@@ -1,4 +1,4 @@
-import type { Locale } from './locale';
+import type { Locale } from '@boluo/api';
 import type { Theme } from '@boluo/theme';
 
 export interface Settings {

@@ -12,10 +12,11 @@ import clsx from 'clsx';
 import { Mask } from '@boluo/icons';
 import { type FC, useState } from 'react';
 import Icon from '@boluo/ui/Icon';
-import { Avatar } from '../account/Avatar';
+import { Avatar } from '@boluo/ui/users/Avatar';
 import { GameMasterBadge } from './GameMasterBadge';
 import { MemberCard } from './MemberCard';
 import { MemberStatusBadge } from './MemberStatusBadge';
+import { useQueryAppSettings } from '@boluo/common/hooks/useQueryAppSettings';
 
 interface Props {
   member: MemberWithUser;
@@ -32,6 +33,7 @@ export const MemberListItem: FC<Props> = ({
   channel,
   canIEditMaster,
 }) => {
+  const { data: appSettings } = useQueryAppSettings();
   const [showMemberCard, setShowMemberCard] = useState(false);
   const { refs, floatingStyles, context } = useFloating({
     open: showMemberCard,
@@ -53,7 +55,7 @@ export const MemberListItem: FC<Props> = ({
         className={clsx(
           'grid grid-flow-col grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-1',
           hasCharacterName ? 'grid-rows-2' : 'grid-rows-1',
-          'hover:bg-surface-100 active:bg-surface-200 group relative w-full cursor-pointer rounded-sm px-2 py-1 text-sm',
+          'hover:bg-surface-muted active:bg-surface-interactive-active group relative w-full cursor-pointer rounded-sm px-2 py-1 text-sm',
         )}
         ref={refs.setReference}
         {...getReferenceProps()}
@@ -65,10 +67,11 @@ export const MemberListItem: FC<Props> = ({
             id={user.id}
             avatarId={user.avatarId}
             className="rounded-sm"
+            mediaUrl={appSettings?.mediaUrl}
           />
         </div>
         {hasCharacterName && (
-          <span className={clsx(offline ? 'text-surface-500' : '', 'text-left', 'truncate')}>
+          <span className={clsx(offline ? 'text-text-muted' : '', 'text-left', 'truncate')}>
             <Icon icon={Mask} /> {channelMember.characterName}
           </span>
         )}
@@ -76,7 +79,7 @@ export const MemberListItem: FC<Props> = ({
           {
             <span
               className={clsx(
-                offline ? 'text-text-light' : hasCharacterName ? 'text-surface-600' : '',
+                offline ? 'text-text-secondary' : hasCharacterName ? 'text-text-secondary' : '',
                 'truncate',
               )}
             >

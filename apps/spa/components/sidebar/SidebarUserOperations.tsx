@@ -4,14 +4,15 @@ import { atom, useAtom, useAtomValue } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
 import { type FC, useCallback, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { toggle } from '@boluo/utils';
+import { toggle } from '@boluo/utils/function';
 import { usePaneToggle } from '../../hooks/usePaneToggle';
 import { panesAtom } from '../../state/view.atoms';
-import { Avatar } from '../account/Avatar';
+import { Avatar } from '@boluo/ui/users/Avatar';
 import { SidebarGroupHeader } from './SidebarGroupHeader';
 import { SidebarItem } from './SidebarItem';
 import { type User } from '@boluo/api';
 import { usePaneLimit } from '../../hooks/useMaxPane';
+import { useQueryAppSettings } from '@boluo/common/hooks/useQueryAppSettings';
 
 interface Props {
   currentUser: User | null | undefined;
@@ -40,6 +41,7 @@ export const isProfileOpenAtom = atom<(id: string) => boolean>((get) => {
     panes.findIndex((pane) => pane.type === 'PROFILE' && pane.userId === id) !== -1;
 });
 export const SidebarUserOperations: FC<Props> = ({ currentUser }) => {
+  const { data: appSettings } = useQueryAppSettings();
   const isLoginOpen = useAtomValue(isLoginOpenAtom);
   const isHelpOpen = useAtomValue(isHelpOpenAtom);
   const isSettingsOpen = useAtomValue(isSettingsOpenAtom);
@@ -123,6 +125,7 @@ export const SidebarUserOperations: FC<Props> = ({ currentUser }) => {
             name={currentUser.nickname}
             avatarId={currentUser.avatarId}
             className={clsx('h-6 w-6 rounded')}
+            mediaUrl={appSettings?.mediaUrl}
           />
           <div className="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
             {currentUser.nickname}

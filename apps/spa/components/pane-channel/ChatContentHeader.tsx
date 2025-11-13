@@ -24,11 +24,11 @@ export const ChatContentHeader: FC<Props> = (props) => {
   return (
     <div
       ref={boxRef}
-      className="flex h-28 select-none flex-col items-center justify-end gap-2 py-4"
+      className="flex h-28 flex-col items-center justify-end gap-2 py-4 select-none"
     >
       {count !== 0 && (
         <span className="text-xs">
-          <span className="text-text-lighter text-xs">
+          <span className="text-text-muted text-xs">
             <FormattedMessage defaultMessage="{count} filtered messages" values={{ count }} />
           </span>
           <ButtonInline className="ml-1" onClick={clear}>
@@ -42,7 +42,7 @@ export const ChatContentHeader: FC<Props> = (props) => {
         </span>
       )}
       {isFullLoaded ? (
-        <span className="text-text-lighter text-lg" title={noMore}>
+        <span className="text-text-muted text-lg" title={noMore}>
           Ω
         </span>
       ) : (

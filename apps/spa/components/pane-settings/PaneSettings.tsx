@@ -1,11 +1,12 @@
-import { useQueryCurrentUser } from '@boluo/common';
+import { useQueryCurrentUser } from '@boluo/common/hooks/useQueryCurrentUser';
 import { LogOut, Settings, User as UserIcon } from '@boluo/icons';
 import { useAtom } from 'jotai';
 import { type FC } from 'react';
 import { useId } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Button } from '@boluo/ui/Button';
-import { type ChildrenProps } from '@boluo/utils';
+import { ButtonWithLamp } from '@boluo/ui/ButtonWithLamp';
+import { type ChildrenProps } from '@boluo/utils/types';
 import { useLogout } from '@boluo/common/hooks/useLogout';
 import { usePaneAdd } from '../../hooks/usePaneAdd';
 import { devMode as devModeAtom } from '../../state/dev.atoms';
@@ -16,6 +17,7 @@ import { LocaleSelect } from './LocaleSelect';
 import { ThemeSelect } from './ThemeSelect';
 import { type User } from '@boluo/api';
 import { EditDefaultColor } from './EditDefaultColor';
+import { HelpText } from '@boluo/ui/HelpText';
 
 const SectionTitle: FC<ChildrenProps> = ({ children }) => (
   <h3 className="mb-2 font-bold">{children}</h3>
@@ -53,7 +55,7 @@ const LogoutField: FC<{ currentUser: User }> = ({ currentUser }) => {
   };
 
   return (
-    <div className="@md:items-center @md:flex-row flex select-none flex-col justify-between gap-4">
+    <div className="flex flex-col justify-between gap-4 select-none @md:flex-row @md:items-center">
       <div className="text-lg">
         {currentUser.nickname} <span className="text-sm">({currentUser.username})</span>
       </div>
@@ -98,7 +100,7 @@ export const PaneSettings: FC = () => {
         </PaneHeaderBox>
       }
     >
-      <div className="p-pane flex min-w-[18rem] max-w-lg flex-col gap-16">
+      <div className="p-pane flex max-w-lg min-w-[18rem] flex-col gap-16">
         <div className="flex flex-col gap-4">
           <SectionTitle>
             <FormattedMessage defaultMessage="Interface" />
@@ -116,11 +118,18 @@ export const PaneSettings: FC = () => {
           </>
         )}
         <div>
-          <SectionTitle>Developer Mode</SectionTitle>
+          <SectionTitle>
+            <FormattedMessage defaultMessage="Developer Options" />
+          </SectionTitle>
           <div>
-            <Button variant="switch" on={devMode} onClick={() => setDevMode(!devMode)}>
-              Turn On Developer Mode
-            </Button>
+            <div className="py-2">
+              <HelpText>
+                <FormattedMessage defaultMessage="Enable this if you want to debug or develop features." />
+              </HelpText>
+            </div>
+            <ButtonWithLamp on={devMode} onClick={() => setDevMode(!devMode)}>
+              <FormattedMessage defaultMessage="Dev Mode" />
+            </ButtonWithLamp>
           </div>
         </div>
       </div>

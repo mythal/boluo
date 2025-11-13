@@ -57,7 +57,7 @@ export const NameEditable: FC<Props> = ({ name, inGame, color, member }) => {
         icon={ChevronDown}
         className={clsx(
           'text inline-block h-[1em] w-[1em] transition-all duration-100',
-          isOpen ? 'rotate-180' : 'text-text-lighter',
+          isOpen ? 'rotate-180' : 'text-text-muted',
         )}
       />
     );

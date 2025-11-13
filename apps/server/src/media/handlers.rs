@@ -2,7 +2,6 @@ use super::api::Upload;
 use super::models::Media;
 use crate::context::media_public_url;
 use crate::csrf::authenticate;
-use crate::db;
 use crate::error::{AppError, Find, ValidationFailed};
 use crate::interface::{Response, missing, ok_response, parse_query};
 use crate::media::api::{MediaQuery, PreSign, PreSignResult};
@@ -95,19 +94,24 @@ pub async fn upload(
     Ok(media_file)
 }
 
-async fn media_upload(req: Request<Incoming>) -> Result<Media, AppError> {
+async fn media_upload(
+    ctx: &crate::context::AppContext,
+    req: Request<Incoming>,
+) -> Result<Media, AppError> {
     let session = authenticate(&req).await?;
     let params = upload_params(req.uri())?;
     let media_id = id();
     let media_file = upload(req, media_id, params, 1024 * 1024 * 16).await?;
-    let pool = db::get().await;
     media_file
-        .create(&pool, session.user_id, "")
+        .create(&ctx.db, session.user_id, "")
         .await
         .map_err(Into::into)
 }
 
-async fn get(req: Request<impl Body>) -> Result<Response, AppError> {
+async fn get(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<Response, AppError> {
     let MediaQuery {
         id,
         filename,
@@ -116,13 +120,12 @@ async fn get(req: Request<impl Body>) -> Result<Response, AppError> {
     metrics::counter!("boluo_server_media_get_total").increment(1);
     let _method = req.method().clone();
 
-    let pool = db::get().await;
     let mut media: Option<Media> = None;
     if let Some(id) = id {
-        media = Some(Media::get_by_id(&pool, &id).await.or_not_found()?);
+        media = Some(Media::get_by_id(&ctx.db, &id).await.or_not_found()?);
     } else if let Some(filename) = filename {
         media = Some(
-            Media::get_by_filename(&pool, &filename)
+            Media::get_by_filename(&ctx.db, &filename)
                 .await
                 .or_not_found()?,
         );
@@ -189,7 +192,10 @@ async fn put_object_presigned(
 }
 
 const EXPIRES_IN_SEC: u64 = 60 * 10;
-async fn presigned(req: Request<impl Body>) -> Result<PreSignResult, AppError> {
+async fn presigned(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<PreSignResult, AppError> {
     use crate::s3;
     let session = authenticate(&req).await?;
     let PreSign {
@@ -201,7 +207,6 @@ async fn presigned(req: Request<impl Body>) -> Result<PreSignResult, AppError> {
     metrics::counter!("boluo_server_media_presigned_total").increment(1);
     metrics::histogram!("boluo_server_media_upload_size_bytes").record(size as f64);
 
-    let db = db::get().await;
     if size <= 0 {
         return Err(ValidationFailed("File size must be greater than 0.").into());
     }
@@ -210,7 +215,7 @@ async fn presigned(req: Request<impl Body>) -> Result<PreSignResult, AppError> {
     }
     let media_id = id();
     let media = Media::create(
-        &db,
+        &ctx.db,
         &media_id,
         &mime_type,
         session.user_id,
@@ -236,14 +241,18 @@ async fn presigned(req: Request<impl Body>) -> Result<PreSignResult, AppError> {
     })
 }
 
-pub async fn router(req: Request<Incoming>, path: &str) -> Result<Response, AppError> {
+pub async fn router(
+    ctx: &crate::context::AppContext,
+    req: Request<Incoming>,
+    path: &str,
+) -> Result<Response, AppError> {
     use hyper::Method;
 
     match (path, req.method().clone()) {
-        ("/get", Method::GET) => get(req).await,
-        ("/get", Method::HEAD) => get(req).await,
-        ("/upload", Method::POST) => media_upload(req).await.map(ok_response),
-        ("/presigned", Method::POST) => presigned(req).await.map(ok_response),
+        ("/get", Method::GET) => get(ctx, req).await,
+        ("/get", Method::HEAD) => get(ctx, req).await,
+        ("/upload", Method::POST) => media_upload(ctx, req).await.map(ok_response),
+        ("/presigned", Method::POST) => presigned(ctx, req).await.map(ok_response),
         _ => missing(),
     }
 }

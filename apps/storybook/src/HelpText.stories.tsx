@@ -1,7 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { HelpText } from '@boluo/ui/HelpText';
 
-const meta: Meta<typeof HelpText> = { component: HelpText };
+const meta: Meta<typeof HelpText> = {
+  title: 'Base/HelpText',
+  component: HelpText,
+};
 
 export default meta;
 type Story = StoryObj<typeof HelpText>;

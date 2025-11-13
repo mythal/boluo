@@ -1,7 +1,8 @@
 'use client';
 
 import { post } from '@boluo/api-browser';
-import { useQueryAppSettings, useQueryCurrentUser } from '@boluo/common/hooks';
+import { useQueryAppSettings } from '@boluo/common/hooks/useQueryAppSettings';
+import { useQueryCurrentUser } from '@boluo/common/hooks/useQueryCurrentUser';
 import Link from 'next/link';
 import type { FC } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';

@@ -9,7 +9,7 @@ export const DefaultRollCommandField: FC = () => {
   const id = useId();
   const { register } = useFormContext<ChannelSettingsForm>();
   return (
-    <div>
+    <div className="DefaultRollCommandField">
       <label className="block pb-1" htmlFor={id}>
         <FormattedMessage defaultMessage="Default Roll Command" />
       </label>

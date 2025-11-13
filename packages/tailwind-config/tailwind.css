@@ -1,0 +1,126 @@
+@import 'tailwindcss';
+@source '../../{apps,packages}/**/*.{ts,tsx,js,jsx,html,htm}';
+@source not '../../apps/server';
+@source not '../../apps/legacy';
+
+@import './theme.tailwind.css';
+
+@custom-variant pressed (&:is([data-active="true"],:active):not(:disabled));
+
+@theme {
+  /* Breakpoints */
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
+
+  /* Sizes */
+  --spacing-sidebar: 16rem;
+  --spacing-pane-padding: 2rem;
+  --spacing-pane-header: 2.5rem;
+
+  --spacing-message: 5rem;
+  --spacing-message-small: 2rem;
+  --spacing-pane: var(--spacing-pane-padding);
+
+  /* Box shadow */
+  --shadow-1-2: 0.125rem 0.125rem 0;
+  --shadow-1: 0.25rem 0.25rem 0;
+}
+
+@layer base {
+  html {
+    font-size: 16px;
+    /* https://github.com/system-fonts/modern-font-stacks#humanist */
+    font-family:
+      'IBM Plex Sans', Seravek, 'Gill Sans Nova', Ubuntu, Calibri, 'DejaVu Sans', source-sans-pro,
+      sans-serif;
+  }
+  html.switching,
+  html.switching * {
+    transition-duration: 200ms;
+    transition-timing-function: ease-in;
+    transition-property:
+      background-color, border-bottom-color, border-top-color, border-left-color,
+      border-right-color, outline-color;
+  }
+
+  @font-face {
+    font-family: 'VT323';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('./fonts/VT323/VT323-Regular.ttf') format('truetype');
+  }
+
+  .font-terminal {
+    font-family: 'VT323', monospace;
+  }
+
+  @font-face {
+    font-family: fusion-pixel-ja;
+    src: url('./fonts/fusion-pixel/fusion-pixel-10px-monospaced-ja.woff2');
+  }
+  :lang(ja) .font-pixel {
+    font-family: fusion-pixel-ja, monospace;
+  }
+  @font-face {
+    font-family: fusion-pixel-latin;
+    src: url('./fonts/fusion-pixel/fusion-pixel-10px-monospaced-latin.woff2');
+  }
+  :lang(en) .font-pixel {
+    font-family: fusion-pixel-latin, monospace;
+  }
+  @font-face {
+    font-family: fusion-pixel-zh-hans;
+    src: url('./fonts/fusion-pixel/fusion-pixel-10px-monospaced-zh_hans.woff2');
+  }
+  :lang(zh-CN) .font-pixel {
+    font-family: fusion-pixel-zh-hans, monospace;
+  }
+  @font-face {
+    font-family: fusion-pixel-zh-hant;
+    src: url('./fonts/fusion-pixel/fusion-pixel-10px-monospaced-zh_hant.woff2');
+  }
+  :lang(zh-TW) .font-pixel {
+    font-family: fusion-pixel-zh-hans, monospace;
+  }
+  .font-pixel {
+    -webkit-font-smoothing: none;
+    -moz-osx-font-smoothing: unset;
+    font-smooth: never;
+  }
+  #__next {
+    height: 100%;
+  }
+}
+
+@layer utilities {
+  .contain-strict {
+    contain: strict;
+  }
+  .contain-content {
+    contain: content;
+  }
+  .contain-size {
+    contain: size;
+  }
+  .view-height {
+    height: 100vh;
+    height: 100dvh;
+  }
+
+  .select-bg-arrow {
+    /* Dropdown indicator inherits the element text color */
+    background-image: url('data:image/svg+xml,%3Csvg%20height%3D%2710%27%20width%3D%2710%27%20viewBox%3D%270%200%2016%2016%27%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%3E%3Cpath%20fill%3D%27currentColor%27%20d%3D%27M7.247%2011.14%202.451%205.658C1.885%205.013%202.345%204%203.204%204h9.592a1%201%200%200%201%20.753%201.659l-4.796%205.48a1%201%200%200%201-1.506%200z%27/%3E%3C/svg%3E');
+    background-repeat: no-repeat;
+    background-position: calc(100% - 0.75rem) center;
+  }
+}
+
+@media all and (display-mode: standalone) {
+  .standalone-bottom-padding {
+    padding-bottom: 2.5rem;
+  }
+}

@@ -2,7 +2,7 @@ import 'server-only';
 import type { ApiError, Get, Post } from '@boluo/api';
 import { makeUri } from '@boluo/api';
 import { appFetch } from '@boluo/api';
-import type { Result } from '@boluo/utils';
+import { type Result } from '@boluo/utils/result';
 
 // eslint-disable-next-line no-restricted-globals
 const BACKEND_URL = process.env.BACKEND_URL;

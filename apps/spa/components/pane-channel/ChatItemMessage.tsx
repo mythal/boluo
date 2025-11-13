@@ -7,7 +7,7 @@ import { ChatItemMessageShowWhisper } from './ChatItemMessageShowWhisper';
 import { Content } from './Content';
 import { MessageMedia } from './MessageMedia';
 import { Name } from './Name';
-import { useQueryUser } from '@boluo/common';
+import { useQueryUser } from '@boluo/common/hooks/useQueryUser';
 import { messageToParsed } from '../../interpreter/to-parsed';
 import { useIsScrolling } from '../../hooks/useIsScrolling';
 import { useReadObserve } from '../../hooks/useReadObserve';
@@ -19,13 +19,14 @@ import { MessageReorderHandle } from './MessageReorderHandle';
 import { MessageTime } from './MessageTime';
 import { useMember } from '../../hooks/useMember';
 import { Delay } from '../Delay';
+import { ContentGuard } from '@boluo/ui/chat/ContentGuard';
 import {
   DisplayContext as ToolbarDisplayContext,
   MessageToolbar,
   makeMessageToolbarDisplayAtom,
 } from './MessageToolbar';
 import { useStore } from 'jotai';
-import { stopPropagation } from '@boluo/utils';
+import { stopPropagation } from '@boluo/utils/browser';
 import { useIsInGameChannel } from '../../hooks/useIsInGameChannel';
 
 export const ChatItemMessage: FC<{
@@ -72,6 +73,8 @@ export const ChatItemMessage: FC<{
   } else if (message.optimisticMedia != null) {
     media = <MessageMedia className="pt-2" media={message.optimisticMedia} />;
   }
+  const shouldGuardContent =
+    message.whisperToUsers != null && (parsed.text !== '' || media != null);
 
   return (
     <MessageBox
@@ -85,7 +88,7 @@ export const ChatItemMessage: FC<{
       pos={message.pos}
       failTo={message.failTo}
     >
-      <div className={clsx('@2xl:text-right self-start', mini ? '@2xl:block hidden' : '')}>
+      <div className={clsx('self-start @2xl:text-right', mini ? 'hidden @2xl:block' : '')}>
         {!mini && <span>{nameNode}:</span>}
       </div>
       <div
@@ -95,7 +98,7 @@ export const ChatItemMessage: FC<{
         data-is-last={isLast}
       >
         {message.whisperToUsers != null && (
-          <span className="text-surface-600 text-sm italic">
+          <span className="text-text-secondary text-sm italic">
             <FormattedMessage defaultMessage="(Whisper)" />
             {parsed.text === '' && (
               <ChatItemMessageShowWhisper
@@ -108,21 +111,23 @@ export const ChatItemMessage: FC<{
           </span>
         )}
 
-        {parsed.text !== '' && (
-          <div>
-            <Content
-              source={parsed.text}
-              entities={parsed.entities}
-              isAction={isAction ?? false}
-              nameNode={nameNode}
-              isArchived={message.folded ?? false}
-              seed={message.seed}
-              onContextMenu={stopPropagation}
-              onDoubleClick={stopPropagation}
-            />
-          </div>
-        )}
-        {media}
+        <ContentGuard active={shouldGuardContent}>
+          {parsed.text !== '' && (
+            <div>
+              <Content
+                source={parsed.text}
+                entities={parsed.entities}
+                isAction={isAction ?? false}
+                nameNode={nameNode}
+                isArchived={message.folded ?? false}
+                seed={message.seed}
+                onContextMenu={stopPropagation}
+                onDoubleClick={stopPropagation}
+              />
+            </div>
+          )}
+          {media}
+        </ContentGuard>
       </div>
     </MessageBox>
   );
@@ -154,7 +159,7 @@ const MessageBox: FC<{
   pos,
 }) => {
   const isInGameChannel = useIsInGameChannel();
-  const toolbarDisplayAtom = useMemo(makeMessageToolbarDisplayAtom, []);
+  const toolbarDisplayAtom = useMemo(() => makeMessageToolbarDisplayAtom(), []);
   const store = useStore();
   const ref = useRef<HTMLDivElement | null>(null);
   const {
@@ -220,13 +225,17 @@ const MessageBox: FC<{
         data-in-game={inGame}
         data-pos={pos}
         className={clsx(
-          'group/msg data relative grid grid-flow-col items-center gap-2 py-2 pl-2 pr-2',
+          'MessageBox',
+          'group/msg data relative grid grid-flow-col items-center gap-2 py-2 pr-2 pl-2',
           'grid-cols-[1.5rem_minmax(0,1fr)]',
           '@2xl:grid-cols-[1.5rem_12rem_minmax(0,1fr)]',
-          !mini && '@2xl:grid-rows-1 grid-rows-[auto_auto]',
+          !mini && 'grid-rows-[auto_auto] @2xl:grid-rows-1',
           inGame
-            ? 'bg-message-inGame-bg'
-            : ['bg-lowest', isInGameChannel ? 'text-text-light hover:text-text-base text-sm' : ''],
+            ? 'bg-message-in-game-bg'
+            : [
+                'bg-pane-bg',
+                isInGameChannel ? 'text-text-secondary hover:text-text-primary text-sm' : '',
+              ],
           'data-[overlay=true]:shadow-lg',
           isDragging && 'opacity-0',
           className,
@@ -238,7 +247,7 @@ const MessageBox: FC<{
       >
         {handle}
         {children}
-        <div className="absolute right-2 top-1 select-none">
+        <div className="absolute top-1 right-2 select-none">
           <MessageTime message={message} failTo={failTo} />
         </div>
         {toolbar}

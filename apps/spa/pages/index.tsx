@@ -1,5 +1,4 @@
 import Head from 'next/head';
-import '@boluo/ui/tailwind.css';
 import { useRouter } from 'next/router';
 import { useEffect } from 'react';
 

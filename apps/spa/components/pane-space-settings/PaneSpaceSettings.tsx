@@ -1,6 +1,6 @@
 import type { ApiError, EditSpace, Space } from '@boluo/api';
 import { post } from '@boluo/api-browser';
-import { useQueryCurrentUser } from '@boluo/common';
+import { useQueryCurrentUser } from '@boluo/common/hooks/useQueryCurrentUser';
 import { Settings } from '@boluo/icons';
 import { type FC, useCallback, useState } from 'react';
 import { useId } from 'react';
@@ -13,7 +13,7 @@ import { HelpText } from '@boluo/ui/HelpText';
 import { Loading } from '@boluo/ui/Loading';
 import { Spinner } from '@boluo/ui/Spinner';
 import { TextArea, TextInput } from '@boluo/ui/TextInput';
-import type { ChildrenProps } from '@boluo/utils';
+import { type ChildrenProps } from '@boluo/utils/types';
 import { usePaneClose } from '../../hooks/usePaneClose';
 import { useQuerySpace } from '../../hooks/useQuerySpace';
 import { DangerZone } from '@boluo/ui/DangerZone';
@@ -24,6 +24,7 @@ import { PaneBox } from '../PaneBox';
 import { PaneHeaderBox } from '../PaneHeaderBox';
 import { FieldDestroySpace } from './FieldDestroySpace';
 import { Failed } from '@boluo/ui/Failed';
+import { PaneFooterBox } from '../PaneFooterBox';
 
 interface Props {
   spaceId: string;
@@ -122,7 +123,7 @@ const PublicityField: FC = () => {
 
   return (
     <div>
-      <div className="grid grid-cols-[1.5em_minmax(0,_1fr)] gap-x-1 gap-y-0">
+      <div className="grid grid-cols-[1.5em_minmax(0,1fr)] gap-x-1 gap-y-0">
         <input
           id={fieldId.public}
           type="radio"
@@ -178,10 +179,6 @@ const FieldDefaultDice: FC = () => {
     </div>
   );
 };
-
-const PaneFooterBox: FC<ChildrenProps> = ({ children }) => (
-  <div className="bg-pane-bg sticky bottom-0 flex justify-end gap-2 border-t p-4">{children}</div>
-);
 
 const spaceToForm = (space: Space): FormSchema => ({
   spaceId: space.id,
@@ -306,7 +303,7 @@ export const PaneSpaceSettings: FC<Props> = ({ spaceId }) => {
           </PaneHeaderBox>
         }
       >
-        <div className="text-surface-400 flex items-center justify-center p-8">
+        <div className="text-text-subtle flex items-center justify-center p-8">
           <FormattedMessage defaultMessage="You are not logged in" />
         </div>
       </PaneBox>

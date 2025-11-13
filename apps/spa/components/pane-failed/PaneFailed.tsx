@@ -12,7 +12,7 @@ export const PaneFailed: FC<FailedProps> = ({ title, ...props }) => {
       grow
       header={
         <PaneHeaderBox
-          icon={props.icon ?? <Icon icon={AlertTriangle} className="text-failed-icon" />}
+          icon={props.icon ?? <Icon icon={AlertTriangle} className="text-state-warning-text" />}
         >
           {title ?? <FormattedMessage defaultMessage="Oops!" />}
         </PaneHeaderBox>

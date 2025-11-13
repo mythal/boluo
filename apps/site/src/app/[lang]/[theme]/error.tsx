@@ -19,7 +19,10 @@ export default function Error({ error, reset }: { error: Error; reset: () => voi
       </div>
 
       <div className="py-2">
-        <Link href="/" className="text-blue-600 underline">
+        <Link
+          href="/"
+          className="text-text-link decoration-text-link-decoration hover:text-text-link-hover underline"
+        >
           Back to Home
         </Link>
       </div>
@@ -28,7 +31,9 @@ export default function Error({ error, reset }: { error: Error; reset: () => voi
         <div className="py-2 text-sm">Tech details:</div>
 
         <div>
-          <span className="bg-error-600 text-lowest mr-2 rounded px-2">{error.name}</span>
+          <span className="bg-action-danger-bg text-action-danger-text mr-2 rounded px-2">
+            {error.name}
+          </span>
           <span className="font-mono">{error.message}</span>
         </div>
       </div>

@@ -1,7 +1,5 @@
 use serde::{Deserialize, Serialize};
 
-use crate::db;
-
 #[derive(Debug, Serialize, Deserialize, Clone, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct Proxy {
@@ -54,9 +52,8 @@ pub struct ConnectionState {
 }
 
 impl ConnectionState {
-    pub async fn database() -> Result<ConnectionState, String> {
+    pub async fn database(pool: sqlx::Pool<sqlx::Postgres>) -> Result<ConnectionState, String> {
         let start = std::time::Instant::now();
-        let pool = db::get().await;
         let count = pool.size() as usize;
         let idle = pool.num_idle();
 
@@ -81,10 +78,12 @@ impl ConnectionState {
         })
     }
 
-    pub async fn redis() -> Result<ConnectionState, String> {
+    pub async fn redis(
+        conn: Option<redis::aio::ConnectionManager>,
+    ) -> Result<ConnectionState, String> {
         use redis::AsyncCommands as _;
         let start = std::time::Instant::now();
-        let mut conn = crate::redis::conn().await.ok_or("Redis is disabled")?;
+        let mut conn = conn.ok_or_else(|| "No Redis connection".to_string())?;
         let count = 1;
         let idle = 0;
         let _: Result<(), String> = conn
@@ -101,9 +100,9 @@ impl ConnectionState {
 }
 
 impl HealthCheck {
-    pub async fn new() -> HealthCheck {
-        let redis = ConnectionState::redis().await.into();
-        let database = ConnectionState::database().await.into();
+    pub async fn new(ctx: &crate::context::AppContext) -> HealthCheck {
+        let redis = ConnectionState::redis(ctx.redis.clone()).await.into();
+        let database = ConnectionState::database(ctx.db.clone()).await.into();
         HealthCheck { redis, database }
     }
 }

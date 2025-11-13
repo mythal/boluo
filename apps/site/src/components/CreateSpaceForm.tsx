@@ -6,17 +6,16 @@ import type { FC } from 'react';
 import { useId, useState } from 'react';
 import type { FieldError, SubmitHandler } from 'react-hook-form';
 import { FormProvider, useController, useForm, useFormContext } from 'react-hook-form';
-import { FormattedMessage, useIntl } from 'react-intl';
+import { FormattedMessage, IntlShape, useIntl } from 'react-intl';
 import { useSWRConfig } from 'swr';
 import { Button } from '@boluo/ui/Button';
 import { TextArea, TextInput } from '@boluo/ui/TextInput';
 import { required, spaceName } from '@boluo/common/validations';
 import { DiceSelect } from '@boluo/ui/DiceSelect';
-import { useErrorExplain } from '@boluo/common/hooks';
+import { explainError } from '@boluo/locale/errors';
 
-const FormErrorDispay: FC<{ error: ApiError }> = ({ error }) => {
-  const explain = useErrorExplain();
-  return <div className="text-error-700 my-1">{explain(error)}</div>;
+const FormErrorDispay: FC<{ error: ApiError; intl: IntlShape }> = ({ intl, error }) => {
+  return <div className="text-state-danger-text my-1">{explainError(intl, error)}</div>;
 };
 
 const FieldErrorDisplay: FC<{ error?: FieldError }> = ({ error }) => {
@@ -101,7 +100,6 @@ const FirstChannelNameField: FC = () => {
 };
 
 const DescriptionField: FC = () => {
-  const intl = useIntl();
   const id = useId();
   const {
     register,
@@ -155,7 +153,7 @@ export const CreateSpaceForm: FC = () => {
           <DescriptionField />
           <DefaultDiceField />
         </div>
-        {error && <FormErrorDispay error={error} />}
+        {error && <FormErrorDispay error={error} intl={intl} />}
         <div className="mt-4 w-full">
           <Button variant="primary" type="submit">
             <FormattedMessage defaultMessage="Create" />

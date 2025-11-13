@@ -53,6 +53,7 @@ const config: NextConfig = {
       '@formatjs/icu-messageformat-parser': '@formatjs/icu-messageformat-parser/no-parser',
     },
   },
+  devIndicators: false,
   experimental: {
     // TODO: Turn off it if the app switched to `app` router.
     externalDir: true,

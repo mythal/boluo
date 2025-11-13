@@ -5,6 +5,25 @@ use std::sync::OnceLock as OnceCell;
 
 use crate::error::AppError;
 
+/// Shared application context that holds commonly used resources
+#[derive(Clone)]
+pub struct AppContext {
+    /// Database connection pool
+    pub db: sqlx::Pool<sqlx::Postgres>,
+    /// Redis connection (optional)
+    pub redis: Option<redis::aio::ConnectionManager>,
+}
+
+impl AppContext {
+    /// Create a new AppContext with the given database pool and redis connection
+    pub fn new(
+        db: sqlx::Pool<sqlx::Postgres>,
+        redis: Option<redis::aio::ConnectionManager>,
+    ) -> Self {
+        Self { db, redis }
+    }
+}
+
 static DEBUG: OnceCell<bool> = OnceCell::new();
 static SECRET: OnceCell<String> = OnceCell::new();
 

@@ -1,7 +1,15 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import clsx from 'clsx';
-import { type DragEventHandler, type FC, type ReactNode, useEffect, useMemo, useRef } from 'react';
+import {
+  type CSSProperties,
+  type DragEventHandler,
+  type FC,
+  type ReactNode,
+  useEffect,
+  useMemo,
+  useRef,
+} from 'react';
 import { PreviewHandlePlaceHolder } from './PreviewHandlePlaceHolder';
 import { useReadObserve } from '../../hooks/useReadObserve';
 import { useIsInGameChannel } from '../../hooks/useIsInGameChannel';
@@ -38,10 +46,15 @@ export const PreviewBox: FC<Props> = ({
   }, [readObserve]);
   const { setNodeRef, transform, transition } = useSortable({ id, disabled: true });
 
-  const style = {
+  const style: CSSProperties & { '--bg-angle': string } = {
     transform: CSS.Transform.toString(transform),
     transition,
     '--bg-angle': isSelf ? '135deg' : '225deg',
+    backgroundImage: 'radial-gradient(var(--color-message-preview-dot) 1px, transparent 1px)',
+    backgroundSize: '10px 10px',
+    boxShadow: inGame
+      ? 'inset 0 0 12px 10px var(--color-message-in-game-bg)'
+      : 'inset 0 0 12px 10px var(--color-message-out-of-game-bg)',
   };
   const handlePlaceHolder = useMemo(
     () => <PreviewHandlePlaceHolder editMode={editMode} />,
@@ -56,13 +69,11 @@ export const PreviewBox: FC<Props> = ({
         'group/item grid grid-flow-col grid-rows-[auto_auto] items-start gap-x-2 gap-y-1 px-2 py-2',
         'grid-cols-[1.5rem_minmax(0,1fr)]',
         '@2xl:grid-cols-[1.5rem_12rem_minmax(0,1fr)] @2xl:grid-rows-1',
-        'bg-[radial-gradient(var(--colors-preview-hint)_1px,_transparent_1px)] bg-[length:10px_10px]',
-        'shadow-[0_0_12px_10px_inset]',
         inGame
-          ? 'bg-preview-in-bg shadow-[var(--colors-preview-in-bg)]'
+          ? 'bg-message-in-game-bg'
           : [
-              'bg-preview-out-bg shadow-[var(--colors-preview-out-bg)]',
-              isInGameChannel ? 'text-text-light hover:text-text-base text-sm' : '',
+              'bg-message-out-of-game-bg',
+              isInGameChannel ? 'text-text-secondary hover:text-text-primary text-sm' : '',
             ],
         className,
       )}

@@ -7,8 +7,8 @@ import { Button } from '@boluo/ui/Button';
 import Icon from '@boluo/ui/Icon';
 import { Loading } from '@boluo/ui/Loading';
 import { TextInput } from '@boluo/ui/TextInput';
-import { unwrap } from '@boluo/utils';
-import { useQueryAppSettings } from '@boluo/common/hooks';
+import { unwrap } from '@boluo/utils/result';
+import { useQueryAppSettings } from '@boluo/common/hooks/useQueryAppSettings';
 
 interface Props {
   spaceId: string;
@@ -63,7 +63,7 @@ export const InviteSpaceMember: FC<Props> = ({ spaceId }) => {
     link = `${base}/${intl.locale}#route=invite?spaceId=${spaceId}&token=${token}`;
   }
   return (
-    <div className="flex max-w-lg flex-col gap-4">
+    <div className="InviteSpaceMember flex max-w-lg flex-col gap-4">
       <div>
         <label htmlFor={id + 'link'} className="mb-1 block">
           <FormattedMessage defaultMessage="Invite Link" />

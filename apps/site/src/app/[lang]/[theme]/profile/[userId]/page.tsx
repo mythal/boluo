@@ -5,7 +5,7 @@ import React from 'react';
 import { get } from '@boluo/common/server/api';
 import { BackLink } from '../../../../../components/BackLink';
 import { Params as BaseParams } from '../../../../../server';
-import { getIntl } from '@boluo/common/locale';
+import { getIntl } from '@boluo/locale/server';
 
 interface Params extends BaseParams {
   userId: string;
@@ -43,12 +43,12 @@ export default async function Page({ params }: { params: Promise<Params> }) {
     return notFound();
   }
   return (
-    <div className="bg-card-bg border-card-border shadow-1/2 shadow-card-shadow max-w-md rounded-sm border p-4">
+    <div className="bg-surface-raised border-border-raised shadow-1/2 shadow-elevation-raised-shadow max-w-md rounded-sm border p-4">
       <div>
         <BackLink />
       </div>
       <div className="text-center text-xl">{user.nickname}</div>
-      {user.bio !== '' && <div className="max-w-md whitespace-pre-line py-4">{user.bio}</div>}
+      {user.bio !== '' && <div className="max-w-md py-4 whitespace-pre-line">{user.bio}</div>}
     </div>
   );
 }

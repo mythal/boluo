@@ -182,6 +182,7 @@
                 paths = with pkgs; [
                   busybox
                   bashInteractive
+                  pgcli
                   dockerTools.caCertificates
                   dockerTools.fakeNss
                 ];
@@ -440,19 +441,19 @@
               '';
 
             deploy-server-staging = pkgs.writeShellScriptBin "deploy-server-staging" ''
-              ${pkgs.flyctl}/bin/flyctl deploy --config ${apps/server/fly.staging.toml} --image ghcr.io/mythal/boluo/server:v${self.rev} --remote-only
-            '';
-
-            deploy-server-production = pkgs.writeShellScriptBin "deploy-server-production" ''
               ${pkgs.flyctl}/bin/flyctl deploy --config ${apps/server/fly.toml} --image ghcr.io/mythal/boluo/server:v${self.rev} --remote-only
             '';
 
+            deploy-server-production = pkgs.writeShellScriptBin "deploy-server-production" ''
+              ${pkgs.flyctl}/bin/flyctl deploy --config ${apps/server/production/fly.toml} --image ghcr.io/mythal/boluo/server:v${self.rev} --remote-only
+            '';
+
             deploy-site-staging = pkgs.writeShellScriptBin "deploy-site-staging" ''
-              ${pkgs.flyctl}/bin/flyctl deploy --config ${apps/site/fly.staging.toml} --image ghcr.io/mythal/boluo/site:v${self.rev} --remote-only
+              ${pkgs.flyctl}/bin/flyctl deploy --config ${apps/site/fly.toml} --image ghcr.io/mythal/boluo/site:v${self.rev} --remote-only
             '';
 
             deploy-site-production = pkgs.writeShellScriptBin "deploy-site-production" ''
-              ${pkgs.flyctl}/bin/flyctl deploy --config ${apps/site/fly.toml} --image ghcr.io/mythal/boluo/site:v${self.rev} --remote-only
+              ${pkgs.flyctl}/bin/flyctl deploy --config ${apps/site/production/fly.toml} --image ghcr.io/mythal/boluo/site:v${self.rev} --remote-only
             '';
           };
 
@@ -462,23 +463,37 @@
             site = self'.packages.site;
             spa = self'.packages.spa;
           };
-          devShells.default = pkgs.mkShell {
-            buildInputs = with pkgs; [
-              rustToolchain
-              nil
-              nodejs
-              clang
-              pgformatter
-              gnumake
-              nixfmt-rfc-style
-              sqlx-cli
-              flyctl
-              cargo-nextest
-            ];
-            shellHook = ''
-              export PATH="node_modules/.bin:$PATH"
-            '';
-          };
+          devShells.default =
+            let
+              libPath =
+                with pkgs;
+                lib.makeLibraryPath (
+                  lib.optionals pkgs.stdenv.isLinux [
+                    wayland-protocols
+                    wayland
+                    libxkbcommon
+                    libGL
+                  ]
+                );
+            in
+            pkgs.mkShell {
+              buildInputs = with pkgs; [
+                rustToolchain
+                nil
+                nodejs
+                clang
+                pgformatter
+                gnumake
+                nixfmt-rfc-style
+                sqlx-cli
+                flyctl
+                cargo-nextest
+              ];
+              shellHook = ''
+                export PATH="node_modules/.bin:$PATH"
+                export LD_LIBRARY_PATH=${libPath}
+              '';
+            };
         };
     };
 }

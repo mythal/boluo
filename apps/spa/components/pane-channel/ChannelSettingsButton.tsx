@@ -36,7 +36,7 @@ export const ChannelSettingsButton: FC<Props> = ({ channelId }) => {
   return (
     <SidebarHeaderButton size="small" onClick={handleClick} active={opened}>
       <Icon icon={Settings} />
-      <span className="@xl:inline hidden">
+      <span className="hidden @xl:inline">
         <FormattedMessage defaultMessage="Channel Settings" />
       </span>
     </SidebarHeaderButton>

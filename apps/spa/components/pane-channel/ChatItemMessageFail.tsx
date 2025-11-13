@@ -39,10 +39,10 @@ export const ChatItemMessageFail: FC<{ failTo: FailTo; retry?: () => void }> = (
   return (
     <div className="relative">
       <Delay fallback={<FallbackIcon />}>
-        <TriangleAlert className="text-text-danger inline text-xs" />
+        <TriangleAlert className="text-state-danger-text inline text-xs" />
       </Delay>
       {message && (
-        <div className="bg-lowest border-highest absolute bottom-full left-0 z-10 min-w-max rounded-sm border px-2 py-1 text-sm shadow-sm">
+        <div className="bg-surface-raised text-text-primary border-border-strong absolute bottom-full left-0 z-10 min-w-max rounded-sm border px-2 py-1 text-sm shadow-sm">
           {message}
           {retry && (
             <button className="cursor-pointer underline" onClick={retry}>

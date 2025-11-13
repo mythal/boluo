@@ -13,7 +13,7 @@ export const PaneSpaceGreeting: FC<Props> = ({ spaceId }) => {
     <PaneBox header={null} grow>
       <div className="p-pane h-full">
         <GreetingHeader />
-        <div className="text-text-lighter flex h-full items-center justify-center">
+        <div className="text-text-muted flex h-full items-center justify-center">
           {space?.name || '...'}
         </div>
       </div>

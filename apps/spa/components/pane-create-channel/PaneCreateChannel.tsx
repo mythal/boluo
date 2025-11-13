@@ -1,10 +1,10 @@
 import { type ApiError, type ChannelWithMember, type Space } from '@boluo/api';
 import { post } from '@boluo/api-browser';
-import { useErrorExplain } from '@boluo/common/hooks';
+import { explainError } from '@boluo/locale/errors';
 import { Plus } from '@boluo/icons';
 import type { FC } from 'react';
 import { FormProvider, useForm, useFormContext } from 'react-hook-form';
-import { FormattedMessage, useIntl } from 'react-intl';
+import { FormattedMessage, IntlShape, useIntl } from 'react-intl';
 import { useSWRConfig } from 'swr';
 import useSWRMutation, { type MutationFetcher } from 'swr/mutation';
 import { Button } from '@boluo/ui/Button';
@@ -24,9 +24,8 @@ import { useQuerySpace } from '../../hooks/useQuerySpace';
 import { PaneLoading } from '../PaneLoading';
 import { PaneFailed } from '../pane-failed/PaneFailed';
 
-const FormErrorDispay: FC<{ error: ApiError }> = ({ error }) => {
-  const explain = useErrorExplain();
-  return <ErrorMessageBox>{explain(error)}</ErrorMessageBox>;
+const FormErrorDispay: FC<{ error: ApiError; intl: IntlShape }> = ({ error, intl }) => {
+  return <ErrorMessageBox>{explainError(intl, error)}</ErrorMessageBox>;
 };
 
 export interface FormSchema {
@@ -64,6 +63,7 @@ const CharacterNameField: FC = () => {
 };
 
 export const CreateChannelForm: FC<{ space: Space }> = ({ space }) => {
+  const intl = useIntl();
   const close = usePaneClose();
   const spaceId = space.id;
   const { mutate } = useSWRConfig();
@@ -108,7 +108,7 @@ export const CreateChannelForm: FC<{ space: Space }> = ({ space }) => {
               <ChannelTypeField />
               <IsSecretField />
               <DefaultDiceField />
-              {error && <FormErrorDispay error={error} />}
+              {error && <FormErrorDispay error={error} intl={intl} />}
             </div>
             <PaneFooterBox>
               <Button type="button" onClick={close}>

@@ -18,7 +18,7 @@ const ChannelName: FC<{ channel: Channel | null | undefined }> = ({ channel }) =
   return (
     <span className="overflow-hidden overflow-ellipsis whitespace-nowrap">
       {!channel.isPublic ? (
-        <span className="text-text-lighter mr-1">
+        <span className="text-text-muted mr-1">
           [<FormattedMessage defaultMessage="Secret" />]
         </span>
       ) : (

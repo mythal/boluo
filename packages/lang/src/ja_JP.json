@@ -32,6 +32,9 @@
   "/iUStU": {
     "message": "例: 霧雨魔理沙"
   },
+  "/jxJyw": {
+    "message": "The position you are trying to place the message is changed."
+  },
   "01eQoz": {
     "message": "接続地域の変更"
   },
@@ -77,6 +80,9 @@
   "39AHJm": {
     "message": "新規登録"
   },
+  "3VG8rb": {
+    "message": "An unknown error occurred"
+  },
   "3VI9mt": {
     "message": "変更を保存"
   },
@@ -112,6 +118,9 @@
   },
   "5jeq8P": {
     "message": "不明"
+  },
+  "5lqSZ6": {
+    "message": "The message you are trying to move is no longer available."
   },
   "5sg7KC": {
     "message": "パスワード"
@@ -164,6 +173,9 @@
   "7q87xo": {
     "message": "チャンネル設定"
   },
+  "7tSUe8": {
+    "message": "Back to login"
+  },
   "8+j66D": {
     "message": "このメッセージを削除しますか？"
   },
@@ -205,6 +217,9 @@
   },
   "AVI/0j": {
     "message": "分割"
+  },
+  "AYIKp4": {
+    "message": "Already have an account? Log in"
   },
   "AbXVP4": {
     "message": "作成"
@@ -290,6 +305,9 @@
   "HH8O0c": {
     "message": "リクエストに失敗しました。ネットワーク異常の可能性があります。"
   },
+  "HOuWsl": {
+    "message": "Developer Options"
+  },
   "HSaR2M": {
     "message": "これは、秘密のチャンネルですか?"
   },
@@ -374,6 +392,9 @@
   "Kp8wZw": {
     "message": "バイオはまだ設定していません"
   },
+  "KqJr7f": {
+    "message": "Click to copy"
+  },
   "KzpV1w": {
     "message": "Your email is not verified, please {verifyEmail}."
   },
@@ -396,7 +417,7 @@
     "message": "Move failed"
   },
   "MWO2zy": {
-    "message": "何か問題が起きています."
+    "message": "Something going wrong."
   },
   "MgRaWS": {
     "message": "チャンネル名は空になることはできません"
@@ -532,6 +553,9 @@
   },
   "TAyWna": {
     "message": "あなたは次元に招待されています"
+  },
+  "TBI2DU": {
+    "message": "Avatar of {name}"
   },
   "TDaF6J": {
     "message": "消去"
@@ -722,6 +746,9 @@
   "clpFBW": {
     "message": "次元のパブリシティ"
   },
+  "cnenZ4": {
+    "message": "Enable this if you want to debug or develop features."
+  },
   "cpFKi9": {
     "message": "Topics can be used to record and remind you of what you are currently focused on."
   },
@@ -764,6 +791,9 @@
   "ecjViF": {
     "message": "Delete failed"
   },
+  "eqOw+7": {
+    "message": "Dev Mode"
+  },
   "f00p/7": {
     "message": "Upload failed"
   },
@@ -787,6 +817,9 @@
   },
   "ftsMiH": {
     "message": "ゲーム内の切り替え"
+  },
+  "fxvXUy": {
+    "message": "Reveal"
   },
   "gEes7R": {
     "message": "You need to {loginLink} to accept the invitation."
@@ -842,8 +875,8 @@
   "jd7fUZ": {
     "message": "Resend in {countdown} seconds"
   },
-  "jtLNcT": {
-    "message": "Failed to move the message, the target is lost. Please try again."
+  "jsy7pk": {
+    "message": "Try Again"
   },
   "k1s9UW": {
     "message": "見つかりませんでした"
@@ -913,6 +946,9 @@
   },
   "onmBf2": {
     "message": "Shuffle Random Color"
+  },
+  "p556q3": {
+    "message": "Copied"
   },
   "pBQ5bd": {
     "message": "編集中"

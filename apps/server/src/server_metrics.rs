@@ -24,20 +24,20 @@ pub async fn update_file_descriptor_metrics() {
     gauge!("boluo_server_file_descriptors_used").set(fd_count as f64);
 }
 
-pub fn update_db_pool_metrics(pool: &sqlx::Pool<sqlx::Postgres>) {
+pub fn update_db_pool_metrics(pool: &sqlx::PgPool) {
     gauge!("boluo_server_db_pool_connections_idle").set(pool.num_idle() as f64);
     gauge!("boluo_server_db_pool_connections_total").set(pool.size() as f64);
 }
 
-pub fn start_update_metrics() {
-    tokio::task::spawn(async {
+pub fn start_update_metrics(pool: sqlx::PgPool) {
+    tokio::task::spawn(async move {
         let mut interval_4s = crate::utils::cleaner_interval(4);
         let mut interval_8s = crate::utils::cleaner_interval(8);
         loop {
             tokio::select! {
                 _ = interval_4s.tick() => {
                     update_file_descriptor_metrics().await;
-                    update_db_pool_metrics(&crate::db::get().await);
+                    update_db_pool_metrics(&pool);
                 }
                 _ = interval_8s.tick() => {
                     if let Ok(Err(e)) = tokio::task::spawn_blocking(update_network_metrics).await {
@@ -107,8 +107,7 @@ pub fn update_network_metrics() -> Result<(), anyhow::Error> {
     Ok(())
 }
 
-pub async fn init_metrics() {
-    let pool = crate::db::get().await;
+pub async fn init_metrics(pool: &sqlx::Pool<sqlx::Postgres>) {
     let mut conn = pool
         .acquire()
         .await

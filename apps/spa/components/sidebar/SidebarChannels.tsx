@@ -34,8 +34,8 @@ export const SidebarChannels: FC<Props> = ({ spaceId }) => {
 
   return (
     <div className="flex-1 overflow-y-auto">
-      <div className="text-text-light flex items-center gap-2 px-4 py-2 text-sm">
-        <div className="flex-grow">
+      <div className="text-text-secondary flex items-center gap-2 px-4 py-2 text-sm">
+        <div className="grow">
           <FormattedMessage defaultMessage="Channels" />
         </div>
 
@@ -43,10 +43,10 @@ export const SidebarChannels: FC<Props> = ({ spaceId }) => {
           <button
             aria-pressed={isReordering}
             className={clsx(
-              'rounded-sm px-1',
+              'text-action-toggle-text rounded-sm px-1 transition-colors',
               isReordering
-                ? 'bg-switch-pressed-bg text-switch-pressed-text shadow-inner'
-                : 'hover:bg-switch-hover-bg text-text-lighter hover:text-text-base',
+                ? 'bg-action-toggle-selected-bg shadow-inner'
+                : 'bg-action-toggle-bg hover:bg-action-toggle-bg-hover text-text-muted hover:text-text-primary shadow-sm',
             )}
             onClick={() => setIsReordering((prev) => !prev)}
           >
@@ -75,7 +75,7 @@ export const SidebarChannels: FC<Props> = ({ spaceId }) => {
           active={isCreateChannelPaneOpened}
           onClick={toggleCreateChannelPane}
         >
-          <span className="text-surface-400 group-hover:text-surface-800">
+          <span className="text-text-subtle group-hover:text-text-primary">
             <FormattedMessage defaultMessage="Add New" />
           </span>
         </SidebarItem>

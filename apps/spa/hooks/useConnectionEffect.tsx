@@ -6,11 +6,12 @@ import {
   type UserStatus,
 } from '@boluo/api';
 import { isServerUpdate } from '@boluo/api/events';
-import { useQueryCurrentUser, webSocketUrlAtom } from '@boluo/common';
+import { useQueryCurrentUser } from '@boluo/common/hooks/useQueryCurrentUser';
+import { webSocketUrlAtom } from '@boluo/common/hooks/useWebSocketUrl';
 import { useAtomValue, useSetAtom, useStore } from 'jotai';
 import { useCallback, useEffect } from 'react';
 import { useSWRConfig } from 'swr';
-import { isUuid, sleep } from '@boluo/utils';
+import { isUuid } from '@boluo/utils/id';
 import { PING, PONG } from '../const';
 import { chatAtom, type ChatDispatch, connectionStateAtom } from '../state/chat.atoms';
 import { type ConnectionState } from '../state/connection.reducer';

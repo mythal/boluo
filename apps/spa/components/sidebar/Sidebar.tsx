@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { useQueryCurrentUser } from '@boluo/common';
+import { useQueryCurrentUser } from '@boluo/common/hooks/useQueryCurrentUser';
 import { useAtom, useAtomValue } from 'jotai';
 import { useEffect, type FC, type ReactNode } from 'react';
 import { isSidebarExpandedAtom, sidebarContentStateAtom } from '../../state/ui.atoms';
@@ -11,8 +11,8 @@ import { ConnectionIndicatior } from './ConnectionIndicator';
 import { useQuerySpace } from '../../hooks/useQuerySpace';
 import { type User } from '@boluo/api';
 import { AppOperations } from './AppOperations';
-import { useIsClient } from '../../hooks/useIsClient';
-import { isApple } from '@boluo/utils';
+import { useIsClient } from '@boluo/common/hooks/useIsClient';
+import { isApple } from '@boluo/utils/browser';
 import { SidebarButton } from './SidebarButton';
 import { useSetThemeColor } from '../../hooks/useSetThemeColor';
 import { SidebarGuestContent } from './SidebarGuestContent';
@@ -91,9 +91,7 @@ export const Sidebar: FC<Props> = ({ spaceId }) => {
       )}
     >
       <div
-        className={clsx(
-          'w-sidebar relative flex flex-grow flex-col justify-between overflow-hidden',
-        )}
+        className={clsx('w-sidebar relative flex grow flex-col justify-between overflow-hidden')}
       >
         {content}
 

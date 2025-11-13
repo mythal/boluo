@@ -13,12 +13,12 @@ export const InListButton = ({ children, active = false, ref, ...props }: Props)
       ref={ref}
       {...props}
       className={clsx(
-        'group-hover:border-surface-500 min-w-[2rem] rounded-sm border px-2 py-1',
-        'active-enabled:translate-y-px active-enable:border-surface-800 active-enabled:bg-surface-300',
+        'group-hover:border-border-strong border-border-default min-w-[2rem] rounded-sm border px-2 py-1',
+        'active-enabled:translate-y-px active-enable:border-border-strong active-enabled:bg-action-toggle-selected-bg',
         'inline-flex gap-1',
         active
-          ? 'border-surface-500 bg-surface-300 hover:bg-surface-200 group-hover:border-surface-700 translate-y-px'
-          : 'border-surface-100 hover:bg-surface-100 group-hover:border-surface-200',
+          ? 'border-border-strong bg-action-toggle-selected-bg hover:bg-surface-interactive-active group-hover:border-border-strong translate-y-px'
+          : 'border-border-subtle hover:bg-surface-muted group-hover:border-border-default',
       )}
     >
       {children}

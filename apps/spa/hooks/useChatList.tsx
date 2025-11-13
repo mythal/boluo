@@ -36,7 +36,6 @@ const selectComposeSlice = (
       prevPreviewId = prevSlice.prevPreviewId;
     }
   }
-
   return { previewId, edit, prevPreviewId };
 };
 
@@ -193,6 +192,12 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
     [composeAtom],
   );
   const composeSlice = useAtomValue(composeSliceAtom);
+  const isWhisper = useAtomValue(
+    useMemo(
+      () => selectAtom(parsedAtom, ({ whisperToUsernames }) => whisperToUsernames != null),
+      [parsedAtom],
+    ),
+  );
   const showDummy = useShowDummy(store, composeAtom, hideSelfPreviewTimeoutAtom);
 
   // Intentionally quit reactivity
@@ -240,11 +245,15 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
         optimisticMessageItems.push(optimistic.item);
       }
     }
+    let filteredMessagesCount = 0;
     const itemList: ChatItem[] = L.toArray(
       L.filter((item) => {
-        const isFiltered = !filter(filterType, item);
-        if (item.type === 'MESSAGE' && item.folded && !showArchived) return false;
-        if (isFiltered) {
+        if (item.type === 'MESSAGE' && item.folded && !showArchived) {
+          filteredMessagesCount++;
+          return false;
+        }
+        if (!filter(filterType, item)) {
+          filteredMessagesCount++;
           return false;
         }
         const optimisticItem = optimisticMessageMap[item.id]?.item;
@@ -266,7 +275,6 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
       }, messages),
     );
     const itemListLen = itemList.length;
-    const filteredMessagesCount = messages.length - itemListLen;
     const minPos = itemListLen > 0 ? itemList[0]!.pos : Number.MIN_SAFE_INTEGER;
     if (myId) {
       const existsPreviewIndex = optimisticPreviewList.findIndex(
@@ -308,7 +316,7 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
             posQ = message.posQ;
           }
         }
-        if (composeSlice.edit != null || showDummy) {
+        if (composeSlice.edit != null || showDummy || isWhisper) {
           optimisticPreviewList.push(
             makeDummyPreview(
               composeSlice.previewId,
@@ -388,6 +396,7 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
     filterType,
     fullLoaded,
     isEmpty,
+    isWhisper,
     messages,
     myId,
     optimisticMessageMap,

@@ -74,6 +74,35 @@ macro_rules! define_caches {
                 }
                 self.notify_invalidate(cache_type, key).await;
             }
+
+            fn expiry(&self) {
+                let mut total_before = 0;
+                let mut total_after = 0;
+
+                $(
+                    total_before += self.$type.len();
+                    {
+                        let before = self.$type.len();
+                        self.$type.retain(|_, v| !v.is_expired());
+                        let after = self.$type.len();
+                        if before != after {
+                            tracing::info!(
+                                "Cache expiry for {}: before {}, after {}",
+                                stringify!($type),
+                                before,
+                                after
+                            );
+                        }
+                    }
+                    total_after += self.$type.len();
+                )*
+
+                tracing::info!(
+                    "Cache expiry run completed. Total before: {}, total after: {}",
+                    total_before,
+                    total_after
+                );
+            }
         }
 
     };
@@ -108,3 +137,23 @@ define_caches! {
 }
 
 pub static CACHE: LazyLock<CacheStore> = LazyLock::new(CacheStore::new);
+
+pub fn start_expiry_task() {
+    use std::time::Duration;
+    use tokio::time::interval;
+
+    tokio::spawn(async move {
+        let mut interval = interval(Duration::from_hours(1));
+        interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
+        loop {
+            tokio::select! {
+                _ = interval.tick() => {
+                    CACHE.expiry();
+                },
+                _ = crate::shutdown::SHUTDOWN.notified() => {
+                    break;
+                }
+            }
+        }
+    });
+}

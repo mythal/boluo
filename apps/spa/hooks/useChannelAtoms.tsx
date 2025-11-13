@@ -50,6 +50,7 @@ export const useMakeChannelAtoms = (
     () => selectAtom(composeAtom, checkCompose(characterName, defaultInGame)),
     [characterName, composeAtom, defaultInGame],
   );
+  const cachedParseResultRef = useRef<ParseResult>(composeInitialParseResult);
   const atoms: Omit<ChannelAtoms, 'composeAtom' | 'checkComposeAtom' | 'inGameAtom'> =
     useMemo(() => {
       const sourceAtom = atom((get) => get(composeAtom).source);
@@ -60,13 +61,12 @@ export const useMakeChannelAtoms = (
           return await asyncParse({ source, defaultDiceFace: defaultDiceFaceRef.current }, signal);
         }),
       );
-      let cachedParseResult: ParseResult = composeInitialParseResult;
       const parsedAtom = atom((get) => {
         const loadableParsed = get(loadableParsedAtom);
         if (loadableParsed.state === 'hasData') {
-          cachedParseResult = loadableParsed.data;
+          cachedParseResultRef.current = loadableParsed.data;
         }
-        return cachedParseResult;
+        return cachedParseResultRef.current;
       });
       const inputedNameAtom = selectAtom(composeAtom, ({ inputedName }) => inputedName);
       const broadcastAtom = selectAtom(parsedAtom, ({ broadcast }) => broadcast);

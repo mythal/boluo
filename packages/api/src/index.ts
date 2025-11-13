@@ -21,3 +21,10 @@ export type EvaluatedExprOf<Tag extends ExprNode['type']> = Extract<
 >;
 export type MaybeEvalutedExprOf<Tag extends ExprNode['type']> = ExprOf<Tag> | EvaluatedExprOf<Tag>;
 export type EntityOf<Tag extends Entity['type']> = Entity & { type: Tag };
+
+export type EvaluatedExpr = {
+  type: 'EvaluatedExpr';
+  node: EvaluatedExprNode;
+  start: number;
+  len: number;
+};

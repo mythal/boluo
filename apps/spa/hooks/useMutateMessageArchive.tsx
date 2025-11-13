@@ -1,7 +1,7 @@
 import useSWRMutation, { type MutationFetcher, type SWRMutationConfiguration } from 'swr/mutation';
 import { post } from '@boluo/api-browser';
 import { type ApiError, type Message } from '@boluo/api';
-import { identity } from '@boluo/utils';
+import { identity } from '@boluo/utils/function';
 
 const path = '/messages/query';
 type Key = readonly [typeof path, string];

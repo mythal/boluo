@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import { LoginForm } from '../../../../../components/LoginForm';
 import { Footer } from './Footer';
 import { Params } from '../../../../../server';
-import { getIntl } from '@boluo/common/locale';
+import { getIntl } from '@boluo/locale/server';
 
 type Props = {
   params: Promise<Params>;

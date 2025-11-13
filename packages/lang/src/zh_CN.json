@@ -32,6 +32,9 @@
   "/iUStU": {
     "message": "例如: 哪吒"
   },
+  "/jxJyw": {
+    "message": "试图放置消息的位置发生了变化。"
+  },
   "01eQoz": {
     "message": "更换线路"
   },
@@ -77,6 +80,9 @@
   "39AHJm": {
     "message": "注册"
   },
+  "3VG8rb": {
+    "message": "发生未知错误"
+  },
   "3VI9mt": {
     "message": "保存更改"
   },
@@ -112,6 +118,9 @@
   },
   "5jeq8P": {
     "message": "未知"
+  },
+  "5lqSZ6": {
+    "message": "正在移动的消息不再存在。"
   },
   "5sg7KC": {
     "message": "密码"
@@ -164,6 +173,9 @@
   "7q87xo": {
     "message": "频道设置"
   },
+  "7tSUe8": {
+    "message": "返回登入"
+  },
   "8+j66D": {
     "message": "确实要删除这条消息？"
   },
@@ -205,6 +217,9 @@
   },
   "AVI/0j": {
     "message": "拆分"
+  },
+  "AYIKp4": {
+    "message": "已经有账户了？登入"
   },
   "AbXVP4": {
     "message": "创建于"
@@ -290,6 +305,9 @@
   "HH8O0c": {
     "message": "请求失败，可能是网络异常。"
   },
+  "HOuWsl": {
+    "message": "开发者选项"
+  },
   "HSaR2M": {
     "message": "是否为秘密频道？"
   },
@@ -374,6 +392,9 @@
   "Kp8wZw": {
     "message": "还没有设置简介"
   },
+  "KqJr7f": {
+    "message": "点击复制"
+  },
   "KzpV1w": {
     "message": "你的邮箱还没验证，请{verifyEmail}。"
   },
@@ -396,7 +417,7 @@
     "message": "移动失败"
   },
   "MWO2zy": {
-    "message": "出了点问题。"
+    "message": "出错了。"
   },
   "MgRaWS": {
     "message": "频道名不可为空"
@@ -532,6 +553,9 @@
   },
   "TAyWna": {
     "message": "邀请你到此位面"
+  },
+  "TBI2DU": {
+    "message": "{name} 的头像"
   },
   "TDaF6J": {
     "message": "知道了"
@@ -722,6 +746,9 @@
   "clpFBW": {
     "message": "位面公开性"
   },
+  "cnenZ4": {
+    "message": "如果您想要调试或开发功能，请启用此功能。"
+  },
   "cpFKi9": {
     "message": "主题可以用来记录和提醒您当前关注的内容。"
   },
@@ -764,6 +791,9 @@
   "ecjViF": {
     "message": "删除失败"
   },
+  "eqOw+7": {
+    "message": "开发模式"
+  },
   "f00p/7": {
     "message": "上传失败"
   },
@@ -787,6 +817,9 @@
   },
   "ftsMiH": {
     "message": "游戏内/外"
+  },
+  "fxvXUy": {
+    "message": "揭开"
   },
   "gEes7R": {
     "message": "为了接受邀请，你需要先 {loginLink}。"
@@ -842,8 +875,8 @@
   "jd7fUZ": {
     "message": "在{countdown}秒后可以重发"
   },
-  "jtLNcT": {
-    "message": "移动消息失败，找不到目的地，请再试一下。"
+  "jsy7pk": {
+    "message": "重试"
   },
   "k1s9UW": {
     "message": "未找到"
@@ -913,6 +946,9 @@
   },
   "onmBf2": {
     "message": "换一个随机颜色"
+  },
+  "p556q3": {
+    "message": "已复制"
   },
   "pBQ5bd": {
     "message": "编辑中"

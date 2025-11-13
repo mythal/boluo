@@ -4,14 +4,17 @@ use crate::channels::{Channel, ChannelMember};
 use crate::csrf::authenticate;
 use crate::error::{AppError, Find};
 use crate::events::Update;
+use crate::interface;
 use crate::interface::{Response, missing, ok_response, parse_query, response};
 use crate::messages::api::{GetMessagesByChannel, MoveMessageBetween};
 use crate::spaces::SpaceMember;
-use crate::{db, interface};
 use hyper::Request;
 use hyper::body::Body;
 
-async fn send(req: Request<impl Body>) -> Result<Message, AppError> {
+async fn send(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<Message, AppError> {
     let start_time = std::time::Instant::now();
     let session = authenticate(&req).await?;
     let new_message = interface::parse_large_body::<NewMessage>(req).await?;
@@ -29,8 +32,7 @@ async fn send(req: Request<impl Body>) -> Result<Message, AppError> {
         pos: request_pos,
         color,
     } = *new_message;
-    let pool = db::get().await;
-    let mut conn = pool.acquire().await?;
+    let mut conn = ctx.db.acquire().await?;
     let channel = Channel::get_by_id(&mut *conn, &channel_id)
         .await
         .or_not_found()?;
@@ -72,7 +74,10 @@ async fn send(req: Request<impl Body>) -> Result<Message, AppError> {
     Ok(message)
 }
 
-async fn edit(req: Request<impl Body>) -> Result<Message, AppError> {
+async fn edit(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<Message, AppError> {
     let start_time = std::time::Instant::now();
     let session = authenticate(&req).await?;
     let edit_message = interface::parse_large_body::<EditMessage>(req).await?;
@@ -86,8 +91,7 @@ async fn edit(req: Request<impl Body>) -> Result<Message, AppError> {
         media_id,
         color,
     } = *edit_message;
-    let pool = db::get().await;
-    let mut trans = pool.begin().await?;
+    let mut trans = ctx.db.begin().await?;
     let message = Message::get(&mut *trans, &message_id, Some(&session.user_id))
         .await?
         .or_not_found()?;
@@ -133,7 +137,10 @@ async fn edit(req: Request<impl Body>) -> Result<Message, AppError> {
     Ok(edited_message)
 }
 
-async fn move_between(req: Request<impl Body>) -> Result<bool, AppError> {
+async fn move_between(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<bool, AppError> {
     let session = authenticate(&req).await?;
     let MoveMessageBetween {
         message_id,
@@ -142,8 +149,7 @@ async fn move_between(req: Request<impl Body>) -> Result<bool, AppError> {
         expect_pos,
     } = interface::parse_body(req).await?;
 
-    let pool = db::get().await;
-    let mut conn = pool.acquire().await?;
+    let mut conn = ctx.db.acquire().await?;
     let message = Message::get(&mut *conn, &message_id, Some(&session.user_id))
         .await
         .or_not_found()?;
@@ -207,19 +213,24 @@ async fn move_between(req: Request<impl Body>) -> Result<bool, AppError> {
     Ok(true)
 }
 
-async fn query(req: Request<impl Body>) -> Result<Message, AppError> {
+async fn query(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<Message, AppError> {
     let interface::IdQuery { id } = interface::parse_query(req.uri())?;
     let user_id = authenticate(&req).await.ok().map(|session| session.user_id);
-    Message::get(&db::get().await, &id, user_id.as_ref())
+    Message::get(&ctx.db, &id, user_id.as_ref())
         .await
         .or_not_found()
 }
 
-async fn delete(req: Request<impl Body>) -> Result<Message, AppError> {
+async fn delete(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<Message, AppError> {
     let session = authenticate(&req).await?;
     let interface::IdQuery { id } = interface::parse_query(req.uri())?;
-    let pool = db::get().await;
-    let mut conn = pool.acquire().await?;
+    let mut conn = ctx.db.acquire().await?;
     let message = Message::get(&mut *conn, &id, Some(&session.user_id))
         .await
         .or_not_found()?;
@@ -244,11 +255,13 @@ async fn delete(req: Request<impl Body>) -> Result<Message, AppError> {
     Ok(message)
 }
 
-async fn toggle_fold(req: Request<impl Body>) -> Result<Message, AppError> {
+async fn toggle_fold(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<Message, AppError> {
     let session = authenticate(&req).await?;
     let interface::IdQuery { id } = interface::parse_query(req.uri())?;
-    let pool = db::get().await;
-    let mut conn = pool.acquire().await?;
+    let mut conn = ctx.db.acquire().await?;
     let message = Message::get(&mut *conn, &id, Some(&session.user_id))
         .await
         .or_not_found()?;
@@ -274,15 +287,17 @@ async fn toggle_fold(req: Request<impl Body>) -> Result<Message, AppError> {
     Ok(edited_message)
 }
 
-async fn by_channel(req: Request<impl Body>) -> Result<Vec<Message>, AppError> {
+async fn by_channel(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<Vec<Message>, AppError> {
     let GetMessagesByChannel {
         channel_id,
         limit,
         before,
     } = parse_query(req.uri())?;
 
-    let pool = db::get().await;
-    let mut conn = pool.acquire().await?;
+    let mut conn = ctx.db.acquire().await?;
 
     let channel = Channel::get_by_id(&mut *conn, &channel_id)
         .await
@@ -306,19 +321,23 @@ async fn by_channel(req: Request<impl Body>) -> Result<Vec<Message>, AppError> {
     .map_err(Into::into)
 }
 
-pub async fn router(req: Request<impl Body>, path: &str) -> Result<Response, AppError> {
+pub async fn router(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+    path: &str,
+) -> Result<Response, AppError> {
     use hyper::Method;
 
     match (path, req.method().clone()) {
-        ("/query", Method::GET) => response(query(req).await).await,
-        ("/by_channel", Method::GET) => response(by_channel(req).await).await,
-        ("/send", Method::POST) => response(send(req).await).await,
-        ("/edit", Method::POST) => response(edit(req).await).await,
-        ("/edit", Method::PUT) => response(edit(req).await).await,
-        ("/edit", Method::PATCH) => response(edit(req).await).await,
-        ("/move_between", Method::POST) => move_between(req).await.map(ok_response),
-        ("/toggle_fold", Method::POST) => response(toggle_fold(req).await).await,
-        ("/delete", Method::POST) => response(delete(req).await).await,
+        ("/query", Method::GET) => response(query(ctx, req).await).await,
+        ("/by_channel", Method::GET) => response(by_channel(ctx, req).await).await,
+        ("/send", Method::POST) => response(send(ctx, req).await).await,
+        ("/edit", Method::POST) => response(edit(ctx, req).await).await,
+        ("/edit", Method::PUT) => response(edit(ctx, req).await).await,
+        ("/edit", Method::PATCH) => response(edit(ctx, req).await).await,
+        ("/move_between", Method::POST) => move_between(ctx, req).await.map(ok_response),
+        ("/toggle_fold", Method::POST) => response(toggle_fold(ctx, req).await).await,
+        ("/delete", Method::POST) => response(delete(ctx, req).await).await,
         _ => missing(),
     }
 }

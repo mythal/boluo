@@ -1,5 +1,55 @@
-import { hsla, toHex } from 'color2k';
 import Prando from 'prando';
+
+// Convert HSL to RGB
+function hslToRgb(h: number, s: number, l: number): [number, number, number] {
+  // Normalize h to 0-360 range
+  h = h % 360;
+  if (h < 0) h += 360;
+  h = h / 360;
+
+  const hue2rgb = (p: number, q: number, t: number) => {
+    if (t < 0) t += 1;
+    if (t > 1) t -= 1;
+    if (t < 1 / 6) return p + (q - p) * 6 * t;
+    if (t < 1 / 2) return q;
+    if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+    return p;
+  };
+
+  if (s === 0) {
+    return [l, l, l];
+  }
+
+  const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+  const p = 2 * l - q;
+
+  const r = hue2rgb(p, q, h + 1 / 3);
+  const g = hue2rgb(p, q, h);
+  const b = hue2rgb(p, q, h - 1 / 3);
+
+  return [r, g, b];
+}
+
+// Create HSLA color and convert to hex
+function hsla(
+  h: number,
+  s: number,
+  l: number,
+  a: number,
+): { r: number; g: number; b: number; a: number } {
+  const [r, g, b] = hslToRgb(h, s, l);
+  return { r, g, b, a };
+}
+
+// Convert RGB to hexadecimal string
+function toHex(color: { r: number; g: number; b: number; a?: number }): string {
+  const toHexByte = (n: number) => {
+    const hex = Math.round(n * 255).toString(16);
+    return hex.padStart(2, '0');
+  };
+
+  return `#${toHexByte(color.r)}${toHexByte(color.g)}${toHexByte(color.b)}`;
+}
 
 // References:
 // - https://pico-8.fandom.com/wiki/Palette
@@ -46,7 +96,8 @@ export function generateColor(seed: string, lightnessDelta = 0.0): string {
   const h = rng.next(0, 365);
   const s = rng.next();
   const l = rng.next(0.5, 0.8) + lightnessDelta;
-  return toHex(hsla(h, s, l, 1)).toUpperCase();
+  const color = hsla(h, s, l, 1);
+  return toHex(color).toUpperCase();
 }
 
 export const PALETTE_PREFIX = 'palette:';

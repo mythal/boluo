@@ -5,7 +5,7 @@ import { Content } from './Content';
 import { Name } from './Name';
 import { OthersPreviewNoBroadcast } from './OthersPreviewNoBroadcast';
 import { PreviewBox } from './PreviewBox';
-import { useQueryUser } from '@boluo/common';
+import { useQueryUser } from '@boluo/common/hooks/useQueryUser';
 
 interface Props {
   preview: PreviewItem;
@@ -45,9 +45,9 @@ export const OthersPreview: FC<Props> = ({ preview, isLast }) => {
       inGame={preview.inGame ?? false}
       isLast={isLast}
       pos={preview.pos}
-      className="text-text-light pr-message-small @2xl:pr-message"
+      className="text-text-secondary pr-message-small @2xl:pr-message"
     >
-      <div className="@2xl:flex-col flex gap-1">
+      <div className="flex gap-1 @2xl:flex-col">
         <div className="@2xl:text-right">{isAction ? null : <>{nameNode}:</>}</div>
       </div>
       {preview.text == null ? (

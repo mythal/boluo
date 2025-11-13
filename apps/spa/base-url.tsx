@@ -1,5 +1,5 @@
 import { type Proxy } from '@boluo/api';
-import { timeout } from '@boluo/utils';
+import { timeout } from '@boluo/utils/async';
 import { atomWithStorage } from 'jotai/utils';
 import { IS_DEVELOPMENT } from './const';
 import { atom } from 'jotai';

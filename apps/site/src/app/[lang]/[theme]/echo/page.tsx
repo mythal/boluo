@@ -1,7 +1,7 @@
 import { type Metadata } from 'next';
 import { cookies, headers } from 'next/headers';
 import { Params } from '../../../../server';
-import { getIntl } from '@boluo/common/locale';
+import { getIntl } from '@boluo/locale/server';
 
 export async function generateMetadata({ params }: { params: Promise<Params> }): Promise<Metadata> {
   const intl = await getIntl(await params);

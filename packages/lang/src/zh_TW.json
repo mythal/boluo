@@ -32,6 +32,9 @@
   "/iUStU": {
     "message": "例如： 媽祖"
   },
+  "/jxJyw": {
+    "message": "The position you are trying to place the message is changed."
+  },
   "01eQoz": {
     "message": "更換線路"
   },
@@ -77,6 +80,9 @@
   "39AHJm": {
     "message": "註冊"
   },
+  "3VG8rb": {
+    "message": "發生未知錯誤"
+  },
   "3VI9mt": {
     "message": "保存變更"
   },
@@ -102,7 +108,7 @@
     "message": "匯出頻道"
   },
   "56x7wR": {
-    "message": "verify it"
+    "message": "驗證"
   },
   "5HUwAy": {
     "message": "只允許字母，數字和下劃線。"
@@ -113,6 +119,9 @@
   "5jeq8P": {
     "message": "未知"
   },
+  "5lqSZ6": {
+    "message": "The message you are trying to move is no longer available."
+  },
   "5sg7KC": {
     "message": "密碼"
   },
@@ -120,7 +129,7 @@
     "message": "設作預設"
   },
   "62nsdy": {
-    "message": "Retry"
+    "message": "重試"
   },
   "64sfSN": {
     "message": "沒差"
@@ -164,20 +173,23 @@
   "7q87xo": {
     "message": "頻道設定"
   },
+  "7tSUe8": {
+    "message": "返回登入"
+  },
   "8+j66D": {
     "message": "確實要刪除這條訊息？"
   },
   "82Y7Sa": {
-    "message": "Sending..."
+    "message": "發送中..."
   },
   "88cMEG": {
     "message": "摧毀位面"
   },
   "8be59M": {
-    "message": "Email verified successfully!"
+    "message": "電子郵件驗證成功。"
   },
   "8mVcs0": {
-    "message": "Verify Email"
+    "message": "驗證郵箱"
   },
   "8pN86+": {
     "message": "{name} 在撰寫…"
@@ -205,6 +217,9 @@
   },
   "AVI/0j": {
     "message": "拆分"
+  },
+  "AYIKp4": {
+    "message": "已有帳號？登入"
   },
   "AbXVP4": {
     "message": "創建於"
@@ -290,6 +305,9 @@
   "HH8O0c": {
     "message": "請求失敗，可能是網路異常。"
   },
+  "HOuWsl": {
+    "message": "開發人員選項"
+  },
   "HSaR2M": {
     "message": "是否為秘密頻道？"
   },
@@ -315,7 +333,7 @@
     "message": "無效的邀請連結"
   },
   "IPvPs7": {
-    "message": "Send verification email"
+    "message": "寄送驗證郵件"
   },
   "IQwWyF": {
     "message": "你必須登入後才能加入頻道。"
@@ -374,6 +392,9 @@
   "Kp8wZw": {
     "message": "還沒有設定簡介"
   },
+  "KqJr7f": {
+    "message": "點擊複製"
+  },
   "KzpV1w": {
     "message": "Your email is not verified, please {verifyEmail}."
   },
@@ -393,7 +414,7 @@
     "message": "{a} 和 {b} 正撰寫…"
   },
   "Lzb4s2": {
-    "message": "Move failed"
+    "message": "移動失敗"
   },
   "MWO2zy": {
     "message": "出了點問題。"
@@ -402,7 +423,7 @@
     "message": "頻道名不可為空。"
   },
   "MjKIej": {
-    "message": "Send failed"
+    "message": "發送失敗"
   },
   "MoRJdV": {
     "message": "用哪個按鍵發送訊息？"
@@ -533,6 +554,9 @@
   "TAyWna": {
     "message": "邀請你到此位面"
   },
+  "TBI2DU": {
+    "message": "{name} 的頭像"
+  },
   "TDaF6J": {
     "message": "知道了"
   },
@@ -654,7 +678,7 @@
     "message": "匯出「{channelName}」"
   },
   "Yw/mtA": {
-    "message": "Edit failed"
+    "message": "編輯失敗"
   },
   "Yy/yDL": {
     "message": "重設密碼"
@@ -722,6 +746,9 @@
   "clpFBW": {
     "message": "位面公開性"
   },
+  "cnenZ4": {
+    "message": "Enable this if you want to debug or develop features."
+  },
   "cpFKi9": {
     "message": "主題可以用來記錄和提醒您當前關注的內容。"
   },
@@ -762,10 +789,13 @@
     "message": "加入私人頻道需要邀請"
   },
   "ecjViF": {
-    "message": "Delete failed"
+    "message": "刪除失敗"
+  },
+  "eqOw+7": {
+    "message": "開發模式"
   },
   "f00p/7": {
-    "message": "Upload failed"
+    "message": "上傳失敗"
   },
   "f0Sf6g": {
     "message": "添加檔案"
@@ -787,6 +817,9 @@
   },
   "ftsMiH": {
     "message": "遊戲內/外"
+  },
+  "fxvXUy": {
+    "message": "揭示"
   },
   "gEes7R": {
     "message": "為了接受邀請，你需要先 {loginLink}。"
@@ -842,8 +875,8 @@
   "jd7fUZ": {
     "message": "Resend in {countdown} seconds"
   },
-  "jtLNcT": {
-    "message": "移動訊息失敗，找不到目的地，請再試一下。"
+  "jsy7pk": {
+    "message": "再試一次"
   },
   "k1s9UW": {
     "message": "未找到"
@@ -873,7 +906,7 @@
     "message": "離開位面"
   },
   "mLZ+cF": {
-    "message": "Your email has been verified."
+    "message": "您的電子信箱已經驗證。"
   },
   "mYgmal": {
     "message": "角色外身分"
@@ -913,6 +946,9 @@
   },
   "onmBf2": {
     "message": "換一個隨機顏色"
+  },
+  "p556q3": {
+    "message": "已拷貝"
   },
   "pBQ5bd": {
     "message": "編輯中"
@@ -975,7 +1011,7 @@
     "message": "重排頻道"
   },
   "ro9oGh": {
-    "message": "Verifying your email..."
+    "message": "正在驗證您的電子郵件…"
   },
   "s+ixvA": {
     "message": "確定，摧毀「{spaceName}」"

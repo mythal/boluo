@@ -25,7 +25,7 @@ const ColorCell: FC<{
 }> = ({ color, selected, onClick, isLoading }) => {
   return (
     <button
-      className={`h-10 w-10 rounded border-[2px] ${isLoading ? 'grayscale' : ''} ${selected ? 'border-highest' : 'border-lowest'}`}
+      className={`h-10 w-10 rounded border-2 ${isLoading ? 'grayscale' : ''} ${selected ? 'border-border-strong' : 'border-border-subtle'}`}
       style={{ backgroundColor: color }}
       onClick={() => onClick(color)}
     />
@@ -50,7 +50,7 @@ export const EditDefaultColor: FC<{ currentUser: User }> = ({ currentUser }) => 
   );
 
   const handleEditDefaultColor = useCallback(
-    (color: string) => () => {
+    (color: string) => {
       if (color !== currentUser.defaultColor) {
         void trigger(color);
       }
@@ -86,10 +86,10 @@ export const EditDefaultColor: FC<{ currentUser: User }> = ({ currentUser }) => 
         <ColorCell
           color={generateColor(currentUser.id + randomColorSeedSuffix)}
           selected={parsedColors[theme].type === 'random'}
-          onClick={handleEditDefaultColor(RANDOM_PREFIX + randomColorSeedSuffix)}
+          onClick={() => handleEditDefaultColor(RANDOM_PREFIX + randomColorSeedSuffix)}
           isLoading={isMutating}
         />
-        <Button onClick={handleEditDefaultColor(RANDOM_PREFIX + Math.random().toString())}>
+        <Button onClick={() => handleEditDefaultColor(RANDOM_PREFIX + Math.random().toString())}>
           <FormattedMessage defaultMessage="Shuffle Random Color" />
         </Button>
       </div>
@@ -102,7 +102,7 @@ export const EditDefaultColor: FC<{ currentUser: User }> = ({ currentUser }) => 
               key={color}
               color={palette[color][theme]}
               selected={selected}
-              onClick={handleEditDefaultColor(`${PALETTE_PREFIX}${color}`)}
+              onClick={() => handleEditDefaultColor(`${PALETTE_PREFIX}${color}`)}
               isLoading={isMutating}
             />
           );

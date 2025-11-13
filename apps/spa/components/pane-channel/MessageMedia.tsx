@@ -3,9 +3,9 @@ import clsx from 'clsx';
 import { Paperclip, Refresh } from '@boluo/icons';
 import { type ReactNode, memo, useState } from 'react';
 import Icon from '@boluo/ui/Icon';
-import { showFileSize } from '@boluo/utils';
+import { showFileSize } from '@boluo/utils/files';
 import { getMediaUrl, supportedMediaType } from '../../media';
-import { useQueryAppSettings } from '@boluo/common/hooks';
+import { useQueryAppSettings } from '@boluo/common/hooks/useQueryAppSettings';
 
 type Props = {
   className?: string;
@@ -26,12 +26,12 @@ const Attachment = ({
 }) => {
   return (
     <div className={className}>
-      <div className="bg-surface-50 border-surface-200 flex h-[6rem] flex-col justify-between rounded border px-3 py-2">
+      <div className="bg-surface-default border-border-default flex h-24 flex-col justify-between rounded border px-3 py-2">
         <div className="flex items-center gap-1 font-mono text-lg">
           <Paperclip />
           {name}
         </div>
-        <div className="text-surface-600 text-right">{showFileSize(size)}</div>
+        <div className="text-text-secondary text-right">{showFileSize(size)}</div>
       </div>
       {children}
     </div>
@@ -104,9 +104,9 @@ export const MessageMedia = memo<Props>(({ media, className, children = null }: 
     <div className={className}>
       <div
         className={clsx(
-          'h-[6rem] rounded-sm',
-          isLoading ? 'bg-surface-300 w-[6rem] animate-pulse' : '',
-          isError ? 'bg-error-200 w-[6rem]' : '',
+          'h-24 rounded-sm',
+          isLoading ? 'bg-surface-interactive-active w-24 animate-pulse' : '',
+          isError ? 'bg-state-danger-bg w-24' : '',
         )}
       >
         {content}

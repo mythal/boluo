@@ -94,7 +94,7 @@ export const MemberList: FC<Props> = ({ currentUser, channel }) => {
   }
 
   return (
-    <div className="border-surface-100 flex flex-col border-l">
+    <div className="border-border-subtle flex flex-col border-l">
       <div className="flex items-center justify-between px-2 py-1 text-sm">
         <span className="font-bold">
           {uiState === 'MEMBER' && <FormattedMessage defaultMessage="Members" />}

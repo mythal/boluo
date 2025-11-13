@@ -34,7 +34,7 @@ export const BaseUrlSelector: FC = () => {
     <div>
       <div>
         <FormattedMessage defaultMessage="Change Connection Region" />
-        <div className="text-surface-900 flex flex-col gap-1 pt-1">
+        <div className="text-text-primary flex flex-col gap-1 pt-1">
           {proxies.map((proxy, index) => {
             const result = testReuslt.find((item) => item.proxy.name === proxy.name);
             return (

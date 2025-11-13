@@ -2,7 +2,7 @@
   "name": "boluo",
   "devDependencies": {
     "prettier": "^3.5.3",
-    "prettier-plugin-tailwindcss": "^0.6.11",
+    "prettier-plugin-tailwindcss": "^0.7.1",
     "turbo": "^2.5.0"
   },
   "engines": {
@@ -25,10 +25,10 @@
     "dev:site": "turbo run dev --filter=site",
     "dev:spa": "turbo run dev --filter=spa",
     "fix:versions": "syncpack-fix-mismatches",
-    "format": "prettier --write '{**/*.{ts,tsx,js,jsx,mjs,cjs,css,md},src/**/*.json}'",
+    "format": "prettier --write '{**/*.{ts,tsx,js,jsx,mjs,cjs,css,md},src/**/*.json}' '!**/next-env.d.ts'",
     "format:versions": "syncpack format",
     "generate": "turbo run generate",
-    "lint": "turbo run lint",
+    "lint": "turbo run lint --cache=local:r,remote:r",
     "lint:versions": "syncpack lint",
     "preview:site": "turbo run preview --filter=site",
     "storybook": "turbo storybook",

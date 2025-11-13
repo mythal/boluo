@@ -1,6 +1,6 @@
 import clsx from 'clsx';
 import { type FC, type ReactNode, useContext, useMemo } from 'react';
-import { stopPropagation } from '@boluo/utils';
+import { stopPropagation } from '@boluo/utils/browser';
 import { usePaneBanner } from '../hooks/useBanner';
 import { PaneContext } from '../state/view.context';
 import { ClosePaneButton } from './ClosePaneButton';
@@ -30,21 +30,21 @@ export const PaneHeaderBox: FC<Props> = ({
   }, [withoutDefaultOperators, canClose]);
   icon = icon ?? <Square />;
   return (
-    <div className="">
-      <div className="min-h-pane-header bg-pane-header-bg pl-pane flex items-center pr-[6px] text-sm">
+    <div className="PaneHeaderBox">
+      <div className="min-h-pane-header bg-pane-header-bg pl-pane flex items-center pr-1.5 text-sm">
         <span
           className={clsx(
-            'inline-flex flex-shrink-0 items-center justify-center pr-1',
-            isFocused ? 'text-text-lighter' : 'text-text-lighter/50',
+            'inline-flex shrink-0 items-center justify-center pr-1',
+            isFocused ? 'text-text-muted' : 'text-text-muted/50',
           )}
         >
           {icon}
         </span>
-        <div className="inline-flex min-w-0 flex-grow flex-nowrap items-center">
+        <div className="inline-flex min-w-0 grow flex-nowrap items-center">
           <div
             className={clsx(
-              'flex-shrink overflow-hidden text-ellipsis whitespace-nowrap',
-              isFocused ? 'text-surface-950' : 'text-surface-400',
+              'shrink overflow-hidden text-ellipsis whitespace-nowrap',
+              isFocused ? 'text-text-primary' : 'text-text-subtle',
             )}
           >
             {children}

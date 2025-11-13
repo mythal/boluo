@@ -1,0 +1,32 @@
+# fly.toml app configuration file generated for boluo-db-staging on 2025-10-19T06:55:49+09:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'boluo-db-staging'
+primary_region = 'nrt'
+swap_size_mb = 512
+
+[build]
+  image = 'ghcr.io/mythal/boluo/boluo-postgres:latest'
+
+[env]
+  POSTGRES_DB = 'boluo'
+  POSTGRES_PASSWORD = 'boluo-staging'
+  POSTGRES_USER = 'boluo'
+
+[[services]]
+  protocol = 'tcp'
+  internal_port = 5432
+  auto_stop_machines = 'off'
+  auto_start_machines = false
+  min_machines_running = 0
+
+  [[services.ports]]
+    port = 5432
+
+[[vm]]
+  memory = '512mb'
+  cpu_kind = 'shared'
+  cpus = 1
+  persist_rootfs = 'restart'

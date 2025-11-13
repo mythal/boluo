@@ -1,0 +1,39 @@
+# fly.toml app configuration file generated for boluo-db on 2025-09-30T11:49:46+09:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'boluo-db'
+primary_region = 'nrt'
+swap_size_mb = 512
+
+[build]
+  image = 'ghcr.io/mythal/boluo/boluo-postgres:latest'
+
+[env]
+  POSTGRES_DB = 'boluo'
+  POSTGRES_USER = 'boluo'
+
+[[mounts]]
+  source = 'pgdata'
+  destination = '/var/lib/postgresql'
+  initial_size = '10gb'
+  snapshot_retention = 14
+  auto_extend_size_threshold = 90
+  auto_extend_size_increment = '1gb'
+  auto_extend_size_limit = '64GB'
+
+[[services]]
+  protocol = 'tcp'
+  internal_port = 5432
+  auto_stop_machines = 'off'
+  auto_start_machines = false
+  min_machines_running = 1
+
+  [[services.ports]]
+    port = 5432
+
+[[vm]]
+  memory = '1gb'
+  cpu_kind = 'shared'
+  cpus = 1

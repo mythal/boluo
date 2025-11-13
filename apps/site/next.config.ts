@@ -32,17 +32,16 @@ const rewrites = async () => {
   ];
 };
 
+const root = path.join(__dirname, '../..');
+
 const config: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
-  eslint: {
-    dirs: ['src', 'tests'],
-  },
   output: 'standalone',
   rewrites: process.env.NODE_ENV === 'development' ? rewrites : undefined,
   turbopack: {
     // Workaround for https://github.com/vercel/next.js/issues/81628
-    root: path.join(__dirname, '../..'),
+    root,
     resolveAlias: {
       '@formatjs/icu-messageformat-parser': '@formatjs/icu-messageformat-parser/no-parser',
     },
@@ -61,7 +60,7 @@ const config: NextConfig = {
   env: {
     SENTRY_DSN: env.SENTRY_DSN,
   },
-  outputFileTracingRoot: path.join(__dirname, '../../'),
+  outputFileTracingRoot: root,
   webpack: (config) => {
     // `react-intl` without parser
     // https://formatjs.io/docs/guides/advanced-usage#react-intl-without-parser-40-smaller

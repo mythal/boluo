@@ -41,7 +41,7 @@
     "@types/react-transition-group": "^4.4.10",
     "@vitejs/plugin-react": "^5.0.0",
     "eslint": "^9.23.0",
-    "typescript": "^5.8.3",
+    "typescript": "^5.9.3",
     "vite": "^7.0.3",
     "vite-plugin-svgr": "^4.3.0"
   },

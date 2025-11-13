@@ -13,7 +13,7 @@ pub async fn get() -> sqlx::Pool<sqlx::Postgres> {
     const LIFETIME: std::time::Duration = std::time::Duration::from_secs(60 * 60);
     const IDLE_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(60 * 5);
     const ACQUIRE_SLOW_THRESHOLD: std::time::Duration = std::time::Duration::from_millis(800);
-    const ACQUIRE_TIMEOUT: std::time::Duration = std::time::Duration::from_millis(2000);
+    const ACQUIRE_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(10);
     if let Some(pool) = POOL.get() {
         pool.clone()
     } else {
@@ -74,7 +74,7 @@ pub async fn check_db_host() {
 
 /// Runtime check if the database is available and can correctly deserialize data
 #[tracing::instrument]
-pub async fn check() {
+pub async fn check(pool: &sqlx::Pool<sqlx::Postgres>) {
     use crate::channels::{Channel, ChannelMember};
     use crate::media::models::Media;
     use crate::messages::Message;
@@ -82,7 +82,6 @@ pub async fn check() {
     use crate::users::{User, UserExt};
     use serde_json::json;
 
-    let pool = get().await;
     let real_user_id = {
         let mut conn = pool.acquire().await.expect("Cannot acquire connection");
 

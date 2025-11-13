@@ -1,5 +1,5 @@
-name = "boluo-app"
-compatibility_date = "2025-07-25"
+name = "boluo-app-staging"
+compatibility_date = "2025-10-19"
 main = "../../packages/backend-proxy/dist/worker.js"
 
 [assets]
@@ -9,10 +9,4 @@ main = "../../packages/backend-proxy/dist/worker.js"
   run_worker_first = ["/api/*"]
 
 [vars]
-  BACKEND_URL = "https://production.boluo.chat"
-
-[env.production.vars]
-  BACKEND_URL = "https://production.boluo.chat"
-
-[env.staging.vars]
   BACKEND_URL = "https://boluo-server-staging.fly.dev"

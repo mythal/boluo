@@ -5,7 +5,7 @@ import { useIntl } from 'react-intl';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { InComposeButton } from './InComposeButton';
 import { useDefaultRollCommand } from '../../hooks/useDefaultRollCommand';
-import { useTooltip } from '../../hooks/useTooltip';
+import { useTooltip } from '@boluo/common/hooks/useTooltip';
 import { TooltipBox } from '@boluo/ui/TooltipBox';
 
 export const AddDiceButton: FC = () => {
@@ -24,7 +24,11 @@ export const AddDiceButton: FC = () => {
     });
   const title = intl.formatMessage({ defaultMessage: 'Add a dice roll' });
   return (
-    <div className="flex-shrink-0 self-end py-1" ref={refs.setReference} {...getReferenceProps()}>
+    <div
+      className="AddDiceButton shrink-0 self-end py-1"
+      ref={refs.setReference}
+      {...getReferenceProps()}
+    >
       <InComposeButton onClick={handleAddDice} label={title}>
         <Dice />
       </InComposeButton>

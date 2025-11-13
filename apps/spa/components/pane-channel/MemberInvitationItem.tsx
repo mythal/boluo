@@ -8,9 +8,10 @@ import {
 } from '@floating-ui/react';
 import { type Channel, type SpaceMember, type User, type UserStatus } from '@boluo/api';
 import { type FC, useState } from 'react';
-import { Avatar } from '../account/Avatar';
+import { Avatar } from '@boluo/ui/users/Avatar';
 import { MemberCard } from './MemberCard';
 import { MemberStatusBadge } from './MemberStatusBadge';
+import { useQueryAppSettings } from '@boluo/common/hooks/useQueryAppSettings';
 
 interface Props {
   user: User;
@@ -20,6 +21,7 @@ interface Props {
 }
 
 export const MemberInvitationItem: FC<Props> = ({ user, spaceMember, channel, status }) => {
+  const { data: appSettings } = useQueryAppSettings();
   const [showMemberCard, setShowMemberCard] = useState(false);
   const { refs, floatingStyles, context } = useFloating({
     open: showMemberCard,
@@ -38,7 +40,7 @@ export const MemberInvitationItem: FC<Props> = ({ user, spaceMember, channel, st
       <button
         ref={refs.setReference}
         {...getReferenceProps()}
-        className="hover:bg-surface-100 active:bg-surface-200 group relative flex w-full cursor-pointer items-center gap-1 rounded-sm p-1 text-left text-sm"
+        className="MemberInvitationItem hover:bg-surface-muted active:bg-surface-interactive-active group relative flex w-full cursor-pointer items-center gap-1 rounded-sm p-1 text-left text-sm"
       >
         <div className="h-6 w-6 flex-none">
           <Avatar
@@ -47,6 +49,7 @@ export const MemberInvitationItem: FC<Props> = ({ user, spaceMember, channel, st
             id={user.id}
             avatarId={user.avatarId}
             className="rounded-sm"
+            mediaUrl={appSettings?.mediaUrl}
           />
         </div>
         <span className="space-x-1">

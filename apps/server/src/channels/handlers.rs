@@ -9,7 +9,6 @@ use crate::channels::api::{
 };
 use crate::channels::models::{ChannelType, Member};
 use crate::csrf::{authenticate, authenticate_optional};
-use crate::db;
 use crate::error::{AppError, Find};
 use crate::events::Update;
 use crate::interface::{self, IdQuery, missing, ok_response, parse_body, parse_query, response};
@@ -36,28 +35,34 @@ async fn admin_only<'c, T: sqlx::PgExecutor<'c>>(
     }
 }
 
-async fn query<B: Body>(req: Request<B>) -> Result<Channel, AppError> {
+async fn query<B: Body>(
+    ctx: &crate::context::AppContext,
+    req: Request<B>,
+) -> Result<Channel, AppError> {
     let query: IdQuery = parse_query(req.uri())?;
 
-    Channel::get_by_id(&db::get().await, &query.id)
-        .await
-        .or_not_found()
+    Channel::get_by_id(&ctx.db, &query.id).await.or_not_found()
 }
 
-async fn push_members(space_id: Uuid, channel_id: Uuid) -> Result<(), sqlx::Error> {
-    let pool = db::get().await;
-    let mut conn = pool.acquire().await?;
+async fn push_members(
+    ctx: &crate::context::AppContext,
+    space_id: Uuid,
+    channel_id: Uuid,
+) -> Result<(), sqlx::Error> {
+    let mut conn = ctx.db.acquire().await?;
     let members = Member::get_by_channel_from_db(&mut *conn, space_id, channel_id).await?;
     let members = members_attach_user(&mut *conn, members).await?;
     Update::push_members(space_id, channel_id, members);
     Ok(())
 }
 
-async fn members<B: Body>(req: Request<B>) -> Result<ChannelMembers, AppError> {
+async fn members<B: Body>(
+    ctx: &crate::context::AppContext,
+    req: Request<B>,
+) -> Result<ChannelMembers, AppError> {
     let query: IdQuery = parse_query(req.uri())?;
 
-    let pool = db::get().await;
-    let mut conn = pool.acquire().await?;
+    let mut conn = ctx.db.acquire().await?;
     let channel = Channel::get_by_id(&mut *conn, &query.id)
         .await
         .or_not_found()?;
@@ -126,12 +131,14 @@ async fn members<B: Body>(req: Request<B>) -> Result<ChannelMembers, AppError> {
     })
 }
 
-async fn query_with_related(req: Request<impl Body>) -> Result<ChannelWithRelated, AppError> {
+async fn query_with_related(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<ChannelWithRelated, AppError> {
     let query: IdQuery = parse_query(req.uri())?;
     let session = authenticate(&req).await.ok();
 
-    let pool = db::get().await;
-    let mut conn = pool.acquire().await?;
+    let mut conn = ctx.db.acquire().await?;
     let (mut channel, space) = Channel::get_with_space(&mut *conn, &query.id)
         .await
         .or_not_found()?;
@@ -164,7 +171,10 @@ async fn query_with_related(req: Request<impl Body>) -> Result<ChannelWithRelate
     Ok(with_related)
 }
 
-async fn create(req: Request<impl Body>) -> Result<ChannelWithMember, AppError> {
+async fn create(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<ChannelWithMember, AppError> {
     let session = authenticate(&req).await?;
     let CreateChannel {
         space_id,
@@ -175,8 +185,7 @@ async fn create(req: Request<impl Body>) -> Result<ChannelWithMember, AppError> 
         _type,
     } = interface::parse_body(req).await?;
 
-    let pool = db::get().await;
-    let mut trans = pool.begin().await?;
+    let mut trans = ctx.db.begin().await?;
     Space::get_by_id(&mut *trans, &space_id)
         .await?
         .ok_or_else(|| AppError::BadRequest("The space not found".to_string()))?;
@@ -205,11 +214,14 @@ async fn create(req: Request<impl Body>) -> Result<ChannelWithMember, AppError> 
         channel,
         member: channel_member,
     };
-    Update::space_updated(space_id);
+    Update::space_updated(ctx, space_id);
     Ok(joined)
 }
 
-async fn edit(req: Request<impl Body>) -> Result<Channel, AppError> {
+async fn edit(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<Channel, AppError> {
     let session = authenticate(&req).await?;
     let EditChannel {
         channel_id,
@@ -224,8 +236,7 @@ async fn edit(req: Request<impl Body>) -> Result<Channel, AppError> {
         is_document,
     } = interface::parse_body(req).await?;
 
-    let pool = db::get().await;
-    let mut trans = pool.begin().await?;
+    let mut trans = ctx.db.begin().await?;
 
     let space_member = SpaceMember::get_by_channel(&mut *trans, &session.user_id, &channel_id)
         .await
@@ -258,29 +269,31 @@ async fn edit(req: Request<impl Body>) -> Result<Channel, AppError> {
     }
     trans.commit().await?;
     if push_members {
-        let mut conn = pool.acquire().await?;
+        let mut conn = ctx.db.acquire().await?;
         let members =
             Member::get_by_channel_from_db(&mut *conn, channel.space_id, channel_id).await?;
         let members = members_attach_user(&mut *conn, members).await?;
         Update::push_members(channel.space_id, channel_id, members);
     }
     Update::channel_edited(channel.clone());
-    Update::space_updated(channel.space_id);
+    Update::space_updated(ctx, channel.space_id);
     Ok(channel)
 }
 
-async fn edit_masters(req: Request<impl Body>) -> Result<bool, AppError> {
+async fn edit_masters(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<bool, AppError> {
     let session = authenticate(&req).await?;
     let GrantOrRemoveChannelMaster {
         channel_id,
         grant_or_revoke,
         user_id,
     } = interface::parse_body(req).await?;
-    let pool = db::get().await;
-    let channel = Channel::get_by_id(&pool, &channel_id)
+    let channel = Channel::get_by_id(&ctx.db, &channel_id)
         .await
         .or_not_found()?;
-    let mut trans = pool.begin().await?;
+    let mut trans = ctx.db.begin().await?;
 
     let space_member = SpaceMember::get_by_channel(&mut *trans, &session.user_id, &channel_id)
         .await
@@ -302,19 +315,21 @@ async fn edit_masters(req: Request<impl Body>) -> Result<bool, AppError> {
     .await
     .ok();
     trans.commit().await?;
-    push_members(channel.space_id, channel_id).await?;
+    push_members(ctx, channel.space_id, channel_id).await?;
     Ok(true)
 }
 
-async fn add_member(req: Request<impl Body>) -> Result<ChannelWithMember, AppError> {
+async fn add_member(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<ChannelWithMember, AppError> {
     let session = authenticate(&req).await?;
     let AddChannelMember {
         channel_id,
         user_id,
         character_name,
     } = parse_body(req).await?;
-    let pool = db::get().await;
-    let mut trans = pool.begin().await?;
+    let mut trans = ctx.db.begin().await?;
 
     let channel = Channel::get_by_id(&mut *trans, &channel_id)
         .await
@@ -336,23 +351,25 @@ async fn add_member(req: Request<impl Body>) -> Result<ChannelWithMember, AppErr
     )
     .await?;
     trans.commit().await?;
-    push_members(channel.space_id, channel_id).await?;
+    push_members(ctx, channel.space_id, channel_id).await?;
     Ok(ChannelWithMember { channel, member })
 }
 
-async fn edit_member(req: Request<impl Body>) -> Result<ChannelMember, AppError> {
+async fn edit_member(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<ChannelMember, AppError> {
     let session = authenticate(&req).await?;
     let EditChannelMember {
         channel_id,
         character_name,
         text_color,
     } = interface::parse_body(req).await?;
-    let channel = Channel::get_by_id(&db::get().await, &channel_id)
+    let channel = Channel::get_by_id(&ctx.db, &channel_id)
         .await
         .or_not_found()?;
 
-    let pool = db::get().await;
-    let mut trans = pool.begin().await?;
+    let mut trans = ctx.db.begin().await?;
 
     ChannelMember::get(&mut *trans, session.user_id, channel.space_id, channel_id)
         .await
@@ -371,26 +388,31 @@ async fn edit_member(req: Request<impl Body>) -> Result<ChannelMember, AppError>
     .await?
     .or_not_found();
     trans.commit().await?;
-    push_members(channel.space_id, channel_id).await?;
+    push_members(ctx, channel.space_id, channel_id).await?;
     channel_member
 }
 
-async fn all_members(req: Request<impl Body>) -> Result<Vec<ChannelMemberWithUser>, AppError> {
+async fn all_members(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<Vec<ChannelMemberWithUser>, AppError> {
     let IdQuery { id } = parse_query(req.uri())?;
 
-    ChannelMember::get_by_channel(&db::get().await, &id, true)
+    ChannelMember::get_by_channel(&ctx.db, &id, true)
         .await
         .map_err(Into::into)
 }
 
-async fn join(req: Request<impl Body>) -> Result<ChannelWithMember, AppError> {
+async fn join(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<ChannelWithMember, AppError> {
     let session = authenticate(&req).await?;
     let JoinChannel {
         channel_id,
         character_name,
     } = parse_body(req).await?;
-    let pool = db::get().await;
-    let mut trans = pool.begin().await?;
+    let mut trans = ctx.db.begin().await?;
 
     let channel = Channel::get_by_id(&mut *trans, &channel_id)
         .await
@@ -425,21 +447,23 @@ async fn join(req: Request<impl Body>) -> Result<ChannelWithMember, AppError> {
     )
     .await?;
     trans.commit().await?;
-    push_members(channel.space_id, channel_id).await?;
+    push_members(ctx, channel.space_id, channel_id).await?;
     Ok(ChannelWithMember { channel, member })
 }
 
-async fn leave(req: Request<impl Body>) -> Result<bool, AppError> {
+async fn leave(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<bool, AppError> {
     let session = authenticate(&req).await?;
     let IdQuery { id } = parse_query(req.uri())?;
-    let pool = db::get().await;
-    let channel = Channel::get_by_id(&pool, &id).await.or_not_found()?;
-    ChannelMember::remove_user(&pool, session.user_id, id, channel.space_id).await?;
-    push_members(channel.space_id, id).await?;
+    let channel = Channel::get_by_id(&ctx.db, &id).await.or_not_found()?;
+    ChannelMember::remove_user(&ctx.db, session.user_id, id, channel.space_id).await?;
+    push_members(ctx, channel.space_id, id).await?;
     Ok(true)
 }
 
-async fn kick(req: Request<impl Body>) -> Result<bool, AppError> {
+async fn kick(ctx: &crate::context::AppContext, req: Request<impl Body>) -> Result<bool, AppError> {
     let session = authenticate(&req).await?;
     let KickFromChannel {
         space_id,
@@ -447,8 +471,7 @@ async fn kick(req: Request<impl Body>) -> Result<bool, AppError> {
         user_id: user_to_be_kicked,
     } = parse_query(req.uri())?;
     let operator_user_id = session.user_id;
-    let pool = db::get().await;
-    let mut trans = pool.begin().await?;
+    let mut trans = ctx.db.begin().await?;
     let space_member = SpaceMember::get(&mut *trans, &operator_user_id, &space_id)
         .await
         .or_no_permission()?;
@@ -465,16 +488,18 @@ async fn kick(req: Request<impl Body>) -> Result<bool, AppError> {
     }
     ChannelMember::remove_user(&mut *trans, user_to_be_kicked, channel_id, space_id).await?;
     trans.commit().await?;
-    push_members(space_id, channel_id).await?;
+    push_members(ctx, space_id, channel_id).await?;
     Ok(true)
 }
 
-async fn delete(req: Request<impl Body>) -> Result<bool, AppError> {
+async fn delete(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<bool, AppError> {
     let session = authenticate(&req).await?;
     let IdQuery { id } = parse_query(req.uri())?;
 
-    let pool = db::get().await;
-    let mut conn = pool.acquire().await?;
+    let mut conn = ctx.db.acquire().await?;
 
     let channel = Channel::get_by_id(&mut *conn, &id).await.or_not_found()?;
 
@@ -483,15 +508,17 @@ async fn delete(req: Request<impl Body>) -> Result<bool, AppError> {
     Channel::delete(&mut *conn, &id, &channel.space_id).await?;
     tracing::info!("channel {} was deleted.", &id);
     Update::channel_deleted(channel.space_id, id);
-    Update::space_updated(channel.space_id);
+    Update::space_updated(ctx, channel.space_id);
     Ok(true)
 }
 
-async fn by_space(req: Request<impl Body>) -> Result<Vec<ChannelWithMaybeMember>, AppError> {
+async fn by_space(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<Vec<ChannelWithMaybeMember>, AppError> {
     let IdQuery { id: space_id } = parse_query(req.uri())?;
     let session = authenticate(&req).await.ok();
-    let pool = db::get().await;
-    let mut conn = pool.acquire().await?;
+    let mut conn = ctx.db.acquire().await?;
     let channels = if let Some(Session { user_id, .. }) = session {
         Channel::get_by_space_and_user(&mut *conn, &space_id, &user_id)
             .await
@@ -513,11 +540,13 @@ async fn by_space(req: Request<impl Body>) -> Result<Vec<ChannelWithMaybeMember>
     Ok(channels)
 }
 
-async fn export(req: Request<impl Body>) -> Result<Vec<Message>, AppError> {
+async fn export(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<Vec<Message>, AppError> {
     let Export { channel_id, after } = parse_query(req.uri())?;
     let session = authenticate(&req).await?;
-    let pool = db::get().await;
-    let mut trans = pool.begin().await?;
+    let mut trans = ctx.db.begin().await?;
 
     let channel = Channel::get_by_id(&mut *trans, &channel_id)
         .await?
@@ -539,34 +568,38 @@ async fn export(req: Request<impl Body>) -> Result<Vec<Message>, AppError> {
         .map_err(Into::into)
 }
 
-pub async fn check_channel_name_exists(req: Request<impl Body>) -> Result<bool, AppError> {
+pub async fn check_channel_name_exists(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<bool, AppError> {
     let CheckChannelName { space_id, name } = parse_query(req.uri())?;
-    let channel = Channel::get_by_name(&db::get().await, space_id, &name).await?;
+    let channel = Channel::get_by_name(&ctx.db, space_id, &name).await?;
     Ok(channel.is_some())
 }
 pub async fn router(
+    ctx: &crate::context::AppContext,
     req: Request<impl Body>,
     path: &str,
 ) -> Result<hyper::Response<Vec<u8>>, AppError> {
     use hyper::Method;
 
     match (path, req.method().clone()) {
-        ("/query", Method::GET) => response(query(req).await).await,
-        ("/query_with_related", Method::GET) => response(query_with_related(req).await).await,
-        ("/members", Method::GET) => response(members(req).await).await,
-        ("/by_space", Method::GET) => response(by_space(req).await).await,
-        ("/create", Method::POST) => response(create(req).await).await,
-        ("/edit", Method::POST) => response(edit(req).await).await,
-        ("/edit_master", Method::POST) => edit_masters(req).await.map(ok_response),
-        ("/add_member", Method::POST) => response(add_member(req).await).await,
-        ("/edit_member", Method::POST) => response(edit_member(req).await).await,
-        ("/all_members", Method::GET) => response(all_members(req).await).await,
-        ("/join", Method::POST) => response(join(req).await).await,
-        ("/leave", Method::POST) => leave(req).await.map(ok_response),
-        ("/kick", Method::POST) => kick(req).await.map(ok_response),
-        ("/delete", Method::POST) => response(delete(req).await).await,
-        ("/check_name", Method::GET) => check_channel_name_exists(req).await.map(ok_response),
-        ("/export", Method::GET) => response(export(req).await).await,
+        ("/query", Method::GET) => response(query(ctx, req).await).await,
+        ("/query_with_related", Method::GET) => response(query_with_related(ctx, req).await).await,
+        ("/members", Method::GET) => response(members(ctx, req).await).await,
+        ("/by_space", Method::GET) => response(by_space(ctx, req).await).await,
+        ("/create", Method::POST) => response(create(ctx, req).await).await,
+        ("/edit", Method::POST) => response(edit(ctx, req).await).await,
+        ("/edit_master", Method::POST) => edit_masters(ctx, req).await.map(ok_response),
+        ("/add_member", Method::POST) => response(add_member(ctx, req).await).await,
+        ("/edit_member", Method::POST) => response(edit_member(ctx, req).await).await,
+        ("/all_members", Method::GET) => response(all_members(ctx, req).await).await,
+        ("/join", Method::POST) => response(join(ctx, req).await).await,
+        ("/leave", Method::POST) => leave(ctx, req).await.map(ok_response),
+        ("/kick", Method::POST) => kick(ctx, req).await.map(ok_response),
+        ("/delete", Method::POST) => response(delete(ctx, req).await).await,
+        ("/check_name", Method::GET) => check_channel_name_exists(ctx, req).await.map(ok_response),
+        ("/export", Method::GET) => response(export(ctx, req).await).await,
         _ => missing(),
     }
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { IntlMessages, Locale } from '@boluo/common/locale';
+import type { IntlMessages, Locale } from '@boluo/locale';
 import { Provider as JotaiProvider } from 'jotai';
 import { FC, useEffect } from 'react';
 import { store } from '@boluo/store';
@@ -11,7 +11,7 @@ import {
   setThemeToDom,
   watchSystemTheme,
 } from '@boluo/theme';
-import type { ChildrenProps } from '@boluo/utils';
+import { type ChildrenProps } from '@boluo/utils/types';
 import { LocaleProvider } from './LocaleProvider';
 
 interface Props extends ChildrenProps {

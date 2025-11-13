@@ -2,8 +2,9 @@
   "extends": "@boluo/typescript-config/react-library.json",
   "compilerOptions": {
     "moduleResolution": "bundler",
-    "module": "esnext"
+    "module": "esnext",
+    "rootDir": "src"
   },
-  "include": ["**/*.ts", "**/*.tsx", "tailwindcss-theme-swapper.d.ts", "tailwind.config.mjs"],
+  "include": ["src"],
   "exclude": ["dist", "build", "node_modules"]
 }

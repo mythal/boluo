@@ -15,7 +15,8 @@ import {
   useInteractions,
 } from '@floating-ui/react';
 import clsx from 'clsx';
-import { Avatar } from '../account/Avatar';
+import { Avatar } from '@boluo/ui/users/Avatar';
+import { useQueryAppSettings } from '@boluo/common/hooks/useQueryAppSettings';
 
 interface Props {
   inGame: boolean;
@@ -25,6 +26,7 @@ interface Props {
 }
 
 export const ContentWhisperTo: FC<Props> = ({ channelId, whisperToUsernames, inGame, myId }) => {
+  const { data: appSettings } = useQueryAppSettings();
   const { data: channelMembers, isLoading } = useQueryChannelMembers(channelId);
   const { composeAtom } = useChannelAtoms();
   const dispatch = useSetAtom(composeAtom);
@@ -54,8 +56,15 @@ export const ContentWhisperTo: FC<Props> = ({ channelId, whisperToUsernames, inG
       (member) => !whisperToUsernames.includes(member.user.username),
     );
     if (members.length === 0) return null;
-    return <WhisperToItemAdd inGame={inGame} members={members} add={addUsername} />;
-  }, [addUsername, channelMembers, inGame, whisperToUsernames]);
+    return (
+      <WhisperToItemAdd
+        inGame={inGame}
+        members={members}
+        add={addUsername}
+        mediaUrl={appSettings?.mediaUrl}
+      />
+    );
+  }, [addUsername, channelMembers, inGame, whisperToUsernames, appSettings?.mediaUrl]);
 
   const whisperToMembers: MemberWithUser[] = useMemo(() => {
     return whisperToUsernames.flatMap((username) => {
@@ -75,14 +84,14 @@ export const ContentWhisperTo: FC<Props> = ({ channelId, whisperToUsernames, inG
 
   if (whisperToMembers.length === 0) {
     return (
-      <span className="text-text-light text-sm">
+      <span className="text-text-secondary text-sm">
         <FormattedMessage defaultMessage="Whisper to the Master only" /> {whisperToAdd}
       </span>
     );
   }
 
   return (
-    <span className="text-text-light text-sm">
+    <span className="text-text-secondary text-sm">
       <FormattedMessage defaultMessage="Whisper to the Master and" />{' '}
       <span className="space-x-1">
         {whisperToMembers.map((member) => (
@@ -119,7 +128,7 @@ export const WhisperToItem: FC<{
   }
   return (
     <button
-      className="bg-preview-whisper-item-bg border-preview-whisper-item-border decoration-preview-whisper-item-decoration rounded border px-1 decoration-2 hover:line-through"
+      className="bg-surface-default border-border-subtle decoration-border-strong text-text-primary rounded border px-1 decoration-2 transition-colors hover:line-through"
       onClick={remove}
     >
       {name}
@@ -132,7 +141,8 @@ export const WhisperToItemAdd: FC<{
   inGame: boolean;
   members: MemberWithUser[];
   add: (username: string) => void;
-}> = ({ inGame, members, add }) => {
+  mediaUrl?: string | null | undefined;
+}> = ({ inGame, members, add, mediaUrl }) => {
   const [open, setOpen] = useState(false);
   const { refs, floatingStyles, context } = useFloating({
     placement: 'top-start',
@@ -149,10 +159,10 @@ export const WhisperToItemAdd: FC<{
       <button
         ref={refs.setReference}
         className={clsx(
-          'bg-preview-whisper-add-bg text-preview-whisper-add-text inline-flex rounded border px-0.5',
+          'bg-surface-raised text-text-primary inline-flex rounded border px-0.5 transition-all',
           open
-            ? 'border-preview-whisper-add-border translate-y-px'
-            : 'border-transprent group-hover/item:border-preview-whisper-add-border shadow-sm active:translate-y-px active:shadow-none',
+            ? 'border-border-default translate-y-px shadow-inner'
+            : 'border-border-subtle group-hover/item:border-border-default shadow-sm active:translate-y-px active:shadow-none',
         )}
         {...getReferenceProps()}
       >
@@ -164,10 +174,16 @@ export const WhisperToItemAdd: FC<{
             ref={refs.setFloating}
             style={floatingStyles}
             {...getFloatingProps()}
-            className="bg-menu-panel-bg max-h-72 overflow-y-auto rounded shadow-md"
+            className="bg-surface-raised border-border-default max-h-72 overflow-y-auto rounded border shadow-md"
           >
             {members.map((member) => (
-              <MemberItem inGame={inGame} key={member.user.id} member={member} add={add} />
+              <MemberItem
+                inGame={inGame}
+                key={member.user.id}
+                member={member}
+                add={add}
+                mediaUrl={mediaUrl}
+              />
             ))}
           </div>
         </FloatingPortal>
@@ -180,15 +196,16 @@ const MemberItem: FC<{
   member: MemberWithUser;
   inGame: boolean;
   add: (username: string) => void;
-}> = ({ member, add, inGame }) => {
+  mediaUrl?: string | null | undefined;
+}> = ({ member, add, inGame, mediaUrl }) => {
   const characterName: ReactNode = member.channel.characterName || (
-    <span className="font-pixel text-text-lighter text-[12.5px]">[empty]</span>
+    <span className="font-pixel text-text-muted text-[12.5px]">[empty]</span>
   );
   const mainName: ReactNode = inGame ? characterName : member.user.nickname;
   const subName: ReactNode = inGame ? member.user.nickname : characterName;
   return (
     <button
-      className="hover:bg-menu-item-hover-bg grid grid-cols-[2rem_10rem] grid-rows-2 items-center gap-x-1 px-2 py-1 text-left first:rounded-t-sm last:rounded-b-sm"
+      className="bg-surface-default hover:bg-surface-interactive-hover grid grid-cols-[2rem_10rem] grid-rows-2 items-center gap-x-1 px-2 py-1 text-left first:rounded-t-sm last:rounded-b-sm"
       onClick={() => {
         add(member.user.username);
       }}
@@ -199,10 +216,11 @@ const MemberItem: FC<{
         avatarId={member.user.avatarId}
         className="row-span-2 rounded-sm"
         size="2rem"
+        mediaUrl={mediaUrl}
       />
 
       <div className="w-full truncate text-sm">{mainName}</div>
-      <div className="text-text-light w-full truncate text-xs">{subName}</div>
+      <div className="text-text-secondary w-full truncate text-xs">{subName}</div>
     </button>
   );
 };

@@ -1,8 +1,11 @@
 import { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 import { ClientProviders } from '../../../components/global/Providers';
-import '@boluo/ui/tailwind.css';
-import { getIntl, loadMessages, LOCALES, toLocale } from '@boluo/common/locale';
+import '@boluo/tailwind-config';
+import { LOCALES, toLocale } from '@boluo/locale';
+import { loadMessages } from '@boluo/locale/dynamic';
+import { getIntl } from '@boluo/locale/server';
+
 import { toTheme } from '@boluo/theme';
 import { Params } from '../../../server';
 
@@ -46,7 +49,7 @@ export default async function RootLayout({
   const messages = await loadMessages(locale);
   return (
     <html lang={locale} className={theme}>
-      <body className="bg-bg text-text-base">
+      <body className="bg-bg text-text-primary">
         <ClientProviders locale={locale} messages={messages}>
           <div className="p-4 md:container md:mx-auto md:p-8">{children}</div>
           <div id="portal" />

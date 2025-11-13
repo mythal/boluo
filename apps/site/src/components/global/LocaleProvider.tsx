@@ -1,14 +1,17 @@
 'use client';
 import { patch } from '@boluo/api-browser';
-import { Locale, Settings, useQueryCurrentUser } from '@boluo/common';
-import { ChangeLocaleContext } from '@boluo/common/hooks';
-import { defaultLocale, IntlMessages, LOCALES, onIntlError } from '@boluo/common/locale';
+import type { Locale } from '@boluo/locale';
+import type { Settings } from '@boluo/common/settings';
+import { useQueryCurrentUser } from '@boluo/common/hooks/useQueryCurrentUser';
+import { ChangeLocaleContext } from '@boluo/common/hooks/useLocale';
+import { defaultLocale, IntlMessages, LOCALES, onIntlError } from '@boluo/locale';
 import { useRouter } from 'next/navigation';
 import { FC, useCallback } from 'react';
 import { IntlProvider } from 'react-intl';
 import { MutationFetcher } from 'swr/mutation';
 import useSWRMutation from 'swr/mutation';
-import { ChildrenProps, identity } from '@boluo/utils';
+import { type ChildrenProps } from '@boluo/utils/types';
+import { identity } from '@boluo/utils/function';
 
 interface Props extends ChildrenProps {
   locale: Locale;

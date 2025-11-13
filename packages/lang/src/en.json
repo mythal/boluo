@@ -32,6 +32,9 @@
   "/iUStU": {
     "message": "e.g. Gandalf"
   },
+  "/jxJyw": {
+    "message": "The position you are trying to place the message is changed."
+  },
   "01eQoz": {
     "message": "Change Connection Region"
   },
@@ -77,6 +80,9 @@
   "39AHJm": {
     "message": "Sign Up"
   },
+  "3VG8rb": {
+    "message": "An unknown error occurred"
+  },
   "3VI9mt": {
     "message": "Save Changes"
   },
@@ -112,6 +118,9 @@
   },
   "5jeq8P": {
     "message": "Unknown"
+  },
+  "5lqSZ6": {
+    "message": "The message you are trying to move is no longer available."
   },
   "5sg7KC": {
     "message": "Password"
@@ -164,6 +173,9 @@
   "7q87xo": {
     "message": "Channel Settings"
   },
+  "7tSUe8": {
+    "message": "Back to login"
+  },
   "8+j66D": {
     "message": "Are you sure you want to delete this message?"
   },
@@ -205,6 +217,9 @@
   },
   "AVI/0j": {
     "message": "Split"
+  },
+  "AYIKp4": {
+    "message": "Already have an account? Log in"
   },
   "AbXVP4": {
     "message": "Created at"
@@ -290,6 +305,9 @@
   "HH8O0c": {
     "message": "Request failed, possible network anomaly."
   },
+  "HOuWsl": {
+    "message": "Developer Options"
+  },
   "HSaR2M": {
     "message": "Is secret channel?"
   },
@@ -373,6 +391,9 @@
   },
   "Kp8wZw": {
     "message": "Have not set a bio yet"
+  },
+  "KqJr7f": {
+    "message": "Click to copy"
   },
   "KzpV1w": {
     "message": "Your email is not verified, please {verifyEmail}."
@@ -532,6 +553,9 @@
   },
   "TAyWna": {
     "message": "You have been invited to the space"
+  },
+  "TBI2DU": {
+    "message": "Avatar of {name}"
   },
   "TDaF6J": {
     "message": "Dismiss"
@@ -722,6 +746,9 @@
   "clpFBW": {
     "message": "Space Publicity"
   },
+  "cnenZ4": {
+    "message": "Enable this if you want to debug or develop features."
+  },
   "cpFKi9": {
     "message": "Topics can be used to record and remind you of what you are currently focused on."
   },
@@ -764,6 +791,9 @@
   "ecjViF": {
     "message": "Delete failed"
   },
+  "eqOw+7": {
+    "message": "Dev Mode"
+  },
   "f00p/7": {
     "message": "Upload failed"
   },
@@ -787,6 +817,9 @@
   },
   "ftsMiH": {
     "message": "Toggle In Game"
+  },
+  "fxvXUy": {
+    "message": "Reveal"
   },
   "gEes7R": {
     "message": "You need to {loginLink} to accept the invitation."
@@ -842,8 +875,8 @@
   "jd7fUZ": {
     "message": "Resend in {countdown} seconds"
   },
-  "jtLNcT": {
-    "message": "Failed to move the message, the target is lost. Please try again."
+  "jsy7pk": {
+    "message": "Try Again"
   },
   "k1s9UW": {
     "message": "Not Found"
@@ -913,6 +946,9 @@
   },
   "onmBf2": {
     "message": "Shuffle Random Color"
+  },
+  "p556q3": {
+    "message": "Copied"
   },
   "pBQ5bd": {
     "message": "Editing"

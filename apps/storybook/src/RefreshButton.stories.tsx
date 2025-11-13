@@ -1,7 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { RefreshButton } from '@boluo/ui/RefreshButton';
 
-const meta: Meta<typeof RefreshButton> = { component: RefreshButton };
+const meta: Meta<typeof RefreshButton> = {
+  title: 'Derived/RefreshButton',
+  component: RefreshButton,
+};
 
 export default meta;
 type Story = StoryObj<typeof RefreshButton>;

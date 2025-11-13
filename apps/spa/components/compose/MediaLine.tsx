@@ -6,7 +6,7 @@ import { Paperclip, Trash } from '@boluo/icons';
 import Icon from '@boluo/ui/Icon';
 import { FormattedMessage } from 'react-intl';
 import { mediaUrl } from '@boluo/api-browser';
-import { showFileSize } from '@boluo/utils';
+import { showFileSize } from '@boluo/utils/files';
 import { mediaMaxSizeByte, supportedMediaType } from '../../media';
 import * as classes from '@boluo/ui/classes';
 
@@ -29,13 +29,13 @@ export const MediaLine: FC = () => {
       <>
         <div
           data-valid={isTypeValid}
-          className="data-[valid=false]:text-compose-media-invalid truncate"
+          className="data-[valid=false]:text-state-danger-text truncate"
         >
           {composeMedia.name}
         </div>
         <div
           data-valid={isSizeValid}
-          className="text-text-light data-[valid=false]:text-compose-media-invalid flex-shrink-0"
+          className="text-text-secondary data-[valid=false]:text-state-danger-text shrink-0"
         >
           ({showFileSize(composeMedia.size)})
         </div>
@@ -51,14 +51,14 @@ export const MediaLine: FC = () => {
 
   return (
     <div className="flex gap-1 px-1 pt-1 text-sm">
-      <Icon className="text-text-light" icon={Paperclip} />
-      <div className="text-text-lighter">
+      <Icon className="text-text-secondary" icon={Paperclip} />
+      <div className="text-text-muted">
         <FormattedMessage defaultMessage="Attachment" />:
       </div>
       {content}
       <button
         onClick={handleRemove}
-        className="text-compose-media-remove-text hover:text-compose-media-remove-hover"
+        className="text-state-danger-text hover:text-state-danger-text"
       >
         <Icon icon={Trash} />
       </button>

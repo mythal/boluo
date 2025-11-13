@@ -1,9 +1,10 @@
-import { useQueryCurrentUser, useQueryUser } from '@boluo/common';
+import { useQueryCurrentUser } from '@boluo/common/hooks/useQueryCurrentUser';
+import { useQueryUser } from '@boluo/common/hooks/useQueryUser';
 import { Edit, LogOut, User } from '@boluo/icons';
 import { type FC, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { Loading } from '@boluo/ui/Loading';
-import { toggle } from '@boluo/utils';
+import { toggle } from '@boluo/utils/function';
 import { useLogout } from '@boluo/common/hooks/useLogout';
 import { PaneBox } from '../PaneBox';
 import { PaneHeaderBox } from '../PaneHeaderBox';
@@ -44,7 +45,7 @@ export const PaneProfile: FC<Props> = ({ userId }) => {
       {isMe && (
         <SidebarHeaderButton onClick={logout} title={logoutLabel}>
           <LogOut />
-          <span className="@xs:inline hidden text-xs">
+          <span className="hidden text-xs @xs:inline">
             <FormattedMessage defaultMessage="Logout" />
           </span>
         </SidebarHeaderButton>
@@ -56,7 +57,7 @@ export const PaneProfile: FC<Props> = ({ userId }) => {
           title={editLabel}
         >
           <Edit />
-          <span className="@md:inline hidden text-xs">
+          <span className="hidden text-xs @md:inline">
             <FormattedMessage defaultMessage="Edit" />
           </span>
         </SidebarHeaderButton>
@@ -69,7 +70,7 @@ export const PaneProfile: FC<Props> = ({ userId }) => {
         <PaneHeaderBox operators={operators} icon={isEditing ? <Edit /> : <User />}>
           {user.nickname}{' '}
           {isMe && (
-            <span className="text-text-lighter">
+            <span className="text-text-muted">
               <FormattedMessage defaultMessage="(me)" />
             </span>
           )}

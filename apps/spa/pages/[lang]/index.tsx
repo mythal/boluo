@@ -1,16 +1,17 @@
-import { type IntlMessages, loadMessages, LOCALES, toLocale } from '@boluo/common/locale';
+import { type IntlMessages, LOCALES, toLocale } from '@boluo/locale';
+import { loadMessages } from '@boluo/locale/dynamic';
 import { ClientProviders } from '../../components/ClientProviders';
 import { type GetStaticPaths } from 'next';
-import { type Locale } from '@boluo/common';
+import type { Locale } from '@boluo/locale';
 import Head from 'next/head';
 import { useIntl } from 'react-intl';
 import { useEffect } from 'react';
-import '@boluo/ui/tailwind.css';
 import Chat from '../../components/Chat';
 import { ChatErrorBoundary } from '../../components/ChatErrorBoundary';
 import { UnsupportedBrowser } from '@boluo/ui/UnsupportedBrowser';
-import { useDetectBrowserSupport } from '../../hooks/useDetectBrowserSupport';
-import { getOS } from '@boluo/utils';
+import { useDetectBrowserSupport } from '@boluo/common/hooks/useDetectBrowserSupport';
+import { getOS } from '@boluo/utils/browser';
+import { useQueryAppSettings } from '@boluo/common/hooks/useQueryAppSettings';
 
 export const getStaticPaths = (() => {
   return {
@@ -59,11 +60,16 @@ const PageHead = () => {
 
 export default function Page({ lang, messages }: Props) {
   const isSupportedBrowser = useDetectBrowserSupport();
+  const { data: appSettings } = useQueryAppSettings();
   return (
     <ClientProviders lang={lang} messages={messages}>
       <PageHead />
       <ChatErrorBoundary>
-        {isSupportedBrowser ? <Chat /> : <UnsupportedBrowser isIos={getOS() === 'iOS'} />}
+        {isSupportedBrowser ? (
+          <Chat />
+        ) : (
+          <UnsupportedBrowser isIos={getOS() === 'iOS'} siteUrl={appSettings?.siteUrl} />
+        )}
       </ChatErrorBoundary>
     </ClientProviders>
   );

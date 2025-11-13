@@ -7,7 +7,7 @@ import { FormattedMessage } from 'react-intl';
 import { Button } from '@boluo/ui/Button';
 import { useSetBanner } from '../../hooks/useBanner';
 import { useChannelId } from '../../hooks/useChannelId';
-import { useMountedRef } from '../../hooks/useMounted';
+import { useMountedRef } from '@boluo/common/hooks/useMounted';
 import { chatAtom } from '../../state/chat.atoms';
 import { head } from 'list';
 
@@ -157,7 +157,7 @@ export const ChatContentHeaderLoadMore: FC = () => {
           />
         )}
 
-        <div className="flex-grow text-center">
+        <div className="grow text-center">
           {touchState === 'START' && <FormattedMessage defaultMessage="Pull to Load" />}
           {willLoad && <FormattedMessage defaultMessage="Release to Load" />}
           {touchState === 'NONE' && <FormattedMessage defaultMessage="Load More" />}

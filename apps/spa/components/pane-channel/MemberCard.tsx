@@ -7,7 +7,7 @@ import {
 } from '@boluo/api';
 import { post } from '@boluo/api-browser';
 import clsx from 'clsx';
-import { useQueryCurrentUser } from '@boluo/common';
+import { useQueryCurrentUser } from '@boluo/common/hooks/useQueryCurrentUser';
 import { Gamemaster, Mask, UserCog, UserPlus, UserX } from '@boluo/icons';
 import React, { type FC, type ReactNode, useEffect, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
@@ -15,8 +15,9 @@ import useSWRMutation from 'swr/mutation';
 import { Badge } from '@boluo/ui/Badge';
 import { Button } from '@boluo/ui/Button';
 import Icon from '@boluo/ui/Icon';
-import { Avatar } from '../account/Avatar';
+import { Avatar } from '@boluo/ui/users/Avatar';
 import { FloatingBox } from '@boluo/ui/FloatingBox';
+import { useQueryAppSettings } from '@boluo/common/hooks/useQueryAppSettings';
 
 const JUST_NOW = 1000 * 10;
 const SECONDS_IN_MS = 1000;
@@ -48,9 +49,9 @@ const EditMasterCheckBox: FC<{ channelMember: ChannelMember }> = ({ channelMembe
         <span>
           <FormattedMessage defaultMessage="Game Master" />
         </span>
-        <Icon icon={Gamemaster} className={channelMember.isMaster ? '' : 'text-surface-400'} />
+        <Icon icon={Gamemaster} className={channelMember.isMaster ? '' : 'text-text-subtle'} />
       </span>
-      <span className="text-surface-600 group-hover:text-surface-900 col-start-2 text-sm">
+      <span className="text-text-secondary group-hover:text-text-primary col-start-2 text-sm">
         A game master can read whispers, kick members, move messages, and other.
       </span>
     </label>
@@ -156,7 +157,7 @@ const ConfirmKick: FC<{
 
 const LastSeen = React.memo(
   ({ timestamp: lastSeenTimeStamp, className }: { timestamp: number; className?: string }) => {
-    const [now, setNow] = useState(Date.now());
+    const [now, setNow] = useState(0);
     useEffect(() => {
       const interval = setInterval(() => {
         setNow(Date.now());
@@ -217,7 +218,7 @@ const Names: FC<{ username: string; nickname: string; characterName: string }> =
     return (
       <div className="space-x-1">
         <span className="font-bold">{nickname}</span>
-        <span className="text-text-light">{username}</span>
+        <span className="text-text-secondary">{username}</span>
       </div>
     );
   }
@@ -227,8 +228,8 @@ const Names: FC<{ username: string; nickname: string; characterName: string }> =
         <Icon icon={Mask} /> <span className="font-bold">{characterName}</span>
       </div>
       <div className="space-x-1 text-sm">
-        <span className="text-surface-600">{nickname}</span>
-        <span className="text-text-light">{username}</span>
+        <span className="text-text-secondary">{nickname}</span>
+        <span className="text-text-secondary">{username}</span>
       </div>
     </div>
   );
@@ -292,6 +293,7 @@ export const MemberCard: React.FC<Props> = ({
   ...props
 }) => {
   const { data: currentUser } = useQueryCurrentUser();
+  const { data: appSettings } = useQueryAppSettings();
   const thisIsMe = user.id === currentUser?.id;
   const canIManage = canIKick || canIInvite || canIEditMaster;
   const [uiState, setUiState] = useState<'VIEW' | 'MANAGE' | 'CONFIRM_KICK' | 'CONFIRM_LEAVE'>(
@@ -322,6 +324,7 @@ export const MemberCard: React.FC<Props> = ({
             id={user.id}
             avatarId={user.avatarId}
             name={user.nickname}
+            mediaUrl={appSettings?.mediaUrl}
           />
           <div className="space-y-1">
             <Names
@@ -333,11 +336,13 @@ export const MemberCard: React.FC<Props> = ({
             {status != null && (
               <div className="space-x-1 text-sm">
                 {status.kind === 'ONLINE' ? (
-                  <span className={clsx(status.kind === 'ONLINE' ? 'text-green-600' : '')}>
+                  <span
+                    className={clsx(status.kind === 'ONLINE' ? 'text-presence-online-text' : '')}
+                  >
                     {statusText}
                   </span>
                 ) : (
-                  <LastSeen timestamp={status.timestamp} className="text-surface-500" />
+                  <LastSeen timestamp={status.timestamp} className="text-text-muted" />
                 )}
               </div>
             )}
@@ -350,7 +355,7 @@ export const MemberCard: React.FC<Props> = ({
         </div>
         {user.bio !== '' && (
           <div className="pt-4">
-            <div className="max-h-32 overflow-y-auto whitespace-pre-line text-sm">{user.bio}</div>
+            <div className="max-h-32 overflow-y-auto text-sm whitespace-pre-line">{user.bio}</div>
           </div>
         )}
         {uiState === 'VIEW' && canIManage && (
@@ -372,7 +377,7 @@ export const MemberCard: React.FC<Props> = ({
         )}
 
         {uiState === 'MANAGE' && (
-          <div className="pb-2 pt-4">
+          <div className="pt-4 pb-2">
             {canIEditMaster && channelMember?.channelId === channel.id && (
               <EditMasterCheckBox channelMember={channelMember} />
             )}

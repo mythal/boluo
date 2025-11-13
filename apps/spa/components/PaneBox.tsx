@@ -1,6 +1,6 @@
 import { type FC, type ReactNode, Suspense, useContext, useMemo, useRef } from 'react';
 import { Loading } from '@boluo/ui/Loading';
-import { type ChildrenProps } from '@boluo/utils';
+import { type ChildrenProps } from '@boluo/utils/types';
 import { usePaneFocus } from '../hooks/usePaneFocus';
 import { Delay } from './Delay';
 import { PaneBodyError } from './PaneBodyError';
@@ -50,10 +50,7 @@ export const PaneBox: FC<Props> = ({ header, children, grow = false }) => {
       {header}
       <div ref={bannerRef} className="border-pane-header-border border-b"></div>
 
-      <div
-        onFocus={focus}
-        className="bg-pane-bg relative flex-grow overflow-y-auto overflow-x-hidden"
-      >
+      <div onFocus={focus} className="bg-pane-bg relative grow overflow-x-hidden overflow-y-auto">
         <Suspense
           fallback={
             <div className="flex h-full items-center justify-center">
@@ -77,7 +74,7 @@ export const PaneBox: FC<Props> = ({ header, children, grow = false }) => {
     <BannerContext value={bannerRef}>
       <div
         ref={paneBoxRef}
-        className={`PaneBox flex h-full min-w-[22rem] max-md:flex-[1_1_100%] ${grow ? 'flex-[1_1_100%]' : 'flex-[0_0_0]'} flex-col`}
+        className={`PaneBox flex h-full min-w-88 max-md:flex-[1_1_100%] ${grow ? 'flex-[1_1_100%]' : 'flex-[0_0_0]'} flex-col`}
       >
         {content}
         {childPane && (

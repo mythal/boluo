@@ -13,7 +13,7 @@ import { type IntlShape } from 'react-intl';
 import { get } from '@boluo/api-browser';
 import { fileNameDateTimeFormat, generateDetailDate } from '../../date';
 import { computeColors, parseGameColor } from '../../color';
-import { splitByLine } from '@boluo/utils';
+import { splitByLine } from '@boluo/utils/string';
 
 const DEFAULT_COLOR = '#000';
 

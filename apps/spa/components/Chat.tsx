@@ -12,7 +12,7 @@ import { ChatSpace } from './ChatSpace';
 import { PaneLoading } from './PaneLoading';
 import { Sidebar } from './sidebar/Sidebar';
 import { BannerContext } from '../hooks/useBannerNode';
-import { IsTouchContext, useDetectIsTouch } from '../hooks/useIsTouch';
+import { useDetectIsTouch, IsTouchContext } from '@boluo/common/hooks/useIsTouch';
 import screens from '@boluo/ui/screens.json';
 import {
   type ResolvedTheme,
@@ -25,11 +25,11 @@ import {
 import { useQuerySettings } from '../hooks/useQuerySettings';
 import { ChatInvite } from './ChatInvite';
 import { PaneEmpty } from './PaneEmpty';
-import { useIsClient } from '../hooks/useIsClient';
+import { useIsClient } from '@boluo/common/hooks/useIsClient';
 import clsx from 'clsx';
 import { ResolvedThemeContext } from '../hooks/useResolvedTheme';
 import { SettingsContext } from '../hooks/useSettings';
-import { type Settings } from '@boluo/common';
+import type { Settings } from '@boluo/common/settings';
 
 const useThemeSetup = (settings: Settings | undefined | null): ResolvedTheme => {
   const themeFromSettings = settings?.theme;
@@ -76,7 +76,7 @@ const Chat: FC = () => {
         <BannerContext value={bannerRef}>
           <IsTouchContext value={isTouch}>
             <BreakpointProvider>
-              <div className="view-height accent-brand-600 grid grid-cols-[auto_1fr] grid-rows-[auto_1fr]">
+              <div className="view-height accent-brand-strong grid grid-cols-[auto_1fr] grid-rows-[auto_1fr]">
                 <div ref={bannerRef} className="col-span-full"></div>
                 <Sidebar spaceId={route.type === 'SPACE' ? route.spaceId : undefined} />
                 <ChatContentBox>
@@ -107,10 +107,10 @@ const Chat: FC = () => {
 export const ChatContentBox: FC<{ children: ReactNode }> = ({ children }) => {
   const [isSidebarExpanded, setSidebarExpanded] = useAtom(isSidebarExpandedAtom);
   const noPane = useAtomValue(isNoPaneAtom);
-  const [shouldAutoFold, setShouldAutoFold] = useState(false);
-  useEffect(() => {
-    setShouldAutoFold(window.innerWidth < screens.sm);
-  }, []);
+  const [shouldAutoFold, setShouldAutoFold] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.innerWidth < screens.sm;
+  });
   useEffect(() => {
     let timeout: number | undefined;
     const observer = new ResizeObserver((entries) => {
@@ -133,7 +133,8 @@ export const ChatContentBox: FC<{ children: ReactNode }> = ({ children }) => {
       onTouchStart={autoFoldSidebar}
       onClick={autoFoldSidebar}
       className={clsx(
-        'md:divide-pane-divide relative col-end-[-1] flex h-full min-h-0 w-full flex-[1_0] flex-nowrap overflow-y-hidden transition duration-300 max-md:overflow-y-hidden md:divide-x md:overflow-x-auto',
+        'ChatContentBox',
+        'md:divide-border-subtle relative -col-end-1 flex h-full min-h-0 w-full flex-[1_0] flex-nowrap overflow-y-hidden transition duration-300 max-md:overflow-y-hidden md:divide-x md:overflow-x-auto',
         showMask ? 'cursor-pointer brightness-50' : '',
       )}
     >

@@ -37,7 +37,10 @@ pub fn generate_csrf_token(session_key: &Uuid) -> String {
     buffer
 }
 
-pub async fn get_csrf_token(req: Request<impl Body>) -> Result<String, AppError> {
+pub async fn get_csrf_token(
+    _ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<String, AppError> {
     let session_id = if let Ok(session) = session::authenticate(&req).await {
         session.id
     } else {

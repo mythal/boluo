@@ -42,7 +42,7 @@ export const ChannelExportButton: FC<Props> = ({ channelId }) => {
   return (
     <SidebarHeaderButton size="small" onClick={handleClick} active={opened}>
       <Icon icon={ScrollText} />
-      <span className="@xl:inline hidden">
+      <span className="hidden @xl:inline">
         <FormattedMessage defaultMessage="Export" />
       </span>
     </SidebarHeaderButton>

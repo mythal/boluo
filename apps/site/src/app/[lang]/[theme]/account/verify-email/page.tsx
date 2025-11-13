@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import { Params } from '../../../../../server';
-import { getIntl } from '@boluo/common/locale';
+import { getIntl } from '@boluo/locale/server';
 import { EmailVerification } from './EmailVerification';
 
 type Props = {

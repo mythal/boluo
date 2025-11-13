@@ -4,7 +4,7 @@ import { AlertTriangle, UserPlus } from '@boluo/icons';
 import { type ReactNode, type FC } from 'react';
 import { FormattedMessage } from 'react-intl';
 import useSWRMutation from 'swr/mutation';
-import { unwrap } from '@boluo/utils';
+import { unwrap } from '@boluo/utils/result';
 import { SidebarHeaderButton } from '../sidebar/SidebarHeaderButton';
 import { useSWRConfig } from 'swr';
 import { Spinner } from '@boluo/ui/Spinner';

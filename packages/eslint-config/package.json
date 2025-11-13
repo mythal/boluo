@@ -3,15 +3,15 @@
   "version": "0.0.0",
   "devDependencies": {
     "@eslint/js": "^9.23.0",
-    "@next/eslint-plugin-next": "^15.2.4",
+    "@next/eslint-plugin-next": "^16.0.0",
     "eslint": "^9.23.0",
     "eslint-config-prettier": "^10.1.1",
     "eslint-plugin-only-warn": "^1.1.0",
     "eslint-plugin-react": "^7.37.4",
-    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-hooks": "^7.0.0",
     "eslint-plugin-turbo": "^2.4.4",
     "globals": "^16.0.0",
-    "typescript": "^5.8.3",
+    "typescript": "^5.9.3",
     "typescript-eslint": "^8.28.0"
   },
   "exports": {

@@ -1,13 +1,13 @@
 'use client';
 import type { ApiError } from '@boluo/api';
 import { post } from '@boluo/api-browser';
-import { useErrorExplain } from '@boluo/common/hooks';
+import { explainError } from '@boluo/locale/errors';
 import { useRouter } from 'next/navigation';
 import type { FC } from 'react';
 import { useId, useState } from 'react';
 import { FieldError, SubmitHandler, useFormState } from 'react-hook-form';
 import { FormProvider, useForm, useFormContext } from 'react-hook-form';
-import { FormattedMessage, useIntl } from 'react-intl';
+import { FormattedMessage, IntlShape, useIntl } from 'react-intl';
 import { Button } from '@boluo/ui/Button';
 import { ErrorMessageBox } from '@boluo/ui/ErrorMessageBox';
 import { TextInput } from '@boluo/ui/TextInput';
@@ -22,9 +22,8 @@ interface Schema {
   nickname: string;
 }
 
-const FormErrorDisplay: FC<{ error: ApiError }> = ({ error }) => {
-  const explain = useErrorExplain();
-  return <ErrorMessageBox>{explain(error)}</ErrorMessageBox>;
+const FormErrorDisplay: FC<{ error: ApiError; intl: IntlShape }> = ({ error, intl }) => {
+  return <ErrorMessageBox>{explainError(intl, error)}</ErrorMessageBox>;
 };
 
 const FieldErrorDisplay: FC<{ error?: FieldError }> = ({ error }) => {
@@ -135,11 +134,15 @@ const PasswordField = () => {
     <>
       <div>
         <div className="flex py-1">
-          <label htmlFor={id} className="flex-grow">
+          <label htmlFor={id} className="grow">
             <FormattedMessage defaultMessage="Password" />
           </label>
 
-          <button type="button" onClick={() => setShow((show) => !show)} className="text-brand-700">
+          <button
+            type="button"
+            onClick={() => setShow((show) => !show)}
+            className="text-text-link hover:text-text-link-hover"
+          >
             {show ? (
               <FormattedMessage defaultMessage="Hide" />
             ) : (
@@ -162,6 +165,7 @@ const PasswordField = () => {
 };
 
 const FormContent: FC<{ error: ApiError | null }> = ({ error }) => {
+  const intl = useIntl();
   const { isSubmitting, isValid } = useFormState();
   return (
     <div className="flex flex-col gap-2">
@@ -173,8 +177,8 @@ const FormContent: FC<{ error: ApiError | null }> = ({ error }) => {
       <NicknameField />
       <PasswordField />
       {error && (
-        <div className="text-error-700 my-1">
-          <FormErrorDisplay error={error} />
+        <div className="text-state-danger-text my-1">
+          <FormErrorDisplay error={error} intl={intl} />
         </div>
       )}
       <div className="mt-2 flex justify-end">

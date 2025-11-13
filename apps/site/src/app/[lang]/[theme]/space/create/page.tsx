@@ -6,7 +6,7 @@ import { ChevronLeft } from '@boluo/icons';
 
 import * as classes from '@boluo/ui/classes';
 import { Params } from '../../../../../server';
-import { getIntl } from '@boluo/common/locale';
+import { getIntl } from '@boluo/locale/server';
 export async function generateMetadata({ params }: { params: Promise<Params> }): Promise<Metadata> {
   const intl = await getIntl(await params);
 
@@ -20,7 +20,7 @@ export default async function Page({ params }: { params: Promise<Params> }) {
   const intl = await getIntl({ lang });
   const title = intl.formatMessage({ defaultMessage: 'Create a Space' });
   return (
-    <main className="bg-card-bg shadow-1 border-card-border shadow-card-shadow container max-w-md rounded-sm border p-6">
+    <main className="bg-surface-raised shadow-1 border-border-raised shadow-elevation-raised-shadow container max-w-md rounded-sm border p-6">
       <div>
         <Link href={`/${lang}`} className={classes.link}>
           <Icon icon={ChevronLeft} />

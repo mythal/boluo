@@ -1,0 +1,12 @@
+name = "boluo-app"
+compatibility_date = "2025-10-19"
+main = "../../../packages/backend-proxy/dist/worker.js"
+
+[assets]
+  directory = "../out/"
+  html_handling = "auto-trailing-slash"
+  not_found_handling = "404-page"
+  run_worker_first = ["/api/*"]
+
+[vars]
+  BACKEND_URL = "https://production.boluo.chat"

@@ -1,12 +1,5 @@
-import { type FC } from 'react';
-import { Todo } from '../common/Todo';
+import { FC } from 'react';
 
 export const SidebarGuestContent: FC = () => {
-  return (
-    <div>
-      <div className="p-4">
-        <Todo>Introduce the guest to example spaces</Todo>
-      </div>
-    </div>
-  );
+  return <div>{/* Guest content can be added here in the future */}</div>;
 };

@@ -13,7 +13,7 @@ export const DefaultDiceField: FC = () => {
     defaultValue: 'd20',
   });
   return (
-    <div>
+    <div className="DefaultDiceField">
       <label className="block pb-1" htmlFor={id}>
         <FormattedMessage defaultMessage="Default Dice" />
       </label>

@@ -21,6 +21,8 @@ const PaneCreateChannel = React.lazy(() => import('./pane-create-channel/PaneCre
 const PaneCreateSpace = React.lazy(() => import('./PaneCreateSpace'));
 const PaneSettings = React.lazy(() => import('./pane-settings/PaneSettings'));
 const PaneLogin = React.lazy(() => import('./PaneLogin'));
+const PaneSignUp = React.lazy(() => import('./PaneSignUp'));
+const PaneResetPassword = React.lazy(() => import('./PaneResetPassword'));
 const PaneHelp = React.lazy(() => import('./PaneHelp'));
 
 interface Props {
@@ -38,6 +40,8 @@ const PANE_MAP = {
   CREATE_CHANNEL: PaneCreateChannel,
   CREATE_SPACE: PaneCreateSpace,
   LOGIN: PaneLogin,
+  SIGN_UP: PaneSignUp,
+  RESET_PASSWORD: PaneResetPassword,
   PROFILE: PaneProfile,
   SPACE_MEMBERS: PaneSpaceMembers,
   CHANNEL_SETTINGS: PaneChannelSettings,

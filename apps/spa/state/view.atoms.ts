@@ -1,7 +1,7 @@
 import { atom, WritableAtom } from 'jotai';
 import { atomWithHash } from 'jotai-location';
 import { selectAtom } from 'jotai/utils';
-import { isUuid } from '@boluo/utils';
+import { isUuid } from '@boluo/utils/id';
 import { type Pane, type Route } from './view.types';
 import { recordError } from '../error';
 

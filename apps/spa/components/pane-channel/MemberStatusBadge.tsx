@@ -2,7 +2,7 @@ import { type UserStatus } from '@boluo/api';
 import clsx from 'clsx';
 import React from 'react';
 import { useIntl } from 'react-intl';
-import { useTooltip } from '../../hooks/useTooltip';
+import { useTooltip } from '@boluo/common/hooks/useTooltip';
 import { TooltipBox } from '@boluo/ui/TooltipBox';
 
 export const MemberStatusBadge = React.memo(({ status }: { status: UserStatus }) => {
@@ -25,11 +25,16 @@ export const MemberStatusBadge = React.memo(({ status }: { status: UserStatus })
   if (status.kind === 'OFFLINE') return null;
 
   return (
-    <div className="inline-flex h-6 items-center" ref={refs.setReference} {...getReferenceProps()}>
+    <div
+      className="MemberStatusBadge inline-flex h-6 items-center"
+      ref={refs.setReference}
+      {...getReferenceProps()}
+    >
       <span
         className={clsx(
           'box-content inline-block h-[0.5em] w-[0.5em] rounded-full border-[0.125em]',
-          status.kind === 'ONLINE' && 'border-green-500 bg-green-400',
+          status.kind === 'ONLINE' &&
+            'border-presence-online-indicator-border bg-presence-online-indicator-bg',
         )}
         aria-label={text}
       />

@@ -3,7 +3,7 @@ import { type FC } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { usePaneSplit } from '../../hooks/usePaneSplit';
 import { SidebarHeaderButton } from '../sidebar/SidebarHeaderButton';
-import { useTooltip } from '../../hooks/useTooltip';
+import { useTooltip } from '@boluo/common/hooks/useTooltip';
 import { TooltipBox } from '@boluo/ui/TooltipBox';
 
 export const ChannelHeaderSplitPaneButton: FC = () => {
@@ -12,7 +12,11 @@ export const ChannelHeaderSplitPaneButton: FC = () => {
   const { showTooltip, refs, getFloatingProps, getReferenceProps, floatingStyles } =
     useTooltip('bottom');
   return (
-    <div className="inline-flex" ref={refs.setReference} {...getReferenceProps()}>
+    <div
+      className="ChannelHeaderSplitPaneButton inline-flex"
+      ref={refs.setReference}
+      {...getReferenceProps()}
+    >
       <SidebarHeaderButton
         onClick={dup}
         title={intl.formatMessage({ defaultMessage: 'Split pane' })}

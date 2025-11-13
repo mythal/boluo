@@ -69,6 +69,7 @@ export const SidebarChannelItemPreview: FC<Props> = ({
       const handle = window.setTimeout(updateRecentPreviews, TYPEING_TIMEOUT - distance);
       return () => window.clearTimeout(handle);
     } else {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       updateRecentPreviews();
     }
   }, [oldestRecentPreviewTimestamp, updateRecentPreviews]);
@@ -99,7 +100,7 @@ export const SidebarChannelItemPreview: FC<Props> = ({
   const someoneIsTyping = typingNames.length > 0;
   const containerClass: string = clsx(
     'col-start-2 h-5 w-full overflow-hidden',
-    someoneIsTyping ? 'animate-pulse text-text-light' : '',
+    someoneIsTyping ? 'animate-pulse text-text-secondary' : '',
   );
   if (typingNames.length === 1) {
     const [name] = typingNames;
@@ -132,21 +133,21 @@ export const SidebarChannelItemPreview: FC<Props> = ({
         <div
           data-unread={hasUnread}
           data-is-action={latestMessage.isAction}
-          className="truncate text-sm data-[unread=true]:font-bold data-[is-action=true]:italic"
+          className="truncate text-sm data-[is-action=true]:italic data-[unread=true]:font-bold"
         >
-          <span className="text-text-light group-hover:text-text-base mr-1">
+          <span className="text-text-secondary group-hover:text-text-primary mr-1">
             {latestMessage.name}
             {latestMessage.isAction ? '' : ':'}
           </span>
-          <span className="text-text-lighter group-hover:text-text-light">
+          <span className="text-text-muted group-hover:text-text-secondary">
             {latestMessageText || '…'}
           </span>
         </div>
       )}
       {latestMessage === 'UNLOAD' && (
-        <div className="bg-text-lighter/20 h-4 w-full rounded-md"></div>
+        <div className="bg-text-subtle/20 h-4 w-full rounded-md"></div>
       )}
-      {latestMessage === 'EMPTY' && <div className="text-text-lighter">-</div>}
+      {latestMessage === 'EMPTY' && <div className="text-text-muted">-</div>}
     </div>
   );
 };

@@ -25,7 +25,7 @@ export const NicknameField: FC<Props> = ({ nickname }) => {
       ></TextInput>
 
       {errors.nickname && (
-        <div className="text-error-600 py-1 text-sm">{errors.nickname.message}</div>
+        <div className="text-state-danger-text py-1 text-sm">{errors.nickname.message}</div>
       )}
     </div>
   );

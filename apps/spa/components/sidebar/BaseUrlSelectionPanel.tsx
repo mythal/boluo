@@ -13,7 +13,7 @@ interface Props {
 export const BaseUrlSelectionPanel: FC<Props> = ({ connectionState }) => {
   return (
     <FloatingBox>
-      <div className="flex flex-col gap-4">
+      <div className="flex min-w-48 flex-col gap-4">
         {connectionState.type === 'CONNECTED' && <ConnectionIndicatorConnected />}
         {connectionState.type === 'CONNECTING' && <ConnectionIndicatorConnecting />}
         {connectionState.type === 'CLOSED' && (

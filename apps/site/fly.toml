@@ -1,40 +1,38 @@
-# fly.toml app configuration file generated for boluo-site on 2025-05-07T01:18:30+09:00
+# fly.toml app configuration file generated for boluo-site-staging on 2025-05-06T16:14:25+09:00
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = "boluo-site"
-primary_region = "nrt"
+app = 'boluo-site-staging'
+primary_region = 'nrt'
+swap_size_mb = 256
 
 [build]
-  image = "ghcr.io/mythal/boluo/site:production"
-
-[deploy]
-  strategy = "bluegreen"
+  image = 'ghcr.io/mythal/boluo/site:latest'
 
 [env]
-  BACKEND_URL = "https://production.boluochat.com"
-  HOSTNAME = "0.0.0.0"
-  PORT = "3000"
+  BACKEND_URL = 'http://boluo-server-staging.internal'
+  FLY_BACKEND_APP_NAME = 'boluo-server-staging'
+  HOSTNAME = '0.0.0.0'
+  PORT = '3000'
 
 [http_service]
-  auto_start_machines = true
+  internal_port = 3000
   auto_stop_machines = "suspend"
-  internal_port = 3_000
-  min_machines_running = 1
-  processes = ["app"]
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ['app']
 
   [[http_service.checks]]
-    grace_period = "20s"
+    interval = '20s'
     timeout = '5s'
-    interval = "20s"
-    method = "GET"
-    path = "/"
+    grace_period = '20s'
+    method = 'GET'
+    path = '/'
 
 [[vm]]
-  size = "shared-cpu-1x"
-  memory = "512mb"
-
+  size = 'shared-cpu-1x'
+  memory = "256mb"
 
 [[statics]]
   guest_path = "/app/apps/site/.next/static"

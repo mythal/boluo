@@ -2,12 +2,12 @@ import { type ApiError, type Space } from '@boluo/api';
 import { type Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import React from 'react';
-import { type Result } from '@boluo/utils';
+import { type Result } from '@boluo/utils/result';
 import { get } from '@boluo/common/server/api';
 import { AcceptButton } from './AcceptButton';
 import { BackLink } from '../../../../../../../components/BackLink';
 import { type Params as BaseParams } from '../../../../../../../server';
-import { getIntl } from '@boluo/common/locale';
+import { getIntl } from '@boluo/locale/server';
 
 interface Params extends BaseParams {
   spaceId: string;
@@ -71,11 +71,11 @@ export default async function Page({ params }: Props) {
     },
   );
   return (
-    <div className="bg-card-bg border-card-border shadow-1/2 shadow-card-shadow max-w-md rounded-sm border p-4">
+    <div className="bg-surface-raised border-border-raised shadow-1/2 shadow-elevation-raised-shadow max-w-md rounded-sm border p-4">
       <div className="py-2 italic">{title}</div>
       <div className="py-4 text-center text-xl font-bold">{space.name}</div>
       {space.description !== '' && (
-        <div className="max-w-md whitespace-pre-line py-4">{space.description}</div>
+        <div className="max-w-md py-4 whitespace-pre-line">{space.description}</div>
       )}
       <div className="mt-8 flex items-end justify-between">
         <BackLink />

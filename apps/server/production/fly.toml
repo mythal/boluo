@@ -1,0 +1,57 @@
+# fly.toml app configuration file generated for boluo-server on 2025-05-11T06:42:07+09:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'boluo-server'
+primary_region = 'nrt'
+swap_size_mb = 512
+
+[build]
+  image = 'ghcr.io/mythal/boluo/server:production'
+
+[deploy]
+  strategy = 'bluegreen'
+
+[env]
+  HOST = '0.0.0.0'
+  MAILGUN_DOMAIN = 'noreply.boluo.chat'
+  PORT = '3000'
+  SITE_URL = 'https://site.boluochat.com'
+  APP_URL = 'https://app.boluochat.com'
+  PUBLIC_MEDIA_URL = 'https://media.boluochat.com'
+  S3_BUCKET_NAME = 'boluo'
+  S3_ENDPOINT_URL = 'https://9a7f9f4ce45406e8224c0f1e9e6785b5.r2.cloudflarestorage.com'
+  RUST_LOG = 'info'
+  PROMETHEUS_EXPORTER = "0.0.0.0:9000"
+
+[http_service]
+  internal_port = 3000
+  auto_stop_machines = 'off'
+  auto_start_machines = false
+  min_machines_running = 1
+  processes = ['app']
+  idle_timeout = 300
+  [http_service.tls_options]
+    alpn = ["h2", "http/1.1"]
+  [http_service.http_options]
+    h2_backend = true
+  [http_service.concurrency]
+    type = "requests"
+    soft_limit = 400
+    hard_limit = 2000
+  [[http_service.checks]]
+    interval = '20s'
+    timeout = '5s'
+    grace_period = '30s'
+    method = 'GET'
+    path = '/api/info/healthcheck'
+
+[[vm]]
+  memory = '512mb'
+  cpu_kind = 'shared'
+  cpus = 2
+
+[metrics]
+  port = 9000
+  path = '/metrics'

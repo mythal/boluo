@@ -1,15 +1,15 @@
-import React from 'react';
-import { Delay } from '../Delay';
-import { FallbackIcon } from '@boluo/ui/FallbackIcon';
 import clsx from 'clsx';
+import { type HTMLAttributes, type ReactNode, type Ref } from 'react';
+import { Delay } from '../Delay';
+import { FallbackIcon } from '../FallbackIcon';
 
-interface Props extends React.HTMLAttributes<HTMLSpanElement> {
+interface Props extends HTMLAttributes<HTMLSpanElement> {
   color?: string;
-  icon?: React.ReactNode;
-  children: React.ReactNode;
+  icon?: ReactNode;
+  children: ReactNode;
   interactive?: boolean;
   pressed?: boolean;
-  ref?: React.Ref<HTMLSpanElement>;
+  ref?: Ref<HTMLSpanElement>;
 }
 
 export const NameBox = ({
@@ -27,6 +27,7 @@ export const NameBox = ({
       role={interactive ? 'button' : undefined}
       aria-pressed={pressed}
       className={clsx(
+        'NameBox',
         'bg-name-bg aria-pressed:bg-name-editable-hover relative mr-1 w-32 flex-none rounded-sm font-bold break-all @xl:w-40 @2xl:w-48',
         interactive && 'hover:bg-name-editable-hover cursor-pointer select-text',
       )}

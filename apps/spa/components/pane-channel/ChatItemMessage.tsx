@@ -3,6 +3,9 @@ import { type FC, useEffect, useMemo, useRef } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { type ParseResult } from '../../interpreter/parse-result';
 import { type FailTo, type MessageItem } from '../../state/channel.types';
+import { MessageBox } from '@boluo/ui/chat/MessageBox';
+import { MessageContentBox } from '@boluo/ui/chat/MessageContentBox';
+import { MessageNamePlate } from '@boluo/ui/chat/MessageNamePlate';
 import { ChatItemMessageShowWhisper } from './ChatItemMessageShowWhisper';
 import { Content } from './Content';
 import { MessageMedia } from './MessageMedia';
@@ -65,7 +68,7 @@ export const ChatItemMessage: FC<{
     (): ParseResult => messageToParsed(message.text, message.entities),
     [message.entities, message.text],
   );
-  const mini = continuous || isAction;
+  const continued = continuous || isAction;
   const draggable = sendBySelf || iAmMaster;
   let media: ReactNode = null;
   if (message.mediaId != null) {
@@ -77,26 +80,19 @@ export const ChatItemMessage: FC<{
     message.whisperToUsers != null && (parsed.text !== '' || media != null);
 
   return (
-    <MessageBox
+    <ChatMessageContainer
       sendBySelf={sendBySelf}
       inGame={message.inGame ?? false}
       message={message}
       draggable={draggable}
       overlay={overlay}
       isScrolling={isScrolling}
-      mini={mini}
+      continued={continued}
       pos={message.pos}
       failTo={message.failTo}
     >
-      <div className={clsx('self-start @2xl:text-right', mini ? 'hidden @2xl:block' : '')}>
-        {!mini && <span>{nameNode}:</span>}
-      </div>
-      <div
-        className="pr-message-small @2xl:pr-message"
-        ref={ref}
-        data-read-position={message.pos}
-        data-is-last={isLast}
-      >
+      <MessageNamePlate continued={continued}>{nameNode}</MessageNamePlate>
+      <MessageContentBox ref={ref} pos={message.pos} isLast={isLast}>
         {message.whisperToUsers != null && (
           <span className="text-text-secondary text-sm italic">
             <FormattedMessage defaultMessage="(Whisper)" />
@@ -128,17 +124,17 @@ export const ChatItemMessage: FC<{
           )}
           {media}
         </ContentGuard>
-      </div>
-    </MessageBox>
+      </MessageContentBox>
+    </ChatMessageContainer>
   );
 };
 
-const MessageBox: FC<{
+const ChatMessageContainer: FC<{
   className?: string;
   children: ReactNode;
   message: Message;
   draggable?: boolean;
-  mini?: boolean;
+  continued?: boolean;
   overlay?: boolean;
   sendBySelf: boolean;
   isScrolling: boolean;
@@ -152,7 +148,7 @@ const MessageBox: FC<{
   draggable = false,
   overlay = false,
   message,
-  mini = false,
+  continued = false,
   isScrolling,
   sendBySelf,
   failTo,
@@ -220,38 +216,24 @@ const MessageBox: FC<{
   };
   return (
     <ToolbarDisplayContext value={toolbarDisplayAtom}>
-      <div
-        data-overlay={overlay}
-        data-in-game={inGame}
-        data-pos={pos}
-        className={clsx(
-          'MessageBox',
-          'group/msg data relative grid grid-flow-col items-center gap-2 py-2 pr-2 pl-2',
-          'grid-cols-[1.5rem_minmax(0,1fr)]',
-          '@2xl:grid-cols-[1.5rem_12rem_minmax(0,1fr)]',
-          !mini && 'grid-rows-[auto_auto] @2xl:grid-rows-1',
-          inGame
-            ? 'bg-message-in-game-bg'
-            : [
-                'bg-pane-bg',
-                isInGameChannel ? 'text-text-secondary hover:text-text-primary text-sm' : '',
-              ],
-          'data-[overlay=true]:shadow-lg',
-          isDragging && 'opacity-0',
-          className,
-        )}
-        ref={setRef}
+      <MessageBox
+        inGame={inGame}
+        pos={pos}
+        continued={continued}
+        lifting={overlay}
+        isInGameChannel={isInGameChannel}
+        isDragging={isDragging}
         style={style}
-        onDoubleClick={handleDoubleClick}
-        onContextMenu={handleContextMenu}
+        setRef={setRef}
+        handleDoubleClick={handleDoubleClick}
+        handleContextMenu={handleContextMenu}
+        className={className}
+        timestamp={<MessageTime message={message} failTo={failTo} />}
+        toolbar={toolbar}
       >
         {handle}
         {children}
-        <div className="absolute top-1 right-2 select-none">
-          <MessageTime message={message} failTo={failTo} />
-        </div>
-        {toolbar}
-      </div>
+      </MessageBox>
     </ToolbarDisplayContext>
   );
 };

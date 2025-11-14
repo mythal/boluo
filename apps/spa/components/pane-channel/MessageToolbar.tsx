@@ -30,6 +30,8 @@ import { generateDetailDate } from '../../date';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { flip, useClick, useDismiss, useFloating, useInteractions } from '@floating-ui/react';
 import Icon from '@boluo/ui/Icon';
+import { MessageToolbarBox } from '@boluo/ui/chat/MessageToolbarBox';
+import { MessageToolbarButton } from '@boluo/ui/chat/MessageToolbarButton';
 import { messageToParsed } from '../../interpreter/to-parsed';
 import { toSimpleText } from '../../interpreter/entities';
 import { useMutateMessageDelete } from '../../hooks/useMutateMessageDelete';
@@ -133,58 +135,11 @@ export const MessageToolbar: FC<{
   }, [message]);
   if (display.type === 'HIDDEN') return null;
   return (
-    <div
-      ref={toolbarRef}
-      className={clsx(
-        'MessageToolbar',
-        'bg-surface-raised border-border-default hover:border-border-strong absolute -top-3 right-2 z-10 flex flex-row rounded border p-0.5 shadow-sm transition-colors select-none',
-      )}
-    >
-      <>
-        {archiveButton}
-        {editButton}
-        {moreButton}
-      </>
-    </div>
-  );
-};
-
-interface MessageToolbarButtonProps
-  extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'className'> {
-  children: ReactNode;
-  loading?: boolean;
-  pressed?: boolean;
-  optimistic?: boolean;
-  ref?: Ref<HTMLButtonElement>;
-}
-
-const MessageToolbarButton = ({
-  children,
-  pressed,
-  loading = false,
-  optimistic = false,
-  ref,
-  ...props
-}: MessageToolbarButtonProps) => {
-  return (
-    <button
-      ref={ref}
-      aria-pressed={pressed}
-      disabled={optimistic || props.disabled}
-      className={clsx(
-        'MessageToolbarButton',
-        'text-action-toggle-text inline-flex h-[26px] w-[26px] items-center justify-center rounded-sm text-base transition-colors',
-        'bg-action-toggle-bg',
-        optimistic ? 'cursor-progress' : '',
-        pressed
-          ? 'bg-action-toggle-selected-bg shadow-inner'
-          : 'enabled:hover:bg-action-toggle-bg-hover',
-        loading ? 'text-text-muted cursor-progress' : '',
-      )}
-      {...props}
-    >
-      {children}
-    </button>
+    <MessageToolbarBox ref={toolbarRef}>
+      {archiveButton}
+      {editButton}
+      {moreButton}
+    </MessageToolbarBox>
   );
 };
 

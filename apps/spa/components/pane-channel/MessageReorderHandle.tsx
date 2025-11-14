@@ -3,6 +3,7 @@ import clsx from 'clsx';
 import { MoveVertical, TriangleAlert } from '@boluo/icons';
 import { FC, type ReactNode } from 'react';
 import { Spinner } from '@boluo/ui/Spinner';
+import { MessageHandleBox } from '@boluo/ui/chat/MessageHandleBox';
 import { Delay } from '../Delay';
 import { type FailTo } from '../../state/channel.types';
 import { useIsOptimistic } from '../../hooks/useIsOptimistic';
@@ -41,7 +42,7 @@ export const MessageReorderHandle: FC<Props> = ({
     icon = <MoveVertical className="inline text-xs" />;
   }
   return (
-    <div className="col-span-1 row-span-full h-full">
+    <MessageHandleBox>
       <div
         ref={ref}
         {...listeners}
@@ -57,6 +58,6 @@ export const MessageReorderHandle: FC<Props> = ({
           <div>{icon}</div>
         </Delay>
       </div>
-    </div>
+    </MessageHandleBox>
   );
 };

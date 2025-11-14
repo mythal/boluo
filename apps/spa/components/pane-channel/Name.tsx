@@ -1,7 +1,7 @@
 import { Gamemaster, TriangleAlert } from '@boluo/icons';
 import { useMemo, useState, type FC } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { NameBox } from './NameBox';
+import { NameBox } from '@boluo/ui/chat/NameBox';
 import { type User } from '@boluo/api';
 import { useMessageColor } from '../../hooks/useMessageColor';
 import {

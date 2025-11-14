@@ -13,7 +13,7 @@ import {
   useFloating,
   useInteractions,
 } from '@floating-ui/react';
-import { NameBox } from './NameBox';
+import { NameBox } from '@boluo/ui/chat/NameBox';
 import { NameEditContent } from './NameEditContent';
 import { type MemberWithUser } from '@boluo/api';
 import Icon from '@boluo/ui/Icon';

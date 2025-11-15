@@ -24,9 +24,8 @@ export const MessageToolbarButton = ({
       disabled={optimistic || props.disabled}
       className={clsx(
         'MessageToolbarButton',
-        'text-action-toggle-text inline-flex h-[26px] w-[26px] items-center justify-center rounded-sm text-base transition-colors',
-        'bg-action-toggle-bg',
-        optimistic ? 'cursor-progress' : '',
+        'text-action-toggle-text inline-flex h-[30px] w-[30px] items-center justify-center rounded-sm text-base transition-colors',
+        optimistic ? 'cursor-progress' : 'cursor-pointer',
         pressed
           ? 'bg-action-toggle-selected-bg shadow-inner'
           : 'enabled:hover:bg-action-toggle-bg-hover',

@@ -26,16 +26,6 @@ const meta: Meta<typeof MessageBox> = {
   args: {
     pos: 128,
     timestamp: <MessageTimeDisplay createdAt={new Date('2024-07-08T10:32:00Z')} />,
-    toolbar: (
-      <MessageToolbarBox>
-        <MessageToolbarButton>
-          <PersonRunning />
-        </MessageToolbarButton>
-        <MessageToolbarButton>
-          <TowerBroadcast />
-        </MessageToolbarButton>
-      </MessageToolbarBox>
-    ),
   },
 };
 
@@ -73,9 +63,33 @@ export const Default: Story = {
   },
 };
 
-export const InGameChannel: Story = {
+export const WithToolbar: Story = {
+  args: {
+    children: getChildren(),
+    toolbar: (
+      <MessageToolbarBox>
+        <MessageToolbarButton>
+          <PersonRunning />
+        </MessageToolbarButton>
+        <MessageToolbarButton>
+          <TowerBroadcast />
+        </MessageToolbarButton>
+      </MessageToolbarBox>
+    ),
+  },
+};
+
+export const InGameMessageInGameChannel: Story = {
   args: {
     inGame: true,
+    isInGameChannel: true,
+    children: getChildren(),
+  },
+};
+
+export const OutOfGameMessageInGameChannel: Story = {
+  args: {
+    inGame: false,
     isInGameChannel: true,
     children: getChildren(),
   },

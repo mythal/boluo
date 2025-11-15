@@ -261,19 +261,16 @@ impl ChannelPosActor {
         }
     }
 
-    fn find_pos_by_id(&self, item_id: Uuid) -> Option<Rational32> {
+    fn restore_active_position(&self, item_id: Uuid) -> Option<Rational32> {
         let now = Instant::now();
         // TODO: optimize this
         self.positions
             .iter()
             .rev()
             .find(|(_, pos_item)| pos_item.id == item_id)
-            .and_then(|(pos, pos_item)| {
-                if pos_item.id == item_id || pos_item.pos_available(now) {
-                    Some(*pos)
-                } else {
-                    None
-                }
+            .and_then(|(pos, pos_item)| match pos_item.state {
+                PosItemState::LiveIn(timeout) if (now - pos_item.created) < timeout => Some(*pos),
+                _ => None,
             })
     }
 
@@ -329,7 +326,7 @@ impl ChannelPosActor {
         item_id: Uuid,
         timeout: Duration,
     ) -> Result<Rational32, sqlx::Error> {
-        if let Some(pos) = self.find_pos_by_id(item_id) {
+        if let Some(pos) = self.restore_active_position(item_id) {
             return Ok(pos);
         }
 
@@ -358,9 +355,9 @@ impl ChannelPosActor {
                         None
                     }
                 }
-                (None, Some(preview_id)) => {
-                    self.find_pos_by_id(preview_id).map(|ratio| ratio.into())
-                }
+                (None, Some(preview_id)) => self
+                    .restore_active_position(preview_id)
+                    .map(|ratio| ratio.into()),
                 (None, None) => None,
             }
         };

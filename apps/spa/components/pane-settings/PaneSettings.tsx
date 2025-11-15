@@ -1,14 +1,14 @@
 import { useQueryCurrentUser } from '@boluo/common/hooks/useQueryCurrentUser';
 import { LogOut, Settings, User as UserIcon } from '@boluo/icons';
-import { useAtom } from 'jotai';
-import { type FC } from 'react';
+import { useAtom, useAtomValue } from 'jotai';
+import { type FC, useCallback } from 'react';
 import { useId } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Button } from '@boluo/ui/Button';
 import { ButtonWithLamp } from '@boluo/ui/ButtonWithLamp';
 import { type ChildrenProps } from '@boluo/utils/types';
 import { useLogout } from '@boluo/common/hooks/useLogout';
-import { usePaneAdd } from '../../hooks/usePaneAdd';
+import { usePaneToggle } from '../../hooks/usePaneToggle';
 import { devMode as devModeAtom } from '../../state/dev.atoms';
 import { PaneBox } from '../PaneBox';
 import { PaneHeaderBox } from '../PaneHeaderBox';
@@ -18,6 +18,7 @@ import { ThemeSelect } from './ThemeSelect';
 import { type User } from '@boluo/api';
 import { EditDefaultColor } from './EditDefaultColor';
 import { HelpText } from '@boluo/ui/HelpText';
+import { isProfileOpenAtom } from '../sidebar/SidebarUserOperations';
 
 const SectionTitle: FC<ChildrenProps> = ({ children }) => (
   <h3 className="mb-2 font-bold">{children}</h3>
@@ -47,12 +48,14 @@ const ThemeField = () => {
   );
 };
 
-const LogoutField: FC<{ currentUser: User }> = ({ currentUser }) => {
+interface LogoutFieldProps {
+  currentUser: User;
+  onToggleProfile: () => void;
+  profilePaneActive: boolean;
+}
+
+const LogoutField: FC<LogoutFieldProps> = ({ currentUser, onToggleProfile, profilePaneActive }) => {
   const logout = useLogout();
-  const addPane = usePaneAdd();
-  const openProfile = () => {
-    addPane({ type: 'PROFILE', userId: currentUser.id });
-  };
 
   return (
     <div className="flex flex-col justify-between gap-4 select-none @md:flex-row @md:items-center">
@@ -60,7 +63,7 @@ const LogoutField: FC<{ currentUser: User }> = ({ currentUser }) => {
         {currentUser.nickname} <span className="text-sm">({currentUser.username})</span>
       </div>
       <div className="flex flex-none gap-2">
-        <Button onClick={openProfile}>
+        <Button onClick={onToggleProfile} active={profilePaneActive}>
           <UserIcon />
           <span>
             <FormattedMessage defaultMessage="Profile" />
@@ -77,14 +80,24 @@ const LogoutField: FC<{ currentUser: User }> = ({ currentUser }) => {
   );
 };
 
-const AccountFields: FC<{ currentUser: User }> = ({ currentUser }) => {
+interface AccountFieldsProps {
+  currentUser: User;
+  onToggleProfile: () => void;
+  profilePaneActive: boolean;
+}
+
+const AccountFields: FC<AccountFieldsProps> = ({ currentUser, onToggleProfile, profilePaneActive }) => {
   return (
     <div className="flex flex-col gap-4">
       <SectionTitle>
         <FormattedMessage defaultMessage="Account" />
       </SectionTitle>
 
-      <LogoutField currentUser={currentUser} />
+      <LogoutField
+        currentUser={currentUser}
+        onToggleProfile={onToggleProfile}
+        profilePaneActive={profilePaneActive}
+      />
     </div>
   );
 };
@@ -92,6 +105,13 @@ const AccountFields: FC<{ currentUser: User }> = ({ currentUser }) => {
 export const PaneSettings: FC = () => {
   const { data: currentUser } = useQueryCurrentUser();
   const [devMode, setDevMode] = useAtom(devModeAtom);
+  const isProfileOpen = useAtomValue(isProfileOpenAtom);
+  const togglePane = usePaneToggle();
+  const handleToggleProfile = useCallback(() => {
+    if (!currentUser) return;
+    togglePane({ type: 'PROFILE', userId: currentUser.id });
+  }, [currentUser, togglePane]);
+  const profilePaneActive = currentUser ? isProfileOpen(currentUser.id) : false;
   return (
     <PaneBox
       header={
@@ -112,7 +132,11 @@ export const PaneSettings: FC = () => {
         </div>
         {currentUser && (
           <>
-            <AccountFields currentUser={currentUser} />
+            <AccountFields
+              currentUser={currentUser}
+              onToggleProfile={handleToggleProfile}
+              profilePaneActive={profilePaneActive}
+            />
 
             <EditDefaultColor currentUser={currentUser} />
           </>

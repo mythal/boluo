@@ -4,9 +4,9 @@ import { useAtom } from 'jotai';
 import { type FC } from 'react';
 import { sidebarContentStateAtom } from '../../state/ui.atoms';
 import Icon from '@boluo/ui/Icon';
-import clsx from 'clsx';
 import { FormattedMessage } from 'react-intl';
 import { usePaneReplace } from '../../hooks/usePaneReplace';
+import { ButtonInline } from '@boluo/ui/ButtonInline';
 
 interface Props {
   space: Space;
@@ -30,20 +30,12 @@ export const SpaceOptions: FC<Props> = ({ space }) => {
       >
         <span className="cursor-pointer">{space.name}</span>
       </button>
-      <button
-        className={clsx(
-          'inline-block flex-none cursor-pointer rounded-sm px-1 py-0.5 text-sm',
-          sidebarState === 'SPACES'
-            ? 'bg-surface-interactive-active'
-            : 'hover:bg-surface-interactive-hover',
-        )}
-        onClick={handleClickSwitchSpace}
-      >
+      <ButtonInline aria-pressed={sidebarState === 'SPACES'} onClick={handleClickSwitchSpace}>
         <Icon icon={Shuffle} />
-        <span className="ml-1 text-xs">
-          <FormattedMessage defaultMessage="Spaces" />
+        <span className="ml-1">
+          <FormattedMessage defaultMessage="Switch" />
         </span>
-      </button>
+      </ButtonInline>
     </div>
   );
 };

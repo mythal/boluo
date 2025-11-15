@@ -28,14 +28,25 @@ import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { atom, useAtom, useAtomValue, useSetAtom, useStore } from 'jotai';
 import { generateDetailDate } from '../../date';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { flip, useClick, useDismiss, useFloating, useInteractions } from '@floating-ui/react';
+import {
+  flip,
+  safePolygon,
+  useDismiss,
+  useFloating,
+  useHover,
+  useInteractions,
+} from '@floating-ui/react';
 import Icon from '@boluo/ui/Icon';
+import { MessageToolbarBox } from '@boluo/ui/chat/MessageToolbarBox';
+import { MessageToolbarButton } from '@boluo/ui/chat/MessageToolbarButton';
+import { CircleIndicator } from '@boluo/ui/CircleIndicator';
 import { messageToParsed } from '../../interpreter/to-parsed';
 import { toSimpleText } from '../../interpreter/entities';
 import { useMutateMessageDelete } from '../../hooks/useMutateMessageDelete';
 import { empty, identity } from '@boluo/utils/function';
 import { ErrorBoundary } from '@sentry/nextjs';
 import { useIsOptimistic } from '../../hooks/useIsOptimistic';
+import { useIsDragging } from '../../hooks/useIsDragging';
 
 type ToolbarDisplay =
   | { type: 'HIDDEN' }
@@ -58,7 +69,9 @@ export const MessageToolbar: FC<{
   sendBySelf: boolean;
   message: Message;
   messageBoxRef: RefObject<HTMLDivElement | null>;
-}> = ({ sendBySelf, messageBoxRef, message }) => {
+  longPressStart: number | null;
+  longPressDuration: number;
+}> = ({ sendBySelf, messageBoxRef, message, longPressStart, longPressDuration }) => {
   const member = useMember();
   const admin = member?.space.isAdmin || false;
   const master = member?.channel.isMaster || false;
@@ -68,15 +81,18 @@ export const MessageToolbar: FC<{
   const [display, setDisplay] = useAtom(useContext(DisplayContext));
   const toolbarRef = useRef<HTMLDivElement | null>(null);
   const store = useStore();
+  const isDragging = useIsDragging();
 
   useEffect(() => {
     if (!messageBoxRef.current) return;
     const messageBox = messageBoxRef.current;
 
     const handleMouseEnter = () => {
+      if (isDragging) return;
       setDisplay((prevDisplay) => (prevDisplay.type === 'HIDDEN' ? SHOW : prevDisplay));
     };
     const handleMouseLeave = () => {
+      if (isDragging) return;
       setDisplay((prevDisplay) => (prevDisplay.type !== 'SHOW' ? prevDisplay : HIDDEN));
     };
     messageBox.addEventListener('mouseenter', handleMouseEnter);
@@ -85,7 +101,12 @@ export const MessageToolbar: FC<{
       messageBox.removeEventListener('mouseenter', handleMouseEnter);
       messageBox.removeEventListener('mouseleave', handleMouseLeave);
     };
-  }, [messageBoxRef, setDisplay, store]);
+  }, [isDragging, messageBoxRef, setDisplay, store]);
+  useEffect(() => {
+    if (isDragging) {
+      setDisplay(HIDDEN);
+    }
+  }, [isDragging, setDisplay]);
   const archiveButton = useMemo(() => {
     if (!permsArchive) return null;
     return (
@@ -127,64 +148,21 @@ export const MessageToolbar: FC<{
           </MessageToolbarButton>
         }
       >
-        <MessageToolbarMoreButton message={message} />
+        <MessageToolbarMoreButton
+          message={message}
+          longPressStart={longPressStart}
+          longPressDuration={longPressDuration}
+        />
       </Delay>
     );
-  }, [message]);
+  }, [longPressDuration, longPressStart, message]);
   if (display.type === 'HIDDEN') return null;
   return (
-    <div
-      ref={toolbarRef}
-      className={clsx(
-        'MessageToolbar',
-        'bg-surface-raised border-border-default hover:border-border-strong absolute -top-3 right-2 z-10 flex flex-row rounded border p-0.5 shadow-sm transition-colors select-none',
-      )}
-    >
-      <>
-        {archiveButton}
-        {editButton}
-        {moreButton}
-      </>
-    </div>
-  );
-};
-
-interface MessageToolbarButtonProps
-  extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'className'> {
-  children: ReactNode;
-  loading?: boolean;
-  pressed?: boolean;
-  optimistic?: boolean;
-  ref?: Ref<HTMLButtonElement>;
-}
-
-const MessageToolbarButton = ({
-  children,
-  pressed,
-  loading = false,
-  optimistic = false,
-  ref,
-  ...props
-}: MessageToolbarButtonProps) => {
-  return (
-    <button
-      ref={ref}
-      aria-pressed={pressed}
-      disabled={optimistic || props.disabled}
-      className={clsx(
-        'MessageToolbarButton',
-        'text-action-toggle-text inline-flex h-[26px] w-[26px] items-center justify-center rounded-sm text-base transition-colors',
-        'bg-action-toggle-bg',
-        optimistic ? 'cursor-progress' : '',
-        pressed
-          ? 'bg-action-toggle-selected-bg shadow-inner'
-          : 'enabled:hover:bg-action-toggle-bg-hover',
-        loading ? 'text-text-muted cursor-progress' : '',
-      )}
-      {...props}
-    >
-      {children}
-    </button>
+    <MessageToolbarBox ref={toolbarRef}>
+      {archiveButton}
+      {editButton}
+      {moreButton}
+    </MessageToolbarBox>
   );
 };
 
@@ -275,7 +253,11 @@ const shoudShowMore = (type: ToolbarDisplay['type']) => {
   }
 };
 
-const MessageToolbarMoreButton: FC<{ message: Message }> = ({ message }) => {
+const MessageToolbarMoreButton: FC<{
+  message: Message;
+  longPressStart: number | null;
+  longPressDuration: number;
+}> = ({ message, longPressStart, longPressDuration }) => {
   const displayAtom = useContext(DisplayContext);
   const [display, setDisplay] = useAtom(displayAtom);
   const open = shoudShowMore(display.type);
@@ -300,15 +282,54 @@ const MessageToolbarMoreButton: FC<{ message: Message }> = ({ message }) => {
       update();
     }
   }, [display.type, update]);
-  const click = useClick(context, {});
+  const hover = useHover(context, { delay: { open: 64, close: 0 }, handleClose: safePolygon() });
   const dismiss = useDismiss(context);
-  const { getFloatingProps, getReferenceProps } = useInteractions([click, dismiss]);
+  const { getFloatingProps, getReferenceProps } = useInteractions([hover, dismiss]);
   const more = useMemo(() => <MessageToolbarMore message={message} />, [message]);
+  const showLongPressProgress = longPressStart != null && !open;
+  const [progress, setProgress] = React.useState(0);
+  const rafRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (!showLongPressProgress || longPressStart == null) {
+      setProgress(0);
+      if (rafRef.current != null) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+      return;
+    }
+    const tick = () => {
+      const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+      const elapsed = now - longPressStart;
+      const nextProgress = Math.min(1, elapsed / longPressDuration);
+      setProgress(nextProgress);
+      if (nextProgress < 1) {
+        rafRef.current = requestAnimationFrame(tick);
+      }
+    };
+    rafRef.current = requestAnimationFrame(tick);
+    return () => {
+      if (rafRef.current != null) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+    };
+  }, [longPressDuration, longPressStart, showLongPressProgress]);
 
   return (
     <>
-      <MessageToolbarButton pressed={open} ref={refs.setReference} {...getReferenceProps()}>
-        <EllipsisVertical />
+      <MessageToolbarButton
+        pressed={open}
+        loading={showLongPressProgress}
+        ref={refs.setReference}
+        {...getReferenceProps()}
+      >
+        {showLongPressProgress ? (
+          <CircleIndicator className="h-4 w-4" progress={progress} />
+        ) : (
+          <EllipsisVertical />
+        )}
       </MessageToolbarButton>
       <Activity mode={open ? 'visible' : 'hidden'}>
         <div

@@ -10,7 +10,7 @@ import { panesAtom } from '../../state/view.atoms';
 import { SidebarItem } from './SidebarItem';
 import Icon from '@boluo/ui/Icon';
 import { SidebarChannelListSkeleton } from './SidebarChannelListSkeleton';
-import clsx from 'clsx';
+import { ButtonInline } from '@boluo/ui/ButtonInline';
 
 const SidebarChannelList = React.lazy(() => import('./SidebarChannelList'));
 
@@ -40,21 +40,15 @@ export const SidebarChannels: FC<Props> = ({ spaceId }) => {
         </div>
 
         {mySpaceMember?.isAdmin && (
-          <button
+          <ButtonInline
             aria-pressed={isReordering}
-            className={clsx(
-              'text-action-toggle-text rounded-sm px-1 transition-colors',
-              isReordering
-                ? 'bg-action-toggle-selected-bg shadow-inner'
-                : 'bg-action-toggle-bg hover:bg-action-toggle-bg-hover text-text-muted hover:text-text-primary shadow-sm',
-            )}
             onClick={() => setIsReordering((prev) => !prev)}
           >
             <Icon icon={ArrowDownWideShort} className="mr-1" />
             <span className="text-xs">
               <FormattedMessage defaultMessage="Reorder" />
             </span>
-          </button>
+          </ButtonInline>
         )}
       </div>
       <Suspense fallback={<SidebarChannelListSkeleton />}>

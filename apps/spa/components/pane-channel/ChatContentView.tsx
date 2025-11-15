@@ -56,6 +56,7 @@ const useScrollToBottom = (virtuosoRef: RefObject<VirtuosoHandle | null>): UseSc
     const virtuoso = virtuosoRef.current;
     if (!virtuoso) return;
     virtuoso.scrollToIndex({ index: 'LAST' });
+    setShowButton(false);
   }, [virtuosoRef]);
   return { showButton, onBottomStateChange, goBottom };
 };

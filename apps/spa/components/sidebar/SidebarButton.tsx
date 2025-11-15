@@ -21,16 +21,24 @@ export const SidebarButton: FC = () => {
     <FloatingPortal>
       <button
         className={clsx(
-          'fixed z-20 h-10 w-10',
+          'fixed z-20 h-16 w-10 cursor-pointer',
           isTouch
             ? 'bottom-[30%] -left-2 p-1'
-            : [isSidebarExpanded ? 'left-[15rem]' : '-left-[10px]', 'top-[20%] p-1.5'],
+            : [
+                isSidebarExpanded ? 'left-[calc(var(--spacing-sidebar)-1.2rem)]' : '-left-2.5',
+                'top-[20%] p-1.5',
+              ],
         )}
         onClick={() => setSidebarExpanded((x) => !x)}
         ref={refs.setReference}
         {...getReferenceProps()}
       >
-        <div className="bg-surface-floating text-text-on-floating flex h-full w-full items-center justify-center rounded-sm shadow">
+        <div
+          className={clsx(
+            'bg-bg text-text-on-floating flex h-full w-full items-center justify-center rounded-sm',
+            isSidebarExpanded ? '' : 'shadow-xs',
+          )}
+        >
           {isSidebarExpanded ? <PanelLeftClose /> : <PanelLeftOpen />}
         </div>
       </button>

@@ -1,8 +1,18 @@
-import clsx from 'clsx';
-import { type FC, useEffect, useMemo, useRef } from 'react';
+import {
+  type FC,
+  type PointerEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { FormattedMessage } from 'react-intl';
 import { type ParseResult } from '../../interpreter/parse-result';
 import { type FailTo, type MessageItem } from '../../state/channel.types';
+import { MessageBox } from '@boluo/ui/chat/MessageBox';
+import { MessageContentBox } from '@boluo/ui/chat/MessageContentBox';
+import { MessageNamePlate } from '@boluo/ui/chat/MessageNamePlate';
 import { ChatItemMessageShowWhisper } from './ChatItemMessageShowWhisper';
 import { Content } from './Content';
 import { MessageMedia } from './MessageMedia';
@@ -28,6 +38,9 @@ import {
 import { useStore } from 'jotai';
 import { stopPropagation } from '@boluo/utils/browser';
 import { useIsInGameChannel } from '../../hooks/useIsInGameChannel';
+import { useIsDragging } from '../../hooks/useIsDragging';
+
+const LONG_PRESS_DURATION = 500;
 
 export const ChatItemMessage: FC<{
   message: MessageItem;
@@ -65,7 +78,7 @@ export const ChatItemMessage: FC<{
     (): ParseResult => messageToParsed(message.text, message.entities),
     [message.entities, message.text],
   );
-  const mini = continuous || isAction;
+  const continued = continuous || isAction;
   const draggable = sendBySelf || iAmMaster;
   let media: ReactNode = null;
   if (message.mediaId != null) {
@@ -77,26 +90,19 @@ export const ChatItemMessage: FC<{
     message.whisperToUsers != null && (parsed.text !== '' || media != null);
 
   return (
-    <MessageBox
+    <ChatMessageContainer
       sendBySelf={sendBySelf}
       inGame={message.inGame ?? false}
       message={message}
       draggable={draggable}
       overlay={overlay}
       isScrolling={isScrolling}
-      mini={mini}
+      continued={continued}
       pos={message.pos}
       failTo={message.failTo}
     >
-      <div className={clsx('self-start @2xl:text-right', mini ? 'hidden @2xl:block' : '')}>
-        {!mini && <span>{nameNode}:</span>}
-      </div>
-      <div
-        className="pr-message-small @2xl:pr-message"
-        ref={ref}
-        data-read-position={message.pos}
-        data-is-last={isLast}
-      >
+      <MessageNamePlate continued={continued}>{nameNode}</MessageNamePlate>
+      <MessageContentBox ref={ref} pos={message.pos} isLast={isLast}>
         {message.whisperToUsers != null && (
           <span className="text-text-secondary text-sm italic">
             <FormattedMessage defaultMessage="(Whisper)" />
@@ -128,17 +134,17 @@ export const ChatItemMessage: FC<{
           )}
           {media}
         </ContentGuard>
-      </div>
-    </MessageBox>
+      </MessageContentBox>
+    </ChatMessageContainer>
   );
 };
 
-const MessageBox: FC<{
+const ChatMessageContainer: FC<{
   className?: string;
   children: ReactNode;
   message: Message;
   draggable?: boolean;
-  mini?: boolean;
+  continued?: boolean;
   overlay?: boolean;
   sendBySelf: boolean;
   isScrolling: boolean;
@@ -152,16 +158,20 @@ const MessageBox: FC<{
   draggable = false,
   overlay = false,
   message,
-  mini = false,
+  continued = false,
   isScrolling,
   sendBySelf,
   failTo,
   pos,
 }) => {
   const isInGameChannel = useIsInGameChannel();
+  const isAnyMessageDragging = useIsDragging();
   const toolbarDisplayAtom = useMemo(() => makeMessageToolbarDisplayAtom(), []);
   const store = useStore();
+  const [longPressStart, setLongPressStart] = useState<number | null>(null);
   const ref = useRef<HTMLDivElement | null>(null);
+  const longPressTimeoutRef = useRef<number | null>(null);
+  const longPressActivatedToolbarRef = useRef(false);
   const {
     attributes,
     listeners,
@@ -204,54 +214,109 @@ const MessageBox: FC<{
     if (isDragging || overlay) return null;
     return (
       <Delay>
-        <MessageToolbar message={message} messageBoxRef={ref} sendBySelf={sendBySelf} />
+        <MessageToolbar
+          message={message}
+          messageBoxRef={ref}
+          sendBySelf={sendBySelf}
+          longPressStart={longPressStart}
+          longPressDuration={LONG_PRESS_DURATION}
+        />
       </Delay>
     );
-  }, [isDragging, message, overlay, sendBySelf]);
-  const handleDoubleClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    store.set(toolbarDisplayAtom, { type: 'MORE' });
+  }, [isDragging, longPressStart, message, overlay, sendBySelf]);
+  const clearLongPressTimeout = () => {
+    if (longPressTimeoutRef.current != null) {
+      clearTimeout(longPressTimeoutRef.current);
+      longPressTimeoutRef.current = null;
+    }
   };
-  const handleContextMenu = (e: React.MouseEvent) => {
-    const selection = document.getSelection();
-    if (selection != null && selection.toString() !== '') return;
-    e.preventDefault();
-    store.set(toolbarDisplayAtom, { type: 'MORE' });
+  const resetLongPressState = useCallback(
+    (hideToolbar = true) => {
+      clearLongPressTimeout();
+      if (hideToolbar && longPressActivatedToolbarRef.current) {
+        store.set(toolbarDisplayAtom, { type: 'HIDDEN' });
+      }
+      longPressActivatedToolbarRef.current = false;
+      setLongPressStart(null);
+    },
+    [store, toolbarDisplayAtom],
+  );
+  const handlePointerDown = (e: PointerEvent<HTMLDivElement>) => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    if (document.getSelection()?.toString()) return;
+    if (e.target instanceof Element) {
+      if (e.target.closest('.MessageToolbar') || e.target.closest('.MessageHandleBox')) {
+        return;
+      }
+    }
+    const currentDisplay = store.get(toolbarDisplayAtom);
+    if (currentDisplay.type === 'HIDDEN') {
+      store.set(toolbarDisplayAtom, { type: 'SHOW' });
+      longPressActivatedToolbarRef.current = true;
+    } else {
+      longPressActivatedToolbarRef.current = false;
+    }
+    const start = typeof performance !== 'undefined' ? performance.now() : Date.now();
+    setLongPressStart(start);
+    clearLongPressTimeout();
+    longPressTimeoutRef.current = window.setTimeout(() => {
+      longPressTimeoutRef.current = null;
+      longPressActivatedToolbarRef.current = false;
+      setLongPressStart(null);
+      store.set(toolbarDisplayAtom, { type: 'MORE' });
+    }, LONG_PRESS_DURATION);
   };
+  const handlePointerUp = () => {
+    resetLongPressState();
+  };
+  const handlePointerLeave = () => {
+    resetLongPressState();
+  };
+  const handlePointerCancel = () => {
+    resetLongPressState();
+  };
+  useEffect(() => {
+    return () => {
+      clearLongPressTimeout();
+    };
+  }, []);
+  useEffect(() => {
+    if (longPressStart == null) return;
+    if (typeof document === 'undefined') return;
+    const handleSelectionChange = () => {
+      const selection = document.getSelection();
+      if (selection != null && selection.toString() !== '') {
+        resetLongPressState();
+      }
+    };
+    document.addEventListener('selectionchange', handleSelectionChange);
+    return () => {
+      document.removeEventListener('selectionchange', handleSelectionChange);
+    };
+  }, [longPressStart, resetLongPressState]);
   return (
     <ToolbarDisplayContext value={toolbarDisplayAtom}>
-      <div
-        data-overlay={overlay}
-        data-in-game={inGame}
-        data-pos={pos}
-        className={clsx(
-          'MessageBox',
-          'group/msg data relative grid grid-flow-col items-center gap-2 py-2 pr-2 pl-2',
-          'grid-cols-[1.5rem_minmax(0,1fr)]',
-          '@2xl:grid-cols-[1.5rem_12rem_minmax(0,1fr)]',
-          !mini && 'grid-rows-[auto_auto] @2xl:grid-rows-1',
-          inGame
-            ? 'bg-message-in-game-bg'
-            : [
-                'bg-pane-bg',
-                isInGameChannel ? 'text-text-secondary hover:text-text-primary text-sm' : '',
-              ],
-          'data-[overlay=true]:shadow-lg',
-          isDragging && 'opacity-0',
-          className,
-        )}
-        ref={setRef}
+      <MessageBox
+        inGame={inGame}
+        pos={pos}
+        continued={continued}
+        lifting={overlay}
+        isInGameChannel={isInGameChannel}
+        isDragging={isDragging}
+        disableHoverEffect={isAnyMessageDragging}
         style={style}
-        onDoubleClick={handleDoubleClick}
-        onContextMenu={handleContextMenu}
+        setRef={setRef}
+        handlePointerDown={handlePointerDown}
+        handlePointerUp={handlePointerUp}
+        handlePointerLeave={handlePointerLeave}
+        handlePointerCancel={handlePointerCancel}
+        className={className}
+        timestamp={<MessageTime message={message} failTo={failTo} />}
+        toolbar={toolbar}
       >
         {handle}
         {children}
-        <div className="absolute top-1 right-2 select-none">
-          <MessageTime message={message} failTo={failTo} />
-        </div>
-        {toolbar}
-      </div>
+      </MessageBox>
     </ToolbarDisplayContext>
   );
 };

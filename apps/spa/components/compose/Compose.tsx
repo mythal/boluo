@@ -24,9 +24,6 @@ interface Props {
   channelAtoms: ChannelAtoms;
 }
 
-export const COMPOSE_BACKUP_TIMEOUT = 2000;
-export const composeBackupKey = (channelId: string) => `compose-backup:${channelId}`;
-
 const DeferredComposeTextArea: FC<{
   parsedAtom: ChannelAtoms['parsedAtom'];
   currentUser: User;

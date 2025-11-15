@@ -1,9 +1,13 @@
-import { type FC } from 'react';
-import { composeBackupKey } from '../../hooks/useBackupCompose';
-import { ButtonInline } from '@boluo/ui/ButtonInline';
+import { type FC, useCallback, useEffect, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { type ChannelAtoms } from '../../hooks/useChannelAtoms';
 import { useSetAtom } from 'jotai';
+import {
+  fetchDraftsFromWorker,
+  subscribeDraftUpdates,
+} from '../../state/compose-backup.worker-client';
+import type { ComposeDraftEntry } from '../../state/compose-backup.worker.types';
+import { DraftHistoryButton } from './DraftHistoryButton';
 
 interface Props {
   channelId: string;
@@ -12,12 +16,38 @@ interface Props {
 }
 
 export const SelfPreviewPlaceholder: FC<Props> = ({ channelId, inGame, composeAtom }) => {
-  const backedUp = sessionStorage.getItem(composeBackupKey(channelId));
+  const [drafts, setDrafts] = useState<ComposeDraftEntry[]>([]);
   const dispatch = useSetAtom(composeAtom);
-  const restore = () => {
-    if (!backedUp) return;
-    dispatch({ type: 'setSource', payload: { channelId, source: backedUp } });
-  };
+
+  useEffect(() => {
+    let cancelled = false;
+    const loadDrafts = async () => {
+      const items = await fetchDraftsFromWorker(channelId);
+      if (!cancelled) {
+        setDrafts(items);
+      }
+    };
+    void loadDrafts();
+    const unsubscribe = subscribeDraftUpdates((updatedChannel) => {
+      if (updatedChannel === channelId) {
+        void loadDrafts();
+      }
+    });
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
+  }, [channelId]);
+
+  const restore = useCallback(
+    (text: string) => {
+      dispatch({ type: 'setSource', payload: { channelId, source: text } });
+    },
+    [channelId, dispatch],
+  );
+
+  const hasHistory = drafts.length > 0;
+
   return (
     <span>
       <span className="mr-2 italic">
@@ -31,11 +61,7 @@ export const SelfPreviewPlaceholder: FC<Props> = ({ channelId, inGame, composeAt
           </span>
         )}
       </span>
-      {backedUp && (
-        <ButtonInline onClick={restore}>
-          <FormattedMessage defaultMessage="Restore Draft" />
-        </ButtonInline>
-      )}
+      {hasHistory && <DraftHistoryButton drafts={drafts} onRestore={restore} />}
     </span>
   );
 };

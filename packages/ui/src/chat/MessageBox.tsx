@@ -7,6 +7,10 @@ interface Props {
   lifting?: boolean;
   handleDoubleClick?: (e: React.MouseEvent<HTMLDivElement>) => void;
   handleContextMenu?: (e: React.MouseEvent<HTMLDivElement>) => void;
+  handlePointerDown?: (e: React.PointerEvent<HTMLDivElement>) => void;
+  handlePointerUp?: (e: React.PointerEvent<HTMLDivElement>) => void;
+  handlePointerLeave?: (e: React.PointerEvent<HTMLDivElement>) => void;
+  handlePointerCancel?: (e: React.PointerEvent<HTMLDivElement>) => void;
   className?: string;
   isInGameChannel?: boolean;
   isDragging?: boolean;
@@ -24,6 +28,10 @@ export function MessageBox({
   lifting = false,
   handleContextMenu,
   handleDoubleClick,
+  handlePointerDown,
+  handlePointerUp,
+  handlePointerLeave,
+  handlePointerCancel,
   className,
   isInGameChannel = false,
   isDragging = false,
@@ -62,6 +70,10 @@ export function MessageBox({
       style={style}
       onDoubleClick={handleDoubleClick}
       onContextMenu={handleContextMenu}
+      onPointerDown={handlePointerDown}
+      onPointerUp={handlePointerUp}
+      onPointerLeave={handlePointerLeave}
+      onPointerCancel={handlePointerCancel}
     >
       {children}
 

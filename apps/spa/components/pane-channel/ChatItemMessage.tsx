@@ -1,5 +1,12 @@
-import clsx from 'clsx';
-import { type FC, useEffect, useMemo, useRef } from 'react';
+import {
+  type FC,
+  type PointerEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { FormattedMessage } from 'react-intl';
 import { type ParseResult } from '../../interpreter/parse-result';
 import { type FailTo, type MessageItem } from '../../state/channel.types';
@@ -31,6 +38,8 @@ import {
 import { useStore } from 'jotai';
 import { stopPropagation } from '@boluo/utils/browser';
 import { useIsInGameChannel } from '../../hooks/useIsInGameChannel';
+
+const LONG_PRESS_DURATION = 500;
 
 export const ChatItemMessage: FC<{
   message: MessageItem;
@@ -157,7 +166,10 @@ const ChatMessageContainer: FC<{
   const isInGameChannel = useIsInGameChannel();
   const toolbarDisplayAtom = useMemo(() => makeMessageToolbarDisplayAtom(), []);
   const store = useStore();
+  const [longPressStart, setLongPressStart] = useState<number | null>(null);
   const ref = useRef<HTMLDivElement | null>(null);
+  const longPressTimeoutRef = useRef<number | null>(null);
+  const longPressActivatedToolbarRef = useRef(false);
   const {
     attributes,
     listeners,
@@ -200,20 +212,86 @@ const ChatMessageContainer: FC<{
     if (isDragging || overlay) return null;
     return (
       <Delay>
-        <MessageToolbar message={message} messageBoxRef={ref} sendBySelf={sendBySelf} />
+        <MessageToolbar
+          message={message}
+          messageBoxRef={ref}
+          sendBySelf={sendBySelf}
+          longPressStart={longPressStart}
+          longPressDuration={LONG_PRESS_DURATION}
+        />
       </Delay>
     );
-  }, [isDragging, message, overlay, sendBySelf]);
-  const handleDoubleClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    store.set(toolbarDisplayAtom, { type: 'MORE' });
+  }, [isDragging, longPressStart, message, overlay, sendBySelf]);
+  const clearLongPressTimeout = () => {
+    if (longPressTimeoutRef.current != null) {
+      clearTimeout(longPressTimeoutRef.current);
+      longPressTimeoutRef.current = null;
+    }
   };
-  const handleContextMenu = (e: React.MouseEvent) => {
-    const selection = document.getSelection();
-    if (selection != null && selection.toString() !== '') return;
-    e.preventDefault();
-    store.set(toolbarDisplayAtom, { type: 'MORE' });
+  const resetLongPressState = useCallback(
+    (hideToolbar = true) => {
+      clearLongPressTimeout();
+      if (hideToolbar && longPressActivatedToolbarRef.current) {
+        store.set(toolbarDisplayAtom, { type: 'HIDDEN' });
+      }
+      longPressActivatedToolbarRef.current = false;
+      setLongPressStart(null);
+    },
+    [store, toolbarDisplayAtom],
+  );
+  const handlePointerDown = (e: PointerEvent<HTMLDivElement>) => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    if (document.getSelection()?.toString()) return;
+    if (e.target instanceof Element) {
+      if (e.target.closest('.MessageToolbar') || e.target.closest('.MessageHandleBox')) {
+        return;
+      }
+    }
+    const currentDisplay = store.get(toolbarDisplayAtom);
+    if (currentDisplay.type === 'HIDDEN') {
+      store.set(toolbarDisplayAtom, { type: 'SHOW' });
+      longPressActivatedToolbarRef.current = true;
+    } else {
+      longPressActivatedToolbarRef.current = false;
+    }
+    const start = typeof performance !== 'undefined' ? performance.now() : Date.now();
+    setLongPressStart(start);
+    clearLongPressTimeout();
+    longPressTimeoutRef.current = window.setTimeout(() => {
+      longPressTimeoutRef.current = null;
+      longPressActivatedToolbarRef.current = false;
+      setLongPressStart(null);
+      store.set(toolbarDisplayAtom, { type: 'MORE' });
+    }, LONG_PRESS_DURATION);
   };
+  const handlePointerUp = () => {
+    resetLongPressState();
+  };
+  const handlePointerLeave = () => {
+    resetLongPressState();
+  };
+  const handlePointerCancel = () => {
+    resetLongPressState();
+  };
+  useEffect(() => {
+    return () => {
+      clearLongPressTimeout();
+    };
+  }, []);
+  useEffect(() => {
+    if (longPressStart == null) return;
+    if (typeof document === 'undefined') return;
+    const handleSelectionChange = () => {
+      const selection = document.getSelection();
+      if (selection != null && selection.toString() !== '') {
+        resetLongPressState();
+      }
+    };
+    document.addEventListener('selectionchange', handleSelectionChange);
+    return () => {
+      document.removeEventListener('selectionchange', handleSelectionChange);
+    };
+  }, [longPressStart, resetLongPressState]);
   return (
     <ToolbarDisplayContext value={toolbarDisplayAtom}>
       <MessageBox
@@ -225,8 +303,10 @@ const ChatMessageContainer: FC<{
         isDragging={isDragging}
         style={style}
         setRef={setRef}
-        handleDoubleClick={handleDoubleClick}
-        handleContextMenu={handleContextMenu}
+        handlePointerDown={handlePointerDown}
+        handlePointerUp={handlePointerUp}
+        handlePointerLeave={handlePointerLeave}
+        handlePointerCancel={handlePointerCancel}
         className={className}
         timestamp={<MessageTime message={message} failTo={failTo} />}
         toolbar={toolbar}

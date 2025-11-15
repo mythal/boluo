@@ -28,10 +28,18 @@ import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { atom, useAtom, useAtomValue, useSetAtom, useStore } from 'jotai';
 import { generateDetailDate } from '../../date';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { flip, useClick, useDismiss, useFloating, useInteractions } from '@floating-ui/react';
+import {
+  flip,
+  safePolygon,
+  useDismiss,
+  useFloating,
+  useHover,
+  useInteractions,
+} from '@floating-ui/react';
 import Icon from '@boluo/ui/Icon';
 import { MessageToolbarBox } from '@boluo/ui/chat/MessageToolbarBox';
 import { MessageToolbarButton } from '@boluo/ui/chat/MessageToolbarButton';
+import { CircleIndicator } from '@boluo/ui/CircleIndicator';
 import { messageToParsed } from '../../interpreter/to-parsed';
 import { toSimpleText } from '../../interpreter/entities';
 import { useMutateMessageDelete } from '../../hooks/useMutateMessageDelete';
@@ -60,7 +68,9 @@ export const MessageToolbar: FC<{
   sendBySelf: boolean;
   message: Message;
   messageBoxRef: RefObject<HTMLDivElement | null>;
-}> = ({ sendBySelf, messageBoxRef, message }) => {
+  longPressStart: number | null;
+  longPressDuration: number;
+}> = ({ sendBySelf, messageBoxRef, message, longPressStart, longPressDuration }) => {
   const member = useMember();
   const admin = member?.space.isAdmin || false;
   const master = member?.channel.isMaster || false;
@@ -129,10 +139,14 @@ export const MessageToolbar: FC<{
           </MessageToolbarButton>
         }
       >
-        <MessageToolbarMoreButton message={message} />
+        <MessageToolbarMoreButton
+          message={message}
+          longPressStart={longPressStart}
+          longPressDuration={longPressDuration}
+        />
       </Delay>
     );
-  }, [message]);
+  }, [longPressDuration, longPressStart, message]);
   if (display.type === 'HIDDEN') return null;
   return (
     <MessageToolbarBox ref={toolbarRef}>
@@ -230,7 +244,11 @@ const shoudShowMore = (type: ToolbarDisplay['type']) => {
   }
 };
 
-const MessageToolbarMoreButton: FC<{ message: Message }> = ({ message }) => {
+const MessageToolbarMoreButton: FC<{
+  message: Message;
+  longPressStart: number | null;
+  longPressDuration: number;
+}> = ({ message, longPressStart, longPressDuration }) => {
   const displayAtom = useContext(DisplayContext);
   const [display, setDisplay] = useAtom(displayAtom);
   const open = shoudShowMore(display.type);
@@ -255,15 +273,54 @@ const MessageToolbarMoreButton: FC<{ message: Message }> = ({ message }) => {
       update();
     }
   }, [display.type, update]);
-  const click = useClick(context, {});
+  const hover = useHover(context, { delay: { open: 64, close: 0 }, handleClose: safePolygon() });
   const dismiss = useDismiss(context);
-  const { getFloatingProps, getReferenceProps } = useInteractions([click, dismiss]);
+  const { getFloatingProps, getReferenceProps } = useInteractions([hover, dismiss]);
   const more = useMemo(() => <MessageToolbarMore message={message} />, [message]);
+  const showLongPressProgress = longPressStart != null && !open;
+  const [progress, setProgress] = React.useState(0);
+  const rafRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (!showLongPressProgress || longPressStart == null) {
+      setProgress(0);
+      if (rafRef.current != null) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+      return;
+    }
+    const tick = () => {
+      const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+      const elapsed = now - longPressStart;
+      const nextProgress = Math.min(1, elapsed / longPressDuration);
+      setProgress(nextProgress);
+      if (nextProgress < 1) {
+        rafRef.current = requestAnimationFrame(tick);
+      }
+    };
+    rafRef.current = requestAnimationFrame(tick);
+    return () => {
+      if (rafRef.current != null) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+    };
+  }, [longPressDuration, longPressStart, showLongPressProgress]);
 
   return (
     <>
-      <MessageToolbarButton pressed={open} ref={refs.setReference} {...getReferenceProps()}>
-        <EllipsisVertical />
+      <MessageToolbarButton
+        pressed={open}
+        loading={showLongPressProgress}
+        ref={refs.setReference}
+        {...getReferenceProps()}
+      >
+        {showLongPressProgress ? (
+          <CircleIndicator className="h-4 w-4" progress={progress} />
+        ) : (
+          <EllipsisVertical />
+        )}
       </MessageToolbarButton>
       <Activity mode={open ? 'visible' : 'hidden'}>
         <div

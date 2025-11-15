@@ -46,6 +46,7 @@ import { useMutateMessageDelete } from '../../hooks/useMutateMessageDelete';
 import { empty, identity } from '@boluo/utils/function';
 import { ErrorBoundary } from '@sentry/nextjs';
 import { useIsOptimistic } from '../../hooks/useIsOptimistic';
+import { useIsDragging } from '../../hooks/useIsDragging';
 
 type ToolbarDisplay =
   | { type: 'HIDDEN' }
@@ -80,15 +81,18 @@ export const MessageToolbar: FC<{
   const [display, setDisplay] = useAtom(useContext(DisplayContext));
   const toolbarRef = useRef<HTMLDivElement | null>(null);
   const store = useStore();
+  const isDragging = useIsDragging();
 
   useEffect(() => {
     if (!messageBoxRef.current) return;
     const messageBox = messageBoxRef.current;
 
     const handleMouseEnter = () => {
+      if (isDragging) return;
       setDisplay((prevDisplay) => (prevDisplay.type === 'HIDDEN' ? SHOW : prevDisplay));
     };
     const handleMouseLeave = () => {
+      if (isDragging) return;
       setDisplay((prevDisplay) => (prevDisplay.type !== 'SHOW' ? prevDisplay : HIDDEN));
     };
     messageBox.addEventListener('mouseenter', handleMouseEnter);
@@ -97,7 +101,12 @@ export const MessageToolbar: FC<{
       messageBox.removeEventListener('mouseenter', handleMouseEnter);
       messageBox.removeEventListener('mouseleave', handleMouseLeave);
     };
-  }, [messageBoxRef, setDisplay, store]);
+  }, [isDragging, messageBoxRef, setDisplay, store]);
+  useEffect(() => {
+    if (isDragging) {
+      setDisplay(HIDDEN);
+    }
+  }, [isDragging, setDisplay]);
   const archiveButton = useMemo(() => {
     if (!permsArchive) return null;
     return (

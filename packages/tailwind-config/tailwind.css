@@ -5,7 +5,7 @@
 
 @import './theme.tailwind.css';
 
-@custom-variant pressed (&:is([data-active="true"],:active):not(:disabled));
+@custom-variant pressed (&:is([data-active="true"],[aria-pressed="true"],:active):not(:disabled));
 
 @theme {
   /* Breakpoints */

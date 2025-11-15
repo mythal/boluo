@@ -45,12 +45,16 @@ export function MessageBox({
         '@2xl:grid-cols-[1.5rem_12rem_minmax(0,1fr)]',
         !continued && 'grid-rows-[auto_auto] @2xl:grid-rows-1',
         inGame
-          ? 'bg-message-in-game-bg'
+          ? lifting
+            ? 'bg-message-in-game-bg-hover'
+            : 'bg-message-in-game-bg hover:bg-message-in-game-bg-hover'
           : [
-              'bg-pane-bg',
+              lifting
+                ? 'bg-message-out-of-game-bg-hover'
+                : 'bg-message-out-of-game-bg hover:bg-message-out-of-game-bg-hover',
               isInGameChannel ? 'text-text-secondary hover:text-text-primary text-sm' : '',
             ],
-        'data-[lifting=true]:shadow-lg',
+        'data-[lifting=true]:shadow-md',
         isDragging && 'opacity-0',
         className,
       )}

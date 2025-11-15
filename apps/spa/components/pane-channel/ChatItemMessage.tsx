@@ -38,6 +38,7 @@ import {
 import { useStore } from 'jotai';
 import { stopPropagation } from '@boluo/utils/browser';
 import { useIsInGameChannel } from '../../hooks/useIsInGameChannel';
+import { useIsDragging } from '../../hooks/useIsDragging';
 
 const LONG_PRESS_DURATION = 500;
 
@@ -164,6 +165,7 @@ const ChatMessageContainer: FC<{
   pos,
 }) => {
   const isInGameChannel = useIsInGameChannel();
+  const isAnyMessageDragging = useIsDragging();
   const toolbarDisplayAtom = useMemo(() => makeMessageToolbarDisplayAtom(), []);
   const store = useStore();
   const [longPressStart, setLongPressStart] = useState<number | null>(null);
@@ -301,6 +303,7 @@ const ChatMessageContainer: FC<{
         lifting={overlay}
         isInGameChannel={isInGameChannel}
         isDragging={isDragging}
+        disableHoverEffect={isAnyMessageDragging}
         style={style}
         setRef={setRef}
         handlePointerDown={handlePointerDown}

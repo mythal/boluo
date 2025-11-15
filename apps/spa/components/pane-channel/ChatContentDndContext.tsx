@@ -9,7 +9,7 @@ import {
   useSensors,
 } from '@dnd-kit/core';
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
-import { type FC, type ReactNode, useMemo } from 'react';
+import { type FC, type ReactNode, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import type { DraggingItem } from './ChatContentView';
 import { DraggingOverlay } from './DraggingOverlay';
@@ -26,6 +26,14 @@ export const ChatListDndContext: FC<Props> = ({ children, active, ...rest }) => 
   const keyboardSensor = useSensor(KeyboardSensor);
   const sensors = useSensors(mouseSensor, touchSensor, keyboardSensor);
   const modifiers = useMemo(() => [restrictToVerticalAxis], []);
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    if (!active) return;
+    document.body.style.cursor = 'grabbing';
+    return () => {
+      document.body.style.cursor = 'unset';
+    };
+  }, [active]);
   return (
     <DndContext
       sensors={sensors}

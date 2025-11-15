@@ -5,6 +5,7 @@ interface Props {
   pos?: number;
   continued?: boolean;
   lifting?: boolean;
+  disableHoverEffect?: boolean;
   handleDoubleClick?: (e: React.MouseEvent<HTMLDivElement>) => void;
   handleContextMenu?: (e: React.MouseEvent<HTMLDivElement>) => void;
   handlePointerDown?: (e: React.PointerEvent<HTMLDivElement>) => void;
@@ -26,6 +27,7 @@ export function MessageBox({
   pos,
   continued = false,
   lifting = false,
+  disableHoverEffect = false,
   handleContextMenu,
   handleDoubleClick,
   handlePointerDown,
@@ -55,12 +57,23 @@ export function MessageBox({
         inGame
           ? lifting
             ? 'bg-message-in-game-bg-hover'
-            : 'bg-message-in-game-bg hover:bg-message-in-game-bg-hover'
+            : clsx(
+                'bg-message-in-game-bg',
+                !disableHoverEffect && 'hover:bg-message-in-game-bg-hover',
+              )
           : [
               lifting
                 ? 'bg-message-out-of-game-bg-hover'
-                : 'bg-message-out-of-game-bg hover:bg-message-out-of-game-bg-hover',
-              isInGameChannel ? 'text-text-secondary hover:text-text-primary text-sm' : '',
+                : clsx(
+                    'bg-message-out-of-game-bg',
+                    !disableHoverEffect && 'hover:bg-message-out-of-game-bg-hover',
+                  ),
+              isInGameChannel
+                ? clsx(
+                    'text-text-secondary text-sm',
+                    !disableHoverEffect && 'hover:text-text-primary',
+                  )
+                : '',
             ],
         'data-[lifting=true]:shadow-md',
         isDragging && 'opacity-0',

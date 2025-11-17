@@ -1,27 +1,35 @@
-import { useAtom } from 'jotai';
 import { type FC } from 'react';
 import { FloatingPortal } from '@floating-ui/react';
 import { PanelLeftClose, PanelLeftOpen } from '@boluo/icons';
-import { isSidebarExpandedAtom } from '../../state/ui.atoms';
 import { useTooltip } from '@boluo/ui/hooks/useTooltip';
 import { useIsTouch } from '@boluo/ui/hooks/useIsTouch';
 import clsx from 'clsx';
-import { TooltipBox } from '@boluo/ui/TooltipBox';
+import { TooltipBox } from '../TooltipBox';
 import { FormattedMessage } from 'react-intl';
-import { Kbd } from '@boluo/ui/Kbd';
+import { Kbd } from '../Kbd';
 import { isApple } from '@boluo/utils/browser';
 
-export const SidebarButton: FC = () => {
-  const isTouch = useIsTouch();
-  const [isSidebarExpanded, setSidebarExpanded] = useAtom(isSidebarExpandedAtom);
+interface Props {
+  isSidebarExpanded: boolean;
+  setSidebarExpanded: (expanded: boolean | ((prev: boolean) => boolean)) => void;
+}
 
-  const { showTooltip, refs, getFloatingProps, getReferenceProps, floatingStyles } =
-    useTooltip('bottom-start');
+export const SidebarButton: FC<Props> = ({ isSidebarExpanded, setSidebarExpanded }) => {
+  const isTouch = useIsTouch();
+
+  const {
+    showTooltip,
+    refs: { setFloating, setReference },
+    getFloatingProps,
+    getReferenceProps,
+    floatingStyles,
+  } = useTooltip('bottom-start');
   return (
     <FloatingPortal>
       <button
         className={clsx(
-          'fixed z-20 h-16 w-10 cursor-pointer',
+          'fixed z-20 h-16 w-10 cursor-pointer rounded-lg',
+          'focus:ring-border-focus focus:ring-2 focus:outline-none',
           isTouch
             ? 'bottom-[30%] -left-2 p-1'
             : [
@@ -30,12 +38,12 @@ export const SidebarButton: FC = () => {
               ],
         )}
         onClick={() => setSidebarExpanded((x) => !x)}
-        ref={refs.setReference}
+        ref={setReference}
         {...getReferenceProps()}
       >
         <div
           className={clsx(
-            'bg-bg text-text-on-floating flex h-full w-full items-center justify-center rounded-sm',
+            'sidebar-button-box bg-bg text-text-on-floating flex h-full w-full items-center justify-center rounded-sm',
             isSidebarExpanded ? '' : 'shadow-xs',
           )}
         >
@@ -44,7 +52,7 @@ export const SidebarButton: FC = () => {
       </button>
       <TooltipBox
         show={showTooltip}
-        ref={refs.setFloating}
+        ref={setFloating}
         style={floatingStyles}
         {...getFloatingProps()}
         className="rounded bg-black px-3 py-2 text-sm text-white shadow-lg"

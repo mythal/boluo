@@ -40,7 +40,7 @@ export const PaneWelcome: FC = () => {
         </p>
         <p className="py-2">
           <FormattedMessage
-            defaultMessage="You can found the source code at {githubUrl}."
+            defaultMessage="You can find the source code at {githubUrl}."
             values={{
               githubUrl: (
                 <a

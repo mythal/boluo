@@ -6,6 +6,7 @@ import { isSidebarExpandedAtom, sidebarContentStateAtom } from '../../state/ui.a
 import { SidebarChannels } from './SidebarChannels';
 import { SidebarSpaceList } from './SidebarSpaceList';
 import { SpaceOptions } from './SidebarSpaceOptions';
+import { SidebarButton } from '@boluo/ui/chat/SidebarButton';
 import { SidebarUserOperations } from './SidebarUserOperations';
 import { ConnectionIndicatior } from './ConnectionIndicator';
 import { useQuerySpace } from '../../hooks/useQuerySpace';
@@ -13,7 +14,6 @@ import { type User } from '@boluo/api';
 import { AppOperations } from './AppOperations';
 import { useIsClient } from '@boluo/common/hooks/useIsClient';
 import { isApple } from '@boluo/utils/browser';
-import { SidebarButton } from './SidebarButton';
 import { useSetThemeColor } from '../../hooks/useSetThemeColor';
 import { SidebarGuestContent } from './SidebarGuestContent';
 import { SidebarContentLoading } from './SidebarContentLoading';
@@ -65,7 +65,9 @@ export const Sidebar: FC<Props> = ({ spaceId }) => {
       window.removeEventListener('keydown', listener);
     };
   }, [setExpanded]);
-  const foldedNode = <SidebarButton />;
+  const foldedNode = (
+    <SidebarButton isSidebarExpanded={isExpanded} setSidebarExpanded={setExpanded} />
+  );
   if (!isExpanded) {
     return foldedNode;
   }
@@ -101,7 +103,7 @@ export const Sidebar: FC<Props> = ({ spaceId }) => {
 
           {isClient && <ConnectionIndicatior spaceId={spaceId} />}
         </div>
-        <SidebarButton />
+        <SidebarButton isSidebarExpanded={isExpanded} setSidebarExpanded={setExpanded} />
       </div>
     </div>
   );

@@ -109,7 +109,7 @@
     var(--color-zinc-700) 50%,
     var(--color-zinc-600) 50%
   );
-  --color-message-out-of-game-bg-hover: var(--color-zinc-700);
+  --color-message-out-of-game-bg-hover: var(--color-zinc-800);
   --color-message-out-of-game-bg: color-mix(
     in srgb,
     var(--color-zinc-800) 75%,

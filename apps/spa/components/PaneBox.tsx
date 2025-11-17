@@ -2,7 +2,7 @@ import { type FC, type ReactNode, Suspense, useContext, useMemo, useRef } from '
 import { Loading } from '@boluo/ui/Loading';
 import { type ChildrenProps } from '@boluo/utils/types';
 import { usePaneFocus } from '../hooks/usePaneFocus';
-import { Delay } from './Delay';
+import { Delay } from '@boluo/ui/Delay';
 import { PaneBodyError } from './PaneBodyError';
 import { BannerContext } from '../hooks/useBannerNode';
 import { selectAtom } from 'jotai/utils';
@@ -59,9 +59,7 @@ export const PaneBox: FC<Props> = ({ header, children, grow = false }) => {
           }
         >
           <PaneBodyError>
-            <Delay timeout={32} fallback={<Placeholder />}>
-              {children}
-            </Delay>
+            <Delay fallback={<Placeholder />}>{children}</Delay>
           </PaneBodyError>
         </Suspense>
       </div>

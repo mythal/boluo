@@ -17,7 +17,7 @@ import { NameBox } from '@boluo/ui/chat/NameBox';
 import { NameEditContent } from './NameEditContent';
 import { type MemberWithUser } from '@boluo/api';
 import Icon from '@boluo/ui/Icon';
-import { Delay } from '../Delay';
+import { Delay } from '@boluo/ui/Delay';
 import { FallbackIcon } from '@boluo/ui/FallbackIcon';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { useAtomValue, useSetAtom } from 'jotai';

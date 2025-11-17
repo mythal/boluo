@@ -28,7 +28,7 @@ import { type ReactNode } from 'react';
 import { MessageReorderHandle } from './MessageReorderHandle';
 import { MessageTime } from './MessageTime';
 import { useMember } from '../../hooks/useMember';
-import { Delay } from '../Delay';
+import { Delay } from '@boluo/ui/Delay';
 import { ContentGuard } from '@boluo/ui/chat/ContentGuard';
 import {
   DisplayContext as ToolbarDisplayContext,
@@ -40,7 +40,7 @@ import { stopPropagation } from '@boluo/utils/browser';
 import { useIsInGameChannel } from '../../hooks/useIsInGameChannel';
 import { useIsDragging } from '../../hooks/useIsDragging';
 
-const LONG_PRESS_DURATION = 500;
+const LONG_PRESS_DURATION = 300;
 
 export const ChatItemMessage: FC<{
   message: MessageItem;
@@ -213,7 +213,7 @@ const ChatMessageContainer: FC<{
   const toolbar = useMemo(() => {
     if (isDragging || overlay) return null;
     return (
-      <Delay>
+      <Delay fallback={null}>
         <MessageToolbar
           message={message}
           messageBoxRef={ref}

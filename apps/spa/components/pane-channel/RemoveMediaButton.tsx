@@ -2,7 +2,7 @@ import { Trash } from '@boluo/icons';
 import { useSetAtom } from 'jotai';
 import { type FC, useCallback } from 'react';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
-import { Delay } from '../Delay';
+import { Delay } from '@boluo/ui/Delay';
 import { FallbackIcon } from '@boluo/ui/FallbackIcon';
 
 export const RemoveMediaButton: FC = () => {

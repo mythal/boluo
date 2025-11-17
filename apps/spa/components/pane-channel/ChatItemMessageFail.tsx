@@ -1,6 +1,6 @@
 import { ReactNode, type FC } from 'react';
 import { type FailTo } from '../../state/channel.types';
-import { Delay } from '../Delay';
+import { Delay } from '@boluo/ui/Delay';
 import { FallbackIcon } from '@boluo/ui/FallbackIcon';
 import { TriangleAlert } from '@boluo/icons';
 import { FormattedMessage, useIntl } from 'react-intl';

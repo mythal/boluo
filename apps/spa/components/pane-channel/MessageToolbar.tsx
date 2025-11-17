@@ -22,7 +22,7 @@ import {
 } from '@boluo/icons';
 import { SomethingWentWrong } from '@boluo/ui/SomethingWentWrong';
 import { useMember } from '../../hooks/useMember';
-import { Delay } from '../Delay';
+import { Delay } from '@boluo/ui/Delay';
 import { useMutateMessageArchive } from '../../hooks/useMutateMessageArchive';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { atom, useAtom, useAtomValue, useSetAtom, useStore } from 'jotai';
@@ -282,7 +282,7 @@ const MessageToolbarMoreButton: FC<{
       update();
     }
   }, [display.type, update]);
-  const hover = useHover(context, { delay: { open: 64, close: 0 }, handleClose: safePolygon() });
+  const hover = useHover(context, { delay: { open: 200, close: 0 }, handleClose: safePolygon() });
   const dismiss = useDismiss(context);
   const { getFloatingProps, getReferenceProps } = useInteractions([hover, dismiss]);
   const more = useMemo(() => <MessageToolbarMore message={message} />, [message]);

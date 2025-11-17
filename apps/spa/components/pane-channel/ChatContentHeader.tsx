@@ -4,7 +4,7 @@ import { useIsFullLoaded } from '../../hooks/useIsFullLoaded';
 import { ChatContentHeaderLoadMore } from './ChatContentHeaderLoadMore';
 import { type VirtualListContext } from './ChatContentVirtualList';
 import { ButtonInline } from '@boluo/ui/ButtonInline';
-import { Delay } from '../Delay';
+import { Delay } from '@boluo/ui/Delay';
 import { FallbackIcon } from '@boluo/ui/FallbackIcon';
 import Icon from '@boluo/ui/Icon';
 import { FilterX } from '@boluo/icons';

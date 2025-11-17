@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "dependencies": {
     "@boluo/icons": "0.0.0",
+    "@boluo/utils": "0.0.0",
     "@floating-ui/react": "^0.27.5",
     "clsx": "^2.1.1",
     "react-intl": "^7.1.11",
@@ -14,7 +15,6 @@
     "@boluo/locale": "0.0.0",
     "@boluo/theme": "0.0.0",
     "@boluo/typescript-config": "0.0.0",
-    "@boluo/utils": "0.0.0",
     "@formatjs/ts-transformer": "^3.13.34",
     "@types/node": "^24.0.12",
     "@types/react": "^19.0.12",

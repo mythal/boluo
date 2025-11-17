@@ -14,9 +14,9 @@ import {
   useFloating,
   useInteractions,
 } from '@floating-ui/react';
-import clsx from 'clsx';
 import { Avatar } from '@boluo/ui/users/Avatar';
 import { useQueryAppSettings } from '@boluo/common/hooks/useQueryAppSettings';
+import { ButtonInline } from '@boluo/ui/ButtonInline';
 
 interface Props {
   inGame: boolean;
@@ -94,6 +94,7 @@ export const ContentWhisperTo: FC<Props> = ({ channelId, whisperToUsernames, inG
     <span className="text-text-secondary text-sm">
       <FormattedMessage defaultMessage="Whisper to the Master and" />{' '}
       <span className="space-x-1">
+        {whisperToAdd}
         {whisperToMembers.map((member) => (
           <WhisperToItem
             inGame={inGame}
@@ -103,7 +104,6 @@ export const ContentWhisperTo: FC<Props> = ({ channelId, whisperToUsernames, inG
             myself={member.user.id === myId}
           />
         ))}
-        {whisperToAdd}
       </span>
     </span>
   );
@@ -127,13 +127,10 @@ export const WhisperToItem: FC<{
     name = nickname;
   }
   return (
-    <button
-      className="bg-surface-default border-border-subtle decoration-border-strong text-text-primary rounded border px-1 decoration-2 transition-colors hover:line-through"
-      onClick={remove}
-    >
+    <ButtonInline className="hover:line-through" onClick={remove}>
       {name}
       <Icon icon={X} />
-    </button>
+    </ButtonInline>
   );
 };
 
@@ -153,21 +150,19 @@ export const WhisperToItemAdd: FC<{
   const click = useClick(context, {});
   const dismiss = useDismiss(context, {});
   const { getReferenceProps, getFloatingProps } = useInteractions([click, dismiss]);
+  const handleAdd = useCallback(
+    (username: string) => {
+      setOpen(false);
+      add(username);
+    },
+    [add],
+  );
 
   return (
     <>
-      <button
-        ref={refs.setReference}
-        className={clsx(
-          'bg-surface-raised text-text-primary inline-flex rounded border px-0.5 transition-all',
-          open
-            ? 'border-border-default translate-y-px shadow-inner'
-            : 'border-border-subtle group-hover/item:border-border-default shadow-sm active:translate-y-px active:shadow-none',
-        )}
-        {...getReferenceProps()}
-      >
+      <ButtonInline aria-pressed={open} ref={refs.setReference} {...getReferenceProps()}>
         <Icon icon={Plus} />
-      </button>
+      </ButtonInline>
       {open && (
         <FloatingPortal>
           <div
@@ -181,7 +176,7 @@ export const WhisperToItemAdd: FC<{
                 inGame={inGame}
                 key={member.user.id}
                 member={member}
-                add={add}
+                add={handleAdd}
                 mediaUrl={mediaUrl}
               />
             ))}
@@ -205,7 +200,7 @@ const MemberItem: FC<{
   const subName: ReactNode = inGame ? member.user.nickname : characterName;
   return (
     <button
-      className="bg-surface-default hover:bg-surface-interactive-hover grid grid-cols-[2rem_10rem] grid-rows-2 items-center gap-x-1 px-2 py-1 text-left first:rounded-t-sm last:rounded-b-sm"
+      className="bg-surface-default hover:bg-surface-interactive-hover grid cursor-pointer grid-cols-[2rem_10rem] grid-rows-2 items-center gap-x-1 px-2 py-1 text-left first:rounded-t-sm last:rounded-b-sm"
       onClick={() => {
         add(member.user.username);
       }}

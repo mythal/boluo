@@ -1,6 +1,6 @@
 import { Edit } from '@boluo/icons';
 import type { FC } from 'react';
-import { Delay } from '../Delay';
+import { Delay } from '@boluo/ui/Delay';
 
 interface Props {
   editMode: boolean;
@@ -9,7 +9,7 @@ interface Props {
 export const PreviewHandlePlaceHolder: FC<Props> = ({ editMode }) => {
   return (
     <div className="text-text-subtle row-span-full flex justify-center py-1">
-      <Delay>{editMode ? <Edit /> : null}</Delay>
+      <Delay fallback={null}>{editMode ? <Edit /> : null}</Delay>
     </div>
   );
 };

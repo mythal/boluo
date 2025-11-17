@@ -12,7 +12,7 @@ import { ChatSpace } from './ChatSpace';
 import { PaneLoading } from './PaneLoading';
 import { Sidebar } from './sidebar/Sidebar';
 import { BannerContext } from '../hooks/useBannerNode';
-import { useDetectIsTouch, IsTouchContext } from '@boluo/common/hooks/useIsTouch';
+import { useDetectIsTouch, IsTouchContext } from '@boluo/ui/hooks/useIsTouch';
 import screens from '@boluo/ui/screens.json';
 import {
   type ResolvedTheme,

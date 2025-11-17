@@ -3,7 +3,7 @@ import { type FC } from 'react';
 import { SidebarHeaderButton } from '../sidebar/SidebarHeaderButton';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { useAtomValue } from 'jotai';
-import { useTooltip } from '@boluo/common/hooks/useTooltip';
+import { useTooltip } from '@boluo/ui/hooks/useTooltip';
 import { FormattedMessage } from 'react-intl';
 import { TooltipBox } from '@boluo/ui/TooltipBox';
 

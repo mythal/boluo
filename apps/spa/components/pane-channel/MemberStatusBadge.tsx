@@ -2,7 +2,7 @@ import { type UserStatus } from '@boluo/api';
 import clsx from 'clsx';
 import React from 'react';
 import { useIntl } from 'react-intl';
-import { useTooltip } from '@boluo/common/hooks/useTooltip';
+import { useTooltip } from '@boluo/ui/hooks/useTooltip';
 import { TooltipBox } from '@boluo/ui/TooltipBox';
 
 export const MemberStatusBadge = React.memo(({ status }: { status: UserStatus }) => {

@@ -190,7 +190,7 @@ const ExportForm: FC<{ channel: Channel }> = ({ channel }) => {
           onChange={(e) => handleInputChange('simple', e.target.checked)}
         />
         <label htmlFor={id + 'simple'} className="select-none">
-          <FormattedMessage defaultMessage="Without rich-text informations" />
+          <FormattedMessage defaultMessage="Without rich-text information" />
         </label>
         <input
           id={id + 'split'}

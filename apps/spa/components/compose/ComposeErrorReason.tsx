@@ -9,7 +9,7 @@ export const ComposeErrorReason: FC<{ error: ComposeError }> = ({ error }) => {
       return <FormattedMessage defaultMessage="Message cannot be empty." />;
     case 'NO_NAME':
       return (
-        <FormattedMessage defaultMessage="Send a in-game message requires a character name." />
+        <FormattedMessage defaultMessage="Sending an in-game message requires a character name." />
       );
     case 'MEDIA_TOO_LARGE':
       return (

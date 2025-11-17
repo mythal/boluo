@@ -20,9 +20,6 @@
   "/DfISw": {
     "message": "Cancel edit"
   },
-  "/FW+vJ": {
-    "message": "You can found the source code at {githubUrl}."
-  },
   "/I//hN": {
     "message": "Failed to load messages ({errorCode})"
   },
@@ -91,6 +88,9 @@
   },
   "3cc4Ct": {
     "message": "Light"
+  },
+  "3dRjlT": {
+    "message": "This is the latest version of Boluo, which is still under active development. If you prefer the legacy version, please visit"
   },
   "47FYwb": {
     "message": "Cancel"
@@ -178,9 +178,6 @@
   },
   "82Y7Sa": {
     "message": "Sending..."
-  },
-  "88cMEG": {
-    "message": "Destory Space"
   },
   "8be59M": {
     "message": "Email verified successfully!"
@@ -299,6 +296,9 @@
   "GbWVAh": {
     "message": "Yes, Kick"
   },
+  "H2WXs6": {
+    "message": "Destroy Space"
+  },
   "HAlOn1": {
     "message": "Name"
   },
@@ -380,9 +380,6 @@
   "K8uxGU": {
     "message": "The password reset email has been sent."
   },
-  "KIAp17": {
-    "message": "Without rich-text informations"
-  },
   "KN7zKn": {
     "message": "Error"
   },
@@ -454,6 +451,9 @@
   },
   "NXv+Ue": {
     "message": "Turn off notification"
+  },
+  "NYTPf9": {
+    "message": "Sending an in-game message requires a character name."
   },
   "NZyhSX": {
     "message": "News"
@@ -590,9 +590,6 @@
   "Ujs8Kg": {
     "message": "Message from server"
   },
-  "UyfeTd": {
-    "message": "This is latest version of Boluo, which is still under active development. If you perfer the legacy version, please visit"
-  },
   "V/JHlm": {
     "message": "Forgot password?"
   },
@@ -686,6 +683,9 @@
   "Yq91Dy": {
     "message": "Export \"{channelName}\""
   },
+  "YukZFG": {
+    "message": "You can find the source code at {githubUrl}."
+  },
   "Yw/mtA": {
     "message": "Edit failed"
   },
@@ -739,9 +739,6 @@
   },
   "cLIHUg": {
     "message": "Hard Success"
-  },
-  "cTNemu": {
-    "message": "Send a in-game message requires a character name."
   },
   "ccU6l/": {
     "message": "Online"
@@ -1135,6 +1132,9 @@
   },
   "y63e7m": {
     "message": "EMail"
+  },
+  "yy3DLJ": {
+    "message": "Without rich-text information"
   },
   "z/ipXX": {
     "message": "Oops"

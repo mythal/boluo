@@ -83,7 +83,7 @@ export default async function Page({ params }: { params: Promise<Params> }) {
         <Para className="text-sm">
           {intl.formatMessage({
             defaultMessage:
-              'This is latest version of Boluo, which is still under active development. If you perfer the legacy version, please visit',
+              'This is the latest version of Boluo, which is still under active development. If you prefer the legacy version, please visit',
           })}{' '}
           <Link className={classes.link} href="https://old.boluochat.com">
             old.boluochat.com

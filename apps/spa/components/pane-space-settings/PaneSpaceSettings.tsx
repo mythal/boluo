@@ -252,7 +252,7 @@ const PaneSpaceSettingsForm: FC<{ space: Space }> = ({ space }) => {
             <DangerZone
               prompt={
                 <span className="text-lg">
-                  <FormattedMessage defaultMessage="Destory Space" />
+                  <FormattedMessage defaultMessage="Destroy Space" />
                 </span>
               }
             >

@@ -20,9 +20,6 @@
   "/DfISw": {
     "message": "取消編輯"
   },
-  "/FW+vJ": {
-    "message": "You can found the source code at {githubUrl}."
-  },
   "/I//hN": {
     "message": "載入訊息失敗 ({errorCode})"
   },
@@ -65,8 +62,8 @@
   "1iEPTM": {
     "message": "通用"
   },
-  "2J8G6R": {
-    "message": "檔案大小不能超過 {sizeLimit}M"
+  "2mSiu0": {
+    "message": "Draft History ({count})"
   },
   "2pzTGC": {
     "message": "大成功"
@@ -91,6 +88,9 @@
   },
   "3cc4Ct": {
     "message": "亮色"
+  },
+  "3dRjlT": {
+    "message": "This is the latest version of Boluo, which is still under active development. If you prefer the legacy version, please visit"
   },
   "47FYwb": {
     "message": "取消"
@@ -164,9 +164,6 @@
   "72vKlS": {
     "message": "載入位面失敗"
   },
-  "7G8Ojg": {
-    "message": "無法發送訊息"
-  },
   "7UOvbT": {
     "message": "離線"
   },
@@ -181,9 +178,6 @@
   },
   "82Y7Sa": {
     "message": "發送中..."
-  },
-  "88cMEG": {
-    "message": "摧毀位面"
   },
   "8be59M": {
     "message": "電子郵件驗證成功。"
@@ -278,6 +272,9 @@
   "DBP+Od": {
     "message": "Echo"
   },
+  "EcW+hX": {
+    "message": "Only visible to selected people."
+  },
   "F3Wc9W": {
     "message": "過去 {day} 天"
   },
@@ -298,6 +295,9 @@
   },
   "GbWVAh": {
     "message": "是的，踢走"
+  },
+  "H2WXs6": {
+    "message": "Destroy Space"
   },
   "HAlOn1": {
     "message": "名字"
@@ -380,11 +380,11 @@
   "K8uxGU": {
     "message": "密碼重設郵件已發送。"
   },
-  "KIAp17": {
-    "message": "不帶富文本資訊"
-  },
   "KN7zKn": {
     "message": "錯誤"
+  },
+  "KUUb8m": {
+    "message": "Unsupported media type."
   },
   "KhLK4z": {
     "message": "您沒有權限查看此位面。"
@@ -410,6 +410,9 @@
   "LXxsbk": {
     "message": "匿名"
   },
+  "Ln00Sy": {
+    "message": "Unable to send message."
+  },
   "LnM0On": {
     "message": "{a} 和 {b} 正撰寫…"
   },
@@ -431,9 +434,6 @@
   "MoZLbF": {
     "message": "暫不支持"
   },
-  "MqRkT1": {
-    "message": "不支持的媒體類型"
-  },
   "Mqn9K5": {
     "message": "找不到人"
   },
@@ -452,6 +452,9 @@
   "NXv+Ue": {
     "message": "關閉通知"
   },
+  "NYTPf9": {
+    "message": "Sending an in-game message requires a character name."
+  },
   "NZyhSX": {
     "message": "新聞"
   },
@@ -463,9 +466,6 @@
   },
   "OWhbRI": {
     "message": "按下按鈕時將插入的命令。"
-  },
-  "OYT4m/": {
-    "message": "訊息不能為空"
   },
   "OtUXSR": {
     "message": "Type a message"
@@ -484,6 +484,9 @@
   },
   "Pe0ogR": {
     "message": "主題"
+  },
+  "PfPUv3": {
+    "message": "Whether broadcast your input preview."
   },
   "PiX/VH": {
     "message": "在換行處將訊息拆分成多條"
@@ -572,6 +575,9 @@
   "TwyMau": {
     "message": "賬號"
   },
+  "UKhyJG": {
+    "message": "File size must be less than {sizeLimit}M."
+  },
   "UdtpV7": {
     "message": "主題"
   },
@@ -583,9 +589,6 @@
   },
   "Ujs8Kg": {
     "message": "來自服務器的訊息"
-  },
-  "UyfeTd": {
-    "message": "這裡是新版本的菠蘿，仍在活躍開發中。如果你更想回到舊版，請訪問"
   },
   "V/JHlm": {
     "message": "忘記密碼?"
@@ -632,6 +635,9 @@
   "WwpJ5A": {
     "message": "發送密碼重設郵件"
   },
+  "Wy+RsN": {
+    "message": "Message cannot be empty."
+  },
   "X2YA3V": {
     "message": "提交的資料沒有通過稽核。"
   },
@@ -677,17 +683,14 @@
   "Yq91Dy": {
     "message": "匯出「{channelName}」"
   },
+  "YukZFG": {
+    "message": "You can find the source code at {githubUrl}."
+  },
   "Yw/mtA": {
     "message": "編輯失敗"
   },
   "Yy/yDL": {
     "message": "重設密碼"
-  },
-  "ZKBnrB": {
-    "message": "必須填寫角色名"
-  },
-  "ZMoczs": {
-    "message": "位面"
   },
   "ZgsEsn": {
     "message": "沒有權限"
@@ -839,9 +842,6 @@
   "hYOE+U": {
     "message": "邀請"
   },
-  "had27J": {
-    "message": "Restore Draft"
-  },
   "hgvaRE": {
     "message": "請在提交 bug 時附帶這個 ID"
   },
@@ -850,6 +850,9 @@
   },
   "hrgo+E": {
     "message": "歸檔"
+  },
+  "huqwHp": {
+    "message": "{start} Modified {updated}"
   },
   "iATkrL": {
     "message": "窗格崩潰了"
@@ -1082,8 +1085,14 @@
   "w00UiA": {
     "message": "您的設備不支援發送通知。"
   },
+  "wAd2/k": {
+    "message": "Mark as an action."
+  },
   "wEQDC6": {
     "message": "編輯"
+  },
+  "wSL4YI": {
+    "message": "Will not broadcast when whispering."
   },
   "wV1fJ2": {
     "message": "預設顏色"
@@ -1123,6 +1132,9 @@
   },
   "y63e7m": {
     "message": "郵箱"
+  },
+  "yy3DLJ": {
+    "message": "Without rich-text information"
   },
   "z/ipXX": {
     "message": "糟糕！"

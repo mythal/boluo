@@ -63,7 +63,7 @@
     "message": "通用"
   },
   "2mSiu0": {
-    "message": "Draft History ({count})"
+    "message": "草稿记录 ({count})"
   },
   "2pzTGC": {
     "message": "大成功"
@@ -90,7 +90,7 @@
     "message": "亮色"
   },
   "3dRjlT": {
-    "message": "This is the latest version of Boluo, which is still under active development. If you prefer the legacy version, please visit"
+    "message": "这里是新版本的菠萝，仍在活跃开发中。如果你更想回到旧版，请访问"
   },
   "47FYwb": {
     "message": "取消"
@@ -273,7 +273,7 @@
     "message": "Echo"
   },
   "EcW+hX": {
-    "message": "Only visible to selected people."
+    "message": "仅选中的人可见。"
   },
   "F3Wc9W": {
     "message": "过去{day}天"
@@ -297,7 +297,7 @@
     "message": "是的，踢走"
   },
   "H2WXs6": {
-    "message": "Destroy Space"
+    "message": "摧毁位面"
   },
   "HAlOn1": {
     "message": "名字"
@@ -384,7 +384,7 @@
     "message": "错误"
   },
   "KUUb8m": {
-    "message": "Unsupported media type."
+    "message": "不支持的媒体类型。"
   },
   "KhLK4z": {
     "message": "您没有权限查看此位面。"
@@ -411,7 +411,7 @@
     "message": "匿名"
   },
   "Ln00Sy": {
-    "message": "Unable to send message."
+    "message": "无法发送信息。"
   },
   "LnM0On": {
     "message": "{a} 和 {b} 正撰写…"
@@ -453,7 +453,7 @@
     "message": "关闭通知"
   },
   "NYTPf9": {
-    "message": "Sending an in-game message requires a character name."
+    "message": "设好角色名才能发送游戏内消息。"
   },
   "NZyhSX": {
     "message": "新闻"
@@ -486,7 +486,7 @@
     "message": "主题"
   },
   "PfPUv3": {
-    "message": "Whether broadcast your input preview."
+    "message": "是否广播输入预览。"
   },
   "PiX/VH": {
     "message": "在换行处将消息拆分成多条"
@@ -576,7 +576,7 @@
     "message": "账号"
   },
   "UKhyJG": {
-    "message": "File size must be less than {sizeLimit}M."
+    "message": "文件大小不能超过 {sizeLimit}M。"
   },
   "UdtpV7": {
     "message": "主题"
@@ -636,7 +636,7 @@
     "message": "发送密码重置邮件"
   },
   "Wy+RsN": {
-    "message": "Message cannot be empty."
+    "message": "信息不得为空。"
   },
   "X2YA3V": {
     "message": "提交的数据没有通过核查。"
@@ -684,7 +684,7 @@
     "message": "导出「{channelName}」"
   },
   "YukZFG": {
-    "message": "You can find the source code at {githubUrl}."
+    "message": "你可以在 {githubUrl} 查看源代码。"
   },
   "Yw/mtA": {
     "message": "编辑失败"
@@ -852,7 +852,7 @@
     "message": "归档"
   },
   "huqwHp": {
-    "message": "{start} Modified {updated}"
+    "message": "{start} 最新改于 {updated}"
   },
   "iATkrL": {
     "message": "窗格崩溃了"
@@ -1086,13 +1086,13 @@
     "message": "您的设备不支持发送通知。"
   },
   "wAd2/k": {
-    "message": "Mark as an action."
+    "message": "标记为动作。"
   },
   "wEQDC6": {
     "message": "编辑"
   },
   "wSL4YI": {
-    "message": "Will not broadcast when whispering."
+    "message": "悄悄话时始终不会广播。"
   },
   "wV1fJ2": {
     "message": "默认颜色"
@@ -1134,7 +1134,7 @@
     "message": "邮箱"
   },
   "yy3DLJ": {
-    "message": "Without rich-text information"
+    "message": "不带富文本信息"
   },
   "z/ipXX": {
     "message": "糟糕！"

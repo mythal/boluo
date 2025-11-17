@@ -20,9 +20,6 @@
   "/DfISw": {
     "message": "取消编辑"
   },
-  "/FW+vJ": {
-    "message": "你可以在{githubUrl}查看源代码。"
-  },
   "/I//hN": {
     "message": "载入消息失败 ({errorCode})"
   },
@@ -65,8 +62,8 @@
   "1iEPTM": {
     "message": "通用"
   },
-  "2J8G6R": {
-    "message": "文件大小不能超过 {sizeLimit}M"
+  "2mSiu0": {
+    "message": "Draft History ({count})"
   },
   "2pzTGC": {
     "message": "大成功"
@@ -91,6 +88,9 @@
   },
   "3cc4Ct": {
     "message": "亮色"
+  },
+  "3dRjlT": {
+    "message": "This is the latest version of Boluo, which is still under active development. If you prefer the legacy version, please visit"
   },
   "47FYwb": {
     "message": "取消"
@@ -164,9 +164,6 @@
   "72vKlS": {
     "message": "载入位面失败"
   },
-  "7G8Ojg": {
-    "message": "无法发送信息"
-  },
   "7UOvbT": {
     "message": "离线"
   },
@@ -181,9 +178,6 @@
   },
   "82Y7Sa": {
     "message": "发送中..."
-  },
-  "88cMEG": {
-    "message": "摧毁位面"
   },
   "8be59M": {
     "message": "邮箱验证成功！"
@@ -278,6 +272,9 @@
   "DBP+Od": {
     "message": "Echo"
   },
+  "EcW+hX": {
+    "message": "Only visible to selected people."
+  },
   "F3Wc9W": {
     "message": "过去{day}天"
   },
@@ -298,6 +295,9 @@
   },
   "GbWVAh": {
     "message": "是的，踢走"
+  },
+  "H2WXs6": {
+    "message": "Destroy Space"
   },
   "HAlOn1": {
     "message": "名字"
@@ -380,11 +380,11 @@
   "K8uxGU": {
     "message": "密码重置邮件已发送。"
   },
-  "KIAp17": {
-    "message": "不带富文本信息"
-  },
   "KN7zKn": {
     "message": "错误"
+  },
+  "KUUb8m": {
+    "message": "Unsupported media type."
   },
   "KhLK4z": {
     "message": "您没有权限查看此位面。"
@@ -410,6 +410,9 @@
   "LXxsbk": {
     "message": "匿名"
   },
+  "Ln00Sy": {
+    "message": "Unable to send message."
+  },
   "LnM0On": {
     "message": "{a} 和 {b} 正撰写…"
   },
@@ -431,9 +434,6 @@
   "MoZLbF": {
     "message": "暂不支持"
   },
-  "MqRkT1": {
-    "message": "不支持的媒体类型"
-  },
   "Mqn9K5": {
     "message": "找不到人"
   },
@@ -452,6 +452,9 @@
   "NXv+Ue": {
     "message": "关闭通知"
   },
+  "NYTPf9": {
+    "message": "Sending an in-game message requires a character name."
+  },
   "NZyhSX": {
     "message": "新闻"
   },
@@ -463,9 +466,6 @@
   },
   "OWhbRI": {
     "message": "按下按钮时将插入的命令。"
-  },
-  "OYT4m/": {
-    "message": "消息不能为空"
   },
   "OtUXSR": {
     "message": "请输入信息"
@@ -484,6 +484,9 @@
   },
   "Pe0ogR": {
     "message": "主题"
+  },
+  "PfPUv3": {
+    "message": "Whether broadcast your input preview."
   },
   "PiX/VH": {
     "message": "在换行处将消息拆分成多条"
@@ -572,6 +575,9 @@
   "TwyMau": {
     "message": "账号"
   },
+  "UKhyJG": {
+    "message": "File size must be less than {sizeLimit}M."
+  },
   "UdtpV7": {
     "message": "主题"
   },
@@ -583,9 +589,6 @@
   },
   "Ujs8Kg": {
     "message": "来自服务器的消息"
-  },
-  "UyfeTd": {
-    "message": "这里是新版本的菠萝，仍在活跃开发中。如果你更想回到旧版，请访问"
   },
   "V/JHlm": {
     "message": "忘记密码?"
@@ -632,6 +635,9 @@
   "WwpJ5A": {
     "message": "发送密码重置邮件"
   },
+  "Wy+RsN": {
+    "message": "Message cannot be empty."
+  },
   "X2YA3V": {
     "message": "提交的数据没有通过核查。"
   },
@@ -677,17 +683,14 @@
   "Yq91Dy": {
     "message": "导出「{channelName}」"
   },
+  "YukZFG": {
+    "message": "You can find the source code at {githubUrl}."
+  },
   "Yw/mtA": {
     "message": "编辑失败"
   },
   "Yy/yDL": {
     "message": "重置密码"
-  },
-  "ZKBnrB": {
-    "message": "必须填写角色名"
-  },
-  "ZMoczs": {
-    "message": "位面"
   },
   "ZgsEsn": {
     "message": "没有权限"
@@ -839,9 +842,6 @@
   "hYOE+U": {
     "message": "邀请"
   },
-  "had27J": {
-    "message": "还原草稿"
-  },
   "hgvaRE": {
     "message": "请在提交 bug 时附带这个 ID"
   },
@@ -850,6 +850,9 @@
   },
   "hrgo+E": {
     "message": "归档"
+  },
+  "huqwHp": {
+    "message": "{start} Modified {updated}"
   },
   "iATkrL": {
     "message": "窗格崩溃了"
@@ -1082,8 +1085,14 @@
   "w00UiA": {
     "message": "您的设备不支持发送通知。"
   },
+  "wAd2/k": {
+    "message": "Mark as an action."
+  },
   "wEQDC6": {
     "message": "编辑"
+  },
+  "wSL4YI": {
+    "message": "Will not broadcast when whispering."
   },
   "wV1fJ2": {
     "message": "默认颜色"
@@ -1123,6 +1132,9 @@
   },
   "y63e7m": {
     "message": "邮箱"
+  },
+  "yy3DLJ": {
+    "message": "Without rich-text information"
   },
   "z/ipXX": {
     "message": "糟糕！"

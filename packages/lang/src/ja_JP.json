@@ -20,9 +20,6 @@
   "/DfISw": {
     "message": "編集をキャンセル"
   },
-  "/FW+vJ": {
-    "message": "You can found the source code at {githubUrl}."
-  },
   "/I//hN": {
     "message": "メッセージの読み込みに失敗しました ({errorCode})"
   },
@@ -65,8 +62,8 @@
   "1iEPTM": {
     "message": "全般"
   },
-  "2J8G6R": {
-    "message": "ファイルサイズは {sizeLimit} より小さい必要があります"
+  "2mSiu0": {
+    "message": "Draft History ({count})"
   },
   "2pzTGC": {
     "message": "クリティカル"
@@ -91,6 +88,9 @@
   },
   "3cc4Ct": {
     "message": "ライト"
+  },
+  "3dRjlT": {
+    "message": "This is the latest version of Boluo, which is still under active development. If you prefer the legacy version, please visit"
   },
   "47FYwb": {
     "message": "キャンセル"
@@ -164,9 +164,6 @@
   "72vKlS": {
     "message": "次元の読み込みに失敗しました"
   },
-  "7G8Ojg": {
-    "message": "メッセージを送信できません"
-  },
   "7UOvbT": {
     "message": "オフライン"
   },
@@ -181,9 +178,6 @@
   },
   "82Y7Sa": {
     "message": "Sending..."
-  },
-  "88cMEG": {
-    "message": "次元を破壊する"
   },
   "8be59M": {
     "message": "Email verified successfully!"
@@ -278,6 +272,9 @@
   "DBP+Od": {
     "message": "エコー"
   },
+  "EcW+hX": {
+    "message": "Only visible to selected people."
+  },
   "F3Wc9W": {
     "message": "直近の {day} 日"
   },
@@ -298,6 +295,9 @@
   },
   "GbWVAh": {
     "message": "キックする"
+  },
+  "H2WXs6": {
+    "message": "Destroy Space"
   },
   "HAlOn1": {
     "message": "名前"
@@ -380,11 +380,11 @@
   "K8uxGU": {
     "message": "パスワードリセットのメールは送信しました。"
   },
-  "KIAp17": {
-    "message": "リッチテキストなしに"
-  },
   "KN7zKn": {
     "message": "エラー"
+  },
+  "KUUb8m": {
+    "message": "Unsupported media type."
   },
   "KhLK4z": {
     "message": "この次元を表示する権限がありません．"
@@ -410,6 +410,9 @@
   "LXxsbk": {
     "message": "匿名"
   },
+  "Ln00Sy": {
+    "message": "Unable to send message."
+  },
   "LnM0On": {
     "message": "{a} と {b} は入力しています…"
   },
@@ -431,9 +434,6 @@
   "MoZLbF": {
     "message": "未対応"
   },
-  "MqRkT1": {
-    "message": "サポート外のメディア種別"
-  },
   "Mqn9K5": {
     "message": "ユーザーが見つかりません"
   },
@@ -452,6 +452,9 @@
   "NXv+Ue": {
     "message": "通知をオフにしる"
   },
+  "NYTPf9": {
+    "message": "Sending an in-game message requires a character name."
+  },
   "NZyhSX": {
     "message": "新着情報"
   },
@@ -463,9 +466,6 @@
   },
   "OWhbRI": {
     "message": "ボタンが押されたと、このコマンドは挿入される。"
-  },
-  "OYT4m/": {
-    "message": "メッセージは空にできません"
   },
   "OtUXSR": {
     "message": "Type a message"
@@ -484,6 +484,9 @@
   },
   "Pe0ogR": {
     "message": "テーマ"
+  },
+  "PfPUv3": {
+    "message": "Whether broadcast your input preview."
   },
   "PiX/VH": {
     "message": "Split the message into multiple ones at line breaks"
@@ -572,6 +575,9 @@
   "TwyMau": {
     "message": "アカウント"
   },
+  "UKhyJG": {
+    "message": "File size must be less than {sizeLimit}M."
+  },
   "UdtpV7": {
     "message": "トピック"
   },
@@ -583,9 +589,6 @@
   },
   "Ujs8Kg": {
     "message": "サーバーからのメッセージ"
-  },
-  "UyfeTd": {
-    "message": "これは最新バージョンのBoluo、現在も開発中です。旧バージョンはこちらです。"
   },
   "V/JHlm": {
     "message": "パスワードを忘れましたか?"
@@ -632,6 +635,9 @@
   "WwpJ5A": {
     "message": "パスワードリセット用メールを送信する"
   },
+  "Wy+RsN": {
+    "message": "Message cannot be empty."
+  },
   "X2YA3V": {
     "message": "The data submitted did not pass validation."
   },
@@ -677,17 +683,14 @@
   "Yq91Dy": {
     "message": "「{channelName}」をエクスポート"
   },
+  "YukZFG": {
+    "message": "You can find the source code at {githubUrl}."
+  },
   "Yw/mtA": {
     "message": "Edit failed"
   },
   "Yy/yDL": {
     "message": "パスワードをリセット"
-  },
-  "ZKBnrB": {
-    "message": "キャラクター名が必要です"
-  },
-  "ZMoczs": {
-    "message": "次元"
   },
   "ZgsEsn": {
     "message": "権限がありません"
@@ -839,9 +842,6 @@
   "hYOE+U": {
     "message": "招待"
   },
-  "had27J": {
-    "message": "Restore Draft"
-  },
   "hgvaRE": {
     "message": "Please provide this ID when reporting the prolblem."
   },
@@ -850,6 +850,9 @@
   },
   "hrgo+E": {
     "message": "アーカイブ"
+  },
+  "huqwHp": {
+    "message": "{start} Modified {updated}"
   },
   "iATkrL": {
     "message": "The pane has crashed"
@@ -1082,8 +1085,14 @@
   "w00UiA": {
     "message": "お使いのデバイスには通知をサポートしていません。"
   },
+  "wAd2/k": {
+    "message": "Mark as an action."
+  },
   "wEQDC6": {
     "message": "編集"
+  },
+  "wSL4YI": {
+    "message": "Will not broadcast when whispering."
   },
   "wV1fJ2": {
     "message": "デフォルトの色"
@@ -1123,6 +1132,9 @@
   },
   "y63e7m": {
     "message": "メール"
+  },
+  "yy3DLJ": {
+    "message": "Without rich-text information"
   },
   "z/ipXX": {
     "message": "おっとっと！"

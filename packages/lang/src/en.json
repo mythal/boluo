@@ -68,6 +68,9 @@
   "2J8G6R": {
     "message": "File size must be less than {sizeLimit}M"
   },
+  "2mSiu0": {
+    "message": "Draft History ({count})"
+  },
   "2pzTGC": {
     "message": "Critical"
   },
@@ -686,9 +689,6 @@
   "ZKBnrB": {
     "message": "Character name is required"
   },
-  "ZMoczs": {
-    "message": "Spaces"
-  },
   "ZgsEsn": {
     "message": "No permission"
   },
@@ -839,9 +839,6 @@
   "hYOE+U": {
     "message": "Invite"
   },
-  "had27J": {
-    "message": "Restore Draft"
-  },
   "hgvaRE": {
     "message": "Please provide this ID when reporting the prolblem."
   },
@@ -850,6 +847,9 @@
   },
   "hrgo+E": {
     "message": "Archive"
+  },
+  "huqwHp": {
+    "message": "{start} Modified {updated}"
   },
   "iATkrL": {
     "message": "The pane has crashed"

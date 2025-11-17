@@ -1,27 +1,36 @@
-import { memo, type ReactNode, useEffect, useState } from 'react';
+import { type ReactNode, Suspense, useEffect, useState, createContext, useContext } from 'react';
 
 interface Props {
-  fallback?: ReactNode;
+  fallback: ReactNode;
   children: ReactNode;
-  timeout?: number;
+  suspense?: boolean;
 }
 
-// eslint-disable-next-line react/prop-types
-export const Delay = memo<Props>(({ fallback = null, children, timeout = 64 }: Props) => {
-  const [show, setShow] = useState(false);
+export const DisableDelay = createContext(false);
+
+export const Delay = ({ fallback, children, suspense = false }: Props) => {
+  const [showState, setShowState] = useState(false);
+  const disableDelay = useContext(DisableDelay);
+  const show = disableDelay ? true : showState;
   useEffect(() => {
+    if (disableDelay) {
+      return;
+    }
     const callback = () => {
-      setShow(true);
+      setShowState(true);
     };
     if (window.requestIdleCallback !== undefined) {
       const handle = requestIdleCallback(callback);
       return () => cancelIdleCallback(handle);
     } else {
-      const handle = window.setTimeout(callback, timeout);
+      const handle = window.setTimeout(callback, 64);
       return () => window.clearTimeout(handle);
     }
-  }, [timeout]);
+  }, [disableDelay]);
+
+  if (suspense) {
+    return <Suspense fallback={fallback}>{show ? children : fallback}</Suspense>;
+  }
 
   return show ? children : fallback;
-});
-Delay.displayName = 'Delay';
+};

@@ -4,7 +4,7 @@ import { MoveVertical, TriangleAlert } from '@boluo/icons';
 import { FC, type ReactNode } from 'react';
 import { Spinner } from '@boluo/ui/Spinner';
 import { MessageHandleBox } from '@boluo/ui/chat/MessageHandleBox';
-import { Delay } from '../Delay';
+import { Delay } from '@boluo/ui/Delay';
 import { type FailTo } from '../../state/channel.types';
 import { useIsOptimistic } from '../../hooks/useIsOptimistic';
 import { ChatItemMessageFail } from './ChatItemMessageFail';
@@ -54,7 +54,7 @@ export const MessageReorderHandle: FC<Props> = ({
           loading && 'cursor-wait',
         )}
       >
-        <Delay>
+        <Delay fallback={null}>
           <div>{icon}</div>
         </Delay>
       </div>

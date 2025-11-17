@@ -38,7 +38,7 @@ export const useTooltip = (
     whileElementsMounted: autoUpdate,
   });
 
-  const hover = useHover(context, { restMs: 50, move: false });
+  const hover = useHover(context, { restMs: 200, move: false });
   const dismiss = useDismiss(context, {});
   const role = useRole(context, { role: 'tooltip' });
   const { getReferenceProps, getFloatingProps } = useInteractions([hover, dismiss, role]);

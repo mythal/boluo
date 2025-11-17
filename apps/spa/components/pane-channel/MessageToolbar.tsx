@@ -282,7 +282,7 @@ const MessageToolbarMoreButton: FC<{
       update();
     }
   }, [display.type, update]);
-  const hover = useHover(context, { delay: { open: 64, close: 0 }, handleClose: safePolygon() });
+  const hover = useHover(context, { delay: { open: 200, close: 0 }, handleClose: safePolygon() });
   const dismiss = useDismiss(context);
   const { getFloatingProps, getReferenceProps } = useInteractions([hover, dismiss]);
   const more = useMemo(() => <MessageToolbarMore message={message} />, [message]);

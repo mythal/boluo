@@ -40,7 +40,7 @@ import { stopPropagation } from '@boluo/utils/browser';
 import { useIsInGameChannel } from '../../hooks/useIsInGameChannel';
 import { useIsDragging } from '../../hooks/useIsDragging';
 
-const LONG_PRESS_DURATION = 500;
+const LONG_PRESS_DURATION = 300;
 
 export const ChatItemMessage: FC<{
   message: MessageItem;

@@ -22,7 +22,7 @@ import {
 } from '@boluo/icons';
 import { SomethingWentWrong } from '@boluo/ui/SomethingWentWrong';
 import { useMember } from '../../hooks/useMember';
-import { Delay } from '../Delay';
+import { Delay } from '@boluo/ui/Delay';
 import { useMutateMessageArchive } from '../../hooks/useMutateMessageArchive';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { atom, useAtom, useAtomValue, useSetAtom, useStore } from 'jotai';

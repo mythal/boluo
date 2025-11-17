@@ -15,6 +15,7 @@ import { SelfPreviewToolbar } from './SelfPreviewToolbar';
 import { useMessageColor } from '../../hooks/useMessageColor';
 import { usePaneIsFocus } from '../../hooks/usePaneIsFocus';
 import { NameEditable } from './NameEditable';
+import { DisableDelay } from '@boluo/ui/Delay';
 
 type ComposeDrived = Pick<ComposeState, 'media'> & {
   editMode: boolean;
@@ -80,21 +81,23 @@ export const SelfPreview: FC<Props> = ({ preview, myMember: member, isLast }) =>
   }, [media]);
 
   return (
-    <PreviewBox
-      isLast={isLast}
-      id={preview.id}
-      inGame={inGame}
-      editMode={editMode}
-      isSelf
-      onDrop={onDrop}
-      pos={preview.pos}
-    >
-      <SelfPreviewNameCell isAction={isAction} nameNode={nameNode} />
-      <div>
-        <SelfPreviewContent myMember={member.channel} nameNode={nameNode} mediaNode={mediaNode} />
+    <DisableDelay.Provider value={isFocused}>
+      <PreviewBox
+        isLast={isLast}
+        id={preview.id}
+        inGame={inGame}
+        editMode={editMode}
+        isSelf
+        onDrop={onDrop}
+        pos={preview.pos}
+      >
+        <SelfPreviewNameCell isAction={isAction} nameNode={nameNode} />
+        <div>
+          <SelfPreviewContent myMember={member.channel} nameNode={nameNode} mediaNode={mediaNode} />
 
-        <div className="h-6">{isFocused && <SelfPreviewToolbar currentUser={member.user} />}</div>
-      </div>
-    </PreviewBox>
+          <div className="h-6">{isFocused && <SelfPreviewToolbar currentUser={member.user} />}</div>
+        </div>
+      </PreviewBox>
+    </DisableDelay.Provider>
   );
 };

@@ -18,7 +18,7 @@ import {
 } from '@floating-ui/react';
 import Icon from '@boluo/ui/Icon';
 import { UserCard } from '@boluo/ui/users/UserCard';
-import { Delay } from '../Delay';
+import { Delay } from '@boluo/ui/Delay';
 import { FallbackIcon } from '@boluo/ui/FallbackIcon';
 import { useQueryAppSettings } from '@boluo/common/hooks/useQueryAppSettings';
 

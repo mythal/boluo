@@ -65,9 +65,6 @@
   "1iEPTM": {
     "message": "General"
   },
-  "2J8G6R": {
-    "message": "File size must be less than {sizeLimit}M"
-  },
   "2mSiu0": {
     "message": "Draft History ({count})"
   },
@@ -166,9 +163,6 @@
   },
   "72vKlS": {
     "message": "Failed to load the space"
-  },
-  "7G8Ojg": {
-    "message": "Unable to send message"
   },
   "7UOvbT": {
     "message": "Offline"
@@ -281,6 +275,9 @@
   "DBP+Od": {
     "message": "Echo"
   },
+  "EcW+hX": {
+    "message": "Only visible to selected people."
+  },
   "F3Wc9W": {
     "message": "Last {day} days"
   },
@@ -389,6 +386,9 @@
   "KN7zKn": {
     "message": "Error"
   },
+  "KUUb8m": {
+    "message": "Unsupported media type."
+  },
   "KhLK4z": {
     "message": "You do not have permission to view this space."
   },
@@ -413,6 +413,9 @@
   "LXxsbk": {
     "message": "Anonymous"
   },
+  "Ln00Sy": {
+    "message": "Unable to send message."
+  },
   "LnM0On": {
     "message": "{a} and {b} are composing…"
   },
@@ -433,9 +436,6 @@
   },
   "MoZLbF": {
     "message": "Unsupported"
-  },
-  "MqRkT1": {
-    "message": "Unsupported media type"
   },
   "Mqn9K5": {
     "message": "Person not found"
@@ -467,9 +467,6 @@
   "OWhbRI": {
     "message": "The command that will be inserted when the button is pressed."
   },
-  "OYT4m/": {
-    "message": "Message cannot be empty"
-  },
   "OtUXSR": {
     "message": "Type a message"
   },
@@ -487,6 +484,9 @@
   },
   "Pe0ogR": {
     "message": "Theme"
+  },
+  "PfPUv3": {
+    "message": "Whether broadcast your input preview."
   },
   "PiX/VH": {
     "message": "Split the message into multiple ones at line breaks"
@@ -575,6 +575,9 @@
   "TwyMau": {
     "message": "Account"
   },
+  "UKhyJG": {
+    "message": "File size must be less than {sizeLimit}M."
+  },
   "UdtpV7": {
     "message": "Topic"
   },
@@ -635,6 +638,9 @@
   "WwpJ5A": {
     "message": "Send Password Reset Email"
   },
+  "Wy+RsN": {
+    "message": "Message cannot be empty."
+  },
   "X2YA3V": {
     "message": "The data submitted did not pass validation."
   },
@@ -686,9 +692,6 @@
   "Yy/yDL": {
     "message": "Reset password"
   },
-  "ZKBnrB": {
-    "message": "Character name is required"
-  },
   "ZgsEsn": {
     "message": "No permission"
   },
@@ -736,6 +739,9 @@
   },
   "cLIHUg": {
     "message": "Hard Success"
+  },
+  "cTNemu": {
+    "message": "Send a in-game message requires a character name."
   },
   "ccU6l/": {
     "message": "Online"
@@ -1082,8 +1088,14 @@
   "w00UiA": {
     "message": "Your device does not support sending notifications."
   },
+  "wAd2/k": {
+    "message": "Mark as an action."
+  },
   "wEQDC6": {
     "message": "Edit"
+  },
+  "wSL4YI": {
+    "message": "Will not broadcast when whispering."
   },
   "wV1fJ2": {
     "message": "Default Color"

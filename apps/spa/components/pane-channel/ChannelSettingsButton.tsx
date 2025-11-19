@@ -13,7 +13,7 @@ interface Props {
 }
 
 export const ChannelSettingsButton: FC<Props> = ({ channelId }) => {
-  const toggleChild = usePaneToggle({ child: true });
+  const toggleChild = usePaneToggle({ child: '2/3' });
   const paneKey = usePaneKey();
   const opened = useAtomValue(
     useMemo(
@@ -21,7 +21,7 @@ export const ChannelSettingsButton: FC<Props> = ({ channelId }) => {
         atom((read) => {
           const panes = read(panesAtom);
           const currentPane = panes.find((pane) => pane.key === paneKey);
-          return currentPane?.child?.type === 'CHANNEL_SETTINGS';
+          return currentPane?.child?.pane.type === 'CHANNEL_SETTINGS';
         }),
       [paneKey],
     ),

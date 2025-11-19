@@ -20,7 +20,7 @@ export const usePaneClose = () => {
         if (isChild) {
           nextPanes[index] = { ...pane, child: undefined };
         } else if (pane.child) {
-          nextPanes[index] = { ...pane.child, key: pane.key };
+          nextPanes[index] = { ...pane.child.pane, key: pane.key };
         } else {
           nextPanes.splice(index, 1);
         }

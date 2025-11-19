@@ -8,7 +8,7 @@ import { toggle } from '@boluo/utils/function';
 import { useLogout } from '@boluo/common/hooks/useLogout';
 import { PaneBox } from '../PaneBox';
 import { PaneHeaderBox } from '../PaneHeaderBox';
-import { SidebarHeaderButton } from '../sidebar/SidebarHeaderButton';
+import { PaneHeaderButton } from '@boluo/ui/PaneHeaderButton';
 import { PaneProfileEdit } from './PaneProfileEdit';
 import { PaneProfileNotFound } from './PaneProfileNotFound';
 import { PaneProfileView } from './PaneProfileView';
@@ -43,24 +43,20 @@ export const PaneProfile: FC<Props> = ({ userId }) => {
   const operators = (
     <>
       {isMe && (
-        <SidebarHeaderButton onClick={logout} title={logoutLabel}>
+        <PaneHeaderButton onClick={logout} title={logoutLabel}>
           <LogOut />
           <span className="hidden text-xs @xs:inline">
             <FormattedMessage defaultMessage="Logout" />
           </span>
-        </SidebarHeaderButton>
+        </PaneHeaderButton>
       )}
       {isMe && (
-        <SidebarHeaderButton
-          active={isEditing}
-          onClick={() => setIsEditing(toggle)}
-          title={editLabel}
-        >
+        <PaneHeaderButton active={isEditing} onClick={() => setIsEditing(toggle)} title={editLabel}>
           <Edit />
           <span className="hidden text-xs @md:inline">
             <FormattedMessage defaultMessage="Edit" />
           </span>
-        </SidebarHeaderButton>
+        </PaneHeaderButton>
       )}
     </>
   );

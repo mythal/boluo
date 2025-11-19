@@ -10,7 +10,7 @@ interface Props extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   ref?: React.Ref<HTMLButtonElement>;
 }
 
-export const SidebarHeaderButton = ({
+export const PaneHeaderButton = ({
   icon,
   children,
   className,
@@ -27,6 +27,7 @@ export const SidebarHeaderButton = ({
       onClick={isLoading ? undefined : onClick}
       aria-pressed={active}
       className={clsx(
+        'PaneHeaderButton',
         'inline-flex items-center gap-1 rounded-sm px-1.5 py-1.5',
         active
           ? 'bg-action-toggle-selected-bg text-action-toggle-text shadow-inner'

@@ -1,5 +1,5 @@
 import { PersonRunning } from '@boluo/icons';
-import { Delay } from '@boluo/ui/Delay';
+import { Delay } from '../Delay';
 
 export const IsActionIndicator = () => {
   return (

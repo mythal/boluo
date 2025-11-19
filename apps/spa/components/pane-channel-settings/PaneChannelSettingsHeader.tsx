@@ -16,7 +16,7 @@ interface Props {
 }
 
 const SpaceSettingsPaneButton: FC<{ spaceId: string }> = ({ spaceId }) => {
-  const toggleChild = usePaneToggle({ child: true });
+  const toggleChild = usePaneToggle({ child: '2/3' });
   const paneKey = usePaneKey();
   const opened = useAtomValue(
     useMemo(
@@ -26,7 +26,10 @@ const SpaceSettingsPaneButton: FC<{ spaceId: string }> = ({ spaceId }) => {
             return false;
           }
           const pane = panes.find((entry) => entry.key === paneKey);
-          return pane?.child?.type === 'SPACE_SETTINGS' && pane.child.spaceId === spaceId;
+          return (
+            pane?.child?.pane.type === 'SPACE_SETTINGS' &&
+            pane.child.pane.spaceId === spaceId
+          );
         }),
       [paneKey, spaceId],
     ),

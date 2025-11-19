@@ -93,7 +93,14 @@ export type PaneData =
   | ChannelExportPane
   | SpaceMembersPane;
 
-export type Pane = PaneData & { key: number; child?: PaneData };
+export type ChildPaneRatio = '1/2' | '2/3' | '1/3';
+
+export interface PaneChild {
+  ratio: ChildPaneRatio;
+  pane: PaneData;
+}
+
+export type Pane = PaneData & { key: number; child?: PaneChild };
 
 interface RootRoute {
   type: 'ROOT';

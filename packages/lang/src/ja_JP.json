@@ -30,7 +30,7 @@
     "message": "例: 霧雨魔理沙"
   },
   "/jxJyw": {
-    "message": "メッセージを配置しようとしている位置が変更されました。"
+    "message": "The position you are trying to place the message is changed."
   },
   "01eQoz": {
     "message": "接続地域の変更"
@@ -63,7 +63,7 @@
     "message": "全般"
   },
   "2mSiu0": {
-    "message": "草稿履歴 ({count})"
+    "message": "Draft History ({count})"
   },
   "2pzTGC": {
     "message": "クリティカル"
@@ -72,13 +72,13 @@
     "message": "名前が必要"
   },
   "2tXtyi": {
-    "message": "続行するにはメールアドレスを確認してください。"
+    "message": "Please verify your email to continue."
   },
   "39AHJm": {
     "message": "新規登録"
   },
   "3VG8rb": {
-    "message": "不明なエラーが発生しました"
+    "message": "An unknown error occurred"
   },
   "3VI9mt": {
     "message": "変更を保存"
@@ -90,7 +90,7 @@
     "message": "ライト"
   },
   "3dRjlT": {
-    "message": "これはまだ活発に開発中の最新バージョンのBoluoです。レガシーバージョンをお好みでしたら、こちらにアクセスしてください"
+    "message": "This is the latest version of Boluo, which is still under active development. If you prefer the legacy version, please visit"
   },
   "47FYwb": {
     "message": "キャンセル"
@@ -108,7 +108,7 @@
     "message": "チャネルをエクスポート"
   },
   "56x7wR": {
-    "message": "それを確認"
+    "message": "verify it"
   },
   "5HUwAy": {
     "message": "文字、数字、アンダースコアのみ使用可能です。"
@@ -120,7 +120,7 @@
     "message": "不明"
   },
   "5lqSZ6": {
-    "message": "移動しようとしているメッセージはもう存在しません。"
+    "message": "The message you are trying to move is no longer available."
   },
   "5sg7KC": {
     "message": "パスワード"
@@ -129,7 +129,7 @@
     "message": "デフォルトとして"
   },
   "62nsdy": {
-    "message": "もう一度試してください"
+    "message": "Retry"
   },
   "64sfSN": {
     "message": "やめる"
@@ -150,10 +150,10 @@
     "message": "再接続を待っています ({countdown}s)"
   },
   "6QtXvB": {
-    "message": "確認メールが送信されました！メールボックスをご確認ください。"
+    "message": "Verification email sent! Please check your inbox."
   },
   "6WiliO": {
-    "message": "フォーラムは {forumUrl} で利用可能です。こちらでフィードバックと討論ができます。"
+    "message": "The forum is available at {forumUrl} (Chinese only for now), you can feedback issues and discuss there."
   },
   "6q3tCn": {
     "message": "接続中"
@@ -171,19 +171,19 @@
     "message": "チャンネル設定"
   },
   "7tSUe8": {
-    "message": "ログインに戻る"
+    "message": "Back to login"
   },
   "8+j66D": {
     "message": "このメッセージを削除しますか？"
   },
   "82Y7Sa": {
-    "message": "送信中..."
+    "message": "Sending..."
   },
   "8be59M": {
-    "message": "メール確認が成功しました！"
+    "message": "Email verified successfully!"
   },
   "8mVcs0": {
-    "message": "メール確認"
+    "message": "Verify Email"
   },
   "8pN86+": {
     "message": "{name} は入力している…"
@@ -213,7 +213,7 @@
     "message": "分割"
   },
   "AYIKp4": {
-    "message": "アカウントはもう持っていますか？ログインしてください"
+    "message": "Already have an account? Log in"
   },
   "AbXVP4": {
     "message": "作成"
@@ -240,10 +240,10 @@
     "message": "ログアウト"
   },
   "C8PHob": {
-    "message": "非アクティブにより接続が失われました。ページを更新してください。"
+    "message": "Connection lost due to inactivity, please refresh the page."
   },
   "CNLipo": {
-    "message": "確認失敗。もう一度試してください。またはサポートにお問い合わせください。"
+    "message": "Verification failed. Please try again or contact support."
   },
   "CW7jWC": {
     "message": "(自分)"
@@ -273,7 +273,7 @@
     "message": "エコー"
   },
   "EcW+hX": {
-    "message": "選ばれた人だけに見えます。"
+    "message": "Only visible to selected people."
   },
   "F3Wc9W": {
     "message": "直近の {day} 日"
@@ -297,7 +297,7 @@
     "message": "キックする"
   },
   "H2WXs6": {
-    "message": "位面を破壊する"
+    "message": "Destroy Space"
   },
   "HAlOn1": {
     "message": "名前"
@@ -306,7 +306,7 @@
     "message": "リクエストに失敗しました。ネットワーク異常の可能性があります。"
   },
   "HOuWsl": {
-    "message": "開発者オプション"
+    "message": "Developer Options"
   },
   "HSaR2M": {
     "message": "これは、秘密のチャンネルですか?"
@@ -333,7 +333,7 @@
     "message": "無効な招待リンク"
   },
   "IPvPs7": {
-    "message": "確認メールを送信"
+    "message": "Send verification email"
   },
   "IQwWyF": {
     "message": "チャンネルに参加するにはログインが必要です。"
@@ -342,7 +342,7 @@
     "message": "自動選択"
   },
   "Ibwf8a": {
-    "message": "入力ボックスが崩壊しました。"
+    "message": "The compose box crashed."
   },
   "IvBid4": {
     "message": "{enter} キーを使ってメッセージを送信する。"
@@ -359,8 +359,11 @@
   "JQt0RP": {
     "message": "引いて読み込む"
   },
+  "JXdbo8": {
+    "message": "Done"
+  },
   "Jc0JUv": {
-    "message": "入力ボックスが崩壊しました。最後に入力したのは："
+    "message": "The compose box crashed, Your last input was:"
   },
   "Jq3FDz": {
     "message": "コンテンツ"
@@ -384,7 +387,7 @@
     "message": "エラー"
   },
   "KUUb8m": {
-    "message": "サポートされていないメディアタイプです。"
+    "message": "Unsupported media type."
   },
   "KhLK4z": {
     "message": "この次元を表示する権限がありません．"
@@ -393,16 +396,16 @@
     "message": "バイオはまだ設定していません"
   },
   "KqJr7f": {
-    "message": "クリックしてコピー"
+    "message": "Click to copy"
   },
   "KzpV1w": {
-    "message": "あなたのメールは確認されていません。{verifyEmail}してください。"
+    "message": "Your email is not verified, please {verifyEmail}."
   },
   "L01rMU": {
     "message": "デフォルトでは、メンバーは自分として話す。"
   },
   "LQcfcb": {
-    "message": "メール確認失敗"
+    "message": "Email verification failed"
   },
   "LUrJwE": {
     "message": "チャンネル"
@@ -411,22 +414,22 @@
     "message": "匿名"
   },
   "Ln00Sy": {
-    "message": "メッセージを送信できません。"
+    "message": "Unable to send message."
   },
   "LnM0On": {
     "message": "{a} と {b} は入力しています…"
   },
   "Lzb4s2": {
-    "message": "移動失敗"
+    "message": "Move failed"
   },
   "MWO2zy": {
-    "message": "何か問題が発生しました。"
+    "message": "Something going wrong."
   },
   "MgRaWS": {
     "message": "チャンネル名は空になることはできません"
   },
   "MjKIej": {
-    "message": "送信失敗"
+    "message": "Send failed"
   },
   "MoRJdV": {
     "message": "メッセージを送信するには、どのキーを使用しますか？"
@@ -444,16 +447,16 @@
     "message": "権限がありません"
   },
   "NA+vcf": {
-    "message": "フォーラムにログインするにはメールを確認してください。"
+    "message": "Please verify your email to login to the forum."
   },
   "NXI/XL": {
-    "message": "自動"
+    "message": "Auto"
   },
   "NXv+Ue": {
     "message": "通知をオフにしる"
   },
   "NYTPf9": {
-    "message": "ゲーム内メッセージを送信するにはキャラクター名が必要です。"
+    "message": "Sending an in-game message requires a character name."
   },
   "NZyhSX": {
     "message": "新着情報"
@@ -468,7 +471,7 @@
     "message": "ボタンが押されたと、このコマンドは挿入される。"
   },
   "OtUXSR": {
-    "message": "メッセージを入力してください"
+    "message": "Type a message"
   },
   "P57vjw": {
     "message": "チャンネル名は32文字以内で入力してください。"
@@ -477,7 +480,7 @@
     "message": "参加する"
   },
   "PHZ3YP": {
-    "message": "大成功: {critical}、大失敗: {fumble}、成功: {success}、追加: {addition}"
+    "message": "Critical: {critical}, Fumble: {fumble}, Success: {success}, Add: {addition}"
   },
   "PO83gc": {
     "message": "最近の活動時間"
@@ -486,10 +489,10 @@
     "message": "テーマ"
   },
   "PfPUv3": {
-    "message": "入力プレビューをブロードキャストするかどうか。"
+    "message": "Whether broadcast your input preview."
   },
   "PiX/VH": {
-    "message": "改行時にメッセージを複数に分割する"
+    "message": "Split the message into multiple ones at line breaks"
   },
   "PwaN2o": {
     "message": "ようこそ"
@@ -501,7 +504,7 @@
     "message": "説明"
   },
   "QBYqL5": {
-    "message": "位面のメンバー照会に失敗しました"
+    "message": "Failed to query members of the space"
   },
   "QOvY19": {
     "message": "マスターにささやき、"
@@ -558,7 +561,7 @@
     "message": "あなたは次元に招待されています"
   },
   "TBI2DU": {
-    "message": "{name} のアバター"
+    "message": "Avatar of {name}"
   },
   "TDaF6J": {
     "message": "消去"
@@ -576,7 +579,7 @@
     "message": "アカウント"
   },
   "UKhyJG": {
-    "message": "ファイルサイズは {sizeLimit}M 以下である必要があります。"
+    "message": "File size must be less than {sizeLimit}M."
   },
   "UdtpV7": {
     "message": "トピック"
@@ -585,7 +588,7 @@
     "message": "メッセージが見つかりません"
   },
   "UizMy7": {
-    "message": "確認メールを再送できません。後でもう一度お試しください。"
+    "message": "Failed to resend verification email. Please try again later."
   },
   "Ujs8Kg": {
     "message": "サーバーからのメッセージ"
@@ -603,7 +606,7 @@
     "message": "対象期間"
   },
   "VlTrY6": {
-    "message": "チャネルメンバーの照会に失敗しました"
+    "message": "Failed to query members of the channel"
   },
   "VnXp8Z": {
     "message": "アバター"
@@ -627,7 +630,7 @@
     "message": "本当に「{spaceName}」次元を抜けますか？"
   },
   "Wi3NTK": {
-    "message": "このアプリケーションは多くの最新の機能を必要とします。ただし、ブラウザではサポートされていません。"
+    "message": "This application requires many modern features that are not supported by your browser."
   },
   "Wj4YzT": {
     "message": "ホームページに戻る"
@@ -636,10 +639,10 @@
     "message": "パスワードリセット用メールを送信する"
   },
   "Wy+RsN": {
-    "message": "メッセージは空にすることはできません。"
+    "message": "Message cannot be empty."
   },
   "X2YA3V": {
-    "message": "送信されたデータは検証に合格しませんでした。"
+    "message": "The data submitted did not pass validation."
   },
   "X5rIjZ": {
     "message": "危険な操作"
@@ -675,7 +678,7 @@
     "message": "{days} 日前"
   },
   "Yh4Uqn": {
-    "message": "メールアドレスが検証されました。間もなくリダイレクトされます。"
+    "message": "Your email has been verified. You will be redirected shortly."
   },
   "YjO/0+": {
     "message": "ご自身"
@@ -684,10 +687,10 @@
     "message": "「{channelName}」をエクスポート"
   },
   "YukZFG": {
-    "message": "ソースコードは {githubUrl} にあります。"
+    "message": "You can find the source code at {githubUrl}."
   },
   "Yw/mtA": {
-    "message": "編集失敗"
+    "message": "Edit failed"
   },
   "Yy/yDL": {
     "message": "パスワードをリセット"
@@ -708,7 +711,7 @@
     "message": "秘密チャンネル"
   },
   "aifEPM": {
-    "message": "これは秘密チャンネルです。このチャネルに参加するには招待が必要です。"
+    "message": "This is a secret channel. You must be invited to join this channel."
   },
   "aw8eqe": {
     "message": "「{key}」を使って改行します。"
@@ -717,22 +720,22 @@
     "message": "例：コボルトのグループが私たちを攻撃しようとしました"
   },
   "bF0HPN": {
-    "message": "リソースの競合があります。"
+    "message": "There is a resource conflict."
   },
   "bGay8d": {
     "message": "次元の設定"
   },
   "bT0FEQ": {
-    "message": "本当に\"{channelName}\"チャネルを削除してもよろしいですか？"
+    "message": "Are you sure you want to delete the \"{channelName}\" channel?"
   },
   "bqyi2y": {
-    "message": "メールを確認するために{login}してください。"
+    "message": "Please {login} to verify your email."
   },
   "c1nBz9": {
-    "message": "...のキャラクターとして"
+    "message": "As the character of …"
   },
   "c65UQI": {
-    "message": "チャネル名は最低2文字である必要があります。"
+    "message": "Channel name must be at least 2 characters."
   },
   "cCTI4h": {
     "message": "インターネット上の誰もがこの次元を閲覧できるようにするか"
@@ -744,16 +747,16 @@
     "message": "オンライン"
   },
   "ceSWhW": {
-    "message": "アーカイブされたメッセージを表示"
+    "message": "Show archived messages"
   },
   "clpFBW": {
     "message": "次元のパブリシティ"
   },
   "cnenZ4": {
-    "message": "デバッグまたは機能開発を行いたい場合は有効にしてください。"
+    "message": "Enable this if you want to debug or develop features."
   },
   "cpFKi9": {
-    "message": "トピックは、現在焦点を当てている内容を記録し、思い出させるために使用できます。"
+    "message": "Topics can be used to record and remind you of what you are currently focused on."
   },
   "dMEGZV": {
     "message": "分割ペイン"
@@ -762,7 +765,7 @@
     "message": "チャンネル内の自分のキャラクター名 (オプション)"
   },
   "dlu6r1": {
-    "message": "スプレッドシート"
+    "message": "Spreadsheet"
   },
   "domxPs": {
     "message": "ささやき"
@@ -771,13 +774,13 @@
     "message": "チャンネルを削除"
   },
   "e+eb5F": {
-    "message": "ブロードキャストがオフになりました"
+    "message": "Broadcast has been turned off"
   },
   "e3Ttmb": {
     "message": "ゲーム内"
   },
   "eHA8Ex": {
-    "message": "... にささやく"
+    "message": "Whisper to …"
   },
   "eLCAEP": {
     "message": "添付ファイル"
@@ -786,19 +789,19 @@
     "message": "無効なリセットリンクから，パスワードをリセットできません。"
   },
   "eVYdrD": {
-    "message": "過去1日"
+    "message": "Last 1 day"
   },
   "ea+WlP": {
     "message": "プライベートチャンネルに招待する必要があります。"
   },
   "ecjViF": {
-    "message": "削除失敗"
+    "message": "Delete failed"
   },
   "eqOw+7": {
-    "message": "開発モード"
+    "message": "Dev Mode"
   },
   "f00p/7": {
-    "message": "アップロード失敗"
+    "message": "Upload failed"
   },
   "f0Sf6g": {
     "message": "ファイルを追加"
@@ -822,10 +825,10 @@
     "message": "ゲーム内の切り替え"
   },
   "fxvXUy": {
-    "message": "暴露"
+    "message": "Reveal"
   },
   "gEes7R": {
-    "message": "招待を受け入れるには、{loginLink} が必要です。"
+    "message": "You need to {loginLink} to accept the invitation."
   },
   "gduNan": {
     "message": "ライトモード中"
@@ -834,7 +837,7 @@
     "message": "ログインしていません"
   },
   "hFIEcy": {
-    "message": "リクエストが不正な形式です。"
+    "message": "Malformed request."
   },
   "hSOOaa": {
     "message": "あなたは「{spaceName}」に招待されました"
@@ -843,7 +846,7 @@
     "message": "招待"
   },
   "hgvaRE": {
-    "message": "問題を報告するときにこのIDを入力してください。"
+    "message": "Please provide this ID when reporting the prolblem."
   },
   "hh0xW7": {
     "message": "チャンネル名"
@@ -855,10 +858,10 @@
     "message": "{start} Modified {updated}"
   },
   "iATkrL": {
-    "message": "ペインがクラッシュしました"
+    "message": "The pane has crashed"
   },
   "iDRoI+": {
-    "message": "メンバーを退出"
+    "message": "Left Member"
   },
   "iHN12u": {
     "message": "管理者"
@@ -870,16 +873,16 @@
     "message": "プロフィール"
   },
   "iySl5e": {
-    "message": "このチャネルのメンバーは既にいます。"
+    "message": "You are already a member of this channel."
   },
   "jRANBd": {
     "message": "メッセージを編集"
   },
   "jd7fUZ": {
-    "message": "{countdown} 秒後に再送"
+    "message": "Resend in {countdown} seconds"
   },
   "jsy7pk": {
-    "message": "もう一度試してください"
+    "message": "Try Again"
   },
   "k1s9UW": {
     "message": "見つかりませんでした"
@@ -909,13 +912,13 @@
     "message": "次元を離れる"
   },
   "mLZ+cF": {
-    "message": "メールが確認されました。"
+    "message": "Your email has been verified."
   },
   "mYgmal": {
     "message": "キャラクター外"
   },
   "muMPUp": {
-    "message": "大失敗"
+    "message": "Fumble"
   },
   "n1Whvj": {
     "message": "切り替え"
@@ -930,10 +933,10 @@
     "message": "入力必須です。"
   },
   "oGBmRj": {
-    "message": "チャネルメンバーの照会に失敗しました"
+    "message": "Failed to query the channel members"
   },
   "oSgCYv": {
-    "message": "あなたはこの位面のメンバーではありません"
+    "message": "You are not a member of this space"
   },
   "oUWADl": {
     "message": "いいえ"
@@ -942,16 +945,16 @@
     "message": "少なくとも {max} 文字以上でなければなりません。"
   },
   "oaP8SV": {
-    "message": "通知権限を拒否しました。"
+    "message": "You have denied notification permission."
   },
   "oeO284": {
     "message": "{name} と他の {count} 人は入力しています…"
   },
   "onmBf2": {
-    "message": "ランダムカラーをシャッフル"
+    "message": "Shuffle Random Color"
   },
   "p556q3": {
-    "message": "コピーしました"
+    "message": "Copied"
   },
   "pBQ5bd": {
     "message": "編集中"
@@ -963,7 +966,7 @@
     "message": "チャンネル名が必要です。"
   },
   "po7PV2": {
-    "message": "送信できません。チャネルにいるかどうかを確認してください。"
+    "message": "Can not send message, please check if you are in the channel."
   },
   "q7JBy1": {
     "message": "設定を変更"
@@ -972,7 +975,7 @@
     "message": "{count} filtered messages"
   },
   "qQ4pEa": {
-    "message": "{targets} にささやく"
+    "message": "Whisper to {targets}"
   },
   "qbB8pg": {
     "message": "次元の説明"
@@ -981,7 +984,7 @@
     "message": "切断"
   },
   "qnWbsU": {
-    "message": "メッセージのアーカイブに失敗しました"
+    "message": "Failed to archive the message"
   },
   "qoUUiA": {
     "message": "観覧を許可"
@@ -993,7 +996,7 @@
     "message": "キャラクター外"
   },
   "r4YqDx": {
-    "message": "例えば、CSS コンテナクエリなど。"
+    "message": "Such as CSS Container Queries."
   },
   "rK7cTy": {
     "message": "最初のチャネル名"
@@ -1005,22 +1008,22 @@
     "message": "システムに従う"
   },
   "rZgHVT": {
-    "message": "チャネルのエクスポートに失敗しました"
+    "message": "Failed to export the channel"
   },
   "rbrahO": {
     "message": "閉じる"
   },
   "rl4pg7": {
-    "message": "チャネルを並べ替え"
+    "message": "Reorder channel"
   },
   "ro9oGh": {
-    "message": "メールを確認中..."
+    "message": "Verifying your email..."
   },
   "s+ixvA": {
     "message": "「 {spaceName}」を破壊します"
   },
   "s6Rg3u": {
-    "message": "おっと！何か問題が発生しましたが、それはあなたのせいではありません"
+    "message": "Oops! Something went wrong, but it wasn't your fault"
   },
   "sMAAlN": {
     "message": "新規"
@@ -1029,7 +1032,7 @@
     "message": "承認する"
   },
   "snqrYf": {
-    "message": "ログインしていません。{signUp} または {login} してください。"
+    "message": "You are not logged in, {signUp} or {login}."
   },
   "sol2mE": {
     "message": "見つかりません。リソースが削除された可能性があります。"
@@ -1038,7 +1041,7 @@
     "message": "メール"
   },
   "t0WZaq": {
-    "message": "ゲームがプレイされるチャネル。デフォルトではメンバーはキャラクターとして話す。"
+    "message": "The channel where the game is played. By default member will speak as a character."
   },
   "t44Zkc": {
     "message": "ソースをコピー"
@@ -1080,19 +1083,19 @@
     "message": "非公開"
   },
   "vnPoZm": {
-    "message": "あなたの冒険を語る"
+    "message": "Tell your adventures"
   },
   "w00UiA": {
     "message": "お使いのデバイスには通知をサポートしていません。"
   },
   "wAd2/k": {
-    "message": "アクションとしてマーク。"
+    "message": "Mark as an action."
   },
   "wEQDC6": {
     "message": "編集"
   },
   "wSL4YI": {
-    "message": "ささやく場合はブロードキャストしません。"
+    "message": "Will not broadcast when whispering."
   },
   "wV1fJ2": {
     "message": "デフォルトの色"
@@ -1122,7 +1125,7 @@
     "message": "検索"
   },
   "xpqynr": {
-    "message": "これ以上メッセージはありません"
+    "message": "No more messages"
   },
   "xrKHS6": {
     "message": "成功"
@@ -1134,7 +1137,7 @@
     "message": "メール"
   },
   "yy3DLJ": {
-    "message": "リッチテキスト情報なし"
+    "message": "Without rich-text information"
   },
   "z/ipXX": {
     "message": "おっとっと！"

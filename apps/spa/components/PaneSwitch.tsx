@@ -13,6 +13,7 @@ import { PaneLoading } from './PaneLoading';
 import { PaneWelcome } from './PaneWelcome';
 import { PaneSpaceGreeting } from './PaneSpaceGreeting';
 import { PaneChannelExport } from './pane-channel-export/PaneChannelExport';
+import { PaneChannelTopic } from './pane-channel-topic/PaneChannelTopic';
 
 const PaneSpaceSettings = React.lazy(() => import('./pane-space-settings/PaneSpaceSettings'));
 const PaneSpaceMembers = React.lazy(() => import('./pane-space-members/PaneSpaceMembers'));
@@ -45,6 +46,7 @@ const PANE_MAP = {
   PROFILE: PaneProfile,
   SPACE_MEMBERS: PaneSpaceMembers,
   CHANNEL_SETTINGS: PaneChannelSettings,
+  CHANNEL_TOPIC: PaneChannelTopic,
   CHANNEL_EXPORT: PaneChannelExport,
   EMPTY: PaneEmpty,
 } satisfies Record<Pane['type'], unknown>;
@@ -63,6 +65,12 @@ const Switch: FC<Props> = ({ pane }) => {
       return (
         <ChannelIdContext value={pane.channelId}>
           <PaneChannelSettings channelId={pane.channelId} key={pane.channelId} />
+        </ChannelIdContext>
+      );
+    case 'CHANNEL_TOPIC':
+      return (
+        <ChannelIdContext value={pane.channelId}>
+          <PaneChannelTopic channelId={pane.channelId} key={pane.channelId} />
         </ChannelIdContext>
       );
     case 'SPACE_SETTINGS':

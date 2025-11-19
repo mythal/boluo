@@ -9,7 +9,7 @@ interface Props {
 
 export const UserCard = ({ user, mediaUrl }: Props) => {
   return (
-    <FloatingBox>
+    <FloatingBox className="p-3">
       <div className="flex max-w-[200px] gap-2 overflow-clip md:max-w-sm">
         <div className="flex-none">
           <Avatar

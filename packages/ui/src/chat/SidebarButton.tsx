@@ -33,7 +33,7 @@ export const SidebarButton: FC<Props> = ({ isSidebarExpanded, setSidebarExpanded
           isTouch
             ? 'bottom-[30%] -left-2 p-1'
             : [
-                isSidebarExpanded ? 'left-[calc(var(--spacing-sidebar)-1.2rem)]' : '-left-2.5',
+                isSidebarExpanded ? 'left-[calc(var(--spacing-sidebar)-1.1rem)]' : '-left-2.5',
                 'top-[20%] p-1.5',
               ],
         )}

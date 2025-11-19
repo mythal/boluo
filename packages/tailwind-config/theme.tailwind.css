@@ -28,11 +28,13 @@
   --color-text-link-decoration: var(--color-blue-800);
 
   /* Semantic colors: borders and dividers */
-  --color-border-default: var(--color-gray-800);
+  --color-border-default: var(--color-gray-700);
   --color-border-strong: var(--color-gray-600);
   --color-border-subtle: var(--color-gray-800);
   --color-border-focus: var(--color-blue-400);
   --color-border-raised: var(--color-gray-800);
+  --color-border-pane: var(--color-gray-600);
+  --color-border-sidebar: var(--color-gray-900);
 
   /* Semantic colors: interactive controls */
   --color-action-primary-bg: var(--color-sky-600);
@@ -177,6 +179,8 @@
   --color-border-subtle: var(--color-neutral-100);
   --color-border-focus: var(--color-neutral-900);
   --color-border-raised: var(--color-neutral-200);
+  --color-border-pane: var(--color-neutral-300);
+  --color-border-sidebar: var(--color-neutral-100);
 
   /* Semantic colors: interactive controls */
   --color-action-primary-bg: var(--color-green-600);

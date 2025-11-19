@@ -75,7 +75,7 @@ export const MemberLeaveButton: FC<Props> = ({ channelId, onSuccess }) => {
             style={{ position: strategy, top: y ?? 0, left: x ?? 0, zIndex: 30 }}
             {...getFloatingProps()}
           >
-            <FloatingBox>
+            <FloatingBox className="p-3">
               <div className="max-w-xs">
                 <FormattedMessage
                   defaultMessage="Are you sure you want to leave {channelName}?"
@@ -83,7 +83,7 @@ export const MemberLeaveButton: FC<Props> = ({ channelId, onSuccess }) => {
                 />
               </div>
               <div className="pt-2 text-right">
-                <Button variant="danger" data-small onClick={confirm} disabled={channel == null}>
+                <Button variant="danger" small onClick={confirm} disabled={channel == null}>
                   <FormattedMessage defaultMessage="Leave" />
                 </Button>
               </div>

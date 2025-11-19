@@ -68,11 +68,11 @@ export const EditAvatar: FC<Props> = ({ userId, avatar, onChange }) => {
           ref={fileInputRef}
         />
         {avatar != null && (
-          <Button type="button" data-small aria-label={removeAvatarLabel} onClick={removeAvatar}>
+          <Button type="button" small aria-label={removeAvatarLabel} onClick={removeAvatar}>
             <X />
           </Button>
         )}
-        <Button type="button" data-small aria-label={changeAvatarLabel} onClick={triggerUpload}>
+        <Button type="button" small aria-label={changeAvatarLabel} onClick={triggerUpload}>
           <Upload />
         </Button>
       </div>

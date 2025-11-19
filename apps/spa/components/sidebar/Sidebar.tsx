@@ -89,7 +89,7 @@ export const Sidebar: FC<Props> = ({ spaceId }) => {
   return (
     <div
       className={clsx(
-        'bg-bg standalone-bottom-padding relative flex h-full min-h-0 flex-none flex-col',
+        'Sidebar bg-bg standalone-bottom-padding border-border-sidebar relative flex h-full min-h-0 flex-none flex-col border-r',
       )}
     >
       <div

@@ -36,7 +36,7 @@ const ExileConfirm: FC<Props> = ({ spaceId, userId }) => {
   );
 
   return (
-    <FloatingBox className="">
+    <FloatingBox className="p-3">
       <div>
         <FormattedMessage defaultMessage="Are you sure you want to exile this member?" />
       </div>

@@ -4,7 +4,7 @@ import { type FC, useMemo } from 'react';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { useQueryChannelMembers } from '../../hooks/useQueryChannelMembers';
 import { useQueryUsersStatus } from '../../hooks/useQueryUsersStatus';
-import { SidebarHeaderButton } from '../sidebar/SidebarHeaderButton';
+import { PaneHeaderButton } from '@boluo/ui/PaneHeaderButton';
 
 interface Props {
   channelId: string;
@@ -27,7 +27,7 @@ export const ChannelMembersButton: FC<Props> = ({ channelId, spaceId }) => {
     }, 0);
   }, [membersInfo, userStatus]);
   return (
-    <SidebarHeaderButton
+    <PaneHeaderButton
       active={memberListState !== 'CLOSED'}
       isLoading={isLoading}
       onClick={() =>
@@ -40,6 +40,6 @@ export const ChannelMembersButton: FC<Props> = ({ channelId, spaceId }) => {
           {onlineCount}/{membersInfo.members.length}
         </span>
       )}
-    </SidebarHeaderButton>
+    </PaneHeaderButton>
   );
 };

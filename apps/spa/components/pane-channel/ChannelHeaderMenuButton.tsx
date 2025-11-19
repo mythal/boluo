@@ -1,6 +1,6 @@
 import { EllipsisVertical } from '@boluo/icons';
 import { type FC } from 'react';
-import { SidebarHeaderButton } from '../sidebar/SidebarHeaderButton';
+import { PaneHeaderButton } from '@boluo/ui/PaneHeaderButton';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { useAtomValue } from 'jotai';
 import { useTooltip } from '@boluo/ui/hooks/useTooltip';
@@ -27,12 +27,12 @@ export const ChannelHeaderMoreButton: FC<Props> = ({ on, toggle }) => {
       ref={refs.setReference}
       {...getReferenceProps()}
     >
-      <SidebarHeaderButton onClick={toggle} active={on} className="relative">
+      <PaneHeaderButton onClick={toggle} active={on} className="relative">
         <EllipsisVertical
           className={`transition-transform duration-100 ${on ? 'rotate-0' : 'rotate-90'}`}
         />
         {filter !== 'ALL' && <Dot />}
-      </SidebarHeaderButton>
+      </PaneHeaderButton>
       <TooltipBox
         show={showTooltip}
         ref={refs.setFloating}

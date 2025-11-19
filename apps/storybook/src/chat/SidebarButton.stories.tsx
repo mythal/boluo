@@ -4,7 +4,7 @@ import { SidebarButton } from '@boluo/ui/chat/SidebarButton';
 import { IsTouchContext } from '@boluo/ui/hooks/useIsTouch';
 
 const meta: Meta<typeof SidebarButton> = {
-  title: 'Chat/SidebarButton',
+  title: 'Sidebar/SidebarButton',
   component: SidebarButton,
   parameters: {
     layout: 'fullscreen',

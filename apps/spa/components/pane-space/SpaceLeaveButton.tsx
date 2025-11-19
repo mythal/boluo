@@ -8,7 +8,7 @@ import useSWRMutation from 'swr/mutation';
 import { Button } from '@boluo/ui/Button';
 import { unwrap } from '@boluo/utils/result';
 import { FloatingBox } from '@boluo/ui/FloatingBox';
-import { SidebarHeaderButton } from '../sidebar/SidebarHeaderButton';
+import { PaneHeaderButton } from '@boluo/ui/PaneHeaderButton';
 import { useSWRConfig } from 'swr';
 
 interface Props {
@@ -46,7 +46,7 @@ export const SpaceLeaveButton: FC<Props> = ({ space, mySpaceMember }) => {
   const { getReferenceProps, getFloatingProps } = useInteractions([click, dismiss]);
   return (
     <>
-      <SidebarHeaderButton
+      <PaneHeaderButton
         icon={mySpaceMember == null ? <UserPlus /> : <UserX />}
         isLoading={isLeaving}
         ref={refs.setReference}
@@ -59,7 +59,7 @@ export const SpaceLeaveButton: FC<Props> = ({ space, mySpaceMember }) => {
             <FormattedMessage defaultMessage="Leave Space" />
           )}
         </span>
-      </SidebarHeaderButton>
+      </PaneHeaderButton>
       {isConfirmOpen && (
         <div
           style={{ position: strategy, top: y ?? 0, left: x ?? 0 }}

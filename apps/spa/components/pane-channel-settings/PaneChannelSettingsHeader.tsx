@@ -2,7 +2,7 @@ import { type Channel } from '@boluo/api';
 import { MoonStar, Settings } from '@boluo/icons';
 import { type FC, useCallback, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { SidebarHeaderButton } from '../sidebar/SidebarHeaderButton';
+import { PaneHeaderButton } from '@boluo/ui/PaneHeaderButton';
 import { PaneHeaderBox } from '../PaneHeaderBox';
 import Icon from '@boluo/ui/Icon';
 import { usePaneToggle } from '../../hooks/usePaneToggle';
@@ -26,9 +26,7 @@ const SpaceSettingsPaneButton: FC<{ spaceId: string }> = ({ spaceId }) => {
             return false;
           }
           const pane = panes.find((entry) => entry.key === paneKey);
-          return (
-            pane?.child?.type === 'SPACE_SETTINGS' && pane.child.spaceId === spaceId
-          );
+          return pane?.child?.type === 'SPACE_SETTINGS' && pane.child.spaceId === spaceId;
         }),
       [paneKey, spaceId],
     ),
@@ -37,18 +35,21 @@ const SpaceSettingsPaneButton: FC<{ spaceId: string }> = ({ spaceId }) => {
     toggleChild({ type: 'SPACE_SETTINGS', spaceId });
   }, [spaceId, toggleChild]);
   return (
-    <SidebarHeaderButton size="small" onClick={handleClick} active={opened}>
+    <PaneHeaderButton size="small" onClick={handleClick} active={opened}>
       <Icon icon={MoonStar} />
       <span className="hidden @xl:inline">
         <FormattedMessage defaultMessage="Space Settings" />
       </span>
-    </SidebarHeaderButton>
+    </PaneHeaderButton>
   );
 };
 
 export const PaneChannelSettingsHeader: FC<Props> = ({ channel }) => {
   return (
-    <PaneHeaderBox icon={<Settings />} operators={<SpaceSettingsPaneButton spaceId={channel.spaceId} />}>
+    <PaneHeaderBox
+      icon={<Settings />}
+      operators={<SpaceSettingsPaneButton spaceId={channel.spaceId} />}
+    >
       <span className="overflow-hidden overflow-ellipsis whitespace-nowrap">
         <FormattedMessage
           defaultMessage='Settings of "{channelName}" Channel'

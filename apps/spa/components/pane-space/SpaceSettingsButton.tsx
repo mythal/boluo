@@ -1,6 +1,6 @@
 import { type FC, useCallback, useMemo } from 'react';
-import { SidebarHeaderButton } from '../sidebar/SidebarHeaderButton';
 import { Settings } from '@boluo/icons';
+import { PaneHeaderButton } from '@boluo/ui/PaneHeaderButton';
 import { FormattedMessage } from 'react-intl';
 import { usePaneKey } from '../../hooks/usePaneKey';
 import { useAtomValue } from 'jotai';
@@ -27,10 +27,10 @@ export const SpaceSettingsButton: FC<{ spaceId: string }> = ({ spaceId }) => {
   }, [spaceId, toggleChild]);
 
   return (
-    <SidebarHeaderButton icon={<Settings />} onClick={handleClick} active={opened}>
+    <PaneHeaderButton icon={<Settings />} onClick={handleClick} active={opened}>
       <span className="hidden text-xs @xl:inline">
         <FormattedMessage defaultMessage="Space Settings" />
       </span>
-    </SidebarHeaderButton>
+    </PaneHeaderButton>
   );
 };

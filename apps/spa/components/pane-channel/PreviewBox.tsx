@@ -10,7 +10,7 @@ import {
   useMemo,
   useRef,
 } from 'react';
-import { PreviewHandlePlaceHolder } from './PreviewHandlePlaceHolder';
+import { PreviewHandlePlaceHolder } from '@boluo/ui/PreviewHandlePlaceHolder';
 import { useReadObserve } from '../../hooks/useReadObserve';
 import { useIsInGameChannel } from '../../hooks/useIsInGameChannel';
 

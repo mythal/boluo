@@ -27,10 +27,10 @@
     "message": "在新窗格中打開"
   },
   "/iUStU": {
-    "message": "例如： 素還真"
+    "message": "例如： 媽祖"
   },
   "/jxJyw": {
-    "message": "試圖放置訊息的位置發生了改變。"
+    "message": "The position you are trying to place the message is changed."
   },
   "01eQoz": {
     "message": "更換線路"
@@ -63,7 +63,7 @@
     "message": "通用"
   },
   "2mSiu0": {
-    "message": "草稿記錄 ({count})"
+    "message": "Draft History ({count})"
   },
   "2pzTGC": {
     "message": "大成功"
@@ -72,7 +72,7 @@
     "message": "需要名字"
   },
   "2tXtyi": {
-    "message": "請驗證您的電子郵件以繼續。"
+    "message": "Please verify your email to continue."
   },
   "39AHJm": {
     "message": "註冊"
@@ -90,7 +90,7 @@
     "message": "亮色"
   },
   "3dRjlT": {
-    "message": "這是新版本的菠蘿，仍在活躍開發中。如果你更想回到舊版，請訪問"
+    "message": "This is the latest version of Boluo, which is still under active development. If you prefer the legacy version, please visit"
   },
   "47FYwb": {
     "message": "取消"
@@ -120,7 +120,7 @@
     "message": "未知"
   },
   "5lqSZ6": {
-    "message": "正在移動的訊息不再存在。"
+    "message": "The message you are trying to move is no longer available."
   },
   "5sg7KC": {
     "message": "密碼"
@@ -150,10 +150,10 @@
     "message": "正在等待重新連接 ({countdown}s)"
   },
   "6QtXvB": {
-    "message": "驗證郵件已發送！請檢查收件箱。"
+    "message": "Verification email sent! Please check your inbox."
   },
   "6WiliO": {
-    "message": "可以訪問論壇 {forumUrl} 進行討論和反饋。"
+    "message": "The forum is available at {forumUrl} (Chinese only for now), you can feedback issues and discuss there."
   },
   "6q3tCn": {
     "message": "正在連接"
@@ -240,10 +240,10 @@
     "message": "登出"
   },
   "C8PHob": {
-    "message": "因不活動而丟失連線，請刷新頁面。"
+    "message": "Connection lost due to inactivity, please refresh the page."
   },
   "CNLipo": {
-    "message": "驗證失敗。請重試或聯繫開發者。"
+    "message": "Verification failed. Please try again or contact support."
   },
   "CW7jWC": {
     "message": "(自己)"
@@ -273,7 +273,7 @@
     "message": "Echo"
   },
   "EcW+hX": {
-    "message": "只有選中的人可見。"
+    "message": "Only visible to selected people."
   },
   "F3Wc9W": {
     "message": "過去 {day} 天"
@@ -297,7 +297,7 @@
     "message": "是的，踢走"
   },
   "H2WXs6": {
-    "message": "摧毀位面"
+    "message": "Destroy Space"
   },
   "HAlOn1": {
     "message": "名字"
@@ -359,6 +359,9 @@
   "JQt0RP": {
     "message": "下拉刷新"
   },
+  "JXdbo8": {
+    "message": "Done"
+  },
   "Jc0JUv": {
     "message": "輸入框崩潰了。您最後的輸入是："
   },
@@ -384,7 +387,7 @@
     "message": "錯誤"
   },
   "KUUb8m": {
-    "message": "不支援的媒體類型。"
+    "message": "Unsupported media type."
   },
   "KhLK4z": {
     "message": "您沒有權限查看此位面。"
@@ -396,13 +399,13 @@
     "message": "點擊複製"
   },
   "KzpV1w": {
-    "message": "你的郵箱還沒驗證，請{verifyEmail}。"
+    "message": "Your email is not verified, please {verifyEmail}."
   },
   "L01rMU": {
     "message": "成員預設將作為本人發言。"
   },
   "LQcfcb": {
-    "message": "郵箱驗證失敗"
+    "message": "Email verification failed"
   },
   "LUrJwE": {
     "message": "頻道"
@@ -411,7 +414,7 @@
     "message": "匿名"
   },
   "Ln00Sy": {
-    "message": "無法發送訊息。"
+    "message": "Unable to send message."
   },
   "LnM0On": {
     "message": "{a} 和 {b} 正撰寫…"
@@ -444,16 +447,16 @@
     "message": "沒有權限。"
   },
   "NA+vcf": {
-    "message": "請驗證您的郵箱以登入論壇。"
+    "message": "Please verify your email to login to the forum."
   },
   "NXI/XL": {
-    "message": "自動"
+    "message": "Auto"
   },
   "NXv+Ue": {
     "message": "關閉通知"
   },
   "NYTPf9": {
-    "message": "發送遊戲內訊息需要設置角色名。"
+    "message": "Sending an in-game message requires a character name."
   },
   "NZyhSX": {
     "message": "新聞"
@@ -468,7 +471,7 @@
     "message": "按下按鈕時將插入的命令。"
   },
   "OtUXSR": {
-    "message": "輸入訊息"
+    "message": "Type a message"
   },
   "P57vjw": {
     "message": "頻道名稱最多不能超過 32 字元。"
@@ -486,7 +489,7 @@
     "message": "主題"
   },
   "PfPUv3": {
-    "message": "是否廣播輸入預覽。"
+    "message": "Whether broadcast your input preview."
   },
   "PiX/VH": {
     "message": "在換行處將訊息拆分成多條"
@@ -576,7 +579,7 @@
     "message": "賬號"
   },
   "UKhyJG": {
-    "message": "檔案大小不能超過 {sizeLimit}M。"
+    "message": "File size must be less than {sizeLimit}M."
   },
   "UdtpV7": {
     "message": "主題"
@@ -585,7 +588,7 @@
     "message": "未找到訊息"
   },
   "UizMy7": {
-    "message": "無法重新發送驗證郵件。請稍後再試。"
+    "message": "Failed to resend verification email. Please try again later."
   },
   "Ujs8Kg": {
     "message": "來自服務器的訊息"
@@ -636,7 +639,7 @@
     "message": "發送密碼重設郵件"
   },
   "Wy+RsN": {
-    "message": "訊息不得為空。"
+    "message": "Message cannot be empty."
   },
   "X2YA3V": {
     "message": "提交的資料沒有通過稽核。"
@@ -675,7 +678,7 @@
     "message": "{days} 天前"
   },
   "Yh4Uqn": {
-    "message": "您的電子郵件已驗證。您將很快被重新導向。"
+    "message": "Your email has been verified. You will be redirected shortly."
   },
   "YjO/0+": {
     "message": "我自己"
@@ -684,7 +687,7 @@
     "message": "匯出「{channelName}」"
   },
   "YukZFG": {
-    "message": "你可以在 {githubUrl} 查看源代碼。"
+    "message": "You can find the source code at {githubUrl}."
   },
   "Yw/mtA": {
     "message": "編輯失敗"
@@ -726,7 +729,7 @@
     "message": "你確定要刪除「{channelName}」頻道嗎？"
   },
   "bqyi2y": {
-    "message": "請{login}以驗證郵箱。"
+    "message": "Please {login} to verify your email."
   },
   "c1nBz9": {
     "message": "以 … 角色"
@@ -750,7 +753,7 @@
     "message": "位面公開性"
   },
   "cnenZ4": {
-    "message": "如果您想要調試或開發功能，請啟用此功能。"
+    "message": "Enable this if you want to debug or develop features."
   },
   "cpFKi9": {
     "message": "主題可以用來記錄和提醒您當前關注的內容。"
@@ -852,7 +855,7 @@
     "message": "歸檔"
   },
   "huqwHp": {
-    "message": "{start} 最新改於 {updated}"
+    "message": "{start} Modified {updated}"
   },
   "iATkrL": {
     "message": "窗格崩潰了"
@@ -876,7 +879,7 @@
     "message": "編輯訊息"
   },
   "jd7fUZ": {
-    "message": "在{countdown}秒後可以重發"
+    "message": "Resend in {countdown} seconds"
   },
   "jsy7pk": {
     "message": "再試一次"
@@ -930,10 +933,10 @@
     "message": "不能為空。"
   },
   "oGBmRj": {
-    "message": "查詢頻道成員失敗"
+    "message": "Failed to query the channel members"
   },
   "oSgCYv": {
-    "message": "你不屬於這個位面"
+    "message": "You are not a member of this space"
   },
   "oUWADl": {
     "message": "否"
@@ -963,7 +966,7 @@
     "message": "必須填寫頻道名。"
   },
   "po7PV2": {
-    "message": "無法發送，請檢查您是否還在這個頻道。"
+    "message": "Can not send message, please check if you are in the channel."
   },
   "q7JBy1": {
     "message": "變更設定"
@@ -1080,19 +1083,19 @@
     "message": "非公開"
   },
   "vnPoZm": {
-    "message": "講述你的冒險"
+    "message": "Tell your adventures"
   },
   "w00UiA": {
     "message": "您的設備不支援發送通知。"
   },
   "wAd2/k": {
-    "message": "標記為動作。"
+    "message": "Mark as an action."
   },
   "wEQDC6": {
     "message": "編輯"
   },
   "wSL4YI": {
-    "message": "悄悄話時始終不會廣播。"
+    "message": "Will not broadcast when whispering."
   },
   "wV1fJ2": {
     "message": "預設顏色"
@@ -1122,7 +1125,7 @@
     "message": "檢索"
   },
   "xpqynr": {
-    "message": "沒有更多訊息"
+    "message": "No more messages"
   },
   "xrKHS6": {
     "message": "成功"
@@ -1134,7 +1137,7 @@
     "message": "郵箱"
   },
   "yy3DLJ": {
-    "message": "不帶豐富文字訊息"
+    "message": "Without rich-text information"
   },
   "z/ipXX": {
     "message": "糟糕！"

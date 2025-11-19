@@ -49,6 +49,13 @@ pub struct EditChannel {
 }
 
 #[derive(Deserialize, Debug, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct EditChannelTopic {
+    pub channel_id: Uuid,
+    pub topic: String,
+}
+
+#[derive(Deserialize, Debug, specta::Type)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum GrantOrRevoke {
     Grant,

@@ -158,6 +158,8 @@ export type EditChannelMember = {
   textColor: string | null;
 };
 
+export type EditChannelTopic = { channelId: string; topic: string };
+
 export type EditMessage = {
   messageId: string;
   name: string;

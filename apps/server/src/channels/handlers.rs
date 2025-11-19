@@ -1,6 +1,7 @@
 use super::Channel;
 use super::api::{
-    ChannelMembers, ChannelWithMaybeMember, CreateChannel, EditChannel, GrantOrRemoveChannelMaster,
+    ChannelMembers, ChannelWithMaybeMember, CreateChannel, EditChannel, EditChannelTopic,
+    GrantOrRemoveChannelMaster,
 };
 use super::models::{ChannelMember, members_attach_user};
 use crate::channels::api::{
@@ -278,6 +279,59 @@ async fn edit(
     Update::channel_edited(channel.clone());
     Update::space_updated(ctx, channel.space_id);
     Ok(channel)
+}
+
+async fn edit_topic(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<Channel, AppError> {
+    let session = authenticate(&req).await?;
+    let EditChannelTopic { channel_id, topic } = interface::parse_body(req).await?;
+
+    let mut trans = ctx.db.begin().await?;
+
+    let channel = Channel::get_by_id(&mut *trans, &channel_id)
+        .await
+        .or_not_found()?;
+
+    let mut has_permission = false;
+    if let Some(space_member) =
+        SpaceMember::get(&mut *trans, &session.user_id, &channel.space_id).await?
+    {
+        has_permission = space_member.is_admin;
+    }
+
+    if !has_permission {
+        if let Some(channel_member) =
+            ChannelMember::get(&mut *trans, session.user_id, channel.space_id, channel_id).await?
+        {
+            has_permission = channel_member.is_master;
+        }
+    }
+
+    if !has_permission {
+        return Err(AppError::NoPermission(
+            "You have no permission to edit this channel topic.".to_string(),
+        ));
+    }
+
+    let updated = Channel::edit(
+        &mut *trans,
+        &channel_id,
+        None,
+        Some(topic.as_str()),
+        None,
+        None,
+        None,
+        None,
+        None,
+    )
+    .await?;
+
+    trans.commit().await?;
+    Update::channel_edited(updated.clone());
+    Update::space_updated(ctx, updated.space_id);
+    Ok(updated)
 }
 
 async fn edit_masters(
@@ -590,6 +644,7 @@ pub async fn router(
         ("/by_space", Method::GET) => response(by_space(ctx, req).await).await,
         ("/create", Method::POST) => response(create(ctx, req).await).await,
         ("/edit", Method::POST) => response(edit(ctx, req).await).await,
+        ("/edit_topic", Method::POST) => response(edit_topic(ctx, req).await).await,
         ("/edit_master", Method::POST) => edit_masters(ctx, req).await.map(ok_response),
         ("/add_member", Method::POST) => response(add_member(ctx, req).await).await,
         ("/edit_member", Method::POST) => response(edit_member(ctx, req).await).await,

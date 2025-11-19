@@ -15,6 +15,7 @@ import { FormattedMessage } from 'react-intl';
 import { dateTimeFormat } from '../../date';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import type { ComposeDraftEntry } from '../../state/compose-backup.worker.types';
+import { FloatingBox } from '@boluo/ui/FloatingBox';
 
 interface DraftHistoryButtonProps {
   drafts: ComposeDraftEntry[];
@@ -68,13 +69,13 @@ export const DraftHistoryButton: FC<DraftHistoryButtonProps> = ({ drafts, onRest
       </ButtonInline>
       {open && (
         <FloatingPortal>
-          <div
+          <FloatingBox
+            className="max-h-96 max-w-sm p-2"
             ref={refs.setFloating}
             style={floatingStyles}
-            className="bg-surface-unit border-border-strong z-30 w-80 max-w-[calc(100vw-3rem)] rounded border p-2 text-left shadow-lg"
             {...getFloatingProps()}
           >
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col">
               {drafts.map((draft) => (
                 <button
                   key={draft.id}
@@ -83,7 +84,7 @@ export const DraftHistoryButton: FC<DraftHistoryButtonProps> = ({ drafts, onRest
                     onRestore(draft.text);
                     setOpen(false);
                   }}
-                  className="border-border-subtle hover:border-border-strong hover:bg-surface-default cursor-pointer rounded border px-2 py-1 text-left"
+                  className="hover:bg-surface-default cursor-pointer rounded px-2 py-1 text-left"
                 >
                   <div className="text-text-secondary text-xs">
                     <FormattedMessage
@@ -94,11 +95,11 @@ export const DraftHistoryButton: FC<DraftHistoryButtonProps> = ({ drafts, onRest
                       }}
                     />
                   </div>
-                  <div className="line-clamp-3 py-1 text-sm">{draft.text}</div>
+                  <div className="line-clamp-3 py-1 font-mono text-sm break-all">{draft.text}</div>
                 </button>
               ))}
             </div>
-          </div>
+          </FloatingBox>
         </FloatingPortal>
       )}
     </span>

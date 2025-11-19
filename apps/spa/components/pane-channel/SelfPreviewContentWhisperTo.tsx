@@ -17,6 +17,7 @@ import {
 import { Avatar } from '@boluo/ui/users/Avatar';
 import { useQueryAppSettings } from '@boluo/common/hooks/useQueryAppSettings';
 import { ButtonInline } from '@boluo/ui/ButtonInline';
+import { FloatingBox } from '@boluo/ui/FloatingBox';
 
 interface Props {
   inGame: boolean;
@@ -165,11 +166,11 @@ export const WhisperToItemAdd: FC<{
       </ButtonInline>
       {open && (
         <FloatingPortal>
-          <div
+          <FloatingBox
+            className=""
             ref={refs.setFloating}
             style={floatingStyles}
             {...getFloatingProps()}
-            className="bg-surface-raised border-border-default max-h-72 overflow-y-auto rounded border shadow-md"
           >
             {members.map((member) => (
               <MemberItem
@@ -180,7 +181,7 @@ export const WhisperToItemAdd: FC<{
                 mediaUrl={mediaUrl}
               />
             ))}
-          </div>
+          </FloatingBox>
         </FloatingPortal>
       )}
     </>
@@ -200,7 +201,7 @@ const MemberItem: FC<{
   const subName: ReactNode = inGame ? member.user.nickname : characterName;
   return (
     <button
-      className="bg-surface-default hover:bg-surface-interactive-hover grid cursor-pointer grid-cols-[2rem_10rem] grid-rows-2 items-center gap-x-1 px-2 py-1 text-left first:rounded-t-sm last:rounded-b-sm"
+      className="MemberItem hover:bg-surface-interactive-hover grid cursor-pointer grid-cols-[2rem_10rem] grid-rows-2 items-center gap-x-1 px-2 py-1 text-left first:rounded-t-sm last:rounded-b-sm"
       onClick={() => {
         add(member.user.username);
       }}

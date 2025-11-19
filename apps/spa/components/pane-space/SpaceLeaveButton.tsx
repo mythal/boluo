@@ -67,7 +67,7 @@ export const SpaceLeaveButton: FC<Props> = ({ space, mySpaceMember }) => {
           {...getFloatingProps()}
           className="z-20 w-48"
         >
-          <FloatingBox>
+          <FloatingBox className="p-3">
             <FormattedMessage
               defaultMessage='Are you sure to leave the "{spaceName}" space?'
               values={{ spaceName: space.name }}

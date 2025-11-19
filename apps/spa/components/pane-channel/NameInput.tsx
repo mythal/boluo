@@ -23,7 +23,7 @@ const AsDefaultButton: FC<{ channelId: string; inputedName: string; disabled: bo
   };
   return (
     <div className="text-right">
-      <Button data-small disabled={disabled || isMutating} onClick={handleClick}>
+      <Button small disabled={disabled || isMutating} onClick={handleClick}>
         <FormattedMessage defaultMessage="As Default" />
       </Button>
     </div>

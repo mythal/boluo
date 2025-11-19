@@ -26,10 +26,7 @@ const SpaceSettingsPaneButton: FC<{ spaceId: string }> = ({ spaceId }) => {
             return false;
           }
           const pane = panes.find((entry) => entry.key === paneKey);
-          return (
-            pane?.child?.pane.type === 'SPACE_SETTINGS' &&
-            pane.child.pane.spaceId === spaceId
-          );
+          return pane?.child?.pane.type === 'SPACE_SETTINGS' && pane.child.pane.spaceId === spaceId;
         }),
       [paneKey, spaceId],
     ),

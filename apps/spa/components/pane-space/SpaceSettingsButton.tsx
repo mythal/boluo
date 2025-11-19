@@ -16,8 +16,7 @@ export const SpaceSettingsButton: FC<{ spaceId: string }> = ({ spaceId }) => {
       () =>
         selectAtom(panesAtom, (panes) => {
           return panes.some(
-            (pane) =>
-              pane.key === paneKey && pane.child?.pane.type === 'SPACE_SETTINGS',
+            (pane) => pane.key === paneKey && pane.child?.pane.type === 'SPACE_SETTINGS',
           );
         }),
       [paneKey],

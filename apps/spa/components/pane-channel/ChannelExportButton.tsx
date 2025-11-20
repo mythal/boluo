@@ -1,7 +1,7 @@
 import { ScrollText } from '@boluo/icons';
 import { type FC, type MouseEventHandler, useCallback, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { SidebarHeaderButton } from '../sidebar/SidebarHeaderButton';
+import { PaneHeaderButton } from '@boluo/ui/PaneHeaderButton';
 import { usePaneKey } from '../../hooks/usePaneKey';
 import { atom, useAtomValue } from 'jotai';
 import { panesAtom } from '../../state/view.atoms';
@@ -13,7 +13,7 @@ interface Props {
 }
 
 export const ChannelExportButton: FC<Props> = ({ channelId }) => {
-  const toggleChild = usePaneToggle({ child: true });
+  const toggleChild = usePaneToggle({ child: '1/3' });
   const paneKey = usePaneKey();
   const opened = useAtomValue(
     useMemo(
@@ -23,8 +23,8 @@ export const ChannelExportButton: FC<Props> = ({ channelId }) => {
           const pane = panes.find(
             (pane) =>
               (pane.key === paneKey &&
-                pane.child?.type === 'CHANNEL_EXPORT' &&
-                pane.child.channelId === channelId) ||
+                pane.child?.pane.type === 'CHANNEL_EXPORT' &&
+                pane.child.pane.channelId === channelId) ||
               (pane.type === 'CHANNEL_EXPORT' && pane.channelId === channelId),
           );
           return Boolean(pane);
@@ -40,11 +40,11 @@ export const ChannelExportButton: FC<Props> = ({ channelId }) => {
     [toggleChild, channelId],
   );
   return (
-    <SidebarHeaderButton size="small" onClick={handleClick} active={opened}>
+    <PaneHeaderButton size="small" onClick={handleClick} active={opened}>
       <Icon icon={ScrollText} />
       <span className="hidden @xl:inline">
         <FormattedMessage defaultMessage="Export" />
       </span>
-    </SidebarHeaderButton>
+    </PaneHeaderButton>
   );
 };

@@ -3,6 +3,7 @@ import { useCallback } from 'react';
 import { findNextPaneKey, panesAtom } from '../state/view.atoms';
 import {
   insertPaneByPosition,
+  type ChildPaneRatio,
   type NewPanePosition,
   type Pane,
   type PaneData,
@@ -11,7 +12,7 @@ import { usePaneLimit } from './useMaxPane';
 import { usePaneKey } from './usePaneKey';
 
 interface Props {
-  child?: boolean;
+  child?: false | ChildPaneRatio;
 }
 
 export const usePaneToggle = (props?: Props) => {
@@ -27,10 +28,10 @@ export const usePaneToggle = (props?: Props) => {
           if (index === -1) return panes;
           const currentPane = panes[index]!;
           const nextPanes = [...panes];
-          if (currentPane.child && currentPane.child.type === pane.type) {
+          if (currentPane.child && currentPane.child.pane.type === pane.type) {
             nextPanes[index] = { ...currentPane, child: undefined };
           } else {
-            nextPanes[index] = { ...currentPane, child: pane };
+            nextPanes[index] = { ...currentPane, child: { pane, ratio: child } };
           }
           return nextPanes;
         }

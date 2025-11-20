@@ -1,7 +1,7 @@
 import { Settings } from '@boluo/icons';
 import { type FC, type MouseEventHandler, useCallback, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { SidebarHeaderButton } from '../sidebar/SidebarHeaderButton';
+import { PaneHeaderButton } from '@boluo/ui/PaneHeaderButton';
 import { usePaneKey } from '../../hooks/usePaneKey';
 import { atom, useAtomValue } from 'jotai';
 import { panesAtom } from '../../state/view.atoms';
@@ -13,7 +13,7 @@ interface Props {
 }
 
 export const ChannelSettingsButton: FC<Props> = ({ channelId }) => {
-  const toggleChild = usePaneToggle({ child: true });
+  const toggleChild = usePaneToggle({ child: '2/3' });
   const paneKey = usePaneKey();
   const opened = useAtomValue(
     useMemo(
@@ -21,7 +21,7 @@ export const ChannelSettingsButton: FC<Props> = ({ channelId }) => {
         atom((read) => {
           const panes = read(panesAtom);
           const currentPane = panes.find((pane) => pane.key === paneKey);
-          return currentPane?.child?.type === 'CHANNEL_SETTINGS';
+          return currentPane?.child?.pane.type === 'CHANNEL_SETTINGS';
         }),
       [paneKey],
     ),
@@ -34,11 +34,11 @@ export const ChannelSettingsButton: FC<Props> = ({ channelId }) => {
     [toggleChild, channelId],
   );
   return (
-    <SidebarHeaderButton size="small" onClick={handleClick} active={opened}>
+    <PaneHeaderButton size="small" onClick={handleClick} active={opened}>
       <Icon icon={Settings} />
       <span className="hidden @xl:inline">
         <FormattedMessage defaultMessage="Channel Settings" />
       </span>
-    </SidebarHeaderButton>
+    </PaneHeaderButton>
   );
 };

@@ -5,6 +5,9 @@ import { FloatingBox } from '@boluo/ui/FloatingBox';
 const meta: Meta<typeof FloatingBox> = {
   title: 'Base/FloatingBox',
   component: FloatingBox,
+  args: {
+    className: 'p-4',
+  },
 };
 
 export default meta;

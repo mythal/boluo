@@ -1,0 +1,91 @@
+import { useCallback, useMemo, type FC, type MouseEventHandler } from 'react';
+import { useQueryChannel } from '../../hooks/useQueryChannel';
+import { SomethingWentWrong } from '@boluo/ui/SomethingWentWrong';
+import { useIntl } from 'react-intl';
+import clsx from 'clsx';
+import { PaneHeaderButton } from '@boluo/ui/PaneHeaderButton';
+import { ChevronUp, Edit } from '@boluo/icons';
+import Icon from '@boluo/ui/Icon';
+import { useQueryCurrentUser } from '@boluo/common/hooks/useQueryCurrentUser';
+import { useQueryChannelMembers } from '../../hooks/useQueryChannelMembers';
+import { MemberWithUser } from '@boluo/api';
+import { usePaneToggle } from '../../hooks/usePaneToggle';
+import { usePaneKey } from '../../hooks/usePaneKey';
+import { atom, useAtomValue } from 'jotai';
+import { panesAtom } from '../../state/view.atoms';
+
+interface Props {
+  channelId: string;
+  dismiss: () => void;
+}
+
+const classes = {
+  box: 'bg-pane-header-bg pl-pane py-2 text-sm pr-1.5',
+};
+
+export const ChannelHeaderTopic: FC<Props> = ({ channelId, dismiss }) => {
+  const { data: channel, isLoading } = useQueryChannel(channelId);
+  const { data: members } = useQueryChannelMembers(channelId);
+  const toggleChildPane = usePaneToggle({ child: '1/3' });
+  const paneKey = usePaneKey();
+  const topicPaneOpened = useAtomValue(
+    useMemo(
+      () =>
+        atom((read) => {
+          const panes = read(panesAtom);
+          const currentPane = panes.find((pane) => pane.key === paneKey);
+          return (
+            currentPane?.child?.pane.type === 'CHANNEL_TOPIC' &&
+            currentPane.child.pane.channelId === channelId
+          );
+        }),
+      [channelId, paneKey],
+    ),
+  );
+  const member = useMemo((): MemberWithUser | null => {
+    if (members == null || members.members.length === 0 || members.selfIndex == null) {
+      return null;
+    } else {
+      return members.members[members.selfIndex] ?? null;
+    }
+  }, [members]);
+  const intl = useIntl();
+  const handleEditClick: MouseEventHandler<HTMLButtonElement> = useCallback(
+    (e) => {
+      e.stopPropagation();
+      toggleChildPane({ type: 'CHANNEL_TOPIC', channelId });
+    },
+    [channelId, toggleChildPane],
+  );
+  if (isLoading) {
+    return <div className={classes.box}>...</div>;
+  } else if (!channel) {
+    return (
+      <div className={classes.box}>
+        <SomethingWentWrong />
+      </div>
+    );
+  }
+  const topic =
+    channel.topic.trim().length > 0 ? (
+      <span>{channel.topic}</span>
+    ) : (
+      <span>{intl.formatMessage({ defaultMessage: 'No topic set' })}</span>
+    );
+  return (
+    <div className={clsx(classes.box, 'flex items-start gap-1')}>
+      <span className="text-text-secondary grow whitespace-pre">{topic}</span>
+      {member && (member.space.isAdmin || member.channel.isMaster) && (
+        <PaneHeaderButton
+          icon={<Icon icon={Edit} />}
+          size="small"
+          onClick={handleEditClick}
+          active={topicPaneOpened}
+        >
+          {intl.formatMessage({ defaultMessage: 'Edit' })}
+        </PaneHeaderButton>
+      )}
+      <PaneHeaderButton icon={<Icon icon={ChevronUp} />} size="small" onClick={dismiss} />
+    </div>
+  );
+};

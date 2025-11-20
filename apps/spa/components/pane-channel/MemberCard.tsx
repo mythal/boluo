@@ -72,7 +72,7 @@ const InviteButton: FC<{ userId: string; channelId: string }> = ({ userId, chann
     },
   );
   return (
-    <Button data-small disabled={isInviting} onClick={() => invite()}>
+    <Button small disabled={isInviting} onClick={() => invite()}>
       <Icon icon={UserPlus} />
       <FormattedMessage defaultMessage="Invite" />
     </Button>
@@ -104,10 +104,10 @@ const ConfirmLeave: FC<{ channelId: string; channelName: string; dismiss: () => 
         />
       </div>
       <div className="pt-2 text-right">
-        <Button data-small className="mx-1" onClick={dismiss}>
+        <Button small className="mx-1" onClick={dismiss}>
           <FormattedMessage defaultMessage="Cancel" />
         </Button>
-        <Button data-small variant="danger" disabled={isKicking} onClick={() => kick()}>
+        <Button small variant="danger" disabled={isKicking} onClick={() => kick()}>
           <FormattedMessage defaultMessage="Leave" />
         </Button>
       </div>
@@ -144,10 +144,10 @@ const ConfirmKick: FC<{
         />
       </div>
       <div className="pt-2 text-right">
-        <Button data-small className="mx-1" onClick={dismiss}>
+        <Button small className="mx-1" onClick={dismiss}>
           <FormattedMessage defaultMessage="Cancel" />
         </Button>
-        <Button data-small variant="danger" disabled={isKicking} onClick={() => kick()}>
+        <Button small variant="danger" disabled={isKicking} onClick={() => kick()}>
           <FormattedMessage defaultMessage="Yes, Kick" />
         </Button>
       </div>
@@ -297,7 +297,7 @@ export const MemberCard: React.FC<Props> = ({
   const thisIsMe = user.id === currentUser?.id;
   const canIManage = canIKick || canIInvite || canIEditMaster;
   const [uiState, setUiState] = useState<'VIEW' | 'MANAGE' | 'CONFIRM_KICK' | 'CONFIRM_LEAVE'>(
-    'VIEW',
+    canIInvite ? 'MANAGE' : 'VIEW',
   );
   const intl = useIntl();
   let statusText = intl.formatMessage({ defaultMessage: 'Unknown' });
@@ -316,7 +316,7 @@ export const MemberCard: React.FC<Props> = ({
   }
   return (
     <div {...props} ref={ref} className="w-[20rem]">
-      <FloatingBox>
+      <FloatingBox className="p-3">
         <div className="flex items-end">
           <Avatar
             size="6rem"
@@ -359,15 +359,15 @@ export const MemberCard: React.FC<Props> = ({
           </div>
         )}
         {uiState === 'VIEW' && canIManage && (
-          <div className="space-x-1 pt-4 text-right">
+          <div className="flex justify-end gap-1 pt-4">
             {thisIsMe && channelMember != null && (
-              <Button data-small onClick={() => setUiState('CONFIRM_LEAVE')}>
+              <Button small onClick={() => setUiState('CONFIRM_LEAVE')}>
                 <Icon icon={UserX} />
                 <FormattedMessage defaultMessage="Leave" />
               </Button>
             )}
             <Button
-              data-small
+              small
               onClick={() => setUiState((x) => (x === 'VIEW' ? 'MANAGE' : 'VIEW'))}
               title={intl.formatMessage({ defaultMessage: 'Manage' })}
             >
@@ -385,9 +385,9 @@ export const MemberCard: React.FC<Props> = ({
         )}
 
         {uiState === 'MANAGE' && (
-          <div className="space-x-1 pt-4">
+          <div className="flex gap-1 pt-4">
             {canIKick && !thisIsMe && (
-              <Button data-small onClick={() => setUiState('CONFIRM_KICK')}>
+              <Button small onClick={() => setUiState('CONFIRM_KICK')}>
                 <Icon icon={UserX} />
                 <FormattedMessage defaultMessage="Kick this member" />
               </Button>
@@ -397,11 +397,15 @@ export const MemberCard: React.FC<Props> = ({
             )}
 
             {thisIsMe && channelMember?.channelId === channel.id && (
-              <Button data-small onClick={() => setUiState('CONFIRM_LEAVE')}>
+              <Button small onClick={() => setUiState('CONFIRM_LEAVE')}>
                 <Icon icon={UserX} />
                 <FormattedMessage defaultMessage="Leave" />
               </Button>
             )}
+
+            <Button small onClick={() => setUiState('VIEW')}>
+              <FormattedMessage defaultMessage="Done" />
+            </Button>
           </div>
         )}
 

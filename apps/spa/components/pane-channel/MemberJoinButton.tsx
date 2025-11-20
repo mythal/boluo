@@ -13,7 +13,7 @@ import { FormattedMessage } from 'react-intl';
 import useSWRMutation, { type MutationFetcher } from 'swr/mutation';
 import { Spinner } from '@boluo/ui/Spinner';
 import { useMySpaceMember } from '../../hooks/useQueryMySpaceMember';
-import { SidebarHeaderButton } from '../sidebar/SidebarHeaderButton';
+import { PaneHeaderButton } from '@boluo/ui/PaneHeaderButton';
 import { FailedBanner } from '@boluo/ui/chat/FailedBanner';
 import { usePaneAdd } from '../../hooks/usePaneAdd';
 import { useQueryChannelMembers } from '../../hooks/useQueryChannelMembers';
@@ -119,10 +119,10 @@ export const MemberJoinButton: FC<Props> = ({ channel }) => {
   return (
     <>
       {errorNode}
-      <SidebarHeaderButton disabled={!currentUser || isMutating} onClick={handleClick}>
+      <PaneHeaderButton disabled={!currentUser || isMutating} onClick={handleClick}>
         {isMutating ? <Spinner /> : <UserPlus />}
         <FormattedMessage defaultMessage="Join" />
-      </SidebarHeaderButton>
+      </PaneHeaderButton>
     </>
   );
 };

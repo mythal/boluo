@@ -27,19 +27,22 @@ const ensureWorker = (): Worker | null => {
     workerInstance = null;
     return null;
   }
-  workerInstance.addEventListener('message', ({ data }: MessageEvent<ComposeBackupWorkerResponse>) => {
-    if (data.type === 'listResult') {
-      const resolver = pendingRequests.get(data.requestId);
-      if (resolver) {
-        resolver(data.drafts);
-        pendingRequests.delete(data.requestId);
+  workerInstance.addEventListener(
+    'message',
+    ({ data }: MessageEvent<ComposeBackupWorkerResponse>) => {
+      if (data.type === 'listResult') {
+        const resolver = pendingRequests.get(data.requestId);
+        if (resolver) {
+          resolver(data.drafts);
+          pendingRequests.delete(data.requestId);
+        }
+        return;
       }
-      return;
-    }
-    if (data.type === 'updated') {
-      listeners.forEach((listener) => listener(data.channelId));
-    }
-  });
+      if (data.type === 'updated') {
+        listeners.forEach((listener) => listener(data.channelId));
+      }
+    },
+  );
   return workerInstance;
 };
 

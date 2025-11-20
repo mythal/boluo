@@ -13,7 +13,7 @@ interface Props {
 
 export const SpaceMemberBadge: FC<Props> = ({ members, spaceId }) => {
   const count = members == null ? '...' : members.length;
-  const toggleChild = usePaneToggle({ child: true });
+  const toggleChild = usePaneToggle({ child: '2/3' });
   const handleClick = () => {
     toggleChild({ type: 'SPACE_MEMBERS', spaceId });
   };

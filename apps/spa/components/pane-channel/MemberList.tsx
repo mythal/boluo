@@ -4,7 +4,7 @@ import { type FC, useMemo, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useQueryChannelMembers } from '../../hooks/useQueryChannelMembers';
 import { useQueryUsersStatus } from '../../hooks/useQueryUsersStatus';
-import { SidebarHeaderButton } from '../sidebar/SidebarHeaderButton';
+import { PaneHeaderButton } from '@boluo/ui/PaneHeaderButton';
 import { MemberInvitation } from './MemberInvitation';
 import { MemberListItem } from './MemberListItem';
 import { Failed } from '@boluo/ui/Failed';
@@ -101,13 +101,13 @@ export const MemberList: FC<Props> = ({ currentUser, channel }) => {
           {uiState === 'INVITE' && <FormattedMessage defaultMessage="Invite" />}
         </span>
         {canInvite && (
-          <SidebarHeaderButton
+          <PaneHeaderButton
             active={uiState === 'INVITE'}
             onClick={toggleInvite}
             title={intl.formatMessage({ defaultMessage: 'Invite' })}
           >
             <UserPlus />
-          </SidebarHeaderButton>
+          </PaneHeaderButton>
         )}
       </div>
 

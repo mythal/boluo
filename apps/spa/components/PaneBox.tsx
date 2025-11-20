@@ -1,4 +1,12 @@
-import { type FC, type ReactNode, Suspense, useContext, useMemo, useRef } from 'react';
+import {
+  type CSSProperties,
+  type FC,
+  type ReactNode,
+  Suspense,
+  useContext,
+  useMemo,
+  useRef,
+} from 'react';
 import { Loading } from '@boluo/ui/Loading';
 import { type ChildrenProps } from '@boluo/utils/types';
 import { usePaneFocus } from '../hooks/usePaneFocus';
@@ -8,7 +16,7 @@ import { BannerContext } from '../hooks/useBannerNode';
 import { selectAtom } from 'jotai/utils';
 import { PaneContext } from '../state/view.context';
 import { panesAtom } from '../state/view.atoms';
-import { type PaneData } from '../state/view.types';
+import { type ChildPaneRatio, type PaneChild } from '../state/view.types';
 import { useAtomValue } from 'jotai';
 import { IsChildPaneContext, useIsChildPane } from '../hooks/useIsChildPane';
 import { ChildPaneSwitch } from './PaneSwitch';
@@ -22,6 +30,19 @@ const Placeholder = () => {
   return <div className="h-full"></div>;
 };
 
+const CHILD_RATIO_FRACTIONS: Record<ChildPaneRatio, [number, number]> = {
+  '1/2': [1, 1],
+  '2/3': [1, 2],
+  '1/3': [2, 1],
+};
+
+const getChildGridStyle = (ratio: ChildPaneRatio): CSSProperties => {
+  const [parentFraction, childFraction] = CHILD_RATIO_FRACTIONS[ratio];
+  return {
+    gridTemplateRows: `minmax(0, ${parentFraction}fr) minmax(0, ${childFraction}fr)`,
+  };
+};
+
 export const PaneBox: FC<Props> = ({ header, children, grow = false }) => {
   const { key: paneKey } = useContext(PaneContext);
   const paneBoxRef = useRef<HTMLDivElement | null>(null);
@@ -30,7 +51,7 @@ export const PaneBox: FC<Props> = ({ header, children, grow = false }) => {
   const isChildPane = useIsChildPane();
   const childPaneAtom = useMemo(
     () =>
-      selectAtom(panesAtom, (panes): PaneData | undefined => {
+      selectAtom(panesAtom, (panes): PaneChild | undefined => {
         if (isChildPane) {
           return undefined;
         }
@@ -39,7 +60,13 @@ export const PaneBox: FC<Props> = ({ header, children, grow = false }) => {
       }),
     [isChildPane, paneKey],
   );
-  const childPane: PaneData | undefined = useAtomValue(childPaneAtom);
+  const childPane: PaneChild | undefined = useAtomValue(childPaneAtom);
+  const childPaneGridStyle = useMemo(() => {
+    if (!childPane) {
+      return { gridTemplateRows: 'minmax(0, 1fr)' };
+    }
+    return getChildGridStyle(childPane.ratio);
+  }, [childPane]);
   const content = (
     <div
       ref={isChildPane ? paneBoxRef : undefined}
@@ -74,12 +101,16 @@ export const PaneBox: FC<Props> = ({ header, children, grow = false }) => {
         ref={paneBoxRef}
         className={`PaneBox flex h-full min-w-88 max-md:flex-[1_1_100%] ${grow ? 'flex-[1_1_100%]' : 'flex-[0_0_0]'} flex-col`}
       >
-        {content}
-        {childPane && (
-          <IsChildPaneContext value={true}>
-            <ChildPaneSwitch pane={childPane} />
-          </IsChildPaneContext>
-        )}
+        <div className="grid h-full min-h-0 grid-cols-1" style={childPaneGridStyle}>
+          <div className="min-h-0 overflow-hidden">{content}</div>
+          {childPane && (
+            <IsChildPaneContext value={true}>
+              <div className="min-h-0 overflow-hidden">
+                <ChildPaneSwitch pane={childPane.pane} />
+              </div>
+            </IsChildPaneContext>
+          )}
+        </div>
       </div>
     </BannerContext>
   );

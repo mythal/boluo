@@ -56,6 +56,11 @@ export interface ChannelSettingsPane {
   channelId: string;
 }
 
+export interface ChannelTopicPane {
+  type: 'CHANNEL_TOPIC';
+  channelId: string;
+}
+
 export interface CreateChannelPane {
   type: 'CREATE_CHANNEL';
   spaceId: string;
@@ -84,6 +89,7 @@ export type PaneData =
   | SpaceSettingsPane
   | SpaceGreetingPane
   | ChannelSettingsPane
+  | ChannelTopicPane
   | CreateChannelPane
   | CreateSpacePane
   | LoginPane
@@ -93,7 +99,14 @@ export type PaneData =
   | ChannelExportPane
   | SpaceMembersPane;
 
-export type Pane = PaneData & { key: number; child?: PaneData };
+export type ChildPaneRatio = '1/2' | '2/3' | '1/3';
+
+export interface PaneChild {
+  ratio: ChildPaneRatio;
+  pane: PaneData;
+}
+
+export type Pane = PaneData & { key: number; child?: PaneChild };
 
 interface RootRoute {
   type: 'ROOT';

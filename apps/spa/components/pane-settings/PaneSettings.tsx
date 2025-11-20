@@ -86,7 +86,11 @@ interface AccountFieldsProps {
   profilePaneActive: boolean;
 }
 
-const AccountFields: FC<AccountFieldsProps> = ({ currentUser, onToggleProfile, profilePaneActive }) => {
+const AccountFields: FC<AccountFieldsProps> = ({
+  currentUser,
+  onToggleProfile,
+  profilePaneActive,
+}) => {
   return (
     <div className="flex flex-col gap-4">
       <SectionTitle>

@@ -16,7 +16,7 @@ import { Spinner } from '@boluo/ui/Spinner';
 import { type Empty } from '@boluo/utils/types';
 import { useQueryChannel } from '../../hooks/useQueryChannel';
 import { FloatingBox } from '@boluo/ui/FloatingBox';
-import { SidebarHeaderButton } from '../sidebar/SidebarHeaderButton';
+import { PaneHeaderButton } from '@boluo/ui/PaneHeaderButton';
 import Icon from '@boluo/ui/Icon';
 import { useQueryChannelMembers } from '../../hooks/useQueryChannelMembers';
 import { type MemberWithUser } from '@boluo/api';
@@ -59,7 +59,7 @@ export const MemberLeaveButton: FC<Props> = ({ channelId, onSuccess }) => {
   const { getReferenceProps, getFloatingProps } = useInteractions([click, dismiss]);
   return (
     <>
-      <SidebarHeaderButton
+      <PaneHeaderButton
         ref={refs.setReference}
         disabled={myMember == null || isMutating || isLoading}
         size="small"
@@ -67,7 +67,7 @@ export const MemberLeaveButton: FC<Props> = ({ channelId, onSuccess }) => {
       >
         {isMutating || isLoading ? <Spinner /> : <Icon icon={UserX} />}
         <FormattedMessage defaultMessage="Leave" />
-      </SidebarHeaderButton>
+      </PaneHeaderButton>
       {isConfirmOpen && (
         <FloatingPortal>
           <div
@@ -75,7 +75,7 @@ export const MemberLeaveButton: FC<Props> = ({ channelId, onSuccess }) => {
             style={{ position: strategy, top: y ?? 0, left: x ?? 0, zIndex: 30 }}
             {...getFloatingProps()}
           >
-            <FloatingBox>
+            <FloatingBox className="p-3">
               <div className="max-w-xs">
                 <FormattedMessage
                   defaultMessage="Are you sure you want to leave {channelName}?"
@@ -83,7 +83,7 @@ export const MemberLeaveButton: FC<Props> = ({ channelId, onSuccess }) => {
                 />
               </div>
               <div className="pt-2 text-right">
-                <Button variant="danger" data-small onClick={confirm} disabled={channel == null}>
+                <Button variant="danger" small onClick={confirm} disabled={channel == null}>
                   <FormattedMessage defaultMessage="Leave" />
                 </Button>
               </div>

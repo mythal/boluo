@@ -5,7 +5,7 @@ import { type ReactNode, type FC } from 'react';
 import { FormattedMessage } from 'react-intl';
 import useSWRMutation from 'swr/mutation';
 import { unwrap } from '@boluo/utils/result';
-import { SidebarHeaderButton } from '../sidebar/SidebarHeaderButton';
+import { PaneHeaderButton } from '@boluo/ui/PaneHeaderButton';
 import { useSWRConfig } from 'swr';
 import { Spinner } from '@boluo/ui/Spinner';
 
@@ -36,7 +36,7 @@ export const SpaceJoinButton: FC<Props> = ({ spaceId }) => {
     icon = <AlertTriangle />;
   }
   return (
-    <SidebarHeaderButton
+    <PaneHeaderButton
       className="SpaceJoinButton"
       isLoading={isJoining}
       icon={icon}
@@ -45,6 +45,6 @@ export const SpaceJoinButton: FC<Props> = ({ spaceId }) => {
       <span className="text-xs">
         <FormattedMessage defaultMessage="Join Space" />
       </span>
-    </SidebarHeaderButton>
+    </PaneHeaderButton>
   );
 };

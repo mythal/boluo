@@ -18,7 +18,7 @@ export const ConnectionIndicatorConnected: FC = () => {
       </div>
       {isDevMode && (
         <div className="mt-2">
-          <Button data-small onClick={disconnect}>
+          <Button small onClick={disconnect}>
             <FormattedMessage defaultMessage="Disconnect" />
           </Button>
         </div>

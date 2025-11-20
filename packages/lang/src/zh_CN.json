@@ -92,6 +92,9 @@
   "3dRjlT": {
     "message": "这里是新版本的菠萝，仍在活跃开发中。如果你更想回到旧版，请访问"
   },
+  "3kOdlB": {
+    "message": "No topic set"
+  },
   "47FYwb": {
     "message": "取消"
   },
@@ -155,6 +158,9 @@
   "6WiliO": {
     "message": "可以访问论坛 {forumUrl} 进行讨论和反馈。"
   },
+  "6hHVei": {
+    "message": "Edit Topic"
+  },
   "6q3tCn": {
     "message": "正在连接"
   },
@@ -166,6 +172,9 @@
   },
   "7UOvbT": {
     "message": "离线"
+  },
+  "7ifIhk": {
+    "message": "Save Topic"
   },
   "7q87xo": {
     "message": "频道设置"

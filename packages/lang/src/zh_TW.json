@@ -92,6 +92,9 @@
   "3dRjlT": {
     "message": "This is the latest version of Boluo, which is still under active development. If you prefer the legacy version, please visit"
   },
+  "3kOdlB": {
+    "message": "No topic set"
+  },
   "47FYwb": {
     "message": "取消"
   },
@@ -155,6 +158,9 @@
   "6WiliO": {
     "message": "The forum is available at {forumUrl} (Chinese only for now), you can feedback issues and discuss there."
   },
+  "6hHVei": {
+    "message": "Edit Topic"
+  },
   "6q3tCn": {
     "message": "正在連接"
   },
@@ -166,6 +172,9 @@
   },
   "7UOvbT": {
     "message": "離線"
+  },
+  "7ifIhk": {
+    "message": "Save Topic"
   },
   "7q87xo": {
     "message": "頻道設定"

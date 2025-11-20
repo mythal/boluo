@@ -27,7 +27,7 @@
     "message": "在新窗格中打开"
   },
   "/iUStU": {
-    "message": "例如: 哪吒"
+    "message": "例如: 耐门·休·柯曼"
   },
   "/jxJyw": {
     "message": "试图放置消息的位置发生了变化。"
@@ -93,7 +93,7 @@
     "message": "这里是新版本的菠萝，仍在活跃开发中。如果你更想回到旧版，请访问"
   },
   "3kOdlB": {
-    "message": "No topic set"
+    "message": "未设定话题"
   },
   "47FYwb": {
     "message": "取消"
@@ -159,7 +159,7 @@
     "message": "可以访问论坛 {forumUrl} 进行讨论和反馈。"
   },
   "6hHVei": {
-    "message": "Edit Topic"
+    "message": "编辑话题"
   },
   "6q3tCn": {
     "message": "正在连接"
@@ -174,7 +174,7 @@
     "message": "离线"
   },
   "7ifIhk": {
-    "message": "Save Topic"
+    "message": "保存话题"
   },
   "7q87xo": {
     "message": "频道设置"
@@ -369,7 +369,7 @@
     "message": "下拉刷新"
   },
   "JXdbo8": {
-    "message": "Done"
+    "message": "没事"
   },
   "Jc0JUv": {
     "message": "输入框崩溃了。您最后的输入是："

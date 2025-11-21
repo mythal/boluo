@@ -6,7 +6,6 @@ import clsx from 'clsx';
 import { PaneHeaderButton } from '@boluo/ui/PaneHeaderButton';
 import { ChevronUp, Edit } from '@boluo/icons';
 import Icon from '@boluo/ui/Icon';
-import { useQueryCurrentUser } from '@boluo/common/hooks/useQueryCurrentUser';
 import { useQueryChannelMembers } from '../../hooks/useQueryChannelMembers';
 import { MemberWithUser } from '@boluo/api';
 import { usePaneToggle } from '../../hooks/usePaneToggle';
@@ -68,19 +67,22 @@ export const ChannelHeaderTopic: FC<Props> = ({ channelId, dismiss }) => {
   }
   const topic =
     channel.topic.trim().length > 0 ? (
-      <span>{channel.topic}</span>
+      <div>{channel.topic}</div>
     ) : (
-      <span>{intl.formatMessage({ defaultMessage: 'No topic set' })}</span>
+      <div className="text-text-subtle">
+        {intl.formatMessage({ defaultMessage: 'No topic set' })}
+      </div>
     );
   return (
     <div className={clsx(classes.box, 'flex items-start gap-1')}>
-      <span className="text-text-secondary grow whitespace-pre">{topic}</span>
+      <div className="text-text-secondary shrink grow whitespace-pre-line">{topic}</div>
       {member && (member.space.isAdmin || member.channel.isMaster) && (
         <PaneHeaderButton
           icon={<Icon icon={Edit} />}
           size="small"
           onClick={handleEditClick}
           active={topicPaneOpened}
+          className="shrink-0"
         >
           {intl.formatMessage({ defaultMessage: 'Edit' })}
         </PaneHeaderButton>

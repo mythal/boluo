@@ -92,6 +92,9 @@
   "3dRjlT": {
     "message": "這是新版本的菠蘿，仍在活躍開發中。如果你更想回到舊版，請訪問"
   },
+  "3kOdlB": {
+    "message": "沒有設定主題"
+  },
   "47FYwb": {
     "message": "取消"
   },
@@ -155,6 +158,9 @@
   "6WiliO": {
     "message": "可以訪問論壇 {forumUrl} 進行討論和反饋。"
   },
+  "6hHVei": {
+    "message": "編輯主題"
+  },
   "6q3tCn": {
     "message": "正在連接"
   },
@@ -166,6 +172,9 @@
   },
   "7UOvbT": {
     "message": "離線"
+  },
+  "7ifIhk": {
+    "message": "儲存主題"
   },
   "7q87xo": {
     "message": "頻道設定"
@@ -358,6 +367,9 @@
   },
   "JQt0RP": {
     "message": "下拉刷新"
+  },
+  "JXdbo8": {
+    "message": "完畢"
   },
   "Jc0JUv": {
     "message": "輸入框崩潰了。您最後的輸入是："

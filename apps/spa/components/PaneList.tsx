@@ -20,7 +20,11 @@ export const PaneList: FC<Props> = ({ defaultPane }) => {
   const setFocusPane = useSetAtom(focusPaneAtom);
   const maxPane = usePaneLimit();
   const visiblePanes = useMemo(() => panes.slice(0, maxPane), [maxPane, panes]);
-  const canDrag = visiblePanes.length > 1 && maxPane > 1;
+  const draggablePaneCount = useMemo(
+    () => visiblePanes.reduce((count, pane) => count + 1 + (pane.child ? 1 : 0), 0),
+    [visiblePanes],
+  );
+  const canDrag = draggablePaneCount > 1;
 
   const { dragContextValue, indicator } = usePaneDragController({
     visiblePanes,

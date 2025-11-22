@@ -2,17 +2,17 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { clamp } from '@boluo/utils/number';
 import { type Pane, type PaneData } from '../state/view.types';
 import { type PaneDragContextValue } from './usePaneDrag';
-import { type FocusPane } from '../state/view.atoms';
+import { findNextPaneKey, type FocusPane } from '../state/view.atoms';
 
-type DropTarget =
-  | { kind: 'insert'; index: number }
-  | { kind: 'child'; targetKey: number };
+type DropTarget = { kind: 'insert'; index: number } | { kind: 'child'; targetKey: number };
 
 interface DragState {
   key: number;
   pointerId: number;
   dropTarget: DropTarget;
   rects: Map<number, DOMRect>;
+  isChild: boolean;
+  hasMoved: boolean;
 }
 
 export interface PaneDragIndicator {
@@ -31,7 +31,7 @@ interface Args {
   setFocusPane: (focus: FocusPane) => void;
 }
 
-const move = <T,>(list: T[], from: number, to: number) => {
+const move = <T>(list: T[], from: number, to: number) => {
   if (from === to) return list;
   const next = [...list];
   const [item] = next.splice(from, 1);
@@ -108,7 +108,7 @@ export const usePaneDragController = ({
   }, [dragState]);
 
   const handlePointerDown = useCallback(
-    (paneKey: number, event: React.PointerEvent<HTMLElement>) => {
+    (paneKey: number, isChild: boolean, event: React.PointerEvent<HTMLElement>) => {
       if (!canDrag) return;
       const rects = new Map<number, DOMRect>();
       paneRefs.current.forEach((node, key) => {
@@ -121,11 +121,20 @@ export const usePaneDragController = ({
       const x = event.clientX;
       const y = event.clientY;
       const dropTarget = getDropTarget(x, y, visiblePanes, rects, paneKey);
-      setFocusPane({ key: paneKey, isChild: false });
+      const nextState: DragState = {
+        key: paneKey,
+        pointerId,
+        rects,
+        dropTarget,
+        isChild,
+        hasMoved: false,
+      };
+      setFocusPane({ key: paneKey, isChild });
       event.preventDefault();
       event.stopPropagation();
       event.currentTarget.setPointerCapture?.(pointerId);
-      setDragState({ key: paneKey, pointerId, rects, dropTarget });
+      dragStateRef.current = nextState;
+      setDragState(nextState);
     },
     [canDrag, setFocusPane, visiblePanes],
   );
@@ -142,7 +151,9 @@ export const usePaneDragController = ({
       setDragState((prev) => {
         if (!prev) return prev;
         const dropTarget = getDropTarget(x, y, visiblePanes, prev.rects, prev.key);
-        return { ...prev, dropTarget };
+        const nextState = { ...prev, dropTarget, hasMoved: true };
+        dragStateRef.current = nextState;
+        return nextState;
       });
       event.preventDefault();
     };
@@ -151,18 +162,45 @@ export const usePaneDragController = ({
       if (!state || event.pointerId !== state.pointerId) return;
       event.preventDefault();
       setDragState(null);
-      const fromIndex = visiblePanes.findIndex((pane) => pane.key === state.key);
-      if (fromIndex === -1) return;
+      dragStateRef.current = null;
+      if (state.isChild && !state.hasMoved) return;
+      if (visiblePanes.findIndex((pane) => pane.key === state.key) === -1) return;
+      let nextFocus: FocusPane | null = null;
       setPanes((prev) => {
         const dropTarget = state.dropTarget;
         const visible = prev.slice(0, maxPane);
         const rest = prev.slice(maxPane);
         const currentFromIndex = visible.findIndex((pane) => pane.key === state.key);
         if (currentFromIndex === -1) return prev;
+        if (state.isChild) {
+          const hostPane = visible[currentFromIndex];
+          if (!hostPane?.child) return prev;
+          const nextVisible = [...visible];
+          nextVisible[currentFromIndex] = { ...hostPane, child: undefined };
+          if (dropTarget.kind === 'child') {
+            const targetIndex = nextVisible.findIndex((pane) => pane.key === dropTarget.targetKey);
+            if (targetIndex === -1) return prev;
+            const targetPane = nextVisible[targetIndex]!;
+            if (targetPane.child) return prev;
+            nextFocus = { key: dropTarget.targetKey, isChild: true };
+            nextVisible[targetIndex] = {
+              ...targetPane,
+              child: { pane: hostPane.child.pane, ratio: hostPane.child.ratio },
+            };
+            return [...nextVisible, ...rest];
+          }
+          // Dropping a child into the main list: detach, assign a new key, and insert as a standalone pane.
+          const newKey = findNextPaneKey(prev);
+          const toIndex = clamp(dropTarget.index, 0, nextVisible.length);
+          nextVisible.splice(toIndex, 0, { ...hostPane.child.pane, key: newKey });
+          nextFocus = { key: newKey, isChild: false };
+          return [...nextVisible, ...rest];
+        }
         if (dropTarget.kind === 'insert') {
           const toIndex = clamp(dropTarget.index, 0, visible.length);
           if (currentFromIndex === toIndex) return prev;
           const nextVisible = move(visible, currentFromIndex, toIndex);
+          nextFocus = { key: state.key, isChild: false };
           return [...nextVisible, ...rest];
         }
         let targetIndex = visible.findIndex((pane) => pane.key === dropTarget.targetKey);
@@ -192,8 +230,12 @@ export const usePaneDragController = ({
           ...targetPane,
           child: { pane: childPane, ratio: '1/2' },
         };
+        nextFocus = { key: dropTarget.targetKey, isChild: true };
         return [...nextVisible, ...rest];
       });
+      if (nextFocus) {
+        setFocusPane(nextFocus);
+      }
     };
     window.addEventListener('pointermove', handleMove);
     window.addEventListener('pointerup', handleUp);
@@ -203,17 +245,19 @@ export const usePaneDragController = ({
       window.removeEventListener('pointerup', handleUp);
       window.removeEventListener('pointercancel', handleUp);
     };
-  }, [isDragging, maxPane, setPanes, visiblePanes]);
+  }, [isDragging, maxPane, setFocusPane, setPanes, visiblePanes]);
 
   const indicator = useMemo<PaneDragIndicator | null>(() => {
     if (!dragState) return null;
+    if (dragState.isChild && !dragState.hasMoved) return null;
     const dropTarget = dragState.dropTarget;
     const rects = dragState.rects;
     const visibleKeys = visiblePanes.map((pane) => pane.key);
     if (dropTarget.kind === 'insert') {
       if (visibleKeys.length === 0) return null;
       const fromIndex = visibleKeys.findIndex((key) => key === dragState.key);
-      if (fromIndex !== -1) {
+      if (fromIndex !== -1 && !dragState.isChild) {
+        // If the drop target is the same as the dragged pane's index, we don't show the indicator.
         if (dropTarget.index === fromIndex || dropTarget.index === fromIndex + 1) {
           return null;
         }
@@ -250,15 +294,18 @@ export const usePaneDragController = ({
     };
   }, [dragState, visiblePanes]);
 
-  const draggingKey = dragState?.key ?? null;
+  const draggingPane = useMemo(
+    () => (dragState ? { key: dragState.key, isChild: dragState.isChild } : null),
+    [dragState],
+  );
   const dragContextValue = useMemo<PaneDragContextValue>(
     () => ({
       canDrag,
-      draggingKey,
+      draggingPane,
       onHandlePointerDown: handlePointerDown,
       registerPaneRef,
     }),
-    [canDrag, draggingKey, handlePointerDown, registerPaneRef],
+    [canDrag, draggingPane, handlePointerDown, registerPaneRef],
   );
 
   return { dragContextValue, indicator };

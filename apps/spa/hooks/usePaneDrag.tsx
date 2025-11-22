@@ -3,14 +3,18 @@ import { type PointerEvent as ReactPointerEvent } from 'react';
 
 export interface PaneDragContextValue {
   canDrag: boolean;
-  draggingKey: number | null;
-  onHandlePointerDown?: (paneKey: number, event: ReactPointerEvent<HTMLElement>) => void;
+  draggingPane?: { key: number; isChild: boolean } | null;
+  onHandlePointerDown?: (
+    paneKey: number,
+    isChild: boolean,
+    event: ReactPointerEvent<HTMLElement>,
+  ) => void;
   registerPaneRef?: (paneKey: number, node: HTMLDivElement | null) => void;
 }
 
 const defaultPaneDragContext: PaneDragContextValue = {
   canDrag: false,
-  draggingKey: null,
+  draggingPane: null,
 };
 
 export const PaneDragContext = createContext<PaneDragContextValue>(defaultPaneDragContext);

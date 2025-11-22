@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { clamp } from '@boluo/utils/number';
 import { type Pane, type PaneData } from '../state/view.types';
 import { type PaneDragContextValue } from './usePaneDrag';
+import { type FocusPane } from '../state/view.atoms';
 
 type DropTarget =
   | { kind: 'insert'; index: number }
@@ -27,7 +28,7 @@ interface Args {
   maxPane: number;
   canDrag: boolean;
   setPanes: (fn: (prev: Pane[]) => Pane[]) => void;
-  setFocusPane: (key: number) => void;
+  setFocusPane: (focus: FocusPane) => void;
 }
 
 const move = <T,>(list: T[], from: number, to: number) => {
@@ -120,7 +121,7 @@ export const usePaneDragController = ({
       const x = event.clientX;
       const y = event.clientY;
       const dropTarget = getDropTarget(x, y, visiblePanes, rects, paneKey);
-      setFocusPane(paneKey);
+      setFocusPane({ key: paneKey, isChild: false });
       event.preventDefault();
       event.stopPropagation();
       event.currentTarget.setPointerCapture?.(pointerId);
@@ -164,12 +165,23 @@ export const usePaneDragController = ({
           const nextVisible = move(visible, currentFromIndex, toIndex);
           return [...nextVisible, ...rest];
         }
-        const targetIndex = visible.findIndex((pane) => pane.key === dropTarget.targetKey);
+        let targetIndex = visible.findIndex((pane) => pane.key === dropTarget.targetKey);
         if (targetIndex === -1) return prev;
         if (dropTarget.targetKey === state.key) return prev;
         const nextVisible = [...visible];
         const [draggedPane] = nextVisible.splice(currentFromIndex, 1);
         if (!draggedPane) return prev;
+        if (currentFromIndex < targetIndex) {
+          targetIndex -= 1;
+        }
+        const promotedChild = draggedPane.child?.pane;
+        if (promotedChild) {
+          const promoted: Pane = { ...promotedChild, key: draggedPane.key };
+          nextVisible.splice(currentFromIndex, 0, promoted);
+          if (currentFromIndex <= targetIndex) {
+            targetIndex += 1;
+          }
+        }
         const nextTargetIndex = nextVisible.findIndex((pane) => pane.key === dropTarget.targetKey);
         if (nextTargetIndex === -1) return prev;
         const targetPane = nextVisible[nextTargetIndex]!;

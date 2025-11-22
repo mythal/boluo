@@ -27,7 +27,7 @@ export const PaneList: FC<Props> = ({ defaultPane }) => {
     maxPane,
     canDrag,
     setPanes: (fn) => setPanes(fn),
-    setFocusPane: (key) => setFocusPane(key),
+    setFocusPane: (focus) => setFocusPane(focus),
   });
 
   const renderedPanes = useMemo(() => {

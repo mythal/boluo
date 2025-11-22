@@ -22,6 +22,7 @@ import { useAtomValue } from 'jotai';
 import { IsChildPaneContext, useIsChildPane } from '../hooks/useIsChildPane';
 import { ChildPaneSwitch } from './PaneSwitch';
 import { usePaneDrag } from '../hooks/usePaneDrag';
+import { PaneProvider } from '../state/view.context';
 
 interface Props extends ChildrenProps {
   header?: ReactNode;
@@ -115,10 +116,12 @@ export const PaneBox: FC<Props> = ({ header, children, grow = false }) => {
       >
         <div className="grid h-full min-h-0 grid-cols-1" style={childPaneGridStyle}>
           <div className="min-h-0 overflow-hidden">{content}</div>
-          {childPane && (
+          {childPane && paneKey != null && (
             <IsChildPaneContext value={true}>
               <div className="min-h-0 overflow-hidden">
-                <ChildPaneSwitch pane={childPane.pane} />
+                <PaneProvider paneKey={paneKey} isChild>
+                  <ChildPaneSwitch pane={childPane.pane} />
+                </PaneProvider>
               </div>
             </IsChildPaneContext>
           )}

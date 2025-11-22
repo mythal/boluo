@@ -64,12 +64,12 @@ export const PaneSpace: FC<Props> = ({ spaceId }) => {
     );
   }, [isSpaceMembersLoading, myId, mySpaceMember, space]);
   if (isLoading || !space) {
-    return <PaneLoading grow />;
+    return <PaneLoading initSizeLevel={1} />;
   }
   const { description, isPublic } = space;
   return (
     <PaneBox
-      grow
+      initSizeLevel={1}
       header={
         <PaneHeaderBox icon={<MoonStar />} operators={operators}>
           {space.name}

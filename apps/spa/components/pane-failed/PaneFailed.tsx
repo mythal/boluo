@@ -9,7 +9,7 @@ import { AlertTriangle } from '@boluo/icons';
 export const PaneFailed: FC<FailedProps> = ({ title, ...props }) => {
   return (
     <PaneBox
-      grow
+      initSizeLevel={1}
       header={
         <PaneHeaderBox
           icon={props.icon ?? <Icon icon={AlertTriangle} className="text-state-warning-text" />}

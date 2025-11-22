@@ -83,7 +83,7 @@ const Chat: FC = () => {
                   {!isClient ? (
                     <PaneEmpty />
                   ) : (
-                    <Suspense fallback={<PaneLoading grow />}>
+                    <Suspense fallback={<PaneLoading initSizeLevel={1} />}>
                       {route.type === 'SPACE' && (
                         <ChatSpace key={route.spaceId} spaceId={route.spaceId} />
                       )}

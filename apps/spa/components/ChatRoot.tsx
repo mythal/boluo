@@ -1,6 +1,6 @@
 import { useQueryCurrentUser } from '@boluo/common/hooks/useQueryCurrentUser';
 import { type FC, type ReactNode, useMemo } from 'react';
-import { ChatView } from './ChatView';
+import { PaneList } from './PaneList';
 import PaneLogin from './PaneLogin';
 import { PaneWelcome } from './PaneWelcome';
 import { clearToken } from '@boluo/api-browser';
@@ -21,5 +21,5 @@ export const ChatRoot: FC = () => {
       return <PaneWelcome />;
     }
   }, [currentUser, isLoading]);
-  return <ChatView defaultPane={defaultPane} />;
+  return <PaneList defaultPane={defaultPane} />;
 };

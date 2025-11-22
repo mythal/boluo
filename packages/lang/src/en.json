@@ -281,6 +281,9 @@
   "DBP+Od": {
     "message": "Echo"
   },
+  "DqAfWc": {
+    "message": "Drag to Move Pane"
+  },
   "EcW+hX": {
     "message": "Only visible to selected people."
   },
@@ -430,6 +433,9 @@
   },
   "Lzb4s2": {
     "message": "Move failed"
+  },
+  "M8AFCu": {
+    "message": "Long press to vertical split"
   },
   "MWO2zy": {
     "message": "Something going wrong."
@@ -878,6 +884,9 @@
   "iLUQIP": {
     "message": "Invite Link"
   },
+  "iU6/rV": {
+    "message": "Move Pane"
+  },
   "itPgxd": {
     "message": "Profile"
   },
@@ -901,6 +910,9 @@
   },
   "kGQJcD": {
     "message": "Reorder"
+  },
+  "kHHCWR": {
+    "message": "Adjust Size"
   },
   "kIUNDX": {
     "message": "Default Dice"

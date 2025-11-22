@@ -23,6 +23,7 @@ import { IsChildPaneContext, useIsChildPane } from '../hooks/useIsChildPane';
 import { ChildPaneSwitch } from './PaneSwitch';
 import { usePaneDrag } from '../hooks/usePaneDrag';
 import { PaneProvider } from '../state/view.context';
+import clsx from 'clsx';
 
 interface Props extends ChildrenProps {
   header?: ReactNode;
@@ -52,7 +53,7 @@ export const PaneBox: FC<Props> = ({ header, children, grow = false }) => {
   const bannerRef = useRef<HTMLDivElement | null>(null);
   const focus = usePaneFocus(paneBoxRef);
   const isChildPane = useIsChildPane();
-  const { registerPaneRef } = usePaneDrag();
+  const { registerPaneRef, draggingPane } = usePaneDrag();
   const childPaneAtom = useMemo(
     () =>
       selectAtom(panesAtom, (panes): PaneChild | undefined => {
@@ -71,6 +72,8 @@ export const PaneBox: FC<Props> = ({ header, children, grow = false }) => {
     }
     return getChildGridStyle(childPane.ratio);
   }, [childPane]);
+  const isDraggingCurrentPane =
+    draggingPane != null && draggingPane.key === paneKey && draggingPane.isChild === isChildPane;
 
   useEffect(() => {
     if (!registerPaneRef || isChildPane || paneKey == null) return;
@@ -81,7 +84,10 @@ export const PaneBox: FC<Props> = ({ header, children, grow = false }) => {
     <div
       ref={isChildPane ? paneBoxRef : undefined}
       onClick={focus}
-      className="@container relative flex h-full min-h-0 flex-[1_1_100%] flex-col"
+      className={clsx(
+        '@container relative flex h-full min-h-0 flex-[1_1_100%] flex-col',
+        isDraggingCurrentPane && 'opacity-50',
+      )}
     >
       {isChildPane && <div className="bg-pane-header-border absolute top-0 h-px w-full" />}
       {header}

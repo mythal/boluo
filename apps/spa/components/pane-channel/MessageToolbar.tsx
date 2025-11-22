@@ -47,6 +47,7 @@ import { empty, identity } from '@boluo/utils/function';
 import { ErrorBoundary } from '@sentry/nextjs';
 import { useIsOptimistic } from '../../hooks/useIsOptimistic';
 import { useIsDragging } from '../../hooks/useIsDragging';
+import { useLongPressProgress } from '../../hooks/useLongPressProgress';
 
 type ToolbarDisplay =
   | { type: 'HIDDEN' }
@@ -287,35 +288,11 @@ const MessageToolbarMoreButton: FC<{
   const { getFloatingProps, getReferenceProps } = useInteractions([hover, dismiss]);
   const more = useMemo(() => <MessageToolbarMore message={message} />, [message]);
   const showLongPressProgress = longPressStart != null && !open;
-  const [progress, setProgress] = React.useState(0);
-  const rafRef = useRef<number | null>(null);
-
-  useEffect(() => {
-    if (!showLongPressProgress || longPressStart == null) {
-      setProgress(0);
-      if (rafRef.current != null) {
-        cancelAnimationFrame(rafRef.current);
-        rafRef.current = null;
-      }
-      return;
-    }
-    const tick = () => {
-      const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
-      const elapsed = now - longPressStart;
-      const nextProgress = Math.min(1, elapsed / longPressDuration);
-      setProgress(nextProgress);
-      if (nextProgress < 1) {
-        rafRef.current = requestAnimationFrame(tick);
-      }
-    };
-    rafRef.current = requestAnimationFrame(tick);
-    return () => {
-      if (rafRef.current != null) {
-        cancelAnimationFrame(rafRef.current);
-        rafRef.current = null;
-      }
-    };
-  }, [longPressDuration, longPressStart, showLongPressProgress]);
+  const { progress } = useLongPressProgress(
+    longPressStart,
+    longPressDuration,
+    showLongPressProgress,
+  );
 
   return (
     <>

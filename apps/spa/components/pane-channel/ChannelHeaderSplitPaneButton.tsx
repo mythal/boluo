@@ -24,6 +24,7 @@ import { type ChildPaneRatio } from '../../state/view.types';
 import { useLongPressProgress } from '../../hooks/useLongPressProgress';
 
 const LONG_PRESS_DURATION = 1000;
+const SHORT_PRESS_THRESHOLD = 100;
 const CHILD_RATIO: ChildPaneRatio = '1/2';
 
 export const ChannelHeaderSplitPaneButton: FC = () => {
@@ -33,6 +34,7 @@ export const ChannelHeaderSplitPaneButton: FC = () => {
   const { key: paneKey } = useContext(PaneContext);
   const setPanes = useSetAtom(panesAtom);
   const longPressTimeoutRef = useRef<number | null>(null);
+  const longPressVisualTimeoutRef = useRef<number | null>(null);
   const [longPressStart, setLongPressStart] = useState<number | null>(null);
   const longPressTriggeredRef = useRef(false);
   const { showTooltip, refs, getFloatingProps, getReferenceProps, floatingStyles } =
@@ -82,27 +84,46 @@ export const ChannelHeaderSplitPaneButton: FC = () => {
       longPressTimeoutRef.current = null;
     }
   }, []);
+  const clearLongPressVisualTimeout = useCallback(() => {
+    if (longPressVisualTimeoutRef.current != null) {
+      clearTimeout(longPressVisualTimeoutRef.current);
+      longPressVisualTimeoutRef.current = null;
+    }
+  }, []);
 
   const resetLongPressState = useCallback(
     (keepTrigger = false) => {
       clearLongPressTimeout();
+      clearLongPressVisualTimeout();
       resetProgress();
       setLongPressStart(null);
       if (!keepTrigger) {
         longPressTriggeredRef.current = false;
+      } else {
+        // Allow next click after the long-press-triggered click event has been skipped.
+        setTimeout(() => {
+          longPressTriggeredRef.current = false;
+        }, 0);
       }
     },
-    [clearLongPressTimeout, resetProgress],
+    [clearLongPressTimeout, clearLongPressVisualTimeout, resetProgress],
   );
 
   const handleLongPress = useCallback(() => {
+    clearLongPressTimeout();
+    clearLongPressVisualTimeout();
     if (longPressDisabled) return;
     longPressTriggeredRef.current = true;
-    clearLongPressTimeout();
     resetProgress();
     setLongPressStart(null);
     createChildPane();
-  }, [clearLongPressTimeout, createChildPane, longPressDisabled, resetProgress]);
+  }, [
+    clearLongPressTimeout,
+    clearLongPressVisualTimeout,
+    createChildPane,
+    longPressDisabled,
+    resetProgress,
+  ]);
 
   const handlePointerDown = useCallback(
     (event: PointerEvent<HTMLButtonElement>) => {
@@ -111,7 +132,10 @@ export const ChannelHeaderSplitPaneButton: FC = () => {
       const start = typeof performance !== 'undefined' ? performance.now() : Date.now();
       resetLongPressState();
       longPressTriggeredRef.current = false;
-      setLongPressStart(start);
+      longPressVisualTimeoutRef.current = window.setTimeout(
+        () => setLongPressStart(start),
+        SHORT_PRESS_THRESHOLD,
+      );
       longPressTimeoutRef.current = window.setTimeout(handleLongPress, LONG_PRESS_DURATION);
     },
     [handleLongPress, longPressDisabled, resetLongPressState],
@@ -145,9 +169,10 @@ export const ChannelHeaderSplitPaneButton: FC = () => {
       if (longPressTriggeredRef.current) {
         event.preventDefault();
         event.stopPropagation();
-        longPressTriggeredRef.current = false;
-        return;
       }
+      const shouldSkip = longPressTriggeredRef.current;
+      longPressTriggeredRef.current = false;
+      if (shouldSkip) return;
       dup();
     },
     [dup],

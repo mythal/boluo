@@ -1,7 +1,7 @@
 import { createContext, useContext } from 'react';
 import { type PointerEvent as ReactPointerEvent } from 'react';
 
-interface PaneDragContextValue {
+export interface PaneDragContextValue {
   canDrag: boolean;
   draggingKey: number | null;
   onHandlePointerDown?: (paneKey: number, event: ReactPointerEvent<HTMLElement>) => void;

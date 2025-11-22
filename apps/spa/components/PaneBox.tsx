@@ -118,7 +118,7 @@ export const PaneBox: FC<Props> = ({ header, children, grow = false }) => {
     <BannerContext value={bannerRef}>
       <div
         ref={paneBoxRef}
-        className={`PaneBox flex h-full min-w-88 max-md:flex-[1_1_100%] ${grow ? 'flex-[1_1_100%]' : 'flex-[0_0_0]'} flex-col`}
+        className={`PaneBox md:min-w-pane-min flex h-full max-md:flex-[1_1_100%] ${grow ? 'flex-[1_1_100%]' : 'flex-[0_0_0]'} flex-col`}
       >
         <div className="grid h-full min-h-0 grid-cols-1" style={childPaneGridStyle}>
           <div className="min-h-0 overflow-hidden">{content}</div>

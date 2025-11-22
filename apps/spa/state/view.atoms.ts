@@ -65,15 +65,19 @@ export const routeAtom = atom<Route, [Route], void>(
   },
 );
 
-interface FocusRecord {
+export interface FocusPane {
   key: number;
+  isChild: boolean;
+}
+
+interface FocusRecord extends FocusPane {
   timestamp: number;
 }
 
 const focusRecordAtom = atom<FocusRecord | null>(null);
 
-export const focusPaneAtom = atom<number | null, [number], void>(
-  (get): number | null => {
+export const focusPaneAtom = atom<FocusPane | null, [FocusPane], void>(
+  (get): FocusPane | null => {
     const creationMap = get(panesCreationTimeMapAtom);
     const focusRecord = get(focusRecordAtom);
     const entries = [...creationMap.entries()].sort((a, b) => b[1] - a[1]);
@@ -85,16 +89,16 @@ export const focusPaneAtom = atom<number | null, [number], void>(
     if (focusRecord != null) {
       const { timestamp, key } = focusRecord;
       if (creationMap.has(key) && timestamp > firstTime) {
-        return key;
+        return focusRecord;
       }
     }
-    return firstKey;
+    return { key: firstKey, isChild: false };
   },
-  (get, set, key: number) => {
+  (get, set, focus: FocusPane) => {
     const creationMap = get(panesCreationTimeMapAtom);
-    if (creationMap.has(key)) {
+    if (creationMap.has(focus.key)) {
       const time = new Date().getTime();
-      set(focusRecordAtom, { key, timestamp: time });
+      set(focusRecordAtom, { ...focus, timestamp: time });
     }
   },
 );

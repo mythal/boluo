@@ -4,6 +4,7 @@ import {
   type ReactNode,
   Suspense,
   useContext,
+  useEffect,
   useMemo,
   useRef,
 } from 'react';
@@ -20,6 +21,9 @@ import { type ChildPaneRatio, type PaneChild } from '../state/view.types';
 import { useAtomValue } from 'jotai';
 import { IsChildPaneContext, useIsChildPane } from '../hooks/useIsChildPane';
 import { ChildPaneSwitch } from './PaneSwitch';
+import { usePaneDrag } from '../hooks/usePaneDrag';
+import { PaneProvider } from '../state/view.context';
+import clsx from 'clsx';
 
 interface Props extends ChildrenProps {
   header?: ReactNode;
@@ -44,11 +48,12 @@ const getChildGridStyle = (ratio: ChildPaneRatio): CSSProperties => {
 };
 
 export const PaneBox: FC<Props> = ({ header, children, grow = false }) => {
-  const { key: paneKey } = useContext(PaneContext);
+  const { key: paneKey, focused } = useContext(PaneContext);
   const paneBoxRef = useRef<HTMLDivElement | null>(null);
   const bannerRef = useRef<HTMLDivElement | null>(null);
   const focus = usePaneFocus(paneBoxRef);
   const isChildPane = useIsChildPane();
+  const { registerPaneRef, draggingPane } = usePaneDrag();
   const childPaneAtom = useMemo(
     () =>
       selectAtom(panesAtom, (panes): PaneChild | undefined => {
@@ -67,15 +72,29 @@ export const PaneBox: FC<Props> = ({ header, children, grow = false }) => {
     }
     return getChildGridStyle(childPane.ratio);
   }, [childPane]);
+  const isDraggingCurrentPane =
+    draggingPane != null && draggingPane.key === paneKey && draggingPane.isChild === isChildPane;
+
+  useEffect(() => {
+    if (!registerPaneRef || isChildPane || paneKey == null) return;
+    registerPaneRef(paneKey, paneBoxRef.current);
+    return () => registerPaneRef(paneKey, null);
+  }, [isChildPane, paneKey, registerPaneRef]);
   const content = (
     <div
       ref={isChildPane ? paneBoxRef : undefined}
       onClick={focus}
-      className="@container relative flex h-full min-h-0 flex-[1_1_100%] flex-col"
+      className={clsx(
+        '@container relative flex h-full min-h-0 flex-[1_1_100%] flex-col',
+        isDraggingCurrentPane && 'opacity-50',
+      )}
     >
       {isChildPane && <div className="bg-pane-header-border absolute top-0 h-px w-full" />}
       {header}
-      <div ref={bannerRef} className="border-pane-header-border border-b"></div>
+      <div
+        ref={bannerRef}
+        className={`${focused ? 'border-border-default' : 'border-border-subtle'} border-b`}
+      ></div>
 
       <div onFocus={focus} className="bg-pane-bg relative grow overflow-x-hidden overflow-y-auto">
         <Suspense
@@ -103,10 +122,12 @@ export const PaneBox: FC<Props> = ({ header, children, grow = false }) => {
       >
         <div className="grid h-full min-h-0 grid-cols-1" style={childPaneGridStyle}>
           <div className="min-h-0 overflow-hidden">{content}</div>
-          {childPane && (
+          {childPane && paneKey != null && (
             <IsChildPaneContext value={true}>
               <div className="min-h-0 overflow-hidden">
-                <ChildPaneSwitch pane={childPane.pane} />
+                <PaneProvider paneKey={paneKey} isChild>
+                  <ChildPaneSwitch pane={childPane.pane} />
+                </PaneProvider>
               </div>
             </IsChildPaneContext>
           )}

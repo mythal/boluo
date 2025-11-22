@@ -6,7 +6,7 @@ import { SpaceContext } from '../hooks/useSpace';
 import { PaneLoading } from './PaneLoading';
 import { FailedBanner } from '@boluo/ui/chat/FailedBanner';
 import { PaneFailed } from './pane-failed/PaneFailed';
-import { ChatView } from './ChatView';
+import { PaneList } from './PaneList';
 import { useTitle } from '../hooks/useTitle';
 import { PaneSpaceGreeting } from './PaneSpaceGreeting';
 import { useNotify } from '../hooks/useNotify';
@@ -67,7 +67,7 @@ export const ChatSpace: FC<Props> = ({ spaceId }) => {
   return (
     <SpaceContext value={space}>
       {errorNode}
-      <ChatView defaultPane={defaultPane} />
+      <PaneList defaultPane={defaultPane} />
     </SpaceContext>
   );
 };

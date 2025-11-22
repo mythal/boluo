@@ -22,20 +22,28 @@ export const ChannelHeader: FC = () => {
     }
     return <Hash />;
   }, [channel]);
-  return (
-    <PaneHeaderBox
-      icon={icon}
-      operators={
-        channel ? <ChannelHeaderOperations stateAtom={headerStateAtom} channel={channel} /> : null
-      }
-      extra={<ChannelHeaderExtra channelId={channelId} stateAtom={headerStateAtom} />}
-    >
+  const channelName = useMemo(
+    () => (
       <ChannelName
         stateAtom={headerStateAtom}
         name={channel?.name}
         topic={channel?.topic}
         isPublic={channel?.isPublic}
       />
+    ),
+    [channel, headerStateAtom],
+  );
+  const operators = useMemo(() => {
+    return channel ? (
+      <ChannelHeaderOperations stateAtom={headerStateAtom} channel={channel} />
+    ) : null;
+  }, [channel, headerStateAtom]);
+  const extra = useMemo(() => {
+    return <ChannelHeaderExtra channelId={channelId} stateAtom={headerStateAtom} />;
+  }, [channelId, headerStateAtom]);
+  return (
+    <PaneHeaderBox icon={icon} operators={operators} extra={extra}>
+      {channelName}
     </PaneHeaderBox>
   );
 };

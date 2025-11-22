@@ -161,6 +161,7 @@
   /* Semantic colors: typography */
   --color-text-primary: var(--color-black);
   --color-text-secondary: var(--color-neutral-600);
+  --color-text-secondary-dark: var(--color-neutral-300);
   --color-text-muted: var(--color-neutral-500);
   --color-text-subtle: var(--color-neutral-400);
   --color-text-inverted: var(--color-white);

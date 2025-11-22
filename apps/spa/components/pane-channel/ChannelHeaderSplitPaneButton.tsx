@@ -212,7 +212,7 @@ export const ChannelHeaderSplitPaneButton: FC = () => {
           <FormattedMessage defaultMessage="Split" />
         </div>
         {!longPressDisabled && (
-          <div className="text-text-secondary text-sm">
+          <div className="text-text-secondary-dark text-sm">
             <FormattedMessage defaultMessage="Long press to vertical split" />
           </div>
         )}

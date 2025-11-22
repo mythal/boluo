@@ -294,9 +294,15 @@ export const usePaneDragController = ({
     };
   }, [dragState, visiblePanes]);
 
+  // Keep the drag context stable during pointer moves; only recreate when the dragged pane identity changes.
+  const draggingKey = dragState?.key;
+  const draggingIsChild = dragState?.isChild;
   const draggingPane = useMemo(
-    () => (dragState ? { key: dragState.key, isChild: dragState.isChild } : null),
-    [dragState],
+    () =>
+      draggingKey != null && draggingIsChild != null
+        ? { key: draggingKey, isChild: draggingIsChild }
+        : null,
+    [draggingKey, draggingIsChild],
   );
   const dragContextValue = useMemo<PaneDragContextValue>(
     () => ({

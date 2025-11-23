@@ -23,9 +23,6 @@
   "/I//hN": {
     "message": "メッセージの読み込みに失敗しました ({errorCode})"
   },
-  "/caJLq": {
-    "message": "新しいペインで開く"
-  },
   "/iUStU": {
     "message": "例: 霧雨魔理沙"
   },
@@ -127,6 +124,9 @@
   },
   "5sg7KC": {
     "message": "パスワード"
+  },
+  "5zHF5n": {
+    "message": "Open New Pane"
   },
   "60KMrS": {
     "message": "デフォルトとして"
@@ -428,8 +428,14 @@
   "LnM0On": {
     "message": "{a} と {b} は入力しています…"
   },
+  "LtEjKk": {
+    "message": "Focus Next"
+  },
   "Lzb4s2": {
     "message": "移動失敗"
+  },
+  "M8AFCu": {
+    "message": "Long press to vertical split"
   },
   "MWO2zy": {
     "message": "何か問題が発生しました。"
@@ -535,6 +541,9 @@
   },
   "RraqCg": {
     "message": "ユーザー名とパスワードが一致しません"
+  },
+  "Rtr4mH": {
+    "message": "Drag to Move Column"
   },
   "RvUa7+": {
     "message": "名前なし"
@@ -707,6 +716,9 @@
   "ZgsEsn": {
     "message": "権限がありません"
   },
+  "ZsZAvL": {
+    "message": "Drag to Move Child Pane"
+  },
   "ZvI2/H": {
     "message": "指を離して読み込む"
   },
@@ -878,6 +890,9 @@
   "iLUQIP": {
     "message": "招待リンク"
   },
+  "iU6/rV": {
+    "message": "Move Pane"
+  },
   "itPgxd": {
     "message": "プロフィール"
   },
@@ -901,6 +916,9 @@
   },
   "kGQJcD": {
     "message": "並べ替え"
+  },
+  "kHHCWR": {
+    "message": "Adjust Size"
   },
   "kIUNDX": {
     "message": "デフォルトのサイコロ"
@@ -1036,6 +1054,9 @@
   },
   "sMAAlN": {
     "message": "新規"
+  },
+  "sNa4oH": {
+    "message": "Close Pane"
   },
   "sjzLbX": {
     "message": "承認する"

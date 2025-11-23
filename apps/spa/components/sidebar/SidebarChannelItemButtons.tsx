@@ -128,17 +128,10 @@ export const SidebarChannelItemButtons = ({ active, channelId }: Props) => {
     setFocusPane(nextFocus);
   };
   return (
-    <div onClick={(e) => e.stopPropagation()} className="flex gap-1 px-1 py-2">
-      {active && (
-        <ButtonInline
-          className="h-5 w-5"
-          onClick={handleClose}
-          aria-label={labelClose}
-          title={labelClose}
-        >
-          <X />
-        </ButtonInline>
-      )}
+    <div
+      onClick={(e) => e.stopPropagation()}
+      className="SidebarChannelItemButtons flex gap-1 px-1 py-1"
+    >
       {active && threeOrMoreColumns && (
         <ButtonInline
           className="h-5 w-5"
@@ -147,6 +140,17 @@ export const SidebarChannelItemButtons = ({ active, channelId }: Props) => {
           title={labelFocus}
         >
           <CornerDownRight />
+        </ButtonInline>
+      )}
+
+      {active && (
+        <ButtonInline
+          className="h-5 w-5"
+          onClick={handleClose}
+          aria-label={labelClose}
+          title={labelClose}
+        >
+          <X />
         </ButtonInline>
       )}
 

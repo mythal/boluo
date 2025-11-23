@@ -281,6 +281,9 @@
   "DBP+Od": {
     "message": "Echo"
   },
+  "DqAfWc": {
+    "message": "Drag to Move Pane"
+  },
   "EcW+hX": {
     "message": "只有選中的人可見。"
   },
@@ -430,6 +433,9 @@
   },
   "Lzb4s2": {
     "message": "移動失敗"
+  },
+  "M8AFCu": {
+    "message": "Long press to vertical split"
   },
   "MWO2zy": {
     "message": "出了點問題。"
@@ -878,6 +884,9 @@
   "iLUQIP": {
     "message": "邀請連結"
   },
+  "iU6/rV": {
+    "message": "Move Pane"
+  },
   "itPgxd": {
     "message": "個人資料"
   },
@@ -901,6 +910,9 @@
   },
   "kGQJcD": {
     "message": "重排"
+  },
+  "kHHCWR": {
+    "message": "Adjust Size"
   },
   "kIUNDX": {
     "message": "預設使用的骰子"

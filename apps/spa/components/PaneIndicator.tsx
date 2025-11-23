@@ -85,7 +85,7 @@ export const PaneIndicator = () => {
   return (
     <div
       className={clsx(
-        'pointer-events-none fixed bottom-24 left-1/2 z-30 -translate-x-1/2 transition-opacity duration-300',
+        'pointer-events-none fixed bottom-1/2 left-1/2 z-30 -translate-x-1/2 transition-opacity duration-300',
         visible ? 'opacity-100' : 'opacity-0',
       )}
     >

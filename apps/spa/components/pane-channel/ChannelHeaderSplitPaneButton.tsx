@@ -99,11 +99,6 @@ export const ChannelHeaderSplitPaneButton: FC = () => {
       setLongPressStart(null);
       if (!keepTrigger) {
         longPressTriggeredRef.current = false;
-      } else {
-        // Allow next click after the long-press-triggered click event has been skipped.
-        setTimeout(() => {
-          longPressTriggeredRef.current = false;
-        }, 0);
       }
     },
     [clearLongPressTimeout, clearLongPressVisualTimeout, resetProgress],

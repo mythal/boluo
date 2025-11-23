@@ -126,7 +126,7 @@
     "message": "密码"
   },
   "5zHF5n": {
-    "message": "Open New Pane"
+    "message": "打开新窗格"
   },
   "60KMrS": {
     "message": "设作默认"
@@ -429,13 +429,13 @@
     "message": "{a} 和 {b} 正撰写…"
   },
   "LtEjKk": {
-    "message": "Focus Next"
+    "message": "聚焦下一个"
   },
   "Lzb4s2": {
     "message": "移动失败"
   },
   "M8AFCu": {
-    "message": "Long press to vertical split"
+    "message": "长按垂直拆分"
   },
   "MWO2zy": {
     "message": "出错了。"
@@ -543,7 +543,7 @@
     "message": "帐号与密码不匹配"
   },
   "Rtr4mH": {
-    "message": "Drag to Move Column"
+    "message": "拖拽移动整列"
   },
   "RvUa7+": {
     "message": "无名称"
@@ -717,7 +717,7 @@
     "message": "没有权限"
   },
   "ZsZAvL": {
-    "message": "Drag to Move Child Pane"
+    "message": "拖动移动子窗格"
   },
   "ZvI2/H": {
     "message": "释放加载"
@@ -891,7 +891,7 @@
     "message": "邀请链接"
   },
   "iU6/rV": {
-    "message": "Move Pane"
+    "message": "移动窗格"
   },
   "itPgxd": {
     "message": "个人资料"
@@ -918,7 +918,7 @@
     "message": "排序"
   },
   "kHHCWR": {
-    "message": "Adjust Size"
+    "message": "调整尺寸"
   },
   "kIUNDX": {
     "message": "默认使用的骰子"
@@ -1056,7 +1056,7 @@
     "message": "新增"
   },
   "sNa4oH": {
-    "message": "Close Pane"
+    "message": "关闭窗格"
   },
   "sjzLbX": {
     "message": "接受"

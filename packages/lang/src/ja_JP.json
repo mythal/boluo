@@ -281,6 +281,9 @@
   "DBP+Od": {
     "message": "エコー"
   },
+  "DqAfWc": {
+    "message": "Drag to Move Pane"
+  },
   "EcW+hX": {
     "message": "選ばれた人だけに見えます。"
   },
@@ -430,6 +433,9 @@
   },
   "Lzb4s2": {
     "message": "移動失敗"
+  },
+  "M8AFCu": {
+    "message": "Long press to vertical split"
   },
   "MWO2zy": {
     "message": "何か問題が発生しました。"
@@ -878,6 +884,9 @@
   "iLUQIP": {
     "message": "招待リンク"
   },
+  "iU6/rV": {
+    "message": "Move Pane"
+  },
   "itPgxd": {
     "message": "プロフィール"
   },
@@ -901,6 +910,9 @@
   },
   "kGQJcD": {
     "message": "並べ替え"
+  },
+  "kHHCWR": {
+    "message": "Adjust Size"
   },
   "kIUNDX": {
     "message": "デフォルトのサイコロ"

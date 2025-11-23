@@ -40,7 +40,10 @@ export const usePaneFocus = (ref: RefObject<HTMLDivElement | null>) => {
     if (key == null) {
       return;
     }
-    store.set(focusPaneAtom, { key, isChild });
+    const focus = store.get(focusPaneAtom);
+    if (focus?.key !== key || focus?.isChild !== isChild) {
+      store.set(focusPaneAtom, { key, isChild });
+    }
     scrollPaneIntoView(ref.current);
   }, [isChild, key, ref, store]);
 };

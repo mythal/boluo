@@ -109,12 +109,23 @@ export const usePaneDragController = ({
   setFocusPane,
 }: Args) => {
   const paneRefs = useRef(new Map<number, HTMLDivElement | null>());
+  // Track pointer and rects so drop targets stay in sync when the viewport moves.
+  const pointerPositionRef = useRef<{ x: number; y: number } | null>(null);
   const registerPaneRef = useCallback((key: number, node: HTMLDivElement | null) => {
     if (node) {
       paneRefs.current.set(key, node);
     } else {
       paneRefs.current.delete(key);
     }
+  }, []);
+  const measurePaneRects = useCallback(() => {
+    const rects = new Map<number, DOMRect>();
+    paneRefs.current.forEach((node, key) => {
+      if (node) {
+        rects.set(key, node.getBoundingClientRect());
+      }
+    });
+    return rects;
   }, []);
 
   const [dragState, setDragState] = useState<DragState | null>(null);
@@ -127,16 +138,12 @@ export const usePaneDragController = ({
   const handlePointerDown = useCallback(
     (paneKey: number, isChild: boolean, event: React.PointerEvent<HTMLElement>) => {
       if (!canDrag) return;
-      const rects = new Map<number, DOMRect>();
-      paneRefs.current.forEach((node, key) => {
-        if (node) {
-          rects.set(key, node.getBoundingClientRect());
-        }
-      });
+      const rects = measurePaneRects();
       if (!rects.has(paneKey)) return;
       const pointerId = event.pointerId;
       const x = event.clientX;
       const y = event.clientY;
+      pointerPositionRef.current = { x, y };
       const dropTarget = getDropTarget(x, y, visiblePanes, rects, paneKey, isChild);
       const nextState: DragState = {
         key: paneKey,
@@ -153,10 +160,41 @@ export const usePaneDragController = ({
       dragStateRef.current = nextState;
       setDragState(nextState);
     },
-    [canDrag, setFocusPane, visiblePanes],
+    [canDrag, measurePaneRects, setFocusPane, visiblePanes],
   );
 
   const isDragging = dragState != null;
+
+  const updateDragStateWithPointer = useCallback(
+    (
+      pointer: { x: number; y: number } | null,
+      markMoved: boolean,
+      overrideRects?: Map<number, DOMRect>,
+    ) => {
+      if (!pointer) return;
+      setDragState((prev) => {
+        if (!prev) return prev;
+        const rects = overrideRects ?? prev.rects;
+        const dropTarget = getDropTarget(
+          pointer.x,
+          pointer.y,
+          visiblePanes,
+          rects,
+          prev.key,
+          prev.isChild,
+        );
+        const nextState = {
+          ...prev,
+          rects,
+          dropTarget,
+          hasMoved: markMoved ? true : prev.hasMoved,
+        };
+        dragStateRef.current = nextState;
+        return nextState;
+      });
+    },
+    [visiblePanes],
+  );
 
   useEffect(() => {
     if (!isDragging) return;
@@ -165,13 +203,8 @@ export const usePaneDragController = ({
       if (!state || event.pointerId !== state.pointerId) return;
       const x = event.clientX;
       const y = event.clientY;
-      setDragState((prev) => {
-        if (!prev) return prev;
-        const dropTarget = getDropTarget(x, y, visiblePanes, prev.rects, prev.key, prev.isChild);
-        const nextState = { ...prev, dropTarget, hasMoved: true };
-        dragStateRef.current = nextState;
-        return nextState;
-      });
+      pointerPositionRef.current = { x, y };
+      updateDragStateWithPointer({ x, y }, true);
       event.preventDefault();
     };
     const handleUp = (event: PointerEvent) => {
@@ -180,6 +213,7 @@ export const usePaneDragController = ({
       event.preventDefault();
       setDragState(null);
       dragStateRef.current = null;
+      pointerPositionRef.current = null;
       if (state.isChild && !state.hasMoved) return;
       if (visiblePanes.findIndex((pane) => pane.key === state.key) === -1) return;
       let nextFocus: FocusPane | null = null;
@@ -263,7 +297,22 @@ export const usePaneDragController = ({
       window.removeEventListener('pointerup', handleUp);
       window.removeEventListener('pointercancel', handleUp);
     };
-  }, [isDragging, maxPane, setFocusPane, setPanes, visiblePanes]);
+  }, [isDragging, maxPane, setFocusPane, setPanes, updateDragStateWithPointer, visiblePanes]);
+
+  useEffect(() => {
+    if (!isDragging) return;
+    const handleViewportChange = () => {
+      const rects = measurePaneRects();
+      updateDragStateWithPointer(pointerPositionRef.current, false, rects);
+    };
+    // Re-measure when scrolling/resize shifts panes (e.g. scrollIntoView).
+    window.addEventListener('scroll', handleViewportChange, true);
+    window.addEventListener('resize', handleViewportChange);
+    return () => {
+      window.removeEventListener('scroll', handleViewportChange, true);
+      window.removeEventListener('resize', handleViewportChange);
+    };
+  }, [isDragging, measurePaneRects, updateDragStateWithPointer]);
 
   const indicator = useMemo<PaneDragIndicator | null>(() => {
     if (!dragState) return null;

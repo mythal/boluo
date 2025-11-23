@@ -359,9 +359,6 @@
   "IvjoDS": {
     "message": "接続されました"
   },
-  "J1Hzu0": {
-    "message": "Close All"
-  },
   "JBWS0c": {
     "message": "リンク"
   },
@@ -1057,6 +1054,9 @@
   },
   "sMAAlN": {
     "message": "新規"
+  },
+  "sNa4oH": {
+    "message": "Close Pane"
   },
   "sjzLbX": {
     "message": "承認する"

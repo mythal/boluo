@@ -18,7 +18,7 @@ export const usePaneSplit = () => {
         const pane = panes[index]!;
         const newPaneKey = findNextPaneKey(panes);
         const nextPanes = [...panes];
-        nextPanes.splice(index, 0, { ...pane, child: undefined, key: newPaneKey });
+        nextPanes.splice(index + 1, 0, { ...pane, child: undefined, key: newPaneKey });
         return nextPanes;
       }),
     [key, paneLimit, setPanes],

@@ -10,6 +10,7 @@ import {
 } from '../state/view.types';
 import { usePaneLimit } from './useMaxPane';
 import { usePaneKey } from './usePaneKey';
+import { useIsChildPane } from './useIsChildPane';
 
 interface Props {
   child?: false | ChildPaneRatio;
@@ -20,6 +21,7 @@ export const usePaneToggle = (props?: Props) => {
   const setPanes = useSetAtom(panesAtom);
   const paneLimit = usePaneLimit();
   const paneKey = usePaneKey();
+  const isChildPane = useIsChildPane();
   return useCallback(
     (pane: PaneData, position: NewPanePosition = 'HEAD') =>
       setPanes((panes) => {
@@ -28,6 +30,16 @@ export const usePaneToggle = (props?: Props) => {
           if (index === -1) return panes;
           const currentPane = panes[index]!;
           const nextPanes = [...panes];
+          if (isChildPane && currentPane.child) {
+            const promotedPaneKey = findNextPaneKey(panes);
+            const promotedPane: Pane = { ...currentPane.child.pane, key: promotedPaneKey };
+            nextPanes[index] = { ...currentPane, child: undefined };
+            nextPanes.splice(index + 1, 0, {
+              ...promotedPane,
+              child: { pane, ratio: child },
+            });
+            return nextPanes;
+          }
           if (currentPane.child && currentPane.child.pane.type === pane.type) {
             nextPanes[index] = { ...currentPane, child: undefined };
           } else {
@@ -59,6 +71,6 @@ export const usePaneToggle = (props?: Props) => {
 
         return insertPaneByPosition(panes, newPane, position);
       }),
-    [child, paneKey, paneLimit, setPanes],
+    [child, isChildPane, paneKey, paneLimit, setPanes],
   );
 };

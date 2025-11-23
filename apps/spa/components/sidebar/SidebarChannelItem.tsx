@@ -1,4 +1,4 @@
-import type { Channel } from '@boluo/api';
+import type { Channel, ChannelType } from '@boluo/api';
 import clsx from 'clsx';
 import { Drama, Hash, Lock, MoveVertical } from '@boluo/icons';
 import { type Atom, atom, useAtomValue } from 'jotai';
@@ -74,17 +74,20 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active, overlay = false
   const paneUrlPart = encodeURIComponent(
     JSON.stringify([{ type: 'CHANNEL', channelId: channel.id, key: 0 }]),
   );
-  const iconButton = (
-    <button
-      className={clsx(
-        'group/icon relative row-span-2 h-full self-center',
-        active ? 'text-text-primary' : 'text-text-subtle group-hover:text-text-secondary',
-        isReordering ? 'cursor-grab' : '',
-      )}
-      aria-label={isReordering ? labelReorder : undefined}
-    >
-      <ChannelItemIcon channel={channel} isReordering={isReordering} />
-    </button>
+  const iconButton = useMemo(
+    () => (
+      <button
+        className={clsx(
+          'group/icon relative row-span-2 h-full self-center',
+          active ? 'text-text-primary' : 'text-text-subtle group-hover:text-text-secondary',
+          isReordering ? 'cursor-grab' : '',
+        )}
+        aria-label={isReordering ? labelReorder : undefined}
+      >
+        <ChannelItemIcon channelType={channel.type} isReordering={isReordering} />
+      </button>
+    ),
+    [active, channel.type, isReordering, labelReorder],
   );
   const channelName = (
     <span className="text-left">
@@ -102,6 +105,14 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active, overlay = false
       />
     ),
     [hasUnread, myId, latestMessageAtom, channel.id],
+  );
+  const buttons = useMemo(
+    () => (
+      <div className="absolute right-0 opacity-0 group-hover:opacity-100">
+        <SidebarChannelItemButtons active={active} channelId={channel.id} />
+      </div>
+    ),
+    [active, channel.id],
   );
   if (isReordering) {
     return (
@@ -145,23 +156,21 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active, overlay = false
           {iconButton}
           {channelName}
           {messagePreview}
-          <div className="absolute right-0 opacity-0 group-hover:opacity-100">
-            <SidebarChannelItemButtons active={active} channelId={channel.id} />
-          </div>
+          {buttons}
         </a>
       </div>
     </SidebarChannelItemOrderableBox>
   );
 };
 
-const ChannelItemIcon: FC<{ channel: Channel; isReordering: boolean }> = ({
-  channel,
+const ChannelItemIcon: FC<{ channelType: ChannelType; isReordering: boolean }> = ({
+  channelType,
   isReordering,
 }) => {
   let icon = Hash;
   if (isReordering) {
     icon = MoveVertical;
-  } else if (channel.type === 'IN_GAME') {
+  } else if (channelType === 'IN_GAME') {
     icon = Drama;
   }
   return <Icon className="ChannelItemIcon" icon={icon} />;

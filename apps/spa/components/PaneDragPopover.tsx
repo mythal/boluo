@@ -14,7 +14,11 @@ export const PaneDragPopover = ({ isChild }: Props) => {
   return (
     <div>
       <div className="font-bold">
-        <FormattedMessage defaultMessage="Drag to Move Pane" />
+        {isChild ? (
+          <FormattedMessage defaultMessage="Drag to Move Child Pane" />
+        ) : (
+          <FormattedMessage defaultMessage="Drag to Move Column" />
+        )}
       </div>
       {!isChild && (
         <div>

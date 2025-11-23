@@ -92,7 +92,7 @@ export const PaneBox: FC<Props> = ({ header, children, initSizeLevel = 0 }) => {
       className={clsx(
         '@container relative flex h-full min-h-0 flex-[1_1_100%] flex-col',
         isChildPane && 'border-border-subtle border-t',
-        isDraggingCurrentPane && 'opacity-50',
+        isDraggingCurrentPane && isChildPane && 'opacity-50',
       )}
     >
       {isChildPane && <div className="bg-pane-header-border absolute top-0 h-px w-full" />}
@@ -132,6 +132,7 @@ export const PaneBox: FC<Props> = ({ header, children, initSizeLevel = 0 }) => {
           style={growStyle}
           className={clsx(
             'PaneBox flex h-full flex-[0_0_0] flex-col max-md:flex-[1_1_100%]',
+            isDraggingCurrentPane && 'opacity-50',
             isSinglePane
               ? 'md:flex-[1_1_100%]'
               : 'md:min-w-[max(calc(40%+var(--min-size,0)),375px)] md:flex-[var(--pane-flex-grow,1)_1] lg:min-w-[max(calc(33%+var(--min-size,0)),375px)] xl:min-w-[max(calc(22%+var(--min-size,0)),375px)]',

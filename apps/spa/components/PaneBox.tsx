@@ -91,6 +91,7 @@ export const PaneBox: FC<Props> = ({ header, children, initSizeLevel = 0 }) => {
       onClick={focus}
       className={clsx(
         '@container relative flex h-full min-h-0 flex-[1_1_100%] flex-col',
+        isChildPane && 'border-border-subtle border-t',
         isDraggingCurrentPane && 'opacity-50',
       )}
     >

@@ -85,7 +85,7 @@
   --color-backdrop: color-mix(in srgb, var(--color-black) 80%, transparent 20%);
 
   /* Component tokens: tooltips */
-  --color-surface-tooltip: var(--color-neutral-600);
+  --color-surface-tooltip: var(--color-neutral-900);
   --color-tooltip-text: var(--color-white);
 
   /* Component tokens: presence indicators */

@@ -6,6 +6,7 @@ import { usePaneLimit } from '../hooks/useMaxPane';
 import { PaneEmpty } from './PaneEmpty';
 import { ChatPaneSwitch } from './PaneSwitch';
 import { PaneDragController } from './pane-channel/PaneDragController';
+import { PaneIndicator } from './PaneIndicator';
 
 interface Props {
   defaultPane?: ReactNode;
@@ -28,5 +29,10 @@ export const PaneList: FC<Props> = ({ defaultPane }) => {
     return defaultPane || <PaneEmpty />;
   }
 
-  return <PaneDragController visiblePanes={visiblePanes}>{renderedPanes}</PaneDragController>;
+  return (
+    <>
+      <PaneDragController visiblePanes={visiblePanes}>{renderedPanes}</PaneDragController>
+      <PaneIndicator />
+    </>
+  );
 };

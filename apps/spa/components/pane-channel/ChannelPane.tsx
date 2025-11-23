@@ -102,7 +102,7 @@ const ChatPaneChannelView: FC<{
     <MemberContext value={member}>
       <ChannelContext value={channel}>
         <ChannelAtomsContext value={atoms}>
-          <PaneBox header={header} grow>
+          <PaneBox header={header} initSizeLevel={1}>
             {errorNode}
             <div
               className={clsx(
@@ -161,7 +161,7 @@ export const ChatPaneChannel = memo(({ channelId }: Props) => {
       : null;
   }
   if (isChannelLoading || isMembersLoading) {
-    return <PaneLoading grow>{errorNode}</PaneLoading>;
+    return <PaneLoading initSizeLevel={1}>{errorNode}</PaneLoading>;
   }
   if (channel == null) {
     return (

@@ -8,7 +8,7 @@ import { GreetingHeader } from './GreetingHeader';
 export const PaneWelcome: FC = () => {
   return (
     <PaneBox
-      grow
+      initSizeLevel={1}
       header={
         <PaneHeaderBox>
           <FormattedMessage defaultMessage="Welcome" />

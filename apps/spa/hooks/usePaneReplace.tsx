@@ -31,27 +31,12 @@ export const usePaneReplace = () => {
 
         if (maxPane === 1) {
           const single = panes[0];
-          // If only one root pane and focus is on its child, replace child only.
-          if (single && focus?.isChild && single.child) {
-            return [
-              {
-                ...single,
-                child: { ...single.child, pane: newPane },
-              },
-            ];
-          }
           return [{ ...newPane, key: single?.key ?? 0 }];
         }
         const newPaneKey = findNextPaneKey(panes);
         const nextPanes = [...panes];
         const pane: Pane = { ...newPane, key: newPaneKey };
         if (panes.length === 0) {
-          return [pane];
-        } else if (panes.length === 1) {
-          if (shouldReplace && !shouldReplace(panes[0]!)) {
-            nextPanes.unshift(pane);
-            return nextPanes;
-          }
           return [pane];
         }
         let replace = true;
@@ -67,7 +52,9 @@ export const usePaneReplace = () => {
           replace = false;
         }
         if (replace) {
-          nextPanes[index] = { ...newPane, key: oldPane?.key ?? newPaneKey };
+          // If the focused pane has a child, replacing the parent but keep the child.
+          const newPaneWithChild = oldPane?.child ? { ...newPane, child: oldPane.child } : newPane;
+          nextPanes[index] = { ...newPaneWithChild, key: oldPane?.key ?? newPaneKey };
         } else {
           nextPanes.unshift({ ...newPane, key: newPaneKey });
         }

@@ -10,7 +10,10 @@ import { type Pane, type PaneData } from '../../state/view.types';
 import { type PaneDragContextValue } from '../../hooks/usePaneDrag';
 import { findNextPaneKey, type FocusPane } from '../../state/view.atoms';
 
-type DropTarget = { kind: 'insert'; index: number } | { kind: 'child'; targetKey: number };
+type DropTarget =
+  | { kind: 'insert'; index: number }
+  | { kind: 'child'; targetKey: number }
+  | { kind: 'none' };
 
 interface DragState {
   key: number;
@@ -62,23 +65,31 @@ const getDropIndex = (pointerX: number, paneKeys: number[], rects: Map<number, D
   return orderedRects.length;
 };
 
+const inChildDropZone = (x: number, y: number, rect: DOMRect) => {
+  const inHorizontalBand = x >= rect.left + rect.width * 0.2 && x <= rect.right - rect.width * 0.2;
+  const inLowerBand = y >= rect.top + rect.height * 0.55 && y <= rect.bottom;
+  return inHorizontalBand && inLowerBand;
+};
+
 const getDropTarget = (
   x: number,
   y: number,
   panes: Pane[],
   rects: Map<number, DOMRect>,
   draggedKey: number,
+  draggingChild: boolean,
 ): DropTarget => {
+  const draggedRect = rects.get(draggedKey);
+  if (draggingChild && draggedRect && inChildDropZone(x, y, draggedRect)) {
+    return { kind: 'none' };
+  }
   for (const pane of panes) {
     if (pane.key === draggedKey) continue;
     if (pane.child) continue;
     const rect = rects.get(pane.key);
     if (!rect) continue;
     // Only treat as child drop when cursor is in lower-middle band to avoid accidental nesting.
-    const inHorizontalBand =
-      x >= rect.left + rect.width * 0.2 && x <= rect.right - rect.width * 0.2;
-    const inLowerBand = y >= rect.top + rect.height * 0.55 && y <= rect.bottom;
-    if (inHorizontalBand && inLowerBand) {
+    if (inChildDropZone(x, y, rect)) {
       return { kind: 'child', targetKey: pane.key };
     }
   }
@@ -126,7 +137,7 @@ export const usePaneDragController = ({
       const pointerId = event.pointerId;
       const x = event.clientX;
       const y = event.clientY;
-      const dropTarget = getDropTarget(x, y, visiblePanes, rects, paneKey);
+      const dropTarget = getDropTarget(x, y, visiblePanes, rects, paneKey, isChild);
       const nextState: DragState = {
         key: paneKey,
         pointerId,
@@ -156,7 +167,7 @@ export const usePaneDragController = ({
       const y = event.clientY;
       setDragState((prev) => {
         if (!prev) return prev;
-        const dropTarget = getDropTarget(x, y, visiblePanes, prev.rects, prev.key);
+        const dropTarget = getDropTarget(x, y, visiblePanes, prev.rects, prev.key, prev.isChild);
         const nextState = { ...prev, dropTarget, hasMoved: true };
         dragStateRef.current = nextState;
         return nextState;
@@ -174,6 +185,7 @@ export const usePaneDragController = ({
       let nextFocus: FocusPane | null = null;
       setPanes((prev) => {
         const dropTarget = state.dropTarget;
+        if (dropTarget.kind === 'none') return prev;
         const visible = prev.slice(0, maxPane);
         const rest = prev.slice(maxPane);
         const currentFromIndex = visible.findIndex((pane) => pane.key === state.key);
@@ -257,6 +269,7 @@ export const usePaneDragController = ({
     if (!dragState) return null;
     if (dragState.isChild && !dragState.hasMoved) return null;
     const dropTarget = dragState.dropTarget;
+    if (dropTarget.kind === 'none') return null;
     const rects = dragState.rects;
     const visibleKeys = visiblePanes.map((pane) => pane.key);
     if (dropTarget.kind === 'insert') {

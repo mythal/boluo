@@ -16,6 +16,38 @@ interface Props {
   child?: false | ChildPaneRatio;
 }
 
+const isSamePane = (pane: PaneData, target: PaneData) => {
+  if (pane.type !== target.type) {
+    return false;
+  }
+  if (pane.type === 'CHANNEL' && target.type === 'CHANNEL') {
+    return pane.channelId === target.channelId;
+  }
+  if (pane.type === 'PROFILE' && target.type === 'PROFILE') {
+    return pane.userId === target.userId;
+  }
+  if (pane.type === 'SPACE_MEMBERS' && target.type === 'SPACE_MEMBERS') {
+    return pane.spaceId === target.spaceId;
+  }
+  if (pane.type === 'SPACE_SETTINGS' && target.type === 'SPACE_SETTINGS') {
+    return pane.spaceId === target.spaceId;
+  }
+  return true;
+};
+
+const findPane = (panes: Pane[], pane: PaneData) => {
+  for (let i = 0; i < panes.length; i++) {
+    const current = panes[i]!;
+    if (isSamePane(current, pane)) {
+      return { index: i, isChild: false };
+    }
+    if (current.child && isSamePane(current.child.pane, pane)) {
+      return { index: i, isChild: true };
+    }
+  }
+  return null;
+};
+
 export const usePaneToggle = (props?: Props) => {
   const { child = false } = props || {};
   const setPanes = useSetAtom(panesAtom);
@@ -51,21 +83,16 @@ export const usePaneToggle = (props?: Props) => {
         if (paneLimit === 1) {
           return [{ ...pane, key: 0 }];
         }
-        let index: number = -1;
-        if (pane.type === 'CHANNEL') {
-          index = panes.findIndex((x) => x.type === 'CHANNEL' && x.channelId === pane.channelId);
-        } else if (pane.type === 'PROFILE') {
-          index = panes.findIndex((x) => x.type === 'PROFILE' && x.userId === pane.userId);
-        } else if (pane.type === 'SPACE_MEMBERS' || pane.type === 'SPACE_SETTINGS') {
-          index = panes.findIndex((x) => x.type === pane.type && x.spaceId === pane.spaceId);
-        } else {
-          index = panes.findIndex((x) => x.type === pane.type);
-        }
+        const existingPane = findPane(panes, pane);
         const nextKey = findNextPaneKey(panes);
         const newPane: Pane = { ...pane, key: nextKey };
-        if (index !== -1) {
+        if (existingPane) {
           const nextPanes = [...panes];
-          nextPanes.splice(index, 1);
+          if (existingPane.isChild) {
+            nextPanes[existingPane.index] = { ...nextPanes[existingPane.index]!, child: undefined };
+          } else {
+            nextPanes.splice(existingPane.index, 1);
+          }
           return nextPanes;
         }
 

@@ -23,9 +23,6 @@
   "/I//hN": {
     "message": "載入訊息失敗 ({errorCode})"
   },
-  "/caJLq": {
-    "message": "在新窗格中打開"
-  },
   "/iUStU": {
     "message": "例如： 素還真"
   },
@@ -127,6 +124,9 @@
   },
   "5sg7KC": {
     "message": "密碼"
+  },
+  "5zHF5n": {
+    "message": "Open New Pane"
   },
   "60KMrS": {
     "message": "設作預設"
@@ -281,9 +281,6 @@
   "DBP+Od": {
     "message": "Echo"
   },
-  "DqAfWc": {
-    "message": "Drag to Move Pane"
-  },
   "EcW+hX": {
     "message": "只有選中的人可見。"
   },
@@ -362,6 +359,9 @@
   "IvjoDS": {
     "message": "已連接"
   },
+  "J1Hzu0": {
+    "message": "Close All"
+  },
   "JBWS0c": {
     "message": "連結"
   },
@@ -430,6 +430,9 @@
   },
   "LnM0On": {
     "message": "{a} 和 {b} 正撰寫…"
+  },
+  "LtEjKk": {
+    "message": "Focus Next"
   },
   "Lzb4s2": {
     "message": "移動失敗"
@@ -541,6 +544,9 @@
   },
   "RraqCg": {
     "message": "賬號和密碼不匹配"
+  },
+  "Rtr4mH": {
+    "message": "Drag to Move Column"
   },
   "RvUa7+": {
     "message": "無名稱"
@@ -712,6 +718,9 @@
   },
   "ZgsEsn": {
     "message": "沒有權限"
+  },
+  "ZsZAvL": {
+    "message": "Drag to Move Child Pane"
   },
   "ZvI2/H": {
     "message": "釋放加載"

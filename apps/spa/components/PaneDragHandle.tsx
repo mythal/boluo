@@ -15,12 +15,12 @@ import {
 import { TooltipBox } from '@boluo/ui/TooltipBox';
 import { PaneDragPopover } from './PaneDragPopover';
 import { useAtomValue } from 'jotai';
-import { isSinglePaneAtom } from '../state/view.atoms';
+import { isSingleColumnAtom } from '../state/view.atoms';
 
 export const PaneDragHandle: FC = () => {
   const { focused: isFocused, key: paneKey } = useContext(PaneContext);
   const { canDrag, onHandlePointerDown, draggingPane } = usePaneDrag();
-  const isSinglePane = useAtomValue(isSinglePaneAtom);
+  const isSingleColumn = useAtomValue(isSingleColumnAtom);
   const isChildPane = useIsChildPane();
   const intl = useIntl();
   const isDraggingCurrentPane =
@@ -45,7 +45,7 @@ export const PaneDragHandle: FC = () => {
   const dismiss = useDismiss(context, {});
   const { getReferenceProps, getFloatingProps } = useInteractions([hover, dismiss]);
   const title = intl.formatMessage({ defaultMessage: 'Move Pane' });
-  if (!canDrag || (isSinglePane && !isChildPane)) {
+  if (!canDrag || (isSingleColumn && !isChildPane)) {
     return null;
   }
   return (

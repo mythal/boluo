@@ -19,6 +19,7 @@
   --spacing-sidebar: 16rem;
   --spacing-pane-padding: 2rem;
   --spacing-pane-header: 2.5rem;
+  --spacing-pane-min: 375px;
 
   --spacing-message: 5rem;
   --spacing-message-small: 2rem;

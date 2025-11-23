@@ -6,6 +6,7 @@ import { ChannelHeaderMoreButton } from './ChannelHeaderMenuButton';
 import { ChannelHeaderSplitPaneButton } from './ChannelHeaderSplitPaneButton';
 import { ChannelMembersButton } from './ChannelMembersButton';
 import { usePaneLimit } from '../../hooks/useMaxPane';
+import { useIsChildPane } from '../../hooks/useIsChildPane';
 
 interface Props {
   stateAtom: PrimitiveAtom<ChannelHeaderState>;
@@ -14,6 +15,7 @@ interface Props {
 
 export const ChannelHeaderOperations: FC<Props> = ({ stateAtom, channel }) => {
   const [state, setState] = useAtom(stateAtom);
+  const isChildPane = useIsChildPane();
   const toggleMore = useCallback(
     () => setState((prev) => (prev === 'MORE' ? 'DEFAULT' : 'MORE')),
     [setState],
@@ -21,7 +23,7 @@ export const ChannelHeaderOperations: FC<Props> = ({ stateAtom, channel }) => {
   const paneLimit = usePaneLimit();
   return (
     <>
-      {paneLimit > 1 && <ChannelHeaderSplitPaneButton />}
+      {paneLimit > 1 && !isChildPane && <ChannelHeaderSplitPaneButton />}
       <ChannelMembersButton spaceId={channel.spaceId} channelId={channel.id} />
       <ChannelHeaderMoreButton on={state === 'MORE'} toggle={toggleMore} />
     </>

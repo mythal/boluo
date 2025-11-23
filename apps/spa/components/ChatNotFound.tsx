@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { ChatView } from './ChatView';
+import { PaneList } from './PaneList';
 
 export const ChatNotFound = () => {
   const defaultPane = useMemo(() => {
@@ -7,5 +7,5 @@ export const ChatNotFound = () => {
       <div className="ChatNotFound flex h-full w-full items-center justify-center">Not found</div>
     );
   }, []);
-  return <ChatView defaultPane={defaultPane} />;
+  return <PaneList defaultPane={defaultPane} />;
 };

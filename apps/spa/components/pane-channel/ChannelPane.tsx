@@ -79,6 +79,9 @@ const ChatPaneChannelView: FC<{
     defaultInGame,
   );
   const memberListState = useAtomValue(atoms.memberListStateAtom);
+  const header = useMemo(() => {
+    return <ChannelHeader />;
+  }, []);
 
   const iAmMember = member?.channel.channelId === channel.id;
   if (!channel.isPublic && (member == null || !iAmMember)) {
@@ -99,7 +102,7 @@ const ChatPaneChannelView: FC<{
     <MemberContext value={member}>
       <ChannelContext value={channel}>
         <ChannelAtomsContext value={atoms}>
-          <PaneBox header={<ChannelHeader />} grow>
+          <PaneBox header={header} initSizeLevel={1}>
             {errorNode}
             <div
               className={clsx(
@@ -158,7 +161,7 @@ export const ChatPaneChannel = memo(({ channelId }: Props) => {
       : null;
   }
   if (isChannelLoading || isMembersLoading) {
-    return <PaneLoading grow>{errorNode}</PaneLoading>;
+    return <PaneLoading initSizeLevel={1}>{errorNode}</PaneLoading>;
   }
   if (channel == null) {
     return (

@@ -111,7 +111,7 @@ export const NameEditable: FC<Props> = ({ name, inGame, color, member }) => {
         <FloatingPortal>
           <div
             ref={refs.setFloating}
-            className="bg-pane-bg z-20 rounded-sm border px-4 py-3 shadow"
+            className="bg-surface-unit z-20 rounded-sm border px-4 py-3 shadow"
             style={floatingStyles}
             {...getFloatingProps()}
           >

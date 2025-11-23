@@ -22,17 +22,22 @@ export const isUserOperationsFoldedAtom = atomWithStorage('isUserOperationsFolde
 
 export const isSettingsOpenAtom = atom((get) => {
   const panes = get(panesAtom);
-  return panes.findIndex((pane) => pane.type === 'SETTINGS') !== -1;
+  return (
+    panes.findIndex((pane) => pane.type === 'SETTINGS' || pane.child?.pane.type === 'SETTINGS') !==
+    -1
+  );
 });
 
 export const isHelpOpenAtom = atom((get) => {
   const panes = get(panesAtom);
-  return panes.findIndex((pane) => pane.type === 'HELP') !== -1;
+  return panes.findIndex((pane) => pane.type === 'HELP' || pane.child?.pane.type === 'HELP') !== -1;
 });
 
 export const isLoginOpenAtom = atom((get) => {
   const panes = get(panesAtom);
-  return panes.findIndex((pane) => pane.type === 'LOGIN') !== -1;
+  return (
+    panes.findIndex((pane) => pane.type === 'LOGIN' || pane.child?.pane.type === 'LOGIN') !== -1
+  );
 });
 
 export const isProfileOpenAtom = atom<(id: string) => boolean>((get) => {

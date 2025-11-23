@@ -6,6 +6,7 @@ import { PaneContext } from '../state/view.context';
 import { ClosePaneButton } from './ClosePaneButton';
 import { PaneBanner } from './PaneBanner';
 import { Square } from '@boluo/icons';
+import { PaneDragHandle } from './PaneDragHandle';
 
 interface Props {
   withoutDefaultOperators?: boolean;
@@ -29,9 +30,11 @@ export const PaneHeaderBox: FC<Props> = ({
     return <ClosePaneButton />;
   }, [withoutDefaultOperators, canClose]);
   icon = icon ?? <Square />;
+  const dragHandle = useMemo(() => <PaneDragHandle />, []);
   return (
     <div className="PaneHeaderBox">
-      <div className="min-h-pane-header bg-pane-header-bg pl-pane flex items-center pr-1.5 text-sm">
+      <div className="min-h-pane-header bg-pane-header-bg pl-pane relative flex items-center pr-1.5 text-sm">
+        {dragHandle}
         <span
           className={clsx(
             'inline-flex shrink-0 items-center justify-center pr-1',

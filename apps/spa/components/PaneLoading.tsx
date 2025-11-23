@@ -7,10 +7,10 @@ import { LoadingText } from '@boluo/ui/LoadingText';
 
 interface Props {
   children?: React.ReactNode;
-  grow?: boolean;
+  initSizeLevel?: number;
 }
 
-export const PaneLoading: FC<Props> = ({ children, grow = false }) => {
+export const PaneLoading: FC<Props> = ({ children, initSizeLevel }) => {
   const header = useMemo(
     () => (
       <PaneHeaderBox withoutDefaultOperators icon={<Spinner />}>
@@ -20,7 +20,7 @@ export const PaneLoading: FC<Props> = ({ children, grow = false }) => {
     [],
   );
   return (
-    <PaneBox grow={grow} header={header}>
+    <PaneBox initSizeLevel={initSizeLevel} header={header}>
       <Loading />
       {children}
     </PaneBox>

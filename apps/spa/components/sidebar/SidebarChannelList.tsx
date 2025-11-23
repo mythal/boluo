@@ -39,7 +39,12 @@ export const SidebarChannelList: FC<Props> = ({
   const { trigger } = useMutateSpaceSettings(spaceId);
   const panes = useAtomValue(panesAtom);
   const channelIdFromPanes = useMemo(
-    () => panes.flatMap((pane) => (pane.type === 'CHANNEL' ? [pane.channelId] : [])),
+    () =>
+      panes.flatMap((pane) =>
+        (pane.type === 'CHANNEL' ? [pane.channelId] : []).concat(
+          pane.child?.pane.type === 'CHANNEL' ? [pane.child.pane.channelId] : [],
+        ),
+      ),
     [panes],
   );
   const { data: currentUser } = useQueryCurrentUser();

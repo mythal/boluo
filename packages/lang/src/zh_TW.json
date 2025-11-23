@@ -23,9 +23,6 @@
   "/I//hN": {
     "message": "載入訊息失敗 ({errorCode})"
   },
-  "/caJLq": {
-    "message": "在新窗格中打開"
-  },
   "/iUStU": {
     "message": "例如： 素還真"
   },
@@ -127,6 +124,9 @@
   },
   "5sg7KC": {
     "message": "密碼"
+  },
+  "5zHF5n": {
+    "message": "Open New Pane"
   },
   "60KMrS": {
     "message": "設作預設"
@@ -428,8 +428,14 @@
   "LnM0On": {
     "message": "{a} 和 {b} 正撰寫…"
   },
+  "LtEjKk": {
+    "message": "Focus Next"
+  },
   "Lzb4s2": {
     "message": "移動失敗"
+  },
+  "M8AFCu": {
+    "message": "Long press to vertical split"
   },
   "MWO2zy": {
     "message": "出了點問題。"
@@ -535,6 +541,9 @@
   },
   "RraqCg": {
     "message": "賬號和密碼不匹配"
+  },
+  "Rtr4mH": {
+    "message": "Drag to Move Column"
   },
   "RvUa7+": {
     "message": "無名稱"
@@ -707,6 +716,9 @@
   "ZgsEsn": {
     "message": "沒有權限"
   },
+  "ZsZAvL": {
+    "message": "Drag to Move Child Pane"
+  },
   "ZvI2/H": {
     "message": "釋放加載"
   },
@@ -878,6 +890,9 @@
   "iLUQIP": {
     "message": "邀請連結"
   },
+  "iU6/rV": {
+    "message": "Move Pane"
+  },
   "itPgxd": {
     "message": "個人資料"
   },
@@ -901,6 +916,9 @@
   },
   "kGQJcD": {
     "message": "重排"
+  },
+  "kHHCWR": {
+    "message": "Adjust Size"
   },
   "kIUNDX": {
     "message": "預設使用的骰子"
@@ -1036,6 +1054,9 @@
   },
   "sMAAlN": {
     "message": "新增"
+  },
+  "sNa4oH": {
+    "message": "Close Pane"
   },
   "sjzLbX": {
     "message": "接受"

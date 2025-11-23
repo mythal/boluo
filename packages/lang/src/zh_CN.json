@@ -23,9 +23,6 @@
   "/I//hN": {
     "message": "载入消息失败 ({errorCode})"
   },
-  "/caJLq": {
-    "message": "在新窗格中打开"
-  },
   "/iUStU": {
     "message": "例如: 耐门·休·柯曼"
   },
@@ -127,6 +124,9 @@
   },
   "5sg7KC": {
     "message": "密码"
+  },
+  "5zHF5n": {
+    "message": "打开新窗格"
   },
   "60KMrS": {
     "message": "设作默认"
@@ -428,8 +428,14 @@
   "LnM0On": {
     "message": "{a} 和 {b} 正撰写…"
   },
+  "LtEjKk": {
+    "message": "聚焦下一个"
+  },
   "Lzb4s2": {
     "message": "移动失败"
+  },
+  "M8AFCu": {
+    "message": "长按垂直拆分"
   },
   "MWO2zy": {
     "message": "出错了。"
@@ -535,6 +541,9 @@
   },
   "RraqCg": {
     "message": "帐号与密码不匹配"
+  },
+  "Rtr4mH": {
+    "message": "拖拽移动整列"
   },
   "RvUa7+": {
     "message": "无名称"
@@ -707,6 +716,9 @@
   "ZgsEsn": {
     "message": "没有权限"
   },
+  "ZsZAvL": {
+    "message": "拖动移动子窗格"
+  },
   "ZvI2/H": {
     "message": "释放加载"
   },
@@ -878,6 +890,9 @@
   "iLUQIP": {
     "message": "邀请链接"
   },
+  "iU6/rV": {
+    "message": "移动窗格"
+  },
   "itPgxd": {
     "message": "个人资料"
   },
@@ -901,6 +916,9 @@
   },
   "kGQJcD": {
     "message": "排序"
+  },
+  "kHHCWR": {
+    "message": "调整尺寸"
   },
   "kIUNDX": {
     "message": "默认使用的骰子"
@@ -1036,6 +1054,9 @@
   },
   "sMAAlN": {
     "message": "新增"
+  },
+  "sNa4oH": {
+    "message": "关闭窗格"
   },
   "sjzLbX": {
     "message": "接受"

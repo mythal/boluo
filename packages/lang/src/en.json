@@ -23,9 +23,6 @@
   "/I//hN": {
     "message": "Failed to load messages ({errorCode})"
   },
-  "/caJLq": {
-    "message": "Open in new pane"
-  },
   "/iUStU": {
     "message": "e.g. Gandalf"
   },
@@ -127,6 +124,9 @@
   },
   "5sg7KC": {
     "message": "Password"
+  },
+  "5zHF5n": {
+    "message": "Open New Pane"
   },
   "60KMrS": {
     "message": "As Default"
@@ -428,8 +428,14 @@
   "LnM0On": {
     "message": "{a} and {b} are composing…"
   },
+  "LtEjKk": {
+    "message": "Focus Next"
+  },
   "Lzb4s2": {
     "message": "Move failed"
+  },
+  "M8AFCu": {
+    "message": "Long press to vertical split"
   },
   "MWO2zy": {
     "message": "Something going wrong."
@@ -535,6 +541,9 @@
   },
   "RraqCg": {
     "message": "Username and password do not match"
+  },
+  "Rtr4mH": {
+    "message": "Drag to Move Column"
   },
   "RvUa7+": {
     "message": "No Name"
@@ -707,6 +716,9 @@
   "ZgsEsn": {
     "message": "No permission"
   },
+  "ZsZAvL": {
+    "message": "Drag to Move Child Pane"
+  },
   "ZvI2/H": {
     "message": "Release to Load"
   },
@@ -878,6 +890,9 @@
   "iLUQIP": {
     "message": "Invite Link"
   },
+  "iU6/rV": {
+    "message": "Move Pane"
+  },
   "itPgxd": {
     "message": "Profile"
   },
@@ -901,6 +916,9 @@
   },
   "kGQJcD": {
     "message": "Reorder"
+  },
+  "kHHCWR": {
+    "message": "Adjust Size"
   },
   "kIUNDX": {
     "message": "Default Dice"
@@ -1036,6 +1054,9 @@
   },
   "sMAAlN": {
     "message": "Add New"
+  },
+  "sNa4oH": {
+    "message": "Close Pane"
   },
   "sjzLbX": {
     "message": "Accept"

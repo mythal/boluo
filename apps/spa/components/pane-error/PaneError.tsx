@@ -21,7 +21,7 @@ export const PaneError: FC<{ children: React.ReactNode }> = ({ children }) => {
     }
     return (
       <PaneBox
-        grow
+        initSizeLevel={1}
         header={
           <PaneHeaderBox>
             <FormattedMessage defaultMessage="Oops!" />

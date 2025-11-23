@@ -10,16 +10,50 @@ import {
 } from '../state/view.types';
 import { usePaneLimit } from './useMaxPane';
 import { usePaneKey } from './usePaneKey';
+import { useIsChildPane } from './useIsChildPane';
 
 interface Props {
   child?: false | ChildPaneRatio;
 }
+
+const isSamePane = (pane: PaneData, target: PaneData) => {
+  if (pane.type !== target.type) {
+    return false;
+  }
+  if (pane.type === 'CHANNEL' && target.type === 'CHANNEL') {
+    return pane.channelId === target.channelId;
+  }
+  if (pane.type === 'PROFILE' && target.type === 'PROFILE') {
+    return pane.userId === target.userId;
+  }
+  if (pane.type === 'SPACE_MEMBERS' && target.type === 'SPACE_MEMBERS') {
+    return pane.spaceId === target.spaceId;
+  }
+  if (pane.type === 'SPACE_SETTINGS' && target.type === 'SPACE_SETTINGS') {
+    return pane.spaceId === target.spaceId;
+  }
+  return true;
+};
+
+const findPane = (panes: Pane[], pane: PaneData) => {
+  for (let i = 0; i < panes.length; i++) {
+    const current = panes[i]!;
+    if (isSamePane(current, pane)) {
+      return { index: i, isChild: false };
+    }
+    if (current.child && isSamePane(current.child.pane, pane)) {
+      return { index: i, isChild: true };
+    }
+  }
+  return null;
+};
 
 export const usePaneToggle = (props?: Props) => {
   const { child = false } = props || {};
   const setPanes = useSetAtom(panesAtom);
   const paneLimit = usePaneLimit();
   const paneKey = usePaneKey();
+  const isChildPane = useIsChildPane();
   return useCallback(
     (pane: PaneData, position: NewPanePosition = 'HEAD') =>
       setPanes((panes) => {
@@ -28,6 +62,16 @@ export const usePaneToggle = (props?: Props) => {
           if (index === -1) return panes;
           const currentPane = panes[index]!;
           const nextPanes = [...panes];
+          if (isChildPane && currentPane.child) {
+            const promotedPaneKey = findNextPaneKey(panes);
+            const promotedPane: Pane = { ...currentPane.child.pane, key: promotedPaneKey };
+            nextPanes[index] = { ...currentPane, child: undefined };
+            nextPanes.splice(index + 1, 0, {
+              ...promotedPane,
+              child: { pane, ratio: child },
+            });
+            return nextPanes;
+          }
           if (currentPane.child && currentPane.child.pane.type === pane.type) {
             nextPanes[index] = { ...currentPane, child: undefined };
           } else {
@@ -39,26 +83,21 @@ export const usePaneToggle = (props?: Props) => {
         if (paneLimit === 1) {
           return [{ ...pane, key: 0 }];
         }
-        let index: number = -1;
-        if (pane.type === 'CHANNEL') {
-          index = panes.findIndex((x) => x.type === 'CHANNEL' && x.channelId === pane.channelId);
-        } else if (pane.type === 'PROFILE') {
-          index = panes.findIndex((x) => x.type === 'PROFILE' && x.userId === pane.userId);
-        } else if (pane.type === 'SPACE_MEMBERS' || pane.type === 'SPACE_SETTINGS') {
-          index = panes.findIndex((x) => x.type === pane.type && x.spaceId === pane.spaceId);
-        } else {
-          index = panes.findIndex((x) => x.type === pane.type);
-        }
+        const existingPane = findPane(panes, pane);
         const nextKey = findNextPaneKey(panes);
         const newPane: Pane = { ...pane, key: nextKey };
-        if (index !== -1) {
+        if (existingPane) {
           const nextPanes = [...panes];
-          nextPanes.splice(index, 1);
+          if (existingPane.isChild) {
+            nextPanes[existingPane.index] = { ...nextPanes[existingPane.index]!, child: undefined };
+          } else {
+            nextPanes.splice(existingPane.index, 1);
+          }
           return nextPanes;
         }
 
         return insertPaneByPosition(panes, newPane, position);
       }),
-    [child, paneKey, paneLimit, setPanes],
+    [child, isChildPane, paneKey, paneLimit, setPanes],
   );
 };

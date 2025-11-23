@@ -16,7 +16,7 @@ import { PaneBodyError } from './PaneBodyError';
 import { BannerContext } from '../hooks/useBannerNode';
 import { selectAtom } from 'jotai/utils';
 import { PaneContext } from '../state/view.context';
-import { isSinglePaneAtom, panesAtom } from '../state/view.atoms';
+import { isSingleColumnAtom, panesAtom } from '../state/view.atoms';
 import { type ChildPaneRatio, type PaneChild } from '../state/view.types';
 import { atom, useAtomValue } from 'jotai';
 import { IsChildPaneContext, useIsChildPane } from '../hooks/useIsChildPane';
@@ -57,7 +57,7 @@ export const PaneBox: FC<Props> = ({ header, children, initSizeLevel = 0 }) => {
   const sizeLevel = useAtomValue(sizeLevelAtom);
   const focus = usePaneFocus(paneBoxRef);
   const isChildPane = useIsChildPane();
-  const isSinglePane = useAtomValue(isSinglePaneAtom);
+  const isSingleColumn = useAtomValue(isSingleColumnAtom);
   const { registerPaneRef, draggingPane } = usePaneDrag();
   const childPaneAtom = useMemo(
     () =>
@@ -138,7 +138,7 @@ export const PaneBox: FC<Props> = ({ header, children, initSizeLevel = 0 }) => {
           className={clsx(
             'PaneBox flex h-full flex-[0_0_0] flex-col max-md:flex-[1_1_100%]',
             isDraggingCurrentPane && 'opacity-50',
-            isSinglePane
+            isSingleColumn
               ? 'md:flex-[1_1_100%]'
               : 'md:min-w-[max(calc(40%+var(--min-size,0)),375px)] md:flex-[var(--pane-flex-grow,1)_1] lg:min-w-[max(calc(33%+var(--min-size,0)),375px)] xl:min-w-[max(calc(22%+var(--min-size,0)),375px)]',
           )}

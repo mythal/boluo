@@ -128,11 +128,15 @@ export const panesAtom: PaneAtom = atomWithHash<Pane[]>('panes', [], {
   setHash,
 });
 
-export const panesCountAtom = selectAtom(panesAtom, (panes) => panes.length);
+export const panesColumnCountAtom = selectAtom(panesAtom, (panes) => panes.length);
 
-export const isSinglePaneAtom = selectAtom(panesCountAtom, (count) => count === 1);
+export const isSingleColumnAtom = selectAtom(panesColumnCountAtom, (count) => count === 1);
 
-export const isNoPaneAtom = selectAtom(panesCountAtom, (count) => count === 0);
+export const isNoPaneAtom = selectAtom(panesColumnCountAtom, (count) => count === 0);
+
+export const panesCountAtom = selectAtom(panesAtom, (panes) =>
+  panes.reduce((sum, pane) => sum + 1 + (pane.child ? 1 : 0), 0),
+);
 
 export const panesCreationTimeMapAtom = selectAtom(
   panesAtom,

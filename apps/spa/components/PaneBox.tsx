@@ -10,7 +10,7 @@ import {
 } from 'react';
 import { Loading } from '@boluo/ui/Loading';
 import { type ChildrenProps } from '@boluo/utils/types';
-import { usePaneFocus } from '../hooks/usePaneFocus';
+import { scrollPaneIntoView, usePaneFocus } from '../hooks/usePaneFocus';
 import { Delay } from '@boluo/ui/Delay';
 import { PaneBodyError } from './PaneBodyError';
 import { BannerContext } from '../hooks/useBannerNode';
@@ -85,6 +85,11 @@ export const PaneBox: FC<Props> = ({ header, children, initSizeLevel = 0 }) => {
     registerPaneRef(paneKey, paneBoxRef.current);
     return () => registerPaneRef(paneKey, null);
   }, [isChildPane, paneKey, registerPaneRef]);
+
+  useEffect(() => {
+    if (!focused) return;
+    scrollPaneIntoView(paneBoxRef.current);
+  }, [focused]);
   const content = (
     <div
       ref={isChildPane ? paneBoxRef : undefined}

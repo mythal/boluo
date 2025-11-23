@@ -359,9 +359,6 @@
   "IvjoDS": {
     "message": "已连接"
   },
-  "J1Hzu0": {
-    "message": "Close All"
-  },
   "JBWS0c": {
     "message": "链接"
   },
@@ -1057,6 +1054,9 @@
   },
   "sMAAlN": {
     "message": "新增"
+  },
+  "sNa4oH": {
+    "message": "Close Pane"
   },
   "sjzLbX": {
     "message": "接受"

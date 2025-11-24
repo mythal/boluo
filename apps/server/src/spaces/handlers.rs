@@ -9,6 +9,7 @@ use crate::error::{AppError, Find};
 use crate::events::models::space_users_status;
 use crate::events::{StatusMap, Update};
 use crate::interface::{self, IdQuery, Response, missing, ok_response, parse_query, response};
+use crate::permissions::{Action, PermissionCtx, SpaceAction};
 use crate::spaces::api::{JoinSpace, KickFromSpace, SearchParams, SpaceWithMember};
 use crate::spaces::models::SpaceMemberWithUser;
 use crate::users::User;
@@ -121,21 +122,23 @@ async fn token(
     let session = authenticate(&req).await?;
     let IdQuery { id } = parse_query(req.uri())?;
     let mut conn = ctx.db.acquire().await?;
-    let is_admin = SpaceMember::get(&mut *conn, &session.user_id, &id)
-        .await?
-        .map(|space_member| space_member.is_admin)
-        .unwrap_or(false);
-    if !is_admin {
+    let space_member = SpaceMember::get(&mut *conn, &session.user_id, &id).await?;
+    let space = Space::get_by_id(&mut *conn, &id).await?.or_not_found()?;
+    let auth = crate::permissions::authorize(
+        Action::Space(SpaceAction::ManageInviteToken),
+        PermissionCtx::new(&session.user_id).with_space(&space, space_member.as_ref()),
+    );
+    if let Err(err) = auth {
         tracing::warn!(
-            space_id = %id,
+            space_id = %space.id,
             user_id = %session.user_id,
             "A non-admin tries to get invitation token"
         );
-        return Err(AppError::NoPermission(
-            "Only admins can get space invitation token".to_string(),
-        ));
+        return Err(err);
     }
-    Space::get_token(&mut *conn, &id).await.map_err(Into::into)
+    Space::get_token(&mut *conn, &space.id)
+        .await
+        .map_err(Into::into)
 }
 
 async fn refresh_token(
@@ -145,21 +148,21 @@ async fn refresh_token(
     let session = authenticate(&req).await?;
     let IdQuery { id } = parse_query(req.uri())?;
     let mut conn = ctx.db.acquire().await?;
-    let is_admin = SpaceMember::get(&mut *conn, &session.user_id, &id)
-        .await?
-        .map(|space_member| space_member.is_admin)
-        .unwrap_or(false);
-    if !is_admin {
+    let space_member = SpaceMember::get(&mut *conn, &session.user_id, &id).await?;
+    let space = Space::get_by_id(&mut *conn, &id).await?.or_not_found()?;
+    let auth = crate::permissions::authorize(
+        Action::Space(SpaceAction::ManageInviteToken),
+        PermissionCtx::new(&session.user_id).with_space(&space, space_member.as_ref()),
+    );
+    if let Err(err) = auth {
         tracing::warn!(
-            space_id = %id,
+            space_id = %space.id,
             user_id = %session.user_id,
             "A non-admin tries to refresh invitation token"
         );
-        return Err(AppError::NoPermission(
-            "Only admins can refresh space invitation token".to_string(),
-        ));
+        return Err(err);
     }
-    Space::refresh_token(&mut *conn, &id)
+    Space::refresh_token(&mut *conn, &space.id)
         .await
         .map_err(Into::into)
 }
@@ -259,15 +262,17 @@ async fn edit(
     let space_member = SpaceMember::get(&mut *trans, &session.user_id, &space_id)
         .await
         .or_no_permission()?;
-    if !space_member.is_admin && space.owner_id != session.user_id {
+    let auth = crate::permissions::authorize(
+        Action::Space(SpaceAction::Edit),
+        PermissionCtx::new(&session.user_id).with_space(&space, Some(&space_member)),
+    );
+    if let Err(err) = auth {
         tracing::warn!(
             space_id = %space_id,
             user_id = %session.user_id,
             "A non-admin tries to edit space"
         );
-        return Err(AppError::NoPermission(
-            "Only admins can edit space".to_string(),
-        ));
+        return Err(err);
     }
     let space = Space::edit(
         &mut *trans,
@@ -368,18 +373,19 @@ async fn kick(
     let member_to_kick = SpaceMember::get(&mut *trans, &user_id, &space_id)
         .await
         .or_not_found()?;
-    if member_to_kick.is_admin && space.owner_id != session.user_id {
-        return Err(AppError::BadRequest("Can't kick admin".to_string()));
-    }
-    if !my_member.is_admin && space.owner_id != session.user_id {
+    let auth = crate::permissions::authorize(
+        Action::Space(SpaceAction::KickMember {
+            target_is_admin: member_to_kick.is_admin,
+        }),
+        PermissionCtx::new(&session.user_id).with_space(&space, Some(&my_member)),
+    );
+    if let Err(err) = auth {
         tracing::warn!(
             space_id = %space_id,
             user_id = %session.user_id,
             "A non-admin tries to kick"
         );
-        return Err(AppError::NoPermission(
-            "Only admins can kick members".to_string(),
-        ));
+        return Err(err);
     }
     SpaceMember::remove_user(&mut trans, user_id, space_id).await?;
     trans.commit().await?;
@@ -429,19 +435,21 @@ async fn delete(
     let mut conn = ctx.db.acquire().await?;
     let session = authenticate(&req).await?;
     let space = Space::get_by_id(&mut *conn, &id).await.or_not_found()?;
-    if space.owner_id == session.user_id {
-        Space::delete(&mut conn, id).await?;
-        tracing::info!("A space ({}) was deleted", space.id);
-        return Ok(space);
-    }
-    tracing::warn!(
-        "The user {} failed to try delete a space {}",
-        session.user_id,
-        space.id
+    let auth = crate::permissions::authorize(
+        Action::Space(SpaceAction::Delete),
+        PermissionCtx::new(&session.user_id).with_space(&space, None),
     );
-    Err(AppError::NoPermission(
-        "You are not the owner of this space".to_string(),
-    ))
+    if let Err(err) = auth {
+        tracing::warn!(
+            "The user {} failed to try delete a space {}",
+            session.user_id,
+            space.id
+        );
+        return Err(err);
+    }
+    Space::delete(&mut conn, id).await?;
+    tracing::info!("A space ({}) was deleted", space.id);
+    Ok(space)
 }
 
 async fn space_settings(
@@ -471,19 +479,18 @@ async fn update_settings(
         return Err(AppError::NotFound("space"));
     };
 
-    let is_admin = SpaceMember::get(&mut *conn, &session.user_id, &id)
-        .await?
-        .map(|space_member| space_member.is_admin)
-        .unwrap_or(false);
-    if !is_admin && space.owner_id != session.user_id {
+    let space_member = SpaceMember::get(&mut *conn, &session.user_id, &id).await?;
+    let auth = crate::permissions::authorize(
+        Action::Space(SpaceAction::UpdateSettings),
+        PermissionCtx::new(&session.user_id).with_space(&space, space_member.as_ref()),
+    );
+    if let Err(err) = auth {
         tracing::warn!(
             space_id = %id,
             user_id = %session.user_id,
             "A non-admin tries to update settings"
         );
-        return Err(AppError::NoPermission(
-            "Only admins can update space settings".to_string(),
-        ));
+        return Err(err);
     }
     Space::put_settings(&mut *conn, id, &settings).await?;
     Ok(settings)

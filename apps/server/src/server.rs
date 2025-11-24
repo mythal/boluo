@@ -40,6 +40,7 @@ mod mail;
 mod media;
 mod messages;
 mod notify;
+mod permissions;
 mod pos;
 mod pubsub;
 mod redis;

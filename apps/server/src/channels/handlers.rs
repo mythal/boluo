@@ -14,6 +14,7 @@ use crate::error::{AppError, Find};
 use crate::events::Update;
 use crate::interface::{self, IdQuery, missing, ok_response, parse_body, parse_query, response};
 use crate::messages::Message;
+use crate::permissions::{Action, ChannelAction, PermissionCtx, SpaceAction};
 use crate::session::Session;
 use crate::spaces::{Space, SpaceMember};
 use hyper::Request;
@@ -21,19 +22,19 @@ use hyper::body::Body;
 use std::collections::HashMap;
 use uuid::Uuid;
 
-async fn admin_only<'c, T: sqlx::PgExecutor<'c>>(
-    db: T,
+async fn admin_only(
+    db: &mut sqlx::PgConnection,
     user_id: &Uuid,
     space_id: &Uuid,
 ) -> Result<(), AppError> {
-    let member = SpaceMember::get(db, user_id, space_id)
+    let space_member = SpaceMember::get(&mut *db, user_id, space_id)
         .await
         .or_no_permission()?;
-    if member.is_admin {
-        Ok(())
-    } else {
-        Err(AppError::NoPermission("You're not admin".to_string()))
-    }
+    let space = Space::get_by_id(&mut *db, space_id).await?.or_not_found()?;
+    crate::permissions::authorize(
+        Action::Space(SpaceAction::Edit),
+        PermissionCtx::new(user_id).with_space(&space, Some(&space_member)),
+    )
 }
 
 async fn query<B: Body>(
@@ -239,12 +240,20 @@ async fn edit(
 
     let mut trans = ctx.db.begin().await?;
 
+    let channel = Channel::get_by_id(&mut *trans, &channel_id)
+        .await
+        .or_not_found()?;
+    let space = Space::get_by_id(&mut *trans, &channel.space_id)
+        .await
+        .or_not_found()?;
     let space_member = SpaceMember::get_by_channel(&mut *trans, &session.user_id, &channel_id)
         .await
         .or_no_permission()?;
-    if !space_member.is_admin {
-        return Err(AppError::NoPermission("user is not admin".to_string()));
-    }
+    crate::permissions::authorize(
+        Action::Channel(ChannelAction::Edit),
+        PermissionCtx::new(&session.user_id)
+            .with_channel(&channel, &space, Some(&space_member), None),
+    )?;
     let channel = Channel::edit(
         &mut *trans,
         &channel_id,
@@ -293,27 +302,18 @@ async fn edit_topic(
     let channel = Channel::get_by_id(&mut *trans, &channel_id)
         .await
         .or_not_found()?;
-
-    let mut has_permission = false;
-    if let Some(space_member) =
-        SpaceMember::get(&mut *trans, &session.user_id, &channel.space_id).await?
-    {
-        has_permission = space_member.is_admin;
-    }
-
-    if !has_permission {
-        if let Some(channel_member) =
-            ChannelMember::get(&mut *trans, session.user_id, channel.space_id, channel_id).await?
-        {
-            has_permission = channel_member.is_master;
-        }
-    }
-
-    if !has_permission {
-        return Err(AppError::NoPermission(
-            "You have no permission to edit this channel topic.".to_string(),
-        ));
-    }
+    let space = Space::get_by_id(&mut *trans, &channel.space_id)
+        .await
+        .or_not_found()?;
+    let space_member =
+        SpaceMember::get(&mut *trans, &session.user_id, &channel.space_id).await?;
+    let channel_member =
+        ChannelMember::get(&mut *trans, session.user_id, channel.space_id, channel_id).await?;
+    crate::permissions::authorize(
+        Action::Channel(ChannelAction::EditTopic),
+        PermissionCtx::new(&session.user_id)
+            .with_channel(&channel, &space, space_member.as_ref(), channel_member.as_ref()),
+    )?;
 
     let updated = Channel::edit(
         &mut *trans,
@@ -347,14 +347,19 @@ async fn edit_masters(
     let channel = Channel::get_by_id(&ctx.db, &channel_id)
         .await
         .or_not_found()?;
+    let space = Space::get_by_id(&ctx.db, &channel.space_id)
+        .await
+        .or_not_found()?;
     let mut trans = ctx.db.begin().await?;
 
     let space_member = SpaceMember::get_by_channel(&mut *trans, &session.user_id, &channel_id)
         .await
         .or_no_permission()?;
-    if !space_member.is_admin {
-        return Err(AppError::NoPermission("user is not admin".to_string()));
-    }
+    crate::permissions::authorize(
+        Action::Channel(ChannelAction::ManageMasters),
+        PermissionCtx::new(&session.user_id)
+            .with_channel(&channel, &space, Some(&space_member), None),
+    )?;
 
     ChannelMember::set_master(
         &mut *trans,
@@ -526,20 +531,26 @@ async fn kick(ctx: &crate::context::AppContext, req: Request<impl Body>) -> Resu
     } = parse_query(req.uri())?;
     let operator_user_id = session.user_id;
     let mut trans = ctx.db.begin().await?;
+    let channel = Channel::get_by_id(&mut *trans, &channel_id)
+        .await
+        .or_not_found()?;
+    let space = Space::get_by_id(&mut *trans, &channel.space_id)
+        .await
+        .or_not_found()?;
     let space_member = SpaceMember::get(&mut *trans, &operator_user_id, &space_id)
         .await
         .or_no_permission()?;
-    if !space_member.is_admin {
-        let channel_member =
-            ChannelMember::get(&mut *trans, operator_user_id, space_id, channel_id)
-                .await
-                .or_no_permission()?;
-        if !channel_member.is_master {
-            return Err(AppError::NoPermission(
-                "You have no permission to kick user from this channel.".to_string(),
-            ));
-        }
-    }
+    let channel_member =
+        ChannelMember::get(&mut *trans, operator_user_id, space_id, channel_id).await?;
+    crate::permissions::authorize(
+        Action::Channel(ChannelAction::KickMember),
+        PermissionCtx::new(&session.user_id).with_channel(
+            &channel,
+            &space,
+            Some(&space_member),
+            channel_member.as_ref(),
+        ),
+    )?;
     ChannelMember::remove_user(&mut *trans, user_to_be_kicked, channel_id, space_id).await?;
     trans.commit().await?;
     push_members(ctx, space_id, channel_id).await?;

@@ -7,7 +7,8 @@ use crate::events::Update;
 use crate::interface;
 use crate::interface::{Response, missing, ok_response, parse_query, response};
 use crate::messages::api::{GetMessagesByChannel, MoveMessageBetween};
-use crate::spaces::SpaceMember;
+use crate::permissions::{Action, MessageAction, PermissionCtx};
+use crate::spaces::{Space, SpaceMember};
 use hyper::Request;
 use hyper::body::Body;
 
@@ -238,9 +239,15 @@ async fn delete(
         SpaceMember::get_by_channel(&mut *conn, &session.user_id, &message.channel_id)
             .await
             .or_no_permission()?;
-    if !space_member.is_admin && message.sender_id != session.user_id {
-        return Err(AppError::NoPermission("user id mismatch".to_string()));
-    }
+    let space = Space::get_by_id(&mut *conn, &space_member.space_id)
+        .await
+        .or_not_found()?;
+    crate::permissions::authorize(
+        Action::Message(MessageAction::Delete),
+        PermissionCtx::new(&session.user_id)
+            .with_space(&space, Some(&space_member))
+            .with_message_sender(&message.sender_id),
+    )?;
     Message::delete(&mut *conn, &id).await?;
     Update::message_deleted(
         space_member.space_id,

@@ -84,7 +84,7 @@ export const DraftHistoryButton: FC<DraftHistoryButtonProps> = ({ drafts, onRest
                     onRestore(draft.text);
                     setOpen(false);
                   }}
-                  className="hover:bg-surface-default cursor-pointer rounded px-2 py-1 text-left"
+                  className="hover:bg-surface-interactive-hover cursor-pointer rounded px-2 py-1 text-left"
                 >
                   <div className="text-text-secondary text-xs">
                     <FormattedMessage

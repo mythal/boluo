@@ -54,7 +54,7 @@ export const EntityExprDicePoolRoll: FC<Props> = React.memo(({ node }: Props) =>
       </Delay>
       <span className="decoration-text-secondary group/dice-pool relative cursor-help px-1 underline decoration-dotted">
         <FormattedMessage defaultMessage="Dice Pool" />
-        <span className="bg-surface-tooltip text-tooltip-text absolute bottom-full left-0 hidden w-max rounded-sm px-2 py-1 text-sm shadow group-hover/dice-pool:inline-block">
+        <span className="bg-tooltip-bg text-tooltip-text absolute bottom-full left-0 hidden w-max rounded-sm px-2 py-1 text-sm shadow group-hover/dice-pool:inline-block">
           <FormattedMessage
             defaultMessage="Critical: {critical}, Fumble: {fumble}, Success: {success}, Add: {addition}"
             values={{

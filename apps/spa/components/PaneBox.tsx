@@ -100,7 +100,7 @@ export const PaneBox: FC<Props> = ({ header, children, initSizeLevel = 0 }) => {
         isDraggingCurrentPane && isChildPane && 'opacity-50',
       )}
     >
-      {isChildPane && <div className="bg-pane-header-border absolute top-0 h-px w-full" />}
+      {isChildPane && <div className="bg-border-subtle absolute top-0 h-px w-full" />}
       {header}
       <div
         ref={bannerRef}

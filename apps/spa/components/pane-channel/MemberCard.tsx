@@ -336,9 +336,7 @@ export const MemberCard: React.FC<Props> = ({
             {status != null && (
               <div className="space-x-1 text-sm">
                 {status.kind === 'ONLINE' ? (
-                  <span
-                    className={clsx(status.kind === 'ONLINE' ? 'text-presence-online-text' : '')}
-                  >
+                  <span className={clsx(status.kind === 'ONLINE' ? 'text-state-success-text' : '')}>
                     {statusText}
                   </span>
                 ) : (

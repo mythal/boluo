@@ -74,11 +74,15 @@ export const EditDefaultColor: FC<{ currentUser: User }> = ({ currentUser }) => 
         <FormattedMessage defaultMessage="Default Color" />
       </div>
       <div className="flex w-full gap-2 py-4">
-        <div className="bg-light-bg rounded-lg border p-6" style={{ color: computedColors.light }}>
-          <FormattedMessage defaultMessage="In Light Mode" />
+        <div className="light">
+          <div className="bg-pane-bg rounded-lg border p-6" style={{ color: computedColors.light }}>
+            <FormattedMessage defaultMessage="In Light Mode" />
+          </div>
         </div>
-        <div className="bg-dark-bg rounded-lg border p-6" style={{ color: computedColors.dark }}>
-          <FormattedMessage defaultMessage="In Dark Mode" />
+        <div className="dark">
+          <div className="bg-pane-bg rounded-lg border p-6" style={{ color: computedColors.dark }}>
+            <FormattedMessage defaultMessage="In Dark Mode" />
+          </div>
         </div>
       </div>
 

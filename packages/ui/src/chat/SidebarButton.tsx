@@ -43,7 +43,7 @@ export const SidebarButton: FC<Props> = ({ isSidebarExpanded, setSidebarExpanded
       >
         <div
           className={clsx(
-            'sidebar-button-box bg-bg text-text-on-floating flex h-full w-full items-center justify-center rounded-sm',
+            'sidebar-button-box bg-surface-canvas text-text-primary flex h-full w-full items-center justify-center rounded-sm',
             isSidebarExpanded ? '' : 'shadow-xs',
           )}
         >

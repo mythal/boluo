@@ -71,7 +71,7 @@ export default async function Page({ params }: Props) {
     },
   );
   return (
-    <div className="bg-surface-raised border-border-raised shadow-1/2 shadow-elevation-raised-shadow max-w-md rounded-sm border p-4">
+    <div className="bg-surface-raised border-border-raised shadow-1/2 max-w-md rounded-sm border p-4">
       <div className="py-2 italic">{title}</div>
       <div className="py-4 text-center text-xl font-bold">{space.name}</div>
       {space.description !== '' && (

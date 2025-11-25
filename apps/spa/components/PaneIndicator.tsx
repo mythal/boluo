@@ -101,7 +101,7 @@ export const PaneIndicator = () => {
               key={pane.key}
               className={clsx(
                 'block h-2 w-2 rounded-full transition-all duration-300',
-                isActive ? 'bg-brand-strong w-4' : 'bg-pane-header-border',
+                isActive ? 'bg-brand-strong w-4' : 'bg-surface-muted',
               )}
             />
           );

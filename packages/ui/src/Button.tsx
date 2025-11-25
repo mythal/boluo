@@ -41,8 +41,8 @@ export const Button: React.FC<ButtonProps> = function Button({
           'disabled:text-text-inverted-secondary disabled:bg-action-secondary-bg-disabled',
         ],
         variant === 'danger' && [
-          'bg-action-danger-bg text-action-primary-text hover:enabled:bg-action-danger-bg-hover border-b-border-danger',
-          'pressed:bg-action-danger-bg-active pressed:border-border-strong',
+          'bg-action-danger-bg text-action-primary-text hover:enabled:bg-action-danger-bg-hover border-b-state-danger-border',
+          'pressed:bg-action-danger-bg-active pressed:border-b-action-danger-bg-active',
           'disabled:bg-action-danger-bg-disabled disabled:text-text-inverted-secondary',
         ],
         variant === 'primary' && [

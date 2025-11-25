@@ -2,12 +2,14 @@ import { useAtomValue, useStore } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import clsx from 'clsx';
 import { focusPaneAtom, panesAtom } from '../state/view.atoms';
+import { isSidebarExpandedAtom } from '../state/ui.atoms';
 
 const DISPLAY_DURATION = 1000;
 
 export const PaneIndicator = () => {
   const panes = useAtomValue(panesAtom);
   const focusPane = useAtomValue(focusPaneAtom);
+  const isSidebarExpanded = useAtomValue(isSidebarExpandedAtom);
   const store = useStore();
   const [visible, setVisible] = useState(false);
   const timeoutRef = useRef<number | undefined>(undefined);
@@ -84,12 +86,14 @@ export const PaneIndicator = () => {
 
   return (
     <div
+      data-sidebar-expanded={isSidebarExpanded ? 'true' : 'false'}
       className={clsx(
-        'pointer-events-none fixed bottom-1/2 left-1/2 z-30 -translate-x-1/2 transition-opacity duration-300',
+        'pointer-events-none fixed top-16 z-30 -translate-x-1/2 transition-opacity duration-200',
+        'data-[sidebar-expanded=false]:left-1/2 data-[sidebar-expanded=true]:left-[calc(50%+var(--spacing-sidebar)/2)]',
         visible ? 'opacity-100' : 'opacity-0',
       )}
     >
-      <div className="bg-surface-unit/90 border-border-subtle text-text-primary flex items-center gap-2 rounded-full border px-3 py-2 shadow-lg backdrop-blur-sm">
+      <div className="bg-surface-unit/90 border-border-default text-text-primary flex items-center gap-2 rounded-full border px-3 py-2 shadow-md backdrop-blur-sm">
         {panes.map((pane, index) => {
           const isActive = index === activeIndex;
           return (

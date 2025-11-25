@@ -68,7 +68,7 @@ export const PaneResetPassword: FC = () => {
         </PaneHeaderBox>
       }
     >
-      <div className="p-pane">
+      <div className="p-pane max-w-lg">
         {pageState === 'FORM' ? (
           <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4 pt-2">
             <div>

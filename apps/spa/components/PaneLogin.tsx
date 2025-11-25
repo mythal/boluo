@@ -25,7 +25,7 @@ export const PaneLogin: FC = () => {
         </PaneHeaderBox>
       }
     >
-      <div className="p-pane">
+      <div className="p-pane max-w-lg">
         <LoginForm onSuccess={close} className="w-full" />
         <div className="mt-3 flex justify-between">
           <button type="button" className={classes.link} onClick={handleOpenSignUp}>

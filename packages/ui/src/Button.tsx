@@ -22,6 +22,9 @@ export const Button: React.FC<ButtonProps> = function Button({
   ref,
   ...props
 }: ButtonProps) {
+  if (props.type == null) {
+    props.type = 'button';
+  }
   return (
     <button
       className={clsx(

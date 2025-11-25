@@ -15,6 +15,9 @@ export const ButtonInline: React.FC<ButtonInlineProps> = function ButtonInline({
   ref,
   ...props
 }: ButtonInlineProps) {
+  if (props.type == null) {
+    props.type = 'button';
+  }
   return (
     <button
       className={clsx(

@@ -126,10 +126,10 @@ export const PaneBox: FC<Props> = ({ header, children, initSizeLevel = 0 }) => {
     return content;
   }
   const GROW_FACTOR = 0.25;
-  const SIZE_FACTOR = 8;
+  const SIZE_FACTOR = 4;
   const growStyle: CSSProperties = {
     ['--pane-flex-grow' as string]: (1 + sizeLevel * GROW_FACTOR).toString(),
-    ['--pane-min-delta' as string]: `${sizeLevel * SIZE_FACTOR}%`,
+    ['--pane-min-delta' as string]: `${sizeLevel * SIZE_FACTOR}vw`,
   };
   return (
     <BannerContext value={bannerRef}>
@@ -143,9 +143,12 @@ export const PaneBox: FC<Props> = ({ header, children, initSizeLevel = 0 }) => {
             isSingleColumn
               ? 'md:flex-[1_1_100%]'
               : [
-                  'md:min-w-[max(calc(42%+var(--pane-min-delta,0)),375px)] md:flex-[var(--pane-flex-grow,1)_1]',
-                  'lg:min-w-[max(calc(33%+var(--pane-min-delta,0)),375px)]',
-                  'xl:min-w-[max(calc(26%+var(--pane-min-delta,0)),375px)]',
+                  'md:min-w-[max(calc(40%+var(--pane-min-delta,0)),375px)] md:flex-[var(--pane-flex-grow,1)_1]',
+                  'lg:min-w-[max(calc(38%+var(--pane-min-delta,0)),375px)]',
+                  'xl:min-w-[max(calc(32%+var(--pane-min-delta,0)),375px)]',
+                  '2xl:min-w-[max(calc(30%+var(--pane-min-delta,0)),375px)]',
+                  'min-[1890px]:min-w-[max(calc(20%+var(--pane-min-delta,0)),375px)]',
+                  'min-[2220px]:min-w-[max(calc(16%+var(--pane-min-delta,0)),375px)]',
                 ],
           )}
         >

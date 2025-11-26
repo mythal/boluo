@@ -87,8 +87,8 @@
   --color-entity-fate-dice-border: var(--color-blue-300);
 
   /* Kbd */
-  --color-kbd-bg: var(--color-neutral-600);
-  --color-kbd-shadow: var(--color-neutral-800);
+  --color-kbd-bg: var(--color-stone-900);
+  --color-kbd-shadow: var(--color-neutral-600);
   --color-kbd-text: var(--color-white);
 
   /* Name */
@@ -227,9 +227,9 @@
   --color-entity-fate-dice-border: var(--color-lime-700);
 
   /* Kbd */
-  --color-kbd-bg: var(--color-stone-50);
-  --color-kbd-shadow: var(--color-stone-300);
-  --color-kbd-text: var(--color-black);
+  --color-kbd-bg: var(--color-stone-700);
+  --color-kbd-shadow: var(--color-neutral-400);
+  --color-kbd-text: var(--color-white);
 
   /* Name */
   --color-name-bg: color-mix(in srgb, var(--color-neutral-200) 35%, transparent 65%);

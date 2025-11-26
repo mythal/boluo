@@ -100,14 +100,20 @@ export const PaneBox: FC<Props> = ({ header, children, initSizeLevel = 0 }) => {
         isDraggingCurrentPane && isChildPane && 'opacity-50',
       )}
     >
-      {isChildPane && <div className="bg-pane-header-border absolute top-0 h-px w-full" />}
+      {isChildPane && <div className="bg-border-subtle absolute top-0 h-px w-full" />}
       {header}
       <div
         ref={bannerRef}
         className={`${focused ? 'border-border-default' : 'border-border-subtle'} border-b`}
       ></div>
 
-      <div onFocus={focus} className="bg-pane-bg relative grow overflow-x-hidden overflow-y-auto">
+      <div
+        onFocus={focus}
+        className={clsx(
+          'bg-pane-bg relative grow overflow-x-hidden overflow-y-auto transition-shadow duration-100',
+          focused && 'shadow-pane-focus-shadow shadow-[0_10px_4px_-10px_inset]',
+        )}
+      >
         <Suspense
           fallback={
             <div className="flex h-full items-center justify-center">
@@ -126,10 +132,10 @@ export const PaneBox: FC<Props> = ({ header, children, initSizeLevel = 0 }) => {
     return content;
   }
   const GROW_FACTOR = 0.25;
-  const SIZE_FACTOR = 8;
+  const SIZE_FACTOR = 4;
   const growStyle: CSSProperties = {
     ['--pane-flex-grow' as string]: (1 + sizeLevel * GROW_FACTOR).toString(),
-    ['--pane-min-delta' as string]: `${sizeLevel * SIZE_FACTOR}%`,
+    ['--pane-min-delta' as string]: `${sizeLevel * SIZE_FACTOR}vw`,
   };
   return (
     <BannerContext value={bannerRef}>
@@ -143,9 +149,12 @@ export const PaneBox: FC<Props> = ({ header, children, initSizeLevel = 0 }) => {
             isSingleColumn
               ? 'md:flex-[1_1_100%]'
               : [
-                  'md:min-w-[max(calc(42%+var(--pane-min-delta,0)),375px)] md:flex-[var(--pane-flex-grow,1)_1]',
-                  'lg:min-w-[max(calc(33%+var(--pane-min-delta,0)),375px)]',
-                  'xl:min-w-[max(calc(26%+var(--pane-min-delta,0)),375px)]',
+                  'md:min-w-[max(calc(40%+var(--pane-min-delta,0)),375px)] md:flex-[var(--pane-flex-grow,1)_1]',
+                  'lg:min-w-[max(calc(38%+var(--pane-min-delta,0)),375px)]',
+                  'xl:min-w-[max(calc(32%+var(--pane-min-delta,0)),375px)]',
+                  '2xl:min-w-[max(calc(30%+var(--pane-min-delta,0)),375px)]',
+                  'min-[1890px]:min-w-[max(calc(20%+var(--pane-min-delta,0)),375px)]',
+                  'min-[2220px]:min-w-[max(calc(16%+var(--pane-min-delta,0)),375px)]',
                 ],
           )}
         >

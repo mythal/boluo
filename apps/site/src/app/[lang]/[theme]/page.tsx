@@ -9,7 +9,7 @@ const Card: FC<{ children: ReactNode; className?: string }> = ({ children, class
   return (
     <div
       className={[
-        'bg-surface-raised border-border-raised shadow-1/2 shadow-elevation-raised-shadow max-w-lg rounded-sm border p-6',
+        'bg-surface-raised border-border-raised shadow-1/2 max-w-lg rounded-sm border p-6',
         className,
       ].join(' ')}
     >

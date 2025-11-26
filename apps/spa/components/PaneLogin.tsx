@@ -1,22 +1,35 @@
 import { LogIn } from '@boluo/icons';
-import { type FC, useCallback } from 'react';
+import { type FC, type MouseEventHandler, useCallback } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { usePaneClose } from '../hooks/usePaneClose';
 import { usePaneReplace } from '../hooks/usePaneReplace';
 import { LoginForm } from './account/LoginForm';
 import { PaneBox } from './PaneBox';
 import { PaneHeaderBox } from './PaneHeaderBox';
+import { paneHref } from '../href';
 import * as classes from '@boluo/ui/classes';
+
+const signUpPaneHref = paneHref({ type: 'SIGN_UP' });
+
+const resetPasswordPaneHref = paneHref({ type: 'RESET_PASSWORD' });
 
 export const PaneLogin: FC = () => {
   const close = usePaneClose();
   const replacePane = usePaneReplace();
-  const handleForgotPassword = useCallback(() => {
-    replacePane({ type: 'RESET_PASSWORD' }, (pane) => pane.type === 'LOGIN');
-  }, [replacePane]);
-  const handleOpenSignUp = useCallback(() => {
-    replacePane({ type: 'SIGN_UP' }, (pane) => pane.type === 'LOGIN');
-  }, [replacePane]);
+  const handleForgotPassword: MouseEventHandler<HTMLAnchorElement> = useCallback(
+    (event) => {
+      event.preventDefault();
+      replacePane({ type: 'RESET_PASSWORD' }, (pane) => pane.type === 'LOGIN');
+    },
+    [replacePane],
+  );
+  const handleOpenSignUp: MouseEventHandler<HTMLAnchorElement> = useCallback(
+    (event) => {
+      event.preventDefault();
+      replacePane({ type: 'SIGN_UP' }, (pane) => pane.type === 'LOGIN');
+    },
+    [replacePane],
+  );
   return (
     <PaneBox
       header={
@@ -25,15 +38,15 @@ export const PaneLogin: FC = () => {
         </PaneHeaderBox>
       }
     >
-      <div className="p-pane">
+      <div className="p-pane max-w-lg">
         <LoginForm onSuccess={close} className="w-full" />
         <div className="mt-3 flex justify-between">
-          <button type="button" className={classes.link} onClick={handleOpenSignUp}>
+          <a href={signUpPaneHref} className={classes.link} onClick={handleOpenSignUp}>
             <FormattedMessage defaultMessage="Sign Up" />
-          </button>
-          <button type="button" className={classes.link} onClick={handleForgotPassword}>
+          </a>
+          <a href={resetPasswordPaneHref} className={classes.link} onClick={handleForgotPassword}>
             <FormattedMessage defaultMessage="Forgot password?" />
-          </button>
+          </a>
         </div>
       </div>
     </PaneBox>

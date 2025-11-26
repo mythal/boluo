@@ -73,7 +73,7 @@ export const ConnectionIndicatior: FC<Props> = ({ spaceId }) => {
       <div
         className={clsx(
           'ConnectionIndicatior group flex cursor-pointer items-center gap-1 px-4 py-1 text-sm select-none',
-          connectionState.type === 'CONNECTED' ? 'bg-connect-success' : 'bg-connect-other',
+          connectionState.type === 'CONNECTED' ? 'bg-state-success-bg' : 'bg-surface-muted',
         )}
         ref={refs.setReference}
         {...getReferenceProps()}
@@ -110,7 +110,7 @@ export const ConnectionIndicatior: FC<Props> = ({ spaceId }) => {
             ref={refs.setFloating}
             style={{ position: strategy, top: y ?? 0, left: x ?? 0 }}
             {...getFloatingProps()}
-            className={clsx('z-40 w-[max-content]')}
+            className={clsx('z-40 w-max')}
           >
             <BaseUrlSelectionPanel connectionState={connectionState} />
           </div>

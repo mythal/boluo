@@ -3,7 +3,7 @@ import { post } from '@boluo/api-browser';
 import { explainError } from '@boluo/locale/errors';
 import * as validators from '@boluo/common/validations';
 import { UserPlus } from '@boluo/icons';
-import { type FC, useCallback, useId, useState } from 'react';
+import { type FC, type MouseEventHandler, useCallback, useId, useState } from 'react';
 import {
   type FieldError,
   FormProvider,
@@ -20,6 +20,8 @@ import * as classes from '@boluo/ui/classes';
 import { PaneBox } from './PaneBox';
 import { PaneHeaderBox } from './PaneHeaderBox';
 import { usePaneReplace } from '../hooks/usePaneReplace';
+import { paneHref } from '../href';
+import { ButtonInline } from '@boluo/ui/ButtonInline';
 
 interface Schema {
   username: string;
@@ -138,13 +140,13 @@ const PasswordField = () => {
         <label htmlFor={id} className="grow">
           <FormattedMessage defaultMessage="Password" />
         </label>
-        <button type="button" className={classes.link} onClick={() => setShow((next) => !next)}>
+        <ButtonInline type="button" onClick={() => setShow((next) => !next)}>
           {show ? (
             <FormattedMessage defaultMessage="Hide" />
           ) : (
             <FormattedMessage defaultMessage="Show" />
           )}
-        </button>
+        </ButtonInline>
       </div>
       <TextInput
         className="w-full"
@@ -189,6 +191,7 @@ export const PaneSignUp: FC = () => {
   const replacePane = usePaneReplace();
   const methods = useForm<Schema>({ mode: 'onChange' });
   const [error, setError] = useState<ApiError | null>(null);
+  const loginPaneHref = paneHref({ type: 'LOGIN' });
 
   const onSubmit: SubmitHandler<Schema> = useCallback(
     async ({ username, email, nickname, password }) => {
@@ -208,9 +211,13 @@ export const PaneSignUp: FC = () => {
     [replacePane],
   );
 
-  const handleOpenLogin = useCallback(() => {
-    replacePane({ type: 'LOGIN' }, (pane) => pane.type === 'SIGN_UP');
-  }, [replacePane]);
+  const handleOpenLogin: MouseEventHandler<HTMLAnchorElement> = useCallback(
+    (event) => {
+      event.preventDefault();
+      replacePane({ type: 'LOGIN' }, (pane) => pane.type === 'SIGN_UP');
+    },
+    [replacePane],
+  );
 
   return (
     <PaneBox
@@ -220,16 +227,16 @@ export const PaneSignUp: FC = () => {
         </PaneHeaderBox>
       }
     >
-      <div className="p-pane">
+      <div className="p-pane max-w-lg">
         <FormProvider {...methods}>
           <form onSubmit={methods.handleSubmit(onSubmit)} className="flex flex-col gap-4 pt-2">
             <FormContent error={error} />
           </form>
         </FormProvider>
         <div className="mt-4 text-right">
-          <button type="button" className={classes.link} onClick={handleOpenLogin}>
+          <a href={loginPaneHref} className={classes.link} onClick={handleOpenLogin}>
             <FormattedMessage defaultMessage="Already have an account? Log in" />
-          </button>
+          </a>
         </div>
       </div>
     </PaneBox>

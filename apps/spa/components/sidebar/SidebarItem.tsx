@@ -34,21 +34,33 @@ export const SidebarItem: FC<Props> = ({
     }
     return null;
   }, [active, toggle]);
+  const iconNode = useMemo(
+    () => (
+      <span
+        className={clsx(
+          'flex h-5 w-5 items-center justify-center',
+          icon && (active ? 'text-text-secondary' : 'text-text-subtle'),
+        )}
+        aria-hidden={!icon}
+      >
+        {icon}
+      </span>
+    ),
+    [active, icon],
+  );
   return (
     <div className="px-3 py-0.5">
       <button
+        type="button"
         onClick={onClick}
         className={clsx(
-          'group relative flex w-full items-center justify-center gap-1 rounded py-1 text-left',
+          'group relative grid w-full grid-cols-[1.25rem_1fr_auto] items-center gap-x-1 rounded px-1 py-1 text-left text-sm',
           onClick ? 'hover:bg-surface-muted cursor-pointer' : 'cursor-default',
-          'px-1 text-left text-sm',
           active && 'bg-surface-default',
         )}
       >
-        {icon && (
-          <span className={active ? 'text-text-secondary' : 'text-text-subtle'}>{icon}</span>
-        )}
-        <span className={clsx('grow text-left')}>{children}</span>
+        {iconNode}
+        <span className="text-left">{children}</span>
 
         {extraNode}
       </button>

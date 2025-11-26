@@ -22,6 +22,9 @@ export const Button: React.FC<ButtonProps> = function Button({
   ref,
   ...props
 }: ButtonProps) {
+  if (props.type == null) {
+    props.type = 'button';
+  }
   return (
     <button
       className={clsx(
@@ -32,14 +35,14 @@ export const Button: React.FC<ButtonProps> = function Button({
         'pressed:[&_.detail-arrow]:rotate-180',
         small ? 'min-h-7 px-3 py-0.5 text-sm' : 'px-4 py-2 text-base',
         (variant === 'default' || variant === 'detail') && [
-          'bg-action-secondary-bg border-b-border-default',
+          'bg-action-secondary-bg border-action-secondary-border border shadow-[0_-1px_0_var(--color-action-secondary-border)_inset,0_1px_3px_rgba(0,0,0,0.075)]',
           'hover:enabled:bg-action-secondary-bg-hover',
-          'pressed:bg-action-secondary-bg-active pressed:border-border-strong',
+          'pressed:bg-action-secondary-bg-active pressed:shadow-none pressed:border-border-strong',
           'disabled:text-text-inverted-secondary disabled:bg-action-secondary-bg-disabled',
         ],
         variant === 'danger' && [
-          'bg-action-danger-bg text-action-primary-text hover:enabled:bg-action-danger-bg-hover border-b-border-danger',
-          'pressed:bg-action-danger-bg-active pressed:border-border-strong',
+          'bg-action-danger-bg text-action-primary-text hover:enabled:bg-action-danger-bg-hover border-b-state-danger-border',
+          'pressed:bg-action-danger-bg-active pressed:border-b-action-danger-bg-active',
           'disabled:bg-action-danger-bg-disabled disabled:text-text-inverted-secondary',
         ],
         variant === 'primary' && [

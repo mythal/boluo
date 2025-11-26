@@ -61,7 +61,7 @@ export const DraftHistoryButton: FC<DraftHistoryButtonProps> = ({ drafts, onRest
 
   return (
     <span ref={refs.setReference}>
-      <ButtonInline onClick={() => setOpen((value) => !value)}>
+      <ButtonInline aria-pressed={open} onClick={() => setOpen((value) => !value)}>
         <FormattedMessage
           defaultMessage="Draft History ({count})"
           values={{ count: drafts.length }}

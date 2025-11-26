@@ -113,6 +113,7 @@
   /* Pane */
   --color-pane-bg: color-mix(in srgb, var(--color-zinc-800) 75%, var(--color-zinc-700) 25%);
   --color-pane-header-bg: var(--color-neutral-800);
+  --color-pane-focus-shadow: rgba(0, 0, 0, 0.5);
 
   /* Lamp */
   --color-lamp-on-border: var(--color-yellow-500);
@@ -239,12 +240,13 @@
   --color-message-in-game-bg: #fbfdf6;
   --color-message-in-game-bg-hover: #f2f6e9;
   --color-message-out-of-game-bg: var(--color-white);
-  --color-message-out-of-game-bg-hover: var(--color-zinc-50);
+  --color-message-out-of-game-bg-hover: var(--color-surface-canvas);
   --color-message-preview-dot: var(--color-gray-200);
 
   /* Pane */
   --color-pane-bg: var(--color-white);
   --color-pane-header-bg: var(--color-white);
+  --color-pane-focus-shadow: rgba(0, 0, 0, 0.05);
 
   /* Lamp */
   --color-lamp-on-border: var(--color-green-600);

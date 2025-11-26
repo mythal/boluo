@@ -107,7 +107,13 @@ export const PaneBox: FC<Props> = ({ header, children, initSizeLevel = 0 }) => {
         className={`${focused ? 'border-border-default' : 'border-border-subtle'} border-b`}
       ></div>
 
-      <div onFocus={focus} className="bg-pane-bg relative grow overflow-x-hidden overflow-y-auto">
+      <div
+        onFocus={focus}
+        className={clsx(
+          'bg-pane-bg relative grow overflow-x-hidden overflow-y-auto transition-shadow duration-100',
+          focused && 'shadow-pane-focus-shadow shadow-[0_10px_4px_-10px_inset]',
+        )}
+      >
         <Suspense
           fallback={
             <div className="flex h-full items-center justify-center">

@@ -9,7 +9,7 @@ const worker = self as unknown as Worker;
 const DB_NAME = 'compose-backup';
 const STORE_NAME = 'drafts';
 const DB_VERSION = 1;
-const MAX_DRAFT_COUNT = 5;
+const MAX_DRAFT_COUNT = 20;
 const MIN_DRAFT_LENGTH = 3;
 
 let dbPromise: Promise<IDBDatabase> | null = null;

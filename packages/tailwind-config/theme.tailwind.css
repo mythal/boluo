@@ -9,7 +9,7 @@
   --color-surface-raised: var(--color-stone-800);
   --color-surface-unit: var(--color-black);
   --color-surface-inverted: var(--color-white);
-  --color-surface-floating: color-mix(in srgb, var(--color-stone-600) 50%, transparent 50%);
+  --color-surface-floating: oklch(from var(--color-stone-600) l c h / 0.5);
   --color-surface-interactive-hover: var(--color-stone-600);
   --color-surface-interactive-active: var(--color-stone-700);
   --color-surface-selectable-default: var(--color-stone-900);
@@ -46,10 +46,10 @@
   --color-action-primary-bg-disabled: var(--color-cyan-800);
   --color-action-secondary-bg: var(--color-gray-700);
   --color-action-secondary-text: var(--color-white);
-  --color-action-secondary-bg-hover: var(--color-gray-800);
-  --color-action-secondary-bg-active: var(--color-gray-900);
+  --color-action-secondary-bg-hover: var(--color-gray-600);
+  --color-action-secondary-bg-active: var(--color-gray-800);
   --color-action-secondary-bg-disabled: var(--color-gray-500);
-  --color-action-outline-border: var(--color-gray-600);
+  --color-action-secondary-border: var(--color-neutral-900);
 
   --color-action-danger-bg: var(--color-red-500);
   --color-action-danger-bg-hover: var(--color-red-400);
@@ -87,7 +87,11 @@
   --color-entity-fate-dice-border: var(--color-blue-300);
 
   /* Kbd */
-  --color-kbd-bg: var(--color-stone-900);
+  --gradient-kbd-bg: radial-gradient(
+    ellipse at 50% 0%,
+    var(--color-stone-600) 0%,
+    var(--color-stone-800) 60%
+  );
   --color-kbd-shadow: var(--color-neutral-600);
   --color-kbd-text: var(--color-white);
 
@@ -122,6 +126,9 @@
   --color-lamp-off-bg: var(--color-neutral-700);
 
   /* Sidebar */
+  --color-sidebar-bg: var(--color-stone-900);
+  --color-sidebar-item-hover-bg: oklch(from var(--color-gray-800) l c h / 0.4);
+  --color-sidebar-item-active-bg: var(--color-gray-800);
   --color-sidebar-channels-placeholder-random1: var(--color-neutral-800);
   --color-sidebar-channels-placeholder-random2: var(--color-neutral-700);
   --color-sidebar-channels-placeholder-random3: var(--color-neutral-600);
@@ -133,9 +140,11 @@
 }
 
 @theme {
+  /* Extra colors */
+  --color-neutral-10: rgb(253, 253, 253);
   /* Foundational surfaces */
   --color-surface-default: var(--color-neutral-50);
-  --color-surface-canvas: rgb(253, 253, 253);
+  --color-surface-canvas: var(--color-neutral-10);
   --color-surface-muted: var(--color-neutral-100);
   --color-surface-raised: var(--color-neutral-50);
   --color-surface-unit: var(--color-white);
@@ -179,8 +188,8 @@
   --color-action-primary-bg-hover: var(--color-green-700);
   --color-action-primary-bg-active: var(--color-green-800);
   --color-action-primary-bg-disabled: var(--color-teal-700);
-  --color-action-secondary-bg: var(--color-white);
-  --color-action-secondary-border: var(--color-neutral-500);
+  --color-action-secondary-bg: var(--color-neutral-10);
+  --color-action-secondary-border: var(--color-neutral-400);
   --color-action-secondary-text: var(--color-black);
   --color-action-secondary-bg-hover: var(--color-neutral-50);
   --color-action-secondary-bg-active: var(--color-neutral-200);
@@ -228,7 +237,11 @@
   --color-entity-fate-dice-border: var(--color-lime-700);
 
   /* Kbd */
-  --color-kbd-bg: var(--color-stone-700);
+  --gradient-kbd-bg: radial-gradient(
+    ellipse at 50% 0%,
+    var(--color-stone-500) 0%,
+    var(--color-stone-700) 60%
+  );
   --color-kbd-shadow: var(--color-neutral-400);
   --color-kbd-text: var(--color-white);
 
@@ -255,7 +268,10 @@
   --color-lamp-off-bg: var(--color-neutral-200);
 
   /* Sidebar */
-  --color-sidebar-channels-placeholder-random1: var(--color-neutral-100);
-  --color-sidebar-channels-placeholder-random2: var(--color-neutral-200);
-  --color-sidebar-channels-placeholder-random3: var(--color-neutral-300);
+  --color-sidebar-bg: var(--color-amber-50);
+  --color-sidebar-item-hover-bg: oklch(from var(--color-amber-100) l c h / 0.4);
+  --color-sidebar-item-active-bg: var(--color-amber-100);
+  --color-sidebar-channels-placeholder-random1: var(--color-amber-100);
+  --color-sidebar-channels-placeholder-random2: var(--color-amber-200);
+  --color-sidebar-channels-placeholder-random3: var(--color-amber-300);
 }

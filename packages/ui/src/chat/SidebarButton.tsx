@@ -43,7 +43,7 @@ export const SidebarButton: FC<Props> = ({ isSidebarExpanded, setSidebarExpanded
       >
         <div
           className={clsx(
-            'sidebar-button-box bg-surface-canvas text-text-primary flex h-full w-full items-center justify-center rounded-sm',
+            'sidebar-button-box bg-sidebar-bg text-text-primary flex h-full w-full items-center justify-center rounded-sm',
             isSidebarExpanded ? '' : 'shadow-xs',
           )}
         >
@@ -55,7 +55,7 @@ export const SidebarButton: FC<Props> = ({ isSidebarExpanded, setSidebarExpanded
         ref={setFloating}
         style={floatingStyles}
         {...getFloatingProps()}
-        className="rounded bg-black px-3 py-2 text-sm text-white shadow-lg"
+        className="dark rounded bg-black px-3 py-2 text-sm text-white shadow-lg"
       >
         <div className="pb-2">
           {isApple() ? <Kbd>⌘</Kbd> : <Kbd>Ctrl</Kbd>} + <Kbd>/</Kbd>

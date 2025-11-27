@@ -73,7 +73,12 @@ const InvitationField: FC<{ spaceId: string }> = ({ spaceId }) => {
   return (
     <div>
       <div>
-        <Button onClick={() => setExpanded((x) => !x)} variant="detail" on={expanded} type="button">
+        <Button
+          onClick={() => setExpanded((x) => !x)}
+          variant="detail"
+          aria-pressed={expanded}
+          type="button"
+        >
           <FormattedMessage defaultMessage="Invite" />
         </Button>
       </div>

@@ -55,8 +55,8 @@ export const SidebarItem: FC<Props> = ({
         onClick={onClick}
         className={clsx(
           'group relative grid w-full grid-cols-[1.25rem_1fr_auto] items-center gap-x-1 rounded px-1 py-1 text-left text-sm',
-          onClick ? 'hover:bg-surface-muted cursor-pointer' : 'cursor-default',
-          active && 'bg-surface-default',
+          onClick ? 'hover:bg-sidebar-item-hover-bg cursor-pointer' : 'cursor-default',
+          active && 'bg-sidebar-item-active-bg',
         )}
       >
         {iconNode}

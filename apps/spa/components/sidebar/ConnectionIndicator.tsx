@@ -18,6 +18,7 @@ import { BaseUrlSelectionPanel } from './BaseUrlSelectionPanel';
 import { useProxies } from '../../hooks/useProxies';
 import { backendUrlConfigAtom } from '../../base-url';
 import { backendUrlAtom } from '@boluo/api-browser';
+import { ButtonInline } from '@boluo/ui/ButtonInline';
 
 interface Props {
   spaceId: string | null | undefined;
@@ -99,9 +100,9 @@ export const ConnectionIndicatior: FC<Props> = ({ spaceId }) => {
           </span>
         )}
         <div className="grow text-right">
-          <span className="rounded border bg-white/15 px-1 text-xs group-hover:bg-white/5">
+          <ButtonInline groupHover aria-pressed={isPopoverOpen}>
             <FormattedMessage defaultMessage="Switch" />
-          </span>
+          </ButtonInline>
         </div>
       </div>
       {isPopoverOpen && (

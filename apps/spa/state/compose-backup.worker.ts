@@ -73,8 +73,8 @@ const normalizeDraftText = (text: string): string => {
 };
 
 const shouldMergeDraft = (draftText: string, incoming: string): boolean => {
-  const existing = draftText.trim();
-  const next = normalizeDraftText(incoming);
+  const existing = draftText;
+  const next = incoming;
   if (existing.length === 0 || next.length === 0) {
     return false;
   }
@@ -83,6 +83,8 @@ const shouldMergeDraft = (draftText: string, incoming: string): boolean => {
   if (existing.includes(next)) return true;
   return false;
 };
+
+const draftNormalizedCache = new Map<string, string>();
 
 const saveDraft = async (channelId: string, text: string): Promise<void> => {
   const trimmed = text.trim();
@@ -95,7 +97,13 @@ const saveDraft = async (channelId: string, text: string): Promise<void> => {
     drafts = [];
   }
   const now = Date.now();
-  const existingIndex = drafts.findIndex((draft) => shouldMergeDraft(draft.text, text));
+  const normalizedIncoming = normalizeDraftText(trimmed);
+  if (!normalizedIncoming) return;
+  const existingIndex = drafts.findIndex((draft) => {
+    const normalizedDraft = draftNormalizedCache.get(draft.id) ?? normalizeDraftText(draft.text);
+    draftNormalizedCache.set(draft.id, normalizedDraft);
+    return shouldMergeDraft(normalizedDraft, normalizedIncoming);
+  });
   if (existingIndex >= 0) {
     const existing = drafts[existingIndex];
     if (existing) {
@@ -122,6 +130,15 @@ const saveDraft = async (channelId: string, text: string): Promise<void> => {
   }
   const response: ComposeBackupWorkerResponse = { type: 'updated', channelId };
   worker.postMessage(response);
+
+  // Remove from cache if deleted
+  if (drafts.length < drafts.length) {
+    draftNormalizedCache.forEach((_, key) => {
+      if (!drafts.find((draft) => draft.id === key)) {
+        draftNormalizedCache.delete(key);
+      }
+    });
+  }
 };
 
 const listDrafts = async (

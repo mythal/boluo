@@ -29,13 +29,14 @@ const DeferredComposeTextArea: FC<{
   parsedAtom: ChannelAtoms['parsedAtom'];
   currentUser: User;
   enterSend: boolean;
-  channelId: string;
-  isEditing: boolean;
-  isComposing: boolean;
   send: () => Promise<void>;
-}> = ({ parsedAtom, currentUser, send, enterSend, channelId, isEditing, isComposing }) => {
+}> = ({
+  parsedAtom,
+  currentUser,
+  send,
+  enterSend,
+}) => {
   const parsed = useDeferredValue(useAtomValue(parsedAtom));
-  useBackupCompose(channelId, parsed, isEditing, isComposing);
   const compose = useMemo(
     () => (
       <ComposeTextArea myId={currentUser.id} send={send} enterSend={enterSend} parsed={parsed} />
@@ -61,11 +62,15 @@ export const Compose = ({ member, channelAtoms }: Props) => {
     event.preventDefault(); // This is important to prevent the browser's default handling of the data
   };
   const isEditing = useAtomValue(isEditingAtom);
-  const isComposing = useAtomValue(
-    useMemo(() => selectAtom(composeAtom, ({ composing }) => composing), [composeAtom]),
+  const composingAt = useAtomValue(
+    useMemo(() => selectAtom(composeAtom, ({ composingAt }) => composingAt), [composeAtom]),
+  );
+  const composeSource = useAtomValue(
+    useMemo(() => selectAtom(composeAtom, ({ source }) => source), [composeAtom]),
   );
   const inGame = useAtomValue(inGameAtom);
   const isWhisper = useAtomValue(isWhisperAtom);
+  useBackupCompose(member.channel.channelId, composeSource, isEditing, composingAt);
   const editMessageBanner = useMemo(() => {
     if (!isEditing) return null;
     return <EditMessageBanner currentUser={member.user} />;
@@ -102,10 +107,7 @@ export const Compose = ({ member, channelAtoms }: Props) => {
             parsedAtom={parsedAtom}
             currentUser={member.user}
             enterSend={enterSend}
-            channelId={member.channel.channelId}
             send={send}
-            isEditing={isEditing}
-            isComposing={isComposing}
           />
 
           {addDiceButton}

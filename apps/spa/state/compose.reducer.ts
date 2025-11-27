@@ -21,7 +21,7 @@ export interface ComposeState {
     | undefined;
   focused: boolean;
   range: ComposeRange;
-  composing: boolean;
+  composingAt: number | null;
   backup?: ComposeState;
   edit: PreviewEdit | null;
 }
@@ -33,7 +33,7 @@ export const makeInitialComposeState = (): ComposeState => ({
   media: null,
   range: [0, 0],
   focused: false,
-  composing: false,
+  composingAt: null,
   whisperTo: undefined,
   edit: null,
 });
@@ -100,7 +100,7 @@ const handleRecoverState = (
   state: ComposeState,
   action: ComposeAction<'recoverState'>,
 ): ComposeState => {
-  return { ...action.payload, previewId: makeId(), media: null, composing: false };
+  return { ...action.payload, previewId: makeId(), media: null, composingAt: null };
 };
 
 const handleAddDice = (
@@ -298,7 +298,7 @@ const handleSent = (
     range: [source.length, source.length],
     media: null,
     source,
-    composing: false,
+    composingAt: null,
   };
 };
 
@@ -318,7 +318,7 @@ const handleFocus = (state: ComposeState, _: ComposeAction<'focus'>): ComposeSta
 const handleBlur = (state: ComposeState, _: ComposeAction<'blur'>): ComposeState => ({
   ...state,
   focused: false,
-  composing: false,
+  composingAt: null,
 });
 
 const handleCompositionStart = (
@@ -326,7 +326,7 @@ const handleCompositionStart = (
   _: ComposeAction<'compositionStart'>,
 ): ComposeState => ({
   ...state,
-  composing: true,
+  composingAt: Date.now(),
 });
 
 const handleCompositionEnd = (
@@ -334,7 +334,7 @@ const handleCompositionEnd = (
   _: ComposeAction<'compositionEnd'>,
 ): ComposeState => ({
   ...state,
-  composing: false,
+  composingAt: null,
 });
 
 const handleReset = (
@@ -345,10 +345,10 @@ const handleReset = (
     return makeInitialComposeState();
   }
   if (restore === true && state.backup != null) {
-    return { ...state.backup, composing: false };
+    return { ...state.backup, composingAt: null };
   }
   if (state.edit != null && state.backup != null) {
-    return { ...state.backup, composing: false };
+    return { ...state.backup, composingAt: null };
   }
   return makeInitialComposeState();
 };

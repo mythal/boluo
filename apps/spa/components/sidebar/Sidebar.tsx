@@ -17,6 +17,7 @@ import { isApple } from '@boluo/utils/browser';
 import { useSetThemeColor } from '../../hooks/useSetThemeColor';
 import { SidebarGuestContent } from './SidebarGuestContent';
 import { SidebarContentLoading } from './SidebarContentLoading';
+import { SidebarConnectionSelector } from './SidebarConnectionSelector';
 
 interface Props {
   spaceId?: string;
@@ -48,6 +49,7 @@ const SidebarContent: FC<{ spaceId: string; currentUser: User | undefined | null
 export const Sidebar: FC<Props> = ({ spaceId }) => {
   const { data: currentUser, isLoading: isQueryingUser } = useQueryCurrentUser();
   const isClient = useIsClient();
+  const contentState = useAtomValue(sidebarContentStateAtom);
   const [isExpanded, setExpanded] = useAtom(isSidebarExpandedAtom);
   useSetThemeColor(isExpanded);
   useEffect(() => {
@@ -74,6 +76,8 @@ export const Sidebar: FC<Props> = ({ spaceId }) => {
   let content: ReactNode = <SidebarContentLoading />;
   if (!isClient) {
     content = <SidebarContentLoading />;
+  } else if (contentState === 'CONNECTIONS') {
+    content = <SidebarConnectionSelector />;
   } else if (spaceId == null) {
     if (isQueryingUser) {
       content = <SidebarContentLoading />;
@@ -89,7 +93,7 @@ export const Sidebar: FC<Props> = ({ spaceId }) => {
   return (
     <div
       className={clsx(
-        'Sidebar bg-bg standalone-bottom-padding border-border-sidebar relative flex h-full min-h-0 flex-none flex-col border-r',
+        'Sidebar bg-sidebar-bg standalone-bottom-padding border-border-sidebar relative flex h-full min-h-0 flex-none flex-col border-r',
       )}
     >
       <div

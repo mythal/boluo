@@ -9,8 +9,8 @@ export const metadata: Metadata = {
 export default function NotFound() {
   return (
     <html lang="en">
-      <body className="bg-bg text-text-primary">
-        <div className="bg-surface-raised border-border-raised shadow-1/2 shadow-elevation-raised-shadow mx-auto mt-20 flex flex-col gap-4 border p-6 md:w-[20em]">
+      <body className="bg-surface-canvas text-text-primary">
+        <div className="bg-surface-raised border-border-raised shadow-1/2 mx-auto mt-20 flex flex-col gap-4 border p-6 md:w-[20em]">
           <h2 className="text-4xl">Not Found</h2>
 
           <p className="">

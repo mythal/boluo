@@ -1,6 +1,6 @@
 import { post } from '@boluo/api-browser';
 import { Key } from '@boluo/icons';
-import { type FC, useCallback, useId, useState } from 'react';
+import { type FC, type MouseEventHandler, useCallback, useId, useState } from 'react';
 import { SubmitHandler, type FieldError, useForm } from 'react-hook-form';
 import { FormattedMessage, useIntl } from 'react-intl';
 import * as validators from '@boluo/common/validations';
@@ -11,6 +11,7 @@ import * as classes from '@boluo/ui/classes';
 import { PaneBox } from './PaneBox';
 import { PaneHeaderBox } from './PaneHeaderBox';
 import { usePaneReplace } from '../hooks/usePaneReplace';
+import { paneHref } from '../href';
 
 type PageState = 'FORM' | 'SUCCESS' | 'NOT_FOUND' | 'UNKNOWN_ERROR';
 
@@ -30,6 +31,7 @@ export const PaneResetPassword: FC = () => {
   const intl = useIntl();
   const [pageState, setPageState] = useState<PageState>('FORM');
   const replacePane = usePaneReplace();
+  const loginPaneHref = paneHref({ type: 'LOGIN' });
   const {
     handleSubmit,
     register,
@@ -54,9 +56,13 @@ export const PaneResetPassword: FC = () => {
     [intl.locale],
   );
 
-  const handleOpenLogin = useCallback(() => {
-    replacePane({ type: 'LOGIN' }, (pane) => pane.type === 'RESET_PASSWORD');
-  }, [replacePane]);
+  const handleOpenLogin: MouseEventHandler<HTMLAnchorElement> = useCallback(
+    (event) => {
+      event.preventDefault();
+      replacePane({ type: 'LOGIN' }, (pane) => pane.type === 'RESET_PASSWORD');
+    },
+    [replacePane],
+  );
 
   const handleRetry = useCallback(() => setPageState('FORM'), []);
 
@@ -68,7 +74,7 @@ export const PaneResetPassword: FC = () => {
         </PaneHeaderBox>
       }
     >
-      <div className="p-pane">
+      <div className="p-pane max-w-lg">
         {pageState === 'FORM' ? (
           <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4 pt-2">
             <div>
@@ -119,9 +125,9 @@ export const PaneResetPassword: FC = () => {
           </div>
         )}
         <div className="mt-4 text-right">
-          <button type="button" className={classes.link} onClick={handleOpenLogin}>
+          <a href={loginPaneHref} className={classes.link} onClick={handleOpenLogin}>
             <FormattedMessage defaultMessage="Back to login" />
-          </button>
+          </a>
         </div>
       </div>
     </PaneBox>

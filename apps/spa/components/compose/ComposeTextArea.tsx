@@ -149,6 +149,16 @@ export const ComposeTextArea: FC<Props> = ({ parsed, enterSend, send, myId }) =>
     dispatch({ type: 'media', payload: { media } });
   };
 
+  const handleCompositionStart = () => {
+    isCompositionRef.current = true;
+    dispatch({ type: 'compositionStart', payload: {} });
+  };
+
+  const handleCompositionEnd = () => {
+    isCompositionRef.current = false;
+    dispatch({ type: 'compositionEnd', payload: {} });
+  };
+
   const handleKeyDown = async (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (isCompositionRef.current) {
       return;
@@ -202,8 +212,8 @@ export const ComposeTextArea: FC<Props> = ({ parsed, enterSend, send, myId }) =>
       onBlur={() => dispatch(blurAction)}
       onClick={() => setSelfPreviewLock(Date.now() + 1000 * 6)}
       onPasteCapture={handlePaste}
-      onCompositionStart={() => (isCompositionRef.current = true)}
-      onCompositionEnd={() => (isCompositionRef.current = false)}
+      onCompositionStart={handleCompositionStart}
+      onCompositionEnd={handleCompositionEnd}
       onKeyDown={handleKeyDown}
       data-variant="normal"
       onSelectionChange={updateRange}

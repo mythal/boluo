@@ -31,9 +31,7 @@ export default function Error({ error, reset }: { error: Error; reset: () => voi
         <div className="py-2 text-sm">Tech details:</div>
 
         <div>
-          <span className="bg-action-danger-bg text-action-danger-text mr-2 rounded px-2">
-            {error.name}
-          </span>
+          <span className="bg-state-danger-bg mr-2 rounded px-2">{error.name}</span>
           <span className="font-mono">{error.message}</span>
         </div>
       </div>

@@ -4,6 +4,7 @@ import { type FC } from 'react';
 import { useIntl } from 'react-intl';
 import { useNotificationSwitch } from '../../hooks/useNotificationSwitch';
 import { type User } from '@boluo/api';
+import { Button } from '@boluo/ui/Button';
 
 export const AppOperations: FC<{ currentUser: User | null | undefined }> = ({ currentUser }) => {
   return (
@@ -29,16 +30,12 @@ export const NotificationSwitch: FC = () => {
   };
 
   return (
-    <button
+    <Button
+      small
       aria-pressed={canNotify}
       onClick={handleClick}
       title={title}
-      className={clsx(
-        'text-action-toggle-text relative rounded p-2 transition-colors',
-        canNotify
-          ? 'bg-action-toggle-selected-bg shadow-inner'
-          : 'bg-action-toggle-bg hover:bg-action-toggle-bg-hover shadow-sm',
-      )}
+      className={clsx('relative')}
     >
       <Bell />
       <span
@@ -48,6 +45,6 @@ export const NotificationSwitch: FC = () => {
           canNotify ? 'bg-action-toggle-indicator-on' : 'bg-action-toggle-indicator-off',
         )}
       />
-    </button>
+    </Button>
   );
 };

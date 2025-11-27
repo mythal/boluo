@@ -2,7 +2,8 @@ import clsx from 'clsx';
 import React from 'react';
 
 interface ExtendedButtonInlineProps {
-  variant?: 'primary' | 'default';
+  variant?: 'default';
+  groupHover?: boolean;
   ref?: React.Ref<HTMLButtonElement>;
 }
 
@@ -12,18 +13,23 @@ export type ButtonInlineProps = React.ComponentPropsWithoutRef<'button'> &
 export const ButtonInline: React.FC<ButtonInlineProps> = function ButtonInline({
   children,
   className,
+  groupHover,
   ref,
   ...props
 }: ButtonInlineProps) {
+  if (props.type == null) {
+    props.type = 'button';
+  }
   return (
     <button
       className={clsx(
         className,
-        'ButtonInline pressed:translate-y-0 inline-block -translate-y-px rounded-sm px-[0.5em] py-0.5 transition-shadow duration-100',
+        'ButtonInline inline-flex items-center justify-center rounded-xs px-[0.5em] py-0.5 transition-shadow duration-100',
         'text-text-primary',
-        'bg-action-secondary-bg shadow-border-default ring-border-focus/75 focus:ring',
-        'hover:bg-action-secondary-bg-hover hover:shadow-border-strong pressed:bg-action-secondary-bg-active',
-        'pressed:shadow-border-strong/25 pressed:shadow-[0_0px_0_1px] shadow-[0_1px_0_0]',
+        'bg-action-secondary-bg shadow-action-secondary-border ring-border-focus/75 focus:ring',
+        'hover:bg-action-secondary-bg-hover pressed:bg-action-secondary-bg-active',
+        groupHover && 'group-hover:bg-action-secondary-bg-hover',
+        'pressed:shadow-action-secondary-border pressed:shadow-[0_0px_0_1px,0_1px_0_0_inset] shadow-[0_-1px_0_0_inset,0_0_0_1px]',
         'cursor-pointer text-[80%]',
       )}
       ref={ref}

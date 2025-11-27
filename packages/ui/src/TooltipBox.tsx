@@ -24,7 +24,7 @@ export const TooltipBox: FC<Props> = ({
         ref={ref}
         className={
           defaultStyle
-            ? 'TooltipBox bg-surface-tooltip text-tooltip-text rounded-sm px-2 py-1 text-sm shadow-lg'
+            ? 'TooltipBox dark bg-tooltip-bg text-tooltip-text rounded-sm px-2 py-1 text-sm shadow-lg'
             : className
         }
         {...props}

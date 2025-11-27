@@ -413,7 +413,7 @@ export const PaneDragController: FC<Props> = ({ children, visiblePanes }) => {
       {indicator
         ? createPortal(
             <div
-              className={`pointer-events-none fixed bg-blue-500/30 ${indicator.kind === 'insert' ? '-translate-x-1/2' : 'rounded-sm'}`}
+              className={`bg-brand-strong/40 pointer-events-none fixed ${indicator.kind === 'insert' ? '-translate-x-1/2' : 'rounded-sm'}`}
               style={{
                 left: indicator.left,
                 top: indicator.top,

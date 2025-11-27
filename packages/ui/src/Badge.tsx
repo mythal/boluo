@@ -14,7 +14,7 @@ export const Badge: FC<Props> = ({ icon, children, onClick }) => {
       role={clickable ? 'button' : undefined}
       onClick={onClick}
       className={clsx(
-        'Badge bg-surface-muted border-border-strong inline-flex gap-1 rounded border px-1 py-0.5 text-xs',
+        'Badge bg-surface-canvas border-border-default inline-flex gap-1 rounded border px-1 py-0.5 text-xs',
         onClick != null
           ? 'hover:bg-surface-interactive-hover active:bg-surface-interactive-active hover:active:border-border-strong cursor-pointer select-none'
           : '',

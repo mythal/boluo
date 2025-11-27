@@ -3,13 +3,14 @@ import type {
   ComposeBackupWorkerResponse,
   ComposeDraftEntry,
 } from './compose-backup.worker.types';
+import { parseModifiers } from '../interpreter/parser';
 
 const worker = self as unknown as Worker;
 
 const DB_NAME = 'compose-backup';
 const STORE_NAME = 'drafts';
 const DB_VERSION = 1;
-const MAX_DRAFT_COUNT = 5;
+const MAX_DRAFT_COUNT = 20;
 const MIN_DRAFT_LENGTH = 3;
 
 let dbPromise: Promise<IDBDatabase> | null = null;
@@ -62,9 +63,18 @@ const makeDraftId = (): string => {
   return `${Date.now().toString(16)}-${Math.random().toString(16).slice(2)}`;
 };
 
+// Remove modifier commands and trim the text for comparison
+const normalizeDraftText = (text: string): string => {
+  try {
+    return parseModifiers(text).rest.trim();
+  } catch {
+    return text.trim();
+  }
+};
+
 const shouldMergeDraft = (draftText: string, incoming: string): boolean => {
-  const existing = draftText.trim();
-  const next = incoming.trim();
+  const existing = draftText;
+  const next = incoming;
   if (existing.length === 0 || next.length === 0) {
     return false;
   }
@@ -73,6 +83,8 @@ const shouldMergeDraft = (draftText: string, incoming: string): boolean => {
   if (existing.includes(next)) return true;
   return false;
 };
+
+const draftNormalizedCache = new Map<string, string>();
 
 const saveDraft = async (channelId: string, text: string): Promise<void> => {
   const trimmed = text.trim();
@@ -85,7 +97,13 @@ const saveDraft = async (channelId: string, text: string): Promise<void> => {
     drafts = [];
   }
   const now = Date.now();
-  const existingIndex = drafts.findIndex((draft) => shouldMergeDraft(draft.text, text));
+  const normalizedIncoming = normalizeDraftText(trimmed);
+  if (!normalizedIncoming) return;
+  const existingIndex = drafts.findIndex((draft) => {
+    const normalizedDraft = draftNormalizedCache.get(draft.id) ?? normalizeDraftText(draft.text);
+    draftNormalizedCache.set(draft.id, normalizedDraft);
+    return shouldMergeDraft(normalizedDraft, normalizedIncoming);
+  });
   if (existingIndex >= 0) {
     const existing = drafts[existingIndex];
     if (existing) {
@@ -112,6 +130,15 @@ const saveDraft = async (channelId: string, text: string): Promise<void> => {
   }
   const response: ComposeBackupWorkerResponse = { type: 'updated', channelId };
   worker.postMessage(response);
+
+  // Remove from cache if deleted
+  if (drafts.length < drafts.length) {
+    draftNormalizedCache.forEach((_, key) => {
+      if (!drafts.find((draft) => draft.id === key)) {
+        draftNormalizedCache.delete(key);
+      }
+    });
+  }
 };
 
 const listDrafts = async (

@@ -1,8 +1,10 @@
 import { type Proxy } from '@boluo/api';
-import { type FC } from 'react';
+import clsx from 'clsx';
+import { Cloud } from '@boluo/icons';
+import Icon from '@boluo/ui/Icon';
+import { type FC, type ReactNode } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { type BaseUrlTestResult } from '../../base-url';
-import { SelectBox } from '@boluo/ui/SelectBox';
 
 interface Props {
   proxy: Proxy;
@@ -13,32 +15,49 @@ interface Props {
 
 export const BaseUrlSelectorItem: FC<Props> = ({ proxy, result, setUrl, selected }) => {
   const { url, name, region } = proxy;
+  let resultNode: ReactNode = <span>...</span>;
+  if (result === 'FAILED') {
+    resultNode = (
+      <span className="text-state-danger-text">
+        <FormattedMessage defaultMessage="Failed" />
+      </span>
+    );
+  } else if (result === 'TIMEOUT') {
+    resultNode = (
+      <span className="text-text-muted">
+        <FormattedMessage defaultMessage="Timeout" />
+      </span>
+    );
+  } else if (typeof result === 'number') {
+    resultNode = <span className="text-text-secondary">{result.toFixed(0)} ms</span>;
+  }
   return (
-    <SelectBox
-      selected={selected}
-      onSelected={() => setUrl(url)}
-      title={
-        <div>
-          <span className="text-lg">{name}</span>
-          {region && <span className="ml-1 text-sm">({region})</span>}
+    <button
+      type="button"
+      onClick={() => setUrl(url)}
+      className={clsx(
+        'group relative grid w-full cursor-pointer grid-cols-[1.25rem_1fr_auto] grid-rows-[auto_auto] items-start gap-x-2 gap-y-1 rounded px-1 py-2 text-sm',
+        selected ? 'bg-sidebar-item-active-bg' : 'hover:bg-sidebar-item-hover-bg',
+      )}
+      aria-pressed={selected}
+    >
+      <span
+        className={clsx(
+          'flex h-5 w-5 items-center justify-center',
+          selected ? 'text-text-secondary' : 'text-text-subtle group-hover:text-text-secondary',
+        )}
+      >
+        <Icon icon={Cloud} />
+      </span>
+      <div className="min-w-0">
+        <div className="truncate text-left font-semibold">
+          {name}
+          {region && <span className="text-text-muted ml-1 text-xs">({region})</span>}
         </div>
-      }
-      description={
-        <div>
-          {result == null && <span>...</span>}
-          {result === 'FAILED' && (
-            <span className="text-state-danger-text">
-              <FormattedMessage defaultMessage="Failed" />
-            </span>
-          )}
-          {result === 'TIMEOUT' && (
-            <span>
-              <FormattedMessage defaultMessage="Timeout" />
-            </span>
-          )}
-          {typeof result === 'number' && <span>{result.toFixed(2)} ms</span>}
-        </div>
-      }
-    />
+      </div>
+      <div className="text-right text-xs">{resultNode}</div>
+
+      <div className="text-text-muted col-start-2 truncate text-left font-mono text-xs">{url}</div>
+    </button>
   );
 };

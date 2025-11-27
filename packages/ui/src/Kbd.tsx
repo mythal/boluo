@@ -9,7 +9,7 @@ interface Props {
 export const Kbd: FC<Props> = ({ children, variant = 'normal' }) => (
   <kbd
     className={clsx(
-      'Kbd text-kbd-text bg-kbd-bg shadow-kbd-shadow mx-[2px] rounded-sm font-mono font-normal shadow-[0_1px_0_2px]',
+      'Kbd text-kbd-text shadow-kbd-shadow mx-0.5 min-w-4 rounded-xs bg-(image:--gradient-kbd-bg) font-sans font-normal shadow-[0_1px_0_1px]',
       variant === 'small' && 'px-0.5 py-px text-xs',
       variant === 'normal' && 'px-1 py-0.5 text-sm',
     )}

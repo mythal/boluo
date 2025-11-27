@@ -10,3 +10,5 @@ export default meta;
 type Story = StoryObj<typeof Kbd>;
 
 export const Basic: Story = { args: { children: 'Ctrl' } };
+
+export const Small: Story = { args: { children: 'Ctrl', variant: 'small' } };

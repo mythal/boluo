@@ -6,6 +6,7 @@ import { type FC, useCallback, useMemo } from 'react';
 import { useIntl } from 'react-intl';
 import Icon from '@boluo/ui/Icon';
 import { usePaneReplace } from '../../hooks/usePaneReplace';
+import { paneHrefWithRoute } from '../../href';
 import { chatAtom } from '../../state/chat.atoms';
 import { channelReadFamily } from '../../state/unread.atoms';
 import { useIsReordering } from '../../hooks/useIsReordering';
@@ -71,9 +72,10 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active, overlay = false
     },
     [channel.id, isReordering, replacePane],
   );
-  const paneUrlPart = encodeURIComponent(
-    JSON.stringify([{ type: 'CHANNEL', channelId: channel.id, key: 0 }]),
-  );
+  const channelHref = paneHrefWithRoute(channel.spaceId, {
+    type: 'CHANNEL',
+    channelId: channel.id,
+  });
   const iconButton = useMemo(
     () => (
       <button
@@ -125,7 +127,7 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active, overlay = false
           <span
             className={clsx(
               'group grid w-full grid-cols-[1.25rem_1fr_auto] grid-rows-[auto_auto] items-start gap-x-1 gap-y-1 rounded px-1 py-1 text-sm',
-              active ? 'bg-surface-interactive-active/50' : 'hover:bg-surface-interactive-hover',
+              'bg-sidebar-item-hover-bg cursor-grab',
             )}
             onClick={handleClick}
           >
@@ -146,10 +148,10 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active, overlay = false
     >
       <div className="px-3 py-0.5">
         <a
-          href={`#route=${channel.spaceId}&panes=${paneUrlPart}`}
+          href={channelHref}
           className={clsx(
             'group relative grid w-full cursor-pointer grid-cols-[1.25rem_1fr_auto] grid-rows-[auto_auto] items-start gap-x-1 gap-y-1 rounded px-1 py-1 text-sm',
-            active ? 'bg-surface-interactive-active/50' : 'hover:bg-surface-interactive-hover/50',
+            active ? 'bg-sidebar-item-active-bg' : 'hover:bg-sidebar-item-hover-bg',
           )}
           onClick={handleClick}
         >

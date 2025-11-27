@@ -1,3 +1,4 @@
+import clsx from 'clsx';
 import { type ReactNode } from 'react';
 
 interface Props {
@@ -14,7 +15,13 @@ export const InComposeButton = ({ onClick, children, label, pressed, disabled = 
       disabled={disabled}
       aria-label={label}
       aria-pressed={pressed}
-      className="text-action-secondary-text hover:enabled:bg-action-primary-bg/30 pressed:bg-action-primary-bg/50 disabled:bg-action-secondary-bg-disabled/50 disabled:text-action-secondary-text-disabled rounded-sm bg-transparent p-[0.5em] disabled:cursor-not-allowed"
+      className={clsx(
+        'InComposeButton',
+        'text-action-secondary-text cursor-pointer rounded-sm bg-transparent p-[0.5em]',
+        'hover:enabled:bg-action-primary-bg/20',
+        'pressed:bg-action-primary-bg pressed:text-white',
+        'disabled:bg-action-secondary-bg-disabled/50 disabled:text-action-secondary-text-disabled disabled:cursor-not-allowed',
+      )}
       onClick={onClick}
       onTouchEnd={(e) => {
         // https://stackoverflow.com/a/71725297

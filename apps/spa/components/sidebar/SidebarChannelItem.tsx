@@ -127,7 +127,7 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active, overlay = false
           <span
             className={clsx(
               'group grid w-full grid-cols-[1.25rem_1fr_auto] grid-rows-[auto_auto] items-start gap-x-1 gap-y-1 rounded px-1 py-1 text-sm',
-              active ? 'bg-surface-interactive-active/50' : 'hover:bg-surface-interactive-hover',
+              'bg-sidebar-item-hover-bg cursor-grab',
             )}
             onClick={handleClick}
           >
@@ -151,7 +151,7 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active, overlay = false
           href={channelHref}
           className={clsx(
             'group relative grid w-full cursor-pointer grid-cols-[1.25rem_1fr_auto] grid-rows-[auto_auto] items-start gap-x-1 gap-y-1 rounded px-1 py-1 text-sm',
-            active ? 'bg-surface-interactive-active/50' : 'hover:bg-surface-interactive-hover/50',
+            active ? 'bg-sidebar-item-active-bg' : 'hover:bg-sidebar-item-hover-bg',
           )}
           onClick={handleClick}
         >

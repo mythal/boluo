@@ -56,7 +56,7 @@ export const EneterSendField: FC = () => {
             values={{
               key: (
                 <React.Fragment key="key-indicator">
-                  <Kbd variant="small">Shift Shift</Kbd>
+                  <Kbd variant="small">Shift</Kbd>
                   <span> + </span>
                   <Kbd variant="small">↵</Kbd>
                 </React.Fragment>

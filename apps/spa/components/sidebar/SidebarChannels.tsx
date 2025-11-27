@@ -69,7 +69,7 @@ export const SidebarChannels: FC<Props> = ({ spaceId }) => {
           active={isCreateChannelPaneOpened}
           onClick={toggleCreateChannelPane}
         >
-          <span className="text-text-subtle group-hover:text-text-primary">
+          <span className="">
             <FormattedMessage defaultMessage="Add New" />
           </span>
         </SidebarItem>

@@ -21,6 +21,7 @@ export interface ComposeState {
     | undefined;
   focused: boolean;
   range: ComposeRange;
+  composing: boolean;
   backup?: ComposeState;
   edit: PreviewEdit | null;
 }
@@ -32,6 +33,7 @@ export const makeInitialComposeState = (): ComposeState => ({
   media: null,
   range: [0, 0],
   focused: false,
+  composing: false,
   whisperTo: undefined,
   edit: null,
 });
@@ -98,7 +100,7 @@ const handleRecoverState = (
   state: ComposeState,
   action: ComposeAction<'recoverState'>,
 ): ComposeState => {
-  return { ...action.payload, previewId: makeId(), media: null };
+  return { ...action.payload, previewId: makeId(), media: null, composing: false };
 };
 
 const handleAddDice = (
@@ -296,6 +298,7 @@ const handleSent = (
     range: [source.length, source.length],
     media: null,
     source,
+    composing: false,
   };
 };
 
@@ -315,6 +318,23 @@ const handleFocus = (state: ComposeState, _: ComposeAction<'focus'>): ComposeSta
 const handleBlur = (state: ComposeState, _: ComposeAction<'blur'>): ComposeState => ({
   ...state,
   focused: false,
+  composing: false,
+});
+
+const handleCompositionStart = (
+  state: ComposeState,
+  _: ComposeAction<'compositionStart'>,
+): ComposeState => ({
+  ...state,
+  composing: true,
+});
+
+const handleCompositionEnd = (
+  state: ComposeState,
+  _: ComposeAction<'compositionEnd'>,
+): ComposeState => ({
+  ...state,
+  composing: false,
 });
 
 const handleReset = (
@@ -325,10 +345,10 @@ const handleReset = (
     return makeInitialComposeState();
   }
   if (restore === true && state.backup != null) {
-    return state.backup;
+    return { ...state.backup, composing: false };
   }
   if (state.edit != null && state.backup != null) {
-    return state.backup;
+    return { ...state.backup, composing: false };
   }
   return makeInitialComposeState();
 };
@@ -424,6 +444,10 @@ export const composeReducer = (state: ComposeState, action: ComposeActionUnion):
       return handleAddWhisperTarget(state, action);
     case 'removeWhisperTarget':
       return handleRemoveWhisperTarget(state, action);
+    case 'compositionStart':
+      return handleCompositionStart(state, action);
+    case 'compositionEnd':
+      return handleCompositionEnd(state, action);
   }
 };
 

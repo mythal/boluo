@@ -4,12 +4,18 @@ import { saveDraftInWorker } from '../state/compose-backup.worker-client';
 
 export const COMPOSE_BACKUP_TIMEOUT = 2000;
 
-export const useBackupCompose = (channelId: string, parsed: ParseResult, disabled: boolean) => {
+export const useBackupCompose = (
+  channelId: string,
+  parsed: ParseResult,
+  disabled: boolean,
+  isComposing = false,
+) => {
   const lastSave = useRef<number>(0);
   const text = parsed.text;
   const entityCount = parsed.entities.length;
   useEffect(() => {
     if (disabled) return;
+    if (isComposing) return;
     if (entityCount === 0) return;
     const trimmed = text.trim();
     if (trimmed === '') return;
@@ -24,5 +30,5 @@ export const useBackupCompose = (channelId: string, parsed: ParseResult, disable
       return () => clearTimeout(handle);
     }
     save();
-  }, [channelId, disabled, entityCount, text]);
+  }, [channelId, disabled, entityCount, isComposing, text]);
 };

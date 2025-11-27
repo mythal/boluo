@@ -1,24 +1,15 @@
-import {
-  autoUpdate,
-  FloatingPortal,
-  offset,
-  useClick,
-  useDismiss,
-  useFloating,
-  useInteractions,
-} from '@floating-ui/react';
 import clsx from 'clsx';
 import { Cloud, CloudOff } from '@boluo/icons';
-import { useAtomValue } from 'jotai';
-import { type FC, type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
+import { useAtom, useAtomValue } from 'jotai';
+import { type FC, type ReactNode, useEffect, useRef } from 'react';
 import { Spinner } from '@boluo/ui/Spinner';
 import { connectionStateAtom } from '../../state/chat.atoms';
 import { FormattedMessage } from 'react-intl';
-import { BaseUrlSelectionPanel } from './BaseUrlSelectionPanel';
 import { useProxies } from '../../hooks/useProxies';
 import { backendUrlConfigAtom } from '../../base-url';
 import { backendUrlAtom } from '@boluo/api-browser';
 import { ButtonInline } from '@boluo/ui/ButtonInline';
+import { sidebarContentStateAtom } from '../../state/ui.atoms';
 
 interface Props {
   spaceId: string | null | undefined;
@@ -26,33 +17,21 @@ interface Props {
 
 export const ConnectionIndicatior: FC<Props> = ({ spaceId }) => {
   const connectionState = useAtomValue(connectionStateAtom);
-  const [isPopoverOpen, setPopoverOpen] = useState(false);
-  const middleware = useMemo(() => [offset(-32)], []);
-  const { x, y, strategy, refs, context } = useFloating({
-    open: connectionState.type === 'CONNECTED' ? isPopoverOpen : true,
-    strategy: 'fixed',
-    placement: 'right-end',
-    middleware,
-    onOpenChange: setPopoverOpen,
-    whileElementsMounted: autoUpdate,
-  });
+  const [sidebarContentState, setSidebarContentState] = useAtom(sidebarContentStateAtom);
   const prevConnectStateType = useRef(connectionState.type);
   useEffect(() => {
-    setPopoverOpen((prev) => {
-      if (connectionState.type === 'CONNECTED' || connectionState.type === 'ERROR') return prev;
-      if (connectionState.retry < 2) return prev;
-      if (connectionState.type === prevConnectStateType.current) return prev;
-      if (prevConnectStateType.current === 'CLOSED' && connectionState.type === 'CONNECTING')
-        return prev;
-      return true;
-    });
+    const prevType = prevConnectStateType.current;
+    if (
+      connectionState.type !== 'CONNECTED' &&
+      connectionState.type !== 'ERROR' &&
+      connectionState.retry >= 2 &&
+      connectionState.type !== prevType &&
+      !(prevType === 'CLOSED' && connectionState.type === 'CONNECTING')
+    ) {
+      setSidebarContentState((prev) => (prev === 'CONNECTIONS' ? prev : 'CONNECTIONS'));
+    }
     prevConnectStateType.current = connectionState.type;
-  }, [connectionState]);
-
-  const click = useClick(context, {});
-
-  const dismiss = useDismiss(context);
-  const { getReferenceProps, getFloatingProps } = useInteractions([click, dismiss]);
+  }, [connectionState, setSidebarContentState]);
   if (spaceId == null) return null;
   let icon: ReactNode;
   switch (connectionState.type) {
@@ -76,8 +55,9 @@ export const ConnectionIndicatior: FC<Props> = ({ spaceId }) => {
           'ConnectionIndicatior group flex cursor-pointer items-center gap-1 px-4 py-1 text-sm select-none',
           connectionState.type === 'CONNECTED' ? 'bg-state-success-bg' : 'bg-surface-muted',
         )}
-        ref={refs.setReference}
-        {...getReferenceProps()}
+        onClick={() =>
+          setSidebarContentState((prev) => (prev === 'CONNECTIONS' ? 'CHANNELS' : 'CONNECTIONS'))
+        }
       >
         {icon}
         {connectionState.type === 'CLOSED' && (
@@ -100,23 +80,11 @@ export const ConnectionIndicatior: FC<Props> = ({ spaceId }) => {
           </span>
         )}
         <div className="grow text-right">
-          <ButtonInline groupHover aria-pressed={isPopoverOpen}>
+          <ButtonInline groupHover aria-pressed={sidebarContentState === 'CONNECTIONS'}>
             <FormattedMessage defaultMessage="Switch" />
           </ButtonInline>
         </div>
       </div>
-      {isPopoverOpen && (
-        <FloatingPortal>
-          <div
-            ref={refs.setFloating}
-            style={{ position: strategy, top: y ?? 0, left: x ?? 0 }}
-            {...getFloatingProps()}
-            className={clsx('z-40 w-max')}
-          >
-            <BaseUrlSelectionPanel connectionState={connectionState} />
-          </div>
-        </FloatingPortal>
-      )}
     </>
   );
 };

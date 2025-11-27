@@ -3,6 +3,7 @@ import type {
   ComposeBackupWorkerResponse,
   ComposeDraftEntry,
 } from './compose-backup.worker.types';
+import { parseModifiers } from '../interpreter/parser';
 
 const worker = self as unknown as Worker;
 
@@ -62,9 +63,18 @@ const makeDraftId = (): string => {
   return `${Date.now().toString(16)}-${Math.random().toString(16).slice(2)}`;
 };
 
+// Remove modifier commands and trim the text for comparison
+const normalizeDraftText = (text: string): string => {
+  try {
+    return parseModifiers(text).rest.trim();
+  } catch {
+    return text.trim();
+  }
+};
+
 const shouldMergeDraft = (draftText: string, incoming: string): boolean => {
   const existing = draftText.trim();
-  const next = incoming.trim();
+  const next = normalizeDraftText(incoming);
   if (existing.length === 0 || next.length === 0) {
     return false;
   }

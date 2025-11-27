@@ -1,6 +1,7 @@
 'use client';
 import type { MemberWithUser, User } from '@boluo/api';
 import { useAtomValue } from 'jotai';
+import { selectAtom } from 'jotai/utils';
 import { type FC, useDeferredValue, useEffect, useMemo } from 'react';
 import { useMediaDrop } from '../../hooks/useMediaDrop';
 import { AddDiceButton } from './AddDiceButton';
@@ -28,12 +29,14 @@ const DeferredComposeTextArea: FC<{
   parsedAtom: ChannelAtoms['parsedAtom'];
   currentUser: User;
   enterSend: boolean;
-  channelId: string;
-  isEditing: boolean;
   send: () => Promise<void>;
-}> = ({ parsedAtom, currentUser, send, enterSend, channelId, isEditing }) => {
+}> = ({
+  parsedAtom,
+  currentUser,
+  send,
+  enterSend,
+}) => {
   const parsed = useDeferredValue(useAtomValue(parsedAtom));
-  useBackupCompose(channelId, parsed, isEditing);
   const compose = useMemo(
     () => (
       <ComposeTextArea myId={currentUser.id} send={send} enterSend={enterSend} parsed={parsed} />
@@ -44,7 +47,7 @@ const DeferredComposeTextArea: FC<{
 };
 
 export const Compose = ({ member, channelAtoms }: Props) => {
-  const { inGameAtom, isWhisperAtom, parsedAtom, isEditingAtom } = channelAtoms;
+  const { inGameAtom, isWhisperAtom, parsedAtom, isEditingAtom, composeAtom } = channelAtoms;
   const settings = useSettings();
   const enterSend = settings?.enterSend === true;
   const send = useSend();
@@ -59,8 +62,15 @@ export const Compose = ({ member, channelAtoms }: Props) => {
     event.preventDefault(); // This is important to prevent the browser's default handling of the data
   };
   const isEditing = useAtomValue(isEditingAtom);
+  const composingAt = useAtomValue(
+    useMemo(() => selectAtom(composeAtom, ({ composingAt }) => composingAt), [composeAtom]),
+  );
+  const composeSource = useAtomValue(
+    useMemo(() => selectAtom(composeAtom, ({ source }) => source), [composeAtom]),
+  );
   const inGame = useAtomValue(inGameAtom);
   const isWhisper = useAtomValue(isWhisperAtom);
+  useBackupCompose(member.channel.channelId, composeSource, isEditing, composingAt);
   const editMessageBanner = useMemo(() => {
     if (!isEditing) return null;
     return <EditMessageBanner currentUser={member.user} />;
@@ -97,9 +107,7 @@ export const Compose = ({ member, channelAtoms }: Props) => {
             parsedAtom={parsedAtom}
             currentUser={member.user}
             enterSend={enterSend}
-            channelId={member.channel.channelId}
             send={send}
-            isEditing={isEditing}
           />
 
           {addDiceButton}

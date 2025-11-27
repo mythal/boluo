@@ -70,7 +70,7 @@ export const DraftHistoryButton: FC<DraftHistoryButtonProps> = ({ drafts, onRest
       {open && (
         <FloatingPortal>
           <FloatingBox
-            className="max-h-96 max-w-sm p-2"
+            className="max-h-96 max-w-sm overflow-y-auto p-2"
             ref={refs.setFloating}
             style={floatingStyles}
             {...getFloatingProps()}

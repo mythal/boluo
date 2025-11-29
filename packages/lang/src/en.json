@@ -29,9 +29,6 @@
   "/jxJyw": {
     "message": "The position you are trying to place the message is changed."
   },
-  "01eQoz": {
-    "message": "Change Connection Region"
-  },
   "0Azlrb": {
     "message": "Manage"
   },
@@ -149,9 +146,6 @@
   "6PgVSe": {
     "message": "Regenerate"
   },
-  "6QRlW8": {
-    "message": "Waiting for reconnection ({countdown}s)"
-  },
   "6QtXvB": {
     "message": "Verification email sent! Please check your inbox."
   },
@@ -217,6 +211,9 @@
   },
   "9to/Le": {
     "message": "Change Avatar"
+  },
+  "A3J8Sf": {
+    "message": "Waiting {countdown}s"
   },
   "AVI/0j": {
     "message": "Split"
@@ -286,6 +283,9 @@
   },
   "F3Wc9W": {
     "message": "Last {day} days"
+  },
+  "FGo9HD": {
+    "message": "My Spaces"
   },
   "FN6jdd": {
     "message": "Hi, {username}!"
@@ -508,6 +508,9 @@
   },
   "PiX/VH": {
     "message": "Split the message into multiple ones at line breaks"
+  },
+  "PpzpBO": {
+    "message": "Click to view"
   },
   "PwaN2o": {
     "message": "Welcome"
@@ -841,9 +844,6 @@
   },
   "fnihsY": {
     "message": "Leave"
-  },
-  "fsU2v+": {
-    "message": "Switch Spaces"
   },
   "ftsMiH": {
     "message": "Toggle In Game"

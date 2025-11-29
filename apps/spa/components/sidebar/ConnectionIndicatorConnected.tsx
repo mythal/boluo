@@ -1,9 +1,10 @@
 import { useAtomValue, useSetAtom } from 'jotai';
 import { type FC } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { Button } from '@boluo/ui/Button';
 import { chatAtom } from '../../state/chat.atoms';
 import { devMode } from '../../state/dev.atoms';
+import { ButtonInline } from '@boluo/ui/ButtonInline';
+import Unplug from '@boluo/icons/Unplug';
 
 export const ConnectionIndicatorConnected: FC = () => {
   const isDevMode = useAtomValue(devMode);
@@ -12,17 +13,18 @@ export const ConnectionIndicatorConnected: FC = () => {
     dispatch({ type: 'debugCloseConnection', payload: { countdown: 5 } });
   };
   return (
-    <div>
-      <div className="font-bold">
+    <>
+      <span className="grow">
         <FormattedMessage defaultMessage="Connected" />
-      </div>
+      </span>
       {isDevMode && (
-        <div className="mt-2">
-          <Button small onClick={disconnect}>
+        <ButtonInline onClick={disconnect}>
+          <Unplug />
+          <span className="ml-1">
             <FormattedMessage defaultMessage="Disconnect" />
-          </Button>
-        </div>
+          </span>
+        </ButtonInline>
       )}
-    </div>
+    </>
   );
 };

@@ -12,11 +12,12 @@ export const Badge: FC<Props> = ({ icon, children, onClick }) => {
   return (
     <div
       role={clickable ? 'button' : undefined}
+      tabIndex={clickable ? 0 : undefined}
       onClick={onClick}
       className={clsx(
         'Badge bg-surface-canvas border-border-default inline-flex gap-1 rounded border px-1 py-0.5 text-xs',
         onClick != null
-          ? 'hover:bg-surface-interactive-hover active:bg-surface-interactive-active hover:active:border-border-strong cursor-pointer select-none'
+          ? 'hover:bg-surface-interactive-hover active:bg-surface-interactive-active hover:active:border-border-strong cursor-pointer select-none not-disabled:focus:ring'
           : '',
       )}
     >

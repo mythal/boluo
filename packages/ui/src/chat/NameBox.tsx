@@ -25,11 +25,12 @@ export const NameBox = ({
     <span
       ref={ref}
       role={interactive ? 'button' : undefined}
+      tabIndex={interactive ? 0 : undefined}
       aria-pressed={pressed}
       className={clsx(
         'NameBox',
         'bg-name-bg aria-pressed:bg-name-editable-hover relative mr-1 w-32 flex-none rounded-sm font-bold break-all @xl:w-40 @2xl:w-48',
-        interactive && 'hover:bg-name-editable-hover cursor-pointer select-text',
+        interactive && 'hover:bg-name-editable-hover cursor-pointer select-text focus:ring',
       )}
       {...props}
     >

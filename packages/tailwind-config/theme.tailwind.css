@@ -183,11 +183,12 @@
   --color-border-sidebar: var(--color-neutral-100);
 
   /* Interactive controls */
-  --color-action-primary-bg: var(--color-green-600);
+  --color-action-primary-bg: var(--color-amber-500);
   --color-action-primary-text: var(--color-white);
-  --color-action-primary-bg-hover: var(--color-green-700);
-  --color-action-primary-bg-active: var(--color-green-800);
-  --color-action-primary-bg-disabled: var(--color-teal-700);
+  --color-action-primary-bg-hover: var(--color-amber-400);
+  --color-action-primary-bg-active: var(--color-amber-600);
+  --color-action-primary-border-active: var(--color-amber-800);
+  --color-action-primary-bg-disabled: var(--color-emerald-600);
   --color-action-secondary-bg: var(--color-neutral-10);
   --color-action-secondary-border: var(--color-neutral-400);
   --color-action-secondary-text: var(--color-black);
@@ -199,6 +200,7 @@
   --color-action-danger-bg-hover: var(--color-red-600);
   --color-action-danger-bg-active: var(--color-red-700);
   --color-action-danger-bg-disabled: var(--color-red-800);
+  --color-action-danger-border-active: var(--color-red-950);
 
   --color-action-toggle-bg: var(--color-neutral-100);
   --color-action-toggle-bg-hover: var(--color-neutral-200);

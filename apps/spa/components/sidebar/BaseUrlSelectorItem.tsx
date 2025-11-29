@@ -1,6 +1,7 @@
 import { type Proxy } from '@boluo/api';
 import clsx from 'clsx';
-import { Cloud } from '@boluo/icons';
+import Cloud from '@boluo/icons/Cloud';
+import Unplug from '@boluo/icons/Unplug';
 import Icon from '@boluo/ui/Icon';
 import { type FC, type ReactNode } from 'react';
 import { FormattedMessage } from 'react-intl';
@@ -16,18 +17,21 @@ interface Props {
 export const BaseUrlSelectorItem: FC<Props> = ({ proxy, result, setUrl, selected }) => {
   const { url, name, region } = proxy;
   let resultNode: ReactNode = <span>...</span>;
+  let icon: typeof Cloud = Cloud;
   if (result === 'FAILED') {
     resultNode = (
       <span className="text-state-danger-text">
         <FormattedMessage defaultMessage="Failed" />
       </span>
     );
+    icon = Unplug;
   } else if (result === 'TIMEOUT') {
     resultNode = (
       <span className="text-text-muted">
         <FormattedMessage defaultMessage="Timeout" />
       </span>
     );
+    icon = Unplug;
   } else if (typeof result === 'number') {
     resultNode = <span className="text-text-secondary">{result.toFixed(0)} ms</span>;
   }

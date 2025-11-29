@@ -32,10 +32,6 @@ export const BaseUrlSelector: FC = () => {
   };
   return (
     <div className="flex flex-col gap-2">
-      <div className="text-text-secondary px-1 text-sm">
-        <FormattedMessage defaultMessage="Change Connection Region" />
-      </div>
-
       <label className="flex items-center gap-2 px-1 text-sm">
         <input
           type="checkbox"

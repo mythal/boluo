@@ -52,11 +52,12 @@ export const SidebarItem: FC<Props> = ({
     <div className="px-3 py-0.5">
       <button
         type="button"
+        aria-pressed={active}
         onClick={onClick}
         className={clsx(
           'group relative grid w-full grid-cols-[1.25rem_1fr_auto] items-center gap-x-1 rounded px-1 py-1 text-left text-sm',
-          onClick ? 'hover:bg-sidebar-item-hover-bg cursor-pointer' : 'cursor-default',
-          active && 'bg-sidebar-item-active-bg',
+          onClick ? 'not-pressed:hover:bg-sidebar-item-hover-bg cursor-pointer' : 'cursor-default',
+          'pressed:bg-sidebar-item-active-bg',
         )}
       >
         {iconNode}

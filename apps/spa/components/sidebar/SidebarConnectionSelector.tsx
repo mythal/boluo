@@ -17,7 +17,7 @@ export const SidebarConnectionSelector: FC = () => {
 
   return (
     <div className="SidebarConnectionSelector flex h-full flex-col">
-      <div className="text-text-secondary h-pane-header flex items-center justify-between px-4 py-2 text-sm">
+      <div className="h-pane-header flex items-center justify-between px-4 py-2 text-sm">
         <span className="font-bold">
           <FormattedMessage defaultMessage="Switch Connection" />
         </span>
@@ -27,7 +27,7 @@ export const SidebarConnectionSelector: FC = () => {
       </div>
       <div className="flex-1 overflow-y-auto px-3 py-3">
         <div className="flex flex-col gap-2">
-          <div className="px-1">
+          <div className="text-text-secondary flex gap-2 px-1 text-sm">
             {connectionState.type === 'CONNECTED' && <ConnectionIndicatorConnected />}
             {connectionState.type === 'CONNECTING' && <ConnectionIndicatorConnecting />}
             {connectionState.type === 'CLOSED' && (

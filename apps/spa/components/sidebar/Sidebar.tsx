@@ -1,7 +1,7 @@
 import clsx from 'clsx';
 import { useQueryCurrentUser } from '@boluo/common/hooks/useQueryCurrentUser';
 import { useAtom, useAtomValue } from 'jotai';
-import { useEffect, type FC, type ReactNode } from 'react';
+import { useEffect, useMemo, type FC, type ReactNode } from 'react';
 import { isSidebarExpandedAtom, sidebarContentStateAtom } from '../../state/ui.atoms';
 import { SidebarChannels } from './SidebarChannels';
 import { SidebarSpaceList } from './SidebarSpaceList';
@@ -18,6 +18,8 @@ import { useSetThemeColor } from '../../hooks/useSetThemeColor';
 import { SidebarGuestContent } from './SidebarGuestContent';
 import { SidebarContentLoading } from './SidebarContentLoading';
 import { SidebarConnectionSelector } from './SidebarConnectionSelector';
+import { connectionStateAtom } from '../../state/chat.atoms';
+import { SidebarButtonController } from './SidebarButtonController';
 
 interface Props {
   spaceId?: string;
@@ -67,11 +69,11 @@ export const Sidebar: FC<Props> = ({ spaceId }) => {
       window.removeEventListener('keydown', listener);
     };
   }, [setExpanded]);
-  const foldedNode = (
-    <SidebarButton isSidebarExpanded={isExpanded} setSidebarExpanded={setExpanded} />
-  );
+  const sidebarButton = useMemo(() => {
+    return <SidebarButtonController />;
+  }, []);
   if (!isExpanded) {
-    return foldedNode;
+    return sidebarButton;
   }
   let content: ReactNode = <SidebarContentLoading />;
   if (!isClient) {
@@ -93,7 +95,7 @@ export const Sidebar: FC<Props> = ({ spaceId }) => {
   return (
     <div
       className={clsx(
-        'Sidebar bg-sidebar-bg standalone-bottom-padding border-border-sidebar relative flex h-full min-h-0 flex-none flex-col border-r',
+        'Sidebar bg-sidebar-bg standalone-bottom-padding border-sidebar-border relative flex h-full min-h-0 flex-none flex-col border-r',
       )}
     >
       <div
@@ -107,7 +109,7 @@ export const Sidebar: FC<Props> = ({ spaceId }) => {
 
           {isClient && <ConnectionIndicatior spaceId={spaceId} />}
         </div>
-        <SidebarButton isSidebarExpanded={isExpanded} setSidebarExpanded={setExpanded} />
+        {sidebarButton}
       </div>
     </div>
   );

@@ -7,6 +7,7 @@ import {
   useEffect,
   useMemo,
   useRef,
+  useState,
 } from 'react';
 import { Loading } from '@boluo/ui/Loading';
 import { type ChildrenProps } from '@boluo/utils/types';
@@ -59,6 +60,7 @@ export const PaneBox: FC<Props> = ({ header, children, initSizeLevel = 0 }) => {
   const isChildPane = useIsChildPane();
   const isSingleColumn = useAtomValue(isSingleColumnAtom);
   const { registerPaneRef, draggingPane } = usePaneDrag();
+  const [animateIn, setAnimateIn] = useState(false);
   const childPaneAtom = useMemo(
     () =>
       selectAtom(panesAtom, (panes): PaneChild | undefined => {
@@ -87,6 +89,10 @@ export const PaneBox: FC<Props> = ({ header, children, initSizeLevel = 0 }) => {
   }, [isChildPane, paneKey, registerPaneRef]);
 
   useEffect(() => {
+    setAnimateIn(true);
+  }, []);
+
+  useEffect(() => {
     if (!focused) return;
     scrollPaneIntoView(paneBoxRef.current);
   }, [focused]);
@@ -98,6 +104,7 @@ export const PaneBox: FC<Props> = ({ header, children, initSizeLevel = 0 }) => {
         '@container relative flex h-full min-h-0 flex-[1_1_100%] flex-col',
         isChildPane && 'border-border-subtle border-t',
         isDraggingCurrentPane && isChildPane && 'opacity-50',
+        isChildPane && animateIn && 'animate-pane-pop-in',
       )}
     >
       {isChildPane && <div className="bg-border-subtle absolute top-0 h-px w-full" />}
@@ -146,6 +153,7 @@ export const PaneBox: FC<Props> = ({ header, children, initSizeLevel = 0 }) => {
           className={clsx(
             'PaneBox flex h-full flex-[0_0_0] flex-col max-md:flex-[1_1_100%]',
             isDraggingCurrentPane && 'opacity-50',
+            !isChildPane && animateIn && 'animate-pane-pop-in',
             isSingleColumn
               ? 'md:flex-[1_1_100%]'
               : [

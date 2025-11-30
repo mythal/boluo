@@ -1,7 +1,8 @@
 import { type User, type Channel, type MemberWithUser } from '@boluo/api';
-import { UserPlus } from '@boluo/icons';
+import { UserPlus, X } from '@boluo/icons';
 import { type FC, useMemo, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
+import clsx from 'clsx';
 import { useQueryChannelMembers } from '../../hooks/useQueryChannelMembers';
 import { useQueryUsersStatus } from '../../hooks/useQueryUsersStatus';
 import { PaneHeaderButton } from '@boluo/ui/PaneHeaderButton';
@@ -12,6 +13,7 @@ import { Failed } from '@boluo/ui/Failed';
 interface Props {
   className?: string;
   channel: Channel;
+  onClose: () => void;
   currentUser: User | undefined | null;
 }
 
@@ -23,11 +25,15 @@ const MemberListLoading: FC<{ className?: string }> = ({ className }) => {
   );
 };
 
-export const MemberList: FC<Props> = ({ currentUser, channel }) => {
+export const ChannelSubPaneMemberList: FC<Props> = ({ currentUser, channel, onClose }) => {
   const intl = useIntl();
   const [uiState, setUiState] = useState<'MEMBER' | 'INVITE'>('MEMBER');
   const { data: userStatusMap } = useQueryUsersStatus(channel.spaceId);
   const { data: membersData, error } = useQueryChannelMembers(channel.id);
+  const containerClassName = clsx(
+    'border-border-subtle bg-pane-bg absolute inset-y-0 right-0 z-40 flex h-full w-3xs flex-col border-l shadow-xl',
+    '@xl:static @xl:shadow-none',
+  );
   const toggleInvite = () => {
     setUiState((x) => (x === 'MEMBER' ? 'INVITE' : 'MEMBER'));
   };
@@ -84,7 +90,7 @@ export const MemberList: FC<Props> = ({ currentUser, channel }) => {
   }
 
   if (membersData == null) {
-    return <MemberListLoading />;
+    return <MemberListLoading className={containerClassName} />;
   }
   let canIKick = false;
   let canInvite = false;
@@ -94,12 +100,12 @@ export const MemberList: FC<Props> = ({ currentUser, channel }) => {
   }
 
   return (
-    <div className="border-border-subtle flex flex-col border-l">
-      <div className="flex items-center justify-between px-2 py-1 text-sm">
-        <span className="font-bold">
+    <div className={containerClassName}>
+      <div className="border-border-subtle flex items-center border-b px-3 py-2 text-sm">
+        <div className="grow">
           {uiState === 'MEMBER' && <FormattedMessage defaultMessage="Members" />}
           {uiState === 'INVITE' && <FormattedMessage defaultMessage="Invite" />}
-        </span>
+        </div>
         {canInvite && (
           <PaneHeaderButton
             active={uiState === 'INVITE'}
@@ -109,6 +115,10 @@ export const MemberList: FC<Props> = ({ currentUser, channel }) => {
             <UserPlus />
           </PaneHeaderButton>
         )}
+
+        <PaneHeaderButton onClick={onClose} title={intl.formatMessage({ defaultMessage: 'Close' })}>
+          <X />
+        </PaneHeaderButton>
       </div>
 
       <div className="overflow-y-auto">

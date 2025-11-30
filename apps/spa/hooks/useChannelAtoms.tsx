@@ -10,7 +10,7 @@ import { composeAtomFamily } from '../state/compose.atoms';
 
 export type ChannelFilter = 'ALL' | 'IN_GAME' | 'OOC';
 
-export type ChannelMemberListState = 'CLOSED' | 'RIGHT';
+export type SubPaneState = 'NONE' | 'MEMBER_LIST' | 'SEARCH';
 
 export interface ChannelAtoms {
   composeAtom: WritableAtom<ComposeState, [ComposeActionUnion], void>;
@@ -27,7 +27,7 @@ export interface ChannelAtoms {
   isEditingAtom: Atom<boolean>;
   filterAtom: PrimitiveAtom<ChannelFilter>;
   showArchivedAtom: PrimitiveAtom<boolean>;
-  memberListStateAtom: PrimitiveAtom<ChannelMemberListState>;
+  subPaneStateAtom: PrimitiveAtom<SubPaneState>;
   defaultDiceFaceRef: React.RefObject<number>;
 }
 
@@ -91,7 +91,7 @@ export const useMakeChannelAtoms = (
         isEditingAtom,
         filterAtom: atomWithStorage<ChannelFilter>(`${channelId}:filter`, 'ALL'),
         showArchivedAtom: atomWithStorage(`${channelId}:show-archived`, false),
-        memberListStateAtom: atom<ChannelMemberListState>('CLOSED'),
+        subPaneStateAtom: atom<SubPaneState>('NONE'),
         defaultDiceFaceRef,
       };
     }, [channelId, composeAtom]);

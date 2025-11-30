@@ -12,8 +12,8 @@ interface Props {
 }
 
 export const ChannelMembersButton: FC<Props> = ({ channelId, spaceId }) => {
-  const { memberListStateAtom } = useChannelAtoms();
-  const [memberListState, setMemberListState] = useAtom(memberListStateAtom);
+  const { subPaneStateAtom } = useChannelAtoms();
+  const [subPaneState, setSubPaneState] = useAtom(subPaneStateAtom);
   const { data: membersInfo, isLoading } = useQueryChannelMembers(channelId);
   const { data: userStatus } = useQueryUsersStatus(spaceId);
   const onlineCount = useMemo(() => {
@@ -28,10 +28,10 @@ export const ChannelMembersButton: FC<Props> = ({ channelId, spaceId }) => {
   }, [membersInfo, userStatus]);
   return (
     <PaneHeaderButton
-      active={memberListState !== 'CLOSED'}
+      active={subPaneState === 'MEMBER_LIST'}
       isLoading={isLoading}
       onClick={() =>
-        setMemberListState((prevState) => (prevState !== 'CLOSED' ? 'CLOSED' : 'RIGHT'))
+        setSubPaneState((prevState) => (prevState === 'MEMBER_LIST' ? 'NONE' : 'MEMBER_LIST'))
       }
     >
       <Users />

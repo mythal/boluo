@@ -1,6 +1,7 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+use super::Message;
 use super::models::Entities;
 
 #[derive(Deserialize, Debug, specta::Type)]
@@ -71,4 +72,38 @@ pub struct GetMessagesByChannel {
     pub channel_id: Uuid,
     pub before: Option<f64>,
     pub limit: Option<i64>,
+}
+
+#[derive(Deserialize, Debug, Clone, Copy, specta::Type)]
+#[serde(rename_all = "lowercase")]
+pub enum SearchDirection {
+    Asc,
+    Desc,
+}
+
+fn default_search_direction() -> SearchDirection {
+    SearchDirection::Desc
+}
+
+#[derive(Deserialize, Debug, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct SearchMessagesParams {
+    pub channel_id: Uuid,
+    pub keyword: String,
+    #[serde(default)]
+    pub pos: Option<f64>,
+    #[serde(default)]
+    pub limit: Option<i64>,
+    #[serde(default = "default_search_direction")]
+    pub direction: SearchDirection,
+}
+
+#[derive(Serialize, Debug, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct SearchMessagesResult {
+    pub messages: Vec<Message>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub next_pos: Option<f64>,
+    pub scanned: usize,
+    pub matched: usize,
 }

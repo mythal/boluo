@@ -1,0 +1,269 @@
+import {
+  type SearchMessagesResult,
+  type ApiError,
+  type Message,
+  type SearchDirection,
+} from '@boluo/api';
+import { Loading } from '@boluo/ui/Loading';
+import { PaneHeaderButton } from '@boluo/ui/PaneHeaderButton';
+import { Failed } from '@boluo/ui/Failed';
+import { ArrowDownWideShort, ArrowUpWideShort, Search, X } from '@boluo/icons';
+import clsx from 'clsx';
+import { type FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { FormattedMessage, useIntl } from 'react-intl';
+import { Button } from '@boluo/ui/Button';
+import { TextInput } from '@boluo/ui/TextInput';
+import { useSearchChannelMessages } from '../../hooks/useSearchChannelMessages';
+import { Spinner } from '@boluo/ui/Spinner';
+import { LoadingText } from '@boluo/ui/LoadingText';
+
+interface Props {
+  channelId: string;
+  onClose: () => void;
+}
+
+interface SearchMeta {
+  scanned: number;
+  matched: number;
+  nextPos: number | null;
+}
+
+const formatDateTime = (intl: ReturnType<typeof useIntl>, value: string) => {
+  const date = new Date(value);
+  const dateText = intl.formatDate(date, { year: 'numeric', month: 'short', day: '2-digit' });
+  const timeText = intl.formatTime(date, { hour: '2-digit', minute: '2-digit' });
+  return `${dateText} ${timeText}`;
+};
+
+const emptyPages: SearchMessagesResult[] = [];
+
+export const ChannelSubPaneSearch: FC<Props> = ({ channelId, onClose }) => {
+  const intl = useIntl();
+  const [keyword, setKeyword] = useState('');
+  const [activeKeyword, setActiveKeyword] = useState('');
+  const [direction, setDirection] = useState<SearchDirection>('desc');
+  const listRef = useRef<HTMLDivElement>(null);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+  const loadMoreTimeoutRef = useRef<number | undefined>(undefined);
+
+  const {
+    data,
+    error: fetchError,
+    isLoading,
+    isValidating,
+    mutate,
+    setSize,
+  } = useSearchChannelMessages(channelId, activeKeyword, direction);
+
+  const pages = data ?? emptyPages;
+
+  const results = useMemo<Message[]>(() => pages.flatMap((page) => page.messages), [pages]);
+
+  const meta = useMemo<SearchMeta | null>(() => {
+    if (pages.length === 0) {
+      return null;
+    }
+    const scanned = pages.reduce((sum, page) => sum + page.scanned, 0);
+    const matched = pages.reduce((sum, page) => sum + page.matched, 0);
+    const nextPos = pages[pages.length - 1]?.nextPos ?? null;
+    return { scanned, matched, nextPos: nextPos ?? null };
+  }, [pages]);
+
+  const isSearching = (isLoading || isValidating) && activeKeyword.trim() !== '';
+
+  const submit = useCallback(
+    (event: React.FormEvent) => {
+      event.preventDefault();
+      const trimmed = keyword.trim();
+      setActiveKeyword((prev) => {
+        if (prev === trimmed) {
+          void mutate();
+          return prev;
+        }
+        return trimmed;
+      });
+      void setSize(1);
+    },
+    [keyword, mutate, setSize],
+  );
+
+  const changeDirection = useCallback(
+    (nextDirection: SearchDirection) => {
+      if (nextDirection === direction) return;
+      setDirection(nextDirection);
+      void setSize(1);
+    },
+    [direction, setDirection, setSize],
+  );
+
+  const loadNext = useCallback(() => {
+    if (meta?.nextPos == null || activeKeyword.trim() === '') return;
+    void setSize((prev) => prev + 1);
+  }, [activeKeyword, meta, setSize]);
+
+  const trimmedActiveKeyword = activeKeyword.trim();
+  const canLoadMore = meta?.nextPos != null && trimmedActiveKeyword !== '';
+
+  const scheduleLoadNext = useCallback(() => {
+    if (!canLoadMore || isSearching) return;
+    window.clearTimeout(loadMoreTimeoutRef.current);
+    loadMoreTimeoutRef.current = window.setTimeout(() => {
+      loadNext();
+    }, 500);
+  }, [canLoadMore, isSearching, loadNext]);
+
+  useEffect(() => {
+    const sentinel = loadMoreRef.current;
+    const root = listRef.current;
+    if (!sentinel || !root) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (!entry?.isIntersecting) return;
+        scheduleLoadNext();
+      },
+      { root, threshold: 0.5 },
+    );
+
+    observer.observe(sentinel);
+
+    return () => observer.disconnect();
+  }, [scheduleLoadNext]);
+
+  useEffect(() => {
+    return () => {
+      window.clearTimeout(loadMoreTimeoutRef.current);
+    };
+  }, []);
+
+  const error = fetchError ?? null;
+
+  const errorMessage = useMemo(() => {
+    if (!error) return null;
+    if ('message' in error && typeof error.message === 'string') {
+      return error.message;
+    }
+    return intl.formatMessage({ defaultMessage: 'Failed to search messages' });
+  }, [error, intl]);
+
+  return (
+    <div
+      className={clsx(
+        'border-border-subtle bg-pane-bg absolute inset-y-0 right-0 z-40 flex h-full w-xs flex-col border-l shadow-xl',
+        '@xl:static @xl:shadow-none',
+      )}
+    >
+      <div className="border-border-subtle flex items-center gap-2 border-b px-3 py-2 text-sm">
+        <span>
+          <FormattedMessage defaultMessage="Search" />
+        </span>
+        <div className="ml-auto flex items-center gap-1">
+          <PaneHeaderButton
+            onClick={onClose}
+            title={intl.formatMessage({ defaultMessage: 'Close' })}
+          >
+            <X />
+          </PaneHeaderButton>
+        </div>
+      </div>
+
+      <form onSubmit={submit} className="border-border-subtle w-full border-b px-3 text-sm">
+        <div className="flex w-full gap-2 pt-2">
+          <label className="sr-only">
+            <FormattedMessage defaultMessage="Search keyword" />
+          </label>
+          <TextInput
+            placeholder={intl.formatMessage({ defaultMessage: 'Search messages' })}
+            className="shrink grow"
+            value={keyword}
+            onChange={(event) => {
+              setKeyword(event.target.value);
+            }}
+          />
+          <Button
+            variant="primary"
+            small
+            type="submit"
+            disabled={isSearching || keyword.trim() === ''}
+          >
+            <FormattedMessage defaultMessage="Search" />
+          </Button>
+        </div>
+
+        <div className="flex gap-1 py-2">
+          <Button small aria-pressed={direction === 'asc'} onClick={() => changeDirection('asc')}>
+            <ArrowDownWideShort />
+            <FormattedMessage defaultMessage="Old First" />
+          </Button>
+          <Button small aria-pressed={direction === 'desc'} onClick={() => changeDirection('desc')}>
+            <ArrowUpWideShort />
+            <FormattedMessage defaultMessage="New First" />
+          </Button>
+        </div>
+      </form>
+
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        {error && (
+          <div className="px-3 py-2">
+            <Failed code={error.code} message={errorMessage} />
+          </div>
+        )}
+        <div ref={listRef} className="flex-1 overflow-y-auto">
+          {isSearching && results.length === 0 && (
+            <div className="flex items-center gap-2 text-sm">
+              <Spinner />
+              <FormattedMessage defaultMessage="Searching..." />
+            </div>
+          )}
+          {!isSearching && results.length === 0 && activeKeyword && !error && (
+            <div className="text-text-muted px-3 py-2 text-sm">
+              <FormattedMessage defaultMessage="No messages matched." />
+            </div>
+          )}
+          {results.map((message) => (
+            <div
+              key={message.id}
+              className="border-border-subtle hover:bg-surface-interactive-hover px-3 py-2"
+            >
+              <div className="text-text-muted flex items-center justify-between gap-2 text-xs">
+                <span className="font-semibold">{message.name || message.senderId}</span>
+                <span>{formatDateTime(intl, message.created)}</span>
+              </div>
+              <div className="mt-1 text-sm leading-snug wrap-break-word whitespace-pre-wrap">
+                {message.text}
+              </div>
+            </div>
+          ))}
+          <div
+            ref={loadMoreRef}
+            className="text-text-secondary flex h-8 items-center justify-center"
+            aria-hidden
+          >
+            {meta?.nextPos != null && (
+              <span>
+                <FormattedMessage defaultMessage="Searching..." />
+              </span>
+            )}
+          </div>
+        </div>
+        {meta != null && (
+          <div className="border-border-subtle flex items-center gap-1 border-t px-3 py-2">
+            <div className="text-text-secondary grow text-sm">
+              <FormattedMessage
+                defaultMessage="Scanned {scanned}, matched {matched}"
+                values={{ scanned: meta.scanned, matched: meta.matched }}
+              />
+            </div>
+            <div className="text-text-secondary flex items-center gap-1 text-sm">
+              {isSearching && <LoadingText />}
+              {!isSearching && meta.nextPos == null && (
+                <FormattedMessage defaultMessage="All searched" />
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};

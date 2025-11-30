@@ -14,6 +14,9 @@
   "+a+2ug": {
     "message": "Members"
   },
+  "+tsDQE": {
+    "message": "Search keyword"
+  },
   "/+v5jy": {
     "message": "{seconds} seconds ago"
   },
@@ -166,6 +169,9 @@
   },
   "7UOvbT": {
     "message": "Offline"
+  },
+  "7VFLWn": {
+    "message": "Search messages"
   },
   "7ifIhk": {
     "message": "Save Topic"
@@ -410,6 +416,9 @@
   "KzpV1w": {
     "message": "Your email is not verified, please {verifyEmail}."
   },
+  "L/Ows0": {
+    "message": "Scanned {scanned}, matched {matched}"
+  },
   "L01rMU": {
     "message": "By default member will speak on their own behalf."
   },
@@ -463,6 +472,9 @@
   },
   "NA+vcf": {
     "message": "Please verify your email to login to the forum."
+  },
+  "NNQzoi": {
+    "message": "Searching..."
   },
   "NXI/XL": {
     "message": "Auto"
@@ -685,6 +697,9 @@
   },
   "XzgtzD": {
     "message": "This is Boluo, a chat app designed for tabletop roleplaying games."
+  },
+  "Y0FWgq": {
+    "message": "New First"
   },
   "Y78Gyb": {
     "message": "{minutes} minutes ago"
@@ -1049,6 +1064,9 @@
   "ro9oGh": {
     "message": "Verifying your email..."
   },
+  "ruZw+F": {
+    "message": "All searched"
+  },
   "s+ixvA": {
     "message": "Sure, Destroy {spaceName}"
   },
@@ -1088,6 +1106,9 @@
   "taJuye": {
     "message": "We recommend using the latest version of {chromeLink}, {firefoxLink}, or {edgeLink} to use this application."
   },
+  "uL62d2": {
+    "message": "Old First"
+  },
   "ug01Mk": {
     "message": "Time"
   },
@@ -1114,6 +1135,9 @@
   },
   "viXE32": {
     "message": "Private"
+  },
+  "vnAZKt": {
+    "message": "No messages matched."
   },
   "vnPoZm": {
     "message": "Tell your adventures"
@@ -1189,5 +1213,8 @@
   },
   "zQvVDJ": {
     "message": "All"
+  },
+  "zqHxkG": {
+    "message": "Failed to search messages"
   }
 }

@@ -29,9 +29,6 @@
   "/jxJyw": {
     "message": "试图放置消息的位置发生了变化。"
   },
-  "01eQoz": {
-    "message": "更换线路"
-  },
   "0Azlrb": {
     "message": "管理"
   },
@@ -149,9 +146,6 @@
   "6PgVSe": {
     "message": "重新生成"
   },
-  "6QRlW8": {
-    "message": "正在等待重新连接 ({countdown}s)"
-  },
   "6QtXvB": {
     "message": "验证邮件已发送！请检查收件箱。"
   },
@@ -217,6 +211,9 @@
   },
   "9to/Le": {
     "message": "更改头像"
+  },
+  "A3J8Sf": {
+    "message": "Waiting {countdown}s"
   },
   "AVI/0j": {
     "message": "拆分"
@@ -286,6 +283,9 @@
   },
   "F3Wc9W": {
     "message": "过去{day}天"
+  },
+  "FGo9HD": {
+    "message": "My Spaces"
   },
   "FN6jdd": {
     "message": "贵安，{username}！"
@@ -508,6 +508,9 @@
   },
   "PiX/VH": {
     "message": "在换行处将消息拆分成多条"
+  },
+  "PpzpBO": {
+    "message": "Click to view"
   },
   "PwaN2o": {
     "message": "欢迎"
@@ -841,9 +844,6 @@
   },
   "fnihsY": {
     "message": "离开"
-  },
-  "fsU2v+": {
-    "message": "位面间跳跃"
   },
   "ftsMiH": {
     "message": "游戏内/外"

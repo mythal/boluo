@@ -111,7 +111,7 @@
     var(--color-zinc-700) 25%
   );
   --color-message-out-of-game-bg-hover: var(--color-zinc-800);
-  --color-message-preview-dot: var(--color-gray-700);
+  --color-message-preview-dot: var(--color-gray-600);
 
   /* Pane */
   --color-pane-bg: color-mix(in srgb, var(--color-zinc-800) 75%, var(--color-zinc-700) 25%);

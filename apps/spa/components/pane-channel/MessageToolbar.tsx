@@ -108,24 +108,6 @@ export const MessageToolbar: FC<{
       setDisplay(HIDDEN);
     }
   }, [isDragging, setDisplay]);
-  const archiveButton = useMemo(() => {
-    if (!permsArchive) return null;
-    return (
-      <Delay
-        fallback={
-          <MessageToolbarButton optimistic={optimistic} pressed={message.folded}>
-            <Archive />
-          </MessageToolbarButton>
-        }
-      >
-        <MessageArchive
-          messageId={message.id}
-          archived={message.folded ?? false}
-          variant="toolbar"
-        />
-      </Delay>
-    );
-  }, [message.folded, message.id, optimistic, permsArchive]);
   const editButton = useMemo(() => {
     if (!permsEdit) return null;
     return (
@@ -160,7 +142,6 @@ export const MessageToolbar: FC<{
   if (display.type === 'HIDDEN') return null;
   return (
     <MessageToolbarBox ref={toolbarRef}>
-      {archiveButton}
       {editButton}
       {moreButton}
     </MessageToolbarBox>

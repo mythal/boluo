@@ -17,7 +17,7 @@ import { PaneHeaderBox } from '../PaneHeaderBox';
 import { PaneLoading } from '../PaneLoading';
 import { ChannelHeader } from './ChannelHeader';
 import { ChatContent } from './ChatContent';
-import { MemberList } from './MemberList';
+import { ChannelSubPaneMemberList } from './ChannelSubPaneMemberList';
 import { ChannelSubPaneSearch } from './ChannelSubPaneSearch';
 import { FailedBanner } from '@boluo/ui/chat/FailedBanner';
 import { PaneFailed } from '../pane-failed/PaneFailed';
@@ -111,12 +111,18 @@ const ChatPaneChannelView: FC<{
             <div
               className={clsx(
                 'ChatPaneChannelView',
-                'relative grid h-full grid-rows-[minmax(0,1fr)_auto]',
-                hasRightPane ? 'grid-cols-[1fr_auto]' : 'grid-cols-1',
+                'relative grid h-full grid-cols-1 grid-rows-[minmax(0,1fr)_auto]',
+                hasRightPane && '@xl:grid-cols-[1fr_auto]',
               )}
             >
               <ChatContent />
-              {showMemberList && <MemberList currentUser={member?.user} channel={channel} />}
+              {showMemberList && (
+                <ChannelSubPaneMemberList
+                  currentUser={member?.user}
+                  channel={channel}
+                  onClose={() => setSubPaneState('NONE')}
+                />
+              )}
               {showSearchPane && (
                 <ChannelSubPaneSearch
                   channelId={channel.id}

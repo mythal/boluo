@@ -97,7 +97,8 @@ export const ChannelSubPaneSearch: FC<Props> = ({ channelId, onClose }) => {
   return (
     <div
       className={clsx(
-        'border-border-subtle bg-pane-bg relative flex h-full w-[320px] flex-col border-l',
+        'border-border-subtle bg-pane-bg absolute inset-y-0 right-0 z-20 flex h-full w-xs flex-col border-l shadow-xl',
+        '@xl:static @xl:shadow-none',
       )}
     >
       <div className="border-border-subtle flex items-center gap-2 border-b px-3 py-2 text-sm">

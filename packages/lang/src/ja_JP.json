@@ -299,6 +299,9 @@
   "FazwRl": {
     "message": "リトライ"
   },
+  "FqI37D": {
+    "message": "Oldest First"
+  },
   "GEhexi": {
     "message": "ダークモード中"
   },
@@ -698,9 +701,6 @@
   "XzgtzD": {
     "message": "これは、テーブルトップのロールプレイングゲーム用に設計されたチャットアプリ Boluo です。"
   },
-  "Y0FWgq": {
-    "message": "New First"
-  },
   "Y78Gyb": {
     "message": "{minutes}分前"
   },
@@ -805,6 +805,9 @@
   },
   "dVoumD": {
     "message": "チャンネル内の自分のキャラクター名 (オプション)"
+  },
+  "dZYazP": {
+    "message": "Newest First"
   },
   "dlu6r1": {
     "message": "スプレッドシート"
@@ -1105,9 +1108,6 @@
   },
   "taJuye": {
     "message": "このアプリを使用するには、最新バージョンの {chromeLink}、 {firefoxLink}、または {edgeLink} を使用することをお勧めします。"
-  },
-  "uL62d2": {
-    "message": "Old First"
   },
   "ug01Mk": {
     "message": "時間"

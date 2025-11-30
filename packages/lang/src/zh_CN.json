@@ -300,7 +300,7 @@
     "message": "再试一次"
   },
   "FqI37D": {
-    "message": "Oldest First"
+    "message": "最古开始"
   },
   "GEhexi": {
     "message": "在暗色模式"
@@ -807,7 +807,7 @@
     "message": "我在频道中的角色名（可选）"
   },
   "dZYazP": {
-    "message": "Newest First"
+    "message": "最新开始"
   },
   "dlu6r1": {
     "message": "电子表格"
@@ -1068,7 +1068,7 @@
     "message": "正在验证邮箱…"
   },
   "ruZw+F": {
-    "message": "All searched"
+    "message": "搜完了"
   },
   "s+ixvA": {
     "message": "确定，摧毁「{spaceName}」"
@@ -1137,7 +1137,7 @@
     "message": "非公开"
   },
   "vnAZKt": {
-    "message": "No messages matched."
+    "message": "没有匹配的消息。"
   },
   "vnPoZm": {
     "message": "讲述你的冒险"
@@ -1215,6 +1215,6 @@
     "message": "所有"
   },
   "zqHxkG": {
-    "message": "Failed to search messages"
+    "message": "搜索消息失败"
   }
 }

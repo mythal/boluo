@@ -14,6 +14,9 @@
   "+a+2ug": {
     "message": "メンバー"
   },
+  "+tsDQE": {
+    "message": "Search keyword"
+  },
   "/+v5jy": {
     "message": "{seconds} 秒前"
   },
@@ -166,6 +169,9 @@
   },
   "7UOvbT": {
     "message": "オフライン"
+  },
+  "7VFLWn": {
+    "message": "Search messages"
   },
   "7ifIhk": {
     "message": "トピックの保存"
@@ -410,6 +416,9 @@
   "KzpV1w": {
     "message": "あなたのメールは確認されていません。{verifyEmail}してください。"
   },
+  "L/Ows0": {
+    "message": "Scanned {scanned}, matched {matched}"
+  },
   "L01rMU": {
     "message": "デフォルトでは、メンバーは自分として話す。"
   },
@@ -463,6 +472,9 @@
   },
   "NA+vcf": {
     "message": "フォーラムにログインするにはメールを確認してください。"
+  },
+  "NNQzoi": {
+    "message": "Searching..."
   },
   "NXI/XL": {
     "message": "自動"
@@ -685,6 +697,9 @@
   },
   "XzgtzD": {
     "message": "これは、テーブルトップのロールプレイングゲーム用に設計されたチャットアプリ Boluo です。"
+  },
+  "Y0FWgq": {
+    "message": "New First"
   },
   "Y78Gyb": {
     "message": "{minutes}分前"
@@ -1049,6 +1064,9 @@
   "ro9oGh": {
     "message": "メールを確認中..."
   },
+  "ruZw+F": {
+    "message": "All searched"
+  },
   "s+ixvA": {
     "message": "「 {spaceName}」を破壊します"
   },
@@ -1088,6 +1106,9 @@
   "taJuye": {
     "message": "このアプリを使用するには、最新バージョンの {chromeLink}、 {firefoxLink}、または {edgeLink} を使用することをお勧めします。"
   },
+  "uL62d2": {
+    "message": "Old First"
+  },
   "ug01Mk": {
     "message": "時間"
   },
@@ -1114,6 +1135,9 @@
   },
   "viXE32": {
     "message": "非公開"
+  },
+  "vnAZKt": {
+    "message": "No messages matched."
   },
   "vnPoZm": {
     "message": "あなたの冒険を語る"
@@ -1189,5 +1213,8 @@
   },
   "zQvVDJ": {
     "message": "全て"
+  },
+  "zqHxkG": {
+    "message": "Failed to search messages"
   }
 }

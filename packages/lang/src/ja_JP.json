@@ -29,9 +29,6 @@
   "/jxJyw": {
     "message": "メッセージを配置しようとしている位置が変更されました。"
   },
-  "01eQoz": {
-    "message": "接続地域の変更"
-  },
   "0Azlrb": {
     "message": "管理"
   },
@@ -149,9 +146,6 @@
   "6PgVSe": {
     "message": "再生成"
   },
-  "6QRlW8": {
-    "message": "再接続を待っています ({countdown}s)"
-  },
   "6QtXvB": {
     "message": "確認メールが送信されました！メールボックスをご確認ください。"
   },
@@ -217,6 +211,9 @@
   },
   "9to/Le": {
     "message": "アバターの変更"
+  },
+  "A3J8Sf": {
+    "message": "Waiting {countdown}s"
   },
   "AVI/0j": {
     "message": "分割"
@@ -286,6 +283,9 @@
   },
   "F3Wc9W": {
     "message": "直近の {day} 日"
+  },
+  "FGo9HD": {
+    "message": "My Spaces"
   },
   "FN6jdd": {
     "message": "こんにちは、{username}！"
@@ -508,6 +508,9 @@
   },
   "PiX/VH": {
     "message": "改行時にメッセージを複数に分割する"
+  },
+  "PpzpBO": {
+    "message": "Click to view"
   },
   "PwaN2o": {
     "message": "ようこそ"
@@ -841,9 +844,6 @@
   },
   "fnihsY": {
     "message": "退出する"
-  },
-  "fsU2v+": {
-    "message": "次元の切り替え"
   },
   "ftsMiH": {
     "message": "ゲーム内の切り替え"

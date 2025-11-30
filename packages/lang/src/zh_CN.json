@@ -14,6 +14,9 @@
   "+a+2ug": {
     "message": "成员"
   },
+  "+tsDQE": {
+    "message": "搜索关键词"
+  },
   "/+v5jy": {
     "message": "{seconds} 秒前"
   },
@@ -28,9 +31,6 @@
   },
   "/jxJyw": {
     "message": "试图放置消息的位置发生了变化。"
-  },
-  "01eQoz": {
-    "message": "更换线路"
   },
   "0Azlrb": {
     "message": "管理"
@@ -149,9 +149,6 @@
   "6PgVSe": {
     "message": "重新生成"
   },
-  "6QRlW8": {
-    "message": "正在等待重新连接 ({countdown}s)"
-  },
   "6QtXvB": {
     "message": "验证邮件已发送！请检查收件箱。"
   },
@@ -172,6 +169,9 @@
   },
   "7UOvbT": {
     "message": "离线"
+  },
+  "7VFLWn": {
+    "message": "搜索消息"
   },
   "7ifIhk": {
     "message": "保存话题"
@@ -217,6 +217,9 @@
   },
   "9to/Le": {
     "message": "更改头像"
+  },
+  "A3J8Sf": {
+    "message": "等{countdown}秒"
   },
   "AVI/0j": {
     "message": "拆分"
@@ -287,11 +290,17 @@
   "F3Wc9W": {
     "message": "过去{day}天"
   },
+  "FGo9HD": {
+    "message": "我在的位面"
+  },
   "FN6jdd": {
     "message": "贵安，{username}！"
   },
   "FazwRl": {
     "message": "再试一次"
+  },
+  "FqI37D": {
+    "message": "最古开始"
   },
   "GEhexi": {
     "message": "在暗色模式"
@@ -410,6 +419,9 @@
   "KzpV1w": {
     "message": "你的邮箱还没验证，请{verifyEmail}。"
   },
+  "L/Ows0": {
+    "message": "扫描了{scanned}条，{matched}条匹配"
+  },
   "L01rMU": {
     "message": "成员默认将作为本人发言。"
   },
@@ -464,6 +476,9 @@
   "NA+vcf": {
     "message": "请验证您的邮箱以登录论坛。"
   },
+  "NNQzoi": {
+    "message": "正在搜索…"
+  },
   "NXI/XL": {
     "message": "自动"
   },
@@ -509,6 +524,9 @@
   "PiX/VH": {
     "message": "在换行处将消息拆分成多条"
   },
+  "PpzpBO": {
+    "message": "点击查看"
+  },
   "PwaN2o": {
     "message": "欢迎"
   },
@@ -532,6 +550,9 @@
   },
   "Qm+Ijg": {
     "message": "该邮箱尚未注册"
+  },
+  "QudmKz": {
+    "message": "切换连接"
   },
   "R59CS8": {
     "message": "移除头像"
@@ -785,6 +806,9 @@
   "dVoumD": {
     "message": "我在频道中的角色名（可选）"
   },
+  "dZYazP": {
+    "message": "最新开始"
+  },
   "dlu6r1": {
     "message": "电子表格"
   },
@@ -838,9 +862,6 @@
   },
   "fnihsY": {
     "message": "离开"
-  },
-  "fsU2v+": {
-    "message": "位面间跳跃"
   },
   "ftsMiH": {
     "message": "游戏内/外"
@@ -1046,6 +1067,9 @@
   "ro9oGh": {
     "message": "正在验证邮箱…"
   },
+  "ruZw+F": {
+    "message": "搜完了"
+  },
   "s+ixvA": {
     "message": "确定，摧毁「{spaceName}」"
   },
@@ -1111,6 +1135,9 @@
   },
   "viXE32": {
     "message": "非公开"
+  },
+  "vnAZKt": {
+    "message": "没有匹配的消息。"
   },
   "vnPoZm": {
     "message": "讲述你的冒险"
@@ -1186,5 +1213,8 @@
   },
   "zQvVDJ": {
     "message": "所有"
+  },
+  "zqHxkG": {
+    "message": "搜索消息失败"
   }
 }

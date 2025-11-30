@@ -514,12 +514,16 @@ export type RollResultNode = { type: 'Roll' } & RollResult;
 
 export type SearchDirection = 'asc' | 'desc';
 
+export type SearchFilter = 'ALL' | 'IN_GAME' | 'OUT_OF_GAME';
+
 export type SearchMessagesParams = {
   channelId: string;
   keyword: string;
   pos?: number | null;
-  limit?: number | null;
   direction?: SearchDirection;
+  includeArchived?: boolean;
+  filter?: SearchFilter;
+  nameFilter?: SearchNameFilter;
 };
 
 export type SearchMessagesResult = {
@@ -528,6 +532,8 @@ export type SearchMessagesResult = {
   scanned: number;
   matched: number;
 };
+
+export type SearchNameFilter = 'NAME_ONLY' | 'ALL' | 'TEXT_ONLY';
 
 export type SearchParams = { search: string };
 

@@ -49,13 +49,13 @@ export interface Get {
   '/channels/all_members': { query: { id: string }; result: ChannelMemberWithUser[] };
   '/channels/check_name': { query: { name: string; spaceId: string }; result: boolean };
   '/channels/export': { query: Export; result: Message[] };
-  '/channels/search_messages': {
-    query: SearchMessagesParams;
-    result: SearchMessagesResult;
-  };
   // messages
   '/messages/by_channel': { query: GetMessagesByChannel; result: Message[] };
   '/messages/query': { query: { id: string }; result: Message | null };
+  '/messages/search': {
+    query: SearchMessagesParams;
+    result: SearchMessagesResult;
+  };
   // events
   '/events/token': { query: MakeToken; result: { token: string } };
   // info

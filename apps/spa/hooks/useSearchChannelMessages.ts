@@ -19,7 +19,7 @@ export const useSearchChannelMessages = (
         return null;
       }
       const pos = pageIndex === 0 ? null : (previousPageData?.nextPos ?? null);
-      return ['/channels/search_messages', channelId, trimmedKeyword, direction, pos] as const;
+      return ['/messages/search', channelId, trimmedKeyword, direction, pos] as const;
     },
     ([path, channel, searchKeyword, searchDirection, pos]) =>
       get(path, {

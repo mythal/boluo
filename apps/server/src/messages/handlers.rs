@@ -7,8 +7,8 @@ use crate::events::Update;
 use crate::interface;
 use crate::interface::{Response, missing, ok_response, parse_query, response};
 use crate::messages::api::{
-    GetMessagesByChannel, MoveMessageBetween, SearchDirection, SearchMessagesParams,
-    SearchMessagesResult,
+    GetMessagesByChannel, MoveMessageBetween, SearchDirection, SearchFilter, SearchMessagesParams,
+    SearchMessagesResult, SearchNameFilter,
 };
 use crate::spaces::SpaceMember;
 use hyper::Request;
@@ -332,8 +332,10 @@ async fn search(
         channel_id,
         keyword,
         pos,
-        limit,
         direction,
+        include_archived,
+        filter,
+        name_filter,
     } = parse_query(req.uri())?;
 
     const KEYWORD_MAX_LEN: usize = 100;
@@ -354,8 +356,6 @@ async fn search(
     if tokens.is_empty() {
         return Err(AppError::BadRequest("keyword is empty".to_string()));
     }
-
-    let limit = limit.unwrap_or(20).clamp(1, 50);
     const WINDOW_SIZE: i64 = 200;
 
     let mut conn = ctx.db.acquire().await?;
@@ -402,12 +402,31 @@ async fn search(
     let filtered: Vec<Message> = window_messages
         .into_iter()
         .filter(|message| {
+            if !include_archived && message.folded {
+                return false;
+            }
+            let in_filter = match filter {
+                SearchFilter::All => true,
+                SearchFilter::InGame => message.in_game,
+                SearchFilter::OutOfGame => !message.in_game,
+            };
+            if !in_filter {
+                return false;
+            }
             let lower_text = message.text.to_lowercase();
-            tokens.iter().all(|token| lower_text.contains(token))
+            let matches_text = tokens.iter().all(|token| lower_text.contains(token));
+            let matches_name = tokens
+                .iter()
+                .all(|token| message.name.to_lowercase().contains(token));
+            match name_filter {
+                SearchNameFilter::All => matches_text || matches_name,
+                SearchNameFilter::NameOnly => matches_name,
+                SearchNameFilter::TextOnly => matches_text,
+            }
         })
         .collect();
     let matched = filtered.len();
-    let messages = filtered.into_iter().take(limit as usize).collect();
+    let messages = filtered.into_iter().collect();
 
     Ok(SearchMessagesResult {
         messages,

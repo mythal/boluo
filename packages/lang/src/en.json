@@ -74,6 +74,9 @@
   "39AHJm": {
     "message": "Sign Up"
   },
+  "3ImDYr": {
+    "message": "Include Archived"
+  },
   "3VG8rb": {
     "message": "An unknown error occurred"
   },
@@ -220,6 +223,9 @@
   },
   "A3J8Sf": {
     "message": "Waiting {countdown}s"
+  },
+  "ANFxqj": {
+    "message": "In-Game Only"
   },
   "AVI/0j": {
     "message": "Split"

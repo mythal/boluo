@@ -1,15 +1,22 @@
-import { type SearchMessagesResult, type Message, type SearchDirection } from '@boluo/api';
+import {
+  type SearchMessagesResult,
+  type Message,
+  type SearchDirection,
+  type SearchFilter,
+  type SearchNameFilter,
+} from '@boluo/api';
 import { PaneHeaderButton } from '@boluo/ui/PaneHeaderButton';
 import { Failed } from '@boluo/ui/Failed';
-import { ArrowDownWideShort, ArrowUpWideShort, X } from '@boluo/icons';
+import { Archive, ArrowDownWideShort, ArrowUpWideShort, Mask, SwatchBook, X } from '@boluo/icons';
 import clsx from 'clsx';
 import { type FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { Button } from '@boluo/ui/Button';
 import { TextInput } from '@boluo/ui/TextInput';
-import { useSearchChannelMessages } from '../../hooks/useSearchChannelMessages';
+import { type SearchOptions, useSearchChannelMessages } from '../../hooks/useSearchChannelMessages';
 import { Spinner } from '@boluo/ui/Spinner';
 import { LoadingText } from '@boluo/ui/LoadingText';
+import Icon from '@boluo/ui/Icon';
 
 interface Props {
   channelId: string;
@@ -36,9 +43,21 @@ export const ChannelSubPaneSearch: FC<Props> = ({ channelId, onClose }) => {
   const [keyword, setKeyword] = useState('');
   const [activeKeyword, setActiveKeyword] = useState('');
   const [direction, setDirection] = useState<SearchDirection>('desc');
+  const [includeArchived, setIncludeArchived] = useState(false);
+  const [filter, setFilter] = useState<SearchFilter>('ALL');
+  const [nameFilter, setNameFilter] = useState<SearchNameFilter>('ALL');
   const listRef = useRef<HTMLDivElement>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const loadMoreTimeoutRef = useRef<number | undefined>(undefined);
+
+  const searchOptions = useMemo<SearchOptions>(() => {
+    return {
+      direction,
+      includeArchived,
+      filter,
+      nameFilter,
+    };
+  }, [direction, includeArchived, filter, nameFilter]);
 
   const {
     data,
@@ -47,7 +66,7 @@ export const ChannelSubPaneSearch: FC<Props> = ({ channelId, onClose }) => {
     isValidating,
     mutate,
     setSize,
-  } = useSearchChannelMessages(channelId, activeKeyword, direction);
+  } = useSearchChannelMessages(channelId, activeKeyword, searchOptions);
 
   const pages = data ?? emptyPages;
 
@@ -162,8 +181,11 @@ export const ChannelSubPaneSearch: FC<Props> = ({ channelId, onClose }) => {
         </div>
       </div>
 
-      <form onSubmit={submit} className="border-border-subtle w-full border-b px-3 text-sm">
-        <div className="flex w-full gap-2 pt-2">
+      <form
+        onSubmit={submit}
+        className="border-border-subtle flex w-full flex-col gap-2 border-b px-3 py-3 text-sm"
+      >
+        <div className="flex w-full gap-2">
           <label className="sr-only">
             <FormattedMessage defaultMessage="Search keyword" />
           </label>
@@ -185,7 +207,7 @@ export const ChannelSubPaneSearch: FC<Props> = ({ channelId, onClose }) => {
           </Button>
         </div>
 
-        <div className="flex gap-1 py-2">
+        <div className="flex flex-wrap gap-1">
           <Button small aria-pressed={direction === 'asc'} onClick={() => changeDirection('asc')}>
             <ArrowDownWideShort />
             <FormattedMessage defaultMessage="Oldest First" />
@@ -193,6 +215,46 @@ export const ChannelSubPaneSearch: FC<Props> = ({ channelId, onClose }) => {
           <Button small aria-pressed={direction === 'desc'} onClick={() => changeDirection('desc')}>
             <ArrowUpWideShort />
             <FormattedMessage defaultMessage="Newest First" />
+          </Button>
+          <Button
+            small
+            aria-pressed={includeArchived}
+            onClick={() => {
+              setIncludeArchived((prev) => !prev);
+              void setSize(1);
+            }}
+          >
+            <Icon icon={Archive} />
+            <FormattedMessage defaultMessage="Include Archived" />
+          </Button>
+          <Button
+            small
+            aria-pressed={filter === 'IN_GAME'}
+            onClick={() => {
+              setFilter((prev) => (prev === 'IN_GAME' ? 'ALL' : 'IN_GAME'));
+              void setSize(1);
+            }}
+          >
+            <Icon icon={Mask} />
+            <FormattedMessage defaultMessage="In-Game Only" />
+          </Button>
+
+          <Button
+            small
+            aria-pressed={nameFilter !== 'TEXT_ONLY'}
+            onClick={() => {
+              setNameFilter((prevNameFilter) => {
+                if (prevNameFilter === 'TEXT_ONLY') {
+                  return 'ALL';
+                } else {
+                  return 'TEXT_ONLY';
+                }
+              });
+              void setSize(1);
+            }}
+          >
+            <Icon icon={SwatchBook} />
+            <FormattedMessage defaultMessage="Include Names" />
           </Button>
         </div>
       </form>

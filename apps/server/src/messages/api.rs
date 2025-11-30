@@ -85,6 +85,30 @@ fn default_search_direction() -> SearchDirection {
     SearchDirection::Desc
 }
 
+#[derive(Deserialize, Debug, Clone, Copy, specta::Type)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum SearchFilter {
+    All,
+    InGame,
+    OutOfGame,
+}
+
+fn default_search_filter() -> SearchFilter {
+    SearchFilter::All
+}
+
+#[derive(Deserialize, Debug, Clone, Copy, specta::Type)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum SearchNameFilter {
+    NameOnly,
+    All,
+    TextOnly,
+}
+
+fn default_search_name_filter() -> SearchNameFilter {
+    SearchNameFilter::All
+}
+
 #[derive(Deserialize, Debug, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct SearchMessagesParams {
@@ -92,10 +116,14 @@ pub struct SearchMessagesParams {
     pub keyword: String,
     #[serde(default)]
     pub pos: Option<f64>,
-    #[serde(default)]
-    pub limit: Option<i64>,
     #[serde(default = "default_search_direction")]
     pub direction: SearchDirection,
+    #[serde(default)]
+    pub include_archived: bool,
+    #[serde(default = "default_search_filter")]
+    pub filter: SearchFilter,
+    #[serde(default = "default_search_name_filter")]
+    pub name_filter: SearchNameFilter,
 }
 
 #[derive(Serialize, Debug, specta::Type)]

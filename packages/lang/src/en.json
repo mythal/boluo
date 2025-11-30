@@ -95,9 +95,6 @@
   "47FYwb": {
     "message": "Cancel"
   },
-  "4C/sYm": {
-    "message": "Continue Search"
-  },
   "4FbTT8": {
     "message": "Is Master"
   },
@@ -419,6 +416,9 @@
   "KzpV1w": {
     "message": "Your email is not verified, please {verifyEmail}."
   },
+  "L/Ows0": {
+    "message": "Scanned {scanned}, matched {matched}"
+  },
   "L01rMU": {
     "message": "By default member will speak on their own behalf."
   },
@@ -556,9 +556,6 @@
   },
   "R5iTJ0": {
     "message": "If you see this text, please try to swipe down ↓ to display the content."
-  },
-  "RkpNCT": {
-    "message": "Please enter a keyword"
   },
   "RraqCg": {
     "message": "Username and password do not match"
@@ -700,6 +697,9 @@
   },
   "XzgtzD": {
     "message": "This is Boluo, a chat app designed for tabletop roleplaying games."
+  },
+  "Y0FWgq": {
+    "message": "New First"
   },
   "Y78Gyb": {
     "message": "{minutes} minutes ago"
@@ -923,9 +923,6 @@
   "jd7fUZ": {
     "message": "Resend in {countdown} seconds"
   },
-  "jfCVzK": {
-    "message": "Scanned {scanned}"
-  },
   "jsy7pk": {
     "message": "Try Again"
   },
@@ -1067,6 +1064,9 @@
   "ro9oGh": {
     "message": "Verifying your email..."
   },
+  "ruZw+F": {
+    "message": "All searched"
+  },
   "s+ixvA": {
     "message": "Sure, Destroy {spaceName}"
   },
@@ -1105,6 +1105,9 @@
   },
   "taJuye": {
     "message": "We recommend using the latest version of {chromeLink}, {firefoxLink}, or {edgeLink} to use this application."
+  },
+  "uL62d2": {
+    "message": "Old First"
   },
   "ug01Mk": {
     "message": "Time"

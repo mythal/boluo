@@ -74,6 +74,9 @@
   "39AHJm": {
     "message": "註冊"
   },
+  "3ImDYr": {
+    "message": "Include Archived"
+  },
   "3VG8rb": {
     "message": "發生未知錯誤"
   },
@@ -220,6 +223,9 @@
   },
   "A3J8Sf": {
     "message": "Waiting {countdown}s"
+  },
+  "ANFxqj": {
+    "message": "In-Game Only"
   },
   "AVI/0j": {
     "message": "拆分"

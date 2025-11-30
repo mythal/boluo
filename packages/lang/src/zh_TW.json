@@ -299,6 +299,9 @@
   "FazwRl": {
     "message": "再試一次"
   },
+  "FqI37D": {
+    "message": "Oldest First"
+  },
   "GEhexi": {
     "message": "在暗色模式"
   },
@@ -698,9 +701,6 @@
   "XzgtzD": {
     "message": "這是「菠蘿」，一個為桌上角色扮演遊戲（TRPG）量身打造的聊天應用。"
   },
-  "Y0FWgq": {
-    "message": "New First"
-  },
   "Y78Gyb": {
     "message": "{minutes} 分前"
   },
@@ -805,6 +805,9 @@
   },
   "dVoumD": {
     "message": "我在頻道中的角色名（可選）"
+  },
+  "dZYazP": {
+    "message": "Newest First"
   },
   "dlu6r1": {
     "message": "電子表格"
@@ -1105,9 +1108,6 @@
   },
   "taJuye": {
     "message": "為了使用本應用，推薦使用最新版本的 {chromeLink}，{firefoxLink} 或 {edgeLink}。"
-  },
-  "uL62d2": {
-    "message": "Old First"
   },
   "ug01Mk": {
     "message": "時間"

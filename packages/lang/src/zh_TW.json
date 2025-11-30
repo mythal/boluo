@@ -29,9 +29,6 @@
   "/jxJyw": {
     "message": "試圖放置訊息的位置發生了改變。"
   },
-  "01eQoz": {
-    "message": "更換線路"
-  },
   "0Azlrb": {
     "message": "管理"
   },
@@ -149,9 +146,6 @@
   "6PgVSe": {
     "message": "重新生成"
   },
-  "6QRlW8": {
-    "message": "正在等待重新連接 ({countdown}s)"
-  },
   "6QtXvB": {
     "message": "驗證郵件已發送！請檢查收件箱。"
   },
@@ -217,6 +211,9 @@
   },
   "9to/Le": {
     "message": "變更大頭貼"
+  },
+  "A3J8Sf": {
+    "message": "Waiting {countdown}s"
   },
   "AVI/0j": {
     "message": "拆分"
@@ -286,6 +283,9 @@
   },
   "F3Wc9W": {
     "message": "過去 {day} 天"
+  },
+  "FGo9HD": {
+    "message": "My Spaces"
   },
   "FN6jdd": {
     "message": "貴安, {username}!"
@@ -508,6 +508,9 @@
   },
   "PiX/VH": {
     "message": "在換行處將訊息拆分成多條"
+  },
+  "PpzpBO": {
+    "message": "Click to view"
   },
   "PwaN2o": {
     "message": "歡迎"
@@ -841,9 +844,6 @@
   },
   "fnihsY": {
     "message": "離開"
-  },
-  "fsU2v+": {
-    "message": "位面間跳躍"
   },
   "ftsMiH": {
     "message": "遊戲內/外"

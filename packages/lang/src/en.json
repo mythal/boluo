@@ -299,6 +299,9 @@
   "FazwRl": {
     "message": "Try again"
   },
+  "FqI37D": {
+    "message": "Oldest First"
+  },
   "GEhexi": {
     "message": "In Dark Mode"
   },
@@ -698,9 +701,6 @@
   "XzgtzD": {
     "message": "This is Boluo, a chat app designed for tabletop roleplaying games."
   },
-  "Y0FWgq": {
-    "message": "New First"
-  },
   "Y78Gyb": {
     "message": "{minutes} minutes ago"
   },
@@ -805,6 +805,9 @@
   },
   "dVoumD": {
     "message": "My Character Name in the Channel (Optional)"
+  },
+  "dZYazP": {
+    "message": "Newest First"
   },
   "dlu6r1": {
     "message": "Spreadsheet"
@@ -1105,9 +1108,6 @@
   },
   "taJuye": {
     "message": "We recommend using the latest version of {chromeLink}, {firefoxLink}, or {edgeLink} to use this application."
-  },
-  "uL62d2": {
-    "message": "Old First"
   },
   "ug01Mk": {
     "message": "Time"

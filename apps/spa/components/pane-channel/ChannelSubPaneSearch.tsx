@@ -1,13 +1,7 @@
-import {
-  type SearchMessagesResult,
-  type ApiError,
-  type Message,
-  type SearchDirection,
-} from '@boluo/api';
-import { Loading } from '@boluo/ui/Loading';
+import { type SearchMessagesResult, type Message, type SearchDirection } from '@boluo/api';
 import { PaneHeaderButton } from '@boluo/ui/PaneHeaderButton';
 import { Failed } from '@boluo/ui/Failed';
-import { ArrowDownWideShort, ArrowUpWideShort, Search, X } from '@boluo/icons';
+import { ArrowDownWideShort, ArrowUpWideShort, X } from '@boluo/icons';
 import clsx from 'clsx';
 import { type FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
@@ -194,11 +188,11 @@ export const ChannelSubPaneSearch: FC<Props> = ({ channelId, onClose }) => {
         <div className="flex gap-1 py-2">
           <Button small aria-pressed={direction === 'asc'} onClick={() => changeDirection('asc')}>
             <ArrowDownWideShort />
-            <FormattedMessage defaultMessage="Old First" />
+            <FormattedMessage defaultMessage="Oldest First" />
           </Button>
           <Button small aria-pressed={direction === 'desc'} onClick={() => changeDirection('desc')}>
             <ArrowUpWideShort />
-            <FormattedMessage defaultMessage="New First" />
+            <FormattedMessage defaultMessage="Newest First" />
           </Button>
         </div>
       </form>

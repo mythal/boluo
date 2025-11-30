@@ -14,6 +14,9 @@
   "+a+2ug": {
     "message": "成員"
   },
+  "+tsDQE": {
+    "message": "Search keyword"
+  },
   "/+v5jy": {
     "message": "{seconds} 秒前"
   },
@@ -166,6 +169,9 @@
   },
   "7UOvbT": {
     "message": "離線"
+  },
+  "7VFLWn": {
+    "message": "Search messages"
   },
   "7ifIhk": {
     "message": "儲存主題"
@@ -410,6 +416,9 @@
   "KzpV1w": {
     "message": "你的郵箱還沒驗證，請{verifyEmail}。"
   },
+  "L/Ows0": {
+    "message": "Scanned {scanned}, matched {matched}"
+  },
   "L01rMU": {
     "message": "成員預設將作為本人發言。"
   },
@@ -463,6 +472,9 @@
   },
   "NA+vcf": {
     "message": "請驗證您的郵箱以登入論壇。"
+  },
+  "NNQzoi": {
+    "message": "Searching..."
   },
   "NXI/XL": {
     "message": "自動"
@@ -685,6 +697,9 @@
   },
   "XzgtzD": {
     "message": "這是「菠蘿」，一個為桌上角色扮演遊戲（TRPG）量身打造的聊天應用。"
+  },
+  "Y0FWgq": {
+    "message": "New First"
   },
   "Y78Gyb": {
     "message": "{minutes} 分前"
@@ -1049,6 +1064,9 @@
   "ro9oGh": {
     "message": "正在驗證您的電子郵件…"
   },
+  "ruZw+F": {
+    "message": "All searched"
+  },
   "s+ixvA": {
     "message": "確定，摧毀「{spaceName}」"
   },
@@ -1088,6 +1106,9 @@
   "taJuye": {
     "message": "為了使用本應用，推薦使用最新版本的 {chromeLink}，{firefoxLink} 或 {edgeLink}。"
   },
+  "uL62d2": {
+    "message": "Old First"
+  },
   "ug01Mk": {
     "message": "時間"
   },
@@ -1114,6 +1135,9 @@
   },
   "viXE32": {
     "message": "非公開"
+  },
+  "vnAZKt": {
+    "message": "No messages matched."
   },
   "vnPoZm": {
     "message": "講述你的冒險"
@@ -1189,5 +1213,8 @@
   },
   "zQvVDJ": {
     "message": "所有"
+  },
+  "zqHxkG": {
+    "message": "Failed to search messages"
   }
 }

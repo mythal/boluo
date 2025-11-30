@@ -95,7 +95,7 @@ export const EditMessageBanner = ({ currentUser }: Props) => {
         </div>
         <div className="grow">
           <div className="text-text-secondary text-xs"></div>
-          <div className="text-text-secondary max-h-12 overflow-y-auto text-sm">
+          <div className="text-text-secondary max-h-6 overflow-hidden text-sm">
             <Content
               source={message.text}
               entities={parsed.entities}
@@ -113,5 +113,5 @@ export const EditMessageBanner = ({ currentUser }: Props) => {
       </div>
     );
   }
-  return <div className="border border-transparent px-1 pb-1">{content}</div>;
+  return <div className="border border-transparent pb-1 pl-1">{content}</div>;
 };

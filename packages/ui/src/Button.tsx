@@ -30,7 +30,7 @@ export const Button: React.FC<ButtonProps> = function Button({
       className={clsx(
         'Button enabled:cursor-pointer disabled:cursor-not-allowed',
         'appearance-none select-none focus-visible:outline-none',
-        'ring-border-focus/75 inline-flex items-center justify-center border-b focus:ring',
+        'ring-border-focus inline-flex items-center justify-center border-b not-disabled:focus:ring',
         'm-0 gap-1 rounded-sm',
         'pressed:[&_.detail-arrow]:rotate-180',
         small ? 'min-h-7 px-3 py-0.5 text-sm' : 'px-4 py-2 text-base',
@@ -42,13 +42,13 @@ export const Button: React.FC<ButtonProps> = function Button({
         ],
         variant === 'danger' && [
           'bg-action-danger-bg text-action-primary-text hover:enabled:bg-action-danger-bg-hover border-b-state-danger-border',
-          'pressed:bg-action-danger-bg-active pressed:border-b-action-danger-bg-active',
+          'pressed:bg-action-danger-bg-active pressed:border-b-action-danger-bg-active pressed:shadow-[0_1px_0_0_var(--color-action-danger-border-active)_inset]',
           'disabled:bg-action-danger-bg-disabled disabled:text-text-inverted-secondary',
         ],
         variant === 'primary' && [
           'bg-action-primary-bg text-action-primary-text border-b-border-primary',
           'hover:enabled:bg-action-primary-bg-hover',
-          'pressed:bg-action-primary-bg-active pressed:border-border-strong',
+          'pressed:bg-action-primary-bg-active pressed:border-b-action-primary-bg-active pressed:shadow-[0_1px_0_0_var(--color-action-primary-border-active)_inset]',
           'disabled:bg-action-primary-bg-disabled disabled:text-text-inverted-secondary',
         ],
         className,

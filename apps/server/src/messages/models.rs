@@ -162,6 +162,28 @@ impl Message {
         Ok(messages)
     }
 
+    pub async fn get_after_pos<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
+        channel_id: &Uuid,
+        after: Option<f64>,
+        limit: i64,
+        current_user_id: Option<&Uuid>,
+    ) -> Result<Vec<Message>, ModelError> {
+        use futures::TryStreamExt as _;
+        if !(1..=256).contains(&limit) {
+            return Err(ValidationFailed("illegal limit range").into());
+        }
+        let mut stream =
+            sqlx::query_file_scalar!("sql/messages/get_after_pos.sql", channel_id, after, limit)
+                .fetch(db);
+        let mut messages = Vec::new();
+        while let Some(mut message) = stream.try_next().await? {
+            message.hide(current_user_id);
+            messages.push(message);
+        }
+        Ok(messages)
+    }
+
     pub async fn export<'c, T: sqlx::PgExecutor<'c>>(
         db: T,
         channel_id: &Uuid,

@@ -19,6 +19,8 @@ import type {
   VerifyEmail,
   EmailVerificationStatus,
   AppSettings,
+  SearchMessagesParams,
+  SearchMessagesResult,
 } from './bindings';
 
 export interface Get {
@@ -50,6 +52,10 @@ export interface Get {
   // messages
   '/messages/by_channel': { query: GetMessagesByChannel; result: Message[] };
   '/messages/query': { query: { id: string }; result: Message | null };
+  '/messages/search': {
+    query: SearchMessagesParams;
+    result: SearchMessagesResult;
+  };
   // events
   '/events/token': { query: MakeToken; result: { token: string } };
   // info

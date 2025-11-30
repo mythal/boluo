@@ -55,7 +55,7 @@ export const MemberListItem: FC<Props> = ({
         className={clsx(
           'grid grid-flow-col grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-1',
           hasCharacterName ? 'grid-rows-2' : 'grid-rows-1',
-          'hover:bg-surface-muted active:bg-surface-interactive-active group relative w-full cursor-pointer rounded-sm px-2 py-1 text-sm',
+          'hover:bg-surface-muted active:bg-surface-interactive-active group relative w-full cursor-pointer px-3 py-1 text-sm',
         )}
         ref={refs.setReference}
         {...getReferenceProps()}

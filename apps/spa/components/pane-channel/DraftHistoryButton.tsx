@@ -11,11 +11,13 @@ import {
 } from '@floating-ui/react';
 import { useSetAtom } from 'jotai';
 import { type FC, useEffect, useState } from 'react';
+import BookCopy from '@boluo/icons/BookCopy';
 import { FormattedMessage } from 'react-intl';
 import { dateTimeFormat } from '../../date';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import type { ComposeDraftEntry } from '../../state/compose-backup.worker.types';
 import { FloatingBox } from '@boluo/ui/FloatingBox';
+import Icon from '@boluo/ui/Icon';
 
 interface DraftHistoryButtonProps {
   drafts: ComposeDraftEntry[];
@@ -62,6 +64,7 @@ export const DraftHistoryButton: FC<DraftHistoryButtonProps> = ({ drafts, onRest
   return (
     <span ref={refs.setReference}>
       <ButtonInline aria-pressed={open} onClick={() => setOpen((value) => !value)}>
+        <Icon icon={BookCopy} className="mr-1" />
         <FormattedMessage
           defaultMessage="Draft History ({count})"
           values={{ count: drafts.length }}

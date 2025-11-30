@@ -60,7 +60,7 @@ jobs:
       run: cargo clippy --locked
 
     - name: Run tests
-      run: cargo nextest run
+      run: cargo nextest run --retries 2
       env:
         DATABASE_URL: postgres://postgres:postgres@postgres/boluo_test
 

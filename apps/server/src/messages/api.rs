@@ -1,6 +1,7 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+use super::Message;
 use super::models::Entities;
 
 #[derive(Deserialize, Debug, specta::Type)]
@@ -71,4 +72,66 @@ pub struct GetMessagesByChannel {
     pub channel_id: Uuid,
     pub before: Option<f64>,
     pub limit: Option<i64>,
+}
+
+#[derive(Deserialize, Debug, Clone, Copy, specta::Type)]
+#[serde(rename_all = "lowercase")]
+pub enum SearchDirection {
+    Asc,
+    Desc,
+}
+
+fn default_search_direction() -> SearchDirection {
+    SearchDirection::Desc
+}
+
+#[derive(Deserialize, Debug, Clone, Copy, specta::Type)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum SearchFilter {
+    All,
+    InGame,
+    OutOfGame,
+}
+
+fn default_search_filter() -> SearchFilter {
+    SearchFilter::All
+}
+
+#[derive(Deserialize, Debug, Clone, Copy, specta::Type)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum SearchNameFilter {
+    NameOnly,
+    All,
+    TextOnly,
+}
+
+fn default_search_name_filter() -> SearchNameFilter {
+    SearchNameFilter::All
+}
+
+#[derive(Deserialize, Debug, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct SearchMessagesParams {
+    pub channel_id: Uuid,
+    pub keyword: String,
+    #[serde(default)]
+    pub pos: Option<f64>,
+    #[serde(default = "default_search_direction")]
+    pub direction: SearchDirection,
+    #[serde(default)]
+    pub include_archived: bool,
+    #[serde(default = "default_search_filter")]
+    pub filter: SearchFilter,
+    #[serde(default = "default_search_name_filter")]
+    pub name_filter: SearchNameFilter,
+}
+
+#[derive(Serialize, Debug, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct SearchMessagesResult {
+    pub messages: Vec<Message>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub next_pos: Option<f64>,
+    pub scanned: usize,
+    pub matched: usize,
 }

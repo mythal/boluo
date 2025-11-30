@@ -6,7 +6,10 @@ use crate::error::{AppError, Find};
 use crate::events::Update;
 use crate::interface;
 use crate::interface::{Response, missing, ok_response, parse_query, response};
-use crate::messages::api::{GetMessagesByChannel, MoveMessageBetween};
+use crate::messages::api::{
+    GetMessagesByChannel, MoveMessageBetween, SearchDirection, SearchFilter, SearchMessagesParams,
+    SearchMessagesResult, SearchNameFilter,
+};
 use crate::spaces::SpaceMember;
 use hyper::Request;
 use hyper::body::Body;
@@ -321,6 +324,118 @@ async fn by_channel(
     .map_err(Into::into)
 }
 
+async fn search(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<SearchMessagesResult, AppError> {
+    let SearchMessagesParams {
+        channel_id,
+        keyword,
+        pos,
+        direction,
+        include_archived,
+        filter,
+        name_filter,
+    } = parse_query(req.uri())?;
+
+    const KEYWORD_MAX_LEN: usize = 100;
+    let normalized_keyword = keyword.trim();
+    if normalized_keyword.is_empty() {
+        return Err(AppError::BadRequest("keyword is empty".to_string()));
+    }
+    if normalized_keyword.len() > KEYWORD_MAX_LEN {
+        return Err(AppError::BadRequest(format!(
+            "keyword is too long (max {})",
+            KEYWORD_MAX_LEN
+        )));
+    }
+    let tokens: Vec<String> = normalized_keyword
+        .split_whitespace()
+        .map(|token| token.to_lowercase())
+        .collect();
+    if tokens.is_empty() {
+        return Err(AppError::BadRequest("keyword is empty".to_string()));
+    }
+    const WINDOW_SIZE: i64 = 200;
+
+    let mut conn = ctx.db.acquire().await?;
+    let channel = Channel::get_by_id(&mut *conn, &channel_id)
+        .await
+        .or_not_found()?;
+    let session = authenticate(&req).await;
+    let current_user_id = session.as_ref().ok().map(|session| session.user_id);
+    if !channel.is_public {
+        ChannelMember::get(&mut *conn, session?.user_id, channel.space_id, channel_id)
+            .await
+            .or_no_permission()?;
+    }
+
+    let window_messages = match direction {
+        SearchDirection::Asc => Message::get_after_pos(
+            &mut *conn,
+            &channel_id,
+            pos,
+            WINDOW_SIZE,
+            current_user_id.as_ref(),
+        )
+        .await
+        .map_err(Into::<AppError>::into)?,
+        SearchDirection::Desc => {
+            Message::get_by_channel(
+                &mut *conn,
+                &channel_id,
+                pos,
+                WINDOW_SIZE,
+                current_user_id.as_ref(),
+            )
+            .await?
+        }
+    };
+
+    let scanned = window_messages.len();
+    let next_pos = if scanned as i64 == WINDOW_SIZE {
+        window_messages.last().map(|message| message.pos)
+    } else {
+        None
+    };
+
+    let filtered: Vec<Message> = window_messages
+        .into_iter()
+        .filter(|message| {
+            if !include_archived && message.folded {
+                return false;
+            }
+            let in_filter = match filter {
+                SearchFilter::All => true,
+                SearchFilter::InGame => message.in_game,
+                SearchFilter::OutOfGame => !message.in_game,
+            };
+            if !in_filter {
+                return false;
+            }
+            let lower_text = message.text.to_lowercase();
+            let matches_text = tokens.iter().all(|token| lower_text.contains(token));
+            let matches_name = tokens
+                .iter()
+                .all(|token| message.name.to_lowercase().contains(token));
+            match name_filter {
+                SearchNameFilter::All => matches_text || matches_name,
+                SearchNameFilter::NameOnly => matches_name,
+                SearchNameFilter::TextOnly => matches_text,
+            }
+        })
+        .collect();
+    let matched = filtered.len();
+    let messages = filtered.into_iter().collect();
+
+    Ok(SearchMessagesResult {
+        messages,
+        next_pos,
+        scanned,
+        matched,
+    })
+}
+
 pub async fn router(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
@@ -338,6 +453,7 @@ pub async fn router(
         ("/move_between", Method::POST) => move_between(ctx, req).await.map(ok_response),
         ("/toggle_fold", Method::POST) => response(toggle_fold(ctx, req).await).await,
         ("/delete", Method::POST) => response(delete(ctx, req).await).await,
+        ("/search", Method::GET) => response(search(ctx, req).await).await,
         _ => missing(),
     }
 }

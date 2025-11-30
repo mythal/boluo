@@ -30,7 +30,7 @@ export const SidebarGroupHeader: FC<Props> = ({
             folded ? 'group-hover:bg-sidebar-item-hover-bg' : 'bg-sidebar-item-active-bg',
           )}
         >
-          {Icon == null ? folded ? <ChevronDown /> : <ChevronUp /> : <Icon />}
+          {Icon == null ? folded ? <ChevronUp /> : <ChevronDown /> : <Icon />}
         </span>
       )}
     </button>

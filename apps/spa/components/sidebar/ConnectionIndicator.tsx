@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { Cloud, CloudOff } from '@boluo/icons';
+import { Cloud, Unplug } from '@boluo/icons';
 import { useAtom, useAtomValue } from 'jotai';
 import { type FC, type ReactNode, useEffect, useRef } from 'react';
 import { Spinner } from '@boluo/ui/Spinner';
@@ -42,17 +42,17 @@ export const ConnectionIndicatior: FC<Props> = ({ spaceId }) => {
       icon = <Spinner />;
       break;
     case 'CLOSED':
-      icon = <CloudOff />;
+      icon = <Unplug />;
       break;
     case 'ERROR':
-      icon = <CloudOff />;
+      icon = <Unplug />;
       break;
   }
   return (
     <>
       <div
         className={clsx(
-          'ConnectionIndicatior group flex cursor-pointer items-center gap-1 px-4 py-1 text-sm select-none',
+          'ConnectionIndicatior group flex h-8 cursor-pointer items-center gap-1 px-4 py-1 text-sm select-none',
           connectionState.type === 'CONNECTED' ? 'bg-state-success-bg' : 'bg-surface-muted',
         )}
         onClick={() =>

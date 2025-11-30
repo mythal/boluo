@@ -80,6 +80,13 @@ export const SelfPreview: FC<Props> = ({ preview, myMember: member, isLast }) =>
     );
   }, [media]);
 
+  const toolbar = useMemo(
+    () => (
+      <div className="h-6">{isFocused && <SelfPreviewToolbar currentUser={member.user} />}</div>
+    ),
+    [isFocused, member.user],
+  );
+
   return (
     <DisableDelay.Provider value={isFocused}>
       <PreviewBox
@@ -94,8 +101,7 @@ export const SelfPreview: FC<Props> = ({ preview, myMember: member, isLast }) =>
         <SelfPreviewNameCell isAction={isAction} nameNode={nameNode} />
         <div>
           <SelfPreviewContent myMember={member.channel} nameNode={nameNode} mediaNode={mediaNode} />
-
-          <div className="h-6">{isFocused && <SelfPreviewToolbar currentUser={member.user} />}</div>
+          {toolbar}
         </div>
       </PreviewBox>
     </DisableDelay.Provider>

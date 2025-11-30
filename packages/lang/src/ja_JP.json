@@ -14,6 +14,9 @@
   "+a+2ug": {
     "message": "メンバー"
   },
+  "+tsDQE": {
+    "message": "Search keyword"
+  },
   "/+v5jy": {
     "message": "{seconds} 秒前"
   },
@@ -28,9 +31,6 @@
   },
   "/jxJyw": {
     "message": "メッセージを配置しようとしている位置が変更されました。"
-  },
-  "01eQoz": {
-    "message": "接続地域の変更"
   },
   "0Azlrb": {
     "message": "管理"
@@ -149,9 +149,6 @@
   "6PgVSe": {
     "message": "再生成"
   },
-  "6QRlW8": {
-    "message": "再接続を待っています ({countdown}s)"
-  },
   "6QtXvB": {
     "message": "確認メールが送信されました！メールボックスをご確認ください。"
   },
@@ -172,6 +169,9 @@
   },
   "7UOvbT": {
     "message": "オフライン"
+  },
+  "7VFLWn": {
+    "message": "Search messages"
   },
   "7ifIhk": {
     "message": "トピックの保存"
@@ -217,6 +217,9 @@
   },
   "9to/Le": {
     "message": "アバターの変更"
+  },
+  "A3J8Sf": {
+    "message": "Waiting {countdown}s"
   },
   "AVI/0j": {
     "message": "分割"
@@ -287,11 +290,17 @@
   "F3Wc9W": {
     "message": "直近の {day} 日"
   },
+  "FGo9HD": {
+    "message": "My Spaces"
+  },
   "FN6jdd": {
     "message": "こんにちは、{username}！"
   },
   "FazwRl": {
     "message": "リトライ"
+  },
+  "FqI37D": {
+    "message": "Oldest First"
   },
   "GEhexi": {
     "message": "ダークモード中"
@@ -410,6 +419,9 @@
   "KzpV1w": {
     "message": "あなたのメールは確認されていません。{verifyEmail}してください。"
   },
+  "L/Ows0": {
+    "message": "Scanned {scanned}, matched {matched}"
+  },
   "L01rMU": {
     "message": "デフォルトでは、メンバーは自分として話す。"
   },
@@ -464,6 +476,9 @@
   "NA+vcf": {
     "message": "フォーラムにログインするにはメールを確認してください。"
   },
+  "NNQzoi": {
+    "message": "Searching..."
+  },
   "NXI/XL": {
     "message": "自動"
   },
@@ -509,6 +524,9 @@
   "PiX/VH": {
     "message": "改行時にメッセージを複数に分割する"
   },
+  "PpzpBO": {
+    "message": "Click to view"
+  },
   "PwaN2o": {
     "message": "ようこそ"
   },
@@ -532,6 +550,9 @@
   },
   "Qm+Ijg": {
     "message": "このメールアドレスは登録されていません"
+  },
+  "QudmKz": {
+    "message": "Switch Connection"
   },
   "R59CS8": {
     "message": "アイコンを削除"
@@ -785,6 +806,9 @@
   "dVoumD": {
     "message": "チャンネル内の自分のキャラクター名 (オプション)"
   },
+  "dZYazP": {
+    "message": "Newest First"
+  },
   "dlu6r1": {
     "message": "スプレッドシート"
   },
@@ -838,9 +862,6 @@
   },
   "fnihsY": {
     "message": "退出する"
-  },
-  "fsU2v+": {
-    "message": "次元の切り替え"
   },
   "ftsMiH": {
     "message": "ゲーム内の切り替え"
@@ -1046,6 +1067,9 @@
   "ro9oGh": {
     "message": "メールを確認中..."
   },
+  "ruZw+F": {
+    "message": "All searched"
+  },
   "s+ixvA": {
     "message": "「 {spaceName}」を破壊します"
   },
@@ -1111,6 +1135,9 @@
   },
   "viXE32": {
     "message": "非公開"
+  },
+  "vnAZKt": {
+    "message": "No messages matched."
   },
   "vnPoZm": {
     "message": "あなたの冒険を語る"
@@ -1186,5 +1213,8 @@
   },
   "zQvVDJ": {
     "message": "全て"
+  },
+  "zqHxkG": {
+    "message": "Failed to search messages"
   }
 }

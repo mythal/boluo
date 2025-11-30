@@ -15,7 +15,7 @@
     "message": "成员"
   },
   "+tsDQE": {
-    "message": "Search keyword"
+    "message": "搜索关键词"
   },
   "/+v5jy": {
     "message": "{seconds} 秒前"
@@ -171,7 +171,7 @@
     "message": "离线"
   },
   "7VFLWn": {
-    "message": "Search messages"
+    "message": "搜索消息"
   },
   "7ifIhk": {
     "message": "保存话题"
@@ -219,7 +219,7 @@
     "message": "更改头像"
   },
   "A3J8Sf": {
-    "message": "Waiting {countdown}s"
+    "message": "等{countdown}秒"
   },
   "AVI/0j": {
     "message": "拆分"
@@ -291,13 +291,16 @@
     "message": "过去{day}天"
   },
   "FGo9HD": {
-    "message": "My Spaces"
+    "message": "我在的位面"
   },
   "FN6jdd": {
     "message": "贵安，{username}！"
   },
   "FazwRl": {
     "message": "再试一次"
+  },
+  "FqI37D": {
+    "message": "Oldest First"
   },
   "GEhexi": {
     "message": "在暗色模式"
@@ -417,7 +420,7 @@
     "message": "你的邮箱还没验证，请{verifyEmail}。"
   },
   "L/Ows0": {
-    "message": "Scanned {scanned}, matched {matched}"
+    "message": "扫描了{scanned}条，{matched}条匹配"
   },
   "L01rMU": {
     "message": "成员默认将作为本人发言。"
@@ -474,7 +477,7 @@
     "message": "请验证您的邮箱以登录论坛。"
   },
   "NNQzoi": {
-    "message": "Searching..."
+    "message": "正在搜索…"
   },
   "NXI/XL": {
     "message": "自动"
@@ -522,7 +525,7 @@
     "message": "在换行处将消息拆分成多条"
   },
   "PpzpBO": {
-    "message": "Click to view"
+    "message": "点击查看"
   },
   "PwaN2o": {
     "message": "欢迎"
@@ -549,7 +552,7 @@
     "message": "该邮箱尚未注册"
   },
   "QudmKz": {
-    "message": "Switch Connection"
+    "message": "切换连接"
   },
   "R59CS8": {
     "message": "移除头像"
@@ -698,9 +701,6 @@
   "XzgtzD": {
     "message": "这是「菠萝」，一个专为桌上角色扮演游戏（TRPG）设计的聊天应用。"
   },
-  "Y0FWgq": {
-    "message": "New First"
-  },
   "Y78Gyb": {
     "message": "{minutes} 分前"
   },
@@ -805,6 +805,9 @@
   },
   "dVoumD": {
     "message": "我在频道中的角色名（可选）"
+  },
+  "dZYazP": {
+    "message": "Newest First"
   },
   "dlu6r1": {
     "message": "电子表格"
@@ -1105,9 +1108,6 @@
   },
   "taJuye": {
     "message": "为了使用本应用，推荐使用最新版本的 {chromeLink}，{firefoxLink} 或 {edgeLink}。"
-  },
-  "uL62d2": {
-    "message": "Old First"
   },
   "ug01Mk": {
     "message": "时间"

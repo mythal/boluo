@@ -112,11 +112,38 @@
     height: 100dvh;
   }
 
+  .text-vertical {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+  }
+
   .select-bg-arrow {
     /* Dropdown indicator inherits the element text color */
     background-image: url('data:image/svg+xml,%3Csvg%20height%3D%2710%27%20width%3D%2710%27%20viewBox%3D%270%200%2016%2016%27%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%3E%3Cpath%20fill%3D%27currentColor%27%20d%3D%27M7.247%2011.14%202.451%205.658C1.885%205.013%202.345%204%203.204%204h9.592a1%201%200%200%201%20.753%201.659l-4.796%205.48a1%201%200%200%201-1.506%200z%27/%3E%3C/svg%3E');
     background-repeat: no-repeat;
     background-position: calc(100% - 0.75rem) center;
+  }
+
+  @keyframes pane-pop-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px) scale(0.98);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  .animate-pane-pop-in {
+    animation: pane-pop-in 120ms cubic-bezier(0.2, 0.8, 0.35, 1) both;
+    will-change: transform, opacity;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-pane-pop-in {
+      animation: none;
+    }
   }
 }
 

@@ -1,6 +1,6 @@
 import clsx from 'clsx';
 import { Lock, LockedHash } from '@boluo/icons';
-import { useAtomValue } from 'jotai';
+import { useAtom } from 'jotai';
 import { ReactNode, useMemo, type FC } from 'react';
 import { memo } from 'react';
 import { FormattedMessage } from 'react-intl';
@@ -18,6 +18,7 @@ import { PaneLoading } from '../PaneLoading';
 import { ChannelHeader } from './ChannelHeader';
 import { ChatContent } from './ChatContent';
 import { MemberList } from './MemberList';
+import { ChannelSubPaneSearch } from './ChannelSubPaneSearch';
 import { FailedBanner } from '@boluo/ui/chat/FailedBanner';
 import { PaneFailed } from '../pane-failed/PaneFailed';
 import { ChannelContext } from '../../hooks/useChannel';
@@ -78,7 +79,7 @@ const ChatPaneChannelView: FC<{
     atoms.parsedAtom,
     defaultInGame,
   );
-  const memberListState = useAtomValue(atoms.memberListStateAtom);
+  const [subPaneState, setSubPaneState] = useAtom(atoms.subPaneStateAtom);
   const header = useMemo(() => {
     return <ChannelHeader />;
   }, []);
@@ -98,6 +99,9 @@ const ChatPaneChannelView: FC<{
       </PaneBox>
     );
   }
+  const showMemberList = subPaneState === 'MEMBER_LIST';
+  const showSearchPane = subPaneState === 'SEARCH';
+  const hasRightPane = subPaneState !== 'NONE';
   return (
     <MemberContext value={member}>
       <ChannelContext value={channel}>
@@ -108,14 +112,16 @@ const ChatPaneChannelView: FC<{
               className={clsx(
                 'ChatPaneChannelView',
                 'relative grid h-full grid-rows-[minmax(0,1fr)_auto]',
-                memberListState === 'CLOSED'
-                  ? 'grid-cols-1'
-                  : 'grid-cols-[1fr_10rem] @2xl:grid-cols-[1fr_14rem]',
+                hasRightPane ? 'grid-cols-[1fr_auto]' : 'grid-cols-1',
               )}
             >
               <ChatContent />
-              {memberListState === 'RIGHT' && (
-                <MemberList currentUser={member?.user} channel={channel} />
+              {showMemberList && <MemberList currentUser={member?.user} channel={channel} />}
+              {showSearchPane && (
+                <ChannelSubPaneSearch
+                  channelId={channel.id}
+                  onClose={() => setSubPaneState('NONE')}
+                />
               )}
               {member ? (
                 <Compose channelAtoms={atoms} member={member} />

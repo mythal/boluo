@@ -14,6 +14,9 @@
   "+a+2ug": {
     "message": "Members"
   },
+  "+tsDQE": {
+    "message": "Search keyword"
+  },
   "/+v5jy": {
     "message": "{seconds} seconds ago"
   },
@@ -92,6 +95,9 @@
   "47FYwb": {
     "message": "Cancel"
   },
+  "4C/sYm": {
+    "message": "Continue Search"
+  },
   "4FbTT8": {
     "message": "Is Master"
   },
@@ -166,6 +172,9 @@
   },
   "7UOvbT": {
     "message": "Offline"
+  },
+  "7VFLWn": {
+    "message": "Search messages"
   },
   "7ifIhk": {
     "message": "Save Topic"
@@ -464,6 +473,9 @@
   "NA+vcf": {
     "message": "Please verify your email to login to the forum."
   },
+  "NNQzoi": {
+    "message": "Searching..."
+  },
   "NXI/XL": {
     "message": "Auto"
   },
@@ -544,6 +556,9 @@
   },
   "R5iTJ0": {
     "message": "If you see this text, please try to swipe down ↓ to display the content."
+  },
+  "RkpNCT": {
+    "message": "Please enter a keyword"
   },
   "RraqCg": {
     "message": "Username and password do not match"
@@ -908,6 +923,9 @@
   "jd7fUZ": {
     "message": "Resend in {countdown} seconds"
   },
+  "jfCVzK": {
+    "message": "Scanned {scanned}"
+  },
   "jsy7pk": {
     "message": "Try Again"
   },
@@ -1115,6 +1133,9 @@
   "viXE32": {
     "message": "Private"
   },
+  "vnAZKt": {
+    "message": "No messages matched."
+  },
   "vnPoZm": {
     "message": "Tell your adventures"
   },
@@ -1189,5 +1210,8 @@
   },
   "zQvVDJ": {
     "message": "All"
+  },
+  "zqHxkG": {
+    "message": "Failed to search messages"
   }
 }

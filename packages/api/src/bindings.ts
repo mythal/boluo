@@ -512,11 +512,14 @@ export type RollResult = Roll & { values: number[]; filtered?: number[] | null; 
 
 export type RollResultNode = { type: 'Roll' } & RollResult;
 
+export type SearchDirection = 'asc' | 'desc';
+
 export type SearchMessagesParams = {
   channelId: string;
   keyword: string;
   pos?: number | null;
   limit?: number | null;
+  direction?: SearchDirection;
 };
 
 export type SearchMessagesResult = {

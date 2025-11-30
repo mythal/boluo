@@ -1,7 +1,7 @@
 use super::Channel;
 use super::api::{
     ChannelMembers, ChannelWithMaybeMember, CreateChannel, EditChannel, EditChannelTopic,
-    GrantOrRemoveChannelMaster, SearchMessagesParams, SearchMessagesResult,
+    GrantOrRemoveChannelMaster, SearchDirection, SearchMessagesParams, SearchMessagesResult,
 };
 use super::models::{ChannelMember, members_attach_user};
 use crate::channels::api::{
@@ -631,6 +631,7 @@ async fn search_messages(
         keyword,
         pos,
         limit,
+        direction,
     } = parse_query(req.uri())?;
 
     const KEYWORD_MAX_LEN: usize = 100;
@@ -667,15 +668,29 @@ async fn search_messages(
             .or_no_permission()?;
     }
 
-    let window_messages = Message::get_after_pos(
-        &mut *conn,
-        &channel_id,
-        pos,
-        WINDOW_SIZE,
-        current_user_id.as_ref(),
-    )
-    .await
-    .map_err(Into::<AppError>::into)?;
+    let window_messages = match direction {
+        SearchDirection::Asc => {
+            Message::get_after_pos(
+                &mut *conn,
+                &channel_id,
+                pos,
+                WINDOW_SIZE,
+                current_user_id.as_ref(),
+            )
+            .await
+            .map_err(Into::<AppError>::into)?
+        }
+        SearchDirection::Desc => {
+            Message::get_by_channel(
+                &mut *conn,
+                &channel_id,
+                pos,
+                WINDOW_SIZE,
+                current_user_id.as_ref(),
+            )
+            .await?
+        }
+    };
 
     let scanned = window_messages.len();
     let next_pos = if scanned as i64 == WINDOW_SIZE {

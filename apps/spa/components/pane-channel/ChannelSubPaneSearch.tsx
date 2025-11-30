@@ -1,14 +1,21 @@
-import { type ApiError, type Message } from '@boluo/api';
-import { get } from '@boluo/api-browser';
+import {
+  type SearchMessagesResult,
+  type ApiError,
+  type Message,
+  type SearchDirection,
+} from '@boluo/api';
 import { Loading } from '@boluo/ui/Loading';
 import { PaneHeaderButton } from '@boluo/ui/PaneHeaderButton';
 import { Failed } from '@boluo/ui/Failed';
-import { Search, X } from '@boluo/icons';
+import { ArrowDownWideShort, ArrowUpWideShort, Search, X } from '@boluo/icons';
 import clsx from 'clsx';
-import { type FC, useCallback, useMemo, useState } from 'react';
+import { type FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { Button } from '@boluo/ui/Button';
 import { TextInput } from '@boluo/ui/TextInput';
+import { useSearchChannelMessages } from '../../hooks/useSearchChannelMessages';
+import { Spinner } from '@boluo/ui/Spinner';
+import { LoadingText } from '@boluo/ui/LoadingText';
 
 interface Props {
   channelId: string;
@@ -28,63 +35,109 @@ const formatDateTime = (intl: ReturnType<typeof useIntl>, value: string) => {
   return `${dateText} ${timeText}`;
 };
 
+const emptyPages: SearchMessagesResult[] = [];
+
 export const ChannelSubPaneSearch: FC<Props> = ({ channelId, onClose }) => {
   const intl = useIntl();
   const [keyword, setKeyword] = useState('');
   const [activeKeyword, setActiveKeyword] = useState('');
-  const [results, setResults] = useState<Message[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
-  const [meta, setMeta] = useState<SearchMeta | null>(null);
-  const [error, setError] = useState<ApiError | null>(null);
+  const [direction, setDirection] = useState<SearchDirection>('desc');
+  const listRef = useRef<HTMLDivElement>(null);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+  const loadMoreTimeoutRef = useRef<number | undefined>(undefined);
 
-  const doSearch = useCallback(
-    async (searchKeyword: string, pos: number | null, append: boolean) => {
-      const trimmed = searchKeyword.trim();
-      if (trimmed === '') {
-        setError({
-          code: 'BAD_REQUEST',
-          message: intl.formatMessage({ defaultMessage: 'Please enter a keyword' }),
-        });
-        return;
-      }
-      setIsSearching(true);
-      setError(null);
-      const res = await get('/channels/search_messages', {
-        channelId,
-        keyword: trimmed,
-        pos,
-      });
-      if (res.isOk) {
-        const { messages, nextPos, scanned, matched } = res.some;
-        setResults((prev) => (append ? [...prev, ...messages] : messages));
-        setMeta((prevMeta) => ({
-          scanned: scanned + (prevMeta?.scanned ?? 0),
-          matched: matched + (prevMeta?.matched ?? 0),
-          nextPos: nextPos ?? null,
-        }));
-        setActiveKeyword(trimmed);
-      } else {
-        setError(res.err);
-      }
-      setIsSearching(false);
-    },
-    [channelId, intl],
-  );
+  const {
+    data,
+    error: fetchError,
+    isLoading,
+    isValidating,
+    mutate,
+    setSize,
+  } = useSearchChannelMessages(channelId, activeKeyword, direction);
+
+  const pages = data ?? emptyPages;
+
+  const results = useMemo<Message[]>(() => pages.flatMap((page) => page.messages), [pages]);
+
+  const meta = useMemo<SearchMeta | null>(() => {
+    if (pages.length === 0) {
+      return null;
+    }
+    const scanned = pages.reduce((sum, page) => sum + page.scanned, 0);
+    const matched = pages.reduce((sum, page) => sum + page.matched, 0);
+    const nextPos = pages[pages.length - 1]?.nextPos ?? null;
+    return { scanned, matched, nextPos: nextPos ?? null };
+  }, [pages]);
+
+  const isSearching = (isLoading || isValidating) && activeKeyword.trim() !== '';
 
   const submit = useCallback(
     (event: React.FormEvent) => {
       event.preventDefault();
-      setResults([]);
-      setMeta(null);
-      void doSearch(keyword, null, false);
+      const trimmed = keyword.trim();
+      setActiveKeyword((prev) => {
+        if (prev === trimmed) {
+          void mutate();
+          return prev;
+        }
+        return trimmed;
+      });
+      void setSize(1);
     },
-    [doSearch, keyword],
+    [keyword, mutate, setSize],
+  );
+
+  const changeDirection = useCallback(
+    (nextDirection: SearchDirection) => {
+      if (nextDirection === direction) return;
+      setDirection(nextDirection);
+      void setSize(1);
+    },
+    [direction, setDirection, setSize],
   );
 
   const loadNext = useCallback(() => {
     if (meta?.nextPos == null || activeKeyword.trim() === '') return;
-    void doSearch(activeKeyword, meta.nextPos, true);
-  }, [activeKeyword, doSearch, meta]);
+    void setSize((prev) => prev + 1);
+  }, [activeKeyword, meta, setSize]);
+
+  const trimmedActiveKeyword = activeKeyword.trim();
+  const canLoadMore = meta?.nextPos != null && trimmedActiveKeyword !== '';
+
+  const scheduleLoadNext = useCallback(() => {
+    if (!canLoadMore || isSearching) return;
+    window.clearTimeout(loadMoreTimeoutRef.current);
+    loadMoreTimeoutRef.current = window.setTimeout(() => {
+      loadNext();
+    }, 500);
+  }, [canLoadMore, isSearching, loadNext]);
+
+  useEffect(() => {
+    const sentinel = loadMoreRef.current;
+    const root = listRef.current;
+    if (!sentinel || !root) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (!entry?.isIntersecting) return;
+        scheduleLoadNext();
+      },
+      { root, threshold: 0.5 },
+    );
+
+    observer.observe(sentinel);
+
+    return () => observer.disconnect();
+  }, [scheduleLoadNext]);
+
+  useEffect(() => {
+    return () => {
+      window.clearTimeout(loadMoreTimeoutRef.current);
+    };
+  }, []);
+
+  const error = fetchError ?? null;
 
   const errorMessage = useMemo(() => {
     if (!error) return null;
@@ -97,7 +150,7 @@ export const ChannelSubPaneSearch: FC<Props> = ({ channelId, onClose }) => {
   return (
     <div
       className={clsx(
-        'border-border-subtle bg-pane-bg absolute inset-y-0 right-0 z-20 flex h-full w-xs flex-col border-l shadow-xl',
+        'border-border-subtle bg-pane-bg absolute inset-y-0 right-0 z-40 flex h-full w-xs flex-col border-l shadow-xl',
         '@xl:static @xl:shadow-none',
       )}
     >
@@ -115,27 +168,39 @@ export const ChannelSubPaneSearch: FC<Props> = ({ channelId, onClose }) => {
         </div>
       </div>
 
-      <form
-        onSubmit={submit}
-        className="border-border-subtle flex w-full gap-2 border-b px-3 py-2 text-sm"
-      >
-        <label className="sr-only">
-          <FormattedMessage defaultMessage="Search keyword" />
-        </label>
-        <TextInput
-          placeholder={intl.formatMessage({ defaultMessage: 'Search messages' })}
-          className="shrink grow"
-          value={keyword}
-          onChange={(event) => setKeyword(event.target.value)}
-        />
-        <Button
-          variant="primary"
-          small
-          type="submit"
-          disabled={isSearching || keyword.trim() === ''}
-        >
-          <FormattedMessage defaultMessage="Search" />
-        </Button>
+      <form onSubmit={submit} className="border-border-subtle w-full border-b px-3 text-sm">
+        <div className="flex w-full gap-2 pt-2">
+          <label className="sr-only">
+            <FormattedMessage defaultMessage="Search keyword" />
+          </label>
+          <TextInput
+            placeholder={intl.formatMessage({ defaultMessage: 'Search messages' })}
+            className="shrink grow"
+            value={keyword}
+            onChange={(event) => {
+              setKeyword(event.target.value);
+            }}
+          />
+          <Button
+            variant="primary"
+            small
+            type="submit"
+            disabled={isSearching || keyword.trim() === ''}
+          >
+            <FormattedMessage defaultMessage="Search" />
+          </Button>
+        </div>
+
+        <div className="flex gap-1 py-2">
+          <Button small aria-pressed={direction === 'asc'} onClick={() => changeDirection('asc')}>
+            <ArrowDownWideShort />
+            <FormattedMessage defaultMessage="Old First" />
+          </Button>
+          <Button small aria-pressed={direction === 'desc'} onClick={() => changeDirection('desc')}>
+            <ArrowUpWideShort />
+            <FormattedMessage defaultMessage="New First" />
+          </Button>
+        </div>
       </form>
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
@@ -144,10 +209,10 @@ export const ChannelSubPaneSearch: FC<Props> = ({ channelId, onClose }) => {
             <Failed code={error.code} message={errorMessage} />
           </div>
         )}
-        <div className="flex-1 overflow-y-auto">
+        <div ref={listRef} className="flex-1 overflow-y-auto">
           {isSearching && results.length === 0 && (
             <div className="flex items-center gap-2 text-sm">
-              <Loading />
+              <Spinner />
               <FormattedMessage defaultMessage="Searching..." />
             </div>
           )}
@@ -170,19 +235,32 @@ export const ChannelSubPaneSearch: FC<Props> = ({ channelId, onClose }) => {
               </div>
             </div>
           ))}
+          <div
+            ref={loadMoreRef}
+            className="text-text-secondary flex h-8 items-center justify-center"
+            aria-hidden
+          >
+            {meta?.nextPos != null && (
+              <span>
+                <FormattedMessage defaultMessage="Searching..." />
+              </span>
+            )}
+          </div>
         </div>
-        {meta?.nextPos != null && (
+        {meta != null && (
           <div className="border-border-subtle flex items-center gap-1 border-t px-3 py-2">
             <div className="text-text-secondary grow text-sm">
               <FormattedMessage
-                defaultMessage="Scanned {scanned}"
-                values={{ scanned: meta.scanned }}
+                defaultMessage="Scanned {scanned}, matched {matched}"
+                values={{ scanned: meta.scanned, matched: meta.matched }}
               />
             </div>
-            <Button type="button" onClick={loadNext} disabled={isSearching}>
-              <Search />
-              <FormattedMessage defaultMessage="Continue Search" />
-            </Button>
+            <div className="text-text-secondary flex items-center gap-1 text-sm">
+              {isSearching && <LoadingText />}
+              {!isSearching && meta.nextPos == null && (
+                <FormattedMessage defaultMessage="All searched" />
+              )}
+            </div>
           </div>
         )}
       </div>

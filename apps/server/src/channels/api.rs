@@ -159,6 +159,17 @@ pub struct Export {
     pub after: Option<DateTime<Utc>>,
 }
 
+#[derive(Deserialize, Debug, Clone, Copy, specta::Type)]
+#[serde(rename_all = "lowercase")]
+pub enum SearchDirection {
+    Asc,
+    Desc,
+}
+
+fn default_search_direction() -> SearchDirection {
+    SearchDirection::Desc
+}
+
 #[derive(Deserialize, Debug, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct SearchMessagesParams {
@@ -168,6 +179,8 @@ pub struct SearchMessagesParams {
     pub pos: Option<f64>,
     #[serde(default)]
     pub limit: Option<i64>,
+    #[serde(default = "default_search_direction")]
+    pub direction: SearchDirection,
 }
 
 #[derive(Serialize, Debug, specta::Type)]

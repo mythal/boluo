@@ -1,7 +1,7 @@
 use super::Channel;
 use super::api::{
     ChannelMembers, ChannelWithMaybeMember, CreateChannel, EditChannel, EditChannelTopic,
-    GrantOrRemoveChannelMaster,
+    GrantOrRemoveChannelMaster, SearchMessagesParams, SearchMessagesResult,
 };
 use super::models::{ChannelMember, members_attach_user};
 use crate::channels::api::{
@@ -622,6 +622,86 @@ async fn export(
         .map_err(Into::into)
 }
 
+async fn search_messages(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<SearchMessagesResult, AppError> {
+    let SearchMessagesParams {
+        channel_id,
+        keyword,
+        pos,
+        limit,
+    } = parse_query(req.uri())?;
+
+    const KEYWORD_MAX_LEN: usize = 100;
+    let normalized_keyword = keyword.trim();
+    if normalized_keyword.is_empty() {
+        return Err(AppError::BadRequest("keyword is empty".to_string()));
+    }
+    if normalized_keyword.len() > KEYWORD_MAX_LEN {
+        return Err(AppError::BadRequest(format!(
+            "keyword is too long (max {})",
+            KEYWORD_MAX_LEN
+        )));
+    }
+    let tokens: Vec<String> = normalized_keyword
+        .split_whitespace()
+        .map(|token| token.to_lowercase())
+        .collect();
+    if tokens.is_empty() {
+        return Err(AppError::BadRequest("keyword is empty".to_string()));
+    }
+
+    let limit = limit.unwrap_or(20).clamp(1, 50);
+    const WINDOW_SIZE: i64 = 200;
+
+    let mut conn = ctx.db.acquire().await?;
+    let channel = Channel::get_by_id(&mut *conn, &channel_id)
+        .await
+        .or_not_found()?;
+    let session = authenticate(&req).await;
+    let current_user_id = session.as_ref().ok().map(|session| session.user_id);
+    if !channel.is_public {
+        ChannelMember::get(&mut *conn, session?.user_id, channel.space_id, channel_id)
+            .await
+            .or_no_permission()?;
+    }
+
+    let window_messages = Message::get_after_pos(
+        &mut *conn,
+        &channel_id,
+        pos,
+        WINDOW_SIZE,
+        current_user_id.as_ref(),
+    )
+    .await
+    .map_err(Into::<AppError>::into)?;
+
+    let scanned = window_messages.len();
+    let next_pos = if scanned as i64 == WINDOW_SIZE {
+        window_messages.last().map(|message| message.pos)
+    } else {
+        None
+    };
+
+    let filtered: Vec<Message> = window_messages
+        .into_iter()
+        .filter(|message| {
+            let lower_text = message.text.to_lowercase();
+            tokens.iter().all(|token| lower_text.contains(token))
+        })
+        .collect();
+    let matched = filtered.len();
+    let messages = filtered.into_iter().take(limit as usize).collect();
+
+    Ok(SearchMessagesResult {
+        messages,
+        next_pos,
+        scanned,
+        matched,
+    })
+}
+
 pub async fn check_channel_name_exists(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
@@ -655,6 +735,7 @@ pub async fn router(
         ("/delete", Method::POST) => response(delete(ctx, req).await).await,
         ("/check_name", Method::GET) => check_channel_name_exists(ctx, req).await.map(ok_response),
         ("/export", Method::GET) => response(export(ctx, req).await).await,
+        ("/search_messages", Method::GET) => response(search_messages(ctx, req).await).await,
         _ => missing(),
     }
 }

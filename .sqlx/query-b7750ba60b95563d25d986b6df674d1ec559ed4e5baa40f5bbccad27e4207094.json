@@ -1,0 +1,124 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n    msg AS \"message!: Message\"\nFROM\n    messages msg\nWHERE\n    msg.channel_id = $1\n    AND msg.deleted = FALSE\n    AND ($2::float8 IS NULL OR msg.pos > $2)\nORDER BY\n    msg.pos ASC\nLIMIT $3;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "message!: Message",
+        "type_info": {
+          "Custom": {
+            "name": "messages",
+            "kind": {
+              "Composite": [
+                [
+                  "id",
+                  "Uuid"
+                ],
+                [
+                  "sender_id",
+                  "Uuid"
+                ],
+                [
+                  "channel_id",
+                  "Uuid"
+                ],
+                [
+                  "parent_message_id",
+                  "Uuid"
+                ],
+                [
+                  "name",
+                  "Text"
+                ],
+                [
+                  "media_id",
+                  "Uuid"
+                ],
+                [
+                  "seed",
+                  "Bytea"
+                ],
+                [
+                  "deleted",
+                  "Bool"
+                ],
+                [
+                  "in_game",
+                  "Bool"
+                ],
+                [
+                  "is_action",
+                  "Bool"
+                ],
+                [
+                  "is_master",
+                  "Bool"
+                ],
+                [
+                  "pinned",
+                  "Bool"
+                ],
+                [
+                  "tags",
+                  "TextArray"
+                ],
+                [
+                  "folded",
+                  "Bool"
+                ],
+                [
+                  "text",
+                  "Text"
+                ],
+                [
+                  "whisper_to_users",
+                  "UuidArray"
+                ],
+                [
+                  "entities",
+                  "Jsonb"
+                ],
+                [
+                  "created",
+                  "Timestamptz"
+                ],
+                [
+                  "modified",
+                  "Timestamptz"
+                ],
+                [
+                  "pos_p",
+                  "Int4"
+                ],
+                [
+                  "pos_q",
+                  "Int4"
+                ],
+                [
+                  "pos",
+                  "Float8"
+                ],
+                [
+                  "color",
+                  "Text"
+                ]
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Float8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "b7750ba60b95563d25d986b6df674d1ec559ed4e5baa40f5bbccad27e4207094"
+}

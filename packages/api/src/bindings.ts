@@ -512,6 +512,20 @@ export type RollResult = Roll & { values: number[]; filtered?: number[] | null; 
 
 export type RollResultNode = { type: 'Roll' } & RollResult;
 
+export type SearchMessagesParams = {
+  channelId: string;
+  keyword: string;
+  pos?: number | null;
+  limit?: number | null;
+};
+
+export type SearchMessagesResult = {
+  messages: Message[];
+  nextPos?: number | null;
+  scanned: number;
+  matched: number;
+};
+
 export type SearchParams = { search: string };
 
 export type Settings = { enterSend?: boolean; expandDice?: boolean };

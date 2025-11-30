@@ -2,6 +2,7 @@ use super::{
     ChannelType,
     models::{Channel, ChannelMember},
 };
+use crate::messages::Message;
 use crate::spaces::Space;
 use crate::users::User;
 use chrono::prelude::*;
@@ -156,4 +157,25 @@ pub struct Export {
     pub channel_id: Uuid,
     #[serde(default)]
     pub after: Option<DateTime<Utc>>,
+}
+
+#[derive(Deserialize, Debug, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct SearchMessagesParams {
+    pub channel_id: Uuid,
+    pub keyword: String,
+    #[serde(default)]
+    pub pos: Option<f64>,
+    #[serde(default)]
+    pub limit: Option<i64>,
+}
+
+#[derive(Serialize, Debug, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct SearchMessagesResult {
+    pub messages: Vec<Message>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub next_pos: Option<f64>,
+    pub scanned: usize,
+    pub matched: usize,
 }

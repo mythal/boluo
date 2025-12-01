@@ -335,9 +335,6 @@
   "HSaR2M": {
     "message": "是否为秘密频道？"
   },
-  "HTmh5Q": {
-    "message": "目标"
-  },
   "HlQPHQ": {
     "message": "加入位面"
   },
@@ -454,9 +451,6 @@
   },
   "M8AFCu": {
     "message": "长按垂直拆分"
-  },
-  "MWO2zy": {
-    "message": "出错了。"
   },
   "MgRaWS": {
     "message": "频道名不可为空"
@@ -955,6 +949,9 @@
   },
   "kh4wt0": {
     "message": "切换侧边栏"
+  },
+  "l+qC1C": {
+    "message": "Include Names"
   },
   "lJePcp": {
     "message": "失败"

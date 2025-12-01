@@ -2,7 +2,7 @@ import { type Atom, atom, type PrimitiveAtom, type WritableAtom } from 'jotai';
 import { atomWithStorage, loadable, selectAtom } from 'jotai/utils';
 import { createContext, useContext, useMemo, useRef } from 'react';
 import { asyncParse } from '../interpreter/async-parse';
-import { composeInitialParseResult, type ParseResult } from '../interpreter/parse-result';
+import { composeInitialParseResult, type ParseResult } from '@boluo/interpreter';
 import type { ComposeActionUnion } from '../state/compose.actions';
 import { checkCompose, type ComposeError, type ComposeState } from '../state/compose.reducer';
 import { usePaneKey } from './usePaneKey';

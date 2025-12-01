@@ -1,3 +1,4 @@
+import { expect, test } from 'vitest';
 import type { Entity } from '@boluo/api';
 import { type Env, parse as originalParse } from './parser';
 

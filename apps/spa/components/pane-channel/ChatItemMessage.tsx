@@ -8,7 +8,7 @@ import {
   useState,
 } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { type ParseResult } from '../../interpreter/parse-result';
+import { type ParseResult, messageToParsed } from '@boluo/interpreter';
 import { type FailTo, type MessageItem } from '../../state/channel.types';
 import { MessageBox } from '@boluo/ui/chat/MessageBox';
 import { MessageContentBox } from '@boluo/ui/chat/MessageContentBox';
@@ -18,7 +18,6 @@ import { Content } from './Content';
 import { MessageMedia } from './MessageMedia';
 import { Name } from './Name';
 import { useQueryUser } from '@boluo/common/hooks/useQueryUser';
-import { messageToParsed } from '../../interpreter/to-parsed';
 import { useIsScrolling } from '../../hooks/useIsScrolling';
 import { useReadObserve } from '../../hooks/useReadObserve';
 import { useSortable } from '@dnd-kit/sortable';

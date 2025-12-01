@@ -14,7 +14,7 @@ import { type ComposeActionUnion } from '../../state/compose.actions';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { RichTextarea, type RichTextareaHandle } from 'rich-textarea';
 import { composeRender } from './render';
-import { type ParseResult } from '../../interpreter/parse-result';
+import { type ParseResult } from '@boluo/interpreter';
 import { type ComposeAtom } from '../../hooks/useComposeAtom';
 import { chatAtom } from '../../state/chat.atoms';
 import * as L from 'list';

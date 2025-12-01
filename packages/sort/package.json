@@ -1,11 +1,6 @@
 {
   "name": "@boluo/sort",
   "version": "0.0.0",
-  "private": true,
-  "type": "module",
-  "sideEffects": false,
-  "homepage": "https://github.com/mythal/boluo",
-  "license": "AGPL-3.0",
   "dependencies": {
     "@boluo/api": "0.0.0",
     "list": "^2.0.19"
@@ -20,10 +15,14 @@
   "exports": {
     ".": "./src/index.ts"
   },
+  "homepage": "https://github.com/mythal/boluo",
+  "license": "AGPL-3.0",
+  "private": true,
   "scripts": {
     "check-types": "tsc --noEmit",
     "lint": "eslint . --ext .ts,.tsx",
     "test": "vitest run"
-  }
+  },
+  "sideEffects": false,
+  "type": "module"
 }
-

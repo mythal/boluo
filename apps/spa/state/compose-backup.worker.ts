@@ -3,7 +3,7 @@ import type {
   ComposeBackupWorkerResponse,
   ComposeDraftEntry,
 } from './compose-backup.worker.types';
-import { parseModifiers } from '../interpreter/parser';
+import { parseModifiers } from '@boluo/interpreter';
 
 const worker = self as unknown as Worker;
 

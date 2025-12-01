@@ -1,5 +1,4 @@
 import type Prando from 'prando';
-import { type ExportEntity } from '../../interpreter/entities';
 import {
   Entity,
   type Channel,
@@ -7,7 +6,7 @@ import {
   type Export,
   type Message,
 } from '@boluo/api';
-import { evaluate, makeRng, nodeToText } from '../../interpreter/eval';
+import { type ExportEntity, evaluate, makeRng, nodeToText } from '@boluo/interpreter';
 import { getMediaUrl } from '../../media';
 import { type IntlShape } from 'react-intl';
 import { get } from '@boluo/api-browser';

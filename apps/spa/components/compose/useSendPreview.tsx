@@ -4,7 +4,7 @@ import { type MutableRefObject, useEffect, useMemo, useRef } from 'react';
 import { makeId } from '@boluo/utils/id';
 import { type ComposeAtom } from '../../hooks/useComposeAtom';
 import { usePaneIsFocus } from '../../hooks/usePaneIsFocus';
-import { type ParseResult } from '../../interpreter/parse-result';
+import { type ParseResult } from '@boluo/interpreter';
 import { chatAtom, connectionStateAtom } from '../../state/chat.atoms';
 import { type ComposeState } from '../../state/compose.reducer';
 

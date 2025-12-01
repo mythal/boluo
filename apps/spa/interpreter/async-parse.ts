@@ -1,4 +1,4 @@
-import type { ParseResult } from './parse-result';
+import type { ParseResult } from '@boluo/interpreter';
 import type { ParserArguments } from './parser-worker';
 
 const create = (): Worker =>

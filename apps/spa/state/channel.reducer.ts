@@ -1,5 +1,5 @@
 import type { EditMessage, Message, NewMessage } from '@boluo/api';
-import { binarySearchPosList } from '../sort';
+import { binarySearchPosList } from '@boluo/sort';
 import { type MessageItem, type PreviewItem } from './channel.types';
 import { type ChatAction, type ChatActionUnion } from './chat.actions';
 import type { ChatReducerContext } from './chat.reducer';

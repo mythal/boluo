@@ -335,9 +335,6 @@
   "HSaR2M": {
     "message": "Is secret channel?"
   },
-  "HTmh5Q": {
-    "message": "target"
-  },
   "HlQPHQ": {
     "message": "Join Space"
   },
@@ -454,9 +451,6 @@
   },
   "M8AFCu": {
     "message": "Long press to vertical split"
-  },
-  "MWO2zy": {
-    "message": "Something going wrong."
   },
   "MgRaWS": {
     "message": "Channel name cannot be empty."
@@ -955,6 +949,9 @@
   },
   "kh4wt0": {
     "message": "Toggle Sidebar"
+  },
+  "l+qC1C": {
+    "message": "Include Names"
   },
   "lJePcp": {
     "message": "Failure"

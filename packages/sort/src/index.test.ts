@@ -1,13 +1,15 @@
-import { binarySearchPos, binarySearchPosList } from './sort';
 import * as L from 'list';
+import { describe, expect, test } from 'vitest';
+import { binarySearchPos, binarySearchPosList } from './index';
 
 const arr = [{ pos: 1 }, { pos: 3 }, { pos: 5 }, { pos: 7 }, { pos: 9 }];
+
 describe('binarySearchPos', () => {
   test('pos exists in array', () => {
     expect(binarySearchPos(arr, 5)).toEqual(2);
   });
 
-  test('pos exists in array', () => {
+  test('pos exists in array at tail', () => {
     expect(binarySearchPos(arr, 9)).toEqual(4);
   });
 
@@ -35,7 +37,7 @@ describe('binarySearchPosList', () => {
     expect(binarySearchPosList(lst, 5)).toEqual([2, { pos: 5 }]);
   });
 
-  test('pos exists in array', () => {
+  test('pos exists in array at tail', () => {
     expect(binarySearchPosList(lst, 9)).toEqual([4, { pos: 9 }]);
   });
 
@@ -55,3 +57,4 @@ describe('binarySearchPosList', () => {
     expect(binarySearchPosList(L.empty(), 5)).toEqual([0, null]);
   });
 });
+

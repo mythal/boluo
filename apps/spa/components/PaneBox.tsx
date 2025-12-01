@@ -89,7 +89,10 @@ export const PaneBox: FC<Props> = ({ header, children, initSizeLevel = 0 }) => {
   }, [isChildPane, paneKey, registerPaneRef]);
 
   useEffect(() => {
-    setAnimateIn(true);
+    const animation = requestAnimationFrame(() => {
+      setAnimateIn(true);
+    });
+    return () => cancelAnimationFrame(animation);
   }, []);
 
   useEffect(() => {

@@ -14,7 +14,6 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import { Button } from '@boluo/ui/Button';
 import { TextInput } from '@boluo/ui/TextInput';
 import { type SearchOptions, useSearchChannelMessages } from '../../hooks/useSearchChannelMessages';
-import { Spinner } from '@boluo/ui/Spinner';
 import { LoadingText } from '@boluo/ui/LoadingText';
 import Icon from '@boluo/ui/Icon';
 
@@ -267,8 +266,7 @@ export const ChannelSubPaneSearch: FC<Props> = ({ channelId, onClose }) => {
         )}
         <div ref={listRef} className="flex-1 overflow-y-auto">
           {isSearching && results.length === 0 && (
-            <div className="flex items-center gap-2 text-sm">
-              <Spinner />
+            <div className="flex items-center gap-2 px-3 text-sm">
               <FormattedMessage defaultMessage="Searching..." />
             </div>
           )}

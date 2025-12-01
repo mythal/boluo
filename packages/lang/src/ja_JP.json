@@ -74,6 +74,9 @@
   "39AHJm": {
     "message": "新規登録"
   },
+  "3ImDYr": {
+    "message": "Include Archived"
+  },
   "3VG8rb": {
     "message": "不明なエラーが発生しました"
   },
@@ -221,6 +224,9 @@
   "A3J8Sf": {
     "message": "Waiting {countdown}s"
   },
+  "ANFxqj": {
+    "message": "In-Game Only"
+  },
   "AVI/0j": {
     "message": "分割"
   },
@@ -328,9 +334,6 @@
   },
   "HSaR2M": {
     "message": "これは、秘密のチャンネルですか?"
-  },
-  "HTmh5Q": {
-    "message": "目標"
   },
   "HlQPHQ": {
     "message": "次元に参加する"
@@ -448,9 +451,6 @@
   },
   "M8AFCu": {
     "message": "Long press to vertical split"
-  },
-  "MWO2zy": {
-    "message": "何か問題が発生しました。"
   },
   "MgRaWS": {
     "message": "チャンネル名は空になることはできません"
@@ -949,6 +949,9 @@
   },
   "kh4wt0": {
     "message": "サイドバーを切り替える"
+  },
+  "l+qC1C": {
+    "message": "Include Names"
   },
   "lJePcp": {
     "message": "失敗"

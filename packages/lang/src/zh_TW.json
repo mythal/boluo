@@ -335,9 +335,6 @@
   "HSaR2M": {
     "message": "是否為秘密頻道？"
   },
-  "HTmh5Q": {
-    "message": "目標"
-  },
   "HlQPHQ": {
     "message": "加入位面"
   },
@@ -454,9 +451,6 @@
   },
   "M8AFCu": {
     "message": "Long press to vertical split"
-  },
-  "MWO2zy": {
-    "message": "出了點問題。"
   },
   "MgRaWS": {
     "message": "頻道名不可為空。"
@@ -955,6 +949,9 @@
   },
   "kh4wt0": {
     "message": "切換側邊欄"
+  },
+  "l+qC1C": {
+    "message": "Include Names"
   },
   "lJePcp": {
     "message": "失敗"

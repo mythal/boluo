@@ -2,12 +2,12 @@ import clsx from 'clsx';
 import React, {
   Activity,
   type FC,
-  Ref,
   type RefObject,
   useContext,
   useEffect,
   useMemo,
   useRef,
+  useTransition,
 } from 'react';
 import { type Message } from '@boluo/api';
 import { type ReactNode } from 'react';
@@ -72,11 +72,8 @@ export const MessageToolbar: FC<{
   longPressStart: number | null;
   longPressDuration: number;
 }> = ({ sendBySelf, messageBoxRef, message, longPressStart, longPressDuration }) => {
-  const member = useMember();
-  const admin = member?.space.isAdmin || false;
-  const master = member?.channel.isMaster || false;
   const optimistic = useIsOptimistic();
-  const permsArchive = admin || master || sendBySelf;
+  const [, startTransition] = useTransition();
   const permsEdit = sendBySelf && !optimistic;
   const [display, setDisplay] = useAtom(useContext(DisplayContext));
   const toolbarRef = useRef<HTMLDivElement | null>(null);
@@ -89,11 +86,15 @@ export const MessageToolbar: FC<{
 
     const handleMouseEnter = () => {
       if (isDragging) return;
-      setDisplay((prevDisplay) => (prevDisplay.type === 'HIDDEN' ? SHOW : prevDisplay));
+      startTransition(() => {
+        setDisplay((prevDisplay) => (prevDisplay.type === 'HIDDEN' ? SHOW : prevDisplay));
+      });
     };
     const handleMouseLeave = () => {
       if (isDragging) return;
-      setDisplay((prevDisplay) => (prevDisplay.type !== 'SHOW' ? prevDisplay : HIDDEN));
+      startTransition(() => {
+        setDisplay((prevDisplay) => (prevDisplay.type !== 'SHOW' ? prevDisplay : HIDDEN));
+      });
     };
     messageBox.addEventListener('mouseenter', handleMouseEnter);
     messageBox.addEventListener('mouseleave', handleMouseLeave);

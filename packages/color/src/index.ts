@@ -128,8 +128,8 @@ export const parseGameColor = (color: string): ByTheme<GameColor> => {
     case 0:
       return { dark: { type: 'random', seed: '' }, light: { type: 'random', seed: '' } };
     case 1: {
-      const color = parseColorPart(colors[0]!);
-      return { dark: color, light: color };
+      const parsedColor = parseColorPart(colors[0]!);
+      return { dark: parsedColor, light: parsedColor };
     }
     default:
       return { light: parseColorPart(colors[0]!), dark: parseColorPart(colors[1]!) };

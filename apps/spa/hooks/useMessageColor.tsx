@@ -1,6 +1,6 @@
+import { computeColors, parseGameColor } from '@boluo/color';
 import { type User } from '@boluo/api';
 import { useMemo } from 'react';
-import { computeColors, parseGameColor } from '../color';
 import { useResolvedTheme } from './useResolvedTheme';
 
 export const useMessageColor = (

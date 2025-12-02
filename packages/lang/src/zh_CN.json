@@ -75,7 +75,7 @@
     "message": "注册"
   },
   "3ImDYr": {
-    "message": "Include Archived"
+    "message": "包括已归档"
   },
   "3VG8rb": {
     "message": "发生未知错误"
@@ -225,7 +225,7 @@
     "message": "等{countdown}秒"
   },
   "ANFxqj": {
-    "message": "In-Game Only"
+    "message": "只要游戏内"
   },
   "AVI/0j": {
     "message": "拆分"
@@ -453,7 +453,7 @@
     "message": "长按垂直拆分"
   },
   "MWO2zy": {
-    "message": "Something going wrong."
+    "message": "出错了。"
   },
   "MgRaWS": {
     "message": "频道名不可为空"
@@ -954,7 +954,7 @@
     "message": "切换侧边栏"
   },
   "l+qC1C": {
-    "message": "Include Names"
+    "message": "包括名字"
   },
   "lJePcp": {
     "message": "失败"

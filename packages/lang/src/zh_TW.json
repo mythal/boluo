@@ -15,7 +15,7 @@
     "message": "成員"
   },
   "+tsDQE": {
-    "message": "Search keyword"
+    "message": "搜尋關鍵字"
   },
   "/+v5jy": {
     "message": "{seconds} 秒前"
@@ -174,7 +174,7 @@
     "message": "離線"
   },
   "7VFLWn": {
-    "message": "Search messages"
+    "message": "搜尋訊息"
   },
   "7ifIhk": {
     "message": "儲存主題"
@@ -306,7 +306,7 @@
     "message": "再試一次"
   },
   "FqI37D": {
-    "message": "Oldest First"
+    "message": "由舊至新"
   },
   "GEhexi": {
     "message": "在暗色模式"
@@ -480,7 +480,7 @@
     "message": "請驗證您的郵箱以登入論壇。"
   },
   "NNQzoi": {
-    "message": "Searching..."
+    "message": "檢索中…"
   },
   "NXI/XL": {
     "message": "自動"
@@ -528,7 +528,7 @@
     "message": "在換行處將訊息拆分成多條"
   },
   "PpzpBO": {
-    "message": "Click to view"
+    "message": "點擊查看"
   },
   "PwaN2o": {
     "message": "歡迎"
@@ -810,7 +810,7 @@
     "message": "我在頻道中的角色名（可選）"
   },
   "dZYazP": {
-    "message": "Newest First"
+    "message": "由新至舊"
   },
   "dlu6r1": {
     "message": "電子表格"
@@ -942,7 +942,7 @@
     "message": "重排"
   },
   "kHHCWR": {
-    "message": "Adjust Size"
+    "message": "調整大小"
   },
   "kIUNDX": {
     "message": "預設使用的骰子"
@@ -1086,7 +1086,7 @@
     "message": "新增"
   },
   "sNa4oH": {
-    "message": "Close Pane"
+    "message": "關閉窗格"
   },
   "sjzLbX": {
     "message": "接受"

@@ -20,6 +20,8 @@ import {
   type OnVirtualKeybroadChange,
   useVirtualKeybroadChange,
 } from '../../hooks/useVirtualKeybroadChange';
+import { useSettings } from '../../hooks/useSettings';
+import { useMutateSettings } from '../../hooks/useMutateSettings';
 
 interface Props {
   firstItemIndex: number;
@@ -34,6 +36,8 @@ interface Props {
 
 export interface VirtualListContext {
   filteredMessagesCount: number;
+  alignToBottom: boolean;
+  toggleAlignToBottom: () => void;
 }
 
 const isContinuous = (a: ChatItem | null | undefined, b: ChatItem | null | undefined): boolean => {
@@ -77,6 +81,21 @@ const useWorkaroundFirstItemIndex = (
 };
 
 export const ChatContentVirtualList: FC<Props> = (props) => {
+  const settings = useSettings();
+  const alignToBottom = settings.alignToBottom ?? true;
+  const { trigger: updateSettings } = useMutateSettings();
+  const toggleAlignToBottom = useCallback(() => {
+    const nextAlignToBottom = !alignToBottom;
+    void updateSettings(
+      { alignToBottom: nextAlignToBottom },
+      {
+        optimisticData: (current) => ({
+          ...(current ?? {}),
+          alignToBottom: nextAlignToBottom,
+        }),
+      },
+    );
+  }, [alignToBottom, updateSettings]);
   const {
     renderRangeRef,
     virtuosoRef,
@@ -127,8 +146,8 @@ export const ChatContentVirtualList: FC<Props> = (props) => {
       }}
       isScrolling={setIsScrolling}
       rangeChanged={handleRangeChange}
-      alignToBottom
-      context={{ filteredMessagesCount }}
+      alignToBottom={alignToBottom}
+      context={{ filteredMessagesCount, alignToBottom, toggleAlignToBottom }}
       components={{ Header: ChatContentHeader, ScrollSeekPlaceholder }}
       scrollSeekConfiguration={{
         enter: (velocity) => {

@@ -1,15 +1,16 @@
-import { expect, test } from 'vitest';
+import assert from 'node:assert/strict';
+import test from 'node:test';
 import type { Entity } from '@boluo/api';
 import { type Env, parse as originalParse } from './parser';
 
 const parse = (source: string, parseExpr = true, env?: Env) => {
   const { entities, text } = originalParse(source, parseExpr, env);
-  expect(text).toEqual(source);
+  assert.strictEqual(text, source);
   return entities.filter((entity) => entity.type !== 'Text');
 };
 
 test('parse emphasis', () => {
-  expect(parse('hello *world*!')).toEqual<Entity[]>([
+  const expected: Entity[] = [
     {
       start: 6,
       len: 7,
@@ -20,11 +21,13 @@ test('parse emphasis', () => {
         len: 5,
       },
     },
-  ]);
+  ];
+
+  assert.deepStrictEqual(parse('hello *world*!'), expected);
 });
 
 test('parse link', () => {
-  expect(parse('hello [world](https://masiro.me/)!')).toEqual<Entity[]>([
+  const expected: Entity[] = [
     {
       start: 6,
       len: 27,
@@ -39,11 +42,13 @@ test('parse link', () => {
         len: 5,
       },
     },
-  ]);
+  ];
+
+  assert.deepStrictEqual(parse('hello [world](https://masiro.me/)!'), expected);
 });
 
 test('parse string', () => {
-  expect(parse('hello **世界**！！！！')).toEqual<Entity[]>([
+  const expected: Entity[] = [
     {
       start: 6,
       len: 6,
@@ -54,11 +59,13 @@ test('parse string', () => {
         len: 2,
       },
     },
-  ]);
+  ];
+
+  assert.deepStrictEqual(parse('hello **世界**！！！！'), expected);
 });
 
 test('parse auto link', () => {
-  expect(parse('hello https://www.lightnovel.app/home')).toEqual<Entity[]>([
+  const expected: Entity[] = [
     {
       start: 6,
       len: 31,
@@ -73,11 +80,13 @@ test('parse auto link', () => {
         len: 31,
       },
     },
-  ]);
+  ];
+
+  assert.deepStrictEqual(parse('hello https://www.lightnovel.app/home'), expected);
 });
 
 test('parse code', () => {
-  expect(parse('hello `Uw U` world')).toEqual<Entity[]>([
+  const inlineCode: Entity[] = [
     {
       start: 6,
       len: 6,
@@ -88,13 +97,14 @@ test('parse code', () => {
         len: 4,
       },
     },
-  ]);
+  ];
 
-  expect(parse('hello `Uw\n U` world')).toEqual<Entity[]>([]);
+  assert.deepStrictEqual(parse('hello `Uw U` world'), inlineCode);
+  assert.deepStrictEqual(parse('hello `Uw\n U` world'), []);
 });
 
 test('parse code block', () => {
-  expect(parse('hello ```Uw U``` world')).toEqual<Entity[]>([
+  const expected: Entity[] = [
     {
       start: 6,
       len: 11,
@@ -105,23 +115,26 @@ test('parse code block', () => {
         len: 4,
       },
     },
-  ]);
+  ];
+
+  assert.deepStrictEqual(parse('hello ```Uw U``` world'), expected);
 });
 
 test('parse modifier', () => {
-  expect(originalParse('hello').broadcast).toBe(true);
-  expect(originalParse('.mute').broadcast).toBe(false);
-  expect(originalParse('.Mute').broadcast).toBe(false);
-  expect(originalParse('.in ').inGame).toBe(true);
-  expect(originalParse('.In ').inGame).toBe(true);
-  expect(originalParse('.Ins').inGame).toBe(null);
-  // expect(originalParse('.out').inGame).toBe(false);
-  // expect(originalParse('.OUT').inGame).toBe(false);
+  assert.strictEqual(originalParse('hello').broadcast, true);
+  assert.strictEqual(originalParse('.mute').broadcast, false);
+  assert.strictEqual(originalParse('.Mute').broadcast, false);
+  assert.strictEqual(originalParse('.in ').inGame, true);
+  assert.strictEqual(originalParse('.In ').inGame, true);
+  assert.strictEqual(originalParse('.Ins').inGame, null);
+  // assert.strictEqual(originalParse('.out').inGame, false);
+  // assert.strictEqual(originalParse('.OUT').inGame, false);
 });
 
 test('parse roll', () => {
-  expect(parse('1d20')).toEqual<Entity[]>([]);
-  expect(parse('{1d20}')).toEqual<Entity[]>([
+  assert.deepStrictEqual(parse('1d20'), []);
+
+  const singleRoll: Entity[] = [
     {
       type: 'Expr',
       start: 0,
@@ -132,9 +145,11 @@ test('parse roll', () => {
         type: 'Roll',
       },
     },
-  ]);
+  ];
 
-  expect(parse('/r {1d20}')).toEqual<Entity[]>([
+  assert.deepStrictEqual(parse('{1d20}'), singleRoll);
+
+  const prefixedRoll: Entity[] = [
     {
       type: 'Expr',
       start: 3,
@@ -145,5 +160,7 @@ test('parse roll', () => {
         type: 'Roll',
       },
     },
-  ]);
+  ];
+
+  assert.deepStrictEqual(parse('/r {1d20}'), prefixedRoll);
 });

@@ -110,3 +110,10 @@ export const Lifting: Story = {
     children: getChildren(),
   },
 };
+
+export const Highlighted: Story = {
+  args: {
+    highlighted: true,
+    children: getChildren(),
+  },
+};

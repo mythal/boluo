@@ -12,6 +12,14 @@ export type ChannelFilter = 'ALL' | 'IN_GAME' | 'OOC';
 
 export type SubPaneState = 'NONE' | 'MEMBER_LIST' | 'SEARCH';
 
+export interface ScrollToMessageRequest {
+  messageId: string;
+  archived: boolean;
+  inGame: boolean;
+  /** The position of the message, used for locating in the list */
+  pos: number;
+}
+
 export interface ChannelAtoms {
   composeAtom: WritableAtom<ComposeState, [ComposeActionUnion], void>;
   checkComposeAtom: Atom<ComposeError | null>;
@@ -28,6 +36,8 @@ export interface ChannelAtoms {
   filterAtom: PrimitiveAtom<ChannelFilter>;
   showArchivedAtom: PrimitiveAtom<boolean>;
   subPaneStateAtom: PrimitiveAtom<SubPaneState>;
+  scrollToMessageAtom: PrimitiveAtom<ScrollToMessageRequest | null>;
+  highlightMessageAtom: PrimitiveAtom<string | null>;
   defaultDiceFaceRef: React.RefObject<number>;
 }
 
@@ -92,6 +102,8 @@ export const useMakeChannelAtoms = (
         filterAtom: atomWithStorage<ChannelFilter>(`${channelId}:filter`, 'ALL'),
         showArchivedAtom: atomWithStorage(`${channelId}:show-archived`, false),
         subPaneStateAtom: atom<SubPaneState>('NONE'),
+        scrollToMessageAtom: atom<ScrollToMessageRequest | null>(null),
+        highlightMessageAtom: atom<string | null>(null),
         defaultDiceFaceRef,
       };
     }, [channelId, composeAtom]);

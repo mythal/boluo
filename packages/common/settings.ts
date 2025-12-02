@@ -6,6 +6,7 @@ export interface Settings {
   theme?: Theme;
   enterSend?: boolean;
   expandDice?: boolean;
+  alignToBottom?: boolean;
 }
 
 export const defaultSettings: Settings = {};

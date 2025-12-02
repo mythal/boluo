@@ -1,5 +1,5 @@
 import { type FC, useRef } from 'react';
-import { FormattedMessage, useIntl } from 'react-intl';
+import { FormattedMessage } from 'react-intl';
 import { useIsFullLoaded } from '../../hooks/useIsFullLoaded';
 import { ChatContentHeaderLoadMore } from './ChatContentHeaderLoadMore';
 import { type VirtualListContext } from './ChatContentVirtualList';
@@ -9,18 +9,17 @@ import { FallbackIcon } from '@boluo/ui/FallbackIcon';
 import Icon from '@boluo/ui/Icon';
 import { FilterX } from '@boluo/icons';
 import { useClearFilter } from '../../hooks/useClearFilter';
+import { ChatContentHeaderOmega } from './ChatContentHeaderOmega';
 
 interface Props {
   context?: VirtualListContext;
 }
 
 export const ChatContentHeader: FC<Props> = (props) => {
-  const intl = useIntl();
   const clear = useClearFilter();
   const count = props.context?.filteredMessagesCount ?? 0;
   const isFullLoaded = useIsFullLoaded();
   const boxRef = useRef<HTMLDivElement>(null);
-  const noMore = intl.formatMessage({ defaultMessage: 'No more messages' });
   return (
     <div
       ref={boxRef}
@@ -42,9 +41,11 @@ export const ChatContentHeader: FC<Props> = (props) => {
         </span>
       )}
       {isFullLoaded ? (
-        <span className="text-text-muted text-lg" title={noMore}>
-          Ω
-        </span>
+        <ChatContentHeaderOmega
+          showOmega={count > 32}
+          alignToBottom={props.context?.alignToBottom ?? true}
+          onToggle={props.context?.toggleAlignToBottom ?? (() => {})}
+        />
       ) : (
         <ChatContentHeaderLoadMore />
       )}

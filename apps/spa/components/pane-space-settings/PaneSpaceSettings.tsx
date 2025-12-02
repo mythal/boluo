@@ -166,12 +166,14 @@ const PublicityField: FC = () => {
   );
 };
 
+const DEFAULT_DICE_TYPE = 'd20';
+
 const FieldDefaultDice: FC = () => {
   const {
     field: { onChange, value },
   } = useController<FormSchema, 'defaultDiceType'>({
     name: 'defaultDiceType',
-    defaultValue: 'd20',
+    defaultValue: DEFAULT_DICE_TYPE,
   });
   return (
     <div>
@@ -179,7 +181,7 @@ const FieldDefaultDice: FC = () => {
         <div className="py-1">
           <FormattedMessage defaultMessage="Default Dice" />
         </div>
-        <DiceSelect value={value} onChange={onChange} />
+        <DiceSelect value={value ?? DEFAULT_DICE_TYPE} onChange={onChange} />
       </label>
     </div>
   );

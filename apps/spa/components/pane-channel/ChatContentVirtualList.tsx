@@ -4,6 +4,7 @@ import {
   type RefObject,
   useCallback,
   useLayoutEffect,
+  useMemo,
   useRef,
 } from 'react';
 import {
@@ -36,6 +37,7 @@ interface Props {
 
 export interface VirtualListContext {
   filteredMessagesCount: number;
+  showOmega: boolean;
   alignToBottom: boolean;
   toggleAlignToBottom: () => void;
 }
@@ -136,6 +138,16 @@ export const ChatContentVirtualList: FC<Props> = (props) => {
   const handleRangeChange = (range: ListRange) => {
     renderRangeRef.current = [range.startIndex - firstItemIndex, range.endIndex - firstItemIndex];
   };
+  const showOmega = chatList.length > 32;
+  const context: VirtualListContext = useMemo(
+    () => ({
+      filteredMessagesCount,
+      showOmega,
+      alignToBottom,
+      toggleAlignToBottom,
+    }),
+    [alignToBottom, filteredMessagesCount, showOmega, toggleAlignToBottom],
+  );
   return (
     <Virtuoso<ChatItem, VirtualListContext>
       className="overflow-x-hidden"
@@ -147,7 +159,7 @@ export const ChatContentVirtualList: FC<Props> = (props) => {
       isScrolling={setIsScrolling}
       rangeChanged={handleRangeChange}
       alignToBottom={alignToBottom}
-      context={{ filteredMessagesCount, alignToBottom, toggleAlignToBottom }}
+      context={context}
       components={{ Header: ChatContentHeader, ScrollSeekPlaceholder }}
       scrollSeekConfiguration={{
         enter: (velocity) => {

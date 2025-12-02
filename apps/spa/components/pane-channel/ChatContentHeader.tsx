@@ -17,7 +17,7 @@ interface Props {
 
 export const ChatContentHeader: FC<Props> = (props) => {
   const clear = useClearFilter();
-  const count = props.context?.filteredMessagesCount ?? 0;
+  const filteredCount = props.context?.filteredMessagesCount ?? 0;
   const isFullLoaded = useIsFullLoaded();
   const boxRef = useRef<HTMLDivElement>(null);
   return (
@@ -25,10 +25,13 @@ export const ChatContentHeader: FC<Props> = (props) => {
       ref={boxRef}
       className="flex h-28 flex-col items-center justify-end gap-2 py-4 select-none"
     >
-      {count !== 0 && (
+      {filteredCount !== 0 && (
         <span className="text-xs">
           <span className="text-text-muted text-xs">
-            <FormattedMessage defaultMessage="{count} filtered messages" values={{ count }} />
+            <FormattedMessage
+              defaultMessage="{count} filtered messages"
+              values={{ count: filteredCount }}
+            />
           </span>
           <ButtonInline className="ml-1" onClick={clear}>
             <span className="mr-0.5">
@@ -42,7 +45,7 @@ export const ChatContentHeader: FC<Props> = (props) => {
       )}
       {isFullLoaded ? (
         <ChatContentHeaderOmega
-          showOmega={count > 32}
+          showOmega={props.context?.showOmega ?? false}
           alignToBottom={props.context?.alignToBottom ?? true}
           onToggle={props.context?.toggleAlignToBottom ?? (() => {})}
         />

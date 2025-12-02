@@ -5,6 +5,7 @@
     "@boluo/api": "0.0.0",
     "@boluo/api-browser": "0.0.0",
     "@boluo/backend-proxy": "0.0.0",
+    "@boluo/color": "0.0.0",
     "@boluo/common": "0.0.0",
     "@boluo/icons": "0.0.0",
     "@boluo/interpreter": "0.0.0",
@@ -44,12 +45,10 @@
     "@next/eslint-plugin-next": "^16.0.0",
     "@swc/plugin-formatjs": "^6.0.0",
     "@types/eslint": "^9.6.1",
-    "@types/jest": "^30.0.0",
     "@types/node": "^24.0.12",
     "@types/react": "^19.0.12",
     "@types/react-dom": "^19.0.4",
     "eslint": "^9.23.0",
-    "jest": "^30.0.3",
     "postcss": "^8.5.3",
     "tailwindcss": "^4.1.14",
     "typescript": "^5.9.3"
@@ -59,8 +58,7 @@
     "build": "next build",
     "check-types": "tsc --noEmit",
     "dev": "next dev --turbopack --port 3200",
-    "lint": "eslint",
-    "test": "jest"
+    "lint": "eslint"
   },
   "type": "module"
 }

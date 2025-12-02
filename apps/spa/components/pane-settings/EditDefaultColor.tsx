@@ -1,13 +1,13 @@
 import { type FC, useCallback, useMemo } from 'react';
 import {
+  PALETTE_PREFIX,
+  RANDOM_PREFIX,
+  computeColors,
+  generateColor,
   palette,
   paletteKeys,
-  generateColor,
-  RANDOM_PREFIX,
-  PALETTE_PREFIX,
   parseGameColor,
-  computeColors,
-} from '../../color';
+} from '@boluo/color';
 import { type ApiError, type User } from '@boluo/api';
 import { FormattedMessage } from 'react-intl';
 import useSWRMutation from 'swr/mutation';

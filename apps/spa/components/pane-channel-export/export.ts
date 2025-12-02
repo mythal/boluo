@@ -7,11 +7,11 @@ import {
   type Message,
 } from '@boluo/api';
 import { type ExportEntity, evaluate, makeRng, nodeToText } from '@boluo/interpreter';
+import { computeColors, parseGameColor } from '@boluo/color';
 import { getMediaUrl } from '../../media';
 import { type IntlShape } from 'react-intl';
 import { get } from '@boluo/api-browser';
 import { fileNameDateTimeFormat, generateDetailDate } from '../../date';
-import { computeColors, parseGameColor } from '../../color';
 import { splitByLine } from '@boluo/utils/string';
 
 const DEFAULT_COLOR = '#000';

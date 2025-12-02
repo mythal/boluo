@@ -1,0 +1,28 @@
+{
+  "name": "@boluo/color",
+  "version": "0.0.0",
+  "dependencies": {
+    "prando": "^6.0.1"
+  },
+  "devDependencies": {
+    "@boluo/eslint-config": "0.0.0",
+    "@boluo/typescript-config": "0.0.0",
+    "@types/node": "^24.0.12",
+    "eslint": "^9.23.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.9.3"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "homepage": "https://github.com/mythal/boluo",
+  "license": "AGPL-3.0",
+  "private": true,
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "lint": "eslint . --ext .ts",
+    "test": "tsx --test src/**/*.test.ts"
+  },
+  "sideEffects": false,
+  "type": "module"
+}

@@ -10,8 +10,8 @@ import { useQueryAppSettings } from '@boluo/common/hooks/useQueryAppSettings';
 
 interface Props {
   userId: string;
-  avatar: string | File | null;
-  onChange: (avatar: string | File | null) => void;
+  avatar: string | File | null | undefined;
+  onChange: (avatar: string | File | null | undefined) => void;
 }
 
 // See: https://developer.mozilla.org/en-US/docs/Web/Media/Formats/Image_types

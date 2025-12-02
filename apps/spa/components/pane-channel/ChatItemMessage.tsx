@@ -8,7 +8,7 @@ import {
   useState,
 } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { type ParseResult } from '../../interpreter/parse-result';
+import { type ParseResult, messageToParsed } from '@boluo/interpreter';
 import { type FailTo, type MessageItem } from '../../state/channel.types';
 import { MessageBox } from '@boluo/ui/chat/MessageBox';
 import { MessageContentBox } from '@boluo/ui/chat/MessageContentBox';
@@ -18,7 +18,6 @@ import { Content } from './Content';
 import { MessageMedia } from './MessageMedia';
 import { Name } from './Name';
 import { useQueryUser } from '@boluo/common/hooks/useQueryUser';
-import { messageToParsed } from '../../interpreter/to-parsed';
 import { useIsScrolling } from '../../hooks/useIsScrolling';
 import { useReadObserve } from '../../hooks/useReadObserve';
 import { useSortable } from '@dnd-kit/sortable';
@@ -45,10 +44,11 @@ const LONG_PRESS_DURATION = 300;
 export const ChatItemMessage: FC<{
   message: MessageItem;
   className?: string;
+  highlighted?: boolean;
   isLast: boolean;
   continuous?: boolean;
   overlay?: boolean;
-}> = ({ message, continuous = false, overlay = false, isLast }) => {
+}> = ({ message, continuous = false, overlay = false, isLast, highlighted = false }) => {
   const member = useMember();
   const sendBySelf = member?.user.id === message.senderId;
   const iAmMaster = member?.channel.isMaster || false;
@@ -74,26 +74,71 @@ export const ChatItemMessage: FC<{
     ),
     [message.inGame, message.name, isMaster, sendBySelf, user],
   );
+
+  const namePlate = useMemo(() => {
+    return <MessageNamePlate continued={continuous}>{nameNode}</MessageNamePlate>;
+  }, [continuous, nameNode]);
   const parsed: ParseResult = useMemo(
     (): ParseResult => messageToParsed(message.text, message.entities),
-    [message.entities, message.text],
+    [message],
   );
   const continued = continuous || isAction;
   const draggable = sendBySelf || iAmMaster;
-  let media: ReactNode = null;
-  if (message.mediaId != null) {
-    media = <MessageMedia className="pt-2" media={message.mediaId} />;
-  } else if (message.optimisticMedia != null) {
-    media = <MessageMedia className="pt-2" media={message.optimisticMedia} />;
-  }
+  const media = useMemo(() => {
+    if (message.mediaId != null) {
+      return <MessageMedia className="pt-2" media={message.mediaId} />;
+    } else if (message.optimisticMedia != null) {
+      return <MessageMedia className="pt-2" media={message.optimisticMedia} />;
+    }
+  }, [message.mediaId, message.optimisticMedia]);
   const shouldGuardContent =
     message.whisperToUsers != null && (parsed.text !== '' || media != null);
+
+  const whisperIndicator = useMemo(() => {
+    if (message.whisperToUsers == null) return null;
+    return (
+      <span className="text-text-secondary text-sm italic">
+        <FormattedMessage defaultMessage="(Whisper)" />
+        {parsed.text === '' && (
+          <ChatItemMessageShowWhisper
+            className="ml-2"
+            messageId={message.id}
+            userIdList={message.whisperToUsers}
+            channelId={message.channelId}
+          />
+        )}
+      </span>
+    );
+  }, [message, parsed]);
+
+  const content = useMemo(() => {
+    return (
+      <ContentGuard active={shouldGuardContent}>
+        {parsed.text !== '' && (
+          <div>
+            <Content
+              source={parsed.text}
+              entities={parsed.entities}
+              isAction={isAction ?? false}
+              nameNode={nameNode}
+              isArchived={message.folded ?? false}
+              seed={message.seed}
+              onContextMenu={stopPropagation}
+              onDoubleClick={stopPropagation}
+            />
+          </div>
+        )}
+        {media}
+      </ContentGuard>
+    );
+  }, [isAction, media, message, nameNode, parsed, shouldGuardContent]);
 
   return (
     <ChatMessageContainer
       sendBySelf={sendBySelf}
       inGame={message.inGame ?? false}
       message={message}
+      highlighted={highlighted}
       draggable={draggable}
       overlay={overlay}
       isScrolling={isScrolling}
@@ -101,39 +146,10 @@ export const ChatItemMessage: FC<{
       pos={message.pos}
       failTo={message.failTo}
     >
-      <MessageNamePlate continued={continued}>{nameNode}</MessageNamePlate>
+      {namePlate}
       <MessageContentBox ref={ref} pos={message.pos} isLast={isLast}>
-        {message.whisperToUsers != null && (
-          <span className="text-text-secondary text-sm italic">
-            <FormattedMessage defaultMessage="(Whisper)" />
-            {parsed.text === '' && (
-              <ChatItemMessageShowWhisper
-                className="ml-2"
-                messageId={message.id}
-                userIdList={message.whisperToUsers}
-                channelId={message.channelId}
-              />
-            )}
-          </span>
-        )}
-
-        <ContentGuard active={shouldGuardContent}>
-          {parsed.text !== '' && (
-            <div>
-              <Content
-                source={parsed.text}
-                entities={parsed.entities}
-                isAction={isAction ?? false}
-                nameNode={nameNode}
-                isArchived={message.folded ?? false}
-                seed={message.seed}
-                onContextMenu={stopPropagation}
-                onDoubleClick={stopPropagation}
-              />
-            </div>
-          )}
-          {media}
-        </ContentGuard>
+        {whisperIndicator}
+        {content}
       </MessageContentBox>
     </ChatMessageContainer>
   );
@@ -146,6 +162,7 @@ const ChatMessageContainer: FC<{
   draggable?: boolean;
   continued?: boolean;
   overlay?: boolean;
+  highlighted?: boolean;
   sendBySelf: boolean;
   isScrolling: boolean;
   inGame: boolean;
@@ -159,6 +176,7 @@ const ChatMessageContainer: FC<{
   overlay = false,
   message,
   continued = false,
+  highlighted = false,
   isScrolling,
   sendBySelf,
   failTo,
@@ -183,7 +201,7 @@ const ChatMessageContainer: FC<{
   } = useSortable({
     id: message.id,
     data: { message },
-    disabled: !draggable || isScrolling || failTo != null,
+    disabled: !draggable || failTo != null,
   });
 
   const setRef = (node: HTMLDivElement | null) => {
@@ -294,12 +312,17 @@ const ChatMessageContainer: FC<{
       document.removeEventListener('selectionchange', handleSelectionChange);
     };
   }, [longPressStart, resetLongPressState]);
+  const timestamp = useMemo(
+    () => <MessageTime message={message} failTo={failTo} />,
+    [failTo, message],
+  );
   return (
     <ToolbarDisplayContext value={toolbarDisplayAtom}>
       <MessageBox
         inGame={inGame}
         pos={pos}
         continued={continued}
+        highlighted={highlighted}
         lifting={overlay}
         isInGameChannel={isInGameChannel}
         isDragging={isDragging}
@@ -311,7 +334,7 @@ const ChatMessageContainer: FC<{
         handlePointerLeave={handlePointerLeave}
         handlePointerCancel={handlePointerCancel}
         className={className}
-        timestamp={<MessageTime message={message} failTo={failTo} />}
+        timestamp={timestamp}
         toolbar={toolbar}
       >
         {handle}

@@ -4,6 +4,7 @@ import {
   type RefObject,
   useCallback,
   useLayoutEffect,
+  useMemo,
   useRef,
 } from 'react';
 import {
@@ -20,6 +21,8 @@ import {
   type OnVirtualKeybroadChange,
   useVirtualKeybroadChange,
 } from '../../hooks/useVirtualKeybroadChange';
+import { useSettings } from '../../hooks/useSettings';
+import { useMutateSettings } from '../../hooks/useMutateSettings';
 
 interface Props {
   firstItemIndex: number;
@@ -34,6 +37,9 @@ interface Props {
 
 export interface VirtualListContext {
   filteredMessagesCount: number;
+  showOmega: boolean;
+  alignToBottom: boolean;
+  toggleAlignToBottom: () => void;
 }
 
 const isContinuous = (a: ChatItem | null | undefined, b: ChatItem | null | undefined): boolean => {
@@ -77,6 +83,21 @@ const useWorkaroundFirstItemIndex = (
 };
 
 export const ChatContentVirtualList: FC<Props> = (props) => {
+  const settings = useSettings();
+  const alignToBottom = settings.alignToBottom ?? true;
+  const { trigger: updateSettings } = useMutateSettings();
+  const toggleAlignToBottom = useCallback(() => {
+    const nextAlignToBottom = !alignToBottom;
+    void updateSettings(
+      { alignToBottom: nextAlignToBottom },
+      {
+        optimisticData: (current) => ({
+          ...(current ?? {}),
+          alignToBottom: nextAlignToBottom,
+        }),
+      },
+    );
+  }, [alignToBottom, updateSettings]);
   const {
     renderRangeRef,
     virtuosoRef,
@@ -117,6 +138,16 @@ export const ChatContentVirtualList: FC<Props> = (props) => {
   const handleRangeChange = (range: ListRange) => {
     renderRangeRef.current = [range.startIndex - firstItemIndex, range.endIndex - firstItemIndex];
   };
+  const showOmega = chatList.length > 32;
+  const context: VirtualListContext = useMemo(
+    () => ({
+      filteredMessagesCount,
+      showOmega,
+      alignToBottom,
+      toggleAlignToBottom,
+    }),
+    [alignToBottom, filteredMessagesCount, showOmega, toggleAlignToBottom],
+  );
   return (
     <Virtuoso<ChatItem, VirtualListContext>
       className="overflow-x-hidden"
@@ -127,8 +158,8 @@ export const ChatContentVirtualList: FC<Props> = (props) => {
       }}
       isScrolling={setIsScrolling}
       rangeChanged={handleRangeChange}
-      alignToBottom
-      context={{ filteredMessagesCount }}
+      alignToBottom={alignToBottom}
+      context={context}
       components={{ Header: ChatContentHeader, ScrollSeekPlaceholder }}
       scrollSeekConfiguration={{
         enter: (velocity) => {

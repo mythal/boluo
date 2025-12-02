@@ -2,7 +2,7 @@ import { type Atom, atom, type PrimitiveAtom, type WritableAtom } from 'jotai';
 import { atomWithStorage, loadable, selectAtom } from 'jotai/utils';
 import { createContext, useContext, useMemo, useRef } from 'react';
 import { asyncParse } from '../interpreter/async-parse';
-import { composeInitialParseResult, type ParseResult } from '../interpreter/parse-result';
+import { composeInitialParseResult, type ParseResult } from '@boluo/interpreter';
 import type { ComposeActionUnion } from '../state/compose.actions';
 import { checkCompose, type ComposeError, type ComposeState } from '../state/compose.reducer';
 import { usePaneKey } from './usePaneKey';
@@ -11,6 +11,14 @@ import { composeAtomFamily } from '../state/compose.atoms';
 export type ChannelFilter = 'ALL' | 'IN_GAME' | 'OOC';
 
 export type SubPaneState = 'NONE' | 'MEMBER_LIST' | 'SEARCH';
+
+export interface ScrollToMessageRequest {
+  messageId: string;
+  archived: boolean;
+  inGame: boolean;
+  /** The position of the message, used for locating in the list */
+  pos: number;
+}
 
 export interface ChannelAtoms {
   composeAtom: WritableAtom<ComposeState, [ComposeActionUnion], void>;
@@ -28,6 +36,8 @@ export interface ChannelAtoms {
   filterAtom: PrimitiveAtom<ChannelFilter>;
   showArchivedAtom: PrimitiveAtom<boolean>;
   subPaneStateAtom: PrimitiveAtom<SubPaneState>;
+  scrollToMessageAtom: PrimitiveAtom<ScrollToMessageRequest | null>;
+  highlightMessageAtom: PrimitiveAtom<string | null>;
   defaultDiceFaceRef: React.RefObject<number>;
 }
 
@@ -92,6 +102,8 @@ export const useMakeChannelAtoms = (
         filterAtom: atomWithStorage<ChannelFilter>(`${channelId}:filter`, 'ALL'),
         showArchivedAtom: atomWithStorage(`${channelId}:show-archived`, false),
         subPaneStateAtom: atom<SubPaneState>('NONE'),
+        scrollToMessageAtom: atom<ScrollToMessageRequest | null>(null),
+        highlightMessageAtom: atom<string | null>(null),
         defaultDiceFaceRef,
       };
     }, [channelId, composeAtom]);

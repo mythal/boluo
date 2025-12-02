@@ -20,9 +20,12 @@ export const useLongPressProgress = (
     setProgress(0);
   }, [clearAnimationFrame]);
 
+  if ((!active || startAt == null) && progress > 0) {
+    resetProgress();
+  }
   useEffect(() => {
     if (!active || startAt == null) {
-      resetProgress();
+      clearAnimationFrame();
       return;
     }
     const tick = () => {
@@ -38,7 +41,7 @@ export const useLongPressProgress = (
     return () => {
       resetProgress();
     };
-  }, [active, duration, resetProgress, startAt]);
+  }, [active, clearAnimationFrame, duration, resetProgress, startAt]);
 
   return { progress, resetProgress };
 };

@@ -23,6 +23,7 @@ import { ReadObserverContext } from '../../hooks/useReadObserve';
 import { useMember } from '../../hooks/useMember';
 import { recordWarn } from '../../error';
 import { timeout } from '@boluo/utils/async';
+import { useScrollToMessage } from '../../hooks/useScrollToMessage';
 
 interface Props {
   setIsScrolling: (isScrolling: boolean) => void;
@@ -259,6 +260,12 @@ export const ChatContentView: FC<Props> = ({ setIsScrolling }) => {
     channelId,
     myId,
   );
+
+  useScrollToMessage({
+    channelId,
+    virtuosoRef,
+    chatList,
+  });
 
   const { handleDragStart, handleDragEnd, active, handleDragCancel } = useDndHandles(
     channelId,

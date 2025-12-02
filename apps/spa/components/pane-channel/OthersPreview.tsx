@@ -1,5 +1,5 @@
 import { type FC, useDeferredValue, useMemo } from 'react';
-import { emptyParseResult, type ParseResult } from '../../interpreter/parse-result';
+import { emptyParseResult, type ParseResult } from '@boluo/interpreter';
 import { type PreviewItem } from '../../state/channel.types';
 import { Content } from './Content';
 import { Name } from './Name';

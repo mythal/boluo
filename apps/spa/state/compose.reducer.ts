@@ -1,5 +1,5 @@
 import { makeId } from '@boluo/utils/id';
-import { type Modifier, parseModifiers } from '../interpreter/parser';
+import { type Modifier, parseModifiers } from '@boluo/interpreter';
 import { type MediaError, validateMedia } from '../media';
 import { type ComposeAction, type ComposeActionUnion } from './compose.actions';
 import { type PreviewEdit } from '@boluo/api';

@@ -1,6 +1,6 @@
 import Prando from 'prando';
 import { type IntlShape } from 'react-intl';
-import { by, byReverse } from '../sort';
+import { by, byReverse } from '@boluo/sort';
 import { type CocRoll, type EvaluatedExprNode, type ExprNode, type FateResult } from '@boluo/api';
 
 export const TOO_MUCH_LAYER = 'TOO_MUCH_LAYER';

@@ -15,7 +15,7 @@
     "message": "成員"
   },
   "+tsDQE": {
-    "message": "Search keyword"
+    "message": "搜尋關鍵字"
   },
   "/+v5jy": {
     "message": "{seconds} 秒前"
@@ -73,6 +73,9 @@
   },
   "39AHJm": {
     "message": "註冊"
+  },
+  "3ImDYr": {
+    "message": "Include Archived"
   },
   "3VG8rb": {
     "message": "發生未知錯誤"
@@ -171,7 +174,7 @@
     "message": "離線"
   },
   "7VFLWn": {
-    "message": "Search messages"
+    "message": "搜尋訊息"
   },
   "7ifIhk": {
     "message": "儲存主題"
@@ -220,6 +223,9 @@
   },
   "A3J8Sf": {
     "message": "Waiting {countdown}s"
+  },
+  "ANFxqj": {
+    "message": "In-Game Only"
   },
   "AVI/0j": {
     "message": "拆分"
@@ -300,7 +306,7 @@
     "message": "再試一次"
   },
   "FqI37D": {
-    "message": "Oldest First"
+    "message": "由舊至新"
   },
   "GEhexi": {
     "message": "在暗色模式"
@@ -328,9 +334,6 @@
   },
   "HSaR2M": {
     "message": "是否為秘密頻道？"
-  },
-  "HTmh5Q": {
-    "message": "目標"
   },
   "HlQPHQ": {
     "message": "加入位面"
@@ -450,7 +453,7 @@
     "message": "Long press to vertical split"
   },
   "MWO2zy": {
-    "message": "出了點問題。"
+    "message": "Something going wrong."
   },
   "MgRaWS": {
     "message": "頻道名不可為空。"
@@ -477,7 +480,7 @@
     "message": "請驗證您的郵箱以登入論壇。"
   },
   "NNQzoi": {
-    "message": "Searching..."
+    "message": "檢索中…"
   },
   "NXI/XL": {
     "message": "自動"
@@ -525,7 +528,7 @@
     "message": "在換行處將訊息拆分成多條"
   },
   "PpzpBO": {
-    "message": "Click to view"
+    "message": "點擊查看"
   },
   "PwaN2o": {
     "message": "歡迎"
@@ -807,7 +810,7 @@
     "message": "我在頻道中的角色名（可選）"
   },
   "dZYazP": {
-    "message": "Newest First"
+    "message": "由新至舊"
   },
   "dlu6r1": {
     "message": "電子表格"
@@ -939,7 +942,7 @@
     "message": "重排"
   },
   "kHHCWR": {
-    "message": "Adjust Size"
+    "message": "調整大小"
   },
   "kIUNDX": {
     "message": "預設使用的骰子"
@@ -949,6 +952,9 @@
   },
   "kh4wt0": {
     "message": "切換側邊欄"
+  },
+  "l+qC1C": {
+    "message": "Include Names"
   },
   "lJePcp": {
     "message": "失敗"
@@ -1080,7 +1086,7 @@
     "message": "新增"
   },
   "sNa4oH": {
-    "message": "Close Pane"
+    "message": "關閉窗格"
   },
   "sjzLbX": {
     "message": "接受"

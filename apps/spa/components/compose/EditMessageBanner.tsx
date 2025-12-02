@@ -7,7 +7,7 @@ import { useChannelId } from '../../hooks/useChannelId';
 import { type Message, type User } from '@boluo/api';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { Content } from '../pane-channel/Content';
-import { messageToParsed } from '../../interpreter/to-parsed';
+import { messageToParsed } from '@boluo/interpreter';
 import { Name } from '../pane-channel/Name';
 import { InComposeButton } from './InComposeButton';
 import { Edit, X } from '@boluo/icons';

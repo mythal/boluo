@@ -1,5 +1,5 @@
 import { recordError } from '../error';
-import { type Env, parse } from './parser';
+import { type Env, parse } from '@boluo/interpreter';
 
 export interface ParserArguments {
   source: string;

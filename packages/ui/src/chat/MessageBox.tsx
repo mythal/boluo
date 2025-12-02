@@ -4,6 +4,7 @@ interface Props {
   inGame?: boolean;
   pos?: number;
   continued?: boolean;
+  highlighted?: boolean;
   lifting?: boolean;
   disableHoverEffect?: boolean;
   handleDoubleClick?: (e: React.MouseEvent<HTMLDivElement>) => void;
@@ -26,6 +27,7 @@ export function MessageBox({
   inGame = false,
   pos,
   continued = false,
+  highlighted = false,
   lifting = false,
   disableHoverEffect = false,
   handleContextMenu,
@@ -54,6 +56,7 @@ export function MessageBox({
         'grid-cols-[1.5rem_minmax(0,1fr)]',
         '@2xl:grid-cols-[1.5rem_12rem_minmax(0,1fr)]',
         !continued && 'grid-rows-[auto_auto] @2xl:grid-rows-1',
+        highlighted && 'shadow-[0_0_0_2px_var(--color-brand-strong)_inset]',
         inGame
           ? lifting
             ? 'bg-message-in-game-bg-hover'

@@ -14,9 +14,10 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import { Button } from '@boluo/ui/Button';
 import { TextInput } from '@boluo/ui/TextInput';
 import { type SearchOptions, useSearchChannelMessages } from '../../hooks/useSearchChannelMessages';
-import { Spinner } from '@boluo/ui/Spinner';
 import { LoadingText } from '@boluo/ui/LoadingText';
 import Icon from '@boluo/ui/Icon';
+import { useChannelAtoms } from '../../hooks/useChannelAtoms';
+import { useSetAtom } from 'jotai';
 
 interface Props {
   channelId: string;
@@ -40,6 +41,8 @@ const emptyPages: SearchMessagesResult[] = [];
 
 export const ChannelSubPaneSearch: FC<Props> = ({ channelId, onClose }) => {
   const intl = useIntl();
+  const { scrollToMessageAtom } = useChannelAtoms();
+  const setScrollToMessage = useSetAtom(scrollToMessageAtom);
   const [keyword, setKeyword] = useState('');
   const [activeKeyword, setActiveKeyword] = useState('');
   const [direction, setDirection] = useState<SearchDirection>('desc');
@@ -149,6 +152,18 @@ export const ChannelSubPaneSearch: FC<Props> = ({ channelId, onClose }) => {
       window.clearTimeout(loadMoreTimeoutRef.current);
     };
   }, []);
+
+  const handleResultClick = useCallback(
+    (message: Message) => {
+      setScrollToMessage({
+        messageId: message.id,
+        pos: message.pos,
+        archived: message.folded ?? false,
+        inGame: message.inGame ?? false,
+      });
+    },
+    [setScrollToMessage],
+  );
 
   const error = fetchError ?? null;
 
@@ -267,8 +282,7 @@ export const ChannelSubPaneSearch: FC<Props> = ({ channelId, onClose }) => {
         )}
         <div ref={listRef} className="flex-1 overflow-y-auto">
           {isSearching && results.length === 0 && (
-            <div className="flex items-center gap-2 text-sm">
-              <Spinner />
+            <div className="flex items-center gap-2 px-3 text-sm">
               <FormattedMessage defaultMessage="Searching..." />
             </div>
           )}
@@ -278,9 +292,11 @@ export const ChannelSubPaneSearch: FC<Props> = ({ channelId, onClose }) => {
             </div>
           )}
           {results.map((message) => (
-            <div
+            <button
+              type="button"
               key={message.id}
-              className="border-border-subtle hover:bg-surface-interactive-hover px-3 py-2"
+              onClick={() => handleResultClick(message)}
+              className="border-border-subtle hover:bg-surface-interactive-hover w-full cursor-pointer px-3 py-2 text-left"
             >
               <div className="text-text-muted flex items-center justify-between gap-2 text-xs">
                 <span className="font-semibold">{message.name || message.senderId}</span>
@@ -289,7 +305,7 @@ export const ChannelSubPaneSearch: FC<Props> = ({ channelId, onClose }) => {
               <div className="mt-1 text-sm leading-snug wrap-break-word whitespace-pre-wrap">
                 {message.text}
               </div>
-            </div>
+            </button>
           ))}
           <div
             ref={loadMoreRef}

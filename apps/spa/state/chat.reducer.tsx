@@ -1,6 +1,6 @@
 import type { EventId } from '@boluo/api';
 import type { Reducer } from 'react';
-import { eventIdCompare } from '../sort';
+import { eventIdCompare } from '@boluo/sort';
 import type { ChannelState } from './channel.reducer';
 import { channelReducer, makeInitialChannelState } from './channel.reducer';
 import { type ChatAction, type ChatActionUnion, updateToChatAction } from './chat.actions';

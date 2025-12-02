@@ -15,7 +15,7 @@
     "message": "メンバー"
   },
   "+tsDQE": {
-    "message": "Search keyword"
+    "message": "検索キーワード"
   },
   "/+v5jy": {
     "message": "{seconds} 秒前"
@@ -74,6 +74,9 @@
   "39AHJm": {
     "message": "新規登録"
   },
+  "3ImDYr": {
+    "message": "アーカイブ済を含む"
+  },
   "3VG8rb": {
     "message": "不明なエラーが発生しました"
   },
@@ -126,7 +129,7 @@
     "message": "パスワード"
   },
   "5zHF5n": {
-    "message": "Open New Pane"
+    "message": "新しいペインを開く"
   },
   "60KMrS": {
     "message": "デフォルトとして"
@@ -171,7 +174,7 @@
     "message": "オフライン"
   },
   "7VFLWn": {
-    "message": "Search messages"
+    "message": "メッセージを検索"
   },
   "7ifIhk": {
     "message": "トピックの保存"
@@ -219,7 +222,10 @@
     "message": "アバターの変更"
   },
   "A3J8Sf": {
-    "message": "Waiting {countdown}s"
+    "message": "{countdown}秒待機"
+  },
+  "ANFxqj": {
+    "message": "ゲーム内のみ"
   },
   "AVI/0j": {
     "message": "分割"
@@ -291,7 +297,7 @@
     "message": "直近の {day} 日"
   },
   "FGo9HD": {
-    "message": "My Spaces"
+    "message": "自分のスペース"
   },
   "FN6jdd": {
     "message": "こんにちは、{username}！"
@@ -300,7 +306,7 @@
     "message": "リトライ"
   },
   "FqI37D": {
-    "message": "Oldest First"
+    "message": "古い順"
   },
   "GEhexi": {
     "message": "ダークモード中"
@@ -328,9 +334,6 @@
   },
   "HSaR2M": {
     "message": "これは、秘密のチャンネルですか?"
-  },
-  "HTmh5Q": {
-    "message": "目標"
   },
   "HlQPHQ": {
     "message": "次元に参加する"
@@ -420,7 +423,7 @@
     "message": "あなたのメールは確認されていません。{verifyEmail}してください。"
   },
   "L/Ows0": {
-    "message": "Scanned {scanned}, matched {matched}"
+    "message": "スキャンされた {scanned}は、 {matched} に一致"
   },
   "L01rMU": {
     "message": "デフォルトでは、メンバーは自分として話す。"
@@ -441,13 +444,13 @@
     "message": "{a} と {b} は入力しています…"
   },
   "LtEjKk": {
-    "message": "Focus Next"
+    "message": "次にフォーカス"
   },
   "Lzb4s2": {
     "message": "移動失敗"
   },
   "M8AFCu": {
-    "message": "Long press to vertical split"
+    "message": "長押しで垂直分割する"
   },
   "MWO2zy": {
     "message": "何か問題が発生しました。"
@@ -477,7 +480,7 @@
     "message": "フォーラムにログインするにはメールを確認してください。"
   },
   "NNQzoi": {
-    "message": "Searching..."
+    "message": "検索中..."
   },
   "NXI/XL": {
     "message": "自動"
@@ -525,7 +528,7 @@
     "message": "改行時にメッセージを複数に分割する"
   },
   "PpzpBO": {
-    "message": "Click to view"
+    "message": "クリックして確認"
   },
   "PwaN2o": {
     "message": "ようこそ"
@@ -552,7 +555,7 @@
     "message": "このメールアドレスは登録されていません"
   },
   "QudmKz": {
-    "message": "Switch Connection"
+    "message": "接続の切り替え"
   },
   "R59CS8": {
     "message": "アイコンを削除"
@@ -564,7 +567,7 @@
     "message": "ユーザー名とパスワードが一致しません"
   },
   "Rtr4mH": {
-    "message": "Drag to Move Column"
+    "message": "ドラッグして列を移動"
   },
   "RvUa7+": {
     "message": "名前なし"
@@ -738,7 +741,7 @@
     "message": "権限がありません"
   },
   "ZsZAvL": {
-    "message": "Drag to Move Child Pane"
+    "message": "ドラッグして子ペインを移動"
   },
   "ZvI2/H": {
     "message": "指を離して読み込む"
@@ -807,7 +810,7 @@
     "message": "チャンネル内の自分のキャラクター名 (オプション)"
   },
   "dZYazP": {
-    "message": "Newest First"
+    "message": "新しい順"
   },
   "dlu6r1": {
     "message": "スプレッドシート"
@@ -912,7 +915,7 @@
     "message": "招待リンク"
   },
   "iU6/rV": {
-    "message": "Move Pane"
+    "message": "ペインを移動"
   },
   "itPgxd": {
     "message": "プロフィール"
@@ -939,7 +942,7 @@
     "message": "並べ替え"
   },
   "kHHCWR": {
-    "message": "Adjust Size"
+    "message": "サイズを調整"
   },
   "kIUNDX": {
     "message": "デフォルトのサイコロ"
@@ -949,6 +952,9 @@
   },
   "kh4wt0": {
     "message": "サイドバーを切り替える"
+  },
+  "l+qC1C": {
+    "message": "名前を含む"
   },
   "lJePcp": {
     "message": "失敗"
@@ -1068,7 +1074,7 @@
     "message": "メールを確認中..."
   },
   "ruZw+F": {
-    "message": "All searched"
+    "message": "すべて検索済み"
   },
   "s+ixvA": {
     "message": "「 {spaceName}」を破壊します"
@@ -1080,7 +1086,7 @@
     "message": "新規"
   },
   "sNa4oH": {
-    "message": "Close Pane"
+    "message": "ペインを閉じる"
   },
   "sjzLbX": {
     "message": "承認する"
@@ -1137,7 +1143,7 @@
     "message": "非公開"
   },
   "vnAZKt": {
-    "message": "No messages matched."
+    "message": "一致するメッセージはありません。"
   },
   "vnPoZm": {
     "message": "あなたの冒険を語る"
@@ -1215,6 +1221,6 @@
     "message": "全て"
   },
   "zqHxkG": {
-    "message": "Failed to search messages"
+    "message": "メッセージの検索に失敗しました"
   }
 }

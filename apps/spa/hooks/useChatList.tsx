@@ -1,7 +1,7 @@
 import { useAtomValue, useStore } from 'jotai';
 import { selectAtom } from 'jotai/utils';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { binarySearchPos } from '../sort';
+import { binarySearchPos } from '@boluo/sort';
 import { findMessage, type OptimisticItem, type ChannelState } from '../state/channel.reducer';
 import { type ChatItem, type PreviewItem } from '../state/channel.types';
 import { chatAtom } from '../state/chat.atoms';

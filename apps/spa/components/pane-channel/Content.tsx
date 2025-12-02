@@ -1,7 +1,7 @@
 import clsx from 'clsx';
 import { memo, type ReactNode, useMemo, type MouseEventHandler } from 'react';
 import type { Entity, EvaluatedExprNode, Entities, EvaluatedExpr } from '@boluo/api';
-import { evaluate, makeRng } from '../../interpreter/eval';
+import { evaluate, makeRng } from '@boluo/interpreter';
 import { EntityExpr } from '@boluo/ui/entities/EntityExpr';
 import { EntityEvaluatedExpr } from '@boluo/ui/entities/EntityEvaluatedExpr';
 import { ZERO_WIDTH_SPACE } from '../../const';

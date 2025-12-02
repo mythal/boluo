@@ -44,10 +44,11 @@ const LONG_PRESS_DURATION = 300;
 export const ChatItemMessage: FC<{
   message: MessageItem;
   className?: string;
+  highlighted?: boolean;
   isLast: boolean;
   continuous?: boolean;
   overlay?: boolean;
-}> = ({ message, continuous = false, overlay = false, isLast }) => {
+}> = ({ message, continuous = false, overlay = false, isLast, highlighted = false }) => {
   const member = useMember();
   const sendBySelf = member?.user.id === message.senderId;
   const iAmMaster = member?.channel.isMaster || false;
@@ -93,6 +94,7 @@ export const ChatItemMessage: FC<{
       sendBySelf={sendBySelf}
       inGame={message.inGame ?? false}
       message={message}
+      highlighted={highlighted}
       draggable={draggable}
       overlay={overlay}
       isScrolling={isScrolling}
@@ -145,6 +147,7 @@ const ChatMessageContainer: FC<{
   draggable?: boolean;
   continued?: boolean;
   overlay?: boolean;
+  highlighted?: boolean;
   sendBySelf: boolean;
   isScrolling: boolean;
   inGame: boolean;
@@ -158,6 +161,7 @@ const ChatMessageContainer: FC<{
   overlay = false,
   message,
   continued = false,
+  highlighted = false,
   isScrolling,
   sendBySelf,
   failTo,
@@ -299,6 +303,7 @@ const ChatMessageContainer: FC<{
         inGame={inGame}
         pos={pos}
         continued={continued}
+        highlighted={highlighted}
         lifting={overlay}
         isInGameChannel={isInGameChannel}
         isDragging={isDragging}

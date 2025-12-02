@@ -1,18 +1,33 @@
 import { SidebarButton } from '@boluo/ui/chat/SidebarButton';
-import { type FC, useMemo } from 'react';
+import { type FC, useEffect, useMemo, useState } from 'react';
 import { isSidebarExpandedAtom, sidebarContentStateAtom } from '../../state/ui.atoms';
-import { useAtom, useAtomValue } from 'jotai';
-import { chatAtom, connectionStateAtom } from '../../state/chat.atoms';
-import { selectAtom } from 'jotai/utils';
+import { atom, useAtom, useStore } from 'jotai';
+import { connectionStateAtom } from '../../state/chat.atoms';
+import { routeAtom } from '../../state/view.atoms';
 
 export const SidebarButtonController: FC = () => {
+  const store = useStore();
   const [isExpanded, setExpanded] = useAtom(isSidebarExpandedAtom);
-  const inSpace = useAtomValue(
-    useMemo(() => selectAtom(chatAtom, (chat) => chat.context.spaceId != ''), []),
-  );
-  const connectionState = useAtomValue(connectionStateAtom);
   const [sidebarState, setSidebarState] = useAtom(sidebarContentStateAtom);
-  const disconnected = inSpace && connectionState.type !== 'CONNECTED';
+  const [disconnected, setDisconnected] = useState(false);
+  const disconnectedAtom = useMemo(() => {
+    return atom((read) => {
+      const route = read(routeAtom);
+      const connection = read(connectionStateAtom);
+      if (route.type === 'SPACE') {
+        if (connection.type !== 'CONNECTED') {
+          return true;
+        }
+      }
+      return false;
+    });
+  }, []);
+
+  useEffect(() => {
+    return store.sub(disconnectedAtom, () => {
+      setDisconnected(store.get(disconnectedAtom));
+    });
+  }, [store, disconnectedAtom]);
   const switchToConnections = useMemo(() => {
     if (sidebarState === 'CONNECTIONS') {
       return undefined;

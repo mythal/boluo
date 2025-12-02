@@ -74,6 +74,9 @@
   "39AHJm": {
     "message": "注册"
   },
+  "3ImDYr": {
+    "message": "包括已归档"
+  },
   "3VG8rb": {
     "message": "发生未知错误"
   },
@@ -221,6 +224,9 @@
   "A3J8Sf": {
     "message": "等{countdown}秒"
   },
+  "ANFxqj": {
+    "message": "只要游戏内"
+  },
   "AVI/0j": {
     "message": "拆分"
   },
@@ -328,9 +334,6 @@
   },
   "HSaR2M": {
     "message": "是否为秘密频道？"
-  },
-  "HTmh5Q": {
-    "message": "目标"
   },
   "HlQPHQ": {
     "message": "加入位面"
@@ -949,6 +952,9 @@
   },
   "kh4wt0": {
     "message": "切换侧边栏"
+  },
+  "l+qC1C": {
+    "message": "包括名字"
   },
   "lJePcp": {
     "message": "失败"

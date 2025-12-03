@@ -1,6 +1,6 @@
 import clsx from 'clsx';
 import { ChevronDown, TriangleAlert } from '@boluo/icons';
-import { useEffect, useMemo, useState, type FC, type ReactNode } from 'react';
+import { useEffect, useMemo, type FC, type ReactNode } from 'react';
 import { FormattedMessage } from 'react-intl';
 import {
   FloatingPortal,
@@ -20,7 +20,7 @@ import Icon from '@boluo/ui/Icon';
 import { Delay } from '@boluo/ui/Delay';
 import { FallbackIcon } from '@boluo/ui/FallbackIcon';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
-import { useAtomValue } from 'jotai';
+import { atom, useAtom, useAtomValue, useStore } from 'jotai';
 import { useVirtualKeybroadChange } from '../../hooks/useVirtualKeybroadChange';
 
 interface Props {
@@ -34,14 +34,28 @@ interface Props {
 }
 
 export const NameEditable: FC<Props> = ({ name, inGame, color, member }) => {
-  const { composeFocusedAtom } = useChannelAtoms();
-  const [isOpen, setIsOpen] = useState(false);
+  const store = useStore();
+  const { composeFocusedAtom, selfPreviewNamePanelOpenAtom, isComposeEmptyAtom } =
+    useChannelAtoms();
+  const [isOpen, setIsOpen] = useAtom(selfPreviewNamePanelOpenAtom);
   const isEmptyName = name === '' || name == null;
-  const composeFocused = useAtomValue(composeFocusedAtom);
-  const forceOpen = inGame && isEmptyName && composeFocused;
+  const shouldForceOpenAtom = useMemo(
+    () =>
+      atom((get) => {
+        const isComposeEmpty = get(isComposeEmptyAtom);
+        const composeFocused = get(composeFocusedAtom);
+        return inGame && isEmptyName && !isComposeEmpty && composeFocused;
+      }),
+    [composeFocusedAtom, inGame, isComposeEmptyAtom, isEmptyName],
+  );
+
   useEffect(() => {
-    if (forceOpen) setIsOpen(true);
-  }, [forceOpen]);
+    return store.sub(shouldForceOpenAtom, () => {
+      const shouldForceOpen = store.get(shouldForceOpenAtom);
+      if (shouldForceOpen) setIsOpen(true);
+    });
+  }, [store, shouldForceOpenAtom, setIsOpen]);
+
   const icon: ReactNode = useMemo(() => {
     return (
       <Icon

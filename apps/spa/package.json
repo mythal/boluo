@@ -56,7 +56,7 @@
   "private": true,
   "scripts": {
     "build": "next build",
-    "check-types": "tsc --noEmit",
+    "check": "tsc --noEmit",
     "dev": "next dev --turbopack --port 3200",
     "lint": "eslint"
   },

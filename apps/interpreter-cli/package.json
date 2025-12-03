@@ -11,7 +11,7 @@
   },
   "private": true,
   "scripts": {
-    "check-types": "tsc --noEmit",
+    "check": "tsc --noEmit",
     "start": "tsx src/index.ts"
   },
   "type": "module"

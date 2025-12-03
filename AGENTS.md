@@ -29,7 +29,7 @@ You can use:
 - Frontends via turbo:
   - Dev: `npm run dev`, or `npm run dev:site` / `npm run dev:spa`.
   - Build: `npm run build`, or `build:site` / `build:spa` / `build:legacy`.
-  - Lint/format/types: `npm run lint`, `npm run format`, `npm run check-types`.
+  - Lint/format/types: `npm run lint`, `npm run format`, `npm run check`.
   - Tests: `npm run test` for frontend and `cargo nextest run` for backend.
 
 ## Testing Guidelines

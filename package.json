@@ -19,7 +19,7 @@
     "build:site": "turbo build --filter=site",
     "build:spa": "turbo build --filter=spa",
     "build:storybook": "turbo build --filter=boluo-storybook",
-    "check-types": "turbo run check-types",
+    "check": "turbo run check --ui=stream --log-prefix=none --continue=always",
     "dev": "turbo run dev",
     "dev:legacy": "turbo run dev --filter=legacy",
     "dev:site": "turbo run dev --filter=site",

@@ -19,7 +19,7 @@
   "private": true,
   "scripts": {
     "build": "tsc --project tsconfig.json",
-    "check-types": "tsc --noEmit",
+    "check": "tsc --noEmit",
     "lint": "eslint . --ext .ts,.tsx"
   },
   "sideEffects": false,

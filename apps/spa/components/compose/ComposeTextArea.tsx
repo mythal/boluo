@@ -73,11 +73,9 @@ const useReflectRangeChange = (
 const MAX_FIND_LENGTH = 64;
 
 export const ComposeTextArea: FC<Props> = ({ parsed, enterSend, send, myId }) => {
-  const { composeAtom, parsedAtom, composeFocusedAtom, hideSelfPreviewTimeoutAtom } =
-    useChannelAtoms();
+  const { composeAtom, parsedAtom, composeFocusedAtom } = useChannelAtoms();
   const defaultInGame = useDefaultInGame();
   const fixHeight = useAtomValue(composeFocusedAtom) && window.innerWidth < screens.md;
-  const setSelfPreviewLock = useSetAtom(hideSelfPreviewTimeoutAtom);
   const ref = useRef<RichTextareaHandle | null>(null);
   const channelId = useChannelId();
   const isCompositionRef = useRef(false);
@@ -210,7 +208,6 @@ export const ComposeTextArea: FC<Props> = ({ parsed, enterSend, send, myId }) =>
       onChange={handleChange}
       onFocus={() => dispatch(focusAction)}
       onBlur={() => dispatch(blurAction)}
-      onClick={() => setSelfPreviewLock(Date.now() + 1000 * 6)}
       onPasteCapture={handlePaste}
       onCompositionStart={handleCompositionStart}
       onCompositionEnd={handleCompositionEnd}

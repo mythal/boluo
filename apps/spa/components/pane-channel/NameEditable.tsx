@@ -20,7 +20,7 @@ import Icon from '@boluo/ui/Icon';
 import { Delay } from '@boluo/ui/Delay';
 import { FallbackIcon } from '@boluo/ui/FallbackIcon';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
-import { useAtomValue, useSetAtom } from 'jotai';
+import { useAtomValue } from 'jotai';
 import { useVirtualKeybroadChange } from '../../hooks/useVirtualKeybroadChange';
 
 interface Props {
@@ -34,8 +34,7 @@ interface Props {
 }
 
 export const NameEditable: FC<Props> = ({ name, inGame, color, member }) => {
-  const { composeFocusedAtom, hideSelfPreviewTimeoutAtom } = useChannelAtoms();
-  const setSelfPreviewLock = useSetAtom(hideSelfPreviewTimeoutAtom);
+  const { composeFocusedAtom } = useChannelAtoms();
   const [isOpen, setIsOpen] = useState(false);
   const isEmptyName = name === '' || name == null;
   const composeFocused = useAtomValue(composeFocusedAtom);
@@ -43,14 +42,6 @@ export const NameEditable: FC<Props> = ({ name, inGame, color, member }) => {
   useEffect(() => {
     if (forceOpen) setIsOpen(true);
   }, [forceOpen]);
-  useEffect(() => {
-    const now = Date.now();
-    if (isOpen && !forceOpen) {
-      setSelfPreviewLock((timestamp) => Math.max(timestamp, now + 1000 * 24));
-    } else if (!isOpen) {
-      setSelfPreviewLock(now + 1000 * 6);
-    }
-  }, [forceOpen, isOpen, setSelfPreviewLock]);
   const icon: ReactNode = useMemo(() => {
     return (
       <Icon

@@ -41,12 +41,14 @@ export const useScrollToMessage = ({
 
   const isLoadingRef = useRef(false);
   const highlightTimeoutRef = useRef<number | undefined>(undefined);
+  const retryAttemptsRef = useRef(0);
+  const retryTimeoutRef = useRef<number[]>([]);
 
   // Clear filters if target message is outside current filters
   useEffect(() => {
     if (scrollToMessage == null) return;
 
-    const inGame = scrollToMessage.inGame;
+    const { inGame, archived } = scrollToMessage;
     setFilter((prevFilter) => {
       if (
         prevFilter === 'ALL' ||
@@ -55,9 +57,9 @@ export const useScrollToMessage = ({
       ) {
         return prevFilter;
       }
-      return inGame ? 'IN_GAME' : 'OOC';
+      return 'ALL';
     });
-    if (!scrollToMessage.archived) setShowArchived(true);
+    if (archived) setShowArchived(true);
   }, [scrollToMessage, setFilter, setShowArchived]);
 
   // Use ref to avoid stale closure in the effect
@@ -69,6 +71,25 @@ export const useScrollToMessage = ({
     if (scrollToMessage == null) return;
 
     const { messageId, pos } = scrollToMessage;
+    retryAttemptsRef.current = 0;
+    const clearRetryTimeouts = () => {
+      retryTimeoutRef.current.forEach((timeoutId) => window.clearTimeout(timeoutId));
+      retryTimeoutRef.current = [];
+    };
+    clearRetryTimeouts();
+
+    const scheduleRetry = (delay: number, replace = true) => {
+      if (replace) {
+        clearRetryTimeouts();
+      }
+      const timeoutId = window.setTimeout(() => {
+        const currentScrollRequest = store.get(scrollToMessageAtom);
+        if (currentScrollRequest?.messageId === messageId) {
+          tryScrollToMessage();
+        }
+      }, delay);
+      retryTimeoutRef.current.push(timeoutId);
+    };
 
     const tryScrollToMessage = () => {
       // Find message in current chat list (use ref to get latest value)
@@ -87,7 +108,8 @@ export const useScrollToMessage = ({
 
       // Find the message in chatList
       // Skip find if "pos" is small than first item pos
-      if (pos >= currentChatList[0]!.pos) {
+      const topPos = currentChatList[0]!.pos;
+      if (pos >= topPos) {
         const chatListIndex = currentChatList.findIndex(
           (item) => item.type === 'MESSAGE' && item.id === messageId,
         );
@@ -109,23 +131,29 @@ export const useScrollToMessage = ({
           // Clear the scroll request
           setScrollToMessage(null);
           isLoadingRef.current = false;
+          retryAttemptsRef.current = 0;
+          clearRetryTimeouts();
           return;
-        } else {
-          // Message not in chatList, check if it's in channel state (loaded but filtered?)
-          const findResult = findMessage(channelState.messages, messageId, pos);
-
-          if (findResult != null) {
-            // Message is loaded but not visible in chatList yet
-            // This might happen if filters are still being applied
-            // Wait for next render and try again
-            console.warn('Message loaded but not in chatList yet, retrying:', messageId);
-            window.setTimeout(tryScrollToMessage, 50);
-            return;
-          }
         }
+
+        if (retryAttemptsRef.current < 2) {
+          const retryDelay = retryAttemptsRef.current === 0 ? 50 : 500;
+          retryAttemptsRef.current += 1;
+          scheduleRetry(retryDelay);
+          return;
+        }
+
+        setBanner({
+          level: 'WARNING',
+          content: 'The message you are looking for is no longer available.',
+        });
+        setScrollToMessage(null);
+        isLoadingRef.current = false;
+        retryAttemptsRef.current = 0;
+        clearRetryTimeouts();
+        return;
       }
 
-      // Message not loaded, need to load more
       if (channelState.fullLoaded) {
         setBanner({
           level: 'WARNING',
@@ -136,7 +164,7 @@ export const useScrollToMessage = ({
         return;
       }
 
-      // Load more messages
+      // Message not loaded, need to load more
       loadMoreMessages();
     };
 
@@ -178,12 +206,8 @@ export const useScrollToMessage = ({
         isLoadingRef.current = false;
 
         // Schedule next attempt after state updates
-        window.setTimeout(() => {
-          const currentScrollRequest = store.get(scrollToMessageAtom);
-          if (currentScrollRequest?.messageId === messageId) {
-            tryScrollToMessage();
-          }
-        }, 50);
+        scheduleRetry(50);
+        scheduleRetry(500, false);
       } catch (error) {
         setBanner({
           level: 'ERROR',
@@ -195,6 +219,10 @@ export const useScrollToMessage = ({
     };
 
     tryScrollToMessage();
+
+    return () => {
+      clearRetryTimeouts();
+    };
   }, [
     channelId,
     dispatch,

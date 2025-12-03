@@ -257,10 +257,12 @@ const handleToggleBroadcast = (
 
 const handleToggleWhisper = (
   state: ComposeState,
-  { payload: { username } }: ComposeAction<'toggleWhisper'>,
+  { payload: { usernames } }: ComposeAction<'toggleWhisper'>,
 ): ComposeState => {
   const { whisper } = parseModifiers(state.source);
-  const command = username != null ? `.h(@${username})` : '.h';
+  const targets = usernames.filter((name) => name.trim() !== '');
+  const mentions = targets.map((name) => `@${name}`).join(' ');
+  const command = mentions === '' ? '.h ' : `.h(${mentions}) `;
   return toggleModifier(state, whisper, command);
 };
 

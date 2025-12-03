@@ -134,7 +134,8 @@ function channelSliceEq(a: ChannelSlice, b: ChannelSlice) {
 
 export const useChatList = (channelId: string, myId?: string): UseChatListReturn => {
   const store = useStore();
-  const { composeAtom, filterAtom, showArchivedAtom, parsedAtom } = useChannelAtoms();
+  const { composeAtom, filterAtom, showArchivedAtom, parsedAtom, selfPreviewVisibleAtom } =
+    useChannelAtoms();
 
   const { filterType, showArchived, isFiltersChanged } = useFilters(filterAtom, showArchivedAtom);
 
@@ -183,6 +184,7 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
   const { fullLoaded, messages, previewMap, scheduledGcLowerPos, optimisticMessageMap } =
     useAtomValue(channelSliceAtom);
   const firstItemIndex = useRef(START_INDEX); // can't be negative
+  const selfPreviewVisible = useAtomValue(selfPreviewVisibleAtom);
   const { chatList, filteredMessagesCount } = useMemo((): Pick<
     UseChatListReturn,
     'chatList' | 'filteredMessagesCount'
@@ -238,6 +240,10 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
           optimisticPreviewList.splice(existsPreviewIndex, 1);
           hasSelfPreview = false;
         }
+        if (!selfPreviewVisible) {
+          optimisticPreviewList.splice(existsPreviewIndex, 1);
+          hasSelfPreview = false;
+        }
       }
       if (!hasSelfPreview) {
         const maxPreviewPos = optimisticPreviewList.reduce(
@@ -267,7 +273,7 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
             posQ = message.posQ;
           }
         }
-        if (composeSlice.edit != null || !isEmpty || isWhisper) {
+        if (selfPreviewVisible) {
           optimisticPreviewList.push(
             makeDummyPreview(
               composeSlice.previewId,
@@ -284,6 +290,9 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
       }
     }
     for (const preview of optimisticPreviewList) {
+      if (preview.senderId === myId && !selfPreviewVisible) {
+        continue;
+      }
       const isFiltered = !filter(filterType, preview);
       if (isFiltered) continue;
       else if (preview.senderId === myId) {
@@ -347,11 +356,11 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
     filterType,
     fullLoaded,
     isEmpty,
-    isWhisper,
     messages,
     myId,
     optimisticMessageMap,
     previewMap,
+    selfPreviewVisible,
     showArchived,
   ]);
 

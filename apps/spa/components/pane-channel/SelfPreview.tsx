@@ -16,6 +16,7 @@ import { useMessageColor } from '../../hooks/useMessageColor';
 import { usePaneIsFocus } from '../../hooks/usePaneIsFocus';
 import { NameEditable } from './NameEditable';
 import { DisableDelay } from '@boluo/ui/Delay';
+import { SelfPreviewHideProgress } from './SelfPreviewHideProgress';
 
 type ComposeDrived = Pick<ComposeState, 'media'> & {
   editMode: boolean;
@@ -90,6 +91,7 @@ export const SelfPreview: FC<Props> = ({ preview, myMember: member, isLast }) =>
   return (
     <DisableDelay.Provider value={isFocused}>
       <PreviewBox
+        className="relative"
         isLast={isLast}
         id={preview.id}
         inGame={inGame}
@@ -98,6 +100,7 @@ export const SelfPreview: FC<Props> = ({ preview, myMember: member, isLast }) =>
         onDrop={onDrop}
         pos={preview.pos}
       >
+        <SelfPreviewHideProgress />
         <SelfPreviewNameCell isAction={isAction} nameNode={nameNode} />
         <div>
           <SelfPreviewContent myMember={member.channel} nameNode={nameNode} mediaNode={mediaNode} />

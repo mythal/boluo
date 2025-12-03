@@ -27,6 +27,11 @@ export interface ChannelAtoms {
   composeFocusedAtom: Atom<boolean>;
   isActionAtom: Atom<boolean>;
   hasMediaAtom: Atom<boolean>;
+  selfPreviewNamePanelOpenAtom: PrimitiveAtom<boolean>;
+  selfPreviewHideAtAtom: PrimitiveAtom<number | null>;
+  selfPreviewProgressAtom: PrimitiveAtom<number | null>;
+  selfPreviewVisibleAtom: Atom<boolean>;
+  isComposeEmptyAtom: Atom<boolean>;
   broadcastAtom: Atom<boolean>;
   inputedNameAtom: Atom<string>;
   isWhisperAtom: Atom<boolean>;
@@ -86,6 +91,25 @@ export const useMakeChannelAtoms = (
         ({ whisperToUsernames }) => whisperToUsernames != null,
       );
       const composeFocusedAtom = selectAtom(composeAtom, ({ focused }) => focused);
+      const isComposeEmptyAtom = atom((get) => {
+        const compose = get(composeAtom);
+        const hasMedia = get(hasMediaAtom);
+        return compose.source.trim().length === 0 && !hasMedia;
+      });
+      const selfPreviewNamePanelOpenAtom = atom<boolean>(false);
+      const selfPreviewHideAtAtom = atom<number | null>(null);
+      const selfPreviewProgressAtom = atom<number | null>(null);
+      const selfPreviewVisibleAtom = atom((get) => {
+        const focused = get(composeFocusedAtom);
+        const isComposeEmpty = get(isComposeEmptyAtom);
+        const namePanelOpen = get(selfPreviewNamePanelOpenAtom);
+        const isEditing = get(isEditingAtom);
+        if (!isComposeEmpty || focused || namePanelOpen || isEditing) return true;
+        const hideAt = get(selfPreviewHideAtAtom);
+        if (hideAt == null) return true;
+        // eslint-disable-next-line react-hooks/purity
+        return hideAt > Date.now();
+      });
       return {
         composeAtom,
         parsedAtom,
@@ -96,6 +120,11 @@ export const useMakeChannelAtoms = (
         isWhisperAtom,
         composeFocusedAtom,
         isEditingAtom,
+        isComposeEmptyAtom,
+        selfPreviewNamePanelOpenAtom,
+        selfPreviewHideAtAtom,
+        selfPreviewProgressAtom,
+        selfPreviewVisibleAtom,
         filterAtom: atomWithStorage<ChannelFilter>(`${channelId}:filter`, 'ALL'),
         showArchivedAtom: atomWithStorage(`${channelId}:show-archived`, false),
         subPaneStateAtom: atom<SubPaneState>('NONE'),

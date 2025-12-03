@@ -35,6 +35,7 @@ export interface ChannelAtoms {
   broadcastAtom: Atom<boolean>;
   inputedNameAtom: Atom<string>;
   isWhisperAtom: Atom<boolean>;
+  lastWhisperTargetsAtom: PrimitiveAtom<string[] | null>;
   inGameAtom: Atom<boolean>;
   isEditingAtom: Atom<boolean>;
   filterAtom: PrimitiveAtom<ChannelFilter>;
@@ -125,6 +126,10 @@ export const useMakeChannelAtoms = (
         selfPreviewHideAtAtom,
         selfPreviewProgressAtom,
         selfPreviewVisibleAtom,
+        lastWhisperTargetsAtom: atomWithStorage<string[] | null>(
+          `${channelId}:last-whisper-targets`,
+          null,
+        ),
         filterAtom: atomWithStorage<ChannelFilter>(`${channelId}:filter`, 'ALL'),
         showArchivedAtom: atomWithStorage(`${channelId}:show-archived`, false),
         subPaneStateAtom: atom<SubPaneState>('NONE'),

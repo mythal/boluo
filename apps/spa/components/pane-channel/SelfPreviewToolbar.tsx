@@ -1,6 +1,6 @@
 import React, { Activity, type FC, type ReactNode, useMemo } from 'react';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
-import { useAtomValue, useSetAtom } from 'jotai';
+import { useAtomValue, useSetAtom, useStore } from 'jotai';
 import Icon from '@boluo/ui/Icon';
 import {
   Edit,
@@ -172,16 +172,29 @@ const SendButton: FC<{ intl: IntlShape }> = () => {
 };
 
 const WhisperButton: FC<{ currentUser: User; intl: IntlShape }> = ({ currentUser, intl }) => {
-  const { isWhisperAtom, composeAtom } = useChannelAtoms();
+  const { isWhisperAtom, composeAtom, lastWhisperTargetsAtom } = useChannelAtoms();
   const dispatch = useSetAtom(composeAtom);
   const isWhisper = useAtomValue(isWhisperAtom);
+  const store = useStore();
+  const onClick = () => {
+    const lastWhisperTargets = store.get(lastWhisperTargetsAtom);
+    const usernames =
+      lastWhisperTargets == null || lastWhisperTargets.length === 0
+        ? [currentUser.username]
+        : lastWhisperTargets;
+
+    dispatch({
+      type: 'toggleWhisper',
+      payload: {
+        usernames,
+      },
+    });
+  };
   return (
     <ToolbarButton
       active={isWhisper}
       tooltip={intl.formatMessage({ defaultMessage: 'Only visible to selected people.' })}
-      onClick={() =>
-        dispatch({ type: 'toggleWhisper', payload: { username: currentUser.username } })
-      }
+      onClick={onClick}
     >
       <Icon icon={Whisper} className={isWhisper ? '' : 'opacity-50'} />
       <span className="ml-1">

@@ -23,7 +23,7 @@ export type ComposeActionMap = {
   addWhisperTarget: { username: string };
   removeWhisperTarget: { username: string };
   toggleAction: Empty;
-  toggleWhisper: { username?: string };
+  toggleWhisper: { usernames: string[] };
   collided: { previewId: string; newPreviewId: string };
   compositionStart: Empty;
   compositionEnd: Empty;

@@ -15,12 +15,7 @@ const isPaneVisible = (paneBox: HTMLElement, container: HTMLElement | null) => {
       bottom <= containerRect.bottom
     );
   }
-  return (
-    left >= 0 &&
-    right <= window.innerWidth &&
-    top >= 0 &&
-    bottom <= window.innerHeight
-  );
+  return left >= 0 && right <= window.innerWidth && top >= 0 && bottom <= window.innerHeight;
 };
 
 export const scrollPaneIntoView = (paneBox: HTMLElement | null) => {

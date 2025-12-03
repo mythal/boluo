@@ -44,7 +44,7 @@
     "swr": "^2.3.3"
   },
   "scripts": {
-    "check-types": "tsc --project tsconfig.json --noEmit",
+    "check": "tsc --project tsconfig.json --noEmit",
     "lint": "eslint . --ext .ts,.tsx"
   },
   "sideEffects": false,

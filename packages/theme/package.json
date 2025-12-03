@@ -18,7 +18,7 @@
   "homepage": "https://github.com/mythal/boluo",
   "license": "AGPL-3.0",
   "scripts": {
-    "check-types": "tsc --noEmit",
+    "check": "tsc --noEmit",
     "lint": "eslint . --ext .ts,.tsx"
   },
   "sideEffects": false,

@@ -9,12 +9,10 @@ import {
   useFloating,
   useInteractions,
 } from '@floating-ui/react';
-import { useSetAtom } from 'jotai';
 import { type FC, useEffect, useState } from 'react';
 import BookCopy from '@boluo/icons/BookCopy';
 import { FormattedMessage } from 'react-intl';
 import { dateTimeFormat } from '../../date';
-import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import type { ComposeDraftEntry } from '../../state/compose-backup.worker.types';
 import { FloatingBox } from '@boluo/ui/FloatingBox';
 import Icon from '@boluo/ui/Icon';
@@ -26,20 +24,6 @@ interface DraftHistoryButtonProps {
 
 export const DraftHistoryButton: FC<DraftHistoryButtonProps> = ({ drafts, onRestore }) => {
   const [open, setOpen] = useState(false);
-  const { hideSelfPreviewTimeoutAtom } = useChannelAtoms();
-  const setSelfPreviewLock = useSetAtom(hideSelfPreviewTimeoutAtom);
-
-  useEffect(() => {
-    if (!open) return;
-    const extendLock = () =>
-      setSelfPreviewLock((timestamp) => Math.max(timestamp, Date.now() + 1000 * 30));
-    extendLock();
-    const interval = window.setInterval(extendLock, 4000);
-    return () => {
-      window.clearInterval(interval);
-      setSelfPreviewLock(Date.now() + 1000 * 6);
-    };
-  }, [open, setSelfPreviewLock]);
 
   const { refs, floatingStyles, context } = useFloating<HTMLSpanElement>({
     open,

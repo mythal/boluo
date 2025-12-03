@@ -14,7 +14,7 @@ export interface ComposeState {
   source: string;
   media: File | string | null | undefined;
   whisperTo: // Represents whisper to the Game Master
-  | null
+    | null
     // Represents whisper to users (Game Master always can read all whisper messages)
     | string[]
     // Represents disabled whisper
@@ -257,10 +257,12 @@ const handleToggleBroadcast = (
 
 const handleToggleWhisper = (
   state: ComposeState,
-  { payload: { username } }: ComposeAction<'toggleWhisper'>,
+  { payload: { usernames } }: ComposeAction<'toggleWhisper'>,
 ): ComposeState => {
   const { whisper } = parseModifiers(state.source);
-  const command = username != null ? `.h(@${username})` : '.h';
+  const targets = usernames.filter((name) => name.trim() !== '');
+  const mentions = targets.map((name) => `@${name}`).join(' ');
+  const command = mentions === '' ? '.h ' : `.h(${mentions}) `;
   return toggleModifier(state, whisper, command);
 };
 

@@ -22,7 +22,7 @@
     "jotai": "^2.12.2"
   },
   "scripts": {
-    "check-types": "tsc --noEmit",
+    "check": "tsc --noEmit",
     "lint": "eslint . --ext .ts,.tsx"
   },
   "sideEffects": false,

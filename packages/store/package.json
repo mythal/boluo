@@ -15,7 +15,7 @@
   "private": true,
   "scripts": {
     "build": "tsc --project tsconfig.json",
-    "check-types": "tsc --noEmit"
+    "check": "tsc --noEmit"
   },
   "sideEffects": false,
   "type": "module"

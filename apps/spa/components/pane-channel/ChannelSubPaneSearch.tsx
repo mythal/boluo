@@ -18,6 +18,7 @@ import { LoadingText } from '@boluo/ui/LoadingText';
 import Icon from '@boluo/ui/Icon';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { useSetAtom } from 'jotai';
+import { ChannelSubPaneSearchResultMessage } from './ChannelSubPaneSearchResultMessage';
 
 interface Props {
   channelId: string;
@@ -29,13 +30,6 @@ interface SearchMeta {
   matched: number;
   nextPos: number | null;
 }
-
-const formatDateTime = (intl: ReturnType<typeof useIntl>, value: string) => {
-  const date = new Date(value);
-  const dateText = intl.formatDate(date, { year: 'numeric', month: 'short', day: '2-digit' });
-  const timeText = intl.formatTime(date, { hour: '2-digit', minute: '2-digit' });
-  return `${dateText} ${timeText}`;
-};
 
 const emptyPages: SearchMessagesResult[] = [];
 
@@ -292,20 +286,12 @@ export const ChannelSubPaneSearch: FC<Props> = ({ channelId, onClose }) => {
             </div>
           )}
           {results.map((message) => (
-            <button
-              type="button"
+            <ChannelSubPaneSearchResultMessage
               key={message.id}
-              onClick={() => handleResultClick(message)}
-              className="border-border-subtle hover:bg-surface-interactive-hover w-full cursor-pointer px-3 py-2 text-left"
-            >
-              <div className="text-text-muted flex items-center justify-between gap-2 text-xs">
-                <span className="font-semibold">{message.name || message.senderId}</span>
-                <span>{formatDateTime(intl, message.created)}</span>
-              </div>
-              <div className="mt-1 text-sm leading-snug wrap-break-word whitespace-pre-wrap">
-                {message.text}
-              </div>
-            </button>
+              message={message}
+              intl={intl}
+              handleResultClick={handleResultClick}
+            />
           ))}
           <div
             ref={loadMoreRef}

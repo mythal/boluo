@@ -37,6 +37,3 @@ main().catch((error) => {
   console.error('Failed to parse the source: ', error);
   process.exitCode = 1;
 });
-
-
-

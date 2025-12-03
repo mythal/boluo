@@ -1,50 +1,56 @@
-# Repository Guidelines
+This project is an open‑source chat tool designed for playing traditional tabletop RPGs (e.g., D&D, CoC). It is structured as a Rust + TypeScript monorepo managed with Turborepo. The repository consists of a Rust backend and multiple Next.js frontend applications.
 
-## Project Structure & Modules
+---
 
-- Monorepo managed by Turborepo.
-- Apps: `apps/site` (Next.js), `apps/spa` (Next.js), `apps/legacy` (Vite), `apps/server` (Rust).
-- Packages: shared libraries in `packages/*` (e.g., `api`, `ui`, `utils`, `icons`, `theme`, `eslint-config`, `typescript-config`, `store`, `types`, `lang`).
-- Docs and API requests: `docs/`.
-- Env/config: `.env`, `.env.local`, `docker-compose.yml`, `flake.nix`.
+## Backend (`apps/server`)
 
-## Tools
+The backend is written in Rust using **hyper** and **tokio**. PostgreSQL is accessed through **sqlx**.
 
-You can use:
+### Development Notes
 
-- `ast-grep` to search and manipulate abstract syntax trees.
-- `jq` to process JSON data.
-- `sqlx-cli` to manage SQL migrations.
+- When modifying SQL statements or RESTful APIs, run: `./scripts/generate-types.sh` to regenerate types.
+- Quick validation: `cargo check`
+- Run tests: `cargo nextest run`
+- Database-related tests:
+  - Use `sqlx::test`
+  - Test function names must start with `db_test_`
+- When using Cargo commands that don’t require network requests, prefer: `cargo --offline <command>` to avoid triggering sandbox network restrictions.
 
-## Style
+---
 
-- Write comments in English.
+## Frontend
 
-## Build, Test, Develop
+The frontend consists of three applications.
 
-- Install deps: `npm install` (root). Nix users: `nix develop`.
-- Generate types & SQLx: `./scripts/generate-types.sh`.
-- Start development services (DB/Redis/MinIO): `docker-compose up` (root). Example creds in `.env.local.example`.
-- Server (Rust): `cargo run -p server` (requires `DATABASE_URL`), build with `cargo build -p server`, tests `cargo test`.
-- Frontends via turbo:
-  - Dev: `npm run dev`, or `npm run dev:site` / `npm run dev:spa`.
-  - Build: `npm run build`, or `build:site` / `build:spa` / `build:legacy`.
-  - Lint/format/types: `npm run lint`, `npm run format`, `npm run check-types`.
-  - Tests: `npm run test` for frontend and `cargo nextest run` for backend.
+### Main Chat App (`apps/spa`)
 
-## Testing Guidelines
+- Built with **Next.js**, exported as a **static** site.
+- Styling: **tailwindcss v4** (config in `packages/tailwind-config/tailwind.css`).
+- State management: **jotai**.
 
-- The function name of database-related tests should start with `db_test_`.
+### Main Site (`apps/site`)
 
-## Quick Check
+- A dynamic Next.js application providing non-chat features (chat record, introduction pages, account-related pages).
+- Uses the same Tailwind + Jotai setup as `apps/spa`.
 
-- Server: `cargo check`
+### Legacy Chat App (`apps/legacy`)
 
-## Commit & PR Guidelines
+- A historical Vite + React SPA.
+- Styling via **emotion**, written in a utility-first style similar to Tailwind.
+- State management is a mix of jotai and redux.
 
-- Use Conventional Commits with scope when relevant (e.g., `feat(server): ...`, `chore(site): ...`).
-- Ensure CI-passing locally: `npm run lint`, `npm test`, `cargo nextest`, and build commands as relevant.
+### Shared UI (`packages/ui`)
 
-## Security & Configuration
+- Contains common stateless UI components.
+- Components here should have associated stories in `apps/storybook`.
 
-- Frontend needs `BACKEND_URL`; server needs `DATABASE_URL`. Local services provided by `docker-compose`.
+### Frontend Development Notes
+
+- Type checking: `npm run check`
+- Linting: `npm run lint`
+
+---
+
+## Suggested Commit Messages
+
+After making changes, provide 2-3 concise commit messages summarizing your work using conventional commit format (package name as scope).

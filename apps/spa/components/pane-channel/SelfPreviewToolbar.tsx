@@ -1,6 +1,6 @@
 import React, { Activity, type FC, type ReactNode, useMemo } from 'react';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
-import { useAtomValue, useSetAtom } from 'jotai';
+import { useAtomValue, useSetAtom, useStore } from 'jotai';
 import Icon from '@boluo/ui/Icon';
 import {
   Edit,
@@ -32,6 +32,7 @@ interface ToolbarButtonProps {
   active?: boolean;
   disabled?: boolean;
   tooltip?: ReactNode;
+  variant?: 'default' | 'primary';
   ref?: React.Ref<HTMLButtonElement>;
 }
 
@@ -42,12 +43,14 @@ const ToolbarButton = ({
   disabled = false,
   ref,
   tooltip,
+  variant = 'default',
 }: ToolbarButtonProps) => {
   const { showTooltip, refs, getFloatingProps, getReferenceProps, floatingStyles } =
     useTooltip('top');
   return (
     <span ref={refs.setReference} {...getReferenceProps()}>
       <ButtonInline
+        variant={variant}
         onClick={onClick}
         onTouchEnd={(e) => {
           // https://stackoverflow.com/a/71725297
@@ -138,6 +141,7 @@ const SendButton: FC<{ intl: IntlShape }> = () => {
     <>
       <ToolbarButton
         disabled={composeError != null}
+        variant="primary"
         tooltip={
           composeError &&
           composeError !== 'TEXT_EMPTY' && (
@@ -168,16 +172,29 @@ const SendButton: FC<{ intl: IntlShape }> = () => {
 };
 
 const WhisperButton: FC<{ currentUser: User; intl: IntlShape }> = ({ currentUser, intl }) => {
-  const { isWhisperAtom, composeAtom } = useChannelAtoms();
+  const { isWhisperAtom, composeAtom, lastWhisperTargetsAtom } = useChannelAtoms();
   const dispatch = useSetAtom(composeAtom);
   const isWhisper = useAtomValue(isWhisperAtom);
+  const store = useStore();
+  const onClick = () => {
+    const lastWhisperTargets = store.get(lastWhisperTargetsAtom);
+    const usernames =
+      lastWhisperTargets == null || lastWhisperTargets.length === 0
+        ? [currentUser.username]
+        : lastWhisperTargets;
+
+    dispatch({
+      type: 'toggleWhisper',
+      payload: {
+        usernames,
+      },
+    });
+  };
   return (
     <ToolbarButton
       active={isWhisper}
       tooltip={intl.formatMessage({ defaultMessage: 'Only visible to selected people.' })}
-      onClick={() =>
-        dispatch({ type: 'toggleWhisper', payload: { username: currentUser.username } })
-      }
+      onClick={onClick}
     >
       <Icon icon={Whisper} className={isWhisper ? '' : 'opacity-50'} />
       <span className="ml-1">
@@ -197,10 +214,10 @@ export const SelfPreviewToolbar: FC<Props> = ({ currentUser }) => {
   const actionButton = useMemo(() => <ActionButton intl={intl} />, [intl]);
   const sendButton = useMemo(() => <SendButton intl={intl} />, [intl]);
   return (
-    <div className="SelfPreviewToolbar relative flex justify-end gap-1 text-sm">
+    <div className="SelfPreviewToolbar relative flex justify-start gap-1 text-sm">
+      {actionButton}
       {whisperButton}
       {muteButton}
-      {actionButton}
       {sendButton}
     </div>
   );

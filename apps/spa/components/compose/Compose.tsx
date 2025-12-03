@@ -30,12 +30,7 @@ const DeferredComposeTextArea: FC<{
   currentUser: User;
   enterSend: boolean;
   send: () => Promise<void>;
-}> = ({
-  parsedAtom,
-  currentUser,
-  send,
-  enterSend,
-}) => {
+}> = ({ parsedAtom, currentUser, send, enterSend }) => {
   const parsed = useDeferredValue(useAtomValue(parsedAtom));
   const compose = useMemo(
     () => (

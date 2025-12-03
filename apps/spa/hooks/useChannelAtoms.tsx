@@ -27,10 +27,15 @@ export interface ChannelAtoms {
   composeFocusedAtom: Atom<boolean>;
   isActionAtom: Atom<boolean>;
   hasMediaAtom: Atom<boolean>;
+  selfPreviewNamePanelOpenAtom: PrimitiveAtom<boolean>;
+  selfPreviewHideAtAtom: PrimitiveAtom<number | null>;
+  selfPreviewProgressAtom: PrimitiveAtom<number | null>;
+  selfPreviewVisibleAtom: Atom<boolean>;
+  isComposeEmptyAtom: Atom<boolean>;
   broadcastAtom: Atom<boolean>;
-  hideSelfPreviewTimeoutAtom: PrimitiveAtom<number>;
   inputedNameAtom: Atom<string>;
   isWhisperAtom: Atom<boolean>;
+  lastWhisperTargetsAtom: PrimitiveAtom<string[] | null>;
   inGameAtom: Atom<boolean>;
   isEditingAtom: Atom<boolean>;
   filterAtom: PrimitiveAtom<ChannelFilter>;
@@ -64,7 +69,6 @@ export const useMakeChannelAtoms = (
   const atoms: Omit<ChannelAtoms, 'composeAtom' | 'checkComposeAtom' | 'inGameAtom'> =
     useMemo(() => {
       const sourceAtom = atom((get) => get(composeAtom).source);
-      const hideSelfPreviewTimeoutAtom = atom(0);
       const loadableParsedAtom = loadable(
         atom(async (get, { signal }): Promise<ParseResult> => {
           const source = get(sourceAtom);
@@ -88,10 +92,28 @@ export const useMakeChannelAtoms = (
         ({ whisperToUsernames }) => whisperToUsernames != null,
       );
       const composeFocusedAtom = selectAtom(composeAtom, ({ focused }) => focused);
+      const isComposeEmptyAtom = atom((get) => {
+        const compose = get(composeAtom);
+        const hasMedia = get(hasMediaAtom);
+        return compose.source.trim().length === 0 && !hasMedia;
+      });
+      const selfPreviewNamePanelOpenAtom = atom<boolean>(false);
+      const selfPreviewHideAtAtom = atom<number | null>(null);
+      const selfPreviewProgressAtom = atom<number | null>(null);
+      const selfPreviewVisibleAtom = atom((get) => {
+        const focused = get(composeFocusedAtom);
+        const isComposeEmpty = get(isComposeEmptyAtom);
+        const namePanelOpen = get(selfPreviewNamePanelOpenAtom);
+        const isEditing = get(isEditingAtom);
+        if (!isComposeEmpty || focused || namePanelOpen || isEditing) return true;
+        const hideAt = get(selfPreviewHideAtAtom);
+        if (hideAt == null) return true;
+        // eslint-disable-next-line react-hooks/purity
+        return hideAt > Date.now();
+      });
       return {
         composeAtom,
         parsedAtom,
-        hideSelfPreviewTimeoutAtom,
         isActionAtom,
         inputedNameAtom,
         hasMediaAtom,
@@ -99,6 +121,15 @@ export const useMakeChannelAtoms = (
         isWhisperAtom,
         composeFocusedAtom,
         isEditingAtom,
+        isComposeEmptyAtom,
+        selfPreviewNamePanelOpenAtom,
+        selfPreviewHideAtAtom,
+        selfPreviewProgressAtom,
+        selfPreviewVisibleAtom,
+        lastWhisperTargetsAtom: atomWithStorage<string[] | null>(
+          `${channelId}:last-whisper-targets`,
+          null,
+        ),
         filterAtom: atomWithStorage<ChannelFilter>(`${channelId}:filter`, 'ALL'),
         showArchivedAtom: atomWithStorage(`${channelId}:show-archived`, false),
         subPaneStateAtom: atom<SubPaneState>('NONE'),

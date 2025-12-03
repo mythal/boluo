@@ -45,7 +45,7 @@
     "react-dom": "^19.0.0"
   },
   "scripts": {
-    "check-types": "tsc --noEmit --project tsconfig.json",
+    "check": "tsc --noEmit --project tsconfig.json",
     "lint": "eslint . --ext .ts,.tsx"
   },
   "sideEffects": false,

@@ -9,6 +9,10 @@ export default [
       'react/prop-types': 'off',
       'react/display-name': 'off',
       '@typescript-eslint/no-unused-vars': 'off',
+      'react-hooks/incompatible-library': 'off',
+      'react-hooks/set-state-in-effect': 'off',
+      'react-hooks/immutability': 'off',
+      'react-hooks/error-boundaries': 'off',
     },
   },
   {

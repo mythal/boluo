@@ -55,7 +55,7 @@
   "license": "GPL-3.0",
   "scripts": {
     "build": "next build",
-    "check-types": "tsc --noEmit",
+    "check": "tsc --noEmit",
     "dev": "next dev --hostname 0.0.0.0 --port 3100 --turbopack",
     "lint": "eslint",
     "start": "next start"

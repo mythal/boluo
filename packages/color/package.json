@@ -19,7 +19,7 @@
   "license": "AGPL-3.0",
   "private": true,
   "scripts": {
-    "check-types": "tsc --noEmit",
+    "check": "tsc --noEmit",
     "lint": "eslint . --ext .ts",
     "test": "tsx --test src/**/*.test.ts"
   },

@@ -2,7 +2,7 @@ import clsx from 'clsx';
 import React from 'react';
 
 interface ExtendedButtonInlineProps {
-  variant?: 'default';
+  variant?: 'default' | 'primary';
   groupHover?: boolean;
   ref?: React.Ref<HTMLButtonElement>;
 }
@@ -13,6 +13,7 @@ export type ButtonInlineProps = React.ComponentPropsWithoutRef<'button'> &
 export const ButtonInline: React.FC<ButtonInlineProps> = function ButtonInline({
   children,
   className,
+  variant = 'default',
   groupHover,
   ref,
   ...props
@@ -25,14 +26,24 @@ export const ButtonInline: React.FC<ButtonInlineProps> = function ButtonInline({
       className={clsx(
         className,
         'ButtonInline inline-flex items-center justify-center rounded-sm px-[0.5em] py-0.5 transition-shadow duration-100',
-        'text-text-primary',
-        'ring-border-focus focus:ring',
-        'bg-action-secondary-bg shadow-action-secondary-border pressed:shadow-[0_1px_0_0_inset] shadow-[0_-1px_0_0_inset]',
-        'border-action-secondary-border border',
-        'hover:bg-action-secondary-bg-hover',
-        groupHover && 'group-hover:bg-action-secondary-bg-hover',
-        'pressed:border-b pressed:bg-action-secondary-bg-active pressed:border-t-2',
-        'cursor-pointer text-[80%]',
+        // 'ring-border-focus focus:ring',
+        'cursor-pointer border text-[80%] disabled:cursor-not-allowed',
+        variant === 'default' && [
+          'text-text-primary',
+          'bg-action-secondary-bg shadow-action-secondary-border pressed:shadow-[0_1px_0_0_inset] shadow-[0_-1px_0_0_inset]',
+          'border-action-secondary-border',
+          'hover:bg-action-secondary-bg-hover',
+          groupHover && 'group-hover:bg-action-secondary-bg-hover',
+          'pressed:bg-action-secondary-bg-active',
+        ],
+        variant === 'primary' && [
+          'text-action-primary-text',
+          'bg-action-primary-bg border-action-primary-border shadow-action-primary-border pressed:shadow-[0_1px_0_0_inset] shadow-[0_-1px_0_0_inset]',
+          'hover:bg-action-primary-bg-hover',
+          groupHover && 'group-hover:bg-action-primary-bg-hover',
+          'pressed:bg-action-primary-bg-active pressed:border-b-action-primary-bg-active pressed:shadow-[0_1px_0_0_var(--color-action-primary-border-active)_inset]',
+          'disabled:bg-action-primary-bg-disabled disabled:text-text-inverted-secondary disabled:cursor-not-allowed',
+        ],
       )}
       ref={ref}
       {...props}

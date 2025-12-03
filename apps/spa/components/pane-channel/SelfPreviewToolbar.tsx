@@ -32,6 +32,7 @@ interface ToolbarButtonProps {
   active?: boolean;
   disabled?: boolean;
   tooltip?: ReactNode;
+  variant?: 'default' | 'primary';
   ref?: React.Ref<HTMLButtonElement>;
 }
 
@@ -42,12 +43,14 @@ const ToolbarButton = ({
   disabled = false,
   ref,
   tooltip,
+  variant = 'default',
 }: ToolbarButtonProps) => {
   const { showTooltip, refs, getFloatingProps, getReferenceProps, floatingStyles } =
     useTooltip('top');
   return (
     <span ref={refs.setReference} {...getReferenceProps()}>
       <ButtonInline
+        variant={variant}
         onClick={onClick}
         onTouchEnd={(e) => {
           // https://stackoverflow.com/a/71725297
@@ -138,6 +141,7 @@ const SendButton: FC<{ intl: IntlShape }> = () => {
     <>
       <ToolbarButton
         disabled={composeError != null}
+        variant="primary"
         tooltip={
           composeError &&
           composeError !== 'TEXT_EMPTY' && (

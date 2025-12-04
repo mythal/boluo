@@ -14,7 +14,7 @@ export const EntityCodeBlock: FC<Props> = ({
 }) => {
   return (
     <div className="py-2">
-      <pre className="EntityCodeBlock bg-surface-muted border-border-default text-text-primary font-pixel overflow-x-auto rounded border px-2 py-1 shadow-sm">
+      <pre className="EntityCodeBlock border-border-default no-autospace font-pixel overflow-x-auto rounded border bg-black px-2 py-1 text-[15px] leading-snug text-green-300 shadow-sm">
         {source.substring(start, start + len)}
       </pre>
     </div>

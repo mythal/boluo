@@ -52,7 +52,6 @@ export const ChatItemMessage: FC<{
   const member = useMember();
   const sendBySelf = member?.user.id === message.senderId;
   const iAmMaster = member?.channel.isMaster || false;
-  const isScrolling = useIsScrolling();
   const { isMaster, isAction } = message;
   const { data: user } = useQueryUser(message.senderId);
   const readObserve = useReadObserve();
@@ -75,14 +74,15 @@ export const ChatItemMessage: FC<{
     [message.inGame, message.name, isMaster, sendBySelf, user],
   );
 
-  const namePlate = useMemo(() => {
-    return <MessageNamePlate continued={continuous}>{nameNode}</MessageNamePlate>;
-  }, [continuous, nameNode]);
   const parsed: ParseResult = useMemo(
     (): ParseResult => messageToParsed(message.text, message.entities),
     [message],
   );
   const continued = continuous || isAction;
+
+  const namePlate = useMemo(() => {
+    return <MessageNamePlate continued={continued}>{nameNode}</MessageNamePlate>;
+  }, [continued, nameNode]);
   const draggable = sendBySelf || iAmMaster;
   const media = useMemo(() => {
     if (message.mediaId != null) {
@@ -141,7 +141,6 @@ export const ChatItemMessage: FC<{
       highlighted={highlighted}
       draggable={draggable}
       overlay={overlay}
-      isScrolling={isScrolling}
       continued={continued}
       pos={message.pos}
       failTo={message.failTo}
@@ -164,7 +163,6 @@ const ChatMessageContainer: FC<{
   overlay?: boolean;
   highlighted?: boolean;
   sendBySelf: boolean;
-  isScrolling: boolean;
   inGame: boolean;
   pos: number;
   failTo: FailTo | null | undefined;
@@ -177,7 +175,6 @@ const ChatMessageContainer: FC<{
   message,
   continued = false,
   highlighted = false,
-  isScrolling,
   sendBySelf,
   failTo,
   pos,

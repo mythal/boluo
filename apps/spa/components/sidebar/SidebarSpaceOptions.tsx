@@ -25,12 +25,16 @@ export const SpaceOptions: FC<Props> = ({ space }) => {
   return (
     <div className="SpaceOptions h-pane-header group flex w-full items-center gap-1 px-4 text-sm">
       <button
-        className="hover:text-text-secondary inline min-w-0 grow items-center gap-2 truncate text-left font-bold"
+        className="hover:text-text-secondary inline min-w-0 shrink grow items-center gap-2 truncate text-left font-bold"
         onClick={handleClickSpaceName}
       >
         <span className="cursor-pointer">{space.name}</span>
       </button>
-      <ButtonInline aria-pressed={sidebarState === 'SPACES'} onClick={handleClickSwitchSpace}>
+      <ButtonInline
+        className="flex-none"
+        aria-pressed={sidebarState === 'SPACES'}
+        onClick={handleClickSwitchSpace}
+      >
         <Icon icon={Shuffle} />
         <span className="ml-1">
           <FormattedMessage defaultMessage="Switch" />

@@ -22,6 +22,8 @@ export const SidebarButton: FC<Props> = ({
   switchToConnections,
 }) => {
   const isTouch = useIsTouch();
+  const placement = isTouch ? 'right-start' : 'bottom-start';
+  const offset = isTouch ? 8 : 4;
 
   const {
     showTooltip,
@@ -29,7 +31,7 @@ export const SidebarButton: FC<Props> = ({
     getFloatingProps,
     getReferenceProps,
     floatingStyles,
-  } = useTooltip('bottom-start');
+  } = useTooltip(placement, offset);
   let icon = isSidebarExpanded ? <ChevronLeft /> : <ChevronRight />;
   if (disconnected && !isSidebarExpanded) {
     icon = (

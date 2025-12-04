@@ -32,11 +32,12 @@
 
 @layer base {
   html {
+    text-autospace: normal;
     font-size: 16px;
     /* https://github.com/system-fonts/modern-font-stacks#humanist */
     font-family:
       'IBM Plex Sans', Seravek, 'Gill Sans Nova', Ubuntu, Calibri, 'DejaVu Sans', source-sans-pro,
-      sans-serif;
+      system-ui, sans-serif;
   }
   html.switching,
   html.switching * {
@@ -98,6 +99,10 @@
 }
 
 @layer utilities {
+  .no-autospace {
+    text-autospace: no-autospace;
+  }
+
   .contain-strict {
     contain: strict;
   }

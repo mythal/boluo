@@ -46,7 +46,7 @@ const ToolbarButton = ({
   variant = 'default',
 }: ToolbarButtonProps) => {
   const { showTooltip, refs, getFloatingProps, getReferenceProps, floatingStyles } =
-    useTooltip('top');
+    useTooltip('top-start');
   return (
     <span ref={refs.setReference} {...getReferenceProps()}>
       <ButtonInline
@@ -214,10 +214,11 @@ export const SelfPreviewToolbar: FC<Props> = ({ currentUser }) => {
   const actionButton = useMemo(() => <ActionButton intl={intl} />, [intl]);
   const sendButton = useMemo(() => <SendButton intl={intl} />, [intl]);
   return (
-    <div className="SelfPreviewToolbar relative flex justify-start gap-1 text-sm">
+    <div className="SelfPreviewToolbar pr-message-small @2xl:pr-message relative flex w-full justify-start gap-1 text-sm">
       {actionButton}
       {whisperButton}
       {muteButton}
+      <span className="grow" />
       {sendButton}
     </div>
   );

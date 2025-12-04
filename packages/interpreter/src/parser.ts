@@ -234,8 +234,8 @@ const strongEmphasis: P<Entity> = regex(STRONG_EM_REGEX).then(([match, { text, r
 
     child: {
       type: 'Text',
-      start: text.length,
-      len: entire.length,
+      start: text.length + entire.indexOf(content),
+      len: content.length,
     },
   };
 

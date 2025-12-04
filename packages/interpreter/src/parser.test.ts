@@ -64,6 +64,23 @@ test('parse string', () => {
   assert.deepStrictEqual(parse('hello **世界**！！！！'), expected);
 });
 
+test('parse strong emphasis', () => {
+  const expected: Entity[] = [
+    {
+      start: 6,
+      len: 11,
+      type: 'StrongEmphasis',
+      child: {
+        type: 'Text',
+        start: 9,
+        len: 5,
+      },
+    },
+  ];
+
+  assert.deepStrictEqual(parse('hello ***world***!'), expected);
+});
+
 test('parse auto link', () => {
   const expected: Entity[] = [
     {

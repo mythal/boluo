@@ -1,5 +1,6 @@
 import {
   type FC,
+  memo,
   type PointerEvent,
   useCallback,
   useEffect,
@@ -7,59 +8,170 @@ import {
   useRef,
   useState,
 } from 'react';
-import { FormattedMessage } from 'react-intl';
 import { type ParseResult, messageToParsed } from '@boluo/interpreter';
-import { type FailTo, type MessageItem } from '../../state/channel.types';
+import { type MessageItem } from '../../state/channel.types';
 import { MessageBox } from '@boluo/ui/chat/MessageBox';
 import { MessageContentBox } from '@boluo/ui/chat/MessageContentBox';
 import { MessageNamePlate } from '@boluo/ui/chat/MessageNamePlate';
-import { ChatItemMessageShowWhisper } from './ChatItemMessageShowWhisper';
-import { Content } from './Content';
-import { MessageMedia } from './MessageMedia';
+import { ChatItemMessageWhisperIndicator } from './ChatItemMessageWhisperIndicator';
 import { Name } from './Name';
 import { useQueryUser } from '@boluo/common/hooks/useQueryUser';
-import { useIsScrolling } from '../../hooks/useIsScrolling';
 import { useReadObserve } from '../../hooks/useReadObserve';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { type Message } from '@boluo/api';
-import { type ReactNode } from 'react';
 import { MessageReorderHandle } from './MessageReorderHandle';
 import { MessageTime } from './MessageTime';
-import { useMember } from '../../hooks/useMember';
+import { ChatItemMessageContent } from './ChatItemMessageContent';
 import { Delay } from '@boluo/ui/Delay';
-import { ContentGuard } from '@boluo/ui/chat/ContentGuard';
 import {
   DisplayContext as ToolbarDisplayContext,
   MessageToolbar,
   makeMessageToolbarDisplayAtom,
 } from './MessageToolbar';
 import { useStore } from 'jotai';
-import { stopPropagation } from '@boluo/utils/browser';
+import { useMember } from '../../hooks/useMember';
 import { useIsInGameChannel } from '../../hooks/useIsInGameChannel';
 import { useIsDragging } from '../../hooks/useIsDragging';
 
 const LONG_PRESS_DURATION = 300;
 
-export const ChatItemMessage: FC<{
+const useMessageLongPress = (
+  toolbarDisplayAtom: ReturnType<typeof makeMessageToolbarDisplayAtom>,
+  store: ReturnType<typeof useStore>,
+) => {
+  const [longPressStart, setLongPressStart] = useState<number | null>(null);
+  const longPressTimeoutRef = useRef<number | null>(null);
+  const longPressActivatedToolbarRef = useRef(false);
+
+  const clearLongPressTimeout = useCallback(() => {
+    if (longPressTimeoutRef.current != null) {
+      clearTimeout(longPressTimeoutRef.current);
+      longPressTimeoutRef.current = null;
+    }
+  }, []);
+
+  const resetLongPressState = useCallback(
+    (hideToolbar = true) => {
+      clearLongPressTimeout();
+      if (hideToolbar && longPressActivatedToolbarRef.current) {
+        store.set(toolbarDisplayAtom, { type: 'HIDDEN' });
+      }
+      longPressActivatedToolbarRef.current = false;
+      setLongPressStart(null);
+    },
+    [clearLongPressTimeout, store, toolbarDisplayAtom],
+  );
+
+  const handlePointerDown = useCallback(
+    (e: PointerEvent<HTMLDivElement>) => {
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      if (document.getSelection()?.toString()) return;
+      if (e.target instanceof Element) {
+        if (e.target.closest('.MessageToolbar') || e.target.closest('.MessageHandleBox')) {
+          return;
+        }
+      }
+      const currentDisplay = store.get(toolbarDisplayAtom);
+      if (currentDisplay.type === 'HIDDEN') {
+        store.set(toolbarDisplayAtom, { type: 'SHOW' });
+        longPressActivatedToolbarRef.current = true;
+      } else {
+        longPressActivatedToolbarRef.current = false;
+      }
+      const start = typeof performance !== 'undefined' ? performance.now() : Date.now();
+      setLongPressStart(start);
+      clearLongPressTimeout();
+      longPressTimeoutRef.current = window.setTimeout(() => {
+        longPressTimeoutRef.current = null;
+        longPressActivatedToolbarRef.current = false;
+        setLongPressStart(null);
+        store.set(toolbarDisplayAtom, { type: 'MORE' });
+      }, LONG_PRESS_DURATION);
+    },
+    [clearLongPressTimeout, store, toolbarDisplayAtom],
+  );
+
+  const handlePointerUp = useCallback(() => {
+    resetLongPressState();
+  }, [resetLongPressState]);
+  const handlePointerLeave = useCallback(() => {
+    resetLongPressState();
+  }, [resetLongPressState]);
+  const handlePointerCancel = useCallback(() => {
+    resetLongPressState();
+  }, [resetLongPressState]);
+
+  useEffect(() => {
+    return () => {
+      clearLongPressTimeout();
+    };
+  }, [clearLongPressTimeout]);
+
+  useEffect(() => {
+    if (longPressStart == null) return;
+    if (typeof document === 'undefined') return;
+    const handleSelectionChange = () => {
+      const selection = document.getSelection();
+      if (selection != null && selection.toString() !== '') {
+        resetLongPressState();
+      }
+    };
+    document.addEventListener('selectionchange', handleSelectionChange);
+    return () => {
+      document.removeEventListener('selectionchange', handleSelectionChange);
+    };
+  }, [longPressStart, resetLongPressState]);
+
+  return {
+    longPressStart,
+    handlePointerDown,
+    handlePointerUp,
+    handlePointerLeave,
+    handlePointerCancel,
+  };
+};
+
+interface Props {
   message: MessageItem;
   className?: string;
   highlighted?: boolean;
   isLast: boolean;
   continuous?: boolean;
   overlay?: boolean;
-}> = ({ message, continuous = false, overlay = false, isLast, highlighted = false }) => {
+}
+
+const ChatItemMessageComponent: FC<Props> = ({
+  message,
+  className = '',
+  continuous = false,
+  overlay = false,
+  isLast,
+  highlighted = false,
+}) => {
   const member = useMember();
   const sendBySelf = member?.user.id === message.senderId;
   const iAmMaster = member?.channel.isMaster || false;
-  const { isMaster, isAction } = message;
+  const { isMaster, isAction, failTo } = message;
   const { data: user } = useQueryUser(message.senderId);
   const readObserve = useReadObserve();
-  const ref = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (ref.current == null) return;
-    return readObserve(ref.current);
-  }, [readObserve]);
+    if (overlay) return;
+    if (contentRef.current == null) return;
+    return readObserve(contentRef.current);
+  }, [overlay, readObserve]);
+  const isInGameChannel = useIsInGameChannel();
+  const isAnyMessageDragging = useIsDragging();
+  const toolbarDisplayAtom = useMemo(() => makeMessageToolbarDisplayAtom(), []);
+  const store = useStore();
+  const messageBoxRef = useRef<HTMLDivElement | null>(null);
+  const {
+    longPressStart,
+    handlePointerDown,
+    handlePointerUp,
+    handlePointerLeave,
+    handlePointerCancel,
+  } = useMessageLongPress(toolbarDisplayAtom, store);
 
   const nameNode = useMemo(
     () => (
@@ -76,117 +188,22 @@ export const ChatItemMessage: FC<{
 
   const parsed: ParseResult = useMemo(
     (): ParseResult => messageToParsed(message.text, message.entities),
-    [message],
+    [message.entities, message.text],
   );
-  const continued = continuous || isAction;
+  const shouldConcealNameOnLeft = continuous || isAction;
 
   const namePlate = useMemo(() => {
-    return <MessageNamePlate continued={continued}>{nameNode}</MessageNamePlate>;
-  }, [continued, nameNode]);
+    return (
+      <MessageNamePlate shouldConcealNameOnLeft={shouldConcealNameOnLeft}>
+        {nameNode}
+      </MessageNamePlate>
+    );
+  }, [shouldConcealNameOnLeft, nameNode]);
   const draggable = sendBySelf || iAmMaster;
-  const media = useMemo(() => {
-    if (message.mediaId != null) {
-      return <MessageMedia className="pt-2" media={message.mediaId} />;
-    } else if (message.optimisticMedia != null) {
-      return <MessageMedia className="pt-2" media={message.optimisticMedia} />;
-    }
-  }, [message.mediaId, message.optimisticMedia]);
-  const shouldGuardContent =
-    message.whisperToUsers != null && (parsed.text !== '' || media != null);
-
-  const whisperIndicator = useMemo(() => {
-    if (message.whisperToUsers == null) return null;
-    return (
-      <span className="text-text-secondary text-sm italic">
-        <FormattedMessage defaultMessage="(Whisper)" />
-        {parsed.text === '' && (
-          <ChatItemMessageShowWhisper
-            className="ml-2"
-            messageId={message.id}
-            userIdList={message.whisperToUsers}
-            channelId={message.channelId}
-          />
-        )}
-      </span>
-    );
-  }, [message, parsed]);
-
   const content = useMemo(() => {
-    return (
-      <ContentGuard active={shouldGuardContent}>
-        {parsed.text !== '' && (
-          <div>
-            <Content
-              source={parsed.text}
-              entities={parsed.entities}
-              isAction={isAction ?? false}
-              nameNode={nameNode}
-              isArchived={message.folded ?? false}
-              seed={message.seed}
-              onContextMenu={stopPropagation}
-              onDoubleClick={stopPropagation}
-            />
-          </div>
-        )}
-        {media}
-      </ContentGuard>
-    );
-  }, [isAction, media, message, nameNode, parsed, shouldGuardContent]);
+    return <ChatItemMessageContent message={message} parsed={parsed} nameNode={nameNode} />;
+  }, [message, nameNode, parsed]);
 
-  return (
-    <ChatMessageContainer
-      sendBySelf={sendBySelf}
-      inGame={message.inGame ?? false}
-      message={message}
-      highlighted={highlighted}
-      draggable={draggable}
-      overlay={overlay}
-      continued={continued}
-      pos={message.pos}
-      failTo={message.failTo}
-    >
-      {namePlate}
-      <MessageContentBox ref={ref} pos={message.pos} isLast={isLast}>
-        {whisperIndicator}
-        {content}
-      </MessageContentBox>
-    </ChatMessageContainer>
-  );
-};
-
-const ChatMessageContainer: FC<{
-  className?: string;
-  children: ReactNode;
-  message: Message;
-  draggable?: boolean;
-  continued?: boolean;
-  overlay?: boolean;
-  highlighted?: boolean;
-  sendBySelf: boolean;
-  inGame: boolean;
-  pos: number;
-  failTo: FailTo | null | undefined;
-}> = ({
-  className = '',
-  inGame,
-  children,
-  draggable = false,
-  overlay = false,
-  message,
-  continued = false,
-  highlighted = false,
-  sendBySelf,
-  failTo,
-  pos,
-}) => {
-  const isInGameChannel = useIsInGameChannel();
-  const isAnyMessageDragging = useIsDragging();
-  const toolbarDisplayAtom = useMemo(() => makeMessageToolbarDisplayAtom(), []);
-  const store = useStore();
-  const [longPressStart, setLongPressStart] = useState<number | null>(null);
-  const ref = useRef<HTMLDivElement | null>(null);
-  const longPressTimeoutRef = useRef<number | null>(null);
-  const longPressActivatedToolbarRef = useRef(false);
   const {
     attributes,
     listeners,
@@ -201,14 +218,17 @@ const ChatMessageContainer: FC<{
     disabled: !draggable || failTo != null,
   });
 
-  const setRef = (node: HTMLDivElement | null) => {
-    ref.current = node;
-    setNodeRef(node);
-  };
+  const setRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      messageBoxRef.current = node;
+      setNodeRef(node);
+    },
+    [setNodeRef],
+  );
 
   const style = useMemo(
     () => ({
-      transform: CSS.Transform.toString(transform),
+      transform: transform ? CSS.Transform.toString(transform) : undefined,
       transition,
     }),
     [transform, transition],
@@ -231,7 +251,7 @@ const ChatMessageContainer: FC<{
       <Delay fallback={null}>
         <MessageToolbar
           message={message}
-          messageBoxRef={ref}
+          messageBoxRef={messageBoxRef}
           sendBySelf={sendBySelf}
           longPressStart={longPressStart}
           longPressDuration={LONG_PRESS_DURATION}
@@ -239,76 +259,6 @@ const ChatMessageContainer: FC<{
       </Delay>
     );
   }, [isDragging, longPressStart, message, overlay, sendBySelf]);
-  const clearLongPressTimeout = () => {
-    if (longPressTimeoutRef.current != null) {
-      clearTimeout(longPressTimeoutRef.current);
-      longPressTimeoutRef.current = null;
-    }
-  };
-  const resetLongPressState = useCallback(
-    (hideToolbar = true) => {
-      clearLongPressTimeout();
-      if (hideToolbar && longPressActivatedToolbarRef.current) {
-        store.set(toolbarDisplayAtom, { type: 'HIDDEN' });
-      }
-      longPressActivatedToolbarRef.current = false;
-      setLongPressStart(null);
-    },
-    [store, toolbarDisplayAtom],
-  );
-  const handlePointerDown = (e: PointerEvent<HTMLDivElement>) => {
-    if (e.pointerType === 'mouse' && e.button !== 0) return;
-    if (document.getSelection()?.toString()) return;
-    if (e.target instanceof Element) {
-      if (e.target.closest('.MessageToolbar') || e.target.closest('.MessageHandleBox')) {
-        return;
-      }
-    }
-    const currentDisplay = store.get(toolbarDisplayAtom);
-    if (currentDisplay.type === 'HIDDEN') {
-      store.set(toolbarDisplayAtom, { type: 'SHOW' });
-      longPressActivatedToolbarRef.current = true;
-    } else {
-      longPressActivatedToolbarRef.current = false;
-    }
-    const start = typeof performance !== 'undefined' ? performance.now() : Date.now();
-    setLongPressStart(start);
-    clearLongPressTimeout();
-    longPressTimeoutRef.current = window.setTimeout(() => {
-      longPressTimeoutRef.current = null;
-      longPressActivatedToolbarRef.current = false;
-      setLongPressStart(null);
-      store.set(toolbarDisplayAtom, { type: 'MORE' });
-    }, LONG_PRESS_DURATION);
-  };
-  const handlePointerUp = () => {
-    resetLongPressState();
-  };
-  const handlePointerLeave = () => {
-    resetLongPressState();
-  };
-  const handlePointerCancel = () => {
-    resetLongPressState();
-  };
-  useEffect(() => {
-    return () => {
-      clearLongPressTimeout();
-    };
-  }, []);
-  useEffect(() => {
-    if (longPressStart == null) return;
-    if (typeof document === 'undefined') return;
-    const handleSelectionChange = () => {
-      const selection = document.getSelection();
-      if (selection != null && selection.toString() !== '') {
-        resetLongPressState();
-      }
-    };
-    document.addEventListener('selectionchange', handleSelectionChange);
-    return () => {
-      document.removeEventListener('selectionchange', handleSelectionChange);
-    };
-  }, [longPressStart, resetLongPressState]);
   const timestamp = useMemo(
     () => <MessageTime message={message} failTo={failTo} />,
     [failTo, message],
@@ -316,9 +266,9 @@ const ChatMessageContainer: FC<{
   return (
     <ToolbarDisplayContext value={toolbarDisplayAtom}>
       <MessageBox
-        inGame={inGame}
-        pos={pos}
-        continued={continued}
+        inGame={message.inGame ?? false}
+        pos={message.pos}
+        continued={shouldConcealNameOnLeft}
         highlighted={highlighted}
         lifting={overlay}
         isInGameChannel={isInGameChannel}
@@ -335,8 +285,15 @@ const ChatMessageContainer: FC<{
         toolbar={toolbar}
       >
         {handle}
-        {children}
+        {namePlate}
+        <MessageContentBox ref={contentRef} pos={message.pos} isLast={isLast}>
+          <ChatItemMessageWhisperIndicator message={message} parsed={parsed} />
+          {content}
+        </MessageContentBox>
       </MessageBox>
     </ToolbarDisplayContext>
   );
 };
+
+export const ChatItemMessage = memo(ChatItemMessageComponent);
+ChatItemMessage.displayName = 'ChatItemMessage';

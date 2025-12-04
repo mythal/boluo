@@ -29,7 +29,11 @@ export const composeRender =
       }
       const end = entity.start + entity.len;
       const segment = text.slice(entity.start, end);
-      if (entity.type === 'Strong' || entity.type === 'Emphasis') {
+      if (
+        entity.type === 'Strong' ||
+        entity.type === 'Emphasis' ||
+        entity.type === 'StrongEmphasis'
+      ) {
         nodes.push(
           <span key={key} className="bg-surface-muted rounded-sm">
             {segment}

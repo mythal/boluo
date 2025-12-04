@@ -49,13 +49,8 @@ export const SelfPreviewPlaceholder: FC<Props> = ({ channelId, inGame, composeAt
   const hasHistory = drafts.length > 0;
 
   return (
-    <span>
-      {hasHistory && (
-        <span className="mr-2">
-          <DraftHistoryButton drafts={drafts} onRestore={restore} />
-        </span>
-      )}
-      <span className="text-text-secondary italic">
+    <span className="flex">
+      <span className="text-text-secondary grow italic">
         {inGame ? (
           <span>
             <FormattedMessage defaultMessage="Tell your adventures" />
@@ -66,6 +61,11 @@ export const SelfPreviewPlaceholder: FC<Props> = ({ channelId, inGame, composeAt
           </span>
         )}
       </span>
+      {hasHistory && (
+        <span className="ml-2 text-sm">
+          <DraftHistoryButton drafts={drafts} onRestore={restore} />
+        </span>
+      )}
     </span>
   );
 };

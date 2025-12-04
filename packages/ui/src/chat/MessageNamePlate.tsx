@@ -1,13 +1,20 @@
 import clsx from 'clsx';
 import { FC, ReactNode } from 'react';
 
-export const MessageNamePlate: FC<{
+interface Props {
   children: ReactNode;
-  continued?: boolean;
-}> = ({ children, continued = false }) => {
+  shouldConcealNameOnLeft?: boolean;
+}
+
+export const MessageNamePlate: FC<Props> = ({ children, shouldConcealNameOnLeft = false }) => {
   return (
-    <div className={clsx('self-start @2xl:text-right', continued ? 'hidden @2xl:block' : '')}>
-      {!continued && <span>{children}:</span>}
+    <div
+      className={clsx(
+        'self-start @2xl:text-right',
+        shouldConcealNameOnLeft ? 'hidden @2xl:block' : '',
+      )}
+    >
+      {!shouldConcealNameOnLeft && <span>{children}:</span>}
     </div>
   );
 };

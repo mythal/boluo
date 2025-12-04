@@ -46,7 +46,7 @@ const ToolbarButton = ({
   variant = 'default',
 }: ToolbarButtonProps) => {
   const { showTooltip, refs, getFloatingProps, getReferenceProps, floatingStyles } =
-    useTooltip('top');
+    useTooltip('top-start');
   return (
     <span ref={refs.setReference} {...getReferenceProps()}>
       <ButtonInline

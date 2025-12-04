@@ -38,7 +38,7 @@ export const Name: FC<Props> = ({ name, isMaster, inGame, user, messageColor }) 
   const { refs, floatingStyles, middlewareData, context } = useFloating({
     open: isOpen,
     onOpenChange: setIsOpen,
-    placement: 'top',
+    placement: 'top-start',
     middleware: [
       flip({ mainAxis: true, crossAxis: false }),
       shift(),

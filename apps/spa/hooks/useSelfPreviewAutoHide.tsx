@@ -1,4 +1,4 @@
-import { atom, useAtomValue, useSetAtom, useStore } from 'jotai';
+import { atom, useSetAtom, useStore } from 'jotai';
 import { useEffect, useMemo } from 'react';
 import { useChannelAtoms } from './useChannelAtoms';
 
@@ -14,6 +14,7 @@ export const useSelfPreviewAutoHide = () => {
     hasMediaAtom,
     isComposeEmptyAtom,
     selfPreviewNamePanelOpenAtom,
+    selfPreviewDraftHistoryOpenAtom,
     selfPreviewHideAtAtom,
     selfPreviewProgressAtom,
     isEditingAtom,
@@ -30,10 +31,17 @@ export const useSelfPreviewAutoHide = () => {
           hasContent ||
           get(composeFocusedAtom) ||
           get(selfPreviewNamePanelOpenAtom) ||
+          get(selfPreviewDraftHistoryOpenAtom) ||
           get(isEditingAtom)
         );
       }),
-    [composeFocusedAtom, isComposeEmptyAtom, isEditingAtom, selfPreviewNamePanelOpenAtom],
+    [
+      composeFocusedAtom,
+      isComposeEmptyAtom,
+      isEditingAtom,
+      selfPreviewDraftHistoryOpenAtom,
+      selfPreviewNamePanelOpenAtom,
+    ],
   );
 
   useEffect(() => {

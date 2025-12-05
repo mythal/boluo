@@ -64,7 +64,7 @@ export const EditMessageBanner = ({ currentUser }: Props) => {
         name={message.name}
         isMaster={message.isMaster ?? false}
         self={currentUser.id === message.senderId}
-        user={null}
+        userId={message.senderId}
       />
     );
   }, [message, currentUser]);

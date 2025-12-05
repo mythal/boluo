@@ -21,7 +21,6 @@ export const OthersPreview: FC<Props> = ({ preview, isLast }) => {
     const entities = preview.entities;
     return { ...emptyParseResult, text, entities };
   }, [preview.text, preview.entities]);
-  const { data: sender } = useQueryUser(preview.senderId);
 
   const nameNode = useMemo(() => {
     return (
@@ -29,12 +28,12 @@ export const OthersPreview: FC<Props> = ({ preview, isLast }) => {
         inGame={preview.inGame ?? false}
         name={name}
         isMaster={isMaster ?? false}
-        user={sender}
+        userId={preview.senderId}
         isPreview
         self
       />
     );
-  }, [isMaster, name, preview.inGame, sender]);
+  }, [isMaster, name, preview.inGame, preview.senderId]);
 
   const { text: source, entities } = useDeferredValue(parsed);
   const isInGameChannel = useIsInGameChannel();

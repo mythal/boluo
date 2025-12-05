@@ -152,7 +152,7 @@ export const SelfPreview: FC<Props> = ({ preview, isLast, virtualListIndex }) =>
   const isAction = useAtomValue(isActionAtom);
   const inGame = useAtomValue(inGameAtom);
   const { editMode, media } = compose;
-  const color = useMessageColor(member.user, inGame, null);
+  const color = useMessageColor(member.user.id, inGame, null);
   const name = useMemo(() => {
     if (!inGame) {
       return member.user.nickname;

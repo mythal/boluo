@@ -28,6 +28,7 @@ import { useScrollToMessage } from '../../hooks/useScrollToMessage';
 
 interface Props {
   setIsScrolling: (isScrolling: boolean) => void;
+  currentUserId?: string | undefined | null;
 }
 
 const SHOW_BOTTOM_BUTTON_TIMEOUT = 2000;
@@ -245,7 +246,7 @@ const useScrollLock = (
   return scrollLockRef;
 };
 
-export const ChatContentView: FC<Props> = ({ setIsScrolling }) => {
+export const ChatContentView: FC<Props> = ({ setIsScrolling, currentUserId }) => {
   const channelId = useChannelId();
   const store = useStore();
   const virtuosoRef = useRef<VirtuosoHandle | null>(null);
@@ -374,6 +375,7 @@ export const ChatContentView: FC<Props> = ({ setIsScrolling }) => {
                   virtuosoRef={virtuosoRef}
                   scrollerRef={scrollerRef}
                   chatList={chatList}
+                  currentUserId={currentUserId}
                 />
                 {showButton && (
                   <GoBottomButton channelId={channelId} chatList={chatList} onClick={goBottom} />

@@ -115,7 +115,7 @@ const ChatPaneChannelView: FC<{
                 hasRightPane && '@xl:grid-cols-[1fr_auto]',
               )}
             >
-              <ChatContent />
+              <ChatContent currentUserId={member?.user.id} />
               {showMemberList && (
                 <ChannelSubPaneMemberList
                   currentUser={member?.user}

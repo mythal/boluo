@@ -28,10 +28,11 @@ import {
   MessageToolbar,
   makeMessageToolbarDisplayAtom,
 } from './MessageToolbar';
-import { useStore } from 'jotai';
+import { useAtomValue, useStore } from 'jotai';
 import { useMember } from '../../hooks/useMember';
 import { useIsInGameChannel } from '../../hooks/useIsInGameChannel';
 import { useIsDragging } from '../../hooks/useIsDragging';
+import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 
 const LONG_PRESS_DURATION = 300;
 
@@ -134,7 +135,6 @@ const useMessageLongPress = (
 interface Props {
   message: MessageItem;
   className?: string;
-  highlighted?: boolean;
   isLast: boolean;
   continuous?: boolean;
   overlay?: boolean;
@@ -146,8 +146,10 @@ const ChatItemMessageComponent: FC<Props> = ({
   continuous = false,
   overlay = false,
   isLast,
-  highlighted = false,
 }) => {
+  const { highlightMessageAtom } = useChannelAtoms();
+  const highlightMessageId = useAtomValue(highlightMessageAtom);
+  const highlighted = message.id === highlightMessageId;
   const member = useMember();
   const sendBySelf = member?.user.id === message.senderId;
   const iAmMaster = member?.channel.isMaster || false;

@@ -8,17 +8,21 @@ import { ChatContentErrorBoundry } from './ChatContentErrorBoundry';
 
 const ChatContentView = React.lazy(() => import('./ChatContentView'));
 
-export const ChatContent: FC = () => {
+interface Props {
+  currentUserId?: string | undefined | null;
+}
+
+export const ChatContent: FC<Props> = ({ currentUserId }) => {
   const loading = <ChatListLoading />;
   const initialized = useAtomValue(isChatInitializedAtom);
   const [isScrolling, setIsScrolling] = useState(false);
   const view = useMemo(
     () => (
       <ChatContentErrorBoundry>
-        <ChatContentView setIsScrolling={setIsScrolling} />
+        <ChatContentView setIsScrolling={setIsScrolling} currentUserId={currentUserId} />
       </ChatContentErrorBoundry>
     ),
-    [],
+    [currentUserId],
   );
   if (!initialized) return loading;
   return (

@@ -1,13 +1,13 @@
 import { type MemberWithUser } from '@boluo/api';
 import { useAtomValue } from 'jotai';
 import { selectAtom } from 'jotai/utils';
-import { type FC, useMemo } from 'react';
+import { type FC, useEffect, useMemo, useRef } from 'react';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { useMediaDrop } from '../../hooks/useMediaDrop';
 import { type PreviewItem } from '../../state/channel.types';
 import { type ComposeState } from '../../state/compose.reducer';
 import { MessageMedia } from './MessageMedia';
-import { PreviewBox } from './PreviewBox';
+import { PreviewBox } from '@boluo/ui/chat/PreviewBox';
 import { RemoveMediaButton } from './RemoveMediaButton';
 import { SelfPreviewContent } from './SelfPreviewContent';
 import { SelfPreviewNameCell } from './SelfPreviewNameCell';
@@ -17,6 +17,9 @@ import { usePaneIsFocus } from '../../hooks/usePaneIsFocus';
 import { NameEditable } from './NameEditable';
 import { DisableDelay } from '@boluo/ui/Delay';
 import { SelfPreviewHideProgress } from './SelfPreviewHideProgress';
+import { useReadObserve } from '../../hooks/useReadObserve';
+import { useIsInGameChannel } from '../../hooks/useIsInGameChannel';
+import { useSortable } from '@dnd-kit/sortable';
 
 type ComposeDrived = Pick<ComposeState, 'media'> & {
   editMode: boolean;
@@ -87,6 +90,14 @@ export const SelfPreview: FC<Props> = ({ preview, myMember: member, isLast }) =>
     ),
     [isFocused, member.user],
   );
+  const readObserve = useReadObserve();
+  const isInGameChannel = useIsInGameChannel();
+  const boxRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (boxRef.current == null) return;
+    return readObserve(boxRef.current);
+  }, [readObserve]);
+  const { setNodeRef, transform, transition } = useSortable({ id: preview.id, disabled: true });
 
   return (
     <DisableDelay.Provider value={isFocused}>
@@ -95,10 +106,17 @@ export const SelfPreview: FC<Props> = ({ preview, myMember: member, isLast }) =>
         isLast={isLast}
         id={preview.id}
         inGame={inGame}
-        editMode={editMode}
+        inEditMode={editMode}
         isSelf
         onDrop={onDrop}
         pos={preview.pos}
+        isInGameChannel={isInGameChannel}
+        transform={transform}
+        transition={transition}
+        ref={(ref) => {
+          setNodeRef(ref);
+          boxRef.current = ref;
+        }}
       >
         <SelfPreviewHideProgress />
         <SelfPreviewNameCell isAction={isAction} nameNode={nameNode} />

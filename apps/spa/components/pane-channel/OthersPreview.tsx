@@ -4,8 +4,9 @@ import { type PreviewItem } from '../../state/channel.types';
 import { Content } from './Content';
 import { Name } from './Name';
 import { OthersPreviewNoBroadcast } from './OthersPreviewNoBroadcast';
-import { PreviewBox } from './PreviewBox';
+import { PreviewBox } from '@boluo/ui/chat/PreviewBox';
 import { useQueryUser } from '@boluo/common/hooks/useQueryUser';
+import { useIsInGameChannel } from '../../hooks/useIsInGameChannel';
 
 interface Props {
   preview: PreviewItem;
@@ -36,13 +37,15 @@ export const OthersPreview: FC<Props> = ({ preview, isLast }) => {
   }, [isMaster, name, preview.inGame, sender]);
 
   const { text: source, entities } = useDeferredValue(parsed);
+  const isInGameChannel = useIsInGameChannel();
 
   return (
     <PreviewBox
       id={preview.id}
-      editMode={preview.edit != null}
+      inEditMode={preview.edit != null}
       isSelf={false}
       inGame={preview.inGame ?? false}
+      isInGameChannel={isInGameChannel}
       isLast={isLast}
       pos={preview.pos}
       className="text-text-secondary pr-message-small @2xl:pr-message"

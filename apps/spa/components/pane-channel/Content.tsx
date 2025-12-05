@@ -70,11 +70,20 @@ export const Content = memo<Props>(
             case 'Link':
               return <EntityLink key={index} source={source} entity={entity} />;
             case 'StrongEmphasis':
-              return <EntityStrongEmphasis key={index} source={source} entity={entity} />;
+              return (
+                <EntityStrongEmphasis
+                  key={index}
+                  source={source}
+                  entity={entity}
+                  isAction={isAction}
+                />
+              );
             case 'Strong':
               return <EntityStrong key={index} source={source} entity={entity} />;
             case 'Emphasis':
-              return <EntityEmphasis key={index} source={source} entity={entity} />;
+              return (
+                <EntityEmphasis key={index} source={source} entity={entity} isAction={isAction} />
+              );
             case 'Code':
               return <EntityCode key={index} source={source} entity={entity} />;
             case 'CodeBlock':
@@ -93,12 +102,13 @@ export const Content = memo<Props>(
         nodeList.push(<span key="space">{ZERO_WIDTH_SPACE}</span>);
       }
       return nodeList;
-    }, [source, evaluatedEntities]);
+    }, [evaluatedEntities, source, isAction]);
     return (
       <span
         className={clsx(
           'Content relative wrap-break-word whitespace-pre-wrap',
           isArchived ? 'decoration-text-secondary decoration-opacity-50 line-through' : '',
+          isAction ? 'italic' : '',
         )}
         onContextMenu={onContextMenu}
         onDoubleClick={onDoubleClick}

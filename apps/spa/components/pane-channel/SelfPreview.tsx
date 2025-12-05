@@ -188,7 +188,9 @@ export const SelfPreview: FC<Props> = ({ preview, isLast, virtualListIndex }) =>
 
   const toolbar = useMemo(
     () => (
-      <div className="h-6">{isFocused && <SelfPreviewToolbar currentUser={member.user} />}</div>
+      <div className="h-6 pt-1">
+        {isFocused && <SelfPreviewToolbar currentUser={member.user} />}
+      </div>
     ),
     [isFocused, member.user],
   );

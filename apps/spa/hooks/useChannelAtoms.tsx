@@ -28,6 +28,7 @@ export interface ChannelAtoms {
   isActionAtom: Atom<boolean>;
   hasMediaAtom: Atom<boolean>;
   selfPreviewNamePanelOpenAtom: PrimitiveAtom<boolean>;
+  selfPreviewDraftHistoryOpenAtom: PrimitiveAtom<boolean>;
   selfPreviewHideAtAtom: PrimitiveAtom<number | null>;
   selfPreviewProgressAtom: PrimitiveAtom<number | null>;
   selfPreviewVisibleAtom: Atom<boolean>;
@@ -98,14 +99,16 @@ export const useMakeChannelAtoms = (
         return compose.source.trim().length === 0 && !hasMedia;
       });
       const selfPreviewNamePanelOpenAtom = atom<boolean>(false);
+      const selfPreviewDraftHistoryOpenAtom = atom<boolean>(false);
       const selfPreviewHideAtAtom = atom<number | null>(null);
       const selfPreviewProgressAtom = atom<number | null>(null);
       const selfPreviewVisibleAtom = atom((get) => {
         const focused = get(composeFocusedAtom);
         const isComposeEmpty = get(isComposeEmptyAtom);
         const namePanelOpen = get(selfPreviewNamePanelOpenAtom);
+        const draftHistoryOpen = get(selfPreviewDraftHistoryOpenAtom);
         const isEditing = get(isEditingAtom);
-        if (!isComposeEmpty || focused || namePanelOpen || isEditing) return true;
+        if (!isComposeEmpty || focused || namePanelOpen || draftHistoryOpen || isEditing) return true;
         const hideAt = get(selfPreviewHideAtAtom);
         if (hideAt == null) return true;
         // eslint-disable-next-line react-hooks/purity
@@ -123,6 +126,7 @@ export const useMakeChannelAtoms = (
         isEditingAtom,
         isComposeEmptyAtom,
         selfPreviewNamePanelOpenAtom,
+        selfPreviewDraftHistoryOpenAtom,
         selfPreviewHideAtAtom,
         selfPreviewProgressAtom,
         selfPreviewVisibleAtom,

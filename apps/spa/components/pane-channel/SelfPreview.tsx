@@ -1,5 +1,5 @@
 import { type MemberWithUser } from '@boluo/api';
-import { useAtomValue } from 'jotai';
+import { useAtomValue, useSetAtom } from 'jotai';
 import { selectAtom } from 'jotai/utils';
 import { type FC, type RefObject, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
@@ -16,7 +16,7 @@ import { useMessageColor } from '../../hooks/useMessageColor';
 import { usePaneIsFocus } from '../../hooks/usePaneIsFocus';
 import { NameEditable } from './NameEditable';
 import { DisableDelay } from '@boluo/ui/Delay';
-import { SelfPreviewHideProgress } from './SelfPreviewHideProgress';
+import { useSelfPreviewAutoHide } from '../../hooks/useSelfPreviewAutoHide';
 import { useReadObserve } from '../../hooks/useReadObserve';
 import { useIsInGameChannel } from '../../hooks/useIsInGameChannel';
 import { useSortable } from '@dnd-kit/sortable';
@@ -145,7 +145,9 @@ export const SelfPreview: FC<Props> = ({ preview, isLast, virtualListIndex }) =>
   const isFocused = usePaneIsFocus();
   const member = useMember()!;
   const isMaster = member.channel.isMaster;
-  const { composeAtom, isActionAtom, inGameAtom } = useChannelAtoms();
+  const { composeAtom, isActionAtom, inGameAtom, selfPreviewHoverAtom } = useChannelAtoms();
+  const setSelfPreviewHover = useSetAtom(selfPreviewHoverAtom);
+  const { hidePlaceholder, hideToolbox } = useSelfPreviewAutoHide();
   const compose: ComposeDrived = useAtomValue(
     useMemo(() => selectAtom(composeAtom, selector, isEqual), [composeAtom]),
   );
@@ -188,11 +190,15 @@ export const SelfPreview: FC<Props> = ({ preview, isLast, virtualListIndex }) =>
 
   const toolbar = useMemo(
     () => (
-      <div className="h-6 pt-1">
+      <div
+        className={`h-6 pt-1 transition-opacity duration-2000 ${
+          hideToolbox ? 'opacity-40' : 'opacity-100'
+        }`}
+      >
         {isFocused && <SelfPreviewToolbar currentUser={member.user} />}
       </div>
     ),
-    [isFocused, member.user],
+    [hideToolbox, isFocused, member.user],
   );
   const readObserve = useReadObserve();
   const isInGameChannel = useIsInGameChannel();
@@ -202,6 +208,12 @@ export const SelfPreview: FC<Props> = ({ preview, isLast, virtualListIndex }) =>
     if (boxRef.current == null) return;
     return readObserve(boxRef.current);
   }, [readObserve]);
+  useEffect(
+    () => () => {
+      setSelfPreviewHover(false);
+    },
+    [setSelfPreviewHover],
+  );
   const { setNodeRef, transform, transition } = useSortable({ id: preview.id, disabled: true });
 
   return (
@@ -218,15 +230,21 @@ export const SelfPreview: FC<Props> = ({ preview, isLast, virtualListIndex }) =>
         isInGameChannel={isInGameChannel}
         transform={transform}
         transition={transition}
+        onMouseEnter={() => setSelfPreviewHover(true)}
+        onMouseLeave={() => setSelfPreviewHover(false)}
         ref={(ref) => {
           setNodeRef(ref);
           boxRef.current = ref;
         }}
       >
-        <SelfPreviewHideProgress />
         <SelfPreviewNameCell isAction={isAction} nameNode={nameNode} />
         <div>
-          <SelfPreviewContent myMember={member.channel} nameNode={nameNode} mediaNode={mediaNode} />
+          <SelfPreviewContent
+            myMember={member.channel}
+            nameNode={nameNode}
+            mediaNode={mediaNode}
+            hidePlaceholder={hidePlaceholder}
+          />
           {toolbar}
         </div>
       </PreviewBox>

@@ -17,6 +17,8 @@ interface Props {
   transform?: Transform | null;
   transition?: string | undefined;
   isSelf?: boolean;
+  onMouseEnter?: React.MouseEventHandler<HTMLDivElement>;
+  onMouseLeave?: React.MouseEventHandler<HTMLDivElement>;
 }
 
 export const PreviewBox: FC<Props> = ({
@@ -33,6 +35,8 @@ export const PreviewBox: FC<Props> = ({
   transform = null,
   transition,
   isSelf = false,
+  onMouseEnter,
+  onMouseLeave,
 }) => {
   const style: CSSProperties & { '--bg-angle': string } = {
     transform: CSS.Transform.toString(transform),
@@ -65,6 +69,8 @@ export const PreviewBox: FC<Props> = ({
       style={style}
       onDrop={onDrop}
       onDragOver={(event) => event.preventDefault()}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
     >
       <PreviewHandlePlaceHolder editMode={inEditMode} />
       {children}

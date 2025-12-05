@@ -1,106 +1,87 @@
-import { atom, useSetAtom, useStore } from 'jotai';
-import { useEffect, useMemo } from 'react';
+import { useSetAtom, useStore } from 'jotai';
+import { useEffect, useState } from 'react';
 import { useChannelAtoms } from './useChannelAtoms';
 
 const HIDE_DELAY_MS = 20000;
+const HIDE_TOOLBOX_BEFORE_MS = 10000;
+const HIDE_PLACEHOLDER_BEFORE_MS = 5000;
 
 /**
  * Manage self preview auto-hide countdown while keeping updates local to the preview.
  */
 export const useSelfPreviewAutoHide = () => {
   const {
-    composeAtom,
-    composeFocusedAtom,
-    hasMediaAtom,
-    isComposeEmptyAtom,
-    selfPreviewNamePanelOpenAtom,
-    selfPreviewDraftHistoryOpenAtom,
     selfPreviewHideAtAtom,
-    selfPreviewProgressAtom,
-    isEditingAtom,
+    selfPreviewShouldHoldAtom,
   } = useChannelAtoms();
   const store = useStore();
   const setHideAt = useSetAtom(selfPreviewHideAtAtom);
-  const setProgress = useSetAtom(selfPreviewProgressAtom);
-
-  const shouldHoldAtom = useMemo(
-    () =>
-      atom((get) => {
-        const hasContent = !get(isComposeEmptyAtom);
-        return (
-          hasContent ||
-          get(composeFocusedAtom) ||
-          get(selfPreviewNamePanelOpenAtom) ||
-          get(selfPreviewDraftHistoryOpenAtom) ||
-          get(isEditingAtom)
-        );
-      }),
-    [
-      composeFocusedAtom,
-      isComposeEmptyAtom,
-      isEditingAtom,
-      selfPreviewDraftHistoryOpenAtom,
-      selfPreviewNamePanelOpenAtom,
-    ],
-  );
+  const [hideToolbox, setHideToolbox] = useState(false);
+  const [hidePlaceholder, setHidePlaceholder] = useState(false);
 
   useEffect(() => {
-    const syncState = () => {
-      const shouldHold = store.get(shouldHoldAtom);
+    let timer: number | null = null;
+    const update = () => {
+      if (timer != null) {
+        window.clearTimeout(timer);
+      }
+      const shouldHold = store.get(selfPreviewShouldHoldAtom);
       if (shouldHold) {
         setHideAt(null);
-        setProgress(null);
+        setHideToolbox(false);
+        setHidePlaceholder(false);
+        timer = null;
         return;
       }
       const now = Date.now();
-      const hideAt = store.get(selfPreviewHideAtAtom);
-      if (hideAt == null || hideAt <= now) {
-        const nextHideAt = now + HIDE_DELAY_MS;
-        setHideAt(nextHideAt);
-        setProgress(0);
-      }
-    };
-    const unsubscribe = store.sub(shouldHoldAtom, syncState);
-    syncState();
-    return () => unsubscribe();
-  }, [setHideAt, setProgress, shouldHoldAtom, store, selfPreviewHideAtAtom]);
-
-  useEffect(() => {
-    let frame: number | null = null;
-    const tick = () => {
-      const shouldHold = store.get(shouldHoldAtom);
-      const hideAt = store.get(selfPreviewHideAtAtom);
-      if (shouldHold || hideAt == null) {
-        setProgress(null);
-        frame = null;
+      let hideAt = store.get(selfPreviewHideAtAtom);
+      if (hideAt === 0) {
+        setHideToolbox(true);
+        setHidePlaceholder(true);
+        timer = null;
         return;
       }
-      const now = Date.now();
-      if (now >= hideAt) {
-        setProgress(1);
+      if (hideAt == null) {
+        hideAt = now + HIDE_DELAY_MS;
+        setHideAt(hideAt);
+      }
+      const msUntilHide = hideAt - now;
+      if (msUntilHide <= 0) {
+        setHideToolbox(true);
+        setHidePlaceholder(true);
         setHideAt(0);
-        frame = null;
+        timer = null;
         return;
       }
-      const progress = Math.min(1, 1 - (hideAt - now) / HIDE_DELAY_MS);
-      setProgress(progress);
-      frame = window.requestAnimationFrame(tick);
+      setHideToolbox(msUntilHide <= HIDE_TOOLBOX_BEFORE_MS);
+      setHidePlaceholder(msUntilHide <= HIDE_PLACEHOLDER_BEFORE_MS);
+      const nextDelay = Math.min(
+        ...[
+          msUntilHide,
+          msUntilHide - HIDE_TOOLBOX_BEFORE_MS,
+          msUntilHide - HIDE_PLACEHOLDER_BEFORE_MS,
+        ].filter((ms) => ms > 0),
+      );
+      timer = window.setTimeout(update, nextDelay);
     };
-    const start = () => {
-      if (frame != null) return;
-      frame = window.requestAnimationFrame(tick);
-    };
-    const unsubscribeHideAt = store.sub(selfPreviewHideAtAtom, start);
-    const unsubscribeHold = store.sub(shouldHoldAtom, start);
-    start();
+    const unsubscribeHideAt = store.sub(selfPreviewHideAtAtom, update);
+    const unsubscribeHold = store.sub(selfPreviewShouldHoldAtom, update);
+    update();
     return () => {
-      if (frame != null) {
-        window.cancelAnimationFrame(frame);
+      if (timer != null) {
+        window.clearTimeout(timer);
       }
       unsubscribeHideAt();
       unsubscribeHold();
     };
-  }, [setHideAt, setProgress, shouldHoldAtom, store, selfPreviewHideAtAtom]);
+  }, [
+    setHideAt,
+    setHidePlaceholder,
+    setHideToolbox,
+    store,
+    selfPreviewHideAtAtom,
+    selfPreviewShouldHoldAtom,
+  ]);
 
-  return selfPreviewProgressAtom;
+  return { hidePlaceholder, hideToolbox };
 };

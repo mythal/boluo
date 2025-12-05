@@ -13,9 +13,15 @@ interface Props {
   channelId: string;
   inGame: boolean;
   composeAtom: ChannelAtoms['composeAtom'];
+  faded?: boolean;
 }
 
-export const SelfPreviewPlaceholder: FC<Props> = ({ channelId, inGame, composeAtom }) => {
+export const SelfPreviewPlaceholder: FC<Props> = ({
+  channelId,
+  inGame,
+  composeAtom,
+  faded = false,
+}) => {
   const [drafts, setDrafts] = useState<ComposeDraftEntry[]>([]);
   const dispatch = useSetAtom(composeAtom);
 
@@ -49,7 +55,9 @@ export const SelfPreviewPlaceholder: FC<Props> = ({ channelId, inGame, composeAt
   const hasHistory = drafts.length > 0;
 
   return (
-    <span className="flex">
+    <span
+      className={`flex transition-opacity duration-5000 ${faded ? 'opacity-0' : 'opacity-100'}`}
+    >
       <span className="text-text-secondary grow italic">
         {inGame ? (
           <span>

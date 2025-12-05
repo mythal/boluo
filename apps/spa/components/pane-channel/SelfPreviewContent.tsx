@@ -10,9 +10,15 @@ interface Props {
   nameNode: ReactNode;
   myMember: ChannelMember;
   mediaNode: ReactNode;
+  hidePlaceholder: boolean;
 }
 
-export const SelfPreviewContent: FC<Props> = ({ nameNode, myMember, mediaNode }) => {
+export const SelfPreviewContent: FC<Props> = ({
+  nameNode,
+  myMember,
+  mediaNode,
+  hidePlaceholder,
+}) => {
   const { parsedAtom, inGameAtom, composeAtom, lastWhisperTargetsAtom } = useChannelAtoms();
   const inGame = useAtomValue(inGameAtom);
   const parsed = useAtomValue(parsedAtom);
@@ -49,6 +55,7 @@ export const SelfPreviewContent: FC<Props> = ({ nameNode, myMember, mediaNode })
             channelId={myMember.channelId}
             inGame={inGame}
             composeAtom={composeAtom}
+            faded={hidePlaceholder}
           />
         )}
       </div>

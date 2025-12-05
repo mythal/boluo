@@ -18,6 +18,7 @@ import { FloatingBox } from '@boluo/ui/FloatingBox';
 import Icon from '@boluo/ui/Icon';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { useAtom } from 'jotai';
+import { usePaneIsFocus } from '../../hooks/usePaneIsFocus';
 
 interface DraftHistoryButtonProps {
   drafts: ComposeDraftEntry[];
@@ -26,12 +27,13 @@ interface DraftHistoryButtonProps {
 
 export const DraftHistoryButton: FC<DraftHistoryButtonProps> = ({ drafts, onRestore }) => {
   const { selfPreviewDraftHistoryOpenAtom } = useChannelAtoms();
+  const isFocused = usePaneIsFocus();
   const [open, setOpen] = useAtom(selfPreviewDraftHistoryOpenAtom);
 
   const { refs, floatingStyles, context } = useFloating<HTMLSpanElement>({
     open,
     onOpenChange: setOpen,
-    placement: 'top-start',
+    placement: 'top-end',
     middleware: [offset(8), flip({ fallbackAxisSideDirection: 'start' }), shift()],
     whileElementsMounted: autoUpdate,
   });
@@ -49,7 +51,7 @@ export const DraftHistoryButton: FC<DraftHistoryButtonProps> = ({ drafts, onRest
   }
 
   return (
-    <span ref={refs.setReference}>
+    <span ref={refs.setReference} className={isFocused ? 'opacity-100' : 'opacity-0'}>
       <ButtonInline aria-pressed={open} onClick={() => setOpen((value) => !value)}>
         <Icon icon={BookCopy} className="mr-1" />
         <FormattedMessage

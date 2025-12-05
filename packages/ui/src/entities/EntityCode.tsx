@@ -52,7 +52,7 @@ export const EntityCode: FC<Props> = ({
       <code
         ref={refs.setReference}
         className={clsx(
-          'EntityCode bg-surface-muted border-border-default hover:border-border-strong font-pixel cursor-pointer rounded-sm border px-1 shadow-xs',
+          'EntityCode bg-surface-muted border-border-default hover:border-border-strong font-pixel cursor-pointer rounded-sm border px-1 not-italic shadow-xs',
           'active:relative active:top-px active:shadow-none',
         )}
         role="button"

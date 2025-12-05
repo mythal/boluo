@@ -15,7 +15,6 @@ import { MessageContentBox } from '@boluo/ui/chat/MessageContentBox';
 import { MessageNamePlate } from '@boluo/ui/chat/MessageNamePlate';
 import { ChatItemMessageWhisperIndicator } from './ChatItemMessageWhisperIndicator';
 import { Name } from './Name';
-import { useQueryUser } from '@boluo/common/hooks/useQueryUser';
 import { useReadObserve } from '../../hooks/useReadObserve';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -28,10 +27,12 @@ import {
   MessageToolbar,
   makeMessageToolbarDisplayAtom,
 } from './MessageToolbar';
-import { useStore } from 'jotai';
+import { useAtomValue, useStore } from 'jotai';
 import { useMember } from '../../hooks/useMember';
 import { useIsInGameChannel } from '../../hooks/useIsInGameChannel';
 import { useIsDragging } from '../../hooks/useIsDragging';
+import { useChannelAtoms } from '../../hooks/useChannelAtoms';
+import { selectAtom } from 'jotai/utils';
 
 const LONG_PRESS_DURATION = 300;
 
@@ -134,7 +135,6 @@ const useMessageLongPress = (
 interface Props {
   message: MessageItem;
   className?: string;
-  highlighted?: boolean;
   isLast: boolean;
   continuous?: boolean;
   overlay?: boolean;
@@ -146,13 +146,18 @@ const ChatItemMessageComponent: FC<Props> = ({
   continuous = false,
   overlay = false,
   isLast,
-  highlighted = false,
 }) => {
+  const { highlightMessageAtom } = useChannelAtoms();
+  const isHighlightedAtom = useMemo(
+    () => selectAtom(highlightMessageAtom, (id) => id === message.id),
+    [highlightMessageAtom, message.id],
+  );
+  const isHighlighted = useAtomValue(isHighlightedAtom);
+
   const member = useMember();
   const sendBySelf = member?.user.id === message.senderId;
   const iAmMaster = member?.channel.isMaster || false;
   const { isMaster, isAction, failTo } = message;
-  const { data: user } = useQueryUser(message.senderId);
   const readObserve = useReadObserve();
   const contentRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -180,10 +185,10 @@ const ChatItemMessageComponent: FC<Props> = ({
         name={message.name}
         isMaster={isMaster ?? false}
         self={sendBySelf}
-        user={user}
+        userId={message.senderId}
       />
     ),
-    [message.inGame, message.name, isMaster, sendBySelf, user],
+    [message.inGame, message.name, isMaster, sendBySelf, message.senderId],
   );
 
   const parsed: ParseResult = useMemo(
@@ -269,7 +274,7 @@ const ChatItemMessageComponent: FC<Props> = ({
         inGame={message.inGame ?? false}
         pos={message.pos}
         continued={shouldConcealNameOnLeft}
-        highlighted={highlighted}
+        highlighted={isHighlighted}
         lifting={overlay}
         isInGameChannel={isInGameChannel}
         isDragging={isDragging}

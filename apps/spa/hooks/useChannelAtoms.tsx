@@ -28,8 +28,10 @@ export interface ChannelAtoms {
   isActionAtom: Atom<boolean>;
   hasMediaAtom: Atom<boolean>;
   selfPreviewNamePanelOpenAtom: PrimitiveAtom<boolean>;
+  selfPreviewDraftHistoryOpenAtom: PrimitiveAtom<boolean>;
   selfPreviewHideAtAtom: PrimitiveAtom<number | null>;
-  selfPreviewProgressAtom: PrimitiveAtom<number | null>;
+  selfPreviewHoverAtom: PrimitiveAtom<boolean>;
+  selfPreviewShouldHoldAtom: Atom<boolean>;
   selfPreviewVisibleAtom: Atom<boolean>;
   isComposeEmptyAtom: Atom<boolean>;
   broadcastAtom: Atom<boolean>;
@@ -98,14 +100,27 @@ export const useMakeChannelAtoms = (
         return compose.source.trim().length === 0 && !hasMedia;
       });
       const selfPreviewNamePanelOpenAtom = atom<boolean>(false);
+      const selfPreviewDraftHistoryOpenAtom = atom<boolean>(false);
       const selfPreviewHideAtAtom = atom<number | null>(null);
-      const selfPreviewProgressAtom = atom<number | null>(null);
-      const selfPreviewVisibleAtom = atom((get) => {
+      const selfPreviewHoverAtom = atom<boolean>(false);
+      const selfPreviewShouldHoldAtom = atom((get) => {
         const focused = get(composeFocusedAtom);
         const isComposeEmpty = get(isComposeEmptyAtom);
         const namePanelOpen = get(selfPreviewNamePanelOpenAtom);
+        const draftHistoryOpen = get(selfPreviewDraftHistoryOpenAtom);
         const isEditing = get(isEditingAtom);
-        if (!isComposeEmpty || focused || namePanelOpen || isEditing) return true;
+        const hovering = get(selfPreviewHoverAtom);
+        return (
+          !isComposeEmpty ||
+          focused ||
+          namePanelOpen ||
+          draftHistoryOpen ||
+          isEditing ||
+          hovering
+        );
+      });
+      const selfPreviewVisibleAtom = atom((get) => {
+        if (get(selfPreviewShouldHoldAtom)) return true;
         const hideAt = get(selfPreviewHideAtAtom);
         if (hideAt == null) return true;
         // eslint-disable-next-line react-hooks/purity
@@ -123,8 +138,10 @@ export const useMakeChannelAtoms = (
         isEditingAtom,
         isComposeEmptyAtom,
         selfPreviewNamePanelOpenAtom,
+        selfPreviewDraftHistoryOpenAtom,
         selfPreviewHideAtAtom,
-        selfPreviewProgressAtom,
+        selfPreviewHoverAtom,
+        selfPreviewShouldHoldAtom,
         selfPreviewVisibleAtom,
         lastWhisperTargetsAtom: atomWithStorage<string[] | null>(
           `${channelId}:last-whisper-targets`,

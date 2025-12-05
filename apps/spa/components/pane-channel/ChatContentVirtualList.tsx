@@ -1,12 +1,4 @@
-import {
-  type FC,
-  type MutableRefObject,
-  type RefObject,
-  useCallback,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-} from 'react';
+import { type FC, type RefObject, useCallback, useLayoutEffect, useMemo, useRef } from 'react';
 import {
   type ListRange,
   type ScrollSeekPlaceholderProps,
@@ -15,7 +7,6 @@ import {
 } from 'react-virtuoso';
 import { type ChatItem } from '../../state/channel.types';
 import { ChatContentHeader } from './ChatContentHeader';
-import { ChatItemSwitch } from './ChatItemSwitch';
 import { getOS } from '@boluo/utils/browser';
 import {
   type OnVirtualKeybroadChange,
@@ -23,6 +14,10 @@ import {
 } from '../../hooks/useVirtualKeybroadChange';
 import { useSettings } from '../../hooks/useSettings';
 import { useMutateSettings } from '../../hooks/useMutateSettings';
+import { IsOptimisticContext } from '../../hooks/useIsOptimistic';
+import { ChatItemMessage } from './ChatItemMessage';
+import { SelfPreview } from './SelfPreview';
+import { OthersPreview } from './OthersPreview';
 
 interface Props {
   firstItemIndex: number;
@@ -33,6 +28,7 @@ interface Props {
   filteredMessagesCount: number;
   handleBottomStateChange?: (bottom: boolean) => void;
   setIsScrolling: (isScrolling: boolean) => void;
+  currentUserId?: string | undefined | null;
 }
 
 export interface VirtualListContext {
@@ -106,6 +102,7 @@ export const ChatContentVirtualList: FC<Props> = (props) => {
     filteredMessagesCount,
     handleBottomStateChange,
     setIsScrolling,
+    currentUserId,
   } = props;
   const totalCount = chatList.length;
   const onVirtualKeybroadChange: OnVirtualKeybroadChange = useCallback(
@@ -131,9 +128,27 @@ export const ChatContentVirtualList: FC<Props> = (props) => {
     // eslint-disable-next-line react-hooks/immutability
     prevOffsetIndex = offsetIndex;
     prevItem = item;
-    return (
-      <ChatItemSwitch isLast={isLast} key={item.key} chatItem={item} continuous={continuous} />
-    );
+
+    switch (item.type) {
+      case 'MESSAGE':
+        return (
+          <IsOptimisticContext value={item.optimistic || false}>
+            <ChatItemMessage isLast={isLast} message={item} continuous={continuous} />
+          </IsOptimisticContext>
+        );
+      case 'PREVIEW':
+        return (
+          <IsOptimisticContext value={item.optimistic || false}>
+            {currentUserId && item.senderId === currentUserId ? (
+              <SelfPreview isLast={isLast} preview={item} virtualListIndex={offsetIndex} />
+            ) : (
+              <OthersPreview isLast={isLast} preview={item} />
+            )}
+          </IsOptimisticContext>
+        );
+      default:
+        return <div className="p-4">Not implemented</div>;
+    }
   };
   const handleRangeChange = (range: ListRange) => {
     renderRangeRef.current = [range.startIndex - firstItemIndex, range.endIndex - firstItemIndex];

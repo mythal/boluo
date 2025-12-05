@@ -19,7 +19,8 @@ export const ContentGuard: FC<Props> = ({ active, children }) => {
           className={clsx(
             'ContentGuard',
             'absolute inset-0 flex w-full items-center justify-center',
-            'text-text-primary focus-visible:outline-surface-inverted cursor-pointer rounded bg-transparent px-4 py-2 text-center text-sm backdrop-blur-sm transition focus-visible:outline focus-visible:outline-offset-2',
+            'bg-surface-unit/70 hover:bg-surface-unit/50',
+            'text-text-primary focus-visible:outline-surface-inverted cursor-pointer rounded px-4 py-2 text-center text-sm backdrop-blur-xs transition focus-visible:outline focus-visible:outline-offset-2',
           )}
           onClick={(event) => {
             event.stopPropagation();

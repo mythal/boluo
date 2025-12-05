@@ -2,7 +2,6 @@ import { Gamemaster, TriangleAlert } from '@boluo/icons';
 import { useMemo, useState, type FC } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { NameBox } from '@boluo/ui/chat/NameBox';
-import { type User } from '@boluo/api';
 import { useMessageColor } from '../../hooks/useMessageColor';
 import {
   FloatingPortal,
@@ -17,23 +16,21 @@ import {
   useInteractions,
 } from '@floating-ui/react';
 import Icon from '@boluo/ui/Icon';
-import { UserCard } from '@boluo/ui/users/UserCard';
 import { Delay } from '@boluo/ui/Delay';
 import { FallbackIcon } from '@boluo/ui/FallbackIcon';
-import { useQueryAppSettings } from '@boluo/common/hooks/useQueryAppSettings';
+import { NameUserPanel } from './NameUserPanel';
 
 interface Props {
   name: string | undefined | null;
   inGame: boolean;
-  user: User | null | undefined;
+  userId: string;
   isMaster: boolean;
   self: boolean;
   isPreview?: boolean;
   messageColor?: string | null | undefined;
 }
 
-export const Name: FC<Props> = ({ name, isMaster, inGame, user, messageColor }) => {
-  const { data: appSettings } = useQueryAppSettings();
+export const Name: FC<Props> = ({ name, isMaster, inGame, userId, messageColor }) => {
   const [isOpen, setIsOpen] = useState(false);
   const { refs, floatingStyles, middlewareData, context } = useFloating({
     open: isOpen,
@@ -51,7 +48,7 @@ export const Name: FC<Props> = ({ name, isMaster, inGame, user, messageColor }) 
   const dismiss = useDismiss(context);
   const { getReferenceProps, getFloatingProps } = useInteractions([click, dismiss]);
   const isEmptyName = name === '' || name == null;
-  const color = useMessageColor(user, inGame, messageColor);
+  const color = useMessageColor(userId, inGame, messageColor);
   const masterIcon = useMemo(
     () => <Icon icon={Gamemaster} className="inline-block h-[1em] w-[1em]" />,
     [],
@@ -60,7 +57,7 @@ export const Name: FC<Props> = ({ name, isMaster, inGame, user, messageColor }) 
     <>
       <NameBox
         pressed={isOpen}
-        interactive={user != null}
+        interactive={userId != null}
         color={color}
         icon={isMaster ? masterIcon : undefined}
         ref={refs.setReference}
@@ -77,7 +74,7 @@ export const Name: FC<Props> = ({ name, isMaster, inGame, user, messageColor }) 
           name
         )}
       </NameBox>
-      {isOpen && user && (
+      {isOpen && userId && (
         <FloatingPortal>
           <div
             ref={refs.setFloating}
@@ -85,7 +82,7 @@ export const Name: FC<Props> = ({ name, isMaster, inGame, user, messageColor }) 
             {...getFloatingProps()}
             className={middlewareData.hide?.referenceHidden === true ? 'hidden' : ''}
           >
-            <UserCard user={user} mediaUrl={appSettings?.mediaUrl} />
+            <NameUserPanel userId={userId} />
           </div>
         </FloatingPortal>
       )}

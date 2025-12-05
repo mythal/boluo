@@ -263,7 +263,12 @@ const MessageToolbarMoreButton: FC<{
     if (shoudShowMore(display.type)) {
       update();
     }
-  }, [display.type, update]);
+  }, [
+    display.type,
+    update,
+    // Update when message changes
+    message,
+  ]);
   const hover = useHover(context, { delay: { open: 200, close: 0 }, handleClose: safePolygon() });
   const dismiss = useDismiss(context);
   const { getFloatingProps, getReferenceProps } = useInteractions([hover, dismiss]);

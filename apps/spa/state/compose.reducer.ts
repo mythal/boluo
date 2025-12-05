@@ -262,7 +262,7 @@ const handleToggleWhisper = (
   const { whisper } = parseModifiers(state.source);
   const targets = usernames.filter((name) => name.trim() !== '');
   const mentions = targets.map((name) => `@${name}`).join(' ');
-  const command = mentions === '' ? '.h ' : `.h(${mentions}) `;
+  const command = targets.length === 0 ? '.h ' : `.h(${mentions}) `;
   return toggleModifier(state, whisper, command);
 };
 
@@ -386,7 +386,7 @@ const handleRemoveWhisperTarget = (
     .filter((u) => u !== username)
     .map((u) => `@${u}`)
     .join(' ');
-  const modifiedModifier = `.h(${mentions})`;
+  const modifiedModifier = mentions ? `.h(${mentions}) ` : '.h';
 
   return modifyModifier(state, whisper, modifiedModifier);
 };

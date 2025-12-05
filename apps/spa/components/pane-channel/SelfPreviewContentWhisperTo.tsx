@@ -85,14 +85,14 @@ export const ContentWhisperTo: FC<Props> = ({ channelId, whisperToUsernames, inG
 
   if (whisperToMembers.length === 0) {
     return (
-      <span className="text-text-secondary text-sm">
+      <div className="text-text-secondary pt-1 text-sm">
         <FormattedMessage defaultMessage="Whisper to the Master only" /> {whisperToAdd}
-      </span>
+      </div>
     );
   }
 
   return (
-    <span className="text-text-secondary text-sm">
+    <div className="text-text-secondary pt-1 text-sm">
       <FormattedMessage defaultMessage="Whisper to the Master and" />{' '}
       <span className="space-x-1">
         {whisperToAdd}
@@ -106,7 +106,7 @@ export const ContentWhisperTo: FC<Props> = ({ channelId, whisperToUsernames, inG
           />
         ))}
       </span>
-    </span>
+    </div>
   );
 };
 

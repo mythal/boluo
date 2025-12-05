@@ -1,51 +1,39 @@
-import { useSortable } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
 import clsx from 'clsx';
-import {
-  type CSSProperties,
-  type DragEventHandler,
-  type FC,
-  type ReactNode,
-  useEffect,
-  useMemo,
-  useRef,
-} from 'react';
-import { PreviewHandlePlaceHolder } from '@boluo/ui/PreviewHandlePlaceHolder';
-import { useReadObserve } from '../../hooks/useReadObserve';
-import { useIsInGameChannel } from '../../hooks/useIsInGameChannel';
+import { CSS, type Transform } from '@dnd-kit/utilities';
+import { CSSProperties, type DragEventHandler, type FC } from 'react';
+import { PreviewHandlePlaceHolder } from '../PreviewHandlePlaceHolder';
 
 interface Props {
-  children: ReactNode;
-  id: string;
-  className?: string;
-  editMode?: boolean;
-  isSelf?: boolean;
   isLast: boolean;
   inGame: boolean;
-  onDrop?: DragEventHandler;
+  isInGameChannel: boolean;
+  id: string;
   pos: number;
+  ref?: React.Ref<HTMLDivElement>;
+  className?: string;
+  children: React.ReactNode;
+  onDrop?: DragEventHandler;
+  inEditMode?: boolean;
+  transform?: Transform | null;
+  transition?: string | undefined;
+  isSelf?: boolean;
 }
 
 export const PreviewBox: FC<Props> = ({
-  id,
-  children,
-  className = '',
-  editMode = false,
-  inGame,
-  isSelf = false,
   isLast,
-  onDrop,
+  inGame,
+  isInGameChannel,
+  id,
   pos,
+  ref,
+  className,
+  children,
+  inEditMode = false,
+  onDrop,
+  transform = null,
+  transition,
+  isSelf = false,
 }) => {
-  const readObserve = useReadObserve();
-  const isInGameChannel = useIsInGameChannel();
-  const boxRef = useRef<HTMLDivElement | null>(null);
-  useEffect(() => {
-    if (boxRef.current == null) return;
-    return readObserve(boxRef.current);
-  }, [readObserve]);
-  const { setNodeRef, transform, transition } = useSortable({ id, disabled: true });
-
   const style: CSSProperties & { '--bg-angle': string } = {
     transform: CSS.Transform.toString(transform),
     transition,
@@ -56,10 +44,6 @@ export const PreviewBox: FC<Props> = ({
       ? 'inset 0 0 12px 10px var(--color-message-in-game-bg)'
       : 'inset 0 0 12px 10px var(--color-message-out-of-game-bg)',
   };
-  const handlePlaceHolder = useMemo(
-    () => <PreviewHandlePlaceHolder editMode={editMode} />,
-    [editMode],
-  );
   return (
     <div
       data-id={id}
@@ -77,15 +61,12 @@ export const PreviewBox: FC<Props> = ({
             ],
         className,
       )}
-      ref={(ref) => {
-        setNodeRef(ref);
-        boxRef.current = ref;
-      }}
+      ref={ref}
       style={style}
       onDrop={onDrop}
       onDragOver={(event) => event.preventDefault()}
     >
-      {handlePlaceHolder}
+      <PreviewHandlePlaceHolder editMode={inEditMode} />
       {children}
     </div>
   );

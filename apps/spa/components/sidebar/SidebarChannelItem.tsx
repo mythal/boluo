@@ -94,7 +94,7 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active, overlay = false
   const channelName = (
     <span className="text-left">
       {channel.isPublic ? '' : <Icon className="text-text-secondary mr-1" icon={Lock} />}
-      {channel.name}
+      <span className="font-bold">{channel.name}</span>
     </span>
   );
   const messagePreview = useMemo(

@@ -303,7 +303,7 @@
     "message": "過去 {day} 天"
   },
   "FGo9HD": {
-    "message": "My Spaces"
+    "message": "我的位面"
   },
   "FN6jdd": {
     "message": "貴安, {username}!"
@@ -462,7 +462,7 @@
     "message": "Long press to vertical split"
   },
   "MWO2zy": {
-    "message": "Something going wrong."
+    "message": "出了點問題。"
   },
   "MgRaWS": {
     "message": "頻道名不可為空。"
@@ -909,7 +909,7 @@
     "message": "頻道名"
   },
   "hmZ3Bz": {
-    "message": "Media"
+    "message": "媒體"
   },
   "hrgo+E": {
     "message": "歸檔"
@@ -1242,6 +1242,6 @@
     "message": "Failed to search messages"
   },
   "zywf7W": {
-    "message": "Fit to Screen"
+    "message": "符合螢幕大小"
   }
 }

@@ -156,7 +156,7 @@
     "message": "验证邮件已发送！请检查收件箱。"
   },
   "6SKklv": {
-    "message": "Remove attachment"
+    "message": "移除附件"
   },
   "6WiliO": {
     "message": "可以访问论坛 {forumUrl} 进行讨论和反馈。"
@@ -174,7 +174,7 @@
     "message": "载入位面失败"
   },
   "7KDJn8": {
-    "message": "Loading user information..."
+    "message": "正在加载用户信息..."
   },
   "7UOvbT": {
     "message": "离线"
@@ -330,7 +330,7 @@
     "message": "摧毁位面"
   },
   "H5g3Pq": {
-    "message": "Failed to load user information."
+    "message": "加载用户信息失败。"
   },
   "HAlOn1": {
     "message": "名字"
@@ -885,7 +885,7 @@
     "message": "为了接受邀请，你需要先 {loginLink}。"
   },
   "gG6Trq": {
-    "message": "Drop to attach a file"
+    "message": "拖放以添加文件"
   },
   "gduNan": {
     "message": "在亮色模式"
@@ -909,7 +909,7 @@
     "message": "频道名"
   },
   "hmZ3Bz": {
-    "message": "Media"
+    "message": "媒体"
   },
   "hrgo+E": {
     "message": "归档"
@@ -996,7 +996,7 @@
     "message": "超出限额"
   },
   "nE9tn4": {
-    "message": "Open in New Window"
+    "message": "在新窗口中打开"
   },
   "nKu0Ba": {
     "message": "你必须先登录。"
@@ -1242,6 +1242,6 @@
     "message": "搜索消息失败"
   },
   "zywf7W": {
-    "message": "Fit to Screen"
+    "message": "适应屏幕"
   }
 }

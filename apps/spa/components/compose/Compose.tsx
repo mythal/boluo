@@ -113,7 +113,7 @@ export const Compose = ({ member, channelAtoms }: Props) => {
 
           {addDiceButton}
           {sendButton}
-          <div className="absolute top-full left-0 z-10 h-(--keyboard-inset,0px) w-full overflow-hidden">
+          <div className="absolute top-full left-0 z-10 w-full overflow-hidden">
             <div className="px-1 py-4">
               <FormattedMessage defaultMessage="If you see this text, please try to swipe down ↓ to display the content." />
             </div>

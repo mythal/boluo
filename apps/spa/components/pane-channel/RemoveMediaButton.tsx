@@ -5,6 +5,7 @@ import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { Delay } from '@boluo/ui/Delay';
 import { FallbackIcon } from '@boluo/ui/FallbackIcon';
 import { Button } from '@boluo/ui/Button';
+import Icon from '@boluo/ui/Icon';
 
 export const RemoveMediaButton = memo(() => {
   const composeAtom = useComposeAtom();
@@ -15,7 +16,7 @@ export const RemoveMediaButton = memo(() => {
   return (
     <Button small onClick={removeMedia}>
       <Delay fallback={<FallbackIcon />}>
-        <Trash />
+        <Icon icon={Trash} />
       </Delay>
     </Button>
   );

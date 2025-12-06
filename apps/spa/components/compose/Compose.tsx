@@ -86,6 +86,7 @@ export const Compose = ({ member, channelAtoms }: Props) => {
         onDragOver={handleDragOver}
         className="Compose bg-surface-default standalone-bottom-padding border-border-subtle col-span-full border-t p-2"
       >
+        {mediaLine}
         {editMessageBanner}
         <div
           data-in-game={inGame}
@@ -108,7 +109,6 @@ export const Compose = ({ member, channelAtoms }: Props) => {
           {addDiceButton}
           {sendButton}
         </div>
-        <div>{mediaLine}</div>
         <div className="h-[env(keyboard-inset-height,0px)] overflow-hidden">
           <div className="px-1 py-4">
             <FormattedMessage defaultMessage="If you see this text, please try to swipe down ↓ to display the content." />

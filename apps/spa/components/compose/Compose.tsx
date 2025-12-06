@@ -85,6 +85,7 @@ export const Compose = ({ member, channelAtoms }: Props) => {
         onDrop={onDrop}
         onDragOver={handleDragOver}
         className="Compose bg-surface-default standalone-bottom-padding border-border-subtle col-span-full border-t p-2"
+        style={{ paddingBottom: 'calc(var(--keyboard-inset, 0px) + 0.5rem)' }}
       >
         {mediaLine}
         {editMessageBanner}

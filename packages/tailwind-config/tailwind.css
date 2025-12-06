@@ -113,8 +113,8 @@
     contain: size;
   }
   .view-height {
-    height: 100vh;
-    height: 100dvh;
+    height: var(--view-height, 100dvh);
+    min-height: var(--view-height, 100dvh);
   }
 
   .text-vertical {

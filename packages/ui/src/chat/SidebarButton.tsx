@@ -65,8 +65,13 @@ export const SidebarButton: FC<Props> = ({
       >
         <div
           className={clsx(
-            'sidebar-button-box bg-sidebar-bg text-text-primary flex h-full w-full items-center justify-center rounded-r-sm',
-            isSidebarExpanded ? 'border-sidebar-border border-t border-r border-b' : 'shadow-xs',
+            isTouch
+              ? 'bg-surface-floating border-border-strong border-t border-r border-b shadow-lg'
+              : 'bg-sidebar-bg',
+            'sidebar-button-box text-text-primary flex h-full w-full items-center justify-center rounded-r-sm',
+            isSidebarExpanded
+              ? 'border-sidebar-border border-t border-r border-b'
+              : !isTouch && 'shadow-xs',
           )}
         >
           {icon}

@@ -1,5 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
-import { Scaling, X } from '@boluo/icons';
+import { ExternalLink, Scaling, X } from '@boluo/icons';
 import { Button } from '@boluo/ui/Button';
 import Icon from '@boluo/ui/Icon';
 import clsx from 'clsx';
@@ -36,6 +36,7 @@ export const useImagePreview = (): ContextValue => {
 const ImagePreviewOverlay: FC<{ src: string; onClose: () => void }> = ({ src, onClose }) => {
   const [mode, setMode] = useState<'fit' | 'original'>('fit');
   const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const [scale, setScale] = useState(1);
   const [isDragging, setIsDragging] = useState(false);
   const dragStateRef = useRef<{
     startX: number;
@@ -43,10 +44,12 @@ const ImagePreviewOverlay: FC<{ src: string; onClose: () => void }> = ({ src, on
     baseX: number;
     baseY: number;
   } | null>(null);
+  const wheelTargetRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     setMode('fit');
     setOffset({ x: 0, y: 0 });
+    setScale(1);
   }, [src]);
 
   useEffect(() => {
@@ -113,7 +116,38 @@ const ImagePreviewOverlay: FC<{ src: string; onClose: () => void }> = ({ src, on
   const toggleMode = useCallback(() => {
     setMode((prev) => (prev === 'fit' ? 'original' : 'fit'));
     setOffset({ x: 0, y: 0 });
+    setScale(1);
   }, []);
+
+  const resetZoom = useCallback(() => {
+    setScale(1);
+    setOffset({ x: 0, y: 0 });
+  }, []);
+
+  const handleWheel = useCallback(
+    (event: WheelEvent) => {
+      event.preventDefault();
+      const zoomIn = event.deltaY < 0;
+      if (mode === 'fit') {
+        setMode('original');
+        setOffset({ x: 0, y: 0 });
+        setScale(1);
+        return;
+      }
+      setScale((prev) => {
+        const next = prev * (zoomIn ? 1.1 : 1 / 1.1);
+        return Math.min(5, Math.max(0.2, next));
+      });
+    },
+    [mode],
+  );
+
+  useEffect(() => {
+    const target = wheelTargetRef.current;
+    if (!target) return;
+    target.addEventListener('wheel', handleWheel, { passive: false });
+    return () => target.removeEventListener('wheel', handleWheel);
+  }, [handleWheel]);
 
   const imageStyles = useMemo(() => {
     if (mode === 'fit') {
@@ -122,9 +156,10 @@ const ImagePreviewOverlay: FC<{ src: string; onClose: () => void }> = ({ src, on
     return {
       maxWidth: 'none',
       maxHeight: 'none',
-      transform: `translate(${offset.x}px, ${offset.y}px)`,
+      transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
+      transformOrigin: 'center center',
     } as const;
-  }, [mode, offset.x, offset.y]);
+  }, [mode, offset.x, offset.y, scale]);
 
   const imageClassName = useMemo(
     () =>
@@ -134,6 +169,10 @@ const ImagePreviewOverlay: FC<{ src: string; onClose: () => void }> = ({ src, on
       ),
     [isDragging, mode],
   );
+
+  const openInNewWindow = useCallback(() => {
+    window.open(src, '_blank', 'noopener,noreferrer');
+  }, [src]);
 
   const handleContainerClick = useCallback(
     (event: ReactMouseEvent<HTMLDivElement>) => {
@@ -153,6 +192,7 @@ const ImagePreviewOverlay: FC<{ src: string; onClose: () => void }> = ({ src, on
         onClick={onClose}
       ></div>
       <div
+        ref={wheelTargetRef}
         className="absolute inset-0 flex items-center justify-center px-4 py-6"
         onClick={handleContainerClick}
       >
@@ -170,18 +210,45 @@ const ImagePreviewOverlay: FC<{ src: string; onClose: () => void }> = ({ src, on
             }
           }}
         />
-        <div className="absolute top-4 right-4 flex gap-2">
-          <Button small onClick={(e) => (e.stopPropagation(), toggleMode())}>
+        <div className="absolute top-4 left-4 flex gap-2">
+          <Button
+            small
+            aria-pressed={mode === 'fit'}
+            onClick={(e) => (e.stopPropagation(), toggleMode())}
+          >
             <Icon icon={Scaling} />
-            {mode === 'fit' ? (
-              <FormattedMessage defaultMessage="Original Size" />
-            ) : (
-              <FormattedMessage defaultMessage="Fit to Screen" />
-            )}
+            <FormattedMessage defaultMessage="Fit to Screen" />
+          </Button>
+          {mode !== 'fit' && (
+            <Button
+              small
+              className="shadow"
+              onClick={(e) => {
+                e.stopPropagation();
+                resetZoom();
+              }}
+            >
+              {Math.round(scale * 100)}%
+            </Button>
+          )}
+        </div>
+        <div className="absolute top-4 right-4 flex gap-2">
+          <Button
+            small
+            className="shadow"
+            onClick={(e) => {
+              e.stopPropagation();
+              openInNewWindow();
+            }}
+          >
+            <Icon icon={ExternalLink} />
+            <span className="hidden md:inline">
+              <FormattedMessage defaultMessage="Open in New Window" />
+            </span>
           </Button>
           <Button
             small
-            className="bg-surface-elevated border-border-default text-text-primary rounded border px-3 py-1 shadow"
+            className="shadow"
             onClick={(e) => {
               e.stopPropagation();
               onClose();

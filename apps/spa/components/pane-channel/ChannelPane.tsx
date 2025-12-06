@@ -1,8 +1,7 @@
 import clsx from 'clsx';
 import { Lock, LockedHash } from '@boluo/icons';
 import { useAtom } from 'jotai';
-import { ReactNode, useMemo, type FC } from 'react';
-import { memo } from 'react';
+import { memo, ReactNode, useMemo, type FC } from 'react';
 import { FormattedMessage } from 'react-intl';
 import {
   type ChannelAtoms,
@@ -29,6 +28,8 @@ import { GuestCompose } from '../compose/GuestCompose';
 import { Channel, ChannelMembers, type MemberWithUser } from '@boluo/api';
 import { useBannerNode } from '../../hooks/useBannerNode';
 import ReactDOM from 'react-dom';
+import { useChannelFileDrop } from './useChannelFileDrop';
+import { FileDropOverlay } from '@boluo/ui/chat/FileDropOverlay';
 
 interface Props {
   channelId: string;
@@ -80,6 +81,8 @@ const ChatPaneChannelView: FC<{
     defaultInGame,
   );
   const [subPaneState, setSubPaneState] = useAtom(atoms.subPaneStateAtom);
+  const { isDraggingFile, handleDragEnter, handleDragLeave, handleDragOver, handleDrop } =
+    useChannelFileDrop({ composeAtom: atoms.composeAtom });
   const header = useMemo(() => {
     return <ChannelHeader />;
   }, []);
@@ -114,7 +117,12 @@ const ChatPaneChannelView: FC<{
                 'relative grid h-full grid-cols-1 grid-rows-[minmax(0,1fr)_auto]',
                 hasRightPane && '@xl:grid-cols-[1fr_auto]',
               )}
+              onDragEnter={handleDragEnter}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
             >
+              {isDraggingFile && member && <FileDropOverlay />}
               <ChatContent currentUserId={member?.user.id} />
               {showMemberList && (
                 <ChannelSubPaneMemberList

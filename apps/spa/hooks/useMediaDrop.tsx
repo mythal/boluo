@@ -1,7 +1,6 @@
 import { useSetAtom } from 'jotai';
-import { type DragEventHandler } from 'react';
+import { useCallback, type DragEventHandler } from 'react';
 import type React from 'react';
-import { useCallback } from 'react';
 import { useComposeAtom } from './useComposeAtom';
 
 interface MediaDropReturn {
@@ -14,15 +13,14 @@ export const useMediaDrop = (): MediaDropReturn => {
   const onDrop = useCallback(
     (event: React.DragEvent) => {
       event.preventDefault();
-      if (event.dataTransfer.items) {
-        // Use DataTransferItemList interface to access the file(s)
-        if (event.dataTransfer.items[0]?.kind === 'file') {
-          const fileDropped = event.dataTransfer.items[0].getAsFile();
-          if (fileDropped) {
-            dispatch({ type: 'media', payload: { media: fileDropped } });
-          }
-        }
-      }
+      const { dataTransfer } = event;
+      if (!dataTransfer) return;
+
+      const item = Array.from(dataTransfer.items ?? []).find((it) => it.kind === 'file');
+      const file = item?.getAsFile() ?? dataTransfer.files?.[0];
+      if (!file) return;
+
+      dispatch({ type: 'media', payload: { media: file } });
     },
     [dispatch],
   );

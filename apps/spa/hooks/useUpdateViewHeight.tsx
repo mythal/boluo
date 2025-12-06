@@ -1,3 +1,4 @@
+import { getOS } from '@boluo/utils/browser';
 import { useEffect } from 'react';
 
 const MIN_KEYBOARD_INSET = 120;
@@ -29,6 +30,9 @@ const updateViewHeightOnFocus = (e: FocusEvent) => {
 
 export const useUpdateViewHeight = () => {
   useEffect(() => {
+    if (getOS() === 'iOS') {
+      return;
+    }
     updateViewHeight();
     const viewport = window.visualViewport;
     window.addEventListener('resize', updateViewHeight);

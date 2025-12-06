@@ -42,6 +42,14 @@ function My() {
         <Title>
           <Icon icon={Newspaper} /> 新闻
         </Title>
+
+        <News css={[mB(2)]}>
+          <ExternalLink css={link} to="https://site.boluochat.com">
+            新版菠萝
+          </ExternalLink>
+          现在有接近旧版的暗色主题和更多功能了，欢迎试用！
+        </News>
+
         <News css={[mB(2)]}>
           建立了
           <ExternalLink css={link} to="https://zh.mythal.net">
@@ -56,14 +64,6 @@ function My() {
             boluochat.com
           </ExternalLink>
           ，以后可以访问论坛获取最新消息。
-        </News>
-
-        <News css={[mB(2)]}>
-          现在会根据延迟自动选择线路，改进了断线重连。重写的
-          <ExternalLink css={link} to="https://site.boluochat.com">
-            新版菠萝
-          </ExternalLink>
-          可以试用。
         </News>
       </div>
       {showHelp && <Help dismiss={() => setHelp(false)} />}

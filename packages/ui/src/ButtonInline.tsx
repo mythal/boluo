@@ -41,7 +41,7 @@ export const ButtonInline: React.FC<ButtonInlineProps> = function ButtonInline({
           'bg-action-primary-bg border-action-primary-border shadow-action-primary-border pressed:shadow-[0_1px_0_0_inset] shadow-[0_-1px_0_0_inset]',
           'hover:bg-action-primary-bg-hover',
           groupHover && 'group-hover:bg-action-primary-bg-hover',
-          'pressed:bg-action-primary-bg-active pressed:border-b-action-primary-bg-active pressed:shadow-[0_1px_0_0_var(--color-action-primary-border-active)_inset]',
+          'pressed:bg-action-primary-bg-active pressed:border-b-action-primary-bg-active pressed:shadow-[0_1px_0_0_var(--color-action-primary-border)_inset]',
           'disabled:bg-action-primary-bg-disabled disabled:text-text-inverted-secondary disabled:cursor-not-allowed',
         ],
       )}

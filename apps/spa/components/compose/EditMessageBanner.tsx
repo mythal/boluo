@@ -13,6 +13,7 @@ import { InComposeButton } from './InComposeButton';
 import { Edit, X } from '@boluo/icons';
 import Icon from '@boluo/ui/Icon';
 import { findMessage } from '../../state/channel.reducer';
+import { ButtonInline } from '@boluo/ui/ButtonInline';
 
 interface Props {
   currentUser: User;
@@ -106,12 +107,12 @@ export const EditMessageBanner = ({ currentUser }: Props) => {
           </div>
         </div>
         <div className="text-sm">
-          <InComposeButton label={cancelEditTitle} onClick={handleCanelEdit}>
-            <X />
-          </InComposeButton>
+          <ButtonInline aria-label={cancelEditTitle} onClick={handleCanelEdit}>
+            <Icon icon={X} />
+          </ButtonInline>
         </div>
       </div>
     );
   }
-  return <div className="border border-transparent pb-1 pl-1">{content}</div>;
+  return <div className="EditMessageBanner pb-1 pl-1">{content}</div>;
 };

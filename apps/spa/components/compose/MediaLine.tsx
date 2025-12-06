@@ -4,15 +4,18 @@ import { useAtomValue, useSetAtom } from 'jotai';
 import { selectAtom } from 'jotai/utils';
 import { Paperclip, Trash } from '@boluo/icons';
 import Icon from '@boluo/ui/Icon';
-import { FormattedMessage } from 'react-intl';
+import { FormattedMessage, useIntl } from 'react-intl';
 import { mediaUrl } from '@boluo/api-browser';
 import { showFileSize } from '@boluo/utils/files';
 import { mediaMaxSizeByte, supportedMediaType } from '../../media';
 import * as classes from '@boluo/ui/classes';
+import { ButtonInline } from '@boluo/ui/ButtonInline';
 
 export const MediaLine: FC = () => {
+  const intl = useIntl();
   const { composeAtom } = useChannelAtoms();
   const dispatch = useSetAtom(composeAtom);
+  const removeLabel = intl.formatMessage({ defaultMessage: 'Remove attachment' });
   const handleRemove = () => {
     dispatch({ type: 'media', payload: { media: null } });
   };
@@ -50,18 +53,18 @@ export const MediaLine: FC = () => {
   }
 
   return (
-    <div className="flex gap-1 px-1 pt-1 text-sm">
-      <Icon className="text-text-secondary" icon={Paperclip} />
-      <div className="text-text-muted">
-        <FormattedMessage defaultMessage="Attachment" />:
+    <div className="MediaLine flex gap-2 pb-1 pl-1 text-sm">
+      <div className="text-text-secondary inline-flex w-18 items-center gap-1">
+        <Icon icon={Paperclip} />
+        <div>
+          <FormattedMessage defaultMessage="Media" />
+        </div>
       </div>
       {content}
-      <button
-        onClick={handleRemove}
-        className="text-state-danger-text hover:text-state-danger-text"
-      >
+      <span className="grow" />
+      <ButtonInline onClick={handleRemove} aria-label={removeLabel}>
         <Icon icon={Trash} />
-      </button>
+      </ButtonInline>
     </div>
   );
 };

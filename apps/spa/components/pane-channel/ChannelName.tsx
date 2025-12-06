@@ -90,7 +90,7 @@ export const ChannelName: FC<Props> = ({ stateAtom, name, topic, isPublic = true
         ) : (
           ''
         )}
-        <span className="font-bold">{name}</span>
+        <span className="text-lg font-semibold">{name}</span>
         {hasTopic ? (
           <span className={clsx(headerState === 'TOPIC' ? '' : 'opacity-45', 'mx-1')}>
             <Icon icon={MessageSquareText} />

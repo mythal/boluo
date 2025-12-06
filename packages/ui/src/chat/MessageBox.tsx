@@ -78,7 +78,7 @@ export function MessageBox({
                   )
                 : '',
             ],
-        'data-[lifting=true]:shadow-md',
+        'data-[lifting=true]:cursor-grabbing data-[lifting=true]:shadow-md',
         isDragging && 'opacity-0',
         className,
       )}

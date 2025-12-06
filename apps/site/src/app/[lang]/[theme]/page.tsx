@@ -53,6 +53,7 @@ export default async function Page({ params }: { params: Promise<Params> }) {
       <Card>
         <div className="font-bold">{intl.formatMessage({ defaultMessage: 'News' })}</div>
         <ul className="list-disc py-4 pl-4">
+          <NewsItem>大量改进了界面，暗色模式还原了旧版的风格，请多多反馈意见！</NewsItem>
           <NewsItem>
             建立了
             <a

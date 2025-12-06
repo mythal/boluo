@@ -155,6 +155,9 @@
   "6QtXvB": {
     "message": "驗證郵件已發送！請檢查收件箱。"
   },
+  "6SKklv": {
+    "message": "Remove attachment"
+  },
   "6WiliO": {
     "message": "可以訪問論壇 {forumUrl} 進行討論和反饋。"
   },
@@ -169,6 +172,9 @@
   },
   "72vKlS": {
     "message": "載入位面失敗"
+  },
+  "7KDJn8": {
+    "message": "Loading user information..."
   },
   "7UOvbT": {
     "message": "離線"
@@ -297,7 +303,7 @@
     "message": "過去 {day} 天"
   },
   "FGo9HD": {
-    "message": "My Spaces"
+    "message": "我的位面"
   },
   "FN6jdd": {
     "message": "貴安, {username}!"
@@ -322,6 +328,9 @@
   },
   "H2WXs6": {
     "message": "摧毀位面"
+  },
+  "H5g3Pq": {
+    "message": "Failed to load user information."
   },
   "HAlOn1": {
     "message": "名字"
@@ -453,7 +462,7 @@
     "message": "Long press to vertical split"
   },
   "MWO2zy": {
-    "message": "Something going wrong."
+    "message": "出了點問題。"
   },
   "MgRaWS": {
     "message": "頻道名不可為空。"
@@ -875,6 +884,9 @@
   "gEes7R": {
     "message": "為了接受邀請，你需要先 {loginLink}。"
   },
+  "gG6Trq": {
+    "message": "Drop to attach a file"
+  },
   "gduNan": {
     "message": "在亮色模式"
   },
@@ -895,6 +907,9 @@
   },
   "hh0xW7": {
     "message": "頻道名"
+  },
+  "hmZ3Bz": {
+    "message": "媒體"
   },
   "hrgo+E": {
     "message": "歸檔"
@@ -979,6 +994,9 @@
   },
   "n9f3pm": {
     "message": "超出限額"
+  },
+  "nE9tn4": {
+    "message": "Open in New Window"
   },
   "nKu0Ba": {
     "message": "你必須先登入。"
@@ -1222,5 +1240,8 @@
   },
   "zqHxkG": {
     "message": "Failed to search messages"
+  },
+  "zywf7W": {
+    "message": "符合螢幕大小"
   }
 }

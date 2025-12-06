@@ -34,7 +34,7 @@ export const ChannelSettingsButton: FC<Props> = ({ channelId }) => {
     [toggleChild, channelId],
   );
   return (
-    <PaneHeaderButton size="small" onClick={handleClick} active={opened}>
+    <PaneHeaderButton onClick={handleClick} active={opened}>
       <Icon icon={Settings} />
       <span className="hidden @xl:inline">
         <FormattedMessage defaultMessage="Channel Settings" />

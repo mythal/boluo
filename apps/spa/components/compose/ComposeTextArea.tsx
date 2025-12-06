@@ -18,8 +18,8 @@ import { type ParseResult } from '@boluo/interpreter';
 import { type ComposeAtom } from '../../hooks/useComposeAtom';
 import { chatAtom } from '../../state/chat.atoms';
 import * as L from 'list';
-import screens from '@boluo/ui/screens.json';
 import { useDefaultInGame } from '../../hooks/useDefaultInGame';
+import { composeSizeAtom } from '../../state/compose.atoms';
 
 interface Props {
   myId: string;
@@ -71,27 +71,29 @@ const useReflectRangeChange = (
 };
 
 const MAX_FIND_LENGTH = 64;
+const LARGE_SIZE = '40vh';
 
 export const ComposeTextArea: FC<Props> = ({ parsed, enterSend, send, myId }) => {
-  const { composeAtom, parsedAtom, composeFocusedAtom } = useChannelAtoms();
+  const { composeAtom, parsedAtom } = useChannelAtoms();
   const defaultInGame = useDefaultInGame();
-  const fixHeight = useAtomValue(composeFocusedAtom) && window.innerWidth < screens.md;
   const ref = useRef<RichTextareaHandle | null>(null);
   const channelId = useChannelId();
   const isCompositionRef = useRef(false);
   const dispatch = useSetAtom(composeAtom);
   const store = useStore();
+  const size = useAtomValue(composeSizeAtom);
+  const autoSize = size === 'AUTO';
   const style = useMemo(
     (): React.CSSProperties => ({
       width: '100%',
-      height: fixHeight ? '12rem' : undefined,
-      maxHeight: fixHeight ? undefined : '10rem',
+      height: !autoSize ? LARGE_SIZE : undefined,
+      maxHeight: !autoSize ? LARGE_SIZE : '12rem',
       scrollbarWidth: 'none',
       WebkitTextSizeAdjust: 'none',
       MozTextSizeAdjust: 'none',
       textSizeAdjust: 'none',
     }),
-    [fixHeight],
+    [autoSize],
   );
   const lastMessageAtom = useMemo(
     () =>
@@ -215,7 +217,7 @@ export const ComposeTextArea: FC<Props> = ({ parsed, enterSend, send, myId }) =>
       data-variant="normal"
       onSelectionChange={updateRange}
       style={style}
-      autoHeight={!fixHeight}
+      autoHeight={autoSize}
       rows={1}
       className="resize-none px-2 py-2 outline-none"
     >

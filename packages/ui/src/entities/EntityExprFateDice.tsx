@@ -8,7 +8,7 @@ interface Props {
 const FateDiceBox: FC<{ children: ReactNode; hidden?: boolean }> = ({ children, hidden }) => (
   <span
     className={clsx(
-      'bg-entity-fate-dice-bg border-entity-fate-dice-border text-text-inverted inline-flex h-5 w-5 items-center justify-center rounded-sm border font-mono text-sm',
+      'bg-entity-fate-dice-bg border-entity-fate-dice-border text-text-primary inline-flex h-5 w-5 items-center justify-center rounded-sm border font-mono text-sm',
       hidden && 'text-opacity-0',
     )}
   >

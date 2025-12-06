@@ -18,7 +18,7 @@
   /* Sizes */
   --spacing-sidebar: 16rem;
   --spacing-pane-padding: 2rem;
-  --spacing-pane-header: 2.5rem;
+  --spacing-pane-header: 2.75rem;
   --spacing-pane-min: 375px;
 
   --spacing-message: 5rem;
@@ -113,8 +113,8 @@
     contain: size;
   }
   .view-height {
-    height: 100vh;
-    height: 100dvh;
+    height: var(--view-height, 100dvh);
+    min-height: var(--view-height, 100dvh);
   }
 
   .text-vertical {

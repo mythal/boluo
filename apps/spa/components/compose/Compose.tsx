@@ -2,7 +2,7 @@
 import type { MemberWithUser, User } from '@boluo/api';
 import { useAtomValue } from 'jotai';
 import { selectAtom } from 'jotai/utils';
-import { type FC, useDeferredValue, useEffect, useMemo } from 'react';
+import { type FC, useDeferredValue, useEffect, useMemo, useState } from 'react';
 import { useMediaDrop } from '../../hooks/useMediaDrop';
 import { AddDiceButton } from './AddDiceButton';
 import { ComposeTextArea } from './ComposeTextArea';
@@ -19,6 +19,7 @@ import { ErrorBoundary } from '@sentry/nextjs';
 import { ComposeFallback } from '@boluo/ui/ComposeFallback';
 import { useBackupCompose } from '../../hooks/useBackupCompose';
 import clsx from 'clsx';
+import { ComposeResizer } from './ComposeResizer';
 
 interface Props {
   member: MemberWithUser;
@@ -84,8 +85,11 @@ export const Compose = ({ member, channelAtoms }: Props) => {
       <div
         onDrop={onDrop}
         onDragOver={handleDragOver}
-        className="Compose bg-surface-default standalone-bottom-padding border-border-subtle col-span-full border-t p-2"
+        className="Compose group/compose bg-surface-default standalone-bottom-padding border-border-subtle relative col-span-full border-t p-2"
+        style={{ paddingBottom: 'calc(var(--keyboard-inset, 0px) + 0.5rem)' }}
       >
+        <ComposeResizer />
+        {mediaLine}
         {editMessageBanner}
         <div
           data-in-game={inGame}
@@ -108,7 +112,6 @@ export const Compose = ({ member, channelAtoms }: Props) => {
           {addDiceButton}
           {sendButton}
         </div>
-        <div>{mediaLine}</div>
         <div className="h-[env(keyboard-inset-height,0px)] overflow-hidden">
           <div className="px-1 py-4">
             <FormattedMessage defaultMessage="If you see this text, please try to swipe down ↓ to display the content." />

@@ -62,7 +62,6 @@ export const MemberLeaveButton: FC<Props> = ({ channelId, onSuccess }) => {
       <PaneHeaderButton
         ref={refs.setReference}
         disabled={myMember == null || isMutating || isLoading}
-        size="small"
         {...getReferenceProps()}
       >
         {isMutating || isLoading ? <Spinner /> : <Icon icon={UserX} />}

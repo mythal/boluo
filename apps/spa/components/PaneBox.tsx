@@ -154,7 +154,7 @@ export const PaneBox: FC<Props> = ({ header, children, initSizeLevel = 0 }) => {
           ref={paneBoxRef}
           style={growStyle}
           className={clsx(
-            'PaneBox flex h-full flex-[0_0_0] flex-col max-md:flex-[1_1_100%]',
+            'PaneBox min-w-pane-min flex h-full flex-[0_0_0] flex-col max-md:flex-[1_1_100%]',
             isDraggingCurrentPane && 'opacity-50',
             !isChildPane && animateIn && 'animate-pane-pop-in',
             isSingleColumn

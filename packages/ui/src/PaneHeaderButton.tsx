@@ -28,7 +28,7 @@ export const PaneHeaderButton = ({
       aria-pressed={active}
       className={clsx(
         'PaneHeaderButton',
-        'inline-flex items-center gap-1 rounded-sm px-1.5 py-1.5',
+        'inline-flex items-center gap-1 rounded-sm px-2 py-2',
         active
           ? 'bg-action-toggle-selected-bg text-action-toggle-text shadow-inner'
           : 'hover:bg-surface-interactive-hover active:bg-surface-interactive-active',

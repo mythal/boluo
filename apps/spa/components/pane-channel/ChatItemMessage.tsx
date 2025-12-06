@@ -242,13 +242,14 @@ const ChatItemMessageComponent: FC<Props> = ({
     () => (
       <MessageReorderHandle
         draggable={draggable}
+        lifting={overlay}
         ref={setActivatorNodeRef}
         attributes={attributes}
         listeners={listeners}
         failTo={failTo}
       />
     ),
-    [attributes, draggable, failTo, listeners, setActivatorNodeRef],
+    [attributes, draggable, failTo, listeners, overlay, setActivatorNodeRef],
   );
   const toolbar = useMemo(() => {
     if (isDragging || overlay) return null;

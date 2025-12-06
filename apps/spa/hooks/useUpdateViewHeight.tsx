@@ -1,10 +1,18 @@
+import { getOS, isApple } from '@boluo/utils/browser';
 import { useEffect } from 'react';
+
+const MIN_KEYBOARD_INSET = 120;
 
 const updateViewHeight = () => {
   if (typeof window === 'undefined') return;
   const viewport = window.visualViewport;
   const height = viewport?.height || window.innerHeight;
-  const keyboardInset = Math.max(0, window.innerHeight - height - (viewport?.offsetTop ?? 0));
+  const isIOS = getOS() === 'iOS';
+  const rawKeyboardInset = Math.max(0, window.innerHeight - height - (viewport?.offsetTop ?? 0));
+  const shouldApplyInset =
+    rawKeyboardInset > MIN_KEYBOARD_INSET &&
+    (!isIOS || navigator.virtualKeyboard?.overlaysContent === true);
+  const keyboardInset = shouldApplyInset ? rawKeyboardInset : 0;
   document.documentElement.style.setProperty('--view-height', `${height}px`);
   document.documentElement.style.setProperty('--keyboard-inset', `${keyboardInset}px`);
 };

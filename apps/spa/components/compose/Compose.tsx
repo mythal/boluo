@@ -86,7 +86,10 @@ export const Compose = ({ member, channelAtoms }: Props) => {
         onDrop={onDrop}
         onDragOver={handleDragOver}
         className="Compose group/compose bg-surface-default standalone-bottom-padding border-border-subtle relative col-span-full border-t p-2"
-        style={{ paddingBottom: 'calc(var(--keyboard-inset, 0px) + 0.5rem)' }}
+        style={{
+          paddingBottom:
+            'calc(max(var(--keyboard-inset, 0px), env(keyboard-inset-height, 0px)) + 0.5rem)',
+        }}
       >
         <ComposeResizer />
         {mediaLine}

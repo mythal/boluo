@@ -80,7 +80,7 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active, overlay = false
     () => (
       <button
         className={clsx(
-          'group/icon relative row-span-2 h-full self-center',
+          'group/icon relative h-full',
           active ? 'text-text-primary' : 'text-text-subtle group-hover:text-text-secondary',
           isReordering ? 'cursor-grab' : '',
         )}
@@ -92,9 +92,9 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active, overlay = false
     [active, channel.type, isReordering, labelReorder],
   );
   const channelName = (
-    <span className="text-left">
+    <span className="text-left text-base">
       {channel.isPublic ? '' : <Icon className="text-text-secondary mr-1" icon={Lock} />}
-      <span className="font-bold">{channel.name}</span>
+      <span className="font-semibold">{channel.name}</span>
     </span>
   );
   const messagePreview = useMemo(
@@ -150,7 +150,7 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active, overlay = false
         <a
           href={channelHref}
           className={clsx(
-            'group relative grid w-full cursor-pointer grid-cols-[1.25rem_1fr_auto] grid-rows-[auto_auto] items-start gap-x-1 gap-y-1 rounded px-1 py-1 text-sm',
+            'group relative grid w-full cursor-pointer grid-cols-[1.25rem_1fr_auto] grid-rows-[auto_auto] items-start gap-x-1 gap-y-1 rounded px-1 py-1.5 text-sm',
             active ? 'bg-sidebar-item-active-bg' : 'hover:bg-sidebar-item-hover-bg',
           )}
           onClick={handleClick}

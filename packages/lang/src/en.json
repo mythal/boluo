@@ -170,6 +170,9 @@
   "72vKlS": {
     "message": "Failed to load the space"
   },
+  "7KDJn8": {
+    "message": "Loading user information..."
+  },
   "7UOvbT": {
     "message": "Offline"
   },
@@ -322,6 +325,9 @@
   },
   "H2WXs6": {
     "message": "Destroy Space"
+  },
+  "H5g3Pq": {
+    "message": "Failed to load user information."
   },
   "HAlOn1": {
     "message": "Name"
@@ -547,6 +553,9 @@
   },
   "QdsAIR": {
     "message": "Members of \"{spaceName}\" Space"
+  },
+  "QgxnvS": {
+    "message": "Original Size"
   },
   "QlsDcr": {
     "message": "Action"
@@ -1222,5 +1231,8 @@
   },
   "zqHxkG": {
     "message": "Failed to search messages"
+  },
+  "zywf7W": {
+    "message": "Fit to Screen"
   }
 }

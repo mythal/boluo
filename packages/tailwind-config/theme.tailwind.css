@@ -3,88 +3,129 @@
   color-scheme: dark;
 
   /* Foundational surfaces */
-  --color-surface-default: var(--color-stone-800);
-  --color-surface-canvas: var(--color-stone-900);
-  --color-surface-muted: var(--color-stone-700);
-  --color-surface-raised: var(--color-stone-800);
+  --color-surface-default: var(--color-slate-900);
+  --color-surface-canvas: var(--color-night-900);
+  --color-surface-muted: color-mix(in srgb, var(--color-night-900) 90%, black);
+  --color-surface-raised: color-mix(in srgb, var(--color-night-blue-900) 85%, black);
   --color-surface-unit: var(--color-black);
   --color-surface-inverted: var(--color-white);
-  --color-surface-floating: oklch(from var(--color-stone-600) l c h / 0.5);
-  --color-surface-interactive-hover: var(--color-stone-600);
-  --color-surface-interactive-active: var(--color-stone-700);
-  --color-surface-selectable-default: var(--color-stone-900);
-  --color-surface-selectable-hover: var(--color-stone-800);
-  --color-surface-selectable-selected: var(--color-blue-900);
+  --color-surface-floating: color-mix(in srgb, var(--color-surface-raised) 70%, transparent);
+  --color-surface-interactive-hover: color-mix(
+    in srgb,
+    var(--color-night-800) 46%,
+    var(--color-night-900)
+  );
+  --color-surface-interactive-active: color-mix(
+    in srgb,
+    var(--color-night-800) 24%,
+    var(--color-night-900)
+  );
+  --color-surface-selectable-default: var(--color-night-900);
+  --color-surface-selectable-hover: color-mix(
+    in srgb,
+    var(--color-night-800) 46%,
+    var(--color-night-900)
+  );
+  --color-surface-selectable-selected: var(--color-night-blue-900);
 
   /* Typography */
-  --color-text-primary: var(--color-white);
-  --color-text-secondary: var(--color-neutral-300);
-  --color-text-muted: var(--color-gray-400);
-  --color-text-subtle: var(--color-gray-500);
+  --color-text-primary: var(--color-night-100);
+  --color-text-secondary: color-mix(in srgb, var(--color-text-primary) 80%, var(--color-night-400));
+  --color-text-muted: var(--color-night-500);
+  --color-text-subtle: var(--color-night-600);
   --color-text-inverted: var(--color-black);
-  --color-text-inverted-secondary: var(--color-gray-300);
-  --color-text-link: var(--color-blue-400);
-  --color-text-link-hover: var(--color-blue-300);
-  --color-text-link-active: var(--color-blue-200);
-  --color-text-link-decoration: var(--color-blue-800);
+  --color-text-inverted-secondary: var(--color-night-700);
+  --color-text-link: color-mix(in srgb, var(--color-orange-600) 85%, white);
+  --color-text-link-hover: color-mix(in srgb, var(--color-orange-600) 80%, white);
+  --color-text-link-active: color-mix(in srgb, var(--color-orange-600) 75%, white);
+  --color-text-link-decoration: var(--color-orange-700);
 
   /* Borders and dividers */
-  --color-border-default: var(--color-gray-700);
-  --color-border-strong: var(--color-gray-600);
-  --color-border-primary: var(--color-sky-700);
-  --color-border-subtle: var(--color-gray-800);
-  --color-border-focus: var(--color-blue-400);
-  --color-border-raised: var(--color-gray-800);
-  --color-border-pane: var(--color-gray-600);
+  --color-border-default: color-mix(in srgb, var(--color-night-900) 85%, white);
+  --color-border-strong: var(--color-night-700);
+  --color-border-primary: var(--color-night-blue-700);
+  --color-border-subtle: color-mix(in srgb, var(--color-night-800) 24%, var(--color-night-900));
+  --color-border-focus: var(--color-orange-400);
+  --color-border-raised: color-mix(in srgb, var(--color-night-blue-900) 85%, black);
+  --color-border-pane: color-mix(in srgb, var(--color-night-800) 24%, var(--color-night-900));
 
   /* Interactive controls */
-  --color-action-primary-bg: var(--color-sky-600);
+  --color-action-primary-bg: var(--color-orange-600);
   --color-action-primary-text: var(--color-white);
-  --color-action-primary-border: var(--color-sky-800);
-  --color-action-primary-bg-hover: var(--color-sky-500);
-  --color-action-primary-bg-active: var(--color-sky-800);
-  --color-action-primary-bg-disabled: var(--color-cyan-800);
-  --color-action-secondary-bg: var(--color-gray-600);
+  --color-action-primary-border: var(--color-orange-900);
+  --color-action-primary-bg-hover: var(--color-orange-500);
+  --color-action-primary-bg-active: var(--color-orange-700);
+  --color-action-primary-bg-disabled: var(--color-orange-900);
+  --color-action-secondary-bg: var(--color-night-700);
   --color-action-secondary-text: var(--color-white);
-  --color-action-secondary-bg-hover: var(--color-gray-500);
-  --color-action-secondary-bg-active: var(--color-gray-700);
-  --color-action-secondary-bg-disabled: var(--color-gray-500);
-  --color-action-secondary-border: var(--color-neutral-900);
+  --color-action-secondary-bg-hover: color-mix(
+    in srgb,
+    var(--color-night-700) 85%,
+    var(--color-night-500)
+  );
+  --color-action-secondary-bg-active: color-mix(
+    in srgb,
+    var(--color-night-700) 79%,
+    var(--color-night-900)
+  );
+  --color-action-secondary-bg-disabled: var(--color-night-800);
+  --color-action-secondary-border: black;
 
-  --color-action-danger-bg: var(--color-red-500);
-  --color-action-danger-bg-hover: var(--color-red-400);
-  --color-action-danger-bg-active: var(--color-red-300);
-  --color-action-danger-bg-disabled: var(--color-red-800);
+  --color-action-danger-bg: var(--color-red-600);
+  --color-action-danger-bg-hover: var(--color-red-700);
+  --color-action-danger-bg-active: var(--color-red-800);
+  --color-action-danger-bg-disabled: var(--color-red-900);
+  --color-action-danger-border: var(--color-red-950);
 
-  --color-action-toggle-bg: var(--color-gray-700);
-  --color-action-toggle-bg-hover: var(--color-gray-600);
-  --color-action-toggle-bg-active: var(--color-gray-500);
+  --color-action-toggle-bg: var(--color-night-700);
+  --color-action-toggle-bg-hover: color-mix(
+    in srgb,
+    var(--color-night-700) 85%,
+    var(--color-night-500)
+  );
+  --color-action-toggle-bg-active: color-mix(
+    in srgb,
+    var(--color-night-600) 63%,
+    var(--color-night-700)
+  );
   --color-action-toggle-text: var(--color-white);
-  --color-action-toggle-disabled-bg: var(--color-gray-500);
-  --color-action-toggle-disabled-text: var(--color-gray-400);
-  --color-action-toggle-selected-bg: var(--color-gray-600);
-  --color-action-toggle-indicator-on: var(--color-blue-600);
-  --color-action-toggle-indicator-off: var(--color-gray-500);
-  --color-action-toggle-icon: var(--color-gray-400);
+  --color-action-toggle-disabled-bg: color-mix(
+    in srgb,
+    var(--color-night-700) 79%,
+    var(--color-night-900)
+  );
+  --color-action-toggle-disabled-text: color-mix(
+    in srgb,
+    var(--color-night-500) 75%,
+    var(--color-night-600)
+  );
+  --color-action-toggle-selected-bg: var(--color-night-700);
+  --color-action-toggle-indicator-on: var(--color-night-blue-700);
+  --color-action-toggle-indicator-off: color-mix(
+    in srgb,
+    var(--color-night-500) 75%,
+    var(--color-night-600)
+  );
+  --color-action-toggle-icon: var(--color-night-500);
 
   /* State */
   --color-state-success-text: var(--color-green-200);
   --color-state-success-bg: var(--color-green-700);
-  --color-state-warning-bg: var(--color-yellow-900);
-  --color-state-warning-text: var(--color-yellow-200);
+  --color-state-warning-bg: var(--color-red-900);
+  --color-state-warning-text: var(--color-orange-400);
   --color-state-danger-bg: var(--color-red-900);
   --color-state-danger-border: var(--color-red-800);
   --color-state-danger-text: var(--color-red-200);
-  --color-state-info-bg: var(--color-blue-900);
-  --color-state-warning-border: var(--color-yellow-800);
+  --color-state-info-bg: var(--color-night-blue-900);
+  --color-state-warning-border: var(--color-orange-700);
 
   /* Brand */
-  --color-brand-strong: var(--color-blue-400);
-  --color-ring: var(--color-blue-500);
+  --color-brand-strong: var(--color-orange-400);
+  --color-ring: var(--color-orange-300);
 
   /* Fate Dice */
-  --color-entity-fate-dice-bg: var(--color-blue-400);
-  --color-entity-fate-dice-border: var(--color-blue-300);
+  --color-entity-fate-dice-bg: var(--color-sky-600);
+  --color-entity-fate-dice-border: var(--color-sky-800);
 
   /* Kbd */
   --gradient-kbd-bg: radial-gradient(
@@ -100,39 +141,43 @@
   --color-name-editable-hover: color-mix(in srgb, var(--color-neutral-500) 50%, transparent 50%);
 
   /* Messages */
-  --color-message-in-game-bg: var(--color-zinc-700);
+  --color-message-in-game-bg: var(--color-night-800);
   --color-message-in-game-bg-hover: color-mix(
     in srgb,
-    var(--color-zinc-700) 50%,
-    var(--color-zinc-600) 50%
+    var(--color-night-800) 46%,
+    var(--color-night-900)
   );
-  --color-message-out-of-game-bg: color-mix(
-    in srgb,
-    var(--color-zinc-800) 75%,
-    var(--color-zinc-700) 25%
-  );
-  --color-message-out-of-game-bg-hover: var(--color-zinc-800);
-  --color-message-preview-dot: var(--color-gray-600);
+  --color-message-out-of-game-bg: var(--color-night-900);
+  --color-message-out-of-game-bg-hover: color-mix(in srgb, var(--color-night-900) 90%, black);
+  --color-message-preview-dot: var(--color-slate-600);
 
   /* Pane */
-  --color-pane-bg: color-mix(in srgb, var(--color-zinc-800) 75%, var(--color-zinc-700) 25%);
-  --color-pane-header-bg: var(--color-neutral-800);
+  --color-pane-bg: var(--color-night-900);
+  --color-pane-header-bg: var(--color-night-800);
   --color-pane-focus-shadow: rgba(0, 0, 0, 0.5);
 
   /* Lamp */
-  --color-lamp-on-border: var(--color-yellow-500);
-  --color-lamp-on-bg: var(--color-yellow-200);
-  --color-lamp-off-border: var(--color-neutral-800);
-  --color-lamp-off-bg: var(--color-neutral-700);
+  --color-lamp-on-border: var(--color-orange-400);
+  --color-lamp-on-bg: var(--color-orange-200);
+  --color-lamp-off-border: color-mix(in srgb, var(--color-night-800) 24%, var(--color-night-900));
+  --color-lamp-off-bg: color-mix(in srgb, var(--color-night-800) 68%, var(--color-night-900));
 
   /* Sidebar */
-  --color-sidebar-border: var(--color-gray-600);
-  --color-sidebar-bg: var(--color-stone-900);
-  --color-sidebar-item-hover-bg: oklch(from var(--color-gray-800) l c h / 0.4);
-  --color-sidebar-item-active-bg: var(--color-gray-800);
-  --color-sidebar-channels-placeholder-random1: var(--color-neutral-800);
-  --color-sidebar-channels-placeholder-random2: var(--color-neutral-700);
-  --color-sidebar-channels-placeholder-random3: var(--color-neutral-600);
+  --color-sidebar-border: color-mix(in srgb, var(--color-night-800) 24%, var(--color-night-900));
+  --color-sidebar-bg: color-mix(in srgb, var(--color-night-800) 68%, var(--color-night-900));
+  --color-sidebar-item-hover-bg: rgba(0, 0, 0, 0.1);
+  --color-sidebar-item-active-bg: rgba(0, 0, 0, 0.2);
+  --color-sidebar-channels-placeholder-random1: color-mix(
+    in srgb,
+    var(--color-night-800) 24%,
+    var(--color-night-900)
+  );
+  --color-sidebar-channels-placeholder-random2: color-mix(
+    in srgb,
+    var(--color-night-800) 68%,
+    var(--color-night-900)
+  );
+  --color-sidebar-channels-placeholder-random3: var(--color-night-800);
 }
 
 .light,
@@ -142,6 +187,29 @@
 
 @theme {
   /* Extra colors */
+
+  /* Night, Previous naming as "gray" in legacy */
+  --color-night-100: #f7fafc;
+  --color-night-200: #edf2f7;
+  --color-night-300: #e2e8f0;
+  --color-night-400: #cbd5e0;
+  --color-night-500: #a0aec0;
+  --color-night-600: #718096;
+  --color-night-700: #4a5568;
+  --color-night-800: #2d3748;
+  --color-night-900: #1a202c;
+
+  /* Night Blue, Previous naming as "blue" in legacy */
+  --color-night-blue-100: #ebf8ff;
+  --color-night-blue-200: #bee3f8;
+  --color-night-blue-300: #90cdf4;
+  --color-night-blue-400: #63b3ed;
+  --color-night-blue-500: #4299e1;
+  --color-night-blue-600: #3182ce;
+  --color-night-blue-700: #2b6cb0;
+  --color-night-blue-800: #2c5282;
+  --color-night-blue-900: #2a4365;
+
   --color-neutral-10: rgb(253, 253, 253);
   /* Foundational surfaces */
   --color-surface-default: var(--color-neutral-50);
@@ -188,7 +256,6 @@
   --color-action-primary-bg-hover: var(--color-amber-400);
   --color-action-primary-bg-active: var(--color-amber-600);
   --color-action-primary-border: var(--color-amber-700);
-  --color-action-primary-border-active: var(--color-amber-800);
   --color-action-primary-bg-disabled: var(--color-emerald-600);
   --color-action-secondary-bg: var(--color-neutral-10);
   --color-action-secondary-border: var(--color-neutral-400);
@@ -201,7 +268,7 @@
   --color-action-danger-bg-hover: var(--color-red-600);
   --color-action-danger-bg-active: var(--color-red-700);
   --color-action-danger-bg-disabled: var(--color-red-800);
-  --color-action-danger-border-active: var(--color-red-950);
+  --color-action-danger-border: var(--color-red-800);
 
   --color-action-toggle-bg: var(--color-neutral-100);
   --color-action-toggle-bg-hover: var(--color-neutral-200);
@@ -236,8 +303,8 @@
   --color-ring: var(--color-green-400);
 
   /* Fate Dice */
-  --color-entity-fate-dice-bg: var(--color-lime-600);
-  --color-entity-fate-dice-border: var(--color-lime-700);
+  --color-entity-fate-dice-bg: var(--color-sky-300);
+  --color-entity-fate-dice-border: var(--color-sky-500);
 
   /* Kbd */
   --gradient-kbd-bg: radial-gradient(

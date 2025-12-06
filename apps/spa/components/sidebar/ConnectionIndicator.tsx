@@ -53,7 +53,7 @@ export const ConnectionIndicatior: FC<Props> = ({ spaceId }) => {
       <div
         className={clsx(
           'ConnectionIndicatior group flex h-8 cursor-pointer items-center gap-1 px-4 py-1 text-sm select-none',
-          connectionState.type === 'CONNECTED' ? 'bg-state-success-bg' : 'bg-surface-muted',
+          connectionState.type === 'CONNECTED' ? 'bg-state-success-bg/50' : 'bg-surface-muted/50',
         )}
         onClick={() =>
           setSidebarContentState((prev) => (prev === 'CONNECTIONS' ? 'CHANNELS' : 'CONNECTIONS'))

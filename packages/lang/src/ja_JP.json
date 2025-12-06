@@ -156,7 +156,7 @@
     "message": "確認メールが送信されました！メールボックスをご確認ください。"
   },
   "6SKklv": {
-    "message": "Remove attachment"
+    "message": "添付取り消し"
   },
   "6WiliO": {
     "message": "フォーラムは {forumUrl} で利用可能です。こちらでフィードバックと討論ができます。"
@@ -174,7 +174,7 @@
     "message": "次元の読み込みに失敗しました"
   },
   "7KDJn8": {
-    "message": "Loading user information..."
+    "message": "ユーザー情報を読み込み中..."
   },
   "7UOvbT": {
     "message": "オフライン"
@@ -330,7 +330,7 @@
     "message": "位面を破壊する"
   },
   "H5g3Pq": {
-    "message": "Failed to load user information."
+    "message": "ユーザー情報の読み込みに失敗しました。"
   },
   "HAlOn1": {
     "message": "名前"
@@ -885,7 +885,7 @@
     "message": "招待を受け入れるには、{loginLink} が必要です。"
   },
   "gG6Trq": {
-    "message": "Drop to attach a file"
+    "message": "ドロップしてファイルを添付"
   },
   "gduNan": {
     "message": "ライトモード中"
@@ -909,7 +909,7 @@
     "message": "チャンネル名"
   },
   "hmZ3Bz": {
-    "message": "Media"
+    "message": "メディア"
   },
   "hrgo+E": {
     "message": "アーカイブ"
@@ -996,7 +996,7 @@
     "message": "制限を超過しました。"
   },
   "nE9tn4": {
-    "message": "Open in New Window"
+    "message": "新しいウィンドウで開く"
   },
   "nKu0Ba": {
     "message": "ログインしてください。"
@@ -1242,6 +1242,6 @@
     "message": "メッセージの検索に失敗しました"
   },
   "zywf7W": {
-    "message": "Fit to Screen"
+    "message": "画面に合わせる"
   }
 }

@@ -27,6 +27,8 @@ The frontend consists of three applications.
 - Built with **Next.js**, exported as a **static** site.
 - Styling: **tailwindcss v4** (config in `packages/tailwind-config/tailwind.css`).
 - State management: **jotai**.
+- Default UI language: English, with internationalization via **react-intl**.
+- Basic components in `packages/ui`.
 
 ### Main Site (`apps/site`)
 

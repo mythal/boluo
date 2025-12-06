@@ -35,10 +35,10 @@
   --color-text-subtle: var(--color-night-600);
   --color-text-inverted: var(--color-black);
   --color-text-inverted-secondary: var(--color-night-700);
-  --color-text-link: color-mix(in srgb, var(--color-orange-600) 85%, white);
-  --color-text-link-hover: color-mix(in srgb, var(--color-orange-600) 80%, white);
-  --color-text-link-active: color-mix(in srgb, var(--color-orange-600) 75%, white);
-  --color-text-link-decoration: var(--color-orange-700);
+  --color-text-link: var(--color-blue-300);
+  --color-text-link-hover: var(--color-blue-200);
+  --color-text-link-active: var(--color-blue-100);
+  --color-text-link-decoration: var(--color-blue-800);
 
   /* Borders and dividers */
   --color-border-default: color-mix(in srgb, var(--color-night-900) 85%, white);

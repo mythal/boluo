@@ -1,11 +1,18 @@
 /* eslint-disable @next/next/no-img-element */
 import clsx from 'clsx';
 import { Paperclip, Refresh } from '@boluo/icons';
-import { type ReactNode, memo, useState } from 'react';
+import {
+  type ReactNode,
+  type MouseEvent as ReactMouseEvent,
+  memo,
+  useCallback,
+  useState,
+} from 'react';
 import Icon from '@boluo/ui/Icon';
 import { showFileSize } from '@boluo/utils/files';
 import { getMediaUrl, supportedMediaType } from '../../media';
 import { useQueryAppSettings } from '@boluo/common/hooks/useQueryAppSettings';
+import { useImagePreview } from './ImagePreviewOverlay';
 
 type Props = {
   className?: string;
@@ -60,6 +67,7 @@ const Loading = () => {
 
 export const MessageMedia = memo<Props>(({ media, className, children = null }: Props) => {
   const { data: appSettings, isLoading: isLoadingAppSettings } = useQueryAppSettings();
+  const { open } = useImagePreview();
   const mediaUrl = appSettings?.mediaUrl;
   const [loadState, setLoadState] = useState<'LOADING' | 'LOADED' | 'ERROR'>('LOADING');
   let src: string | null = null;
@@ -73,15 +81,24 @@ export const MessageMedia = memo<Props>(({ media, className, children = null }: 
     console.error('MEDIA_URL is not set.');
     src = '';
   }
+  let content = null;
+  const isLoading = loadState === 'LOADING' || isLoadingAppSettings;
+  let isError = false;
+  const handlePreview = useCallback(
+    (event: ReactMouseEvent<HTMLButtonElement>) => {
+      event.preventDefault();
+      event.stopPropagation();
+      if (!src || isLoadingAppSettings) return;
+      open(src);
+    },
+    [isLoadingAppSettings, open, src],
+  );
   if (
     media instanceof File &&
     (!media.type.startsWith('image/') || !supportedMediaType.includes(media.type))
   ) {
     return <Attachment name={media.name} size={media.size} className={className} />;
   }
-  let content = null;
-  const isLoading = loadState === 'LOADING' || isLoadingAppSettings;
-  let isError = false;
   if (isLoadingAppSettings) {
     content = <Loading />;
   } else if (loadState === 'ERROR' || src === '') {
@@ -89,7 +106,12 @@ export const MessageMedia = memo<Props>(({ media, className, children = null }: 
     content = <LoadError onClick={() => setLoadState('LOADING')} />;
   } else {
     content = (
-      <a href={src} target="_blank" className="block h-full w-fit overflow-hidden" rel="noreferrer">
+      <button
+        type="button"
+        className="block h-full w-fit cursor-zoom-in overflow-hidden"
+        onClick={handlePreview}
+        onPointerDown={(e) => e.stopPropagation()}
+      >
         <img
           src={src}
           alt="media"
@@ -97,7 +119,7 @@ export const MessageMedia = memo<Props>(({ media, className, children = null }: 
           onError={() => setLoadState('ERROR')}
           onLoad={() => setLoadState('LOADED')}
         />
-      </a>
+      </button>
     );
   }
   return (

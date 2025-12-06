@@ -181,7 +181,7 @@ export const SelfPreview: FC<Props> = ({ preview, isLast, virtualListIndex }) =>
     if (media == null) return null;
     return (
       <MessageMedia media={media} className="relative w-fit py-2">
-        <div className="absolute top-2 right-full -translate-x-1">
+        <div className="absolute top-3 right-1">
           <RemoveMediaButton />
         </div>
       </MessageMedia>

@@ -19,7 +19,7 @@ export const ChannelHeaderFilterShowArchive: FC = () => {
         ref={refs.setReference}
         {...getReferenceProps()}
       >
-        <PaneHeaderButton size="small" active={show} onClick={() => setShow((x) => !x)}>
+        <PaneHeaderButton active={show} onClick={() => setShow((x) => !x)}>
           <span>
             <Icon icon={Archive} />
           </span>

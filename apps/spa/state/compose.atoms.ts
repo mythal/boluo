@@ -1,5 +1,7 @@
-import { atomFamily, atomWithReducer } from 'jotai/utils';
+import { atomFamily, atomWithReducer, atomWithStorage } from 'jotai/utils';
 import { composeReducer, makeInitialComposeState } from './compose.reducer';
+
+export type ComposeSize = 'AUTO' | 'LARGE';
 
 interface Key {
   channelId: string;
@@ -13,3 +15,5 @@ export const composeAtomFamily = atomFamily(
   (_key: Key) => atomWithReducer(makeInitialComposeState(), composeReducer),
   areEqual,
 );
+
+export const composeSizeAtom = atomWithStorage<ComposeSize>('composeSize', 'AUTO');

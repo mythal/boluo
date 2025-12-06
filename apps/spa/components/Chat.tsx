@@ -30,6 +30,7 @@ import clsx from 'clsx';
 import { ResolvedThemeContext } from '../hooks/useResolvedTheme';
 import { SettingsContext } from '../hooks/useSettings';
 import type { Settings } from '@boluo/common/settings';
+import { useUpdateViewHeight } from '../hooks/useUpdateViewHeight';
 
 const useThemeSetup = (settings: Settings | undefined | null): ResolvedTheme => {
   const themeFromSettings = settings?.theme;
@@ -60,6 +61,7 @@ const Chat: FC = () => {
   const isClient = useIsClient();
   useBackendUrlSetupEffect();
   const resolvedTheme = useThemeSetup(settings);
+  useUpdateViewHeight();
 
   useEffect(() => {
     document.documentElement.style.overflow = 'hidden';

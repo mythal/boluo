@@ -6,7 +6,7 @@ import { LOCALES, toLocale } from '@boluo/locale';
 import { loadMessages } from '@boluo/locale/dynamic';
 import { getIntl } from '@boluo/locale/server';
 
-import { toTheme } from '@boluo/theme';
+import { classifyLightOrDark, THEMES, toTheme } from '@boluo/theme';
 import { Params } from '../../../server';
 
 export async function generateMetadata({ params }: { params: Promise<Params> }): Promise<Metadata> {
@@ -22,13 +22,11 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
 }
 
 export async function generateViewport({ params }: { params: Promise<Params> }): Promise<Viewport> {
-  const { theme } = await params;
+  const { theme: themeParam } = await params;
+  const theme = toTheme(themeParam);
   let colorScheme: Viewport['colorScheme'] = 'dark light';
-  if (theme === 'theme:dark') {
-    colorScheme = 'dark';
-  }
-  if (theme === 'theme:light') {
-    colorScheme = 'light';
+  if (theme !== 'system') {
+    colorScheme = classifyLightOrDark(theme);
   }
   return {
     colorScheme,
@@ -63,9 +61,9 @@ export default async function RootLayout({
 export function generateStaticParams() {
   const params: Array<{ lang: string; theme: string }> = [];
   for (const lang of LOCALES) {
-    params.push({ lang, theme: 'theme:light' });
-    params.push({ lang, theme: 'theme:dark' });
-    params.push({ lang, theme: 'theme:system' });
+    for (const theme of THEMES) {
+      params.push({ lang, theme: `theme:${theme}` });
+    }
   }
   return params;
 }

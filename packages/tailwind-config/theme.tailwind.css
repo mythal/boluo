@@ -1,3 +1,141 @@
+.graphite,
+[data-theme='graphite'] {
+  color-scheme: dark;
+
+  /* Foundational surfaces */
+  --color-surface-default: var(--color-stone-800);
+  --color-surface-canvas: var(--color-stone-900);
+  --color-surface-muted: var(--color-stone-700);
+  --color-surface-raised: var(--color-stone-800);
+  --color-surface-unit: var(--color-black);
+  --color-surface-inverted: var(--color-white);
+  --color-surface-floating: oklch(from var(--color-stone-600) l c h / 0.5);
+  --color-surface-interactive-hover: var(--color-stone-600);
+  --color-surface-interactive-active: var(--color-stone-700);
+  --color-surface-selectable-default: var(--color-stone-900);
+  --color-surface-selectable-hover: var(--color-stone-800);
+  --color-surface-selectable-selected: var(--color-blue-900);
+
+  /* Typography */
+  --color-text-primary: var(--color-white);
+  --color-text-secondary: var(--color-neutral-300);
+  --color-text-muted: var(--color-gray-400);
+  --color-text-subtle: var(--color-gray-500);
+  --color-text-inverted: var(--color-black);
+  --color-text-inverted-secondary: var(--color-gray-300);
+  --color-text-link: var(--color-blue-400);
+  --color-text-link-hover: var(--color-blue-300);
+  --color-text-link-active: var(--color-blue-200);
+  --color-text-link-decoration: var(--color-blue-800);
+
+  /* Borders and dividers */
+  --color-border-default: var(--color-gray-700);
+  --color-border-strong: var(--color-gray-600);
+  --color-border-primary: var(--color-sky-700);
+  --color-border-subtle: var(--color-gray-800);
+  --color-border-focus: var(--color-blue-400);
+  --color-border-raised: var(--color-gray-800);
+  --color-border-pane: var(--color-gray-600);
+
+  /* Interactive controls */
+  --color-action-primary-bg: var(--color-sky-600);
+  --color-action-primary-text: var(--color-white);
+  --color-action-primary-border: var(--color-sky-800);
+  --color-action-primary-bg-hover: var(--color-sky-500);
+  --color-action-primary-bg-active: var(--color-sky-800);
+  --color-action-primary-bg-disabled: var(--color-cyan-800);
+  --color-action-secondary-bg: var(--color-gray-600);
+  --color-action-secondary-text: var(--color-white);
+  --color-action-secondary-bg-hover: var(--color-gray-500);
+  --color-action-secondary-bg-active: var(--color-gray-700);
+  --color-action-secondary-bg-disabled: var(--color-gray-500);
+  --color-action-secondary-border: var(--color-neutral-900);
+
+  --color-action-danger-bg: var(--color-red-500);
+  --color-action-danger-bg-hover: var(--color-red-400);
+  --color-action-danger-bg-active: var(--color-red-300);
+  --color-action-danger-bg-disabled: var(--color-red-800);
+  --color-action-danger-border: var(--color-red-950);
+
+  --color-action-toggle-bg: var(--color-gray-700);
+  --color-action-toggle-bg-hover: var(--color-gray-600);
+  --color-action-toggle-bg-active: var(--color-gray-500);
+  --color-action-toggle-text: var(--color-white);
+  --color-action-toggle-disabled-bg: var(--color-gray-500);
+  --color-action-toggle-disabled-text: var(--color-gray-400);
+  --color-action-toggle-selected-bg: var(--color-gray-600);
+  --color-action-toggle-indicator-on: var(--color-blue-600);
+  --color-action-toggle-indicator-off: var(--color-gray-500);
+  --color-action-toggle-icon: var(--color-gray-400);
+
+  /* State */
+  --color-state-success-text: var(--color-green-200);
+  --color-state-success-bg: var(--color-green-700);
+  --color-state-warning-bg: var(--color-yellow-900);
+  --color-state-warning-text: var(--color-yellow-200);
+  --color-state-danger-bg: var(--color-red-900);
+  --color-state-danger-border: var(--color-red-800);
+  --color-state-danger-text: var(--color-red-200);
+  --color-state-info-bg: var(--color-blue-900);
+  --color-state-warning-border: var(--color-yellow-800);
+
+  /* Brand */
+  --color-brand-strong: var(--color-blue-400);
+  --color-ring: var(--color-blue-500);
+
+  /* Fate Dice */
+  --color-entity-fate-dice-bg: var(--color-blue-400);
+  --color-entity-fate-dice-border: var(--color-blue-300);
+
+  /* Kbd */
+  --gradient-kbd-bg: radial-gradient(
+    ellipse at 50% 0%,
+    var(--color-stone-50) 0%,
+    var(--color-stone-100) 60%
+  );
+  --color-kbd-shadow: var(--color-neutral-400);
+  --color-kbd-text: var(--color-neutral-800);
+
+  /* Name */
+  --color-name-bg: color-mix(in srgb, var(--color-neutral-600) 35%, transparent 65%);
+  --color-name-editable-hover: color-mix(in srgb, var(--color-neutral-500) 50%, transparent 50%);
+
+  /* Messages */
+  --color-message-in-game-bg: var(--color-zinc-700);
+  --color-message-in-game-bg-hover: color-mix(
+    in srgb,
+    var(--color-zinc-700) 50%,
+    var(--color-zinc-600) 50%
+  );
+  --color-message-out-of-game-bg: color-mix(
+    in srgb,
+    var(--color-zinc-800) 75%,
+    var(--color-zinc-700) 25%
+  );
+  --color-message-out-of-game-bg-hover: var(--color-zinc-800);
+  --color-message-preview-dot: var(--color-gray-600);
+
+  /* Pane */
+  --color-pane-bg: color-mix(in srgb, var(--color-zinc-800) 75%, var(--color-zinc-700) 25%);
+  --color-pane-header-bg: var(--color-neutral-800);
+  --color-pane-focus-shadow: rgba(0, 0, 0, 0.5);
+
+  /* Lamp */
+  --color-lamp-on-border: var(--color-yellow-500);
+  --color-lamp-on-bg: var(--color-yellow-200);
+  --color-lamp-off-border: var(--color-neutral-800);
+  --color-lamp-off-bg: var(--color-neutral-700);
+
+  /* Sidebar */
+  --color-sidebar-border: var(--color-gray-600);
+  --color-sidebar-bg: var(--color-stone-900);
+  --color-sidebar-item-hover-bg: oklch(from var(--color-gray-800) l c h / 0.4);
+  --color-sidebar-item-active-bg: var(--color-gray-800);
+  --color-sidebar-channels-placeholder-random1: var(--color-neutral-800);
+  --color-sidebar-channels-placeholder-random2: var(--color-neutral-700);
+  --color-sidebar-channels-placeholder-random3: var(--color-neutral-600);
+}
+
 .dark,
 [data-theme='dark'] {
   color-scheme: dark;
@@ -178,11 +316,6 @@
     var(--color-night-900)
   );
   --color-sidebar-channels-placeholder-random3: var(--color-night-800);
-}
-
-.light,
-[data-theme='light'] {
-  --color-pane-bg: var(--color-white);
 }
 
 @theme {

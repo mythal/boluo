@@ -13,9 +13,9 @@ import { FormattedMessage } from 'react-intl';
 import useSWRMutation from 'swr/mutation';
 import { post } from '@boluo/api-browser';
 import { mutate } from 'swr';
-import { useTheme } from '@boluo/theme/react';
-import { resolveSystemTheme } from '@boluo/theme';
+import { classifyLightOrDark } from '@boluo/theme';
 import { Button } from '@boluo/ui/Button';
+import { useResolvedTheme } from '../../hooks/useResolvedTheme';
 
 const ColorCell: FC<{
   color: string;
@@ -33,7 +33,7 @@ const ColorCell: FC<{
 };
 
 export const EditDefaultColor: FC<{ currentUser: User }> = ({ currentUser }) => {
-  const theme = resolveSystemTheme(useTheme());
+  const lightOrDark = classifyLightOrDark(useResolvedTheme());
   const key = ['/users/query', null] as const;
   const { trigger, isMutating } = useSWRMutation<User, ApiError, typeof key, string>(
     key,
@@ -66,7 +66,7 @@ export const EditDefaultColor: FC<{ currentUser: User }> = ({ currentUser }) => 
     () => computeColors(currentUser.id, parsedColors),
     [currentUser.id, parsedColors],
   );
-  const parsedColor = parsedColors[theme];
+  const parsedColor = parsedColors[lightOrDark];
   const randomColorSeedSuffix = parsedColor.type === 'random' ? parsedColor.seed : '';
   return (
     <div>
@@ -75,12 +75,15 @@ export const EditDefaultColor: FC<{ currentUser: User }> = ({ currentUser }) => 
       </div>
       <div className="flex w-full gap-2 py-4">
         <div className="light">
-          <div className="bg-pane-bg rounded-lg border p-6" style={{ color: computedColors.light }}>
+          <div className="rounded-lg border bg-white p-6" style={{ color: computedColors.light }}>
             <FormattedMessage defaultMessage="In Light Mode" />
           </div>
         </div>
         <div className="dark">
-          <div className="bg-pane-bg rounded-lg border p-6" style={{ color: computedColors.dark }}>
+          <div
+            className="rounded-lg border bg-slate-900 p-6"
+            style={{ color: computedColors.dark }}
+          >
             <FormattedMessage defaultMessage="In Dark Mode" />
           </div>
         </div>
@@ -89,7 +92,7 @@ export const EditDefaultColor: FC<{ currentUser: User }> = ({ currentUser }) => 
       <div className="flex items-center gap-2 py-2">
         <ColorCell
           color={generateColor(currentUser.id + randomColorSeedSuffix)}
-          selected={parsedColors[theme].type === 'random'}
+          selected={parsedColors[lightOrDark].type === 'random'}
           onClick={() => handleEditDefaultColor(RANDOM_PREFIX + randomColorSeedSuffix)}
           isLoading={isMutating}
         />
@@ -104,7 +107,7 @@ export const EditDefaultColor: FC<{ currentUser: User }> = ({ currentUser }) => 
           return (
             <ColorCell
               key={color}
-              color={palette[color][theme]}
+              color={palette[color][lightOrDark]}
               selected={selected}
               onClick={() => handleEditDefaultColor(`${PALETTE_PREFIX}${color}`)}
               isLoading={isMutating}

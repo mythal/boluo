@@ -131,6 +131,7 @@ export const decorators = [
     themes: {
       light: 'light',
       dark: 'dark',
+      graphite: 'graphite',
     },
     defaultTheme: 'light',
   }),

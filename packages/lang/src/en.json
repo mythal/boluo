@@ -812,6 +812,9 @@
   "cpFKi9": {
     "message": "Topics can be used to record and remind you of what you are currently focused on."
   },
+  "cyeEx0": {
+    "message": "Midnight"
+  },
   "dMEGZV": {
     "message": "Split pane"
   },
@@ -895,6 +898,9 @@
   },
   "hFIEcy": {
     "message": "Malformed request."
+  },
+  "hHl2J0": {
+    "message": "Graphite"
   },
   "hSOOaa": {
     "message": "You have been invited to \"{spaceName}\""
@@ -1126,9 +1132,6 @@
   },
   "t5xj3B": {
     "message": "New Space"
-  },
-  "tOdNiY": {
-    "message": "Dark"
   },
   "taJuye": {
     "message": "We recommend using the latest version of {chromeLink}, {firefoxLink}, or {edgeLink} to use this application."

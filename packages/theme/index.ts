@@ -1,6 +1,8 @@
-export type Theme = 'light' | 'dark' | 'system';
+export type Theme = 'light' | 'dark' | 'graphite' | 'system';
 
-export const THEMES = ['light', 'dark', 'system'] as const;
+export const CONCRETE_THEMES = ['light', 'dark', 'graphite'] as const;
+
+export const THEMES = [...CONCRETE_THEMES, 'system'] as const;
 
 export const DEFAULT_THEME: Theme = 'system';
 
@@ -19,13 +21,10 @@ export const toTheme = (value: string): Theme => {
     value = decodeURIComponent(value.slice(THEME_PREFIX_ENCODED.length));
   }
 
-  if (value === 'light') {
-    return 'light';
-  } else if (value === 'dark') {
-    return 'dark';
-  } else {
-    return DEFAULT_THEME;
-  }
+  if (value === 'light') return 'light';
+  if (value === 'dark') return 'dark';
+  if (value === 'graphite') return 'graphite';
+  return DEFAULT_THEME;
 };
 
 export const writeThemeToCookie = (data: unknown) => {
@@ -55,6 +54,9 @@ export const getThemeFromDom = (): Theme => {
   if (classList.contains('system')) {
     return 'system';
   }
+  if (classList.contains('graphite')) {
+    return 'graphite';
+  }
   if (classList.contains('dark')) {
     return 'dark';
   } else if (classList.contains('light')) {
@@ -68,6 +70,7 @@ const setThemeByMediaQuery = <T extends { matches: boolean }>(queryDark: T) => {
   if (!classList.contains('system')) {
     return;
   }
+  classList.remove('graphite');
   if (queryDark.matches) {
     classList.add('dark');
     classList.remove('light');
@@ -81,6 +84,7 @@ export const setSystemTheme = () => {
   const classList = window.document.documentElement.classList;
   // How do I detect dark mode using JavaScript?
   // https://stackoverflow.com/a/57795495
+  classList.remove('graphite');
   if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
     classList.add('dark');
     classList.remove('light');
@@ -118,16 +122,26 @@ export const setThemeToDom = (value: string): Theme => {
       html.classList.remove('system');
       html.classList.add('light');
       html.classList.remove('dark');
+      html.classList.remove('graphite');
       colorScheme = 'light';
       break;
     case 'dark':
       html.classList.remove('system');
       html.classList.remove('light');
       html.classList.add('dark');
+      html.classList.remove('graphite');
+      colorScheme = 'dark';
+      break;
+    case 'graphite':
+      html.classList.remove('system');
+      html.classList.remove('light');
+      html.classList.remove('dark');
+      html.classList.add('graphite');
       colorScheme = 'dark';
       break;
     case 'system':
       html.classList.add('system');
+      html.classList.remove('graphite');
       setThemeByMediaQuery(window.matchMedia(DARK_MEDIA_QUERY));
       colorScheme = 'light dark';
       break;
@@ -170,9 +184,15 @@ export const observeTheme = (callback: (theme: Theme) => void): (() => void) => 
 
 export type ResolvedTheme = Exclude<Theme, 'system'>;
 
+// Resolve system theme to concrete theme
 export const resolveSystemTheme = (theme: Theme): ResolvedTheme => {
   if (theme === 'system') {
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
   }
   return theme;
+};
+
+// Group themes into light/dark buckets for places that only care about contrast.
+export const classifyLightOrDark = (theme: ResolvedTheme): 'light' | 'dark' => {
+  return theme === 'light' ? 'light' : 'dark';
 };

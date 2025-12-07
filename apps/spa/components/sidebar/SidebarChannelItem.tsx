@@ -24,6 +24,14 @@ interface Props {
 }
 export type LatestMessageAtom = Atom<'UNLOAD' | 'EMPTY' | MessageItem>;
 
+const styles = {
+  container: clsx('px-3 py-0.5'),
+  item: clsx(
+    'group relative w-full py-1.5 text-sm px-1 rounded',
+    'grid gap-1 grid-cols-[1.25rem_1fr_auto] grid-rows-[auto_auto] items-start',
+  ),
+};
+
 export const SidebarChannelItem: FC<Props> = ({ channel, active, overlay = false, myId }) => {
   const replacePane = usePaneReplace();
   const intl = useIntl();
@@ -123,12 +131,9 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active, overlay = false
         ordering={isReordering}
         overlay={overlay}
       >
-        <div className="px-3 py-0.5">
+        <div className={styles.container}>
           <span
-            className={clsx(
-              'group grid w-full grid-cols-[1.25rem_1fr_auto] grid-rows-[auto_auto] items-start gap-x-1 gap-y-1 rounded px-1 py-1 text-sm',
-              'bg-sidebar-item-hover-bg cursor-grab',
-            )}
+            className={clsx(styles.item, 'bg-sidebar-item-hover-bg cursor-grab')}
             onClick={handleClick}
           >
             {iconButton}
@@ -146,11 +151,12 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active, overlay = false
       ordering={isReordering}
       overlay={overlay}
     >
-      <div className="px-3 py-0.5">
+      <div className={styles.container}>
         <a
           href={channelHref}
           className={clsx(
-            'group relative grid w-full cursor-pointer grid-cols-[1.25rem_1fr_auto] grid-rows-[auto_auto] items-start gap-x-1 gap-y-1 rounded px-1 py-1.5 text-sm',
+            styles.item,
+            'cursor-pointer',
             active ? 'bg-sidebar-item-active-bg' : 'hover:bg-sidebar-item-hover-bg',
           )}
           onClick={handleClick}

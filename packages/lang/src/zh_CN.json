@@ -812,6 +812,9 @@
   "cpFKi9": {
     "message": "主题可以用来记录和提醒您当前关注的内容。"
   },
+  "cyeEx0": {
+    "message": "Midnight"
+  },
   "dMEGZV": {
     "message": "拆分窗格"
   },
@@ -895,6 +898,9 @@
   },
   "hFIEcy": {
     "message": "请求格式不正确。"
+  },
+  "hHl2J0": {
+    "message": "Graphite"
   },
   "hSOOaa": {
     "message": "你被邀请到「{spaceName}」"
@@ -1126,9 +1132,6 @@
   },
   "t5xj3B": {
     "message": "新位面"
-  },
-  "tOdNiY": {
-    "message": "暗色"
   },
   "taJuye": {
     "message": "为了使用本应用，推荐使用最新版本的 {chromeLink}，{firefoxLink} 或 {edgeLink}。"

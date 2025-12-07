@@ -16,6 +16,7 @@ import { timeout } from '@boluo/utils/async';
 import { type FailTo } from '../../state/channel.types';
 import { useIntl } from 'react-intl';
 import { useSetBanner } from '../../hooks/useBanner';
+import { useMember } from '../../hooks/useMember';
 
 const SEND_TIMEOUT = 8000;
 
@@ -27,11 +28,7 @@ export const useSend = () => {
   const store = useStore();
 
   const { data: queryChannelMembers } = useQueryChannelMembers(channelId);
-  const myMember = useMemo(() => {
-    if (queryChannelMembers == null) return null;
-    if (queryChannelMembers.selfIndex == null) return null;
-    return queryChannelMembers.members[queryChannelMembers.selfIndex] ?? null;
-  }, [queryChannelMembers]);
+  const myMember = useMember();
   const channelMembersMap: Map<string, MemberWithUser> = useMemo(() => {
     if (queryChannelMembers == null) return new Map();
     return new Map(queryChannelMembers.members.map((member) => [member.user.username, member]));

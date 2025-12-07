@@ -22,7 +22,7 @@ import { FailedBanner } from '@boluo/ui/chat/FailedBanner';
 import { PaneFailed } from '../pane-failed/PaneFailed';
 import { ChannelContext } from '../../hooks/useChannel';
 import { parseDiceFace } from '../../dice';
-import { MemberContext } from '../../hooks/useMember';
+import { MemberContext, useMember } from '../../hooks/useMember';
 import { useQueryChannelMembers } from '../../hooks/useQueryChannelMembers';
 import { GuestCompose } from '../compose/GuestCompose';
 import { Channel, ChannelMembers, type MemberWithUser } from '@boluo/api';
@@ -30,6 +30,7 @@ import { useBannerNode } from '../../hooks/useBannerNode';
 import ReactDOM from 'react-dom';
 import { useChannelFileDrop } from './useChannelFileDrop';
 import { FileDropOverlay } from '@boluo/ui/chat/FileDropOverlay';
+import { useQueryCurrentUser } from '@boluo/common/hooks/useQueryCurrentUser';
 
 interface Props {
   channelId: string;
@@ -50,19 +51,9 @@ const SecretChannelInfo: FC<{ className?: string }> = ({ className }) => {
 
 const ChatPaneChannelView: FC<{
   channel: Channel;
-  members: ChannelMembers | null;
   errorNode: ReactNode;
-}> = ({ channel, members, errorNode }) => {
-  const member: MemberWithUser | null = useMemo(() => {
-    if (members == null) {
-      return null;
-    }
-    const { selfIndex } = members;
-    if (selfIndex == null) {
-      return null;
-    }
-    return members.members[selfIndex] ?? null;
-  }, [members]);
+}> = ({ channel, errorNode }) => {
+  const member = useMember();
   const nickname = member?.user.nickname ?? undefined;
   const characterName = member?.channel.characterName ?? '';
   const defaultInGame = channel?.type === 'IN_GAME';
@@ -106,51 +97,54 @@ const ChatPaneChannelView: FC<{
   const showSearchPane = subPaneState === 'SEARCH';
   const hasRightPane = subPaneState !== 'NONE';
   return (
-    <MemberContext value={member}>
-      <ChannelContext value={channel}>
-        <ChannelAtomsContext value={atoms}>
-          <PaneBox header={header} initSizeLevel={1}>
-            {errorNode}
-            <div
-              className={clsx(
-                'ChatPaneChannelView',
-                'relative grid h-full grid-cols-1 grid-rows-[minmax(0,1fr)_auto]',
-                hasRightPane && '@xl:grid-cols-[1fr_auto]',
-              )}
-              onDragEnter={handleDragEnter}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-            >
-              {isDraggingFile && member && <FileDropOverlay />}
-              <ChatContent currentUserId={member?.user.id} />
-              {showMemberList && (
-                <ChannelSubPaneMemberList
-                  currentUser={member?.user}
-                  channel={channel}
-                  onClose={() => setSubPaneState('NONE')}
-                />
-              )}
-              {showSearchPane && (
-                <ChannelSubPaneSearch
-                  channelId={channel.id}
-                  onClose={() => setSubPaneState('NONE')}
-                />
-              )}
-              {member ? (
-                <Compose channelAtoms={atoms} member={member} />
-              ) : (
-                <GuestCompose channelId={channel.id} spaceId={channel.spaceId} />
-              )}
-            </div>
-          </PaneBox>
-        </ChannelAtomsContext>
-      </ChannelContext>
-    </MemberContext>
+    <ChannelContext value={channel}>
+      <ChannelAtomsContext value={atoms}>
+        <PaneBox header={header} initSizeLevel={1}>
+          {errorNode}
+          <div
+            className={clsx(
+              'ChatPaneChannelView',
+              'relative grid h-full grid-cols-1 grid-rows-[minmax(0,1fr)_auto]',
+              hasRightPane && '@xl:grid-cols-[1fr_auto]',
+            )}
+            onDragEnter={handleDragEnter}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+          >
+            {isDraggingFile && member && <FileDropOverlay />}
+            <ChatContent currentUserId={member?.user.id} />
+            {showMemberList && (
+              <ChannelSubPaneMemberList
+                currentUser={member?.user}
+                channel={channel}
+                onClose={() => setSubPaneState('NONE')}
+              />
+            )}
+            {showSearchPane && (
+              <ChannelSubPaneSearch
+                channelId={channel.id}
+                onClose={() => setSubPaneState('NONE')}
+              />
+            )}
+            {member ? (
+              <Compose channelAtoms={atoms} member={member} />
+            ) : (
+              <GuestCompose channelId={channel.id} spaceId={channel.spaceId} />
+            )}
+          </div>
+        </PaneBox>
+      </ChannelAtomsContext>
+    </ChannelContext>
   );
 };
 
 export const ChatPaneChannel = memo(({ channelId }: Props) => {
+  const {
+    data: currentUser,
+    isLoading: isCurrentUserLoading,
+    error: queryCurrentUserError,
+  } = useQueryCurrentUser();
   const {
     data: members,
     isLoading: isMembersLoading,
@@ -162,6 +156,13 @@ export const ChatPaneChannel = memo(({ channelId }: Props) => {
     error: queryChannelError,
   } = useQueryChannel(channelId);
   const banner = useBannerNode();
+  const myMember = useMemo((): MemberWithUser | null => {
+    if (members == null || members.members.length === 0 || currentUser == null) {
+      return null;
+    }
+    const found = members.members.find((member) => member.user.id === currentUser.id);
+    return found ?? null;
+  }, [currentUser, members]);
   let errorNode = null;
   if (queryChannelError) {
     const title = <FormattedMessage defaultMessage="Failed to query the channel" />;
@@ -180,7 +181,7 @@ export const ChatPaneChannel = memo(({ channelId }: Props) => {
         )
       : null;
   }
-  if (isChannelLoading || isMembersLoading) {
+  if (isChannelLoading || isMembersLoading || isCurrentUserLoading) {
     return <PaneLoading initSizeLevel={1}>{errorNode}</PaneLoading>;
   }
   if (channel == null) {
@@ -194,6 +195,10 @@ export const ChatPaneChannel = memo(({ channelId }: Props) => {
       />
     );
   }
-  return <ChatPaneChannelView channel={channel} members={members || null} errorNode={errorNode} />;
+  return (
+    <MemberContext value={myMember}>
+      <ChatPaneChannelView channel={channel} errorNode={errorNode} />
+    </MemberContext>
+  );
 });
 ChatPaneChannel.displayName = 'ChatPaneChannel';

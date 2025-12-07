@@ -12,6 +12,7 @@ import { usePaneToggle } from '../../hooks/usePaneToggle';
 import { usePaneKey } from '../../hooks/usePaneKey';
 import { atom, useAtomValue } from 'jotai';
 import { panesAtom } from '../../state/view.atoms';
+import { useMember } from '../../hooks/useMember';
 
 interface Props {
   channelId: string;
@@ -24,7 +25,7 @@ const classes = {
 
 export const ChannelHeaderTopic: FC<Props> = ({ channelId, dismiss }) => {
   const { data: channel, isLoading } = useQueryChannel(channelId);
-  const { data: members } = useQueryChannelMembers(channelId);
+  const member = useMember();
   const toggleChildPane = usePaneToggle({ child: '1/3' });
   const paneKey = usePaneKey();
   const topicPaneOpened = useAtomValue(
@@ -41,13 +42,6 @@ export const ChannelHeaderTopic: FC<Props> = ({ channelId, dismiss }) => {
       [channelId, paneKey],
     ),
   );
-  const member = useMemo((): MemberWithUser | null => {
-    if (members == null || members.members.length === 0 || members.selfIndex == null) {
-      return null;
-    } else {
-      return members.members[members.selfIndex] ?? null;
-    }
-  }, [members]);
   const intl = useIntl();
   const handleEditClick: MouseEventHandler<HTMLButtonElement> = useCallback(
     (e) => {

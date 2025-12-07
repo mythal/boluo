@@ -7,6 +7,8 @@ import useSWRMutation from 'swr/mutation';
 import { Button } from '@boluo/ui/Button';
 import { chatAtom } from '../../state/chat.atoms';
 import { useQueryChannelMembers } from '../../hooks/useQueryChannelMembers';
+import { useQueryCurrentUser } from '@boluo/common/hooks/useQueryCurrentUser';
+import { useMember } from '../../hooks/useMember';
 
 interface Props {
   messageId: string;
@@ -21,16 +23,9 @@ export const ChatItemMessageShowWhisper: FC<Props> = ({
   channelId,
   className,
 }) => {
+  const member = useMember();
   const { data: chanenlMembers } = useQueryChannelMembers(channelId);
-  if (
-    chanenlMembers == null ||
-    chanenlMembers.members.length === 0 ||
-    chanenlMembers.selfIndex == null
-  ) {
-    return null;
-  }
-  const member = chanenlMembers.members[chanenlMembers.selfIndex];
-  if (member == null) {
+  if (chanenlMembers == null || chanenlMembers.members.length === 0 || member == null) {
     return null;
   }
 

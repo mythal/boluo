@@ -812,6 +812,9 @@
   "cpFKi9": {
     "message": "トピックは、現在焦点を当てている内容を記録し、思い出させるために使用できます。"
   },
+  "cyeEx0": {
+    "message": "Midnight"
+  },
   "dMEGZV": {
     "message": "分割ペイン"
   },
@@ -895,6 +898,9 @@
   },
   "hFIEcy": {
     "message": "リクエストが不正な形式です。"
+  },
+  "hHl2J0": {
+    "message": "Graphite"
   },
   "hSOOaa": {
     "message": "あなたは「{spaceName}」に招待されました"
@@ -1126,9 +1132,6 @@
   },
   "t5xj3B": {
     "message": "新しい次元"
-  },
-  "tOdNiY": {
-    "message": "ダーク"
   },
   "taJuye": {
     "message": "このアプリを使用するには、最新バージョンの {chromeLink}、 {firefoxLink}、または {edgeLink} を使用することをお勧めします。"

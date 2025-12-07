@@ -48,7 +48,8 @@ export const ThemeSelect: FC<Props> = ({ id }) => {
     () => [
       { value: 'system', label: intl.formatMessage({ defaultMessage: 'Follow System' }) },
       { value: 'light', label: intl.formatMessage({ defaultMessage: 'Light' }) },
-      { value: 'dark', label: intl.formatMessage({ defaultMessage: 'Dark' }) },
+      { value: 'dark', label: intl.formatMessage({ defaultMessage: 'Midnight' }) },
+      { value: 'graphite', label: intl.formatMessage({ defaultMessage: 'Graphite' }) },
     ],
     [intl],
   );

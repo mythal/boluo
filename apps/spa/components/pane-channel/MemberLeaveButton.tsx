@@ -20,6 +20,7 @@ import { PaneHeaderButton } from '@boluo/ui/PaneHeaderButton';
 import Icon from '@boluo/ui/Icon';
 import { useQueryChannelMembers } from '../../hooks/useQueryChannelMembers';
 import { type MemberWithUser } from '@boluo/api';
+import { useMember } from '../../hooks/useMember';
 
 interface Props {
   channelId: string;
@@ -31,16 +32,11 @@ const leave: MutationFetcher<void, [string, string], Empty> = async ([_, channel
 };
 
 export const MemberLeaveButton: FC<Props> = ({ channelId, onSuccess }) => {
-  const { data: channelMembers } = useQueryChannelMembers(channelId);
   const { data: channel, isLoading } = useQueryChannel(channelId);
   const { trigger, isMutating } = useSWRMutation(['/channels/members', channelId], leave, {
     onSuccess,
   });
-  const myMember = useMemo((): MemberWithUser | null => {
-    if (channelMembers == null || channelMembers.selfIndex == null) return null;
-    return channelMembers.members[channelMembers.selfIndex] ?? null;
-  }, [channelMembers]);
-
+  const myMember = useMember();
   const [isConfirmOpen, setComfirmOpen] = useState(false);
   const { x, y, strategy, refs, context } = useFloating({
     open: isConfirmOpen,

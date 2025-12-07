@@ -14,6 +14,7 @@ import { useQueryChannel } from '../../hooks/useQueryChannel';
 import { useQueryCurrentUser } from '@boluo/common/hooks/useQueryCurrentUser';
 import { ChannelExportButton } from './ChannelExportButton';
 import { useQueryChannelMembers } from '../../hooks/useQueryChannelMembers';
+import { useMember } from '../../hooks/useMember';
 
 interface Props {
   channelId: string;
@@ -53,14 +54,7 @@ export const CharacterName: FC<{ member: ChannelMember; edit?: () => void }> = (
 export const ChannelHeaderMore: FC<Props> = ({ channelId, setHeaderState }) => {
   const { data: channel } = useQueryChannel(channelId);
   const { data: currentUser } = useQueryCurrentUser();
-  const { data: members } = useQueryChannelMembers(channelId);
-  const member = useMemo((): MemberWithUser | null => {
-    if (members == null || members.members.length === 0 || members.selfIndex == null) {
-      return null;
-    } else {
-      return members.members[members.selfIndex] ?? null;
-    }
-  }, [members]);
+  const member = useMember();
 
   let memberButton = null;
   if (currentUser == null) {

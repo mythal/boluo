@@ -49,7 +49,10 @@ const check = (
   if (spaceMember == null) {
     return 'NOT_A_SPACE_MEMBER';
   }
-  if (channelMembers != null && channelMembers.selfIndex != null) {
+  if (
+    channelMembers != null &&
+    channelMembers.members.some((member) => member.user.id === currentUser.id)
+  ) {
     return 'ALREADY';
   }
   return null;

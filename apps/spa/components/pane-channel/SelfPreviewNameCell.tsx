@@ -8,8 +8,8 @@ interface Props {
 
 export const SelfPreviewNameCell = memo<Props>(({ nameNode, isAction }: Props) => {
   return (
-    <div className="SelfPreviewNameCell flex items-center justify-between gap-x-4 gap-y-1 pb-2 @2xl:flex-col @2xl:items-end @2xl:justify-start">
-      <div className="relative max-w-full shrink grow rounded-sm @2xl:shrink-0">
+    <div className="SelfPreviewNameCell irc:flex-col irc:items-end irc:justify-start flex items-center justify-between gap-x-4 gap-y-1 pb-2">
+      <div className="irc:shrink-0 relative max-w-full shrink grow rounded-sm">
         {!isAction ? nameNode : <IsActionIndicator />}
       </div>
     </div>

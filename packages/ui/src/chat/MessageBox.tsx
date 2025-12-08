@@ -45,6 +45,7 @@ export function MessageBox({
   toolbar,
   children,
 }: Props) {
+  const outOfGameMessageInInGameChannel = !inGame && isInGameChannel;
   return (
     <div
       data-lifting={lifting}
@@ -54,29 +55,26 @@ export function MessageBox({
         'MessageBox',
         'group/msg data relative grid grid-flow-col items-center gap-2 py-2 pr-2 pl-2',
         'grid-cols-[1.5rem_minmax(0,1fr)]',
-        '@2xl:grid-cols-[1.5rem_12rem_minmax(0,1fr)]',
-        !continued && 'grid-rows-[auto_auto] @2xl:grid-rows-1',
+        'irc:grid-cols-[1.5rem_12rem_minmax(0,1fr)]',
+        !continued && 'irc:grid-rows-1 grid-rows-[auto_auto]',
         highlighted && 'shadow-[0_0_0_2px_var(--color-brand-strong)_inset]',
+        outOfGameMessageInInGameChannel
+          ? [
+              'text-text-secondary message-text-large:message-text-large:text-base message-text-large:text-base text-sm',
+              !disableHoverEffect && 'hover:text-text-primary',
+            ]
+          : 'message-text-large:text-lg message-text-large:leading-7',
         inGame
           ? lifting
             ? 'bg-message-in-game-bg-hover'
-            : clsx(
-                'bg-message-in-game-bg',
-                !disableHoverEffect && 'hover:bg-message-in-game-bg-hover',
-              )
+            : ['bg-message-in-game-bg', !disableHoverEffect && 'hover:bg-message-in-game-bg-hover']
           : [
               lifting
                 ? 'bg-message-out-of-game-bg-hover'
-                : clsx(
+                : [
                     'bg-message-out-of-game-bg',
                     !disableHoverEffect && 'hover:bg-message-out-of-game-bg-hover',
-                  ),
-              isInGameChannel
-                ? clsx(
-                    'text-text-secondary text-sm',
-                    !disableHoverEffect && 'hover:text-text-primary',
-                  )
-                : '',
+                  ],
             ],
         'data-[lifting=true]:cursor-grabbing data-[lifting=true]:shadow-md',
         isDragging && 'opacity-0',

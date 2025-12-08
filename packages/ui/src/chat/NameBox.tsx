@@ -29,7 +29,7 @@ export const NameBox = ({
       aria-pressed={pressed}
       className={clsx(
         'NameBox',
-        'bg-name-bg aria-pressed:bg-name-editable-hover relative mr-1 w-32 flex-none rounded-sm font-bold break-all @xl:w-40 @2xl:w-48',
+        'bg-name-bg aria-pressed:bg-name-editable-hover irc:w-48 relative mr-1 w-32 flex-none rounded-sm font-bold break-all @xl:w-40',
         interactive && 'hover:bg-name-editable-hover cursor-pointer select-text focus:ring',
       )}
       {...props}

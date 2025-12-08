@@ -10,7 +10,7 @@ interface Props {
 export const MessageContentBox: FC<Props> = ({ children, ref, pos, isLast }) => {
   return (
     <div
-      className="pr-message-small @2xl:pr-message"
+      className="pr-message-small irc:pr-message"
       ref={ref}
       data-read-position={pos}
       data-is-last={isLast}

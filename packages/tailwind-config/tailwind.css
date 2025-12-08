@@ -7,6 +7,21 @@
 
 @custom-variant pressed (&:is([data-active="true"],[aria-pressed="true"],:active):not(:disabled));
 
+/* IRC-like messages layout */
+@custom-variant irc {
+  @container (width >= 42rem) {
+    .irc-layout & {
+      @slot;
+    }
+  }
+}
+
+@custom-variant message-text-large {
+  .message-text-large & {
+    @slot;
+  }
+}
+
 @theme {
   /* Breakpoints */
   --breakpoint-sm: 640px;

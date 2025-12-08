@@ -72,14 +72,14 @@ export const ConnectionIndicatior: FC<Props> = ({ spaceId }) => {
         )}
         {connectionState.type === 'CONNECTING' && <span>…</span>}
         {connectionState.type === 'CONNECTED' && (
-          <span className="">
+          <span className="shrink truncate">
             <FormattedMessage defaultMessage="Connected" />
             <span className="mx-1 text-xs">
               (<CurrentName />)
             </span>
           </span>
         )}
-        <div className="grow text-right">
+        <div className="w-max flex-none text-right">
           <ButtonInline groupHover aria-pressed={sidebarContentState === 'CONNECTIONS'}>
             <FormattedMessage defaultMessage="Switch" />
           </ButtonInline>

@@ -291,6 +291,7 @@ export const ChannelSubPaneSearch: FC<Props> = ({ channelId, onClose }) => {
               message={message}
               intl={intl}
               handleResultClick={handleResultClick}
+              keyword={trimmedActiveKeyword}
             />
           ))}
           <div

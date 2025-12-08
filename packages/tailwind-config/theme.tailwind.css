@@ -64,7 +64,7 @@
   --color-action-toggle-disabled-bg: var(--color-gray-500);
   --color-action-toggle-disabled-text: var(--color-gray-400);
   --color-action-toggle-selected-bg: var(--color-gray-600);
-  --color-action-toggle-indicator-on: var(--color-blue-600);
+  --color-action-toggle-indicator-on: var(--color-green-400);
   --color-action-toggle-indicator-off: var(--color-gray-500);
   --color-action-toggle-icon: var(--color-gray-400);
 
@@ -238,7 +238,7 @@
     var(--color-night-600)
   );
   --color-action-toggle-selected-bg: var(--color-night-700);
-  --color-action-toggle-indicator-on: var(--color-night-blue-700);
+  --color-action-toggle-indicator-on: var(--color-green-500);
   --color-action-toggle-indicator-off: color-mix(
     in srgb,
     var(--color-night-500) 75%,

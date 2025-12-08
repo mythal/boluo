@@ -5,6 +5,7 @@ import { useIntl } from 'react-intl';
 import { useNotificationSwitch } from '../../hooks/useNotificationSwitch';
 import { type User } from '@boluo/api';
 import { Button } from '@boluo/ui/Button';
+import { LampSwitch } from '@boluo/ui/LampSwitch';
 
 export const AppOperations: FC<{ currentUser: User | null | undefined }> = ({ currentUser }) => {
   return (
@@ -38,13 +39,7 @@ export const NotificationSwitch: FC = () => {
       className={clsx('relative')}
     >
       <Bell />
-      <span
-        aria-hidden
-        className={clsx(
-          'absolute top-1 right-1 block h-1 w-1 rounded-full',
-          canNotify ? 'bg-action-toggle-indicator-on' : 'bg-action-toggle-indicator-off',
-        )}
-      />
+      <LampSwitch isOn={canNotify} />
     </Button>
   );
 };

@@ -100,7 +100,7 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active, overlay = false
     [active, channel.type, isReordering, labelReorder],
   );
   const channelName = (
-    <span className="text-left text-base">
+    <span className="text-left">
       {channel.isPublic ? '' : <Icon className="text-text-secondary mr-1" icon={Lock} />}
       <span className="font-semibold">{channel.name}</span>
     </span>

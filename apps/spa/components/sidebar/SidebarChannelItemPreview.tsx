@@ -129,11 +129,14 @@ export const SidebarChannelItemPreview: FC<Props> = ({
   return (
     <div className={containerClass}>
       {typeof latestMessage !== 'string' && (
-        <div
-          data-unread={hasUnread}
-          data-is-action={latestMessage.isAction}
-          className="truncate text-sm data-[is-action=true]:italic data-[unread=true]:font-bold"
-        >
+        <div data-is-action={latestMessage.isAction} className="truncate text-sm italic">
+          {hasUnread && (
+            <span className="bg-action-toggle-indicator-on my-px mr-1 inline-block h-2 w-2 rounded-full">
+              <span className="sr-only">
+                <FormattedMessage defaultMessage="[Unread]" />
+              </span>
+            </span>
+          )}
           <span className="text-text-secondary group-hover:text-text-primary mr-1">
             {latestMessage.name}
             {latestMessage.isAction ? '' : ':'}

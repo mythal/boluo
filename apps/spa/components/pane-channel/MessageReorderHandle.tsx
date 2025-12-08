@@ -16,6 +16,7 @@ interface Props {
   lifting?: boolean;
   listeners?: UseSortableReturn['listeners'];
   attributes?: UseSortableReturn['attributes'];
+  timestamp?: ReactNode;
   children?: React.ReactNode;
   failTo: FailTo | null | undefined;
   ref?: React.Ref<HTMLDivElement>;
@@ -27,6 +28,7 @@ export const MessageReorderHandle: FC<Props> = ({
   attributes,
   draggable,
   failTo,
+  timestamp,
   ref,
 }) => {
   const loading = useIsOptimistic();
@@ -51,7 +53,7 @@ export const MessageReorderHandle: FC<Props> = ({
         {...listeners}
         {...attributes}
         className={clsx(
-          'text-text-muted rounded-sm pl-2 text-right',
+          'text-text-muted relative rounded-sm pl-2 text-right',
           lifting && 'cursor-grabbing',
           canBeDragged && 'hover:text-text-secondary cursor-grab',
           failTo != null && 'cursor-not-allowed',
@@ -61,6 +63,9 @@ export const MessageReorderHandle: FC<Props> = ({
         <Delay fallback={null}>
           <div>{icon}</div>
         </Delay>
+        <div className="compact:not-[.continued-message_&]:block absolute top-7 left-0 hidden -rotate-90">
+          {timestamp}
+        </div>
       </div>
     </MessageHandleBox>
   );

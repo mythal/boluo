@@ -114,7 +114,7 @@ export const ChannelSubPaneMemberList: FC<Props> = ({ currentUser, channel, onCl
       <div
         className={clsx(
           'border-border-subtle flex items-center border-b py-2 text-sm',
-          mini ? 'px-2' : 'px-3',
+          mini ? 'px-2' : 'pr-2 pl-3',
         )}
       >
         <div className="grow">
@@ -141,7 +141,9 @@ export const ChannelSubPaneMemberList: FC<Props> = ({ currentUser, channel, onCl
 
       <div
         className={
-          mini ? 'overflow-x-hidden overflow-y-auto scrollbar-hidden' : 'overflow-x-hidden overflow-y-auto'
+          mini
+            ? 'scrollbar-hidden overflow-x-hidden overflow-y-auto'
+            : 'overflow-x-hidden overflow-y-auto'
         }
       >
         {uiState === 'INVITE' && myMember != null && (

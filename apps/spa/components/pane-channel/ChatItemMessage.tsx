@@ -238,6 +238,10 @@ const ChatItemMessageComponent: FC<Props> = ({
     }),
     [transform, transition],
   );
+  const timestamp = useMemo(
+    () => <MessageTime message={message} failTo={failTo} />,
+    [failTo, message],
+  );
   const handle = useMemo(
     () => (
       <MessageReorderHandle
@@ -246,10 +250,11 @@ const ChatItemMessageComponent: FC<Props> = ({
         ref={setActivatorNodeRef}
         attributes={attributes}
         listeners={listeners}
+        timestamp={timestamp}
         failTo={failTo}
       />
     ),
-    [attributes, draggable, failTo, listeners, overlay, setActivatorNodeRef],
+    [attributes, draggable, failTo, listeners, overlay, setActivatorNodeRef, timestamp],
   );
   const toolbar = useMemo(() => {
     if (isDragging || overlay) return null;
@@ -265,10 +270,6 @@ const ChatItemMessageComponent: FC<Props> = ({
       </Delay>
     );
   }, [isDragging, longPressStart, message, overlay, sendBySelf]);
-  const timestamp = useMemo(
-    () => <MessageTime message={message} failTo={failTo} />,
-    [failTo, message],
-  );
   return (
     <ToolbarDisplayContext value={toolbarDisplayAtom}>
       <MessageBox

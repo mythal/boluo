@@ -32,7 +32,7 @@ export const SelfPreviewContent: FC<Props> = ({
 
   const deferredParsed = useDeferredValue(parsed);
   return (
-    <div className="items-between pr-message-small irc:pr-message flex h-full min-h-8 flex-col gap-1">
+    <div className="items-between pr-message-small compact:pr-message-compact irc:pr-message flex h-full min-h-8 flex-col gap-1">
       {parsed.whisperToUsernames != null && (
         <ContentWhisperTo
           inGame={inGame}

@@ -1,7 +1,7 @@
 import type { Locale } from '@boluo/api';
 import type { Theme } from '@boluo/theme';
 
-export type MessageSize = 'normal' | 'large';
+export type MessageSize = 'message-size-normal' | 'message-size-large';
 export type ChannelLayout = 'irc-layout' | 'compact-layout';
 
 export interface Settings {

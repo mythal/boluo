@@ -1,5 +1,5 @@
 import { type User, type Channel, type MemberWithUser } from '@boluo/api';
-import { UserPlus, X } from '@boluo/icons';
+import { ChevronLeft, ChevronRight, UserPlus, X } from '@boluo/icons';
 import { type FC, useMemo, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import clsx from 'clsx';
@@ -9,6 +9,8 @@ import { PaneHeaderButton } from '@boluo/ui/PaneHeaderButton';
 import { MemberInvitation } from './MemberInvitation';
 import { MemberListItem } from './MemberListItem';
 import { Failed } from '@boluo/ui/Failed';
+import { atomWithStorage } from 'jotai/utils';
+import { useAtom } from 'jotai';
 
 interface Props {
   className?: string;
@@ -25,14 +27,22 @@ const MemberListLoading: FC<{ className?: string }> = ({ className }) => {
   );
 };
 
+const miniMemberListAtom = atomWithStorage<boolean>('boluo:mini-member-list', true);
+
 export const ChannelSubPaneMemberList: FC<Props> = ({ currentUser, channel, onClose }) => {
   const intl = useIntl();
+  const [mini, setMini] = useAtom(miniMemberListAtom);
+  const [openedMemberCardUserId, setOpenedMemberCardUserId] = useState<string | null>(null);
   const [uiState, setUiState] = useState<'MEMBER' | 'INVITE'>('MEMBER');
+  if (mini && uiState === 'INVITE') {
+    setUiState('MEMBER');
+  }
+
   const { data: userStatusMap } = useQueryUsersStatus(channel.spaceId);
   const { data: membersData, error } = useQueryChannelMembers(channel.id);
   const containerClassName = clsx(
-    'border-border-subtle bg-pane-bg absolute inset-y-0 right-0 z-40 flex h-full w-3xs flex-col border-l shadow-xl',
-    '@xl:static @xl:shadow-none',
+    'border-border-subtle bg-pane-bg inset-y-0 right-0 z-40 flex h-full flex-col border-l',
+    mini ? '' : 'absolute shadow-xl w-3xs @xl:static @xl:shadow-none',
   );
   const toggleInvite = () => {
     setUiState((x) => (x === 'MEMBER' ? 'INVITE' : 'MEMBER'));
@@ -101,12 +111,17 @@ export const ChannelSubPaneMemberList: FC<Props> = ({ currentUser, channel, onCl
 
   return (
     <div className={containerClassName}>
-      <div className="border-border-subtle flex items-center border-b px-3 py-2 text-sm">
+      <div
+        className={clsx(
+          'border-border-subtle flex items-center border-b py-2 text-sm',
+          mini ? 'px-2' : 'px-3',
+        )}
+      >
         <div className="grow">
-          {uiState === 'MEMBER' && <FormattedMessage defaultMessage="Members" />}
-          {uiState === 'INVITE' && <FormattedMessage defaultMessage="Invite" />}
+          {!mini && uiState === 'MEMBER' && <FormattedMessage defaultMessage="Members" />}
+          {!mini && uiState === 'INVITE' && <FormattedMessage defaultMessage="Invite" />}
         </div>
-        {canInvite && (
+        {canInvite && !mini && (
           <PaneHeaderButton
             active={uiState === 'INVITE'}
             onClick={toggleInvite}
@@ -116,12 +131,19 @@ export const ChannelSubPaneMemberList: FC<Props> = ({ currentUser, channel, onCl
           </PaneHeaderButton>
         )}
 
-        <PaneHeaderButton onClick={onClose} title={intl.formatMessage({ defaultMessage: 'Close' })}>
-          <X />
+        <PaneHeaderButton
+          onClick={() => setMini((x) => !x)}
+          title={intl.formatMessage({ defaultMessage: 'Mini Member List' })}
+        >
+          {mini ? <ChevronLeft /> : <ChevronRight />}
         </PaneHeaderButton>
       </div>
 
-      <div className="overflow-y-auto">
+      <div
+        className={
+          mini ? 'overflow-x-hidden overflow-y-auto scrollbar-hidden' : 'overflow-x-hidden overflow-y-auto'
+        }
+      >
         {uiState === 'INVITE' && myMember != null && (
           <MemberInvitation
             members={members}
@@ -131,16 +153,22 @@ export const ChannelSubPaneMemberList: FC<Props> = ({ currentUser, channel, onCl
           />
         )}
         {uiState === 'MEMBER' &&
-          members.map((member) => (
-            <MemberListItem
-              key={member.user.id}
-              channel={channel}
-              member={member}
-              canIKick={canIKick}
-              canIEditMaster={myMember?.space.isAdmin ?? false}
-              status={userStatusMap?.[member.user.id]}
-            />
-          ))}
+          members.map((member) => {
+            const isMemberCardOpen = openedMemberCardUserId === member.user.id;
+            return (
+              <MemberListItem
+                key={member.user.id}
+                channel={channel}
+                isMemberCardOpen={isMemberCardOpen}
+                setOpenedMemberCardUserId={setOpenedMemberCardUserId}
+                mini={mini}
+                member={member}
+                canIKick={canIKick}
+                canIEditMaster={myMember?.space.isAdmin ?? false}
+                status={userStatusMap?.[member.user.id]}
+              />
+            );
+          })}
       </div>
     </div>
   );

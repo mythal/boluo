@@ -214,7 +214,7 @@ export const SelfPreviewToolbar: FC<Props> = ({ currentUser }) => {
   const actionButton = useMemo(() => <ActionButton intl={intl} />, [intl]);
   const sendButton = useMemo(() => <SendButton intl={intl} />, [intl]);
   return (
-    <div className="SelfPreviewToolbar pr-message-small irc:pr-message relative flex w-full justify-start gap-1 text-sm">
+    <div className="SelfPreviewToolbar pr-message-small compact:pr-message-compact irc:pr-message relative flex w-full justify-start gap-1 text-sm">
       {actionButton}
       {whisperButton}
       {muteButton}

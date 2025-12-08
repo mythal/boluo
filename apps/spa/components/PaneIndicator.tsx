@@ -88,7 +88,7 @@ export const PaneIndicator = () => {
     <div
       data-sidebar-expanded={isSidebarExpanded ? 'true' : 'false'}
       className={clsx(
-        'pointer-events-none fixed top-16 z-30 -translate-x-1/2 transition-opacity duration-200',
+        'pointer-events-none fixed top-8 z-30 -translate-x-1/2 transition-opacity duration-200',
         'data-[sidebar-expanded=false]:left-1/2 data-[sidebar-expanded=true]:left-[calc(50%+var(--spacing-sidebar)/2)]',
         visible ? 'opacity-100' : 'opacity-0',
       )}

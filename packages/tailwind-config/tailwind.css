@@ -9,15 +9,22 @@
 
 /* IRC-like messages layout */
 @custom-variant irc {
-  @container (width >= 42rem) {
+  @container (width >= 44rem) {
     .irc-layout & {
       @slot;
     }
   }
 }
 
-@custom-variant message-text-large {
-  .message-text-large & {
+/* IRC-like messages layout */
+@custom-variant compact {
+  .compact-layout & {
+    @slot;
+  }
+}
+
+@custom-variant msg-large {
+  .message-size-large & {
     @slot;
   }
 }
@@ -38,6 +45,7 @@
 
   --spacing-message: 5rem;
   --spacing-message-small: 2rem;
+  --spacing-message-compact: 0.5rem;
   --spacing-pane: var(--spacing-pane-padding);
 
   /* Box shadow */

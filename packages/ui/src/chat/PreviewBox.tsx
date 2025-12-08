@@ -60,8 +60,8 @@ export const PreviewBox: FC<Props> = ({
         'irc:grid-cols-[1.5rem_12rem_minmax(0,1fr)] irc:grid-rows-1',
         inGame ? 'bg-message-in-game-bg' : 'bg-message-out-of-game-bg',
         outOfGamePreviewInInGameChannel
-          ? 'text-text-secondary hover:text-text-primary message-text-large:text-base text-sm'
-          : 'message-text-large:text-lg message-text-large:leading-7',
+          ? 'text-text-secondary hover:text-text-primary msg-large:text-base text-sm'
+          : 'msg-large:text-lg msg-large:leading-7',
         className,
       )}
       ref={ref}

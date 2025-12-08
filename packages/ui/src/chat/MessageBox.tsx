@@ -56,14 +56,14 @@ export function MessageBox({
         'group/msg data relative grid grid-flow-col items-center gap-2 py-2 pr-2 pl-2',
         'grid-cols-[1.5rem_minmax(0,1fr)]',
         'irc:grid-cols-[1.5rem_12rem_minmax(0,1fr)]',
-        !continued && 'irc:grid-rows-1 grid-rows-[auto_auto]',
+        continued ? 'continued-message' : 'irc:grid-rows-1 grid-rows-[auto_auto]',
         highlighted && 'shadow-[0_0_0_2px_var(--color-brand-strong)_inset]',
         outOfGameMessageInInGameChannel
           ? [
-              'text-text-secondary message-text-large:message-text-large:text-base message-text-large:text-base text-sm',
+              'text-text-secondary msg-large:msg-large:text-base msg-large:text-base text-sm',
               !disableHoverEffect && 'hover:text-text-primary',
             ]
-          : 'message-text-large:text-lg message-text-large:leading-7',
+          : 'msg-large:text-lg msg-large:leading-7',
         inGame
           ? lifting
             ? 'bg-message-in-game-bg-hover'
@@ -91,7 +91,7 @@ export function MessageBox({
     >
       {children}
 
-      <div className="absolute top-1 right-2 select-none">{timestamp}</div>
+      <div className="compact:hidden absolute top-1 right-2 select-none">{timestamp}</div>
       {toolbar}
     </div>
   );

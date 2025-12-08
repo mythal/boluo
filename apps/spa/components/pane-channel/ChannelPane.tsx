@@ -105,7 +105,7 @@ const ChatPaneChannelView: FC<{
             className={clsx(
               'ChatPaneChannelView',
               'relative grid h-full grid-cols-1 grid-rows-[minmax(0,1fr)_auto]',
-              hasRightPane && '@xl:grid-cols-[1fr_auto]',
+              hasRightPane && 'grid-cols-[1fr_auto]',
             )}
             onDragEnter={handleDragEnter}
             onDragOver={handleDragOver}

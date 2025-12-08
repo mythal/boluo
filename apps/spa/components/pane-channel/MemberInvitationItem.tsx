@@ -10,8 +10,8 @@ import { type Channel, type SpaceMember, type User, type UserStatus } from '@bol
 import { type FC, useState } from 'react';
 import { Avatar } from '@boluo/ui/users/Avatar';
 import { MemberCard } from './MemberCard';
-import { MemberStatusBadge } from './MemberStatusBadge';
 import { useQueryAppSettings } from '@boluo/common/hooks/useQueryAppSettings';
+import { LampOnline } from '@boluo/ui/LampOneline';
 
 interface Props {
   user: User;
@@ -51,10 +51,10 @@ export const MemberInvitationItem: FC<Props> = ({ user, spaceMember, channel, st
             className="rounded-sm"
             mediaUrl={appSettings?.mediaUrl}
           />
+          {status?.kind === 'ONLINE' && <LampOnline isOn />}
         </div>
         <span className="space-x-1">
           <span>{user.nickname}</span>
-          {status && <MemberStatusBadge status={status} />}
         </span>
       </button>
       {showMemberCard && (

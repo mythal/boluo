@@ -125,6 +125,9 @@
   "5jeq8P": {
     "message": "不明"
   },
+  "5l42dd": {
+    "message": "Large Text"
+  },
   "5lqSZ6": {
     "message": "移動しようとしているメッセージはもう存在しません。"
   },
@@ -566,6 +569,9 @@
   "Qm+Ijg": {
     "message": "このメールアドレスは登録されていません"
   },
+  "Qm8yuu": {
+    "message": "[Unread]"
+  },
   "QudmKz": {
     "message": "接続の切り替え"
   },
@@ -766,9 +772,6 @@
   },
   "aLncO3": {
     "message": "秘密チャンネル"
-  },
-  "agOXPD": {
-    "message": "Size"
   },
   "aifEPM": {
     "message": "これは秘密チャンネルです。このチャネルに参加するには招待が必要です。"

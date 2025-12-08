@@ -125,6 +125,9 @@
   "5jeq8P": {
     "message": "Unknown"
   },
+  "5l42dd": {
+    "message": "Large Text"
+  },
   "5lqSZ6": {
     "message": "The message you are trying to move is no longer available."
   },
@@ -566,6 +569,9 @@
   "Qm+Ijg": {
     "message": "The email address is not registered."
   },
+  "Qm8yuu": {
+    "message": "[Unread]"
+  },
   "QudmKz": {
     "message": "Switch Connection"
   },
@@ -766,9 +772,6 @@
   },
   "aLncO3": {
     "message": "Secret Channel"
-  },
-  "agOXPD": {
-    "message": "Size"
   },
   "aifEPM": {
     "message": "This is a secret channel. You must be invited to join this channel."

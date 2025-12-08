@@ -1,7 +1,7 @@
-import { type MemberWithUser, type ChannelMember } from '@boluo/api';
+import { type ChannelMember } from '@boluo/api';
 import clsx from 'clsx';
 import { Edit } from '@boluo/icons';
-import { useMemo, type FC } from 'react';
+import { type FC } from 'react';
 import { FormattedMessage } from 'react-intl';
 import Icon from '@boluo/ui/Icon';
 import { ChannelSettingsButton } from './ChannelSettingsButton';
@@ -13,7 +13,6 @@ import { MemberJoinButton } from './MemberJoinButton';
 import { useQueryChannel } from '../../hooks/useQueryChannel';
 import { useQueryCurrentUser } from '@boluo/common/hooks/useQueryCurrentUser';
 import { ChannelExportButton } from './ChannelExportButton';
-import { useQueryChannelMembers } from '../../hooks/useQueryChannelMembers';
 import { useMember } from '../../hooks/useMember';
 
 interface Props {
@@ -68,7 +67,7 @@ export const ChannelHeaderMore: FC<Props> = ({ channelId, setHeaderState }) => {
   }
 
   return (
-    <div className="bg-pane-header-bg pl-pane flex items-baseline gap-x-1 gap-y-1 py-2 pr-2 text-xs">
+    <div className="bg-pane-header-bg pl-pane flex items-baseline gap-x-1 gap-y-1 py-2 pr-2">
       <ChannelHeaderFilter />
       <ChannelHeaderFilterShowArchive />
       <div className="grow" />

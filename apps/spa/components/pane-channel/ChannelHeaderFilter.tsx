@@ -19,10 +19,10 @@ export const ChannelHeaderFilter: FC = () => {
   const { filterAtom } = useChannelAtoms();
   const [filter, setFilter] = useAtom(filterAtom);
   return (
-    <label className="ChannelHeaderFilter flex items-center gap-1">
+    <label className="ChannelHeaderFilter flex items-center gap-1 text-sm">
       <Icon icon={Filter} />
 
-      <span className="hidden flex-none @xl:inline">
+      <span className="hidden flex-none @2xl:inline">
         <FormattedMessage defaultMessage="Filter" />
       </span>
       <div className="w-20">

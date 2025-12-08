@@ -125,6 +125,9 @@
   "5jeq8P": {
     "message": "未知"
   },
+  "5l42dd": {
+    "message": "Large Text"
+  },
   "5lqSZ6": {
     "message": "正在移動的訊息不再存在。"
   },
@@ -566,6 +569,9 @@
   "Qm+Ijg": {
     "message": "該郵箱尚未註冊"
   },
+  "Qm8yuu": {
+    "message": "[Unread]"
+  },
   "QudmKz": {
     "message": "Switch Connection"
   },
@@ -766,9 +772,6 @@
   },
   "aLncO3": {
     "message": "秘密頻道"
-  },
-  "agOXPD": {
-    "message": "Size"
   },
   "aifEPM": {
     "message": "這是一個秘密頻道。需要邀請才能進入此頻道。"

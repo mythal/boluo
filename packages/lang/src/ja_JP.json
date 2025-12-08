@@ -95,6 +95,9 @@
   "3kOdlB": {
     "message": "トピックが未設定"
   },
+  "3py9Sd": {
+    "message": "ミニメンバー一覧"
+  },
   "47FYwb": {
     "message": "キャンセル"
   },
@@ -121,6 +124,9 @@
   },
   "5jeq8P": {
     "message": "不明"
+  },
+  "5l42dd": {
+    "message": "大きな文字"
   },
   "5lqSZ6": {
     "message": "移動しようとしているメッセージはもう存在しません。"
@@ -563,6 +569,9 @@
   "Qm+Ijg": {
     "message": "このメールアドレスは登録されていません"
   },
+  "Qm8yuu": {
+    "message": "[Unread]"
+  },
   "QudmKz": {
     "message": "接続の切り替え"
   },
@@ -813,7 +822,7 @@
     "message": "トピックは、現在焦点を当てている内容を記録し、思い出させるために使用できます。"
   },
   "cyeEx0": {
-    "message": "Midnight"
+    "message": "ミッドナイト"
   },
   "dMEGZV": {
     "message": "分割ペイン"
@@ -900,7 +909,7 @@
     "message": "リクエストが不正な形式です。"
   },
   "hHl2J0": {
-    "message": "Graphite"
+    "message": "グラファイト"
   },
   "hSOOaa": {
     "message": "あなたは「{spaceName}」に招待されました"
@@ -955,6 +964,9 @@
   },
   "k1s9UW": {
     "message": "見つかりませんでした"
+  },
+  "kCZBrb": {
+    "message": "コンパクト"
   },
   "kFck7X": {
     "message": "ゲームマスター"

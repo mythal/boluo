@@ -10,8 +10,8 @@ export const MessageNamePlate: FC<Props> = ({ children, shouldConcealNameOnLeft 
   return (
     <div
       className={clsx(
-        'self-start @2xl:text-right',
-        shouldConcealNameOnLeft ? 'hidden @2xl:block' : '',
+        'irc:text-right self-start',
+        shouldConcealNameOnLeft ? 'irc:block hidden' : '',
       )}
     >
       {!shouldConcealNameOnLeft && <span>{children}:</span>}

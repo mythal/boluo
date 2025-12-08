@@ -1,12 +1,17 @@
 import type { Locale } from '@boluo/api';
 import type { Theme } from '@boluo/theme';
 
+export type MessageSize = 'normal' | 'large';
+export type ChannelLayout = 'irc-layout' | 'compact-layout';
+
 export interface Settings {
   locale?: Locale;
   theme?: Theme;
   enterSend?: boolean;
   expandDice?: boolean;
   alignToBottom?: boolean;
+  messageSize?: MessageSize;
+  layout?: ChannelLayout;
 }
 
 export const defaultSettings: Settings = {};

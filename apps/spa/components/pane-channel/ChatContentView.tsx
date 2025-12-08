@@ -2,7 +2,7 @@ import { type DataRef, type DragEndEvent, type DragStartEvent } from '@dnd-kit/c
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { post } from '@boluo/api-browser';
 import { useSetAtom, useStore } from 'jotai';
-import type { FC, MutableRefObject, RefObject } from 'react';
+import type { FC, RefObject } from 'react';
 import { useRef } from 'react';
 import { useEffect } from 'react';
 import { useCallback } from 'react';
@@ -26,6 +26,7 @@ import { recordWarn } from '../../error';
 import { timeout } from '@boluo/utils/async';
 import { useScrollToMessage } from '../../hooks/useScrollToMessage';
 import { ImagePreviewProvider } from './ImagePreviewOverlay';
+import { ChatContentContainer } from './ChatContentContainer';
 
 interface Props {
   setIsScrolling: (isScrolling: boolean) => void;
@@ -230,9 +231,9 @@ const useScrollLock = (
   virtuosoRef: RefObject<VirtuosoHandle | null>,
   scrollerRef: RefObject<HTMLDivElement | null>,
   wrapperRef: RefObject<HTMLDivElement | null>,
-  rangeRef: MutableRefObject<[number, number]>,
+  rangeRef: RefObject<[number, number]>,
   chatList: ChatItem[],
-): MutableRefObject<ScrollLockState> => {
+): RefObject<ScrollLockState> => {
   const scrollLockRef = useRef<ScrollLockState>({ end: true, id: null, modified: 0 });
   const prevChatListLength = useRef(chatList.length);
 
@@ -357,7 +358,7 @@ export const ChatContentView: FC<Props> = ({ setIsScrolling, currentUserId }) =>
   });
 
   return (
-    <div className="ChatContentView @container relative" ref={wrapperRef}>
+    <ChatContentContainer ref={wrapperRef}>
       <ImagePreviewProvider>
         <VirtuosoRefContext value={virtuosoRef}>
           <ScrollerRefContext value={scrollerRef}>
@@ -388,7 +389,7 @@ export const ChatContentView: FC<Props> = ({ setIsScrolling, currentUserId }) =>
           </ScrollerRefContext>
         </VirtuosoRefContext>
       </ImagePreviewProvider>
-    </div>
+    </ChatContentContainer>
   );
 };
 

@@ -95,6 +95,9 @@
   "3kOdlB": {
     "message": "トピックが未設定"
   },
+  "3py9Sd": {
+    "message": "Mini Member List"
+  },
   "47FYwb": {
     "message": "キャンセル"
   },
@@ -764,6 +767,9 @@
   "aLncO3": {
     "message": "秘密チャンネル"
   },
+  "agOXPD": {
+    "message": "Size"
+  },
   "aifEPM": {
     "message": "これは秘密チャンネルです。このチャネルに参加するには招待が必要です。"
   },
@@ -955,6 +961,9 @@
   },
   "k1s9UW": {
     "message": "見つかりませんでした"
+  },
+  "kCZBrb": {
+    "message": "Compact"
   },
   "kFck7X": {
     "message": "ゲームマスター"

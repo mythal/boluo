@@ -9,6 +9,7 @@ import { useSwitchSpace } from '../../hooks/useSwitchSpace';
 import { panesAtom } from '../../state/view.atoms';
 import { SidebarItem } from './SidebarItem';
 import { SidebarSkeletonItem } from './SidebarSkeletonItem';
+import { SidebarSpacesHeaderNewSpace } from './SidebarSpacesHeaderNewSpace';
 import clsx from 'clsx';
 
 interface Props {
@@ -66,6 +67,7 @@ export const SidebarSpaceList: FC<Props> = ({ currentUser, currentSpaceId }) => 
         <span>
           <FormattedMessage defaultMessage="My Spaces" />
         </span>
+        {currentUser != null && <SidebarSpacesHeaderNewSpace />}
       </div>
       {spacesWithMemberData == null && isLoading && (
         <div>

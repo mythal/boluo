@@ -1,6 +1,5 @@
 import { IntlConfig, IntlErrorCode, type OnErrorFn } from '@formatjs/intl';
-import type { Locale } from '@boluo/api';
-export type { Locale } from '@boluo/api';
+import type { Locale } from '@boluo/types';
 
 export type IntlMessages = IntlConfig['messages'];
 export const LOCALES: Locale[] = ['en', 'ja', 'zh-CN', 'zh-TW'] as const;

@@ -10,7 +10,7 @@ import {
   useState,
 } from 'react';
 import { Loading } from '@boluo/ui/Loading';
-import { type ChildrenProps } from '@boluo/utils/types';
+import { type ChildrenProps } from '@boluo/types';
 import { scrollPaneIntoView, usePaneFocus } from '../hooks/usePaneFocus';
 import { Delay } from '@boluo/ui/Delay';
 import { PaneBodyError } from './PaneBodyError';

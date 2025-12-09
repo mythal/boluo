@@ -1,4 +1,4 @@
-export type Theme = 'light' | 'dark' | 'graphite' | 'system';
+import { type ResolvedTheme, type Theme } from '@boluo/types';
 
 export const CONCRETE_THEMES = ['light', 'dark', 'graphite'] as const;
 
@@ -181,8 +181,6 @@ export const observeTheme = (callback: (theme: Theme) => void): (() => void) => 
   observer.observe(node, config);
   return () => observer.disconnect();
 };
-
-export type ResolvedTheme = Exclude<Theme, 'system'>;
 
 // Resolve system theme to concrete theme
 export const resolveSystemTheme = (theme: Theme): ResolvedTheme => {

@@ -1,4 +1,4 @@
-import type { Locale } from '@boluo/api';
+import type { Locale } from '@boluo/types';
 import type { IntlMessages } from '.';
 
 export const loadMessages = async (locale: Locale): Promise<IntlMessages> => {

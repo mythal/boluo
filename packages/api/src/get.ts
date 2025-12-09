@@ -1,27 +1,27 @@
 import type {
+  AppSettings,
   Channel,
   ChannelMemberWithUser,
   ChannelMembers,
   ChannelWithMaybeMember,
+  CheckEmailExists,
+  CheckUsernameExists,
+  EmailVerificationStatus,
   Export,
   GetMessagesByChannel,
+  MakeToken,
   Message,
+  SearchMessagesParams,
+  SearchMessagesResult,
   Space,
   SpaceMember,
   SpaceMemberWithUser,
   SpaceWithMember,
   SpaceWithRelated,
-  UserStatus,
-  CheckEmailExists,
-  CheckUsernameExists,
   User,
-  MakeToken,
+  UserStatus,
   VerifyEmail,
-  EmailVerificationStatus,
-  AppSettings,
-  SearchMessagesParams,
-  SearchMessagesResult,
-} from './bindings';
+} from '@boluo/types/bindings';
 
 export interface Get {
   // users

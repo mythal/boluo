@@ -4,7 +4,7 @@ import { store } from '@boluo/store';
 import type { Result } from '@boluo/utils/result';
 import { isCrossOrigin } from '@boluo/utils/browser';
 import { ApiError } from '@boluo/api/errors';
-import type { LoginReturn, User, Media } from '@boluo/api/bindings';
+import type { LoginReturn, Media, User } from '@boluo/types/bindings';
 import { originMap } from '@boluo/api/origin-map';
 
 export const backendUrlAtom = atom('');

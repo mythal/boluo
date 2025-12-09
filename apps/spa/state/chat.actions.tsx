@@ -8,7 +8,7 @@ import type {
   Update,
   SpaceWithRelated,
 } from '@boluo/api';
-import { type Empty } from '@boluo/utils/types';
+import { type Empty } from '@boluo/types';
 import { type MakeAction } from './actions';
 import { type FailTo } from './channel.types';
 import { type OptimisticMessage } from './channel.reducer';

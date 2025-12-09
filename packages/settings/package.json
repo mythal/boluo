@@ -1,12 +1,9 @@
 {
   "name": "@boluo/settings",
   "version": "0.0.0",
-  "dependencies": {
-    "@boluo/api": "0.0.0",
-    "@boluo/theme": "0.0.0"
-  },
   "devDependencies": {
     "@boluo/eslint-config": "0.0.0",
+    "@boluo/types": "0.0.0",
     "@boluo/typescript-config": "0.0.0",
     "@types/node": "^24.0.12",
     "eslint": "^9.23.0",

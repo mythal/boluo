@@ -1,35 +1,35 @@
 import type { MoveMessageBetween, PreSign, PreSignResult } from '@boluo/api';
-import { type Empty } from '@boluo/utils/types';
+import { type Empty } from '@boluo/types';
 import type {
   AddChannelMember,
   Channel,
   ChannelMember,
   ChannelWithMember,
   CreateChannel,
+  CreateSpace,
   EditChannel,
   EditChannelMember,
   EditChannelTopic,
+  EditSpace,
+  EditUser,
   GrantOrRemoveChannelMaster,
   JoinChannel,
   KickFromChannel,
+  KickFromSpace,
+  Login as LoginData,
+  LoginReturn,
   Message,
   NewMessage,
-  CreateSpace,
-  EditSpace,
-  KickFromSpace,
+  Register as RegisterData,
+  ResendEmailVerification,
+  ResendEmailVerificationResult,
+  ResetPassword,
+  ResetPasswordConfirm,
   Space,
   SpaceMemberWithUser,
   SpaceWithMember,
-  EditUser,
-  Login as LoginData,
-  LoginReturn,
-  Register as RegisterData,
-  ResetPassword,
-  ResetPasswordConfirm,
   User,
-  ResendEmailVerificationResult,
-  ResendEmailVerification,
-} from './bindings';
+} from '@boluo/types/bindings';
 
 export interface Post {
   // users

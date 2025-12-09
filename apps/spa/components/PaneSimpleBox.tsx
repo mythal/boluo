@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import { type ChildrenProps } from '@boluo/utils/types';
+import { type ChildrenProps } from '@boluo/types';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface Props extends ChildrenProps {}

@@ -13,7 +13,7 @@ import { FormattedMessage } from 'react-intl';
 import useSWRMutation, { type MutationFetcher } from 'swr/mutation';
 import { Button } from '@boluo/ui/Button';
 import { Spinner } from '@boluo/ui/Spinner';
-import { type Empty } from '@boluo/utils/types';
+import { type Empty } from '@boluo/types';
 import { useQueryChannel } from '../../hooks/useQueryChannel';
 import { FloatingBox } from '@boluo/ui/FloatingBox';
 import { PaneHeaderButton } from '@boluo/ui/PaneHeaderButton';

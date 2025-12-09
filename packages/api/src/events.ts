@@ -1,5 +1,5 @@
-export type * from './bindings';
-import type { Update } from './bindings';
+export type * from '@boluo/types/bindings';
+import type { Update } from '@boluo/types/bindings';
 
 export function isServerUpdate(object: unknown): object is Update {
   if (typeof object !== 'object' || object == null) {

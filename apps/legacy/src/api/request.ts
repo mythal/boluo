@@ -4,7 +4,7 @@ import store from '../store';
 import { Id } from '../utils/id';
 import { Err, Ok, Result } from '../utils/result';
 import { getAuthToken, clearAuthToken } from '../utils/token';
-import type { MakeToken, MoveMessageBetween } from '@boluo/api/bindings';
+import type { MakeToken, MoveMessageBetween } from '@boluo/api';
 import {
   AddMember,
   Channel,

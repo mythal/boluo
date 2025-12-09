@@ -1,4 +1,4 @@
-import { Entity, EvaluatedExprNode, ExprNode, PureExprNode } from './bindings';
+import { Entity, EvaluatedExprNode, ExprNode, PureExprNode } from '@boluo/types/bindings';
 import type { Get } from './get';
 import type { Patch } from './patch';
 import type { Post } from './post';
@@ -11,7 +11,7 @@ export { isApiError, errorCode } from './errors';
 export type * from './errors';
 export type * from './error-types';
 export type * from './types';
-export type * from './bindings';
+export type * from '@boluo/types/bindings';
 
 export type ExprOf<Tag extends ExprNode['type']> = Extract<ExprNode, { type: Tag }>;
 export type PureExprOf<Tag extends PureExprNode['type']> = Extract<PureExprNode, { type: Tag }>;

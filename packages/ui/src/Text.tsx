@@ -1,6 +1,6 @@
 import clsx from 'clsx';
 import type { FC } from 'react';
-import { type ChildrenProps, type StyleProps } from '@boluo/utils/types';
+import { type ChildrenProps, type StyleProps } from '@boluo/types';
 
 interface Props extends StyleProps, ChildrenProps {
   size?: 'small' | 'normal';

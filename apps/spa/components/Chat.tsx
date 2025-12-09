@@ -15,8 +15,6 @@ import { BannerContext } from '../hooks/useBannerNode';
 import { useDetectIsTouch, IsTouchContext } from '@boluo/ui/hooks/useIsTouch';
 import screens from '@boluo/ui/screens.json';
 import {
-  type ResolvedTheme,
-  type Theme,
   getThemeFromCookie,
   resolveSystemTheme,
   setThemeToDom,
@@ -31,6 +29,7 @@ import { ResolvedThemeContext } from '../hooks/useResolvedTheme';
 import { SettingsContext } from '../hooks/useSettings';
 import type { Settings } from '@boluo/settings';
 import { useUpdateViewHeight } from '../hooks/useUpdateViewHeight';
+import type { ResolvedTheme, Theme } from '@boluo/types';
 
 const useThemeSetup = (settings: Settings | undefined | null): ResolvedTheme => {
   const themeFromSettings = settings?.theme;

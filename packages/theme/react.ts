@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { getThemeFromDom, observeTheme, Theme } from './index';
+import { type Theme } from '@boluo/types';
+import { getThemeFromDom, observeTheme } from './index';
 
 export const useTheme = (): Theme => {
   const [theme, setTheme] = useState(getThemeFromDom());

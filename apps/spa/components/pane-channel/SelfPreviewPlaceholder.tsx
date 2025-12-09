@@ -70,7 +70,7 @@ export const SelfPreviewPlaceholder: FC<Props> = ({
         )}
       </span>
       {hasHistory && (
-        <span className="ml-2 text-sm">
+        <span className="font-ui ml-2 text-sm">
           <DraftHistoryButton drafts={drafts} onRestore={restore} />
         </span>
       )}

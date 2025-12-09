@@ -29,6 +29,12 @@
   }
 }
 
+@custom-variant in-game-serif {
+  .in-game-serif & {
+    @slot;
+  }
+}
+
 @theme {
   /* Breakpoints */
   --breakpoint-sm: 640px;
@@ -51,16 +57,36 @@
   /* Box shadow */
   --shadow-1-2: 0.125rem 0.125rem 0;
   --shadow-1: 0.25rem 0.25rem 0;
+
+  /* Fonts */
+
+  /* https://github.com/system-fonts/modern-font-stacks#humanist */
+  --font-ui:
+    'IBM Plex Sans', Seravek, 'Gill Sans Nova', Ubuntu, Calibri, 'DejaVu Sans', source-sans-pro,
+    system-ui, sans-serif;
+  --font-old: 'Iowan Old Style', 'Palatino Linotype', 'URW Palladio L', P052, serif;
+}
+
+:lang(zh-CN),
+:lang(zh-TW) {
+  --font-old:
+    'Iowan Old Style', 'Palatino Linotype', 'URW Palladio L', P052, 'LXGW WenKai Screen', serif;
+}
+
+:lang(en) {
+  --font-old: 'Vollkorn', 'Iowan Old Style', 'Palatino Linotype', 'URW Palladio L', P052, serif;
+}
+
+:lang(ja) {
+  --font-old:
+    'Iowan Old Style', 'Palatino Linotype', 'URW Palladio L', P052, 'Shippori Mincho', serif;
 }
 
 @layer base {
   html {
     text-autospace: normal;
     font-size: 16px;
-    /* https://github.com/system-fonts/modern-font-stacks#humanist */
-    font-family:
-      'IBM Plex Sans', Seravek, 'Gill Sans Nova', Ubuntu, Calibri, 'DejaVu Sans', source-sans-pro,
-      system-ui, sans-serif;
+    font-family: var(--font-ui);
   }
   html.switching,
   html.switching * {

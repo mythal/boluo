@@ -509,6 +509,9 @@
   "NZyhSX": {
     "message": "新闻"
   },
+  "No0obH": {
+    "message": "Switch to serif font for In-Game messages."
+  },
   "O5epsB": {
     "message": "取"
   },
@@ -607,6 +610,9 @@
   },
   "SVwJTM": {
     "message": "导出"
+  },
+  "SaSNIH": {
+    "message": "Messages Display Settings"
   },
   "SpLs8U": {
     "message": "您必须先加入 {space} 才能加入频道。"
@@ -1063,6 +1069,9 @@
   },
   "qGHWyb": {
     "message": "{count}条消息已过滤"
+  },
+  "qOH6mx": {
+    "message": "Serif"
   },
   "qQ4pEa": {
     "message": "对 {targets} 悄悄话"

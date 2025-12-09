@@ -7,6 +7,7 @@ import { FormattedMessage } from 'react-intl';
 import { usePaneToggle } from '../../hooks/usePaneToggle';
 import { useSwitchSpace } from '../../hooks/useSwitchSpace';
 import { panesAtom } from '../../state/view.atoms';
+import { findPane } from '../../state/view.utils';
 import { SidebarItem } from './SidebarItem';
 import { SidebarSkeletonItem } from './SidebarSkeletonItem';
 import { SidebarSpacesHeaderNewSpace } from './SidebarSpacesHeaderNewSpace';
@@ -57,7 +58,7 @@ export const SidebarSpaceList: FC<Props> = ({ currentUser, currentSpaceId }) => 
 
   const togglePane = usePaneToggle();
   const isCreateSpacePaneOpened = useMemo(
-    () => panes.findIndex((pane) => pane.type === 'CREATE_SPACE') !== -1,
+    () => findPane(panes, (pane) => pane.type === 'CREATE_SPACE') !== null,
     [panes],
   );
   const handleToggleCreateSpacePane = () => togglePane({ type: 'CREATE_SPACE' });

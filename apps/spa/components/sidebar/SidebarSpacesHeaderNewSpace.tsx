@@ -6,6 +6,7 @@ import { FC, useMemo } from 'react';
 import { useIntl } from 'react-intl';
 import { usePaneToggle } from '../../hooks/usePaneToggle';
 import { panesAtom } from '../../state/view.atoms';
+import { findPane } from '../../state/view.utils';
 
 export const SidebarSpacesHeaderNewSpace: FC = () => {
   const panes = useAtomValue(panesAtom);
@@ -13,7 +14,7 @@ export const SidebarSpacesHeaderNewSpace: FC = () => {
   const intl = useIntl();
   const newSpaceLabel = intl.formatMessage({ defaultMessage: 'New Space' });
   const isCreateSpacePaneOpened = useMemo(
-    () => panes.find((pane) => pane.type === 'CREATE_SPACE') !== undefined,
+    () => findPane(panes, (pane) => pane.type === 'CREATE_SPACE') !== null,
     [panes],
   );
 

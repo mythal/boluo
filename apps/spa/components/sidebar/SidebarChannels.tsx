@@ -12,6 +12,7 @@ import Icon from '@boluo/ui/Icon';
 import { SidebarChannelListSkeleton } from './SidebarChannelListSkeleton';
 import { ButtonInline } from '@boluo/ui/ButtonInline';
 import { SidebarChannelsHeaderNewChannel } from './SidebarChannelsHeaderNewChannel';
+import { findPane } from '../../state/view.utils';
 
 const SidebarChannelList = React.lazy(() => import('./SidebarChannelList'));
 
@@ -29,7 +30,7 @@ export const SidebarChannels: FC<Props> = ({ spaceId }) => {
     togglePane({ type: 'CREATE_CHANNEL', spaceId });
   };
   const isCreateChannelPaneOpened = useMemo(
-    () => panes.find((pane) => pane.type === 'CREATE_CHANNEL') !== undefined,
+    () => findPane(panes, (pane) => pane.type === 'CREATE_CHANNEL') !== null,
     [panes],
   );
 

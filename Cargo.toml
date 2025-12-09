@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["apps/server", "apps/theme-designer", "packages/types"]
+members = ["apps/server", "apps/theme-designer", "packages/shared-types"]
 metadata.crane.name = "boluo"
 
 [profile.release]

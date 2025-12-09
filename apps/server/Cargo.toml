@@ -65,7 +65,7 @@ specta = { version = "2.0.0-rc.22", features = [
   "uuid",
 ] }
 specta-typescript = "0.0.9"
-types = { version = "0.1.0", path = "../../packages/types" }
+shared-types = { version = "0.1.0", path = "../../packages/shared-types" }
 governor = "0.10.0"
 mimalloc = "0.1.46"
 redis = { version = "0.32.2", features = [

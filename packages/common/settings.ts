@@ -3,6 +3,7 @@ import type { Theme } from '@boluo/theme';
 
 export type MessageSize = 'message-size-normal' | 'message-size-large';
 export type ChannelLayout = 'irc-layout' | 'compact-layout';
+export type InGameFont = 'in-game-serif' | 'in-game-sans-serif';
 
 export interface Settings {
   locale?: Locale;
@@ -12,6 +13,7 @@ export interface Settings {
   alignToBottom?: boolean;
   messageSize?: MessageSize;
   layout?: ChannelLayout;
+  inGameFont?: InGameFont;
 }
 
 export const defaultSettings: Settings = {};

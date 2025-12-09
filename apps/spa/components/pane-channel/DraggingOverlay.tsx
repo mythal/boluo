@@ -4,25 +4,23 @@ import { memo, use } from 'react';
 import type { DraggingItem } from './ChatContentView';
 import { ChatItemMessage } from './ChatItemMessage';
 import { DisableDelay } from '@boluo/ui/Delay';
-import { ChannelLayoutContext } from '../../hooks/useChannelLayout';
-import { MessageSizeContext } from '../../hooks/useMessageSize';
+import { useChatContainerClassnames } from '../../hooks/useChatContainerClassnames';
 
 interface Props {
   active: DraggingItem | null;
 }
 
 export const DraggingOverlay = memo<Props>(({ active }: Props) => {
+  const classNames = useChatContainerClassnames();
   if (!active) {
     return null;
   }
   const { message } = active;
-  const layout = use(ChannelLayoutContext);
-  const messageSize = use(MessageSizeContext);
   return (
     <DragOverlay modifiers={[restrictToFirstScrollableAncestor]} zIndex={15}>
       <DisableDelay.Provider value={true}>
         {active && (
-          <div className={`@container ${layout} ${messageSize}`}>
+          <div className={`@container ${classNames}`}>
             <ChatItemMessage
               overlay={true}
               message={message}

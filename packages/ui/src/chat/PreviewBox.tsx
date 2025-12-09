@@ -58,7 +58,7 @@ export const PreviewBox: FC<Props> = ({
         'group/item grid grid-flow-col grid-rows-[auto_auto] items-start gap-x-2 gap-y-1 px-2 py-2',
         'grid-cols-[1.5rem_minmax(0,1fr)]',
         'irc:grid-cols-[1.5rem_12rem_minmax(0,1fr)] irc:grid-rows-1',
-        inGame ? 'bg-message-in-game-bg' : 'bg-message-out-of-game-bg',
+        inGame ? 'bg-message-in-game-bg in-game-serif:font-old' : 'bg-message-out-of-game-bg',
         outOfGamePreviewInInGameChannel
           ? 'text-text-secondary hover:text-text-primary msg-large:text-base text-sm'
           : 'msg-large:text-lg msg-large:leading-7',

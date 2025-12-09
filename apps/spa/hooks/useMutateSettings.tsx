@@ -20,3 +20,5 @@ export const useMutateSettings = () =>
     rollbackOnError: true,
     revalidate: false,
   });
+
+export type MutateSettingsTrigger = ReturnType<typeof useMutateSettings>['trigger'];

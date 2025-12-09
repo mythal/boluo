@@ -1,0 +1,10 @@
+{
+  "extends": "@boluo/typescript-config/base.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "module": "Preserve",
+    "moduleResolution": "bundler"
+  },
+  "include": ["**/*.ts"],
+  "exclude": ["dist", "build", "node_modules"]
+}

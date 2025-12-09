@@ -1,6 +1,5 @@
 'use client';
 import { patch } from '@boluo/api-browser';
-import type { Settings } from '@boluo/common/settings';
 import { useQueryCurrentUser } from '@boluo/common/hooks/useQueryCurrentUser';
 import { type FC, useCallback } from 'react';
 import { useMemo } from 'react';
@@ -9,6 +8,7 @@ import type { MutationFetcher } from 'swr/mutation';
 import useSWRMutation from 'swr/mutation';
 import { setThemeToDom, type Theme, writeThemeToCookie } from '@boluo/theme';
 import { useTheme } from '@boluo/theme/react';
+import type { Settings } from '@boluo/settings';
 import { Select } from '@boluo/ui/Select';
 import { identity } from '@boluo/utils/function';
 

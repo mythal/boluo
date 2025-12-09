@@ -1,10 +1,10 @@
 'use client';
 import { patch } from '@boluo/api-browser';
 import type { Locale } from '@boluo/locale';
-import type { Settings } from '@boluo/common/settings';
 import { useQueryCurrentUser } from '@boluo/common/hooks/useQueryCurrentUser';
 import { ChangeLocaleContext } from '@boluo/common/hooks/useLocale';
 import { defaultLocale, IntlMessages, LOCALES, onIntlError } from '@boluo/locale';
+import type { Settings } from '@boluo/settings';
 import { useRouter } from 'next/navigation';
 import { FC, useCallback } from 'react';
 import { IntlProvider } from 'react-intl';

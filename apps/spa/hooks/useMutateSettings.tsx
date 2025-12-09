@@ -1,6 +1,6 @@
 import { patch } from '@boluo/api-browser';
-import type { Settings } from '@boluo/common/settings';
-import { defaultSettings, toSettings } from '@boluo/common/settings';
+import type { Settings } from '@boluo/settings';
+import { defaultSettings, toSettings } from '@boluo/settings';
 import useSWRMutation, { type MutationFetcher } from 'swr/mutation';
 
 export const userSettingsKey = ['/users/settings'] as const;

@@ -9,6 +9,7 @@
     "@boluo/icons": "0.0.0",
     "@boluo/lang": "0.0.0",
     "@boluo/locale": "0.0.0",
+    "@boluo/settings": "0.0.0",
     "@boluo/store": "0.0.0",
     "@boluo/theme": "0.0.0",
     "@boluo/ui": "0.0.0",

@@ -1,4 +1,4 @@
-import { type InGameFont } from '@boluo/common/settings';
+import { type InGameFont } from '@boluo/settings';
 import { Button } from '@boluo/ui/Button';
 import { useTooltip } from '@boluo/ui/hooks/useTooltip';
 import { LampSwitch } from '@boluo/ui/LampSwitch';

@@ -1,4 +1,4 @@
-import type { Settings } from '@boluo/common/settings';
+import type { Settings } from '@boluo/settings';
 import React from 'react';
 
 const emptySettings: Settings = {};

@@ -10,10 +10,7 @@ const HIDE_PLACEHOLDER_BEFORE_MS = 5000;
  * Manage self preview auto-hide countdown while keeping updates local to the preview.
  */
 export const useSelfPreviewAutoHide = () => {
-  const {
-    selfPreviewHideAtAtom,
-    selfPreviewShouldHoldAtom,
-  } = useChannelAtoms();
+  const { selfPreviewHideAtAtom, selfPreviewShouldHoldAtom } = useChannelAtoms();
   const store = useStore();
   const setHideAt = useSetAtom(selfPreviewHideAtAtom);
   const [hideToolbox, setHideToolbox] = useState(false);

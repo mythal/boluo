@@ -1,0 +1,26 @@
+{
+  "name": "@boluo/settings",
+  "version": "0.0.0",
+  "dependencies": {
+    "@boluo/api": "0.0.0",
+    "@boluo/theme": "0.0.0"
+  },
+  "devDependencies": {
+    "@boluo/eslint-config": "0.0.0",
+    "@boluo/typescript-config": "0.0.0",
+    "@types/node": "^24.0.12",
+    "eslint": "^9.23.0",
+    "typescript": "^5.9.3"
+  },
+  "exports": {
+    ".": "./index.ts"
+  },
+  "homepage": "https://github.com/mythal/boluo",
+  "license": "AGPL-3.0",
+  "scripts": {
+    "check": "tsc --noEmit",
+    "lint": "eslint . --ext .ts"
+  },
+  "sideEffects": false,
+  "type": "module"
+}

@@ -111,12 +111,7 @@ export const useMakeChannelAtoms = (
         const isEditing = get(isEditingAtom);
         const hovering = get(selfPreviewHoverAtom);
         return (
-          !isComposeEmpty ||
-          focused ||
-          namePanelOpen ||
-          draftHistoryOpen ||
-          isEditing ||
-          hovering
+          !isComposeEmpty || focused || namePanelOpen || draftHistoryOpen || isEditing || hovering
         );
       });
       const selfPreviewVisibleAtom = atom((get) => {

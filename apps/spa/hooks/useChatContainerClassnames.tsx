@@ -1,4 +1,4 @@
-import { type Settings } from '@boluo/common/settings';
+import { type Settings } from '@boluo/settings';
 import { useSettings } from './useSettings';
 import clsx from 'clsx';
 

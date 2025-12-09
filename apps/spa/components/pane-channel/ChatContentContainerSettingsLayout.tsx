@@ -1,4 +1,4 @@
-import { type ChannelLayout } from '@boluo/common/settings';
+import { type ChannelLayout } from '@boluo/settings';
 import { MutateSettingsTrigger } from '../../hooks/useMutateSettings';
 import { FC } from 'react';
 import { Button } from '@boluo/ui/Button';

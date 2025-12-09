@@ -1,7 +1,7 @@
 import { type ApiError } from '@boluo/api';
 import { get } from '@boluo/api-browser';
-import type { Settings } from '@boluo/common/settings';
-import { defaultSettings, toSettings } from '@boluo/common/settings';
+import type { Settings } from '@boluo/settings';
+import { defaultSettings, toSettings } from '@boluo/settings';
 import useSWR, { type SWRResponse } from 'swr';
 import { userSettingsKey } from './useMutateSettings';
 

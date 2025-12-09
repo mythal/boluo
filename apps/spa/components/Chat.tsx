@@ -29,7 +29,7 @@ import { useIsClient } from '@boluo/common/hooks/useIsClient';
 import clsx from 'clsx';
 import { ResolvedThemeContext } from '../hooks/useResolvedTheme';
 import { SettingsContext } from '../hooks/useSettings';
-import type { Settings } from '@boluo/common/settings';
+import type { Settings } from '@boluo/settings';
 import { useUpdateViewHeight } from '../hooks/useUpdateViewHeight';
 
 const useThemeSetup = (settings: Settings | undefined | null): ResolvedTheme => {

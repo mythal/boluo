@@ -31,14 +31,16 @@ export const InviteSpaceMember: FC<Props> = ({ spaceId }) => {
     }
   }, []);
   const [didRefresh, setDidRefresh] = useState(false);
-  const handleRefresh = useCallback(async () => {
+  const handleRefresh = useCallback(() => {
     setDidRefresh(true);
 
-    const result = await post('/spaces/refresh_token', { id: spaceId }, {});
-    if (result.isOk) {
-      const newToken = result.some;
-      await mutate(newToken);
-    }
+    void (async () => {
+      const result = await post('/spaces/refresh_token', { id: spaceId }, {});
+      if (result.isOk) {
+        const newToken = result.some;
+        await mutate(newToken);
+      }
+    })();
   }, [mutate, spaceId]);
 
   if (!token || isLoadingAppSettings) {

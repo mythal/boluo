@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { Id } from '../utils/id';
+import { type Id } from '../utils/id';
 
 export interface PaneInfo {
   id: Id;

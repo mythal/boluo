@@ -1,6 +1,6 @@
 import { type MessageSize } from '@boluo/settings';
-import { MutateSettingsTrigger } from '../../hooks/useMutateSettings';
-import { FC } from 'react';
+import { type MutateSettingsTrigger } from '../../hooks/useMutateSettings';
+import { type FC } from 'react';
 import { Button } from '@boluo/ui/Button';
 import Icon from '@boluo/ui/Icon';
 import { AArrowUp, Shrink } from '@boluo/icons';

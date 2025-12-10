@@ -1,20 +1,20 @@
 import {
-  CocRoll,
-  Code,
-  CodeBlock,
-  DicePool,
-  Emphasis,
-  Entity,
-  Expr,
-  ExprNode,
-  FateRoll,
-  Link,
-  Num,
-  Operator,
-  Roll,
-  Strong,
-  SubExpr,
-  Text,
+  type CocRoll,
+  type Code,
+  type CodeBlock,
+  type DicePool,
+  type Emphasis,
+  type Entity,
+  type Expr,
+  type ExprNode,
+  type FateRoll,
+  type Link,
+  type Num,
+  type Operator,
+  type Roll,
+  type Strong,
+  type SubExpr,
+  type Text,
 } from './entities';
 
 interface State {
@@ -524,7 +524,7 @@ const atom = (disableRoll = false): P<ExprNode> => {
 
 const repeat = (): P<ExprNode> =>
   regex(/^(\d{1,2})#/).then(([match, state], env) => {
-    const count = parseInt(match[1]!);
+    const count = parseInt(match[1]);
     if (count === 0) {
       return null;
     }
@@ -634,7 +634,7 @@ const mergeTextEntitiesReducer = (entities: Entity[], entity: Entity) => {
     entities.push(entity);
     return entities;
   } else {
-    const last = entities[entities.length - 1]!;
+    const last = entities[entities.length - 1];
     if (last.type === 'Text') {
       last.len += entity.len;
     } else {

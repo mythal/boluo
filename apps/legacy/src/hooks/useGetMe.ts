@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { get } from '../api/request';
-import { Dispatch } from '../store';
+import { type Dispatch } from '../store';
 
 export const useGetMe = (dispatch: Dispatch, finish: () => void): void => {
   useEffect(() => {

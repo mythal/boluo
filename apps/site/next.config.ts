@@ -2,7 +2,7 @@
 import path from 'path';
 import withBundleAnalyzer from '@next/bundle-analyzer';
 import { withSentryConfig } from '@sentry/nextjs';
-import { NextConfig } from 'next';
+import { type NextConfig } from 'next';
 import dotenv from 'dotenv';
 
 dotenv.config({
@@ -23,7 +23,7 @@ const env = {
   ANALYZE: process.env.ANALYZE,
 };
 
-const rewrites = async () => {
+const rewrites = () => {
   return [
     {
       source: '/api/:path*',
@@ -65,9 +65,11 @@ const config: NextConfig = {
     // `react-intl` without parser
     // https://formatjs.io/docs/guides/advanced-usage#react-intl-without-parser-40-smaller
     // https://github.com/vercel/next.js/issues/30434
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     config.resolve.alias['@formatjs/icu-messageformat-parser'] =
       '@formatjs/icu-messageformat-parser/no-parser';
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return config;
   },
 };

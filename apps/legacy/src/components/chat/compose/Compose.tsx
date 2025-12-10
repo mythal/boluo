@@ -2,7 +2,7 @@ import { css } from '@emotion/react';
 import { darken } from 'polished';
 import * as React from 'react';
 import { useCallback } from 'react';
-import { ChannelMember } from '../../../api/channels';
+import { type ChannelMember } from '../../../api/channels';
 import { useDispatch, useSelector } from '../../../store';
 import {
   breakpoint,
@@ -18,7 +18,7 @@ import {
   uiShadow,
 } from '../../../styles/atoms';
 import { blue, gray, textColor, white } from '../../../styles/colors';
-import { Id } from '../../../utils/id';
+import { type Id } from '../../../utils/id';
 import { handleKeyDown } from '../key';
 import MessageMedia from '../MessageMedia';
 import { floatPanel } from '../styles';

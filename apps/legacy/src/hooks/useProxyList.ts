@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import useSWR from 'swr';
-import { Proxy, getDefaultBaseUrl } from '../base-url';
+import { type Proxy, getDefaultBaseUrl } from '../base-url';
 
 const fetchList = async (): Promise<Proxy[]> => {
   const response = await fetch(getDefaultBaseUrl() + '/api/info/proxies');

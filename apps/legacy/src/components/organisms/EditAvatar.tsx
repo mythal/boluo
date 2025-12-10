@@ -2,7 +2,7 @@ import { css } from '@emotion/react';
 import * as React from 'react';
 import { useRef, useState } from 'react';
 import { mediaUrl } from '../../api/request';
-import { Id } from '../../utils/id';
+import { type Id } from '../../utils/id';
 import Avatar from '../molecules/Avatar';
 
 interface Props {

@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import Select from 'react-select';
-import { Channel, Export } from '../../api/channels';
+import { type Channel, type Export } from '../../api/channels';
 import { get } from '../../api/request';
 import FileExport from '../../assets/icons/file-export.svg';
 import { bbCodeTextBlob, csvBlob, exportMessage, jsonBlob, txtBlob } from '../../export';

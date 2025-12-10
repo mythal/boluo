@@ -6,7 +6,7 @@ import type {
   SearchNameFilter,
 } from '@boluo/api';
 import { get } from '@boluo/api-browser';
-import useSWRInfinite, { SWRInfiniteFetcher, type SWRInfiniteResponse } from 'swr/infinite';
+import useSWRInfinite, { type SWRInfiniteFetcher, type SWRInfiniteResponse } from 'swr/infinite';
 import { unwrap } from '@boluo/utils/result';
 
 const path = '/messages/search' as const;

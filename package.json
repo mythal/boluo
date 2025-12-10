@@ -29,6 +29,7 @@
     "format:versions": "syncpack format",
     "generate": "turbo run generate",
     "lint": "turbo run lint --ui=stream --log-prefix=none --continue=always",
+    "lint:fix": "turbo run lint -- --fix",
     "lint:versions": "syncpack lint",
     "preview:site": "turbo run preview --filter=site",
     "storybook": "turbo storybook",

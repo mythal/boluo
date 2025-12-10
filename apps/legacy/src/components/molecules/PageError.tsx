@@ -17,6 +17,20 @@ interface State {
   error: unknown;
 }
 
+const formatError = (error: unknown) => {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  if (typeof error === 'string') {
+    return error;
+  }
+  try {
+    return JSON.stringify(error);
+  } catch {
+    return 'Unknown error';
+  }
+};
+
 const Mask = styled.div`
   display: flex;
   align-items: center;
@@ -41,12 +55,13 @@ class PageError extends React.Component<Props, State> {
     console.error(error);
     return { error };
   }
-  onClick() {
+  onClick = () => {
     document.location.reload();
-  }
+  };
   render() {
     if (this.state.error !== undefined) {
       document.title = '菠萝出错啦';
+      const errorMessage = formatError(this.state.error);
       return (
         <Mask>
           <Container>
@@ -62,7 +77,7 @@ class PageError extends React.Component<Props, State> {
               重试，如果依然错误请联系网站管理员。
             </Text>
             <Text css={mY(4)}>
-              详情：<Code>{String(this.state.error)}</Code>
+              详情：<Code>{errorMessage}</Code>
             </Text>
           </Container>
         </Mask>

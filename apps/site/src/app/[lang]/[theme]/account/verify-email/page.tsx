@@ -1,5 +1,5 @@
-import { Metadata } from 'next';
-import { Params } from '../../../../../server';
+import { type Metadata } from 'next';
+import { type Params } from '../../../../../server';
 import { getIntl } from '@boluo/locale/server';
 import { EmailVerification } from './EmailVerification';
 

@@ -1,22 +1,22 @@
 import { Map } from 'immutable';
 import {
-  Action,
-  ChangeBaseUrl,
-  FocusChannel,
-  JoinedSpace,
-  LeftSpace,
-  SpaceEdited,
-  UnfocusChannel,
-  UserEdited,
+  type Action,
+  type ChangeBaseUrl,
+  type FocusChannel,
+  type JoinedSpace,
+  type LeftSpace,
+  type SpaceEdited,
+  type UnfocusChannel,
+  type UserEdited,
 } from '../actions';
-import { Channel } from '../api/channels';
+import { type Channel } from '../api/channels';
 import { errLoading } from '../api/error';
-import { StatusMap } from '../api/events';
-import { AppResult } from '../api/request';
-import { Space, SpaceWithRelated } from '../api/spaces';
-import { User } from '../api/users';
+import { type StatusMap } from '../api/events';
+import { type AppResult } from '../api/request';
+import { type Space, type SpaceWithRelated } from '../api/spaces';
+import { type User } from '../api/users';
 import { getDefaultBaseUrl } from '../base-url';
-import { Id } from '../utils/id';
+import { type Id } from '../utils/id';
 import { Ok } from '../utils/result';
 
 export interface UiState {

@@ -1,4 +1,4 @@
-import { MeasureResult } from '../../hooks/useBaseUrlDelay';
+import { type MeasureResult } from '../../hooks/useBaseUrlDelay';
 import {
   getRouteScore,
   getRouteSuccessRate,

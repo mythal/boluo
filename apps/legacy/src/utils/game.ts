@@ -1,5 +1,5 @@
 import { hsl } from 'polished';
-import Prando from 'prando';
+import type Prando from 'prando';
 
 export const getDiceFace = (diceType: string): number => {
   const pattern = /^[dD](\d{1,3})$/;

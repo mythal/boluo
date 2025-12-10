@@ -3,12 +3,12 @@ import { useAtom } from 'jotai';
 import { useEffect, useRef, useState } from 'react';
 import { connectSpace } from '../../actions';
 import { connect } from '../../api/connect';
-import { compareEvents, EventId, Events, SpaceUpdated } from '../../api/events';
+import { compareEvents, type EventId, type Events, type SpaceUpdated } from '../../api/events';
 import { get } from '../../api/request';
 import { connectionStateAtom } from '../../states/connection';
-import store, { Dispatch, useDispatch, useSelector } from '../../store';
+import store, { type Dispatch, useDispatch, useSelector } from '../../store';
 import { shadowXl, spacingN, textSm } from '../../styles/atoms';
-import { Id } from '../../utils/id';
+import { type Id } from '../../utils/id';
 import Button from '../atoms/Button';
 
 export const PING = '♥';
@@ -34,6 +34,7 @@ async function getConnectionToken(
   spaceId: Id,
   userId: Id | undefined,
   retryCount: number = 0,
+  // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
 ): Promise<string | 'NETWORK_ERROR' | 'UNAUTHENTICATED'> {
   const tokenResult = await get('/events/token', { spaceId, userId });
   if (tokenResult.isOk) {

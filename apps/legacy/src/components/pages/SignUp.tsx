@@ -1,10 +1,10 @@
 import { css } from '@emotion/react';
 import { useState } from 'react';
-import { RegisterOptions as ValidationRules, useForm } from 'react-hook-form';
+import { type RegisterOptions as ValidationRules, useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
-import { AppError, errorText } from '../../api/error';
+import { type AppError, errorText } from '../../api/error';
 import { post } from '../../api/request';
-import { RegisterData } from '../../api/users';
+import { type RegisterData } from '../../api/users';
 import SignUpIcon from '../../assets/icons/sign-up.svg';
 import Icon from '../../components/atoms/Icon';
 import { useTitle } from '../../hooks/useTitle';

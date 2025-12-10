@@ -1,4 +1,4 @@
-import { encodeUuid, Id } from './id';
+import { encodeUuid, type Id } from './id';
 
 export function chatPath(spaceId: Id, channelId?: Id): string {
   if (channelId) {

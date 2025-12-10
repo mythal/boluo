@@ -5,6 +5,7 @@ const getNodeId = (): Uint8Array => {
   const serializedId = localStorage.getItem(key);
   if (serializedId) {
     try {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const parsed = JSON.parse(serializedId);
       if (
         Array.isArray(parsed) &&

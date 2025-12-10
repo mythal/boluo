@@ -1,8 +1,8 @@
 import { useDispatch as useReduxDispatch, useSelector as useReduxSelector } from 'react-redux';
 import { applyMiddleware, createStore } from 'redux';
-import { thunk, ThunkDispatch } from 'redux-thunk';
-import { Action } from './actions';
-import { applicationReducer, ApplicationState, initApplicationState } from './reducers';
+import { thunk, type ThunkDispatch } from 'redux-thunk';
+import { type Action } from './actions';
+import { applicationReducer, type ApplicationState, initApplicationState } from './reducers';
 
 export const store = createStore(applicationReducer, initApplicationState, applyMiddleware(thunk));
 

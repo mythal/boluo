@@ -7,7 +7,7 @@ import { useChannelId } from '../../hooks/useChannelId';
 import { useSelector } from '../../store';
 import { roundedSm, textSm, uiShadow } from '../../styles/atoms';
 import { blue, gray } from '../../styles/colors';
-import { Id } from '../../utils/id';
+import { type Id } from '../../utils/id';
 import Icon from '../atoms/Icon';
 import InviteChannelMemberDialog from './InviteChannelMemberDialog';
 import MemberListItem from './MemberListItem';

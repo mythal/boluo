@@ -1,12 +1,12 @@
 import { Map } from 'immutable';
-import { Action, EventReceived } from '../actions';
+import { type Action, EventReceived } from '../actions';
 import { Events } from '../api/events';
-import { Id } from '../utils/id';
-import { ChatState } from './chatState';
-import { ChatStateMap, chatStateMapReducer } from './chatStateMap';
-import { flashReducer, FlashState, initFlashState } from './flash';
-import { initProfileState, profileReducer, ProfileState } from './profile';
-import { initUiState, uiReducer, UiState } from './ui';
+import { type Id } from '../utils/id';
+import { type ChatState } from './chatState';
+import { type ChatStateMap, chatStateMapReducer } from './chatStateMap';
+import { flashReducer, type FlashState, initFlashState } from './flash';
+import { initProfileState, profileReducer, type ProfileState } from './profile';
+import { initUiState, uiReducer, type UiState } from './ui';
 
 export interface ApplicationState {
   profile: ProfileState | undefined;

@@ -2,7 +2,7 @@ import Plus from '@boluo/icons/Plus';
 import { ButtonInline } from '@boluo/ui/ButtonInline';
 import Icon from '@boluo/ui/Icon';
 import { useAtomValue } from 'jotai';
-import { FC, useMemo } from 'react';
+import { type FC, useMemo } from 'react';
 import { useIntl } from 'react-intl';
 import { usePaneToggle } from '../../hooks/usePaneToggle';
 import { panesAtom } from '../../state/view.atoms';

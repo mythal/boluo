@@ -2,7 +2,7 @@ import * as React from 'react';
 import Binoculars from '../../assets/icons/binoculars.svg';
 import Teleport from '../../assets/icons/teleport.svg';
 import Icon from '../../components/atoms/Icon';
-import { encodeUuid, Id } from '../../utils/id';
+import { encodeUuid, type Id } from '../../utils/id';
 import { ButtonLink } from '../atoms/Button';
 
 interface Props {

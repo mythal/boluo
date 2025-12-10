@@ -1,7 +1,7 @@
 import { List, Map } from 'immutable';
-import { isEmptyPreview, Preview } from '../api/events';
-import { Message } from '../api/messages';
-import { Id } from '../utils/id';
+import { isEmptyPreview, type Preview } from '../api/events';
+import { type Message } from '../api/messages';
+import { type Id } from '../utils/id';
 
 export interface ChatNode {
   id: Id;

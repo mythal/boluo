@@ -1,7 +1,7 @@
 import * as Sentry from '@sentry/nextjs';
 import { SENTRY_CONFIG } from './const';
 
-export async function register() {
+export function register() {
   if (SENTRY_CONFIG.enabled) {
     Sentry.init({
       dsn: SENTRY_CONFIG.dsn,

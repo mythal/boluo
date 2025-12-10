@@ -1,6 +1,6 @@
 import Prando from 'prando';
 import { compare, compareRev } from '../utils/helper';
-import { CocRoll, EvaluatedExprNode, ExprNode, FateResult } from './entities';
+import { type CocRoll, type EvaluatedExprNode, type ExprNode, type FateResult } from './entities';
 
 export const TOO_MUCH_LAYER = 'TOO_MUCH_LAYER';
 export const MAX_DICE_COUNTER = 64;

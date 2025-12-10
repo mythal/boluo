@@ -1,7 +1,7 @@
 import { css } from '@emotion/react';
 import styled from '@emotion/styled';
 import * as React from 'react';
-import { Channel } from '../../api/channels';
+import { type Channel } from '../../api/channels';
 import Lock from '../../assets/icons/lock.svg';
 import { useSelector } from '../../store';
 import { fontMono, mR, pY, textSm } from '../../styles/atoms';

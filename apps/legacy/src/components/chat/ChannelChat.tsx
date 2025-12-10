@@ -2,7 +2,7 @@ import { css } from '@emotion/react';
 import * as React from 'react';
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from '../../store';
-import { Id } from '../../utils/id';
+import { type Id } from '../../utils/id';
 import Loading from '../molecules/Loading';
 import ChatList from './ChatList';
 import Compose from './compose/Compose';

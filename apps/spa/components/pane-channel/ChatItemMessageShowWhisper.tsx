@@ -84,7 +84,13 @@ const ShowButton: FC<{ messageId: string; channelId: string }> = ({ messageId, c
   }, [trigger]);
 
   return (
-    <Button ref={buttonRef} type="button" small disabled={isMutating} onClick={() => trigger()}>
+    <Button
+      ref={buttonRef}
+      type="button"
+      small
+      disabled={isMutating}
+      onClick={() => void trigger()}
+    >
       <FormattedMessage defaultMessage="Show" />
     </Button>
   );

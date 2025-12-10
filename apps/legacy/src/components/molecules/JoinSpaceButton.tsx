@@ -4,7 +4,7 @@ import { post } from '../../api/request';
 import Rocket from '../../assets/icons/rocket.svg';
 import { useIsLoggedIn } from '../../hooks/useIsLoggedIn';
 import { useDispatch, useSelector } from '../../store';
-import { Id } from '../../utils/id';
+import { type Id } from '../../utils/id';
 import Icon from '../atoms/Icon';
 
 interface Props {

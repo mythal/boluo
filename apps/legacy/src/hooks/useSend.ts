@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { ClientEvent } from '../api/events';
+import { type ClientEvent } from '../api/events';
 import { useSelector } from '../store';
 
 export const useSend = (): ((event: ClientEvent) => void) => {

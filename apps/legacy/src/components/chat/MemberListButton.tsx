@@ -5,7 +5,7 @@ import { useChannelId } from '../../hooks/useChannelId';
 import { useSend } from '../../hooks/useSend';
 import { HEARTBEAT_INTERVAL } from '../../settings';
 import { useSelector } from '../../store';
-import { Id } from '../../utils/id';
+import { type Id } from '../../utils/id';
 import { isOnline } from '../../utils/profile';
 import Icon from '../atoms/Icon';
 import Overlay from '../atoms/Overlay';

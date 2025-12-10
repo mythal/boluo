@@ -1,5 +1,5 @@
 import { isApiError } from '@boluo/api/errors';
-import { IntlShape } from '@formatjs/intl';
+import { type IntlShape } from '@formatjs/intl';
 
 export const explainError = <T>(intl: IntlShape<T>, error: unknown): string => {
   if (isApiError(error)) {

@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { parse, ParseResult } from '../interpreter/parser';
+import { parse, type ParseResult } from '../interpreter/parser';
 import { useSelector } from '../store';
 import { getDiceFace } from '../utils/game';
 import { useChannelId } from './useChannelId';

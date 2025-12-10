@@ -1,6 +1,6 @@
-import { Entity } from '../interpreter/entities';
+import { type Entity } from '../interpreter/entities';
 import { LegacyEntity } from '../interpreter/legacy-entities';
-import { Id } from '../utils/id';
+import { type Id } from '../utils/id';
 
 export interface Message {
   id: string;

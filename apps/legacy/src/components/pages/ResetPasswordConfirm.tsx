@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { RegisterOptions, useForm } from 'react-hook-form';
+import { type RegisterOptions, useForm } from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router-dom';
 import { post } from '../../api/request';
 import { useTitle } from '../../hooks/useTitle';

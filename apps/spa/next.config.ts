@@ -1,7 +1,7 @@
 /* eslint-disable no-restricted-globals */
 import generateWithBundleAnalyzer from '@next/bundle-analyzer';
 import { withSentryConfig } from '@sentry/nextjs';
-import { NextConfig } from 'next';
+import { type NextConfig } from 'next';
 import dotenv from 'dotenv';
 import path from 'path';
 
@@ -30,7 +30,7 @@ const withBundleAnalyzer = generateWithBundleAnalyzer({
   enabled: env.ANALYZE === 'true',
 });
 
-const rewrites = async () => {
+const rewrites = () => {
   return [
     {
       source: '/api/:path*',
@@ -72,11 +72,14 @@ const config: NextConfig = {
     SENTRY_DSN: env.SENTRY_DSN,
     SENTRY_TUNNEL: env.SENTRY_TUNNEL,
   },
+
   webpack: (config) => {
     // See `config.turbo.resolveAlias`
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     config.resolve.alias['@formatjs/icu-messageformat-parser'] =
       '@formatjs/icu-messageformat-parser/no-parser';
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return config;
   },
 };

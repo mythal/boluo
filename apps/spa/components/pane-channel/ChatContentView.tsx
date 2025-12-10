@@ -80,7 +80,7 @@ export interface DraggingItem {
 
 interface UseDragHandlesResult {
   handleDragStart: (event: DragStartEvent) => void;
-  handleDragEnd: (event: DragEndEvent) => void;
+  handleDragEnd: (event: DragEndEvent) => Promise<void>;
   active: DraggingItem | null;
   handleDragCancel: () => void;
 }
@@ -367,7 +367,7 @@ export const ChatContentView: FC<Props> = ({ setIsScrolling, currentUserId }) =>
                 active={active}
                 onDragCancel={handleDragCancel}
                 onDragStart={handleDragStart}
-                onDragEnd={handleDragEnd}
+                onDragEnd={(event) => void handleDragEnd(event)}
               >
                 <SortableContext items={chatList} strategy={verticalListSortingStrategy}>
                   <ChatContentVirtualList

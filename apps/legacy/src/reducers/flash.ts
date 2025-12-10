@@ -1,7 +1,7 @@
 import { OrderedMap } from 'immutable';
-import { Action } from '../actions';
-import { Information } from '../information';
-import { Id } from '../utils/id';
+import { type Action } from '../actions';
+import { type Information } from '../information';
+import { type Id } from '../utils/id';
 
 export type FlashState = OrderedMap<Id, Information>;
 

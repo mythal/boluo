@@ -1,6 +1,6 @@
-import { RegisterOptions as ValidationRules } from 'react-hook-form';
+import { type RegisterOptions as ValidationRules } from 'react-hook-form';
 import { get } from './api/request';
-import { Id } from './utils/id';
+import { type Id } from './utils/id';
 
 export const formatIsNotSupported = '不支持的文件格式';
 export const allowImageType = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
@@ -34,7 +34,7 @@ export const nicknameValidation = {
     value: 2,
     message: '昵称至少需要两个字符',
   },
-  validate: (nickname = '') => {
+  validate: (nickname: string = '') => {
     const striped = nickname.replace(/\s/g, '');
     if (striped.length === 0) {
       return '昵称不能为空';
@@ -94,7 +94,7 @@ export const spaceNameValidation = {
     value: 32,
     message: '位面名不可超过32字符',
   },
-  validate: (name = '') => {
+  validate: (name: string = '') => {
     const striped = name.replace(/\s/g, '');
     if (striped.length === 0) {
       return '位面名不能为空';

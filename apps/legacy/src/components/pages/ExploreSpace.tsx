@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useEffect, useState } from 'react';
 import { loadExploreSpace, searchSpaces } from '../../actions';
-import { Space } from '../../api/spaces';
+import { type Space } from '../../api/spaces';
 import StarSattelites from '../../assets/icons/star-sattelites.svg';
 import { useDispatch, useSelector } from '../../store';
 import { mY } from '../../styles/atoms';

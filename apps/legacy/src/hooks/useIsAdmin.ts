@@ -1,5 +1,5 @@
 import { useSelector } from '../store';
-import { Id } from '../utils/id';
+import { type Id } from '../utils/id';
 
 export function useIsAdmin(channelId: Id): boolean {
   return useSelector((state) => {

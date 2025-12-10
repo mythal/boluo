@@ -1,6 +1,6 @@
 'use client';
 import { FloatingPortal } from '@floating-ui/react';
-import { FC, type ReactNode } from 'react';
+import { type FC, type ReactNode } from 'react';
 
 interface Props extends React.HTMLAttributes<HTMLDivElement> {
   show: boolean;

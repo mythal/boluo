@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { LOADING } from '../api/error';
-import { AppResult } from '../api/request';
+import { type AppResult } from '../api/request';
 
 export const DEFAULT_TITLE = 'Boluo';
 

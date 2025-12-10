@@ -4,7 +4,7 @@ import { post } from '../../api/request';
 import DoorOpen from '../../assets/icons/door-open.svg';
 import Dialog from '../../components/molecules/Dialog';
 import { useDispatch, useSelector } from '../../store';
-import { Id } from '../../utils/id';
+import { type Id } from '../../utils/id';
 import Icon from '../atoms/Icon';
 import Text from '../atoms/Text';
 

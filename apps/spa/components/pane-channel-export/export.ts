@@ -1,6 +1,6 @@
 import type Prando from 'prando';
 import {
-  Entity,
+  type Entity,
   type Channel,
   type ChannelMemberWithUser,
   type Export,

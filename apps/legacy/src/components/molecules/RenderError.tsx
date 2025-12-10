@@ -1,5 +1,12 @@
 import * as React from 'react';
-import { AppError, BAD_REQUEST, ErrorCode, errorText, LOADING, NOT_FOUND } from '../../api/error';
+import {
+  type AppError,
+  BAD_REQUEST,
+  type ErrorCode,
+  errorText,
+  LOADING,
+  NOT_FOUND,
+} from '../../api/error';
 import { mY, pY, textSm } from '../../styles/atoms';
 import Title from '../atoms/Title';
 import NotFound from '../pages/NotFound';

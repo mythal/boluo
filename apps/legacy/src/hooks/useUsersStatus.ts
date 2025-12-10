@@ -1,6 +1,6 @@
-import { UserStatus } from '../api/spaces';
+import { type UserStatus } from '../api/spaces';
 import { useSelector } from '../store';
-import { Id } from '../utils/id';
+import { type Id } from '../utils/id';
 
 export function useUsersStatus(spaceId: Id): Record<Id, UserStatus> | null {
   return useSelector((state) => {

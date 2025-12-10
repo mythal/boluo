@@ -1,5 +1,5 @@
-import { ReactNode } from 'react';
-import { Id } from './utils/id';
+import { type ReactNode } from 'react';
+import { type Id } from './utils/id';
 
 export type InformationLevel = 'INFO' | 'SUCCESS' | 'WARNING' | 'ERROR';
 

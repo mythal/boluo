@@ -1,15 +1,20 @@
-import { ReactNode } from 'react';
-import { Channel, ChannelMember, ChannelWithMember } from './api/channels';
-import { Events } from './api/events';
-import { Message } from './api/messages';
-import { AppResult, get } from './api/request';
-import { Space, SpaceMember, SpaceWithMember, SpaceWithRelated } from './api/spaces';
-import { Settings, User } from './api/users';
-import { Information, InformationLevel } from './information';
-import { ChatState, Compose, UserItem } from './reducers/chatState';
-import { MessageItem, PreviewItem } from './states/chat-item-set';
-import { Dispatch } from './store';
-import { Id, newId } from './utils/id';
+import { type ReactNode } from 'react';
+import { type Channel, type ChannelMember, type ChannelWithMember } from './api/channels';
+import { type Events } from './api/events';
+import { type Message } from './api/messages';
+import { type AppResult, get } from './api/request';
+import {
+  type Space,
+  type SpaceMember,
+  type SpaceWithMember,
+  type SpaceWithRelated,
+} from './api/spaces';
+import { type Settings, type User } from './api/users';
+import { type Information, type InformationLevel } from './information';
+import { type ChatState, type Compose, type UserItem } from './reducers/chatState';
+import { type MessageItem, type PreviewItem } from './states/chat-item-set';
+import { type Dispatch } from './store';
+import { type Id, newId } from './utils/id';
 import { Err, Ok } from './utils/result';
 import { notFound } from './api/error';
 

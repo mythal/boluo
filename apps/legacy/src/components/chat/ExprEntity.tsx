@@ -2,20 +2,20 @@ import { css } from '@emotion/react';
 import styled from '@emotion/styled';
 import { darken } from 'polished';
 import Prando from 'prando';
-import React, { MouseEventHandler, ReactNode, useState } from 'react';
+import React, { type MouseEventHandler, type ReactNode, useState } from 'react';
 import Cubes from '../../assets/icons/cubes.svg';
 import D20 from '../../assets/icons/d20.svg';
 import ElderSign from '../../assets/icons/elder-sign.svg';
 import ThumbDown from '../../assets/icons/thumb-down.svg';
 import ThumbUp from '../../assets/icons/thumb-up.svg';
 import {
-  CocRollResult,
-  DicePoolResult,
-  EvaluatedExprNode,
-  ExprNode,
-  FateResult,
-  RepeatResult,
-  RollResult,
+  type CocRollResult,
+  type DicePoolResult,
+  type EvaluatedExprNode,
+  type ExprNode,
+  type FateResult,
+  type RepeatResult,
+  type RollResult,
 } from '../../interpreter/entities';
 import {
   cocRollSubTypeDisplay,

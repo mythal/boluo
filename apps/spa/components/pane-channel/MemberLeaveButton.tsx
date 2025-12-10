@@ -48,9 +48,9 @@ export const MemberLeaveButton: FC<Props> = ({ channelId, onSuccess }) => {
 
   const click = useClick(context, {});
   const dismiss = useDismiss(context);
-  const confirm = useCallback(async () => {
+  const confirm = useCallback(() => {
     setComfirmOpen(false);
-    await trigger({});
+    void trigger({});
   }, [trigger]);
   const { getReferenceProps, getFloatingProps } = useInteractions([click, dismiss]);
   return (

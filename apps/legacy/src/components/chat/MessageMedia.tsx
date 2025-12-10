@@ -5,7 +5,7 @@ import useSWR from 'swr';
 import { mediaHead, mediaUrl } from '../../api/request';
 import { roundedSm } from '../../styles/atoms';
 import { gray } from '../../styles/colors';
-import { Id } from '../../utils/id';
+import { type Id } from '../../utils/id';
 import { allowImageType } from '../../validators';
 import Modal from '../atoms/Modal';
 
@@ -60,6 +60,7 @@ function MessageMedia({ className, mediaId, file }: Props) {
   const {
     data: headResponse,
     isLoading,
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     error,
   } = useSWR(mediaId ? ['media', mediaId] : null, ([, mediaId]) => mediaHead(mediaId));
   console.log('headResponse', headResponse);

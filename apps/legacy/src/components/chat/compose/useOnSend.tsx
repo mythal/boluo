@@ -1,15 +1,15 @@
 import React, { useCallback } from 'react';
 import { showFlash } from '../../../actions';
-import { EditMessage, Message, NewMessage } from '../../../api/messages';
-import { AppResult, patch, post } from '../../../api/request';
+import { type EditMessage, type Message, type NewMessage } from '../../../api/messages';
+import { type AppResult, patch, post } from '../../../api/request';
 import Button from '../../../components/atoms/Button';
 import { useChannelId } from '../../../hooks/useChannelId';
 import { parse } from '../../../interpreter/parser';
-import { Compose } from '../../../reducers/chatState';
-import store, { Dispatch } from '../../../store';
+import { type Compose } from '../../../reducers/chatState';
+import store, { type Dispatch } from '../../../store';
 import { throwErr } from '../../../utils/errors';
 import { getDiceFace } from '../../../utils/game';
-import { Id, newId } from '../../../utils/id';
+import { type Id, newId } from '../../../utils/id';
 import { uploadMedia } from './helper';
 
 export const whyCannotSend = (

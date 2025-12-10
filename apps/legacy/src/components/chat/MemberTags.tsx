@@ -1,8 +1,8 @@
 import * as React from 'react';
-import { ChannelMember } from '../../api/channels';
-import { SpaceMember } from '../../api/spaces';
+import { type ChannelMember } from '../../api/channels';
+import { type SpaceMember } from '../../api/spaces';
 import { mR } from '../../styles/atoms';
-import { Id } from '../../utils/id';
+import { type Id } from '../../utils/id';
 import { adminTag, masterTag } from './styles';
 
 interface Props {

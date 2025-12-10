@@ -5,8 +5,8 @@ import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import Select from 'react-select';
 import { showFlash } from '../../actions';
-import { Channel, EditChannel, MemberWithUser } from '../../api/channels';
-import { AppError } from '../../api/error';
+import { type Channel, type EditChannel, type MemberWithUser } from '../../api/channels';
+import { type AppError } from '../../api/error';
 import { post } from '../../api/request';
 import { useDispatch, useSelector } from '../../store';
 import {
@@ -21,7 +21,7 @@ import {
   textSm,
   widthFull,
 } from '../../styles/atoms';
-import { Id } from '../../utils/id';
+import { type Id } from '../../utils/id';
 import { chatPath } from '../../utils/path';
 import { channelNameValidation, channelTopicValidation } from '../../validators';
 import Button from '../atoms/Button';
@@ -33,7 +33,7 @@ import { PanelTitle } from '../atoms/PanelTitle';
 import Text from '../atoms/Text';
 import TextArea from '../atoms/TextArea';
 import Dialog from '../molecules/Dialog';
-import DiceSelect, { DiceOption } from '../molecules/DiceSelect';
+import DiceSelect, { type DiceOption } from '../molecules/DiceSelect';
 import Panel from '../molecules/Panel';
 import { RenderError } from '../molecules/RenderError';
 

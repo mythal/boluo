@@ -1,7 +1,7 @@
 import { css } from '@emotion/react';
 import { useAtomValue } from 'jotai';
 import { transparentize } from 'polished';
-import { ReactNode, useState } from 'react';
+import { type ReactNode, useState } from 'react';
 import { useBaseUrlDelay } from '../../hooks/useBaseUrlDelay';
 import { connectionStateAtom } from '../../states/connection';
 import { useSelector } from '../../store';

@@ -1,4 +1,4 @@
-import { SendStatus } from 'api/events';
+import { type SendStatus } from 'api/events';
 import { useEffect, useRef } from 'react';
 import { useSend } from '../../hooks/useSend';
 import { HEARTBEAT_INTERVAL } from '../../settings';

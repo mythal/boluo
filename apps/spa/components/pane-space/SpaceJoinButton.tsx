@@ -40,7 +40,7 @@ export const SpaceJoinButton: FC<Props> = ({ spaceId }) => {
       className="SpaceJoinButton"
       isLoading={isJoining}
       icon={icon}
-      onClick={() => join()}
+      onClick={() => void join()}
     >
       <span className="text-xs">
         <FormattedMessage defaultMessage="Join Space" />

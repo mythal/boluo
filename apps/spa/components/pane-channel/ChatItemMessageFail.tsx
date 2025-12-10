@@ -1,4 +1,4 @@
-import { ReactNode, type FC } from 'react';
+import { type ReactNode, type FC } from 'react';
 import { type FailTo } from '../../state/channel.types';
 import { Delay } from '@boluo/ui/Delay';
 import { FallbackIcon } from '@boluo/ui/FallbackIcon';

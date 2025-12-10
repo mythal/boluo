@@ -1,6 +1,6 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { FC } from 'react';
+import { type FC } from 'react';
 
 interface Props {
   channelId: string;

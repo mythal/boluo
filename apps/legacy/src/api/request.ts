@@ -1,51 +1,57 @@
 /* eslint-disable @typescript-eslint/no-empty-object-type */
 import { isCrossOrigin } from '../settings';
 import store from '../store';
-import { Id } from '../utils/id';
-import { Err, Ok, Result } from '../utils/result';
+import { type Id } from '../utils/id';
+import { Err, Ok, type Result } from '../utils/result';
 import { getAuthToken, clearAuthToken } from '../utils/token';
 import type { MakeToken, MoveMessageBetween } from '@boluo/api';
 import {
-  AddMember,
-  Channel,
-  ChannelMember,
-  ChannelMemberWithUser,
-  ChannelWithMember,
-  ChannelWithRelated,
-  CheckChannelName,
-  CreateChannel,
-  EditChannel,
-  EditChannelMember,
-  Export,
-  JoinChannel,
+  type AddMember,
+  type Channel,
+  type ChannelMember,
+  type ChannelMemberWithUser,
+  type ChannelWithMember,
+  type ChannelWithRelated,
+  type CheckChannelName,
+  type CreateChannel,
+  type EditChannel,
+  type EditChannelMember,
+  type Export,
+  type JoinChannel,
 } from './channels';
-import { AppError, FETCH_FAIL, notJson, UNAUTHENTICATED } from './error';
-import { Media, PreSign, PreSignResult } from './media';
-import { ByChannel, EditMessage, Message, MoveBetween, MoveTo, NewMessage } from './messages';
+import { type AppError, FETCH_FAIL, notJson, UNAUTHENTICATED } from './error';
+import { type Media, type PreSign, type PreSignResult } from './media';
 import {
-  CreateSpace,
-  EditSpace,
-  Kick,
-  SearchParams,
-  Space,
-  SpaceIdWithToken,
-  SpaceMemberWithUser,
-  SpaceWithMember,
-  SpaceWithRelated,
+  type ByChannel,
+  type EditMessage,
+  type Message,
+  type MoveTo,
+  type NewMessage,
+} from './messages';
+import {
+  type CreateSpace,
+  type EditSpace,
+  type Kick,
+  type SearchParams,
+  type Space,
+  type SpaceIdWithToken,
+  type SpaceMemberWithUser,
+  type SpaceWithMember,
+  type SpaceWithRelated,
 } from './spaces';
 import {
-  CheckEmail,
-  CheckUsername,
-  EditUser,
-  GetMe,
-  LoginData,
-  LoginResult,
-  RegisterData,
-  ResetPassword,
-  ResetPasswordConfirm,
-  ResetPasswordTokenCheck,
-  Settings,
-  User,
+  type CheckEmail,
+  type CheckUsername,
+  type EditUser,
+  type GetMe,
+  type LoginData,
+  type LoginResult,
+  type RegisterData,
+  type ResetPassword,
+  type ResetPasswordConfirm,
+  type ResetPasswordTokenCheck,
+  type Settings,
+  type User,
 } from './users';
 
 export type AppResult<T> = Result<T, AppError>;
@@ -134,7 +140,7 @@ export const makeUri = (path: string, query?: object, addBaseUrl = true): string
   if (query === undefined) {
     return path;
   }
-  const entities = Object.entries(query);
+  const entities: [string, unknown][] = Object.entries(query);
   if (entities.length === 0) {
     return path;
   }
@@ -356,7 +362,7 @@ export async function uploadWithPresigned(
     return new Err(presignResult.value);
   }
 
-  const { url, mediaId } = presignResult.value as PreSignResult;
+  const { url, mediaId } = presignResult.value;
   try {
     const uploadResponse = await fetch(url, {
       method: 'PUT',

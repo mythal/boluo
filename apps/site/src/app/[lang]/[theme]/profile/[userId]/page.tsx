@@ -1,10 +1,10 @@
-import { User } from '@boluo/api';
-import { Metadata } from 'next';
+import { type User } from '@boluo/api';
+import { type Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import React from 'react';
 import { get } from '@boluo/common/server/api';
 import { BackLink } from '../../../../../components/BackLink';
-import { Params as BaseParams } from '../../../../../server';
+import { type Params as BaseParams } from '../../../../../server';
 import { getIntl } from '@boluo/locale/server';
 
 interface Params extends BaseParams {

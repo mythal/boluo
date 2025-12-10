@@ -42,7 +42,7 @@ const EditMasterCheckBox: FC<{ channelMember: ChannelMember }> = ({ channelMembe
       <input
         type="checkbox"
         checked={channelMember.isMaster}
-        onChange={() => edit()}
+        onChange={() => void edit()}
         disabled={isEditing}
       />
       <span className="space-x-1">
@@ -72,7 +72,7 @@ const InviteButton: FC<{ userId: string; channelId: string }> = ({ userId, chann
     },
   );
   return (
-    <Button small disabled={isInviting} onClick={() => invite()}>
+    <Button small disabled={isInviting} onClick={() => void invite()}>
       <Icon icon={UserPlus} />
       <FormattedMessage defaultMessage="Invite" />
     </Button>
@@ -107,7 +107,7 @@ const ConfirmLeave: FC<{ channelId: string; channelName: string; dismiss: () => 
         <Button small className="mx-1" onClick={dismiss}>
           <FormattedMessage defaultMessage="Cancel" />
         </Button>
-        <Button small variant="danger" disabled={isKicking} onClick={() => kick()}>
+        <Button small variant="danger" disabled={isKicking} onClick={() => void kick()}>
           <FormattedMessage defaultMessage="Leave" />
         </Button>
       </div>
@@ -147,7 +147,7 @@ const ConfirmKick: FC<{
         <Button small className="mx-1" onClick={dismiss}>
           <FormattedMessage defaultMessage="Cancel" />
         </Button>
-        <Button small variant="danger" disabled={isKicking} onClick={() => kick()}>
+        <Button small variant="danger" disabled={isKicking} onClick={() => void kick()}>
           <FormattedMessage defaultMessage="Yes, Kick" />
         </Button>
       </div>

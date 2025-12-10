@@ -3,7 +3,7 @@ import React, { useCallback } from 'react';
 import { userDialogAtom } from '../../states/userDialog';
 import { useSelector } from '../../store';
 import { overflowYAuto } from '../../styles/atoms';
-import { Id } from '../../utils/id';
+import { type Id } from '../../utils/id';
 import { SidebarMemberListItem } from './SidebarMemberListItem';
 import { isOnline } from './UserStatusButton';
 

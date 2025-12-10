@@ -3,7 +3,9 @@
   "compilerOptions": {
     "baseUrl": ".",
     "lib": ["ESNext", "DOM"],
-    "outDir": "dist/"
+    "outDir": "dist/",
+    "module": "Preserve",
+    "moduleResolution": "bundler"
   },
   "include": ["src/**/*.ts"],
   "exclude": ["dist", "build", "node_modules"]

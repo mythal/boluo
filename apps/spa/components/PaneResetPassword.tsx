@@ -1,7 +1,7 @@
 import { post } from '@boluo/api-browser';
 import { Key } from '@boluo/icons';
 import { type FC, type MouseEventHandler, useCallback, useId, useState } from 'react';
-import { SubmitHandler, type FieldError, useForm } from 'react-hook-form';
+import { type SubmitHandler, type FieldError, useForm } from 'react-hook-form';
 import { FormattedMessage, useIntl } from 'react-intl';
 import * as validators from '@boluo/common/validations';
 import { Button } from '@boluo/ui/Button';
@@ -40,18 +40,20 @@ export const PaneResetPassword: FC = () => {
   const fieldId = useId();
 
   const onSubmit: SubmitHandler<FormSchema> = useCallback(
-    async ({ email }) => {
-      const result = await post('/users/reset_password', null, { email, lang: intl.locale });
-      if (result.isErr) {
-        if (result.err.code === 'NOT_FOUND') {
-          setPageState('NOT_FOUND');
+    ({ email }) => {
+      void (async () => {
+        const result = await post('/users/reset_password', null, { email, lang: intl.locale });
+        if (result.isErr) {
+          if (result.err.code === 'NOT_FOUND') {
+            setPageState('NOT_FOUND');
+            return;
+          }
+          console.warn(result.err);
+          setPageState('UNKNOWN_ERROR');
           return;
         }
-        console.warn(result.err);
-        setPageState('UNKNOWN_ERROR');
-        return;
-      }
-      setPageState('SUCCESS');
+        setPageState('SUCCESS');
+      })();
     },
     [intl.locale],
   );
@@ -65,6 +67,7 @@ export const PaneResetPassword: FC = () => {
   );
 
   const handleRetry = useCallback(() => setPageState('FORM'), []);
+  const handleFormSubmit = handleSubmit(onSubmit);
 
   return (
     <PaneBox
@@ -76,7 +79,12 @@ export const PaneResetPassword: FC = () => {
     >
       <div className="p-pane max-w-lg">
         {pageState === 'FORM' ? (
-          <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4 pt-2">
+          <form
+            onSubmit={(event) => {
+              void handleFormSubmit(event);
+            }}
+            className="flex flex-col gap-4 pt-2"
+          >
             <div>
               <label htmlFor={fieldId} className="block py-1">
                 <FormattedMessage defaultMessage="Email" />

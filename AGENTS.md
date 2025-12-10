@@ -9,7 +9,7 @@ The backend is written in Rust using **hyper** and **tokio**. PostgreSQL is acce
 ### Development Notes
 
 - When modifying SQL statements or RESTful APIs, run: `./scripts/generate-types.sh` to regenerate types.
-- Quick validation: `cargo check`
+- You should run `cargo check` after modifying any Rust code.
 - Run tests: `cargo nextest run`
 - Database-related tests:
   - Use `sqlx::test`
@@ -21,6 +21,15 @@ The backend is written in Rust using **hyper** and **tokio**. PostgreSQL is acce
 ## Frontend
 
 The frontend consists of three applications.
+
+### Checking and Linting
+
+You should run `npm run check` after modifying TypeScript code.
+
+- Type checking: `npm run check`
+- Linting: `npm run lint`
+
+Turborepo's options are available for both commands, e.g., `npm run check -- --filter=site --filter='@boluo/ui'`.
 
 ### Main Chat App (`apps/spa`)
 
@@ -45,11 +54,6 @@ The frontend consists of three applications.
 
 - Contains common stateless UI components.
 - Components here should have associated stories in `apps/storybook`.
-
-### Frontend Development Notes
-
-- Type checking: `npm run check`
-- Linting: `npm run lint`
 
 ---
 

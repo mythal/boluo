@@ -1,7 +1,7 @@
-import { ApiError } from '@boluo/api';
-import { Get } from '@boluo/api';
+import { type ApiError } from '@boluo/api';
+import { type Get } from '@boluo/api';
 import { get } from '@boluo/api-browser';
-import useSWR, { SWRConfiguration, SWRResponse } from 'swr';
+import useSWR, { type SWRConfiguration, type SWRResponse } from 'swr';
 import { unwrap } from '@boluo/utils/result';
 
 export const useGetQuery = <P extends keyof Get>(

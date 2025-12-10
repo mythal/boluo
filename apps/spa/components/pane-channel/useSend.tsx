@@ -30,7 +30,7 @@ export const useSend = () => {
   const { data: queryChannelMembers } = useQueryChannelMembers(channelId);
   const myMember = useMember();
   const channelMembersMap: Map<string, MemberWithUser> = useMemo(() => {
-    if (queryChannelMembers == null) return new Map();
+    if (queryChannelMembers == null) return new Map<string, MemberWithUser>();
     return new Map(queryChannelMembers.members.map((member) => [member.user.username, member]));
   }, [queryChannelMembers]);
   const channelMembersMapRef = useRef(channelMembersMap);

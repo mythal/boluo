@@ -1,7 +1,7 @@
 import { css } from '@emotion/react';
 import * as React from 'react';
 import { useMemo } from 'react';
-import { Preview } from '../../../api/events';
+import { type Preview } from '../../../api/events';
 import { useChannelId } from '../../../hooks/useChannelId';
 import { useParse } from '../../../hooks/useParse';
 import { useSelector } from '../../../store';

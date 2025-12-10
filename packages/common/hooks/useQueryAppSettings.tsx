@@ -1,6 +1,6 @@
 import type { AppSettings } from '@boluo/api';
 import { get } from '@boluo/api-browser';
-import useSWR, { SWRResponse } from 'swr';
+import useSWR, { type SWRResponse } from 'swr';
 
 export const useQueryAppSettings = (): SWRResponse<AppSettings, Error> => {
   return useSWR(

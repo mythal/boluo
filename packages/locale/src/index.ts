@@ -1,4 +1,4 @@
-import { IntlConfig, IntlErrorCode, type OnErrorFn } from '@formatjs/intl';
+import { type IntlConfig, IntlErrorCode, type OnErrorFn } from '@formatjs/intl';
 import type { Locale } from '@boluo/types';
 
 export type IntlMessages = IntlConfig['messages'];

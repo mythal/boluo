@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { LoggedOut } from '../actions';
+import { type LoggedOut } from '../actions';
 import { get } from '../api/request';
 import { useDispatch } from '../store';
 import { clearAuthToken } from '../utils/token';

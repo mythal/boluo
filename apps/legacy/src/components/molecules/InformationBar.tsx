@@ -2,7 +2,7 @@ import { css } from '@emotion/react';
 import styled from '@emotion/styled';
 import { lighten } from 'polished';
 import * as React from 'react';
-import { InformationLevel } from '../../information';
+import { type InformationLevel } from '../../information';
 import { roundedSm, spacingN, textBase, textXl, uiShadow } from '../../styles/atoms';
 import {
   informationErrorColor,

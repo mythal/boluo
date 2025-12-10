@@ -11,7 +11,7 @@ import {
   Whisper,
   X,
 } from '@boluo/icons';
-import { FormattedMessage, IntlShape, useIntl } from 'react-intl';
+import { FormattedMessage, type IntlShape, useIntl } from 'react-intl';
 import { useComposeError } from '../../hooks/useComposeError';
 import { useSend } from './useSend';
 import { type User } from '@boluo/api';
@@ -151,7 +151,7 @@ const SendButton: FC<{ intl: IntlShape }> = () => {
             </>
           )
         }
-        onClick={send}
+        onClick={() => void send()}
       >
         <Icon icon={editMode ? Edit : PaperPlane} />
         <span className="ml-1">

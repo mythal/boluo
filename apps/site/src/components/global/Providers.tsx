@@ -2,7 +2,7 @@
 
 import type { IntlMessages } from '@boluo/locale';
 import { Provider as JotaiProvider } from 'jotai';
-import { FC, useEffect } from 'react';
+import { type FC, useEffect } from 'react';
 import { store } from '@boluo/store';
 import { SWRConfig } from 'swr';
 import {

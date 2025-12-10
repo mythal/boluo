@@ -6,7 +6,7 @@ import type { ChatReducerContext } from './chat.reducer';
 import { recordWarn } from '../error';
 import type { List } from 'list';
 import * as L from 'list';
-import { ComposeState } from './compose.reducer';
+import { type ComposeState } from './compose.reducer';
 
 export type UserId = string;
 

@@ -10,7 +10,7 @@ import { useDispatch, useSelector } from '../../store';
 import { color, flex, fontBold, mB, mR, mT, pX, roundedSm, textXl } from '../../styles/atoms';
 import { gray, primary } from '../../styles/colors';
 import { throwErr } from '../../utils/errors';
-import { encodeUuid, Id } from '../../utils/id';
+import { encodeUuid, type Id } from '../../utils/id';
 import Button from '../atoms/Button';
 import Icon from '../atoms/Icon';
 import Text from '../atoms/Text';

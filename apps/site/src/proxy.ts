@@ -1,7 +1,7 @@
 import { narrowLocale, LOCALES } from '@boluo/locale';
-import { Locale, Theme } from '@boluo/types';
+import { type Locale, type Theme } from '@boluo/types';
 import Negotiator from 'negotiator';
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 
 function getLocale(request: NextRequest): Locale {
   // From cookie

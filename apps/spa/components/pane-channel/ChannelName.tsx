@@ -5,7 +5,7 @@ import Icon from '@boluo/ui/Icon';
 import { offset, shift, useFloating, useHover, useInteractions } from '@floating-ui/react';
 import { TooltipBox } from '@boluo/ui/TooltipBox';
 import { type ChannelHeaderState } from './ChannelHeader';
-import { PrimitiveAtom, useAtom } from 'jotai';
+import { type PrimitiveAtom, useAtom } from 'jotai';
 import clsx from 'clsx';
 
 interface Props {

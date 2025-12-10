@@ -19,7 +19,7 @@ interface Props {
 }
 
 function Filter({ className }: Props) {
-  const pane = useChannelId()!;
+  const pane = useChannelId();
   const filter = useSelector((state) => state.chatStates.get(pane)!.filter);
   const showFolded = useSelector((state) => state.chatStates.get(pane)!.showFolded);
   const button = useRef<HTMLButtonElement | null>(null);

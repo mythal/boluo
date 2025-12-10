@@ -1,5 +1,5 @@
 import {
-  MakeToken,
+  type MakeToken,
   type ChannelMembers,
   type EventId,
   type Update,
@@ -16,7 +16,7 @@ import { PING, PONG } from '../const';
 import { chatAtom, type ChatDispatch, connectionStateAtom } from '../state/chat.atoms';
 import { type ConnectionState } from '../state/connection.reducer';
 import { get } from '@boluo/api-browser';
-import { IntlShape, useIntl } from 'react-intl';
+import { type IntlShape, useIntl } from 'react-intl';
 
 let lastPongTime = Date.now();
 const RELOAD_TIMEOUT = 1000 * 60 * 30;
@@ -30,6 +30,7 @@ const SLEEP_MS = [0, 7, 17, 37];
 const getToken = async (
   makeToken: MakeToken,
   retryCount: number = 0,
+  // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
 ): Promise<string | ConnectionError> => {
   const token = await get('/events/token', makeToken);
   if (token.isOk) return token.some.token;
@@ -199,7 +200,7 @@ export const useConnectionEffect = (mailboxId: string) => {
     let currentConnection: WebSocket | null = null;
     const performConnect = () => {
       const chatState = store.get(chatAtom);
-      connect(
+      void connect(
         intl,
         webSocketEndpoint,
         mailboxId,

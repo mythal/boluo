@@ -1,6 +1,6 @@
 import { type Message, type Preview } from '@boluo/api';
 import { ComposeState } from './compose.reducer';
-import { UploadError } from '../media';
+import { type UploadError } from '../media';
 
 export type PreviewItem = Preview & {
   type: 'PREVIEW';

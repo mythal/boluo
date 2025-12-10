@@ -12,7 +12,7 @@ import { type Empty } from '@boluo/types';
 import { type MakeAction } from './actions';
 import { type FailTo } from './channel.types';
 import { type OptimisticMessage } from './channel.reducer';
-import { ComposeState } from './compose.reducer';
+import { type ComposeState } from './compose.reducer';
 
 export type ChatActionMap = {
   receiveMessage: UpdateBody & { type: 'NEW_MESSAGE' };

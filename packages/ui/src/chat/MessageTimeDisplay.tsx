@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { type FC } from 'react';
 import { Delay } from '../Delay';
 import { FallbackIcon } from '../FallbackIcon';
 import Icon from '../Icon';

@@ -1,6 +1,6 @@
 import clsx from 'clsx';
 import { CSS, type Transform } from '@dnd-kit/utilities';
-import { CSSProperties, type DragEventHandler, type FC } from 'react';
+import { type CSSProperties, type DragEventHandler, type FC } from 'react';
 import { PreviewHandlePlaceHolder } from '../PreviewHandlePlaceHolder';
 
 interface Props {

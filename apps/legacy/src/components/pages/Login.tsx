@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
-import { LoggedIn } from '../../actions';
-import { AppError, NO_PERMISSION } from '../../api/error';
+import { type LoggedIn } from '../../actions';
+import { type AppError, NO_PERMISSION } from '../../api/error';
 import { get, post } from '../../api/request';
-import { LoginData } from '../../api/users';
+import { type LoginData } from '../../api/users';
 import SignIn from '../../assets/icons/sign-in.svg';
 import Icon from '../../components/atoms/Icon';
 import { useTitle } from '../../hooks/useTitle';

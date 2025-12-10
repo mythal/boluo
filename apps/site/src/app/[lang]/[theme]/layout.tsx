@@ -1,4 +1,4 @@
-import { Metadata, Viewport } from 'next';
+import { type Metadata, type Viewport } from 'next';
 import type { ReactNode } from 'react';
 import { ClientProviders } from '../../../components/global/Providers';
 import '@boluo/tailwind-config';
@@ -7,7 +7,7 @@ import { loadMessages } from '@boluo/locale/dynamic';
 import { getIntl } from '@boluo/locale/server';
 
 import { classifyLightOrDark, THEMES, toTheme } from '@boluo/theme';
-import { Params } from '../../../server';
+import { type Params } from '../../../server';
 
 export async function generateMetadata({ params }: { params: Promise<Params> }): Promise<Metadata> {
   const intl = await getIntl(await params);

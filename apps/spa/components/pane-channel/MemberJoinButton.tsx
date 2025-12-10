@@ -68,12 +68,12 @@ export const MemberJoinButton: FC<Props> = ({ channel }) => {
   const banner = useBannerNode();
 
   const checkResult = check(currentUser, channel, spaceMember, channelMembers);
-  const handleClick = async () => {
+  const handleClick = () => {
     if (checkResult != null) {
       setShowError(true);
       return;
     }
-    await trigger({});
+    void trigger({});
   };
   let errorNode: ReactNode = null;
   if (showError && checkResult != null) {

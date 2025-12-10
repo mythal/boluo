@@ -1,7 +1,7 @@
 import { uploadWithPresigned } from '../../../api/request';
-import { Dispatch } from '../../../store';
+import { type Dispatch } from '../../../store';
 import { throwErr } from '../../../utils/errors';
-import { Id } from '../../../utils/id';
+import { type Id } from '../../../utils/id';
 
 export const uploadMedia = async (
   dispatch: Dispatch,

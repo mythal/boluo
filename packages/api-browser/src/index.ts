@@ -3,7 +3,7 @@ import { atom } from 'jotai';
 import { store } from '@boluo/store';
 import type { Result } from '@boluo/utils/result';
 import { isCrossOrigin } from '@boluo/utils/browser';
-import { ApiError } from '@boluo/api/errors';
+import { type ApiError } from '@boluo/api/errors';
 import type { LoginReturn, Media, User } from '@boluo/types/bindings';
 import { originMap } from '@boluo/api/origin-map';
 
@@ -68,7 +68,7 @@ export function setToken(token: unknown): void {
   localStorage.setItem(TOKEN_KEY, token);
 }
 
-export async function get<P extends keyof Get>(
+export function get<P extends keyof Get>(
   path: P,
   query: Get[P]['query'],
   apiUrl?: string,
@@ -113,7 +113,7 @@ export async function login(
   return result;
 }
 
-export async function patch<P extends keyof Patch>(
+export function patch<P extends keyof Patch>(
   path: P,
   query: Patch[P]['query'],
   payload: Patch[P]['payload'],

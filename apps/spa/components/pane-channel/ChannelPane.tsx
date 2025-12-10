@@ -1,7 +1,7 @@
 import clsx from 'clsx';
 import { Lock, LockedHash } from '@boluo/icons';
 import { useAtom } from 'jotai';
-import { memo, ReactNode, useMemo, type FC } from 'react';
+import { memo, type ReactNode, useMemo, type FC } from 'react';
 import { FormattedMessage } from 'react-intl';
 import {
   type ChannelAtoms,
@@ -25,7 +25,7 @@ import { parseDiceFace } from '../../dice';
 import { MemberContext, useMember } from '../../hooks/useMember';
 import { useQueryChannelMembers } from '../../hooks/useQueryChannelMembers';
 import { GuestCompose } from '../compose/GuestCompose';
-import { Channel, ChannelMembers, type MemberWithUser } from '@boluo/api';
+import { type Channel, ChannelMembers, type MemberWithUser } from '@boluo/api';
 import { useBannerNode } from '../../hooks/useBannerNode';
 import ReactDOM from 'react-dom';
 import { useChannelFileDrop } from './useChannelFileDrop';

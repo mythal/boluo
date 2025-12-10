@@ -1,8 +1,8 @@
 import { css } from '@emotion/react';
 import * as React from 'react';
 import { showFlash } from '../../actions';
-import { ChannelMember } from '../../api/channels';
-import { Message } from '../../api/messages';
+import { type ChannelMember } from '../../api/channels';
+import { type Message } from '../../api/messages';
 import { get } from '../../api/request';
 import EyeSlash from '../../assets/icons/eye-slash.svg';
 import Eye from '../../assets/icons/eye.svg';

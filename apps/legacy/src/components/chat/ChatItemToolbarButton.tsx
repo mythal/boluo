@@ -6,7 +6,7 @@ import { fontBase, fontNormal, p, textBase, textLg, textXs } from '../../styles/
 import { textColor } from '../../styles/colors';
 import { isMobile } from '../../utils/browser';
 import Icon, { type SvgIcon } from '../atoms/Icon';
-import Tooltip, { TooltipProps } from '../atoms/Tooltip';
+import Tooltip, { type TooltipProps } from '../atoms/Tooltip';
 import { toolbarRadius } from './ItemToolbar';
 
 const style = css`

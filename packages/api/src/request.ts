@@ -5,7 +5,7 @@ export const makeUri = (baseUrl: string, path: string, query?: unknown): string 
   if (query === undefined || query == null || typeof query !== 'object') {
     return path;
   }
-  const entities = Object.entries(query);
+  const entities = Object.entries(query as Record<string, unknown>);
   if (entities.length === 0) {
     return path;
   }

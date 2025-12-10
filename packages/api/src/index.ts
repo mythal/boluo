@@ -1,4 +1,9 @@
-import { Entity, EvaluatedExprNode, ExprNode, PureExprNode } from '@boluo/types/bindings';
+import {
+  type Entity,
+  type EvaluatedExprNode,
+  type ExprNode,
+  type PureExprNode,
+} from '@boluo/types/bindings';
 import type { Get } from './get';
 import type { Patch } from './patch';
 import type { Post } from './post';

@@ -1,4 +1,4 @@
-import { FC, useContext, useEffect, useState } from 'react';
+import { type FC, useContext, useEffect, useState } from 'react';
 import { usePaneDrag } from '../hooks/usePaneDrag';
 import { PaneContext } from '../state/view.context';
 import clsx from 'clsx';

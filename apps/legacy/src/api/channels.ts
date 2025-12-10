@@ -1,6 +1,6 @@
-import { Id } from '../utils/id';
-import { Space, SpaceMember, SpaceMemberWithUser } from './spaces';
-import { User } from './users';
+import { type Id } from '../utils/id';
+import { type Space, type SpaceMember, type SpaceMemberWithUser } from './spaces';
+import { type User } from './users';
 
 export interface CreateChannel {
   spaceId: Id;

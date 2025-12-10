@@ -1,37 +1,44 @@
-import { List, Map } from 'immutable';
+import { List, type Map } from 'immutable';
 import * as O from 'optics-ts';
 import {
-  Action,
-  AddDice,
-  CancelEdit,
-  ChatLoaded,
-  ChatUpdate,
-  ComposeEditFailed,
-  ComposeSendFailed,
-  LoadMessages,
-  MovingMessage,
-  ResetComposeAfterSent,
-  ResetMessageMoving,
-  RestoreComposeState,
-  SetBroadcast,
-  SetComposeMedia,
-  SetComposeSource,
-  SetInGame,
-  SetInputName,
-  SetIsAction,
-  SetWhisperTo,
-  StartEditMessage,
+  type Action,
+  type AddDice,
+  type CancelEdit,
+  type ChatLoaded,
+  type ChatUpdate,
+  type ComposeEditFailed,
+  type ComposeSendFailed,
+  type LoadMessages,
+  type MovingMessage,
+  type ResetComposeAfterSent,
+  type ResetMessageMoving,
+  type RestoreComposeState,
+  type SetBroadcast,
+  type SetComposeMedia,
+  type SetComposeSource,
+  type SetInGame,
+  type SetInputName,
+  type SetIsAction,
+  type SetWhisperTo,
+  type StartEditMessage,
 } from '../actions';
-import { Channel, makeMembers, MemberWithUser } from '../api/channels';
-import { compareEvents, EditPreview, EventId, eventIdMax, Events, Preview } from '../api/events';
-import { Message } from '../api/messages';
-import { SpaceWithRelated } from '../api/spaces';
-import { Entity } from '../interpreter/entities';
+import { type Channel, makeMembers, type MemberWithUser } from '../api/channels';
+import {
+  compareEvents,
+  type EditPreview,
+  type EventId,
+  eventIdMax,
+  type Events,
+  type Preview,
+} from '../api/events';
+import { type Message } from '../api/messages';
+import { type SpaceWithRelated } from '../api/spaces';
+import { type Entity } from '../interpreter/entities';
 import {
   addItem,
   binarySearchPos,
-  ChatItem,
-  ChatItemSet,
+  type ChatItem,
+  type ChatItemSet,
   deleteMessage,
   editMessage,
   makeMessageItem,
@@ -39,7 +46,7 @@ import {
   moveMessages,
   resetMovingMessage,
 } from '../states/chat-item-set';
-import { Id, newId } from '../utils/id';
+import { type Id, newId } from '../utils/id';
 
 export interface UserItem {
   label: string;

@@ -147,7 +147,7 @@ export const ChatContentHeaderLoadMore: FC = () => {
 
   const willLoad = touchState === 'WILL_LOAD';
   return (
-    <Button ref={loadMoreRef} disabled={isLoading} onClick={loadMore}>
+    <Button ref={loadMoreRef} disabled={isLoading} onClick={() => void loadMore()}>
       <div className="flex w-36 items-center justify-between gap-1">
         {isLoading ? (
           <CircleNotch className="animate-spin" />

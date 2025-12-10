@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { type FC, type ReactNode } from 'react';
 import { UserOperations } from '../../../components/UserOperations';
 import * as classes from '@boluo/ui/classes';
-import { Params } from '../../../server';
+import { type Params } from '../../../server';
 import { getIntl } from '@boluo/locale/server';
 
 const Card: FC<{ children: ReactNode; className?: string }> = ({ children, className = '' }) => {

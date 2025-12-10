@@ -1,7 +1,7 @@
-import { Metadata } from 'next';
+import { type Metadata } from 'next';
 import { SignUpForm } from '../../../../../components/SignUpForm';
 import { Footer } from './Footer';
-import { Params } from '../../../../../server';
+import { type Params } from '../../../../../server';
 import { getIntl } from '@boluo/locale/server';
 
 export async function generateMetadata({ params }: { params: Promise<Params> }): Promise<Metadata> {

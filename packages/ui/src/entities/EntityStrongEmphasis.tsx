@@ -1,4 +1,4 @@
-import { EntityOf } from '@boluo/api';
+import { type EntityOf } from '@boluo/api';
 import clsx from 'clsx';
 import type { FC } from 'react';
 

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-floating-promises */
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import type { Entity } from '@boluo/api';

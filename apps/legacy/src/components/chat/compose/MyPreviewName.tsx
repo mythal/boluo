@@ -58,7 +58,7 @@ const nameInputStyle = css`
 
 function MyPreviewName() {
   const dispatch = useDispatch();
-  const channelId = useChannelId()!;
+  const channelId = useChannelId();
   const myId = useSelector((state) => state.profile!.user.id);
   const nickname = useSelector((state) => state.profile!.user.nickname);
   const characterName: string = useSelector(

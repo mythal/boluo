@@ -2,11 +2,11 @@ import * as React from 'react';
 import { useState } from 'react';
 import Select from 'react-select';
 import { post } from '../../api/request';
-import { User } from '../../api/users';
+import { type User } from '../../api/users';
 import { useDispatch, useSelector } from '../../store';
 import { selectTheme } from '../../styles/atoms';
 import { throwErr } from '../../utils/errors';
-import { Id } from '../../utils/id';
+import { type Id } from '../../utils/id';
 import Dialog from '../molecules/Dialog';
 
 export interface MemberOption {

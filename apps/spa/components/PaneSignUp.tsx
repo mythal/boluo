@@ -12,7 +12,7 @@ import {
   useFormContext,
   useFormState,
 } from 'react-hook-form';
-import { FormattedMessage, IntlShape, useIntl } from 'react-intl';
+import { FormattedMessage, type IntlShape, useIntl } from 'react-intl';
 import { Button } from '@boluo/ui/Button';
 import { ErrorMessageBox } from '@boluo/ui/ErrorMessageBox';
 import { TextInput } from '@boluo/ui/TextInput';
@@ -194,19 +194,21 @@ export const PaneSignUp: FC = () => {
   const loginPaneHref = paneHref({ type: 'LOGIN' });
 
   const onSubmit: SubmitHandler<Schema> = useCallback(
-    async ({ username, email, nickname, password }) => {
-      const result = await post('/users/register', null, {
-        username,
-        email,
-        nickname,
-        password,
-      });
-      if (result.isErr) {
-        setError(result.err);
-        return;
-      }
-      setError(null);
-      replacePane({ type: 'LOGIN' }, (pane) => pane.type === 'SIGN_UP');
+    ({ username, email, nickname, password }) => {
+      void (async () => {
+        const result = await post('/users/register', null, {
+          username,
+          email,
+          nickname,
+          password,
+        });
+        if (result.isErr) {
+          setError(result.err);
+          return;
+        }
+        setError(null);
+        replacePane({ type: 'LOGIN' }, (pane) => pane.type === 'SIGN_UP');
+      })();
     },
     [replacePane],
   );

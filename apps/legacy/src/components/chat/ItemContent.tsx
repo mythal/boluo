@@ -1,9 +1,9 @@
 import styled from '@emotion/styled';
-import Prando from 'prando';
+import type Prando from 'prando';
 import * as React from 'react';
-import { Entity, fromLegacyEntity } from '../../interpreter/entities';
+import { type Entity, fromLegacyEntity } from '../../interpreter/entities';
 import { makeRng } from '../../interpreter/eval';
-import { LegacyEntity } from '../../interpreter/legacy-entities';
+import { type LegacyEntity } from '../../interpreter/legacy-entities';
 import { fontMono, link } from '../../styles/atoms';
 import { white } from '../../styles/colors';
 import { Code } from '../atoms/Code';

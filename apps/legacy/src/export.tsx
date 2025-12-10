@@ -1,12 +1,12 @@
 import Prando from 'prando';
-import { ChannelMemberWithUser } from './api/channels';
-import { Message } from './api/messages';
+import { type ChannelMemberWithUser } from './api/channels';
+import { type Message } from './api/messages';
 import { mediaUrl } from './api/request';
-import { ExportEntity, fromLegacyEntity } from './interpreter/entities';
+import { type ExportEntity, fromLegacyEntity } from './interpreter/entities';
 import { evaluate, makeRng, nodeToText } from './interpreter/eval';
 import { genColor } from './utils/game';
 import { parseDateString } from './utils/helper';
-import { Id } from './utils/id';
+import { type Id } from './utils/id';
 import { dateTimeFormat } from './utils/time';
 
 export interface ExportMember {

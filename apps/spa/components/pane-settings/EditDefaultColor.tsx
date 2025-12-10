@@ -42,9 +42,9 @@ export const EditDefaultColor: FC<{ currentUser: User }> = ({ currentUser }) => 
       return editResult.unwrap();
     },
     {
-      onSuccess: async () => {
-        await mutate(['/users/query', null]);
-        await mutate(['/users/query', currentUser.id]);
+      onSuccess: () => {
+        void mutate(['/users/query', null]);
+        void mutate(['/users/query', currentUser.id]);
       },
     },
   );

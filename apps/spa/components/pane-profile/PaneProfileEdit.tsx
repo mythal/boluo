@@ -58,13 +58,14 @@ export const PaneProfileEdit: FC<Props> = ({ me, onSuccess }) => {
       return editResult.unwrap();
     },
     {
-      onSuccess: async () => {
-        await mutate(['/users/query', null]);
-        await mutate(['/users/query', me.id]);
+      onSuccess: () => {
+        void mutate(['/users/query', null]);
+        void mutate(['/users/query', me.id]);
         onSuccess();
       },
     },
   );
+  const handleFormSubmit = form.handleSubmit((formData) => void editUser(formData));
   const disabled = !form.formState.isDirty || isMutating;
   return (
     <FormProvider {...form}>
@@ -73,7 +74,11 @@ export const PaneProfileEdit: FC<Props> = ({ me, onSuccess }) => {
           <ErrorDisplay error={error} type="banner" />
         </div>
       )}
-      <form onSubmit={form.handleSubmit((formData) => editUser(formData))}>
+      <form
+        onSubmit={(event) => {
+          void handleFormSubmit(event);
+        }}
+      >
         <div className="p-pane">
           <div className="group pb-12">
             <Controller<ProfileEditSchema>

@@ -4,7 +4,7 @@ import { focusPaneAtom } from '../state/view.atoms';
 import { PaneContext } from '../state/view.context';
 import { useIsChildPane } from './useIsChildPane';
 
-const isPaneVisible = (paneBox: HTMLElement, container: HTMLElement | null) => {
+const isPaneVisible = (paneBox: HTMLElement, container: Element | null) => {
   const { left, right, top, bottom } = paneBox.getBoundingClientRect();
   if (container) {
     const containerRect = container.getBoundingClientRect();
@@ -20,7 +20,7 @@ const isPaneVisible = (paneBox: HTMLElement, container: HTMLElement | null) => {
 
 export const scrollPaneIntoView = (paneBox: HTMLElement | null) => {
   if (paneBox == null) return;
-  const container = paneBox.closest('.ChatContentBox') as HTMLElement | null;
+  const container = paneBox.closest('.ChatContentBox');
   if (isPaneVisible(paneBox, container)) {
     return;
   }

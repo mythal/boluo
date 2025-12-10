@@ -2,12 +2,12 @@
 import { patch } from '@boluo/api-browser';
 import { useQueryCurrentUser } from '@boluo/common/hooks/useQueryCurrentUser';
 import { ChangeLocaleContext } from '@boluo/common/hooks/useLocale';
-import { defaultLocale, IntlMessages, LOCALES, onIntlError } from '@boluo/locale';
+import { defaultLocale, type IntlMessages, LOCALES, onIntlError } from '@boluo/locale';
 import type { Settings } from '@boluo/settings';
 import { useRouter } from 'next/navigation';
-import { FC, useCallback } from 'react';
+import { type FC, useCallback } from 'react';
 import { IntlProvider } from 'react-intl';
-import { MutationFetcher } from 'swr/mutation';
+import { type MutationFetcher } from 'swr/mutation';
 import useSWRMutation from 'swr/mutation';
 import type { ChildrenProps, Locale } from '@boluo/types';
 import { identity } from '@boluo/utils/function';

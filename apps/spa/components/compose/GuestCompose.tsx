@@ -52,7 +52,7 @@ export const GuestCompose: FC<Props> = ({ channelId, spaceId }) => {
           <span className="mr-1">
             <FormattedMessage defaultMessage="You are not a member of this channel" />
           </span>
-          <ButtonInline onClick={() => join({})}>
+          <ButtonInline onClick={() => void join({})}>
             {icon} <FormattedMessage defaultMessage="Join" />
           </ButtonInline>
         </>

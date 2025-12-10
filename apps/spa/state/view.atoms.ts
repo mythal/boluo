@@ -1,4 +1,4 @@
-import { atom, WritableAtom } from 'jotai';
+import { atom, type WritableAtom } from 'jotai';
 import { atomWithHash } from 'jotai-location';
 import { selectAtom } from 'jotai/utils';
 import { isUuid } from '@boluo/utils/id';

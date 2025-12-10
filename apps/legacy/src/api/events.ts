@@ -1,8 +1,8 @@
-import { Entity } from '../interpreter/entities';
-import { Id } from '../utils/id';
-import { Channel, MemberWithUser } from './channels';
-import { Message } from './messages';
-import { SpaceWithRelated, StatusKind, UserStatus } from './spaces';
+import { type Entity } from '../interpreter/entities';
+import { type Id } from '../utils/id';
+import { type Channel, type MemberWithUser } from './channels';
+import { type Message } from './messages';
+import { type SpaceWithRelated, type StatusKind, type UserStatus } from './spaces';
 
 export const NEW_MESSAGE = 'NEW_MESSAGE';
 export type NEW_MESSAGE = typeof NEW_MESSAGE;

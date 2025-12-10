@@ -1,6 +1,6 @@
-import { Id } from '../utils/id';
-import { Channel, ChannelMember } from './channels';
-import { User } from './users';
+import { type Id } from '../utils/id';
+import { type Channel, type ChannelMember } from './channels';
+import { type User } from './users';
 
 export interface SpaceIdWithToken {
   spaceId: Id;

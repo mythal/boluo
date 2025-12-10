@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Space, SpaceMember } from '../../api/spaces';
+import { type Space, type SpaceMember } from '../../api/spaces';
 import Badge from '../atoms/Badge';
 
 interface Props {

@@ -1,4 +1,4 @@
-import { FC, Ref } from 'react';
+import { type FC, type Ref } from 'react';
 
 interface Props {
   children?: React.ReactNode;

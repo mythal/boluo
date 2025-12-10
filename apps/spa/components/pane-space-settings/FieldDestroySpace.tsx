@@ -32,7 +32,7 @@ export const FieldDestroySpace: FC<{ spaceName: string; spaceId: string }> = ({
         </span>
       </div>
       <div className="text-right">
-        <Button variant="danger" type="button" onClick={() => deleteSpace()}>
+        <Button variant="danger" type="button" onClick={() => void deleteSpace()}>
           <FormattedMessage defaultMessage="Sure, Destroy {spaceName}" values={{ spaceName }} />
         </Button>
       </div>

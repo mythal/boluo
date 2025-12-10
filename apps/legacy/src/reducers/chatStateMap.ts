@@ -1,10 +1,10 @@
 import { List, Map } from 'immutable';
-import { Action, SpaceLoaded, SpaceUpdated } from '../actions';
-import { Channel, ChannelMember, makeMembers } from '../api/channels';
-import { SpaceMemberWithUser } from '../api/spaces';
+import { type Action, type SpaceLoaded, type SpaceUpdated } from '../actions';
+import { type Channel, type ChannelMember, makeMembers } from '../api/channels';
+import { type SpaceMemberWithUser } from '../api/spaces';
 import { initialChatItemSet } from '../states/chat-item-set';
-import { Id, newId } from '../utils/id';
-import { chatReducer, ChatState } from './chatState';
+import { type Id, newId } from '../utils/id';
+import { chatReducer, type ChatState } from './chatState';
 
 export type ChatStateMap = Map<Id, ChatState | undefined>;
 const initChatState = (

@@ -159,7 +159,7 @@ export const ComposeTextArea: FC<Props> = ({ parsed, enterSend, send, myId }) =>
     dispatch({ type: 'compositionEnd', payload: {} });
   };
 
-  const handleKeyDown = async (e: KeyboardEvent<HTMLTextAreaElement>) => {
+  const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (isCompositionRef.current) {
       return;
     }
@@ -194,12 +194,12 @@ export const ComposeTextArea: FC<Props> = ({ parsed, enterSend, send, myId }) =>
     if (enterSend) {
       if (!e.shiftKey) {
         e.preventDefault();
-        await send();
+        void send();
       }
     } else {
       if (e.ctrlKey || e.metaKey) {
         e.preventDefault();
-        await send();
+        void send();
       }
     }
   };

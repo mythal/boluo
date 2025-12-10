@@ -33,7 +33,7 @@ export const delay = ({
         type: 'UnexpectedError',
         message: typeof err === 'string' ? err : 'Successfully failed',
       };
-      setTimeout(() => reject(ApiError), ms);
+      setTimeout(() => reject(new Error(ApiError.message, { cause: ApiError })), ms);
     }
   });
 };

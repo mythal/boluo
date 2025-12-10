@@ -3,7 +3,7 @@ import styled from '@emotion/styled';
 import { lighten } from 'polished';
 import * as React from 'react';
 import { Link } from 'react-router-dom';
-import { Space } from '../../api/spaces';
+import { type Space } from '../../api/spaces';
 import Lock from '../../assets/icons/lock.svg';
 import { fontNormal, m, mR, mT, p, pX, pY, roundedPx, textXl, uiShadow } from '../../styles/atoms';
 import { bgColor, textColor } from '../../styles/colors';

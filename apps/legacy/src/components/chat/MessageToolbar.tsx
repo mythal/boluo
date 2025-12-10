@@ -1,8 +1,8 @@
 import { css } from '@emotion/react';
 import * as React from 'react';
 import { useCallback, useState } from 'react';
-import { ChannelMember } from '../../api/channels';
-import { Message } from '../../api/messages';
+import { type ChannelMember } from '../../api/channels';
+import { type Message } from '../../api/messages';
 import { post } from '../../api/request';
 import Edit from '../../assets/icons/edit.svg';
 import Fold from '../../assets/icons/fold.svg';
@@ -16,7 +16,7 @@ import { primary } from '../../styles/colors';
 import { throwErr } from '../../utils/errors';
 import { Text } from '../atoms/Text';
 import Dialog from '../molecules/Dialog';
-import ChatItemToolbarButton, { ToolbarButtonProps } from './ChatItemToolbarButton';
+import ChatItemToolbarButton, { type ToolbarButtonProps } from './ChatItemToolbarButton';
 import ItemToolbar from './ItemToolbar';
 
 interface Props {

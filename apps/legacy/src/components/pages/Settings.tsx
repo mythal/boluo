@@ -1,9 +1,9 @@
 import { css } from '@emotion/react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { AppError } from '../../api/error';
+import { type AppError } from '../../api/error';
 import { editAvatar, post } from '../../api/request';
-import { EditUser, Settings as SettingsData } from '../../api/users';
+import { type EditUser, type Settings as SettingsData } from '../../api/users';
 import Save from '../../assets/icons/save.svg';
 import { useDispatch, useSelector } from '../../store';
 import { alignRight, flex, largeInput, mR, mT, spacingN, textLg } from '../../styles/atoms';

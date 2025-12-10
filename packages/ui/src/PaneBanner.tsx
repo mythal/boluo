@@ -1,5 +1,5 @@
 import { Button } from './Button';
-import { FC, ReactNode } from 'react';
+import { type FC, type ReactNode } from 'react';
 import clsx from 'clsx';
 import { useIntl } from 'react-intl';
 

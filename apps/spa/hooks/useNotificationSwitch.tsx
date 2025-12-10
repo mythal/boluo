@@ -12,7 +12,7 @@ export const useNotificationSwitch = (): {
     isNotificationSupported && Notification.permission === 'granted' && notificationEnable;
   const intl = useIntl();
 
-  const startNotify = async () => {
+  const startNotifyAsync = async () => {
     if (!isNotificationSupported) {
       alert(
         intl.formatMessage({
@@ -30,6 +30,9 @@ export const useNotificationSwitch = (): {
     }
     setNotificationEnable(Notification.permission === 'granted');
     return;
+  };
+  const startNotify = () => {
+    void startNotifyAsync();
   };
   const stopNotify = () => {
     setNotificationEnable(false);

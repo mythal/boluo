@@ -1,7 +1,7 @@
 import { css } from '@emotion/react';
 import { useAtom } from 'jotai';
 import { useCallback, useState } from 'react';
-import { Proxy } from '../../base-url';
+import { type Proxy } from '../../base-url';
 import { useBaseUrlDelay } from '../../hooks/useBaseUrlDelay';
 import { useProxyList } from '../../hooks/useProxyList';
 import { autoSelectAtom } from '../../states/connection';

@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useState } from 'react';
 import Select from 'react-select';
 import { useChannelId } from '../../../hooks/useChannelId';
-import { UserItem } from '../../../reducers/chatState';
+import { type UserItem } from '../../../reducers/chatState';
 import { useDispatch, useSelector } from '../../../store';
 import { mB, selectTheme } from '../../../styles/atoms';
 import { HelpText } from '../../atoms/HelpText';

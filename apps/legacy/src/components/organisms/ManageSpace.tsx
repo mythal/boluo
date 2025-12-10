@@ -2,10 +2,15 @@ import { css } from '@emotion/react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
-import { Channel } from '../../api/channels';
-import { AppError } from '../../api/error';
+import { type Channel } from '../../api/channels';
+import { type AppError } from '../../api/error';
 import { post } from '../../api/request';
-import { EditSpace, Space, SpaceMember, SpaceMemberWithUser } from '../../api/spaces';
+import {
+  type EditSpace,
+  type Space,
+  type SpaceMember,
+  type SpaceMemberWithUser,
+} from '../../api/spaces';
 import EarthCrack from '../../assets/icons/earth-crack.svg';
 import { useDispatch } from '../../store';
 import {
@@ -19,7 +24,7 @@ import {
   spacingN,
   widthFull,
 } from '../../styles/atoms';
-import { Id } from '../../utils/id';
+import { type Id } from '../../utils/id';
 import { descriptionValidation, required, spaceNameValidation } from '../../validators';
 import Button from '../atoms/Button';
 import { ErrorMessage } from '../atoms/ErrorMessage';
@@ -31,7 +36,7 @@ import { PanelTitle } from '../atoms/PanelTitle';
 import Text from '../atoms/Text';
 import TextArea from '../atoms/TextArea';
 import Dialog from '../molecules/Dialog';
-import DiceSelect, { DiceOption } from '../molecules/DiceSelect';
+import DiceSelect, { type DiceOption } from '../molecules/DiceSelect';
 import Panel from '../molecules/Panel';
 import { RenderError } from '../molecules/RenderError';
 

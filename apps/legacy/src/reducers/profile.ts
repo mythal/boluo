@@ -1,21 +1,21 @@
 import { OrderedMap } from 'immutable';
 import {
-  Action,
-  ChannelMemberEdited,
-  JoinedChannel,
-  JoinedSpace,
-  LeftChannel,
-  LeftSpace,
-  LoggedIn,
-  SettingsUpdated,
-  UserEdited,
+  type Action,
+  type ChannelMemberEdited,
+  type JoinedChannel,
+  type JoinedSpace,
+  type LeftChannel,
+  type LeftSpace,
+  type LoggedIn,
+  type SettingsUpdated,
+  type UserEdited,
 } from '../actions';
-import { ChannelWithMember } from '../api/channels';
-import { ChannelEdited, PushMembers } from '../api/events';
-import { SpaceWithMember, SpaceWithRelated } from '../api/spaces';
-import { Settings, User } from '../api/users';
-import { Id } from '../utils/id';
-import { ChatState } from './chatState';
+import { type ChannelWithMember } from '../api/channels';
+import { type ChannelEdited, type PushMembers } from '../api/events';
+import { type SpaceWithMember, type SpaceWithRelated } from '../api/spaces';
+import { type Settings, type User } from '../api/users';
+import { type Id } from '../utils/id';
+import { type ChatState } from './chatState';
 
 export type MySpaces = OrderedMap<Id, SpaceWithMember>;
 export type MyChannels = OrderedMap<Id, ChannelWithMember>;

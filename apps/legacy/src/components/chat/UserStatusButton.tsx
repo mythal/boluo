@@ -1,9 +1,9 @@
 import * as React from 'react';
 import { Fragment, useMemo } from 'react';
-import { UserStatus } from '../../api/spaces';
+import { type UserStatus } from '../../api/spaces';
 import Members from '../../assets/icons/members.svg';
 import { useSelector } from '../../store';
-import { Id } from '../../utils/id';
+import { type Id } from '../../utils/id';
 import Icon from '../atoms/Icon';
 import ChatHeaderButton from './ChatHeaderButton';
 

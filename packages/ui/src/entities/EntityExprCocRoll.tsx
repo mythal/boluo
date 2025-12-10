@@ -1,7 +1,12 @@
 import { Dice, FlexibleStar } from '@boluo/icons';
 import { type FC, type ReactNode } from 'react';
-import { IntlShape, useIntl } from 'react-intl';
-import { CocRoll, EvaluatedExprOf, ExprOf, MaybeEvalutedExprOf } from '@boluo/api';
+import { type IntlShape, useIntl } from 'react-intl';
+import {
+  type CocRoll,
+  type EvaluatedExprOf,
+  type ExprOf,
+  type MaybeEvalutedExprOf,
+} from '@boluo/api';
 import { Delay } from '../Delay';
 import { FallbackIcon } from '../FallbackIcon';
 import { RollBox } from './RollBox';

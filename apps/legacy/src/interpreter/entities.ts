@@ -1,4 +1,4 @@
-import { isLegacyEntity, LegacyEntity } from './legacy-entities';
+import { isLegacyEntity, type LegacyEntity } from './legacy-entities';
 
 export interface BaseEntity {
   start: number;

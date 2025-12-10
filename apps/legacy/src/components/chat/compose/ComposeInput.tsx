@@ -1,6 +1,6 @@
 import { css } from '@emotion/react';
 import * as React from 'react';
-import { Ref, useCallback, useEffect, useRef, useState } from 'react';
+import { type Ref, useCallback, useEffect, useRef, useState } from 'react';
 import { useAutoHeight } from '../../../hooks/useAutoHeight';
 import { useChannelId } from '../../../hooks/useChannelId';
 import { useDispatch, useSelector } from '../../../store';

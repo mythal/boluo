@@ -1,7 +1,7 @@
 import type { Result } from '@boluo/utils/result';
 import { Err, Ok } from '@boluo/utils/result';
-import { FetchFailError, NotJsonError, UnexpectedError } from './error-types';
-import { ApiError } from './errors.js';
+import { type FetchFailError, type NotJsonError, type UnexpectedError } from './error-types';
+import { type ApiError } from './errors';
 import { isAppResponse } from './request';
 
 export async function appFetch<T>(url: string, params: RequestInit): Promise<Result<T, ApiError>> {

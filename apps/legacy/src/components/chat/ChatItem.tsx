@@ -1,8 +1,12 @@
 import * as React from 'react';
-import { Draggable, DraggableProvided, DraggableProvidedDragHandleProps } from '@hello-pangea/dnd';
-import { ChannelMember } from '../../api/channels';
+import {
+  Draggable,
+  type DraggableProvided,
+  type DraggableProvidedDragHandleProps,
+} from '@hello-pangea/dnd';
+import { type ChannelMember } from '../../api/channels';
 import { useChannelId } from '../../hooks/useChannelId';
-import { MessageItem, PreviewItem } from '../../states/chat-item-set';
+import { type MessageItem, type PreviewItem } from '../../states/chat-item-set';
 import { useSelector } from '../../store';
 import MyPreview from './compose/MyPreview';
 import ChatMessageItem from './MessageItem';

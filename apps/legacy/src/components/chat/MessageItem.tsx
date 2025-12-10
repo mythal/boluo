@@ -1,8 +1,8 @@
 import * as React from 'react';
 import { useEffect, useState } from 'react';
-import { DraggableProvidedDragHandleProps } from '@hello-pangea/dnd';
-import { ChannelMember } from '../../api/channels';
-import { Message } from '../../api/messages';
+import { type DraggableProvidedDragHandleProps } from '@hello-pangea/dnd';
+import { type ChannelMember } from '../../api/channels';
+import { type Message } from '../../api/messages';
 import { chatItemContainer } from './ChatItemContainer';
 import { ChatItemContentContainer } from './ChatItemContentContainer';
 import ChatItemName from './ChatItemName';

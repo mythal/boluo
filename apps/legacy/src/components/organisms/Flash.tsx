@@ -1,8 +1,8 @@
 import { css } from '@emotion/react';
 import * as React from 'react';
 import { dismissFlash } from '../../actions';
-import { Information } from '../../information';
-import { FlashState } from '../../reducers/flash';
+import { type Information } from '../../information';
+import { type FlashState } from '../../reducers/flash';
 import { useDispatch } from '../../store';
 import { mY, textSm } from '../../styles/atoms';
 import { Portal } from '../atoms/Portal';

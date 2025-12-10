@@ -2,10 +2,10 @@ import { css } from '@emotion/react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
-import { JoinedSpace } from '../../actions';
-import { AppError } from '../../api/error';
+import { type JoinedSpace } from '../../actions';
+import { type AppError } from '../../api/error';
 import { post } from '../../api/request';
-import { CreateSpace } from '../../api/spaces';
+import { type CreateSpace } from '../../api/spaces';
 import Implosion from '../../assets/icons/implosion.svg';
 import NightSky from '../../assets/icons/night-sky.svg';
 import { useTitle } from '../../hooks/useTitle';
@@ -34,7 +34,7 @@ import Input from '../atoms/Input';
 import { Label } from '../atoms/Label';
 import TextArea from '../atoms/TextArea';
 import Title from '../atoms/Title';
-import DiceSelect, { DiceOption } from '../molecules/DiceSelect';
+import DiceSelect, { type DiceOption } from '../molecules/DiceSelect';
 import { RenderError } from '../molecules/RenderError';
 
 export const fieldsLayout = css`

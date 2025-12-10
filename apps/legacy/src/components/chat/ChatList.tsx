@@ -1,17 +1,17 @@
 import { css } from '@emotion/react';
-import { List } from 'immutable';
+import { type List } from 'immutable';
 import * as React from 'react';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
-import { DragDropContext, DragDropContextProps, Droppable } from '@hello-pangea/dnd';
-import { FinishMoveMessage, ResetMessageMoving } from '../../actions';
+import { DragDropContext, type DragDropContextProps, Droppable } from '@hello-pangea/dnd';
+import { type FinishMoveMessage, type ResetMessageMoving } from '../../actions';
 import { post } from '../../api/request';
 import { usePane } from '../../hooks/useChannelId';
-import { ChatState } from '../../reducers/chatState';
-import { MessageItem, PreviewItem } from '../../states/chat-item-set';
+import { type ChatState } from '../../reducers/chatState';
+import { type MessageItem, type PreviewItem } from '../../states/chat-item-set';
 import { useDispatch, useSelector } from '../../store';
 import { blue } from '../../styles/colors';
 import { throwErr } from '../../utils/errors';
-import { Id } from '../../utils/id';
+import { type Id } from '../../utils/id';
 import ChatItem from './ChatItem';
 import LoadMore from './LoadMore';
 

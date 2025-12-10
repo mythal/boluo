@@ -2,8 +2,8 @@ import { css } from '@emotion/react';
 import * as React from 'react';
 import { useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { ChannelMemberEdited } from '../../actions';
-import { EditChannelMember } from '../../api/channels';
+import { type ChannelMemberEdited } from '../../actions';
+import { type EditChannelMember } from '../../api/channels';
 import { post } from '../../api/request';
 import Cog from '../../assets/icons/cog.svg';
 import DoorOpen from '../../assets/icons/door-open.svg';
@@ -15,7 +15,7 @@ import { alignRight, mL, mR, mT } from '../../styles/atoms';
 import { recordNext } from '../../utils/browser';
 import { throwErr } from '../../utils/errors';
 import { chatName } from '../../utils/game';
-import { Id } from '../../utils/id';
+import { type Id } from '../../utils/id';
 import { characterNameValidation } from '../../validators';
 import Button from '../atoms/Button';
 import { ErrorMessage } from '../atoms/ErrorMessage';
@@ -85,7 +85,7 @@ interface Props {
 type FormData = Pick<EditChannelMember, 'characterName'>;
 
 function ChannelMemberButton({ className }: Props) {
-  const pane = useChannelId()!;
+  const pane = useChannelId();
   const channelId = useSelector((state) => state.chatStates.get(pane)!.channel.id);
   const user = useSelector((state) => state.profile?.user);
   const channelName = useSelector((state) => state.chatStates.get(pane)!.channel.name);
@@ -161,7 +161,7 @@ function ChannelMemberButton({ className }: Props) {
         </ChatHeaderButton>
         {dialog && (
           <Dialog title="加入频道" dismiss={dismissDialog} mask>
-            <form onSubmit={handleSubmit(onConfirmJoin)}>
+            <form onSubmit={void handleSubmit(onConfirmJoin)}>
               {characterNameField}
               <div css={[mT(4), alignRight]}>
                 <Button data-variant="primary" type="submit">
@@ -210,7 +210,7 @@ function ChannelMemberButton({ className }: Props) {
       )}
       {dialog && (
         <Dialog title="频道成员设置" dismiss={dismissDialog} mask>
-          <form onSubmit={handleSubmit(onSubmitEdit)}>
+          <form onSubmit={void handleSubmit(onSubmitEdit)}>
             {characterNameField}
             <div css={buttonBarStyle}>
               <Button data-variant="primary" type="submit">
@@ -225,7 +225,7 @@ function ChannelMemberButton({ className }: Props) {
           title="退出确认"
           dismiss={() => setLeaveConfirmDialog(false)}
           mask
-          confirm={onConfirmLeave}
+          confirm={void onConfirmLeave}
           confirmText="退出"
         >
           <Text>真的要退出「{channelName}」频道吗？</Text>

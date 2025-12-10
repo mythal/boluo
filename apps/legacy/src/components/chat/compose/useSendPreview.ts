@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { PreviewPost } from '../../../api/events';
+import { type PreviewPost } from '../../../api/events';
 import { useChannelId } from '../../../hooks/useChannelId';
 import { useParse } from '../../../hooks/useParse';
 import { useSend } from '../../../hooks/useSend';

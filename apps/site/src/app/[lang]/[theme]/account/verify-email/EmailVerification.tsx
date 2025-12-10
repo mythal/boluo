@@ -8,6 +8,7 @@ import { ErrorMessageBox } from '@boluo/ui/ErrorMessageBox';
 import useSWRMutation, { type SWRMutationResponse } from 'swr/mutation';
 import { useQueryCurrentUser } from '@boluo/common/hooks/useQueryCurrentUser';
 import { useCountdown } from '@boluo/common/hooks/useCountdown';
+import { useMutateVerifyEmail } from '@boluo/common/hooks/useMutateVerifyEmail';
 import type { ResendEmailVerificationResult, User } from '@boluo/api';
 import { useQueryIsEmailVerified } from '@boluo/common/hooks/useQueryIsEmailVerified';
 import Link from 'next/link';
@@ -41,27 +42,20 @@ export function VerifyEmailContent({
     isMutating: isVerifying,
     error: verifyError,
     data: verifyResult,
-  } = useSWRMutation(
-    token ? (['/users/verify_email', token] as const) : null,
-    async ([path, token]) => {
-      const result = await get(path, { token });
-      return result.unwrap();
+  } = useMutateVerifyEmail(token, {
+    onSuccess: () => {
+      setTimeout(() => {
+        if (currentUser) {
+          router.push('/');
+        } else {
+          router.push('/account/login');
+        }
+      }, 3000);
     },
-    {
-      onSuccess: () => {
-        setTimeout(() => {
-          if (currentUser) {
-            router.push('/');
-          } else {
-            router.push('/account/login');
-          }
-        }, 3000);
-      },
-    },
-  );
+  });
 
   useEffect(() => {
-    triggerVerify();
+    void triggerVerify();
   }, [triggerVerify]);
 
   // Success state
@@ -156,7 +150,7 @@ function StartVerifyEmail({
         <Button
           onClick={() => {
             setWatingResendSeconds(10);
-            triggerResend();
+            void triggerResend();
           }}
           disabled={isResending || countdown > 0}
         >

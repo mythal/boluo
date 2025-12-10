@@ -6,7 +6,7 @@ import type { FC } from 'react';
 import { useId } from 'react';
 import type { FieldError, SubmitHandler } from 'react-hook-form';
 import { FormProvider, useController, useForm, useFormContext } from 'react-hook-form';
-import { FormattedMessage, IntlShape, useIntl } from 'react-intl';
+import { FormattedMessage, type IntlShape, useIntl } from 'react-intl';
 import { useSWRConfig } from 'swr';
 import useSWRMutation, { type MutationFetcher } from 'swr/mutation';
 import { Button } from '@boluo/ui/Button';
@@ -151,18 +151,24 @@ export const CreateSpaceForm: FC<Props> = ({ onSuccess, close }) => {
     error: creationError,
     isMutating: isCreating,
   } = useSWRMutation<SpaceWithMember, ApiError, typeof key, CreateSpace>(key, createSpace, {
-    onSuccess: async ({ space }) => {
-      await mutate(['/spaces/my', null]);
+    onSuccess: ({ space }) => {
+      void mutate(['/spaces/my', null]);
       onSuccess?.(space);
     },
   });
 
-  const onSubmit: SubmitHandler<CreateSpace> = async (params) => {
-    await trigger(params);
+  const onSubmit: SubmitHandler<CreateSpace> = (params) => {
+    void trigger(params);
   };
+  const handleFormSubmit = handleSubmit(onSubmit);
   return (
     <FormProvider {...form}>
-      <form className="CreateSpaceForm" onSubmit={handleSubmit(onSubmit)}>
+      <form
+        className="CreateSpaceForm"
+        onSubmit={(event) => {
+          void handleFormSubmit(event);
+        }}
+      >
         <div className="p-pane flex h-full max-w-md flex-col gap-2">
           <NameField />
           <FirstChannelNameField />

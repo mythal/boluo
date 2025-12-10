@@ -1,3 +1,5 @@
+// False positive with useTooltip refs
+/* eslint-disable react-hooks/refs */
 import { type FC } from 'react';
 import { ChevronLeft, ChevronRight, Unplug } from '@boluo/icons';
 import { useTooltip } from '@boluo/ui/hooks/useTooltip';
@@ -25,13 +27,10 @@ export const SidebarButton: FC<Props> = ({
   const placement = isTouch ? 'right-start' : 'bottom-start';
   const offset = isTouch ? 8 : 4;
 
-  const {
-    showTooltip,
-    refs: { setFloating, setReference },
-    getFloatingProps,
-    getReferenceProps,
-    floatingStyles,
-  } = useTooltip(placement, offset);
+  const { showTooltip, refs, getFloatingProps, getReferenceProps, floatingStyles } = useTooltip(
+    placement,
+    offset,
+  );
   let icon = isSidebarExpanded ? <ChevronLeft /> : <ChevronRight />;
   if (disconnected && !isSidebarExpanded) {
     icon = (
@@ -52,7 +51,7 @@ export const SidebarButton: FC<Props> = ({
               'top-[20%]',
             ],
       )}
-      ref={setReference}
+      ref={refs.setReference}
       {...getReferenceProps()}
     >
       <button
@@ -80,7 +79,7 @@ export const SidebarButton: FC<Props> = ({
 
       {showTooltip && !disconnected && (
         <div
-          ref={setFloating}
+          ref={refs.setFloating}
           style={floatingStyles}
           {...getFloatingProps()}
           className="dark w-max rounded bg-black px-3 py-2 text-left text-sm text-white shadow-lg"
@@ -95,7 +94,7 @@ export const SidebarButton: FC<Props> = ({
       )}
       {disconnected && (
         <button
-          ref={setFloating}
+          ref={refs.setFloating}
           style={floatingStyles}
           {...getFloatingProps()}
           onClick={switchToConnections}

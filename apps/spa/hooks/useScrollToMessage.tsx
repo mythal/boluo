@@ -165,7 +165,7 @@ export const useScrollToMessage = ({
       }
 
       // Message not loaded, need to load more
-      loadMoreMessages();
+      void loadMoreMessages();
     };
 
     const loadMoreMessages = async () => {

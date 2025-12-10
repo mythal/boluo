@@ -1,7 +1,7 @@
 import styled from '@emotion/styled';
 import * as React from 'react';
 import { useEffect, useRef, useState } from 'react';
-import { LoadMessages } from '../../actions';
+import { type LoadMessages } from '../../actions';
 import { get } from '../../api/request';
 import RotateCw from '../../assets/icons/rotate-cw.svg';
 import { useChannelId } from '../../hooks/useChannelId';

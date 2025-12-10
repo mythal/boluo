@@ -1,8 +1,8 @@
 import { css } from '@emotion/react';
 import * as React from 'react';
 import { useCallback, useRef, useState } from 'react';
-import { Channel } from '../../api/channels';
-import { Space } from '../../api/spaces';
+import { type Channel } from '../../api/channels';
+import { type Space } from '../../api/spaces';
 import BellSlashSolid from '../../assets/icons/bell-slash-solid.svg';
 import BellSolid from '../../assets/icons/bell-solid.svg';
 import HelpIcon from '../../assets/icons/help.svg';

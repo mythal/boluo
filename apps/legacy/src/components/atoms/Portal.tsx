@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react';
+import React, { type ReactNode } from 'react';
 import ReactDOM from 'react-dom';
 
 const root = document.getElementById('portal') as HTMLDivElement;

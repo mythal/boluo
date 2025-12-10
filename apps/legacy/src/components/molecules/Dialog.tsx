@@ -4,7 +4,7 @@ import { useCallback, useEffect } from 'react';
 import RotateCw from '../../assets/icons/rotate-cw.svg';
 import { breakpoint, mediaQuery, pX, pY, roundedMd, spacingN, textXl } from '../../styles/atoms';
 import { dialogBgColor, dialogShadowColor, dialogTitleColor } from '../../styles/colors';
-import Button, { ButtonVariant } from '../atoms/Button';
+import Button, { type ButtonVariant } from '../atoms/Button';
 import Icon from '../atoms/Icon';
 import Modal from '../atoms/Modal';
 import CloseButton from './CloseButton';

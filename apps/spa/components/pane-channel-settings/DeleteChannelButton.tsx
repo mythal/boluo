@@ -44,8 +44,8 @@ export const DeleteChannel: FC<Props> = ({ channelId, channelName }) => {
       },
     },
   );
-  const confirm = useCallback(async () => {
-    await trigger({});
+  const confirm = useCallback(() => {
+    void trigger({});
   }, [trigger]);
   return (
     <div>

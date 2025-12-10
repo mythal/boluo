@@ -1,6 +1,6 @@
 import * as React from 'react';
 import Select from 'react-select';
-import { Props as SelectProps } from 'react-select';
+import { type Props as SelectProps } from 'react-select';
 import { selectTheme, uiShadow } from '../../styles/atoms';
 
 interface Props extends Omit<SelectProps<DiceOption, false>, 'options'> {

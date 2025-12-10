@@ -6,7 +6,7 @@ import { useId } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Button } from '@boluo/ui/Button';
 import { ButtonWithLamp } from '@boluo/ui/ButtonWithLamp';
-import { type ChildrenProps } from '@boluo/utils/types';
+import { type ChildrenProps } from '@boluo/types';
 import { useLogout } from '@boluo/common/hooks/useLogout';
 import { usePaneToggle } from '../../hooks/usePaneToggle';
 import { devMode as devModeAtom } from '../../state/dev.atoms';

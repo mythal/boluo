@@ -1,7 +1,8 @@
 import { createContext, useContext } from 'react';
 import { useIntl } from 'react-intl';
 import { empty } from '@boluo/utils/function';
-import { type Locale, toLocale } from '@boluo/locale';
+import { toLocale } from '@boluo/locale';
+import { type Locale } from '@boluo/types';
 
 // The process of changing the locale is different in the
 // different runtimes. (e.g. tauri, next.js, ...)

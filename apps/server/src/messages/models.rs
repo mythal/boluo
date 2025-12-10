@@ -2,7 +2,7 @@ use chrono::prelude::*;
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
-use types::legacy::LegacyEntity;
+use shared_types::legacy::LegacyEntity;
 use uuid::Uuid;
 
 use crate::error::{AppError, ModelError, ValidationFailed};
@@ -13,7 +13,7 @@ use crate::validators::CHARACTER_NAME;
 use crate::notify;
 
 #[derive(Debug, Serialize, Deserialize, Clone, Default, specta::Type)]
-pub struct Entities(pub Vec<types::entities::Entity>);
+pub struct Entities(pub Vec<shared_types::entities::Entity>);
 
 impl sqlx::Encode<'_, sqlx::Postgres> for Entities {
     fn encode_by_ref(
@@ -617,7 +617,7 @@ mod tests {
     use crate::channels::{Channel, ChannelMember, ChannelType};
     use crate::spaces::{Space, SpaceMember};
     use crate::users::User;
-    use types::entities::{Entity as RichEntity, Span};
+    use shared_types::entities::{Entity as RichEntity, Span};
 
     fn unique_name(prefix: &str) -> String {
         let raw = Uuid::new_v4().simple().to_string();

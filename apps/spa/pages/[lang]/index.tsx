@@ -3,7 +3,7 @@ import { type IntlMessages, LOCALES, toLocale } from '@boluo/locale';
 import { loadMessages } from '@boluo/locale/dynamic';
 import { ClientProviders } from '../../components/ClientProviders';
 import { type GetStaticPaths } from 'next';
-import type { Locale } from '@boluo/locale';
+import type { Locale } from '@boluo/types';
 import Head from 'next/head';
 import { useIntl } from 'react-intl';
 import { useEffect } from 'react';

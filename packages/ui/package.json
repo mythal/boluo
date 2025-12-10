@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "dependencies": {
     "@boluo/icons": "0.0.0",
+    "@boluo/types": "0.0.0",
     "@boluo/utils": "0.0.0",
     "@floating-ui/react": "^0.27.5",
     "clsx": "^2.1.1",

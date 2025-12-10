@@ -3,8 +3,8 @@
   "version": "0.0.0",
   "devDependencies": {
     "@boluo/eslint-config": "0.0.0",
+    "@boluo/types": "0.0.0",
     "@boluo/typescript-config": "0.0.0",
-    "@boluo/utils": "0.0.0",
     "@types/node": "^24.0.12",
     "@types/react": "^19.0.12",
     "@types/react-dom": "^19.0.4",

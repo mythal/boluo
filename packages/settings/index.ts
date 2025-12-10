@@ -1,5 +1,4 @@
-import type { Locale } from '@boluo/api';
-import type { Theme } from '@boluo/theme';
+import type { Locale, Theme } from '@boluo/types';
 
 export type MessageSize = 'message-size-normal' | 'message-size-large';
 export type ChannelLayout = 'irc-layout' | 'compact-layout';

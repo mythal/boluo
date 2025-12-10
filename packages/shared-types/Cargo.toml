@@ -1,10 +1,10 @@
 [package]
-name = "types"
+name = "shared-types"
 version = "0.1.0"
 edition = "2024"
 
 [lib]
-name = "types"
+name = "shared_types"
 
 [dependencies]
 serde = { version = "1", features = ["derive"] }

@@ -13,7 +13,7 @@ import { HelpText } from '@boluo/ui/HelpText';
 import { Loading } from '@boluo/ui/Loading';
 import { Spinner } from '@boluo/ui/Spinner';
 import { TextArea, TextInput } from '@boluo/ui/TextInput';
-import { type ChildrenProps } from '@boluo/utils/types';
+import { type ChildrenProps } from '@boluo/types';
 import { usePaneClose } from '../../hooks/usePaneClose';
 import { useQuerySpace } from '../../hooks/useQuerySpace';
 import { DangerZone } from '@boluo/ui/DangerZone';

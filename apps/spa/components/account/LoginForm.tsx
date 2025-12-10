@@ -17,7 +17,7 @@ import { useSWRConfig } from 'swr';
 import { Button } from '@boluo/ui/Button';
 import { ErrorMessageBox } from '@boluo/ui/ErrorMessageBox';
 import { TextInput } from '@boluo/ui/TextInput';
-import { type StyleProps } from '@boluo/utils/types';
+import { type StyleProps } from '@boluo/types';
 
 interface Props extends StyleProps {
   onSuccess?: () => void;

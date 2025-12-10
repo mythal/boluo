@@ -50,7 +50,7 @@ pub struct PreviewDiffPost {
     pub op: PreviewDiffOp,
     /// Changed entities
     #[serde(default, rename = "~")]
-    pub entities: Vec<(u16, types::entities::Entity)>,
+    pub entities: Vec<(u16, shared_types::entities::Entity)>,
 }
 
 impl PreviewDiffPost {

@@ -12,6 +12,7 @@
     "@boluo/settings": "0.0.0",
     "@boluo/store": "0.0.0",
     "@boluo/theme": "0.0.0",
+    "@boluo/types": "0.0.0",
     "@boluo/ui": "0.0.0",
     "@boluo/utils": "0.0.0",
     "@formatjs/intl": "^3.1.6",

@@ -1,26 +1,23 @@
 {
-  "name": "@boluo/api-browser",
+  "name": "@boluo/types",
   "version": "0.0.0",
-  "dependencies": {
-    "@boluo/api": "0.0.0",
-    "@boluo/store": "0.0.0",
-    "@boluo/types": "0.0.0",
-    "@boluo/utils": "0.0.0",
-    "jotai": "^2.12.2"
-  },
   "devDependencies": {
     "@boluo/eslint-config": "0.0.0",
     "@boluo/typescript-config": "0.0.0",
+    "@types/react": "^19.0.12",
     "eslint": "^9.23.0",
     "typescript": "^5.9.3"
   },
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./index.ts",
+    "./bindings": "./bindings.ts"
   },
   "homepage": "https://github.com/mythal/boluo",
   "license": "AGPL-3.0",
+  "private": true,
   "scripts": {
-    "lint": "eslint . --ext .ts,.tsx"
+    "check": "tsc --noEmit",
+    "lint": "eslint . --ext .ts"
   },
   "sideEffects": false,
   "type": "module"

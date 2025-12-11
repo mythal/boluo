@@ -57,7 +57,7 @@
     "message": "无角色名"
   },
   "198Skw": {
-    "message": "Customization"
+    "message": "个性化"
   },
   "1iEPTM": {
     "message": "通用"
@@ -207,7 +207,7 @@
     "message": "发送中..."
   },
   "8HQJF3": {
-    "message": "Paste CSS variables or any custom CSS to override the theme."
+    "message": "粘贴CSS变量或其他自定义CSS来覆盖主题。"
   },
   "8be59M": {
     "message": "邮箱验证成功！"
@@ -261,7 +261,7 @@
     "message": "登录"
   },
   "B+xqKy": {
-    "message": "Failed to load app resources"
+    "message": "加载应用资源失败"
   },
   "BEbOqj": {
     "message": "糟糕！"
@@ -288,7 +288,7 @@
     "message": "(自己)"
   },
   "CcPwxq": {
-    "message": "This may be because the application was updated or your network is unstable."
+    "message": "这可能是因为App更新了，或网络不稳定。"
   },
   "Ciussb": {
     "message": "只能通过邀请访问秘密频道。"
@@ -315,7 +315,7 @@
     "message": "Echo"
   },
   "EWw/tK": {
-    "message": "Apply"
+    "message": "应用"
   },
   "EcW+hX": {
     "message": "仅选中的人可见。"
@@ -522,13 +522,13 @@
     "message": "新闻"
   },
   "No0obH": {
-    "message": "Switch to serif font for In-Game messages."
+    "message": "对游戏内消息使用衬线字体。"
   },
   "O5epsB": {
     "message": "取"
   },
   "ODc/d2": {
-    "message": "New Channel"
+    "message": "新频道"
   },
   "OLFHJL": {
     "message": "极难成功"
@@ -552,7 +552,7 @@
     "message": "上次出现"
   },
   "PbDoyX": {
-    "message": "Enable overrides"
+    "message": "开启覆盖"
   },
   "Pe0ogR": {
     "message": "主题"
@@ -630,7 +630,7 @@
     "message": "导出"
   },
   "SaSNIH": {
-    "message": "Messages Display Settings"
+    "message": "消息显示设置"
   },
   "SpLs8U": {
     "message": "您必须先加入 {space} 才能加入频道。"
@@ -663,7 +663,7 @@
     "message": "账号"
   },
   "U7Z0l+": {
-    "message": "See the <link>source</link> for reference — PRs welcome!"
+    "message": "请参考<link>源代码</link>，并且欢迎贡献！"
   },
   "UKhyJG": {
     "message": "文件大小不能超过 {sizeLimit}M。"
@@ -903,10 +903,10 @@
     "message": "添加文件"
   },
   "f2CunY": {
-    "message": "Custom theme overrides"
+    "message": "自定义主题覆盖"
   },
   "f81+gv": {
-    "message": "Try refreshing the page. If the problem persists, clear your browser cache or try another browser."
+    "message": "尝试刷新页面。如果问题仍然存在，请清除浏览器缓存或试试换个浏览器。"
   },
   "fNCCY7": {
     "message": "基本"
@@ -1044,7 +1044,7 @@
     "message": "切换"
   },
   "n3GPkg": {
-    "message": "If you are still unable to resolve the issue, please report it as a bug."
+    "message": "如果还是有问题，请作为Bug报告。"
   },
   "n9f3pm": {
     "message": "超出限额"
@@ -1101,7 +1101,7 @@
     "message": "{count}条消息已过滤"
   },
   "qOH6mx": {
-    "message": "Serif"
+    "message": "衬线体"
   },
   "qQ4pEa": {
     "message": "对 {targets} 悄悄话"
@@ -1188,7 +1188,7 @@
     "message": "为了使用本应用，推荐使用最新版本的 {chromeLink}，{firefoxLink} 或 {edgeLink}。"
   },
   "tiLDlf": {
-    "message": "Dusha Green"
+    "message": "豆沙绿"
   },
   "ug01Mk": {
     "message": "时间"

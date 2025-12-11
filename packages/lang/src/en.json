@@ -254,6 +254,9 @@
   "AyGauy": {
     "message": "Login"
   },
+  "B+xqKy": {
+    "message": "Failed to load app resources"
+  },
   "BEbOqj": {
     "message": "Oops!"
   },
@@ -277,6 +280,9 @@
   },
   "CW7jWC": {
     "message": "(me)"
+  },
+  "CcPwxq": {
+    "message": "This may be because the application was updated or your network is unstable."
   },
   "Ciussb": {
     "message": "Secret channels are only accessible by invitation."
@@ -466,9 +472,6 @@
   },
   "M8AFCu": {
     "message": "Long press to vertical split"
-  },
-  "MWO2zy": {
-    "message": "Something going wrong."
   },
   "MgRaWS": {
     "message": "Channel name cannot be empty."
@@ -884,6 +887,9 @@
   "f0Sf6g": {
     "message": "Add a file"
   },
+  "f81+gv": {
+    "message": "Try refreshing the page. If the problem persists, clear your browser cache or try another browser."
+  },
   "fNCCY7": {
     "message": "Basic"
   },
@@ -1018,6 +1024,9 @@
   },
   "n1Whvj": {
     "message": "Switch"
+  },
+  "n3GPkg": {
+    "message": "If you are still unable to resolve the issue, please report it as a bug."
   },
   "n9f3pm": {
     "message": "Limit exceeded."

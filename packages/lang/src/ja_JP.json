@@ -389,6 +389,9 @@
   "IQwWyF": {
     "message": "チャンネルに参加するにはログインが必要です。"
   },
+  "IVGDSG": {
+    "message": "Archived Channels"
+  },
   "IW0/M8": {
     "message": "自動選択"
   },
@@ -577,6 +580,9 @@
   },
   "QBYqL5": {
     "message": "位面のメンバー照会に失敗しました"
+  },
+  "QGIvkQ": {
+    "message": "Archived channels are hidden from the list by default."
   },
   "QOvY19": {
     "message": "マスターにささやき、"
@@ -1151,14 +1157,14 @@
   "ruZw+F": {
     "message": "すべて検索済み"
   },
+  "rxjl9U": {
+    "message": "Archive this channel"
+  },
   "s+ixvA": {
     "message": "「 {spaceName}」を破壊します"
   },
   "s6Rg3u": {
     "message": "おっと！何か問題が発生しましたが、それはあなたのせいではありません"
-  },
-  "sMAAlN": {
-    "message": "新規"
   },
   "sNa4oH": {
     "message": "ペインを閉じる"

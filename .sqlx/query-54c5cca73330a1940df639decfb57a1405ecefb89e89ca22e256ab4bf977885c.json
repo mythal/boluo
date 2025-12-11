@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "UPDATE\n    channels\nSET\n    name = COALESCE($2, name),\n    topic = COALESCE($3, topic),\n    default_dice_type = COALESCE($4, default_dice_type),\n    default_roll_command = COALESCE($5, default_roll_command),\n    is_public = COALESCE($6, is_public),\n    is_document = COALESCE($7, is_document),\n    \"type\" = COALESCE($8, \"type\")\nWHERE\n    id = $1\n    AND deleted = FALSE\nRETURNING\n    channels AS \"channel!: Channel\";\n\n",
+  "query": "UPDATE\n    channels\nSET\n    name = COALESCE($2, name),\n    topic = COALESCE($3, topic),\n    default_dice_type = COALESCE($4, default_dice_type),\n    default_roll_command = COALESCE($5, default_roll_command),\n    is_public = COALESCE($6, is_public),\n    is_document = COALESCE($7, is_document),\n    \"type\" = COALESCE($8, \"type\"),\n    is_archived = COALESCE($9, is_archived)\nWHERE\n    id = $1\n    AND deleted = FALSE\nRETURNING\n    channels AS \"channel!: Channel\";\n",
   "describe": {
     "columns": [
       {
@@ -58,6 +58,10 @@
                 [
                   "type",
                   "Text"
+                ],
+                [
+                  "is_archived",
+                  "Bool"
                 ]
               ]
             }
@@ -74,12 +78,13 @@
         "Text",
         "Bool",
         "Bool",
-        "Text"
+        "Text",
+        "Bool"
       ]
     },
     "nullable": [
       null
     ]
   },
-  "hash": "2925b1218fde36d24da6099aebda1f23408efa855c3b2b40dc5dcb6d288e04a5"
+  "hash": "54c5cca73330a1940df639decfb57a1405ecefb89e89ca22e256ab4bf977885c"
 }

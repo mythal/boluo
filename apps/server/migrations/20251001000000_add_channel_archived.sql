@@ -1,0 +1,2 @@
+ALTER TABLE channels
+    ADD COLUMN IF NOT EXISTS is_archived boolean NOT NULL DEFAULT FALSE;

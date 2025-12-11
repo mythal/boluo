@@ -10,7 +10,7 @@ use crate::error::ModelError;
 use crate::spaces::{Space, SpaceMember};
 use crate::ttl::{Lifespan, Mortal, fetch_entry, fetch_entry_optional, hour, minute};
 use crate::users::User;
-use crate::utils::merge_blank;
+use crate::utils::{is_false, merge_blank};
 use std::collections::HashMap;
 
 #[derive(
@@ -62,6 +62,8 @@ pub struct Channel {
     #[serde(skip)]
     pub old_name: String,
     pub r#type: ChannelType,
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub is_archived: bool,
 }
 
 impl Lifespan for Channel {
@@ -246,6 +248,7 @@ impl Channel {
         is_public: Option<bool>,
         is_document: Option<bool>,
         _type: Option<ChannelType>,
+        is_archived: Option<bool>,
     ) -> Result<Channel, ModelError> {
         use crate::validators;
 
@@ -268,7 +271,8 @@ impl Channel {
             default_roll_command,
             is_public,
             is_document,
-            _type.as_ref().map(ChannelType::as_str)
+            _type.as_ref().map(ChannelType::as_str),
+            is_archived,
         )
         .fetch_one(db)
         .await
@@ -749,6 +753,7 @@ mod tests {
         assert_eq!(channel.default_dice_type, "d12");
         assert!(channel.is_public);
         assert_eq!(channel.r#type, ChannelType::InGame);
+        assert!(!channel.is_archived);
 
         let fetched = Channel::get_by_id(&pool, &channel.id)
             .await
@@ -817,6 +822,7 @@ mod tests {
             Some(false),
             Some(true),
             Some(ChannelType::Document),
+            Some(true),
         )
         .await
         .expect("failed to edit channel");
@@ -828,6 +834,7 @@ mod tests {
         assert!(!edited.is_public);
         assert!(edited.is_document);
         assert_eq!(edited.r#type, ChannelType::Document);
+        assert!(edited.is_archived);
 
         let deleted = Channel::delete(&pool, &channel.id, &space.id)
             .await

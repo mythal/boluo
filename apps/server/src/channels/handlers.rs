@@ -235,15 +235,26 @@ async fn edit(
         remove_masters,
         is_public,
         is_document,
+        is_archived,
     } = interface::parse_body(req).await?;
 
     let mut trans = ctx.db.begin().await?;
 
-    let space_member = SpaceMember::get_by_channel(&mut *trans, &session.user_id, &channel_id)
+    let channel = Channel::get_by_id(&mut *trans, &channel_id)
         .await
-        .or_no_permission()?;
-    if !space_member.is_admin {
-        return Err(AppError::NoPermission("user is not admin".to_string()));
+        .or_not_found()?;
+
+    let space = Space::get_by_id(&mut *trans, &channel.space_id)
+        .await?
+        .or_not_found()?;
+
+    let space_member = SpaceMember::get(&mut *trans, &session.user_id, &channel.space_id).await?;
+    let is_admin = space_member.map(|member| member.is_admin).unwrap_or(false);
+    let is_owner = space.owner_id == session.user_id;
+    if !is_admin && !is_owner {
+        return Err(AppError::NoPermission(
+            "user is not admin or owner".to_string(),
+        ));
     }
     let channel = Channel::edit(
         &mut *trans,
@@ -255,6 +266,7 @@ async fn edit(
         is_public,
         is_document,
         _type,
+        is_archived,
     )
     .await?;
     let push_members = !(grant_masters.is_empty() && remove_masters.is_empty());
@@ -320,6 +332,7 @@ async fn edit_topic(
         &channel_id,
         None,
         Some(topic.as_str()),
+        None,
         None,
         None,
         None,

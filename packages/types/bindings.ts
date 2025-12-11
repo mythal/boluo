@@ -31,6 +31,7 @@ export type Channel = {
   defaultRollCommand: string;
   isDocument: boolean;
   type: ChannelType;
+  isArchived?: boolean;
 };
 
 export type ChannelMember = {
@@ -149,6 +150,7 @@ export type EditChannel = {
   removeMasters?: string[];
   isPublic: boolean | null;
   isDocument: boolean | null;
+  isArchived: boolean | null;
   type: ChannelType | null;
 };
 

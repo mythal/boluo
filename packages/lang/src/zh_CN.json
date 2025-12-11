@@ -56,6 +56,9 @@
   "0pT/2d": {
     "message": "无角色名"
   },
+  "198Skw": {
+    "message": "Customization"
+  },
   "1iEPTM": {
     "message": "通用"
   },
@@ -203,6 +206,9 @@
   "82Y7Sa": {
     "message": "发送中..."
   },
+  "8HQJF3": {
+    "message": "Paste CSS variables or any custom CSS to override the theme."
+  },
   "8be59M": {
     "message": "邮箱验证成功！"
   },
@@ -307,6 +313,9 @@
   },
   "DBP+Od": {
     "message": "Echo"
+  },
+  "EWw/tK": {
+    "message": "Apply"
   },
   "EcW+hX": {
     "message": "仅选中的人可见。"
@@ -542,6 +551,9 @@
   "PO83gc": {
     "message": "上次出现"
   },
+  "PbDoyX": {
+    "message": "Enable overrides"
+  },
   "Pe0ogR": {
     "message": "主题"
   },
@@ -649,6 +661,9 @@
   },
   "TwyMau": {
     "message": "账号"
+  },
+  "U7Z0l+": {
+    "message": "See the <link>source</link> for reference — PRs welcome!"
   },
   "UKhyJG": {
     "message": "文件大小不能超过 {sizeLimit}M。"
@@ -886,6 +901,9 @@
   },
   "f0Sf6g": {
     "message": "添加文件"
+  },
+  "f2CunY": {
+    "message": "Custom theme overrides"
   },
   "f81+gv": {
     "message": "Try refreshing the page. If the problem persists, clear your browser cache or try another browser."
@@ -1168,6 +1186,9 @@
   },
   "taJuye": {
     "message": "为了使用本应用，推荐使用最新版本的 {chromeLink}，{firefoxLink} 或 {edgeLink}。"
+  },
+  "tiLDlf": {
+    "message": "Dusha Green"
   },
   "ug01Mk": {
     "message": "时间"

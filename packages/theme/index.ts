@@ -1,6 +1,6 @@
 import { type ResolvedTheme, type Theme } from '@boluo/types';
 
-export const CONCRETE_THEMES = ['light', 'dark', 'graphite'] as const;
+export const CONCRETE_THEMES = ['light', 'dark', 'graphite', 'dusha'] as const;
 
 export const THEMES = [...CONCRETE_THEMES, 'system'] as const;
 
@@ -24,6 +24,7 @@ export const toTheme = (value: string): Theme => {
   if (value === 'light') return 'light';
   if (value === 'dark') return 'dark';
   if (value === 'graphite') return 'graphite';
+  if (value === 'dusha') return 'dusha';
   return DEFAULT_THEME;
 };
 
@@ -57,6 +58,9 @@ export const getThemeFromDom = (): Theme => {
   if (classList.contains('graphite')) {
     return 'graphite';
   }
+  if (classList.contains('dusha')) {
+    return 'dusha';
+  }
   if (classList.contains('dark')) {
     return 'dark';
   } else if (classList.contains('light')) {
@@ -71,6 +75,7 @@ const setThemeByMediaQuery = <T extends { matches: boolean }>(queryDark: T) => {
     return;
   }
   classList.remove('graphite');
+  classList.remove('dusha');
   if (queryDark.matches) {
     classList.add('dark');
     classList.remove('light');
@@ -85,6 +90,7 @@ export const setSystemTheme = () => {
   // How do I detect dark mode using JavaScript?
   // https://stackoverflow.com/a/57795495
   classList.remove('graphite');
+  classList.remove('dusha');
   if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
     classList.add('dark');
     classList.remove('light');
@@ -123,6 +129,7 @@ export const setThemeToDom = (value: string): Theme => {
       html.classList.add('light');
       html.classList.remove('dark');
       html.classList.remove('graphite');
+      html.classList.remove('dusha');
       colorScheme = 'light';
       break;
     case 'dark':
@@ -130,6 +137,7 @@ export const setThemeToDom = (value: string): Theme => {
       html.classList.remove('light');
       html.classList.add('dark');
       html.classList.remove('graphite');
+      html.classList.remove('dusha');
       colorScheme = 'dark';
       break;
     case 'graphite':
@@ -137,11 +145,21 @@ export const setThemeToDom = (value: string): Theme => {
       html.classList.remove('light');
       html.classList.remove('dark');
       html.classList.add('graphite');
+      html.classList.remove('dusha');
       colorScheme = 'dark';
+      break;
+    case 'dusha':
+      html.classList.remove('system');
+      html.classList.remove('light');
+      html.classList.remove('dark');
+      html.classList.remove('graphite');
+      html.classList.add('dusha');
+      colorScheme = 'light';
       break;
     case 'system':
       html.classList.add('system');
       html.classList.remove('graphite');
+      html.classList.remove('dusha');
       setThemeByMediaQuery(window.matchMedia(DARK_MEDIA_QUERY));
       colorScheme = 'light dark';
       break;
@@ -192,5 +210,5 @@ export const resolveSystemTheme = (theme: Theme): ResolvedTheme => {
 
 // Group themes into light/dark buckets for places that only care about contrast.
 export const classifyLightOrDark = (theme: ResolvedTheme): 'light' | 'dark' => {
-  return theme === 'light' ? 'light' : 'dark';
+  return theme === 'light' || theme === 'dusha' ? 'light' : 'dark';
 };

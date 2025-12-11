@@ -10,6 +10,6 @@
   "license": "AGPL-3.0",
   "scripts": {
     "build": "formatjs compile-folder --ast --format crowdin ./src ./dist",
-    "generate": "formatjs extract '../../{apps,packages}/{site,spa,ui,theme,common,locale}/**/*.{ts,tsx,js,jsx}' --ignore '../../**/{node_modules,out,.next,storybook-static}/**/*' --ignore '../../**/*.d.ts' --out-file src/en.json --format crowdin"
+    "generate": "formatjs extract '../../{apps,packages}/{site,spa,ui,theme,common,locale}/**/*.{ts,tsx,js,jsx}' --ignore '../../**/{node_modules,out,.next,storybook-static,dist,.turbo}/**/*' --ignore '../../**/*.d.ts' --out-file src/en.json --format crowdin"
   }
 }

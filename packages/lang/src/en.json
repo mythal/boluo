@@ -389,6 +389,9 @@
   "IQwWyF": {
     "message": "You must be logged in to join a channel."
   },
+  "IVGDSG": {
+    "message": "Archived Channels"
+  },
   "IW0/M8": {
     "message": "Auto Select"
   },
@@ -577,6 +580,9 @@
   },
   "QBYqL5": {
     "message": "Failed to query members of the space"
+  },
+  "QGIvkQ": {
+    "message": "Archived channels are hidden from the list by default."
   },
   "QOvY19": {
     "message": "Whisper to the Master and"
@@ -1151,14 +1157,14 @@
   "ruZw+F": {
     "message": "All searched"
   },
+  "rxjl9U": {
+    "message": "Archive this channel"
+  },
   "s+ixvA": {
     "message": "Sure, Destroy {spaceName}"
   },
   "s6Rg3u": {
     "message": "Oops! Something went wrong, but it wasn't your fault"
-  },
-  "sMAAlN": {
-    "message": "Add New"
   },
   "sNa4oH": {
     "message": "Close Pane"

@@ -1,3 +1,148 @@
+/* Dusha Green - Eye-care theme with low-saturation warm green colors */
+.dusha,
+[data-theme='dusha'] {
+  color-scheme: light;
+
+  --dusha-50: #f6f9f4;
+  --dusha-100: #edf3e8;
+  --dusha-200: #dce8d4;
+  --dusha-300: #c5d9b8;
+  --dusha-400: #a8c494;
+  --dusha-500: #8bae72;
+  --dusha-600: #6d9255;
+  --dusha-700: #557542;
+  --dusha-800: #3f5831;
+  --dusha-900: #2a3b21;
+
+  --warm-50: #fafaf8;
+  --warm-100: #f4f4f0;
+  --warm-200: #e8e8e2;
+  --warm-300: #d4d4cc;
+  --warm-400: #a8a8a0;
+  --warm-500: #7c7c74;
+  --warm-600: #5c5c56;
+  --warm-700: #44443f;
+  --warm-800: #2c2c28;
+  --warm-900: #1a1a17;
+
+  --color-surface-default: var(--dusha-50);
+  --color-surface-canvas: #f8faf6;
+  --color-surface-muted: var(--dusha-100);
+  --color-surface-raised: #fcfdf9;
+  --color-surface-unit: #fffef9;
+  --color-surface-inverted: var(--dusha-900);
+  --color-surface-floating: color-mix(in srgb, var(--dusha-100) 85%, transparent 15%);
+  --color-surface-interactive-hover: color-mix(in srgb, var(--dusha-200) 40%, transparent 60%);
+  --color-surface-interactive-active: var(--dusha-200);
+  --color-surface-selectable-default: var(--dusha-50);
+  --color-surface-selectable-hover: var(--dusha-100);
+  --color-surface-selectable-selected: var(--dusha-200);
+
+  --color-text-primary: var(--dusha-900);
+  --color-text-secondary: var(--dusha-700);
+  --color-text-muted: var(--dusha-600);
+  --color-text-subtle: var(--dusha-500);
+  --color-text-inverted: #fffef9;
+  --color-text-inverted-secondary: var(--dusha-200);
+  --color-text-link: #4a7c3a;
+  --color-text-link-hover: #3d6830;
+  --color-text-link-active: #325526;
+  --color-text-link-decoration: var(--dusha-400);
+
+  --color-border-default: var(--dusha-200);
+  --color-border-strong: var(--dusha-400);
+  --color-border-primary: var(--dusha-500);
+  --color-border-subtle: var(--dusha-100);
+  --color-border-focus: var(--dusha-600);
+  --color-border-raised: var(--dusha-200);
+  --color-border-pane: var(--dusha-300);
+
+  --color-action-primary-bg: var(--dusha-600);
+  --color-action-primary-text: #fffef9;
+  --color-action-primary-bg-hover: var(--dusha-500);
+  --color-action-primary-bg-active: var(--dusha-700);
+  --color-action-primary-border: var(--dusha-700);
+  --color-action-primary-bg-disabled: var(--dusha-300);
+
+  --color-action-secondary-bg: var(--dusha-50);
+  --color-action-secondary-border: var(--dusha-300);
+  --color-action-secondary-text: var(--dusha-800);
+  --color-action-secondary-bg-hover: var(--dusha-100);
+  --color-action-secondary-bg-active: var(--dusha-200);
+  --color-action-secondary-bg-disabled: var(--dusha-100);
+
+  --color-action-danger-bg: #c45c5c;
+  --color-action-danger-bg-hover: #b54e4e;
+  --color-action-danger-bg-active: #a34040;
+  --color-action-danger-bg-disabled: #d4a0a0;
+  --color-action-danger-border: #8c3535;
+
+  --color-action-toggle-bg: var(--dusha-100);
+  --color-action-toggle-bg-hover: var(--dusha-200);
+  --color-action-toggle-bg-active: var(--dusha-300);
+  --color-action-toggle-text: var(--dusha-900);
+  --color-action-toggle-disabled-bg: var(--dusha-200);
+  --color-action-toggle-disabled-text: var(--dusha-400);
+  --color-action-toggle-selected-bg: var(--dusha-300);
+  --color-action-toggle-indicator-on: var(--dusha-500);
+  --color-action-toggle-indicator-off: var(--dusha-300);
+  --color-action-toggle-icon: var(--dusha-600);
+
+  --color-tooltip-bg: var(--dusha-800);
+  --color-tooltip-text: #fffef9;
+  --color-tooltip-text-secondary: var(--dusha-300);
+
+  --color-state-success-text: #4a7c3a;
+  --color-state-success-bg: #e0f0d8;
+  --color-state-warning-bg: #fef6e0;
+  --color-state-warning-text: #8b7033;
+  --color-state-warning-border: #e8d4a0;
+  --color-state-danger-bg: #fce8e8;
+  --color-state-danger-border: #e0b0b0;
+  --color-state-danger-text: #9c4444;
+  --color-state-info-bg: #e8f4f0;
+
+  --color-brand-strong: var(--dusha-600);
+  --color-ring: var(--dusha-500);
+
+  --color-entity-fate-dice-bg: var(--dusha-400);
+  --color-entity-fate-dice-border: var(--dusha-500);
+
+  --gradient-kbd-bg: radial-gradient(
+    ellipse at 50% 0%,
+    var(--dusha-500) 0%,
+    var(--dusha-700) 60%
+  );
+  --color-kbd-shadow: var(--dusha-400);
+  --color-kbd-text: #fffef9;
+
+  --color-name-bg: color-mix(in srgb, var(--dusha-200) 50%, transparent 50%);
+  --color-name-editable-hover: color-mix(in srgb, var(--dusha-300) 60%, transparent 40%);
+
+  --color-message-in-game-bg: #f4f8f0;
+  --color-message-in-game-bg-hover: #ebf2e4;
+  --color-message-out-of-game-bg: #fcfdf9;
+  --color-message-out-of-game-bg-hover: var(--dusha-50);
+  --color-message-preview-dot: var(--dusha-300);
+
+  --color-pane-bg: #fcfdf9;
+  --color-pane-header-bg: #f8faf6;
+  --color-pane-focus-shadow: rgba(107, 142, 86, 0.1);
+
+  --color-lamp-on-border: var(--dusha-600);
+  --color-lamp-on-bg: var(--dusha-400);
+  --color-lamp-off-border: var(--dusha-300);
+  --color-lamp-off-bg: var(--dusha-200);
+
+  --color-sidebar-bg: var(--dusha-100);
+  --color-sidebar-border: var(--dusha-200);
+  --color-sidebar-item-hover-bg: color-mix(in srgb, var(--dusha-200) 50%, transparent 50%);
+  --color-sidebar-item-active-bg: color-mix(in srgb, var(--dusha-300) 70%, transparent 30%);
+  --color-sidebar-channels-placeholder-random1: var(--dusha-100);
+  --color-sidebar-channels-placeholder-random2: var(--dusha-200);
+  --color-sidebar-channels-placeholder-random3: #e5efe0;
+}
+
 .graphite,
 [data-theme='graphite'] {
   color-scheme: dark;

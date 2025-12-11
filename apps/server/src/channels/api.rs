@@ -44,6 +44,7 @@ pub struct EditChannel {
     pub remove_masters: Vec<Uuid>,
     pub is_public: Option<bool>,
     pub is_document: Option<bool>,
+    pub is_archived: Option<bool>,
     #[serde(rename = "type")]
     pub _type: Option<ChannelType>,
 }

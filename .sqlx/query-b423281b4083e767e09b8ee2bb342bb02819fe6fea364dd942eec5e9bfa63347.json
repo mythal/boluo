@@ -58,6 +58,10 @@
                 [
                   "type",
                   "Text"
+                ],
+                [
+                  "is_archived",
+                  "Bool"
                 ]
               ]
             }

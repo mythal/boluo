@@ -1,5 +1,5 @@
 import { type FC, type FormEvent, useId, useMemo } from 'react';
-import { atom, useAtomValue, useSetAtom, useStore } from 'jotai';
+import { useAtomValue, useSetAtom, useStore } from 'jotai';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { FormattedMessage } from 'react-intl';
 import { NameEditInput } from './NameInput';
@@ -8,14 +8,12 @@ import { chatAtom } from '../../state/chat.atoms';
 import { type MemberWithUser } from '@boluo/api';
 import { type ChannelState } from '../../state/channel.reducer';
 import { backwards, last } from 'list';
-import { ButtonInline } from '@boluo/ui/ButtonInline';
+import { NameEditContentNameHistory } from './NameEditContentNameHistory';
 
 interface Props {
   member: MemberWithUser;
   dismiss: () => void;
 }
-
-const NAME_HISTORY_MAX = 5;
 
 const searchChannelForNames = (
   names: string[],
@@ -65,41 +63,9 @@ const chatStateToNameList = (
 
   for (const channel of channels) {
     searchChannelForNames(names, channel, myId, 100);
-    if (names.length > NAME_HISTORY_MAX) return names;
   }
 
   return names;
-};
-
-const NameButton: FC<{ name: string; defaultCharacterName: string }> = ({
-  name,
-  defaultCharacterName,
-}) => {
-  const { composeAtom, characterNameAtom } = useChannelAtoms();
-  const dispatch = useSetAtom(composeAtom);
-  const pressedAtom = useMemo(
-    () =>
-      atom((read) => {
-        const characterName = read(characterNameAtom);
-        return characterName === name;
-      }),
-    [characterNameAtom, name],
-  );
-  const pressed = useAtomValue(pressedAtom);
-  return (
-    <ButtonInline
-      key={name}
-      data-active={pressed}
-      onClick={() => {
-        dispatch({
-          type: 'setCharacterName',
-          payload: { name, setInGame: true },
-        });
-      }}
-    >
-      {name}
-    </ButtonInline>
-  );
 };
 
 export const NameEditContent: FC<Props> = ({ member, dismiss }) => {
@@ -154,13 +120,10 @@ export const NameEditContent: FC<Props> = ({ member, dismiss }) => {
           <FormattedMessage defaultMessage="As the character of …" />
         </label>
         <NameEditInput channelId={member.channel.channelId} defaultName={defaultCharacterName} />
-        {nameHistory.length > 0 && (
-          <div className="flex flex-wrap gap-1">
-            {nameHistory.map((name) => (
-              <NameButton key={name} name={name} defaultCharacterName={defaultCharacterName} />
-            ))}
-          </div>
-        )}
+        <NameEditContentNameHistory
+          names={nameHistory}
+          defaultCharacterName={defaultCharacterName}
+        />
       </div>
 
       <div>

@@ -13,6 +13,8 @@ export interface Settings {
   messageSize?: MessageSize;
   layout?: ChannelLayout;
   inGameFont?: InGameFont;
+  customThemeCss?: string;
+  customThemeEnabled?: boolean;
 }
 
 export const defaultSettings: Settings = {};

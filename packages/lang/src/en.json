@@ -56,6 +56,9 @@
   "0pT/2d": {
     "message": "No Character Name"
   },
+  "198Skw": {
+    "message": "Customization"
+  },
   "1iEPTM": {
     "message": "General"
   },
@@ -203,6 +206,9 @@
   "82Y7Sa": {
     "message": "Sending..."
   },
+  "8HQJF3": {
+    "message": "Paste CSS variables or any custom CSS to override the theme."
+  },
   "8be59M": {
     "message": "Email verified successfully!"
   },
@@ -307,6 +313,9 @@
   },
   "DBP+Od": {
     "message": "Echo"
+  },
+  "EWw/tK": {
+    "message": "Apply"
   },
   "EcW+hX": {
     "message": "Only visible to selected people."
@@ -542,6 +551,9 @@
   "PO83gc": {
     "message": "Last seen"
   },
+  "PbDoyX": {
+    "message": "Enable overrides"
+  },
   "Pe0ogR": {
     "message": "Theme"
   },
@@ -649,6 +661,9 @@
   },
   "TwyMau": {
     "message": "Account"
+  },
+  "U7Z0l+": {
+    "message": "See the <link>source</link> for reference — PRs welcome!"
   },
   "UKhyJG": {
     "message": "File size must be less than {sizeLimit}M."
@@ -886,6 +901,9 @@
   },
   "f0Sf6g": {
     "message": "Add a file"
+  },
+  "f2CunY": {
+    "message": "Custom theme overrides"
   },
   "f81+gv": {
     "message": "Try refreshing the page. If the problem persists, clear your browser cache or try another browser."

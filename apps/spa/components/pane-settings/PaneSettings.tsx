@@ -19,6 +19,7 @@ import { type User } from '@boluo/api';
 import { EditDefaultColor } from './EditDefaultColor';
 import { HelpText } from '@boluo/ui/HelpText';
 import { isProfileOpenAtom } from '../sidebar/SidebarUserOperations';
+import { CustomThemeOverridesField } from './CustomThemeOverridesField';
 
 const SectionTitle: FC<ChildrenProps> = ({ children }) => (
   <h3 className="mb-2 font-bold">{children}</h3>
@@ -145,6 +146,12 @@ export const PaneSettings: FC = () => {
             <EditDefaultColor currentUser={currentUser} />
           </>
         )}
+        <div className="flex flex-col gap-4">
+          <SectionTitle>
+            <FormattedMessage defaultMessage="Customization" />
+          </SectionTitle>
+          <CustomThemeOverridesField />
+        </div>
         <div>
           <SectionTitle>
             <FormattedMessage defaultMessage="Developer Options" />

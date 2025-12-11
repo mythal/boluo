@@ -30,6 +30,7 @@ import { SettingsContext } from '../hooks/useSettings';
 import type { Settings } from '@boluo/settings';
 import { useUpdateViewHeight } from '../hooks/useUpdateViewHeight';
 import type { ResolvedTheme, Theme } from '@boluo/types';
+import { useCustomThemeOverrides } from '../hooks/useCustomThemeOverrides';
 
 const useThemeSetup = (settings: Settings | undefined | null): ResolvedTheme => {
   const themeFromSettings = settings?.theme;
@@ -61,6 +62,7 @@ const Chat: FC = () => {
   useBackendUrlSetupEffect();
   const resolvedTheme = useThemeSetup(settings);
   useUpdateViewHeight();
+  useCustomThemeOverrides(settings);
 
   useEffect(() => {
     document.documentElement.style.overflow = 'hidden';

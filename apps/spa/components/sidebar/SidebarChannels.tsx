@@ -1,9 +1,9 @@
-import { ArrowDownWideShort, Plus } from '@boluo/icons';
+import { Archive, ArrowDownWideShort } from '@boluo/icons';
 import { useAtomValue } from 'jotai';
 import type { FC } from 'react';
 import React, { Suspense, useMemo, useState } from 'react';
-import { FormattedMessage, useIntl } from 'react-intl';
-import { usePaneToggle } from '../../hooks/usePaneToggle';
+import { FormattedMessage } from 'react-intl';
+import { type Channel, type ChannelWithMaybeMember } from '@boluo/api';
 import { useQueryChannelList } from '../../hooks/useQueryChannelList';
 import { useMySpaceMember } from '../../hooks/useQueryMySpaceMember';
 import { panesAtom } from '../../state/view.atoms';
@@ -12,7 +12,8 @@ import Icon from '@boluo/ui/Icon';
 import { SidebarChannelListSkeleton } from './SidebarChannelListSkeleton';
 import { ButtonInline } from '@boluo/ui/ButtonInline';
 import { SidebarChannelsHeaderNewChannel } from './SidebarChannelsHeaderNewChannel';
-import { findPane } from '../../state/view.utils';
+import { useQueryCurrentUser } from '@boluo/common/hooks/useQueryCurrentUser';
+import { SidebarChannelItem } from './SidebarChannelItem';
 
 const SidebarChannelList = React.lazy(() => import('./SidebarChannelList'));
 
@@ -23,15 +24,67 @@ interface Props {
 export const SidebarChannels: FC<Props> = ({ spaceId }) => {
   const panes = useAtomValue(panesAtom);
   const [isReordering, setIsReordering] = useState(false);
+  const [showArchived, setShowArchived] = useState(false);
   const { data: mySpaceMember } = useMySpaceMember(spaceId);
   const { data: channelWithMemberList } = useQueryChannelList(spaceId);
-  const togglePane = usePaneToggle();
-  const toggleCreateChannelPane = () => {
-    togglePane({ type: 'CREATE_CHANNEL', spaceId });
-  };
-  const isCreateChannelPaneOpened = useMemo(
-    () => findPane(panes, (pane) => pane.type === 'CREATE_CHANNEL') !== null,
+  const { data: currentUser } = useQueryCurrentUser();
+  const myId = currentUser?.id;
+  const activeChannelIds = useMemo(
+    () =>
+      panes.flatMap((pane) =>
+        (pane.type === 'CHANNEL' ? [pane.channelId] : []).concat(
+          pane.child?.pane.type === 'CHANNEL' ? [pane.child.pane.channelId] : [],
+        ),
+      ),
     [panes],
+  );
+  const { activeChannels, archivedChannels } = useMemo((): {
+    activeChannels: ChannelWithMaybeMember[] | undefined;
+    archivedChannels: ChannelWithMaybeMember[] | undefined;
+  } => {
+    if (!channelWithMemberList) {
+      return { activeChannels: undefined, archivedChannels: undefined };
+    }
+    const grouped = channelWithMemberList.reduce<{
+      activeChannels: ChannelWithMaybeMember[];
+      archivedChannels: ChannelWithMaybeMember[];
+    }>(
+      (result, channelWithMember) => {
+        const isArchived = channelWithMember.channel.isArchived ?? false;
+        if (isArchived) {
+          result.archivedChannels.push(channelWithMember);
+        } else {
+          result.activeChannels.push(channelWithMember);
+        }
+        return result;
+      },
+      { activeChannels: [], archivedChannels: [] },
+    );
+    return grouped;
+  }, [channelWithMemberList]);
+
+  const archivedChannelsSorted = useMemo(() => {
+    if (archivedChannels == null) return archivedChannels;
+    const getModifiedTime = (channel: Channel) => {
+      const channelWithModified = channel as Channel & {
+        modified?: string;
+        updated?: string;
+        lastModified?: string;
+      };
+      return new Date(
+        channelWithModified.modified ??
+          channelWithModified.updated ??
+          channelWithModified.lastModified ??
+          channel.created,
+      ).getTime();
+    };
+    return [...archivedChannels].sort(
+      (a, b) => getModifiedTime(b.channel) - getModifiedTime(a.channel),
+    );
+  }, [archivedChannels]);
+  const archivedChannelIds = useMemo(
+    () => archivedChannels?.map(({ channel }) => channel.id) ?? [],
+    [archivedChannels],
   );
 
   return (
@@ -57,27 +110,45 @@ export const SidebarChannels: FC<Props> = ({ spaceId }) => {
         )}
       </div>
       <Suspense fallback={<SidebarChannelListSkeleton />}>
-        {channelWithMemberList == null ? (
+        {activeChannels == null ? (
           <SidebarChannelListSkeleton />
         ) : (
           <SidebarChannelList
             spaceId={spaceId}
-            channelWithMemberList={channelWithMemberList}
+            channelWithMemberList={activeChannels}
             isReordering={isReordering}
+            activeChannelIds={activeChannelIds}
+            myId={myId}
+            archivedChannelIds={archivedChannelIds}
           />
         )}
       </Suspense>
-      {mySpaceMember?.isAdmin && (
-        <SidebarItem
-          icon={<Plus />}
-          toggle
-          active={isCreateChannelPaneOpened}
-          onClick={toggleCreateChannelPane}
-        >
-          <span className="">
-            <FormattedMessage defaultMessage="Add New" />
-          </span>
-        </SidebarItem>
+      {archivedChannelsSorted != null && archivedChannelsSorted.length > 0 && (
+        <>
+          <SidebarItem
+            icon={<Archive />}
+            toggle
+            active={showArchived}
+            onClick={() => setShowArchived((prev) => !prev)}
+          >
+            <span className="">
+              <FormattedMessage defaultMessage="Archived Channels" />
+            </span>
+          </SidebarItem>
+          {showArchived && (
+            <div className="pb-2">
+              {archivedChannelsSorted.map(({ channel }) => (
+                <SidebarChannelItem
+                  key={channel.id}
+                  channel={channel}
+                  active={activeChannelIds.includes(channel.id)}
+                  myId={myId}
+                  disableOrderingContainer
+                />
+              ))}
+            </div>
+          )}
+        </>
       )}
     </div>
   );

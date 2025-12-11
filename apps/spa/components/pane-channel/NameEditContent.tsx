@@ -74,15 +74,15 @@ const NameButton: FC<{ name: string; defaultCharacterName: string }> = ({
   name,
   defaultCharacterName,
 }) => {
-  const { composeAtom, inputedNameAtom } = useChannelAtoms();
+  const { composeAtom, characterNameAtom } = useChannelAtoms();
   const dispatch = useSetAtom(composeAtom);
   const pressedAtom = useMemo(
     () =>
       atom((read) => {
-        const inputedName = read(inputedNameAtom);
-        return inputedName === name;
+        const characterName = read(characterNameAtom);
+        return characterName === name;
       }),
-    [inputedNameAtom, name],
+    [characterNameAtom, name],
   );
   const pressed = useAtomValue(pressedAtom);
   return (
@@ -91,8 +91,8 @@ const NameButton: FC<{ name: string; defaultCharacterName: string }> = ({
       data-active={pressed}
       onClick={() => {
         dispatch({
-          type: 'setInputedName',
-          payload: { inputedName: name, setInGame: true },
+          type: 'setCharacterName',
+          payload: { name, setInGame: true },
         });
       }}
     >

@@ -2,7 +2,7 @@ import { type Atom, atom, type PrimitiveAtom, type WritableAtom } from 'jotai';
 import { atomWithStorage, loadable, selectAtom } from 'jotai/utils';
 import { createContext, useContext, useMemo, useRef } from 'react';
 import { asyncParse } from '../interpreter/async-parse';
-import { composeInitialParseResult, type ParseResult } from '@boluo/interpreter';
+import { composeInitialParseResult, parseModifiers, type ParseResult } from '@boluo/interpreter';
 import type { ComposeActionUnion } from '../state/compose.actions';
 import { checkCompose, type ComposeError, type ComposeState } from '../state/compose.reducer';
 import { usePaneKey } from './usePaneKey';
@@ -35,7 +35,7 @@ export interface ChannelAtoms {
   selfPreviewVisibleAtom: Atom<boolean>;
   isComposeEmptyAtom: Atom<boolean>;
   broadcastAtom: Atom<boolean>;
-  inputedNameAtom: Atom<string>;
+  characterNameAtom: Atom<string>;
   isWhisperAtom: Atom<boolean>;
   lastWhisperTargetsAtom: PrimitiveAtom<string[] | null>;
   inGameAtom: Atom<boolean>;
@@ -84,7 +84,13 @@ export const useMakeChannelAtoms = (
         }
         return cachedParseResultRef.current;
       });
-      const inputedNameAtom = selectAtom(composeAtom, ({ inputedName }) => inputedName);
+      const characterNameAtom = selectAtom(composeAtom, ({ source }) => {
+        try {
+          return parseModifiers(source).characterName;
+        } catch {
+          return '';
+        }
+      });
       const broadcastAtom = selectAtom(parsedAtom, ({ broadcast }) => broadcast);
       const isActionAtom = selectAtom(parsedAtom, ({ isAction }) => isAction);
       const hasMediaAtom = selectAtom(composeAtom, ({ media }) => media != null);
@@ -125,7 +131,7 @@ export const useMakeChannelAtoms = (
         composeAtom,
         parsedAtom,
         isActionAtom,
-        inputedNameAtom,
+        characterNameAtom,
         hasMediaAtom,
         broadcastAtom,
         isWhisperAtom,
@@ -153,12 +159,12 @@ export const useMakeChannelAtoms = (
   const inGameAtom = useMemo(
     () =>
       atom((read) => {
-        const { inGame } = read(atoms.parsedAtom);
-        if (inGame == null) {
+        const parsed = read(atoms.parsedAtom);
+        if (parsed.characterName) return true;
+        if (parsed.inGame == null) {
           return defaultInGame;
-        } else {
-          return inGame;
         }
+        return parsed.inGame;
       }),
     [atoms.parsedAtom, defaultInGame],
   );

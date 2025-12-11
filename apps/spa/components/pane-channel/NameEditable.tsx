@@ -120,7 +120,7 @@ export const NameEditable: FC<Props> = ({ name, inGame, color, member }) => {
             style={floatingStyles}
             {...getFloatingProps()}
           >
-            <NameEditContent member={member} />
+            <NameEditContent member={member} dismiss={() => setIsOpen(false)} />
           </div>
         </FloatingPortal>
       )}

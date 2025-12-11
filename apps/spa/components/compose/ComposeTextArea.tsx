@@ -1,4 +1,4 @@
-import { useAtomValue, useSetAtom, useStore } from 'jotai';
+import { useAtomValue, useSetAtom, useStore, type Atom } from 'jotai';
 import { selectAtom } from 'jotai/utils';
 import {
   type ChangeEventHandler,
@@ -20,6 +20,7 @@ import { chatAtom } from '../../state/chat.atoms';
 import * as L from 'list';
 import { useDefaultInGame } from '../../hooks/useDefaultInGame';
 import { composeSizeAtom } from '../../state/compose.atoms';
+import { type ComposeState } from '../../state/compose.reducer';
 
 interface Props {
   myId: string;
@@ -39,21 +40,17 @@ const useEnterKeyHint = (enterSend: boolean, ref: React.RefObject<RichTextareaHa
   }, [enterSend, ref]);
 
 const useReflectRangeChange = (
-  composeAtom: ComposeAtom,
+  rangeAtom: Atom<ComposeState['range']>,
   lock: React.RefObject<boolean>,
   ref: React.RefObject<RichTextareaHandle | null>,
 ) => {
   const store = useStore();
 
-  const rangeAtom = useMemo(
-    () => selectAtom(composeAtom, (compose) => compose.range),
-    [composeAtom],
-  );
   return useEffect(() => {
     return store.sub(rangeAtom, () => {
       const range = store.get(rangeAtom);
       const textArea = ref.current;
-      if (!range || !textArea) {
+      if (!textArea) {
         return;
       }
       const [a, b] = range;
@@ -61,7 +58,6 @@ const useReflectRangeChange = (
         return;
       }
       lock.current = true;
-      // textArea.focus();
       setTimeout(() => {
         textArea.setSelectionRange(a, b);
         lock.current = false;
@@ -113,12 +109,33 @@ export const ComposeTextArea: FC<Props> = ({ parsed, enterSend, send, myId }) =>
       }),
     [channelId, myId],
   );
+  const rangeAtom = useMemo(
+    () => selectAtom(composeAtom, (compose) => compose.range),
+    [composeAtom],
+  );
+  const focused = useAtomValue(
+    useMemo(() => selectAtom(composeAtom, ({ focused }) => focused), [composeAtom]),
+  );
   const source = useAtomValue(
     useMemo(() => selectAtom(composeAtom, (compose) => compose.source), [composeAtom]),
   );
 
-  const lock = useRef(false);
+  const lock = useRef(false); // guards against loops when we programmatically move selection
   useEnterKeyHint(enterSend, ref);
+  useReflectRangeChange(rangeAtom, lock, ref);
+  useEffect(() => {
+    if (!focused) return;
+    const textArea = ref.current;
+    if (!textArea) return;
+    const compose = store.get(composeAtom);
+    const [start, end] = compose.range;
+    lock.current = true;
+    textArea.focus();
+    setTimeout(() => {
+      textArea.setSelectionRange(start, end);
+      lock.current = false;
+    });
+  }, [composeAtom, focused, store]);
 
   const updateRange = () => {
     startTransition(() => {
@@ -129,8 +146,6 @@ export const ComposeTextArea: FC<Props> = ({ parsed, enterSend, send, myId }) =>
       dispatch({ type: 'setRange', payload: { range: [selectionStart, selectionEnd] } });
     });
   };
-
-  useReflectRangeChange(composeAtom, lock, ref);
 
   const handleChange: ChangeEventHandler<HTMLTextAreaElement> = (e) => {
     const { value } = e.target;

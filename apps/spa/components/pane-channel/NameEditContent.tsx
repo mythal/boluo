@@ -1,4 +1,4 @@
-import { type FC, useId, useMemo } from 'react';
+import { type FC, type FormEvent, useId, useMemo } from 'react';
 import { atom, useAtomValue, useSetAtom, useStore } from 'jotai';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { FormattedMessage } from 'react-intl';
@@ -12,6 +12,7 @@ import { ButtonInline } from '@boluo/ui/ButtonInline';
 
 interface Props {
   member: MemberWithUser;
+  dismiss: () => void;
 }
 
 const NAME_HISTORY_MAX = 5;
@@ -101,7 +102,7 @@ const NameButton: FC<{ name: string; defaultCharacterName: string }> = ({
   );
 };
 
-export const NameEditContent: FC<Props> = ({ member }) => {
+export const NameEditContent: FC<Props> = ({ member, dismiss }) => {
   const { inGameAtom, composeAtom } = useChannelAtoms();
   const dispatch = useSetAtom(composeAtom);
   const inGame = useAtomValue(inGameAtom);
@@ -125,8 +126,17 @@ export const NameEditContent: FC<Props> = ({ member }) => {
   const switchToOutOfGame = () => {
     dispatch({ type: 'setInGame', payload: { inGame: false } });
   };
+
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const compose = store.get(composeAtom);
+    const len = compose.source.length;
+    dispatch({ type: 'setRange', payload: { range: [len, len] } });
+    dispatch({ type: 'focus', payload: {} });
+    dismiss();
+  };
   return (
-    <div className="grid w-52 grid-cols-[auto_auto] gap-x-1 gap-y-2">
+    <form onSubmit={handleSubmit} className="grid w-52 grid-cols-[auto_auto] gap-x-1 gap-y-2">
       <div>
         <input
           id={id.inputName}
@@ -171,6 +181,6 @@ export const NameEditContent: FC<Props> = ({ member }) => {
           <span className="text-text-secondary ml-1">({member.user.nickname})</span>
         </div>
       </label>
-    </div>
+    </form>
   );
 };

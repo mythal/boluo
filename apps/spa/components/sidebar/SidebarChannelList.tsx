@@ -2,8 +2,6 @@ import { type ChannelWithMaybeMember } from '@boluo/api';
 import { type FC, type ReactNode, useCallback, useMemo, useState } from 'react';
 import { IsReorderingContext } from '../../hooks/useIsReordering';
 import { SidebarChannelItem } from './SidebarChannelItem';
-import { useAtomValue } from 'jotai';
-import { panesAtom } from '../../state/view.atoms';
 import {
   DndContext,
   type DragEndEvent,
@@ -21,34 +19,27 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { useQuerySpaceSettings } from '../../hooks/useQuerySpaceSettings';
 import { SidebarChannelListSkeleton } from './SidebarChannelListSkeleton';
 import { useMutateSpaceSettings } from '../../hooks/useMutateSpaceSettings';
-import { useQueryCurrentUser } from '@boluo/common/hooks/useQueryCurrentUser';
 
 interface Props {
   spaceId: string;
   isReordering: boolean;
   channelWithMemberList: ChannelWithMaybeMember[];
+  activeChannelIds: string[];
+  myId: string | null | undefined;
+  archivedChannelIds: string[];
 }
 
 export const SidebarChannelList: FC<Props> = ({
   spaceId,
   channelWithMemberList: originalChannelWithMemberList,
   isReordering,
+  activeChannelIds,
+  myId,
+  archivedChannelIds,
 }) => {
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
   const { data: spaceSettings, isLoading } = useQuerySpaceSettings(spaceId);
   const { trigger } = useMutateSpaceSettings(spaceId);
-  const panes = useAtomValue(panesAtom);
-  const channelIdFromPanes = useMemo(
-    () =>
-      panes.flatMap((pane) =>
-        (pane.type === 'CHANNEL' ? [pane.channelId] : []).concat(
-          pane.child?.pane.type === 'CHANNEL' ? [pane.child.pane.channelId] : [],
-        ),
-      ),
-    [panes],
-  );
-  const { data: currentUser } = useQueryCurrentUser();
-  const myId = currentUser?.id;
   const channelWithMemberList = useMemo((): typeof originalChannelWithMemberList => {
     if (spaceSettings == null) return originalChannelWithMemberList;
     const { channelsOrder = [] } = spaceSettings;
@@ -90,10 +81,42 @@ export const SidebarChannelList: FC<Props> = ({
       const [removed] = idList.splice(activeChannelIndex, 1);
       if (removed == null) return;
       idList.splice(overChannelIndex, 0, removed);
-      const nextSettings: typeof spaceSettings = { ...spaceSettings, channelsOrder: idList };
+      const mergeWithArchived = (newActiveOrder: string[]) => {
+        const baseOrder = spaceSettings?.channelsOrder;
+        const archivedSet = new Set(archivedChannelIds);
+        if (!baseOrder || baseOrder.length === 0) {
+          return [...newActiveOrder, ...archivedChannelIds];
+        }
+        const result: string[] = [];
+        const activeQueue = [...newActiveOrder];
+        for (const id of baseOrder) {
+          if (archivedSet.has(id)) {
+            if (!result.includes(id)) result.push(id);
+            continue;
+          }
+          if (activeQueue.length === 0) continue;
+          if (id === activeQueue[0]) {
+            result.push(activeQueue.shift()!);
+          } else if (newActiveOrder.includes(id)) {
+            const nextIndex = activeQueue.findIndex((nextId) => nextId === id);
+            if (nextIndex !== -1) {
+              result.push(...activeQueue.splice(0, nextIndex + 1));
+            }
+          }
+        }
+        for (const id of activeQueue) {
+          if (!result.includes(id)) result.push(id);
+        }
+        for (const archived of archivedChannelIds) {
+          if (!result.includes(archived)) result.push(archived);
+        }
+        return result;
+      };
+      const channelsOrder = mergeWithArchived(idList);
+      const nextSettings: typeof spaceSettings = { ...spaceSettings, channelsOrder };
       void trigger(nextSettings, { optimisticData: nextSettings });
     },
-    [channelWithMemberList, spaceSettings, trigger],
+    [archivedChannelIds, channelWithMemberList, spaceSettings, trigger],
   );
   const handleDragCancel = useCallback(() => setActiveId(null), []);
   const overlay: ReactNode = useMemo(() => {
@@ -103,11 +126,11 @@ export const SidebarChannelList: FC<Props> = ({
       <SidebarChannelItem
         myId={myId}
         channel={activeChannel.channel}
-        active={channelIdFromPanes.includes(activeChannel.channel.id)}
+        active={activeChannelIds.includes(activeChannel.channel.id)}
         overlay
       />
     );
-  }, [activeId, channelIdFromPanes, channelWithMemberList, myId]);
+  }, [activeId, activeChannelIds, channelWithMemberList, myId]);
 
   if (isLoading || spaceSettings == null) {
     return <SidebarChannelListSkeleton />;
@@ -132,7 +155,7 @@ export const SidebarChannelList: FC<Props> = ({
               myId={myId}
               key={channel.id}
               channel={channel}
-              active={channelIdFromPanes.includes(channel.id)}
+              active={activeChannelIds.includes(channel.id)}
             />
           ))}
           <DragOverlay>{overlay}</DragOverlay>

@@ -7,4 +7,5 @@ export interface ChannelSettingsForm {
   defaultRollCommand: string;
   isSecret: boolean;
   type: ChannelType;
+  isArchived: boolean;
 }

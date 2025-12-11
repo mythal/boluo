@@ -21,6 +21,7 @@ interface Props {
   active: boolean;
   overlay?: boolean;
   myId: string | null | undefined;
+  disableOrderingContainer?: boolean;
 }
 export type LatestMessageAtom = Atom<'UNLOAD' | 'EMPTY' | MessageItem>;
 
@@ -32,10 +33,17 @@ const styles = {
   ),
 };
 
-export const SidebarChannelItem: FC<Props> = ({ channel, active, overlay = false, myId }) => {
+export const SidebarChannelItem: FC<Props> = ({
+  channel,
+  active,
+  overlay = false,
+  myId,
+  disableOrderingContainer = false,
+}) => {
   const replacePane = usePaneReplace();
   const intl = useIntl();
   const isReordering = useIsReordering();
+  const isOrderingEnabled = isReordering && !disableOrderingContainer;
 
   const messagesAtom = useMemo(
     () => atom((read) => read(chatAtom).channels[channel.id]?.messages),
@@ -73,12 +81,12 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active, overlay = false
   const handleClick: React.MouseEventHandler<HTMLAnchorElement> = useCallback(
     (e) => {
       e.preventDefault();
-      if (isReordering) {
+      if (isOrderingEnabled) {
         return;
       }
       replacePane({ type: 'CHANNEL', channelId: channel.id });
     },
-    [channel.id, isReordering, replacePane],
+    [channel.id, isOrderingEnabled, replacePane],
   );
   const channelHref = paneHrefWithRoute(channel.spaceId, {
     type: 'CHANNEL',
@@ -90,14 +98,14 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active, overlay = false
         className={clsx(
           'group/icon relative h-full',
           active ? 'text-text-primary' : 'text-text-subtle group-hover:text-text-secondary',
-          isReordering ? 'cursor-grab' : '',
+          isOrderingEnabled ? 'cursor-grab' : '',
         )}
-        aria-label={isReordering ? labelReorder : undefined}
+        aria-label={isOrderingEnabled ? labelReorder : undefined}
       >
-        <ChannelItemIcon channelType={channel.type} isReordering={isReordering} />
+        <ChannelItemIcon channelType={channel.type} isReordering={isOrderingEnabled} />
       </button>
     ),
-    [active, channel.type, isReordering, labelReorder],
+    [active, channel.type, isOrderingEnabled, labelReorder],
   );
   const channelName = (
     <span className="text-left">
@@ -124,7 +132,7 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active, overlay = false
     ),
     [active, channel.id],
   );
-  if (isReordering) {
+  if (isOrderingEnabled) {
     return (
       <SidebarChannelItemOrderableBox
         channelId={channel.id}
@@ -142,6 +150,27 @@ export const SidebarChannelItem: FC<Props> = ({ channel, active, overlay = false
           </span>
         </div>
       </SidebarChannelItemOrderableBox>
+    );
+  }
+
+  if (disableOrderingContainer) {
+    return (
+      <div className={styles.container}>
+        <a
+          href={channelHref}
+          className={clsx(
+            styles.item,
+            'cursor-pointer',
+            active ? 'bg-sidebar-item-active-bg' : 'hover:bg-sidebar-item-hover-bg',
+          )}
+          onClick={handleClick}
+        >
+          {iconButton}
+          {channelName}
+          {messagePreview}
+          {buttons}
+        </a>
+      </div>
     );
   }
 

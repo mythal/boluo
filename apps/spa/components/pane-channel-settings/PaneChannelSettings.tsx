@@ -23,6 +23,7 @@ import { PaneChannelSettingsHeader } from './PaneChannelSettingsHeader';
 import { TopicField } from './TopicField';
 import { Failed } from '@boluo/ui/Failed';
 import { ChannelTypeField } from '../pane-create-channel/ChannelTypeField';
+import { IsArchivedField } from './IsArchivedField';
 
 const channelToInitialValues = (channel: Channel): ChannelSettingsForm => ({
   name: channel.name,
@@ -31,6 +32,7 @@ const channelToInitialValues = (channel: Channel): ChannelSettingsForm => ({
   defaultRollCommand: channel.defaultRollCommand,
   isSecret: !channel.isPublic,
   type: channel.type || 'IN_GAME',
+  isArchived: channel.isArchived ?? false,
 });
 
 const PaneChannelSettingsForm: FC<{ channel: Channel }> = ({ channel }) => {
@@ -43,7 +45,7 @@ const PaneChannelSettingsForm: FC<{ channel: Channel }> = ({ channel }) => {
   const key = ['/channels/query', channel.id] as const;
   const editChannel: MutationFetcher<Channel, typeof key, ChannelSettingsForm> = async (
     [_, channelId],
-    { arg: { name, defaultDiceType, defaultRollCommand, topic, isSecret, type } },
+    { arg: { name, defaultDiceType, defaultRollCommand, topic, isSecret, type, isArchived } },
   ): Promise<Channel> => {
     const result = await post('/channels/edit', null, {
       name,
@@ -56,6 +58,7 @@ const PaneChannelSettingsForm: FC<{ channel: Channel }> = ({ channel }) => {
       removeMasters: [],
       isDocument: null,
       type,
+      isArchived,
     });
     return result.unwrap();
   };
@@ -91,6 +94,7 @@ const PaneChannelSettingsForm: FC<{ channel: Channel }> = ({ channel }) => {
           <DefaultRollCommandField />
           <TopicField />
           <IsSecretField />
+          <IsArchivedField />
 
           <div className="font-bold">
             <FormattedMessage defaultMessage="Danger Zone" />

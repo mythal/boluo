@@ -389,6 +389,9 @@
   "IQwWyF": {
     "message": "你必須登入後才能加入頻道。"
   },
+  "IVGDSG": {
+    "message": "Archived Channels"
+  },
   "IW0/M8": {
     "message": "自動選擇"
   },
@@ -577,6 +580,9 @@
   },
   "QBYqL5": {
     "message": "查詢位面成員失敗"
+  },
+  "QGIvkQ": {
+    "message": "Archived channels are hidden from the list by default."
   },
   "QOvY19": {
     "message": "悄悄話給主持人以及"
@@ -1151,14 +1157,14 @@
   "ruZw+F": {
     "message": "All searched"
   },
+  "rxjl9U": {
+    "message": "Archive this channel"
+  },
   "s+ixvA": {
     "message": "確定，摧毀「{spaceName}」"
   },
   "s6Rg3u": {
     "message": "哎呀！出了錯，但不是你這邊的問題"
-  },
-  "sMAAlN": {
-    "message": "新增"
   },
   "sNa4oH": {
     "message": "關閉窗格"

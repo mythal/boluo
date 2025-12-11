@@ -13,7 +13,6 @@ specta = { version = "2.0.0-rc.22", features = [
   "chrono",
   "derive",
   "export",
-  "serde",
   "serde_json",
   "uuid",
 ] }

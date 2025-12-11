@@ -57,7 +57,7 @@
     "message": "無角色名"
   },
   "198Skw": {
-    "message": "Customization"
+    "message": "客製化"
   },
   "1iEPTM": {
     "message": "通用"
@@ -315,7 +315,7 @@
     "message": "Echo"
   },
   "EWw/tK": {
-    "message": "Apply"
+    "message": "套用"
   },
   "EcW+hX": {
     "message": "只有選中的人可見。"
@@ -552,7 +552,7 @@
     "message": "上次出現"
   },
   "PbDoyX": {
-    "message": "Enable overrides"
+    "message": "啟用覆寫"
   },
   "Pe0ogR": {
     "message": "主題"
@@ -1101,7 +1101,7 @@
     "message": "{count}條訊息已過濾"
   },
   "qOH6mx": {
-    "message": "Serif"
+    "message": "襯線體"
   },
   "qQ4pEa": {
     "message": "對 {targets} 悄悄話"
@@ -1188,7 +1188,7 @@
     "message": "為了使用本應用，推薦使用最新版本的 {chromeLink}，{firefoxLink} 或 {edgeLink}。"
   },
   "tiLDlf": {
-    "message": "Dusha Green"
+    "message": "豆沙綠"
   },
   "ug01Mk": {
     "message": "時間"

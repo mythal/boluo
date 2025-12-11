@@ -254,6 +254,9 @@
   "AyGauy": {
     "message": "登入"
   },
+  "B+xqKy": {
+    "message": "Failed to load app resources"
+  },
   "BEbOqj": {
     "message": "糟糕！"
   },
@@ -277,6 +280,9 @@
   },
   "CW7jWC": {
     "message": "(自己)"
+  },
+  "CcPwxq": {
+    "message": "This may be because the application was updated or your network is unstable."
   },
   "Ciussb": {
     "message": "只能通過邀請訪問秘密頻道"
@@ -467,9 +473,6 @@
   "M8AFCu": {
     "message": "Long press to vertical split"
   },
-  "MWO2zy": {
-    "message": "出了點問題。"
-  },
   "MgRaWS": {
     "message": "頻道名不可為空。"
   },
@@ -514,6 +517,9 @@
   },
   "O5epsB": {
     "message": "取"
+  },
+  "ODc/d2": {
+    "message": "New Channel"
   },
   "OLFHJL": {
     "message": "極難成功"
@@ -881,6 +887,9 @@
   "f0Sf6g": {
     "message": "添加檔案"
   },
+  "f81+gv": {
+    "message": "Try refreshing the page. If the problem persists, clear your browser cache or try another browser."
+  },
   "fNCCY7": {
     "message": "基本"
   },
@@ -1015,6 +1024,9 @@
   },
   "n1Whvj": {
     "message": "切換"
+  },
+  "n3GPkg": {
+    "message": "If you are still unable to resolve the issue, please report it as a bug."
   },
   "n9f3pm": {
     "message": "超出限額"

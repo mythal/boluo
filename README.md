@@ -9,7 +9,9 @@ This repository is a monorepo containing the following applications:
 - `apps/site`: The website frontend.
 - `apps/server`: The backend server.
 - `apps/legacy`: The legacy version of the Boluo web application.
-- `apps/spa`: The single-page application (SPA).
+- `apps/spa`: The chat single-page application (SPA).
+  - [Staging environment](https://boluo-app-staging.mythal.workers.dev/). If you encounter connection issues, try disabling adblockers.
+- [`apps/storybook`](https://boluo-storybook.mythal.workers.dev/): The Storybook instance for UI components.
 
 ## Set Up Development Environment
 
@@ -17,19 +19,18 @@ We recommend using the [nix](https://nixos.org/) package manager ([installer](ht
 
 If you prefer not to use nix, you can install the following tools manually:
 
-- Rust toolchain: Even if you only plan to develop the frontend, installing Rust is still recommended as code generation depends on it.
-  - [cargo-nextest](https://nexte.st/)
-- Node.js
+- Node.js (v20+) and npm
+- Latest Rust toolchain, [sqlx-cli](https://crates.io/crates/sqlx-cli) and [cargo-nextest](https://nexte.st/).
 - Docker or Podman (recommended)
 
-### Frontend Only Development
+### Frontend Development
 
 For frontend-only development, simply set the `BACKEND_URL` environment variable to point to the staging or production server.
 
 ```
 echo "BACKEND_URL=https://boluo-server-staging.fly.dev" > .env.local
 npm install
-npm build
+npm run build
 npm run dev:spa
 ```
 
@@ -37,7 +38,7 @@ You can find testing users in [`apps/server/fixtures/0-users.sql`](https://githu
 
 ### Full-stack Development
 
-Skip this section if you are only developing the frontend. To develop the server, you must start the development services first.
+To develop the server, you must start the development services first.
 
 Rename the example configuration files:
 
@@ -49,11 +50,11 @@ cp docker-compose.override.example.yml docker-compose.override.yml
 
 Start the development services using `docker-compose`:
 
-```base
+```bash
 docker-compose up -d
 ```
 
-You need to set up the `DATABASE_URL` environment variable correctly in the `.env.local`. Then initialize the database with fixtures:
+You need to set up the `DATABASE_URL` environment variable correctly in `.env.local`. Then initialize the database with fixtures:
 
 ```bash
 cargo run --bin init -- --fixtures
@@ -64,11 +65,14 @@ You can find testing users in [`apps/server/fixtures/0-users.sql`](https://githu
 #### Start Development Servers
 
 ```bash
-cargo run
+cargo run # Server
 
 npm install
-npm build
-npm run dev:spa
+npm run build
+npm run dev:spa # SPA
+npm run dev:site # Website
+npm run dev:legacy # Legacy app
+npm run storybook # Storybook
 ```
 
 ## Checks

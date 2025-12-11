@@ -390,7 +390,7 @@
     "message": "你必须登录后才能加入频道。"
   },
   "IVGDSG": {
-    "message": "Archived Channels"
+    "message": "已归档频道"
   },
   "IW0/M8": {
     "message": "自动选择"
@@ -582,7 +582,7 @@
     "message": "查询位面成员失败"
   },
   "QGIvkQ": {
-    "message": "Archived channels are hidden from the list by default."
+    "message": "频道归档之后默认不在频道列表显示。"
   },
   "QOvY19": {
     "message": "悄悄话给主持人以及"
@@ -1158,7 +1158,7 @@
     "message": "搜完了"
   },
   "rxjl9U": {
-    "message": "Archive this channel"
+    "message": "归档此频道"
   },
   "s+ixvA": {
     "message": "确定，摧毁「{spaceName}」"

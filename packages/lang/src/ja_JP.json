@@ -57,7 +57,7 @@
     "message": "キャラクター名なし"
   },
   "198Skw": {
-    "message": "Customization"
+    "message": "カスタマイズ"
   },
   "1iEPTM": {
     "message": "全般"
@@ -261,7 +261,7 @@
     "message": "ログイン"
   },
   "B+xqKy": {
-    "message": "Failed to load app resources"
+    "message": "アプリのリソースの読み込みに失敗しました"
   },
   "BEbOqj": {
     "message": "おっとっと！"
@@ -288,7 +288,7 @@
     "message": "(自分)"
   },
   "CcPwxq": {
-    "message": "This may be because the application was updated or your network is unstable."
+    "message": "これは、アプリケーションが更新されたか、ネットワークが不安定なためである可能性があります。"
   },
   "Ciussb": {
     "message": "シークレットチャンネルは招待でのみアクセスできます。"
@@ -315,7 +315,7 @@
     "message": "エコー"
   },
   "EWw/tK": {
-    "message": "Apply"
+    "message": "適用"
   },
   "EcW+hX": {
     "message": "選ばれた人だけに見えます。"
@@ -388,6 +388,9 @@
   },
   "IQwWyF": {
     "message": "チャンネルに参加するにはログインが必要です。"
+  },
+  "IVGDSG": {
+    "message": "アーカイブ済みチャンネル"
   },
   "IW0/M8": {
     "message": "自動選択"
@@ -528,7 +531,7 @@
     "message": "取る"
   },
   "ODc/d2": {
-    "message": "New Channel"
+    "message": "新規チャネル"
   },
   "OLFHJL": {
     "message": "極限成功"
@@ -552,7 +555,7 @@
     "message": "最近の活動時間"
   },
   "PbDoyX": {
-    "message": "Enable overrides"
+    "message": "上書きを有効化"
   },
   "Pe0ogR": {
     "message": "テーマ"
@@ -577,6 +580,9 @@
   },
   "QBYqL5": {
     "message": "位面のメンバー照会に失敗しました"
+  },
+  "QGIvkQ": {
+    "message": "Archived channels are hidden from the list by default."
   },
   "QOvY19": {
     "message": "マスターにささやき、"
@@ -630,7 +636,7 @@
     "message": "エクスポート"
   },
   "SaSNIH": {
-    "message": "Messages Display Settings"
+    "message": "メッセージ表示設定"
   },
   "SpLs8U": {
     "message": "チャネルに参加するには、まず {space} に参加する必要があります。"
@@ -903,10 +909,10 @@
     "message": "ファイルを追加"
   },
   "f2CunY": {
-    "message": "Custom theme overrides"
+    "message": "カスタムテーマの上書き"
   },
   "f81+gv": {
-    "message": "Try refreshing the page. If the problem persists, clear your browser cache or try another browser."
+    "message": "ページを更新してみてください。問題が解決しない場合は、ブラウザのキャッシュをクリアするか、別のブラウザをお試しください。"
   },
   "fNCCY7": {
     "message": "ベーシック"
@@ -1044,7 +1050,7 @@
     "message": "切り替え"
   },
   "n3GPkg": {
-    "message": "If you are still unable to resolve the issue, please report it as a bug."
+    "message": "それでも問題を解決できない場合は、バグとして報告してください。"
   },
   "n9f3pm": {
     "message": "制限を超過しました。"
@@ -1101,7 +1107,7 @@
     "message": "{count} filtered messages"
   },
   "qOH6mx": {
-    "message": "Serif"
+    "message": "明朝体"
   },
   "qQ4pEa": {
     "message": "{targets} にささやく"
@@ -1151,14 +1157,14 @@
   "ruZw+F": {
     "message": "すべて検索済み"
   },
+  "rxjl9U": {
+    "message": "このチャネルをアーカイブ"
+  },
   "s+ixvA": {
     "message": "「 {spaceName}」を破壊します"
   },
   "s6Rg3u": {
     "message": "おっと！何か問題が発生しましたが、それはあなたのせいではありません"
-  },
-  "sMAAlN": {
-    "message": "新規"
   },
   "sNa4oH": {
     "message": "ペインを閉じる"
@@ -1188,7 +1194,7 @@
     "message": "このアプリを使用するには、最新バージョンの {chromeLink}、 {firefoxLink}、または {edgeLink} を使用することをお勧めします。"
   },
   "tiLDlf": {
-    "message": "Dusha Green"
+    "message": "ドゥシャグリーン"
   },
   "ug01Mk": {
     "message": "時間"

@@ -389,6 +389,9 @@
   "IQwWyF": {
     "message": "你必须登录后才能加入频道。"
   },
+  "IVGDSG": {
+    "message": "已归档频道"
+  },
   "IW0/M8": {
     "message": "自动选择"
   },
@@ -577,6 +580,9 @@
   },
   "QBYqL5": {
     "message": "查询位面成员失败"
+  },
+  "QGIvkQ": {
+    "message": "频道归档之后默认不在频道列表显示。"
   },
   "QOvY19": {
     "message": "悄悄话给主持人以及"
@@ -1151,14 +1157,14 @@
   "ruZw+F": {
     "message": "搜完了"
   },
+  "rxjl9U": {
+    "message": "归档此频道"
+  },
   "s+ixvA": {
     "message": "确定，摧毁「{spaceName}」"
   },
   "s6Rg3u": {
     "message": "哎呀！出了错，但不是你这边的问题"
-  },
-  "sMAAlN": {
-    "message": "新增"
   },
   "sNa4oH": {
     "message": "关闭窗格"

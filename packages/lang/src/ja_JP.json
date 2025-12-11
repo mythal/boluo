@@ -56,6 +56,9 @@
   "0pT/2d": {
     "message": "キャラクター名なし"
   },
+  "198Skw": {
+    "message": "Customization"
+  },
   "1iEPTM": {
     "message": "全般"
   },
@@ -203,6 +206,9 @@
   "82Y7Sa": {
     "message": "送信中..."
   },
+  "8HQJF3": {
+    "message": "Paste CSS variables or any custom CSS to override the theme."
+  },
   "8be59M": {
     "message": "メール確認が成功しました！"
   },
@@ -254,6 +260,9 @@
   "AyGauy": {
     "message": "ログイン"
   },
+  "B+xqKy": {
+    "message": "Failed to load app resources"
+  },
   "BEbOqj": {
     "message": "おっとっと！"
   },
@@ -278,6 +287,9 @@
   "CW7jWC": {
     "message": "(自分)"
   },
+  "CcPwxq": {
+    "message": "This may be because the application was updated or your network is unstable."
+  },
   "Ciussb": {
     "message": "シークレットチャンネルは招待でのみアクセスできます。"
   },
@@ -301,6 +313,9 @@
   },
   "DBP+Od": {
     "message": "エコー"
+  },
+  "EWw/tK": {
+    "message": "Apply"
   },
   "EcW+hX": {
     "message": "選ばれた人だけに見えます。"
@@ -467,9 +482,6 @@
   "M8AFCu": {
     "message": "長押しで垂直分割する"
   },
-  "MWO2zy": {
-    "message": "何か問題が発生しました。"
-  },
   "MgRaWS": {
     "message": "チャンネル名は空になることはできません"
   },
@@ -509,8 +521,14 @@
   "NZyhSX": {
     "message": "新着情報"
   },
+  "No0obH": {
+    "message": "Switch to serif font for In-Game messages."
+  },
   "O5epsB": {
     "message": "取る"
+  },
+  "ODc/d2": {
+    "message": "New Channel"
   },
   "OLFHJL": {
     "message": "極限成功"
@@ -532,6 +550,9 @@
   },
   "PO83gc": {
     "message": "最近の活動時間"
+  },
+  "PbDoyX": {
+    "message": "Enable overrides"
   },
   "Pe0ogR": {
     "message": "テーマ"
@@ -608,6 +629,9 @@
   "SVwJTM": {
     "message": "エクスポート"
   },
+  "SaSNIH": {
+    "message": "Messages Display Settings"
+  },
   "SpLs8U": {
     "message": "チャネルに参加するには、まず {space} に参加する必要があります。"
   },
@@ -637,6 +661,9 @@
   },
   "TwyMau": {
     "message": "アカウント"
+  },
+  "U7Z0l+": {
+    "message": "See the <link>source</link> for reference — PRs welcome!"
   },
   "UKhyJG": {
     "message": "ファイルサイズは {sizeLimit}M 以下である必要があります。"
@@ -875,6 +902,12 @@
   "f0Sf6g": {
     "message": "ファイルを追加"
   },
+  "f2CunY": {
+    "message": "Custom theme overrides"
+  },
+  "f81+gv": {
+    "message": "Try refreshing the page. If the problem persists, clear your browser cache or try another browser."
+  },
   "fNCCY7": {
     "message": "ベーシック"
   },
@@ -1010,6 +1043,9 @@
   "n1Whvj": {
     "message": "切り替え"
   },
+  "n3GPkg": {
+    "message": "If you are still unable to resolve the issue, please report it as a bug."
+  },
   "n9f3pm": {
     "message": "制限を超過しました。"
   },
@@ -1063,6 +1099,9 @@
   },
   "qGHWyb": {
     "message": "{count} filtered messages"
+  },
+  "qOH6mx": {
+    "message": "Serif"
   },
   "qQ4pEa": {
     "message": "{targets} にささやく"
@@ -1147,6 +1186,9 @@
   },
   "taJuye": {
     "message": "このアプリを使用するには、最新バージョンの {chromeLink}、 {firefoxLink}、または {edgeLink} を使用することをお勧めします。"
+  },
+  "tiLDlf": {
+    "message": "Dusha Green"
   },
   "ug01Mk": {
     "message": "時間"

@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import type { Entity } from '@boluo/api';
-import { type Env, parse as originalParse } from './parser';
+import { type Env, parse as originalParse, parseModifiers } from './parser';
 
 const parse = (source: string, parseExpr = true, env?: Env) => {
   const { entities, text } = originalParse(source, parseExpr, env);
@@ -147,6 +147,43 @@ test('parse modifier', () => {
   assert.strictEqual(originalParse('.Ins').inGame, null);
   // assert.strictEqual(originalParse('.out').inGame, false);
   // assert.strictEqual(originalParse('.OUT').inGame, false);
+});
+
+test('parse temporary character name modifier', () => {
+  const withAs = originalParse('.as Alice; hello world');
+  assert.strictEqual(withAs.characterName, 'Alice');
+  assert.strictEqual(withAs.inGame, true);
+  assert.ok(withAs.modifiers.some((modifier) => modifier.type === 'As'));
+
+  const modifiers = parseModifiers('.as   Bob the Brave;  hi');
+  assert.strictEqual(modifiers.characterName, 'Bob the Brave');
+  assert.strictEqual(modifiers.rest.trimStart(), 'hi');
+
+  const chinesePunctuation = parseModifiers('.as 贝伦卡斯泰露； 泥嘻嘻');
+  assert.strictEqual(chinesePunctuation.characterName, '贝伦卡斯泰露');
+  assert.strictEqual(chinesePunctuation.rest.trimStart(), '泥嘻嘻');
+
+  const withSpaces = parseModifiers('.as  Alice  Bob  ; greetings');
+  assert.strictEqual(withSpaces.characterName, 'Alice  Bob');
+  assert.strictEqual(withSpaces.rest.trimStart(), 'greetings');
+
+  const newlineDelimiter = parseModifiers('.as 勇者\n战斗!');
+  assert.strictEqual(newlineDelimiter.characterName, '勇者');
+  assert.strictEqual(newlineDelimiter.rest.trimStart(), '战斗!');
+
+  const newlineDelimiterAndWhitespace = parseModifiers('.as 魔女工艺掌门 玻璃匠薇儿   \n逃跑!');
+  assert.strictEqual(newlineDelimiterAndWhitespace.characterName, '魔女工艺掌门 玻璃匠薇儿');
+  assert.strictEqual(newlineDelimiterAndWhitespace.rest.trimStart(), '逃跑!');
+});
+
+test('parse .as without name acts as in-game', () => {
+  const parsed = originalParse('.as hello');
+  assert.strictEqual(parsed.inGame, true);
+  assert.strictEqual(parsed.characterName, '');
+  const modifiers = parseModifiers('.as some text');
+  assert.strictEqual(modifiers.characterName, '');
+  assert.strictEqual(modifiers.inGame && modifiers.inGame.type, 'As');
+  assert.strictEqual(modifiers.rest.trimStart(), 'some text');
 });
 
 test('parse roll', () => {

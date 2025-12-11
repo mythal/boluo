@@ -1,6 +1,6 @@
-import { JsonValue, type ClientEvent, type PreviewPost } from '@boluo/api';
+import { type ClientEvent, type PreviewPost } from '@boluo/api';
 import { atom, type Atom, useAtomValue, useStore } from 'jotai';
-import { type MutableRefObject, useEffect, useMemo, useRef } from 'react';
+import { type RefObject, useEffect, useMemo, useRef } from 'react';
 import { makeId } from '@boluo/utils/id';
 import { type ComposeAtom } from '../../hooks/useComposeAtom';
 import { usePaneIsFocus } from '../../hooks/usePaneIsFocus';
@@ -13,20 +13,26 @@ const SEND_PREVIEW_TIMEOUT_MS = 250;
 const sendPreview = (
   channelId: string,
   nickname: string,
-  characterName: string,
+  defaultCharacterName: string,
   compose: ComposeState,
   parsed: ParseResult,
   connection: WebSocket,
-  sendTimeoutRef: MutableRefObject<number | undefined>,
+  sendTimeoutRef: RefObject<number | undefined>,
   defaultInGame: boolean,
 ): void => {
   window.clearTimeout(sendTimeoutRef.current);
 
   sendTimeoutRef.current = window.setTimeout(() => {
-    const { previewId, inputedName, edit } = compose;
-    const { isAction, broadcast, whisperToUsernames, inGame: parsedInGame } = parsed;
-    const inGame = parsedInGame ?? defaultInGame;
-    const inGameName = inputedName || characterName;
+    const { previewId, edit } = compose;
+    const {
+      isAction,
+      broadcast,
+      whisperToUsernames,
+      inGame: parsedInGame,
+      characterName: parsedCharacterName,
+    } = parsed;
+    const inGame = parsedCharacterName ? true : (parsedInGame ?? defaultInGame);
+    const inGameName = parsedCharacterName || defaultCharacterName;
     if (!previewId) return;
     const doNotBroadcast = !broadcast || whisperToUsernames != null;
     const resetPreview = parsed.text === '' || parsed.entities.length === 0;
@@ -56,7 +62,7 @@ const sendPreview = (
 export const useSendPreview = (
   channelId: string,
   nickname: string | undefined,
-  characterName: string,
+  defaultCharacterName: string,
   composeAtom: ComposeAtom,
   parsedAtom: Atom<ParseResult>,
   defaultInGame: boolean,
@@ -101,7 +107,7 @@ export const useSendPreview = (
       sendPreview(
         channelId,
         nickname,
-        characterName,
+        defaultCharacterName,
         composeState,
         parsed,
         connectionState.connection,
@@ -111,7 +117,7 @@ export const useSendPreview = (
     });
   }, [
     channelId,
-    characterName,
+    defaultCharacterName,
     composeAtom,
     connectionState,
     defaultInGame,

@@ -26,15 +26,14 @@ import { useMember } from '../../hooks/useMember';
 
 type ComposeDrived = Pick<ComposeState, 'media'> & {
   editMode: boolean;
-  name: string;
 };
 
 const isEqual = (a: ComposeDrived, b: ComposeDrived) =>
-  a.editMode === b.editMode && a.name === b.name && a.media === b.media;
+  a.editMode === b.editMode && a.media === b.media;
 
-const selector = ({ inputedName, edit, media }: ComposeState): ComposeDrived => {
+const selector = ({ edit, media }: ComposeState): ComposeDrived => {
   const editMode = edit != null;
-  return { name: inputedName.trim(), editMode, media };
+  return { editMode, media };
 };
 
 // Keep the self preview fully visible when its own height or the scroller height changes.
@@ -145,7 +144,8 @@ export const SelfPreview: FC<Props> = ({ preview, isLast, virtualListIndex }) =>
   const isFocused = usePaneIsFocus();
   const member = useMember()!;
   const isMaster = member.channel.isMaster;
-  const { composeAtom, isActionAtom, inGameAtom, selfPreviewHoverAtom } = useChannelAtoms();
+  const { composeAtom, isActionAtom, inGameAtom, parsedAtom, selfPreviewHoverAtom } =
+    useChannelAtoms();
   const setSelfPreviewHover = useSetAtom(selfPreviewHoverAtom);
   const { hidePlaceholder, hideToolbox } = useSelfPreviewAutoHide();
   const compose: ComposeDrived = useAtomValue(
@@ -153,16 +153,23 @@ export const SelfPreview: FC<Props> = ({ preview, isLast, virtualListIndex }) =>
   );
   const isAction = useAtomValue(isActionAtom);
   const inGame = useAtomValue(inGameAtom);
+  const parsed = useAtomValue(parsedAtom);
   const { editMode, media } = compose;
   const color = useMessageColor(member.user.id, inGame, null);
   const name = useMemo(() => {
     if (!inGame) {
       return member.user.nickname;
-    } else if (compose.name !== '') {
-      return compose.name;
+    }
+    if (parsed.characterName) {
+      return parsed.characterName;
     }
     return member.channel.characterName;
-  }, [compose.name, inGame, member.channel.characterName, member.user.nickname]);
+  }, [
+    inGame,
+    member.channel.characterName,
+    member.user.nickname,
+    parsed.characterName,
+  ]);
   const nameNode = useMemo(() => {
     return (
       <NameEditable

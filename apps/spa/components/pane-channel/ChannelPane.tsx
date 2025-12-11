@@ -55,18 +55,18 @@ const ChatPaneChannelView: FC<{
 }> = ({ channel, errorNode }) => {
   const member = useMember();
   const nickname = member?.user.nickname ?? undefined;
-  const characterName = member?.channel.characterName ?? '';
+  const defaultCharacterName = member?.channel.characterName ?? '';
   const defaultInGame = channel?.type === 'IN_GAME';
   const atoms: ChannelAtoms = useMakeChannelAtoms(
     channel.id,
-    characterName,
+    defaultCharacterName,
     defaultInGame,
     parseDiceFace(channel?.defaultDiceType),
   );
   useSendPreview(
     channel.id,
     nickname,
-    characterName,
+    defaultCharacterName,
     atoms.composeAtom,
     atoms.parsedAtom,
     defaultInGame,

@@ -52,12 +52,12 @@ export const useSend = () => {
     }
     const nickname = myMember.user.nickname;
     const composeState = store.get(composeAtom);
-    const parsed = store.get(parsedAtom);
+    const parsedPreview = store.get(parsedAtom);
     if (store.get(checkComposeAtom) != null) return;
     const composeDispatch = (action: ComposeActionUnion) => store.set(composeAtom, action);
     const chatDispatch = (action: ChatActionUnion) => store.set(chatAtom, action);
     composeDispatch({ type: 'sent', payload: { edit: composeState.edit != null } });
-    const { text, entities, whisperToUsernames } = parse(composeState.source, true, {
+    const parsedForSend = parse(composeState.source, true, {
       defaultDiceFace: defaultDiceFaceRef.current,
       resolveUsername: (username) => {
         const member = channelMembersMapRef.current.get(username);
@@ -65,14 +65,18 @@ export const useSend = () => {
         return member.user.nickname;
       },
     });
+    const { text, entities, whisperToUsernames, characterName: parsedCharacterNameForSend } =
+      parsedForSend;
     let name = nickname;
-    const inGame = parsed.inGame ?? defaultInGame;
+    const effectiveCharacterName =
+      (parsedCharacterNameForSend || parsedPreview.characterName).trim();
+    const parsedInGame = parsedPreview.inGame ?? parsedForSend.inGame ?? null;
+    const inGame = effectiveCharacterName ? true : parsedInGame ?? defaultInGame;
     if (inGame) {
-      const inputedName = composeState.inputedName.trim();
-      if (inputedName === '') {
-        name = myMember.channel.characterName;
+      if (effectiveCharacterName !== '') {
+        name = effectiveCharacterName;
       } else {
-        name = inputedName;
+        name = myMember.channel.characterName;
       }
     }
     let payload:
@@ -99,7 +103,7 @@ export const useSend = () => {
           text,
           entities,
           inGame,
-          isAction: parsed.isAction,
+          isAction: parsedPreview.isAction,
           whisperToUsers: whisperToUsernames
             ? usernameListToUserIdList(whisperToUsernames)
             : undefined,
@@ -124,7 +128,7 @@ export const useSend = () => {
           text,
           entities,
           inGame,
-          isAction: parsed.isAction,
+          isAction: parsedPreview.isAction,
           mediaId: typeof composeState.media === 'string' ? composeState.media : null,
           color: '',
         },

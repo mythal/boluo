@@ -174,7 +174,7 @@ export const useConnectionEffect = (mailboxId: string) => {
         case 'ERROR':
           if (update.body.code === 'NOT_FOUND') {
             alert(
-              'Can not find the requested updates, this may be due to the client being offline for a long time or the server has been restarted. Please refresh the page',
+              'Cannot find the requested updates. This may be because the client has been offline for a long time or the server has restarted. Please refresh the page.',
             );
           }
           dispatch({
@@ -212,10 +212,12 @@ export const useConnectionEffect = (mailboxId: string) => {
       ).then((connectionResult) => {
         if (connectionResult == null) return;
         if (connectionResult === NETWORK_ERROR) {
-          alert('Failed to establish connection due to network error, please try again later');
+          alert('Failed to establish connection due to a network error. Please try again later.');
           return;
         } else if (connectionResult === UNAUTHENTICATED) {
-          alert('The session is invalid, please login again');
+          alert(
+            'The session is invalid. Please clear your cache or try a different browser. This is unexpected behavior; please report this issue.',
+          );
           return;
         }
         currentConnection = connectionResult;

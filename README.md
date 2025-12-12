@@ -28,10 +28,14 @@ If you prefer not to use nix, you can install the following tools manually:
 For frontend-only development, simply set the `BACKEND_URL` environment variable to point to the staging or production server.
 
 ```
-echo "BACKEND_URL=https://boluo-server-staging.fly.dev" > .env.local
 npm install
-npm run build
+
+echo "BACKEND_URL=https://boluo-server-staging.fly.dev" > .env.local
 npm run dev:spa
+
+# Or simply
+
+BACKEND_URL=https://boluo-server-staging.fly.dev npm run dev:spa
 ```
 
 You can find testing users in [`apps/server/fixtures/0-users.sql`](https://github.com/mythal/boluo/blob/master/apps/server/fixtures/0-users.sql).
@@ -90,7 +94,7 @@ You can run the following commands to check code quality and run tests:
 Generate new migration files using:
 
 ```
-sqlx migrate add <migration_name> --source apps/server/migrations
+sqlx migrate add <migration_name> -r --source apps/server/migrations
 ```
 
 Generate type-safe query definitions using:

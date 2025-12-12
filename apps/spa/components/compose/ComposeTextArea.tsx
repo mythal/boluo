@@ -4,6 +4,7 @@ import {
   type ChangeEventHandler,
   type FC,
   type KeyboardEvent,
+  type PointerEventHandler,
   startTransition,
   useEffect,
   useMemo,
@@ -75,6 +76,8 @@ export const ComposeTextArea: FC<Props> = ({ parsed, enterSend, send, myId }) =>
   const ref = useRef<RichTextareaHandle | null>(null);
   const channelId = useChannelId();
   const isCompositionRef = useRef(false);
+  // Avoid overriding a user-clicked caret position when focus is regained via pointer.
+  const skipFocusSelectionRef = useRef(false);
   const dispatch = useSetAtom(composeAtom);
   const store = useStore();
   const size = useAtomValue(composeSizeAtom);
@@ -127,6 +130,10 @@ export const ComposeTextArea: FC<Props> = ({ parsed, enterSend, send, myId }) =>
     if (!focused) return;
     const textArea = ref.current;
     if (!textArea) return;
+    if (skipFocusSelectionRef.current) {
+      skipFocusSelectionRef.current = false;
+      return;
+    }
     const compose = store.get(composeAtom);
     const [start, end] = compose.range;
     lock.current = true;
@@ -218,6 +225,13 @@ export const ComposeTextArea: FC<Props> = ({ parsed, enterSend, send, myId }) =>
       }
     }
   };
+
+  const handlePointerDown: PointerEventHandler<HTMLTextAreaElement> = () => {
+    const textArea = ref.current;
+    if (!textArea) return;
+    // Only skip selection restoration when the textarea is not already focused.
+    skipFocusSelectionRef.current = textArea !== document.activeElement;
+  };
   return (
     <RichTextarea
       ref={ref}
@@ -230,6 +244,7 @@ export const ComposeTextArea: FC<Props> = ({ parsed, enterSend, send, myId }) =>
       onCompositionEnd={handleCompositionEnd}
       onKeyDown={handleKeyDown}
       data-variant="normal"
+      onPointerDown={handlePointerDown}
       onSelectionChange={updateRange}
       style={style}
       autoHeight={autoSize}

@@ -79,6 +79,7 @@ export const ConnectionIndicatior: FC<Props> = ({ spaceId }) => {
             </span>
           </span>
         )}
+        <span className="grow" />
         <div className="w-max flex-none text-right">
           <ButtonInline groupHover aria-pressed={sidebarContentState === 'CONNECTIONS'}>
             <FormattedMessage defaultMessage="Switch" />

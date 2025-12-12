@@ -6,6 +6,8 @@ import { TooltipBox } from '@boluo/ui/TooltipBox';
 import { type FC } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { type MutateSettingsTrigger } from '../../hooks/useMutateSettings';
+import { useAtomValue } from 'jotai';
+import { devMode } from '../../state/dev.atoms';
 
 interface Props {
   inGameFont?: InGameFont;
@@ -27,6 +29,10 @@ export const ChatContentContainerSettingsFont: FC<Props> = ({ inGameFont, update
       },
     );
   };
+  const isDev = useAtomValue(devMode);
+  if (!isDev) {
+    return null;
+  }
   return (
     <>
       <Button

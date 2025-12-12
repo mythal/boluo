@@ -51,33 +51,6 @@ const PageHead = () => {
       <meta name="application-name" content={intl.formatMessage({ defaultMessage: 'Boluo' })} />
       <link rel="manifest" href={`/${intl.locale}.webmanifest`} />
       <link rel="apple-touch-icon" href="/icons/app-180px.png"></link>
-      {/* TODO: Self-host fonts */}
-      {intl.locale.startsWith('zh') && (
-        <link
-          rel="stylesheet"
-          href="https://chinese-fonts-cdn.deno.dev/packages/lywkpmydb/dist/LXGWWenKaiScreen/result.css"
-        />
-      )}
-      {intl.locale === 'en' && (
-        <>
-          <link rel="preconnect" href="https://fonts.googleapis.com"></link>
-          <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous"></link>
-          <link
-            href="https://fonts.googleapis.com/css2?family=Vollkorn:ital,wght@0,400..900;1,400..900&display=swap"
-            rel="stylesheet"
-          />
-        </>
-      )}
-      {intl.locale === 'ja' && (
-        <>
-          <link rel="preconnect" href="https://fonts.googleapis.com"></link>
-          <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous"></link>
-          <link
-            href="https://fonts.googleapis.com/css2?family=Shippori+Mincho&display=swap"
-            rel="stylesheet"
-          />
-        </>
-      )}
       {LOCALES.map((locale) => (
         <link key={locale} rel="alternate" hrefLang={locale} href={`/${locale}`} />
       ))}

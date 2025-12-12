@@ -29,6 +29,8 @@ You should run `npm run check` after modifying TypeScript code.
 - Type checking: `npm run check`
 - Linting: `npm run lint`
 
+> **Note**: `noUncheckedIndexedAccess` is enabled in TypeScript configuration. Please handle potential `undefined` results when accessing arrays or objects by index.
+
 Turborepo's options are available for both commands, e.g., `npm run check -- --filter=site --filter='@boluo/ui'`.
 
 ### Main Chat App (`apps/spa`)

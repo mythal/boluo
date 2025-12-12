@@ -85,10 +85,7 @@ export const Compose = ({ member, channelAtoms }: Props) => {
       <div
         onDrop={onDrop}
         onDragOver={handleDragOver}
-        className="Compose group/compose bg-surface-default standalone-bottom-padding border-border-subtle relative col-span-full overflow-y-hidden border-t p-2"
-        style={{
-          paddingBottom: 'calc(var(--keyboard-inset, 0px) + 0.5rem)',
-        }}
+        className="Compose group/compose bg-surface-default standalone-bottom-padding border-border-subtle relative col-span-full border-t p-2"
       >
         <ComposeResizer />
         {mediaLine}
@@ -113,10 +110,10 @@ export const Compose = ({ member, channelAtoms }: Props) => {
 
           {addDiceButton}
           {sendButton}
-          <div className="absolute top-full left-0 z-10 w-full overflow-hidden">
-            <div className="px-1 py-4">
-              <FormattedMessage defaultMessage="If you see this text, please try to swipe down ↓ to display the content." />
-            </div>
+        </div>
+        <div className="h-(--keyboard-inset,0px) overflow-clip">
+          <div className="px-1 py-4">
+            <FormattedMessage defaultMessage="If you see this text, please try to swipe down ↓ to display the content." />
           </div>
         </div>
       </div>

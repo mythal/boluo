@@ -161,7 +161,7 @@ function ChannelMemberButton({ className }: Props) {
         </ChatHeaderButton>
         {dialog && (
           <Dialog title="加入频道" dismiss={dismissDialog} mask>
-            <form onSubmit={void handleSubmit(onConfirmJoin)}>
+            <form onSubmit={handleSubmit(onConfirmJoin)}>
               {characterNameField}
               <div css={[mT(4), alignRight]}>
                 <Button data-variant="primary" type="submit">
@@ -210,7 +210,7 @@ function ChannelMemberButton({ className }: Props) {
       )}
       {dialog && (
         <Dialog title="频道成员设置" dismiss={dismissDialog} mask>
-          <form onSubmit={void handleSubmit(onSubmitEdit)}>
+          <form onSubmit={handleSubmit(onSubmitEdit)}>
             {characterNameField}
             <div css={buttonBarStyle}>
               <Button data-variant="primary" type="submit">
@@ -225,7 +225,7 @@ function ChannelMemberButton({ className }: Props) {
           title="退出确认"
           dismiss={() => setLeaveConfirmDialog(false)}
           mask
-          confirm={void onConfirmLeave}
+          confirm={onConfirmLeave}
           confirmText="退出"
         >
           <Text>真的要退出「{channelName}」频道吗？</Text>

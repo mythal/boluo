@@ -1,11 +1,19 @@
-import { type FC, useCallback, useMemo } from 'react';
+import {
+  type CSSProperties,
+  type FC,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import {
   PALETTE_PREFIX,
   RANDOM_PREFIX,
   computeColors,
-  generateColor,
   palette,
   paletteKeys,
+  parseHexColor,
   parseGameColor,
 } from '@boluo/color';
 import { type ApiError, type User } from '@boluo/api';
@@ -15,25 +23,14 @@ import { post } from '@boluo/api-browser';
 import { mutate } from 'swr';
 import { classifyLightOrDark } from '@boluo/theme';
 import { Button } from '@boluo/ui/Button';
+import { ColorCell } from '@boluo/ui/ColorCell';
 import { useResolvedTheme } from '../../hooks/useResolvedTheme';
-
-const ColorCell: FC<{
-  color: string;
-  selected: boolean;
-  onClick: (color: string) => void;
-  isLoading: boolean;
-}> = ({ color, selected, onClick, isLoading }) => {
-  return (
-    <button
-      className={`h-10 w-10 rounded border-2 ${isLoading ? 'grayscale' : ''} ${selected ? 'border-border-strong' : 'border-border-subtle'}`}
-      style={{ backgroundColor: color }}
-      onClick={() => onClick(color)}
-    />
-  );
-};
+import { ColorPickerInput } from '@boluo/ui/ColorPickerInput';
 
 export const EditDefaultColor: FC<{ currentUser: User }> = ({ currentUser }) => {
   const lightOrDark = classifyLightOrDark(useResolvedTheme());
+  const [customColor, setCustomColor] = useState<string>('');
+  const debounceTimer = useRef<number | null>(null);
   const key = ['/users/query', null] as const;
   const { trigger, isMutating } = useSWRMutation<User, ApiError, typeof key, string>(
     key,
@@ -49,13 +46,38 @@ export const EditDefaultColor: FC<{ currentUser: User }> = ({ currentUser }) => 
     },
   );
 
+  const normalizeColor = useCallback((color: string) => {
+    const hex = parseHexColor(color);
+    if (hex != null) {
+      return hex.toUpperCase();
+    }
+    return color;
+  }, []);
+
   const handleEditDefaultColor = useCallback(
     (color: string) => {
-      if (color !== currentUser.defaultColor) {
-        void trigger(color);
+      const normalizedColor = normalizeColor(color);
+      if (normalizedColor !== currentUser.defaultColor) {
+        void trigger(normalizedColor);
       }
     },
-    [currentUser.defaultColor, trigger],
+    [currentUser.defaultColor, normalizeColor, trigger],
+  );
+
+  const scheduleCustomColorUpdate = useCallback(
+    (color: string) => {
+      const hex = parseHexColor(color);
+      setCustomColor(color);
+      if (hex == null) return;
+      const normalized = hex.toUpperCase();
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current);
+      }
+      debounceTimer.current = window.setTimeout(() => {
+        handleEditDefaultColor(normalized);
+      }, 300);
+    },
+    [handleEditDefaultColor],
   );
 
   const parsedColors = useMemo(
@@ -66,23 +88,48 @@ export const EditDefaultColor: FC<{ currentUser: User }> = ({ currentUser }) => 
     () => computeColors(currentUser.id, parsedColors),
     [currentUser.id, parsedColors],
   );
-  const parsedColor = parsedColors[lightOrDark];
-  const randomColorSeedSuffix = parsedColor.type === 'random' ? parsedColor.seed : '';
+  const colorPickerValue = parseHexColor(customColor)?.toUpperCase() ?? computedColors[lightOrDark];
+
+  useEffect(() => {
+    setCustomColor(computedColors[lightOrDark]);
+  }, [computedColors, lightOrDark]);
+
+  useEffect(() => {
+    return () => {
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current);
+      }
+    };
+  }, []);
+
   return (
     <div>
       <div className="block pb-1 font-bold">
         <FormattedMessage defaultMessage="Default Color" />
       </div>
       <div className="flex w-full gap-2 py-4">
-        <div className="light">
-          <div className="rounded-lg border bg-white p-6" style={{ color: computedColors.light }}>
+        <div className="light mode-light">
+          <div
+            className="stroke-name border-border-strong rounded-lg border bg-white p-6"
+            style={
+              {
+                color: computedColors.light,
+                '--name-color': computedColors.light,
+              } as CSSProperties
+            }
+          >
             <FormattedMessage defaultMessage="In Light Mode" />
           </div>
         </div>
-        <div className="dark">
+        <div className="dark mode-dark">
           <div
-            className="rounded-lg border bg-slate-900 p-6"
-            style={{ color: computedColors.dark }}
+            className="stroke-name border-border-strong rounded-lg border bg-slate-900 p-6"
+            style={
+              {
+                color: computedColors.dark,
+                '--name-color': computedColors.dark,
+              } as CSSProperties
+            }
           >
             <FormattedMessage defaultMessage="In Dark Mode" />
           </div>
@@ -90,11 +137,13 @@ export const EditDefaultColor: FC<{ currentUser: User }> = ({ currentUser }) => 
       </div>
 
       <div className="flex items-center gap-2 py-2">
-        <ColorCell
-          color={generateColor(currentUser.id + randomColorSeedSuffix)}
-          selected={parsedColors[lightOrDark].type === 'random'}
-          onClick={() => handleEditDefaultColor(RANDOM_PREFIX + randomColorSeedSuffix)}
-          isLoading={isMutating}
+        <ColorPickerInput
+          className="py-2"
+          colorValue={colorPickerValue}
+          textValue={customColor}
+          onChange={scheduleCustomColorUpdate}
+          disabled={isMutating}
+          colorInputClassName={`border ${parsedColors[lightOrDark].type === 'hex' ? 'border-border-strong' : 'border-border-subtle'}`}
         />
         <Button onClick={() => handleEditDefaultColor(RANDOM_PREFIX + Math.random().toString())}>
           <FormattedMessage defaultMessage="Shuffle Random Color" />

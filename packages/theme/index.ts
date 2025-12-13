@@ -1,3 +1,5 @@
+// TODO: Refactor
+
 import { type ResolvedTheme, type Theme } from '@boluo/types';
 
 export const CONCRETE_THEMES = ['light', 'dark', 'graphite', 'dusha'] as const;
@@ -13,6 +15,11 @@ const DARK_MEDIA_QUERY = '(prefers-color-scheme: dark)';
 
 const THEME_PREFIX = 'theme:';
 const THEME_PREFIX_ENCODED = encodeURIComponent(THEME_PREFIX);
+
+const setModeClass = (classList: DOMTokenList, mode: 'light' | 'dark') => {
+  classList.toggle('mode-light', mode === 'light');
+  classList.toggle('mode-dark', mode === 'dark');
+};
 
 export const toTheme = (value: string): Theme => {
   if (value.startsWith('theme:')) {
@@ -79,9 +86,11 @@ const setThemeByMediaQuery = <T extends { matches: boolean }>(queryDark: T) => {
   if (queryDark.matches) {
     classList.add('dark');
     classList.remove('light');
+    setModeClass(classList, 'dark');
   } else {
     classList.remove('dark');
     classList.add('light');
+    setModeClass(classList, 'light');
   }
 };
 
@@ -94,9 +103,11 @@ export const setSystemTheme = () => {
   if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
     classList.add('dark');
     classList.remove('light');
+    setModeClass(classList, 'dark');
   } else {
     classList.remove('dark');
     classList.add('light');
+    setModeClass(classList, 'light');
   }
   window
     .matchMedia('(prefers-color-scheme: dark)')
@@ -130,6 +141,7 @@ export const setThemeToDom = (value: string): Theme => {
       html.classList.remove('dark');
       html.classList.remove('graphite');
       html.classList.remove('dusha');
+      setModeClass(html.classList, 'light');
       colorScheme = 'light';
       break;
     case 'dark':
@@ -138,6 +150,7 @@ export const setThemeToDom = (value: string): Theme => {
       html.classList.add('dark');
       html.classList.remove('graphite');
       html.classList.remove('dusha');
+      setModeClass(html.classList, 'dark');
       colorScheme = 'dark';
       break;
     case 'graphite':
@@ -146,6 +159,7 @@ export const setThemeToDom = (value: string): Theme => {
       html.classList.remove('dark');
       html.classList.add('graphite');
       html.classList.remove('dusha');
+      setModeClass(html.classList, 'dark');
       colorScheme = 'dark';
       break;
     case 'dusha':
@@ -154,6 +168,7 @@ export const setThemeToDom = (value: string): Theme => {
       html.classList.remove('dark');
       html.classList.remove('graphite');
       html.classList.add('dusha');
+      setModeClass(html.classList, 'light');
       colorScheme = 'light';
       break;
     case 'system':

@@ -145,11 +145,30 @@
   #__next {
     height: 100%;
   }
+  :root,
+  .mode-light {
+    /* 1 if light mode, -1 if dark mode */
+    --mode-sign: 1;
+    --light-threshold: 0.75;
+  }
+  .mode-dark {
+    --mode-sign: -1;
+    --light-threshold: 0.6;
+  }
 }
 
 @layer utilities {
   .no-autospace {
     text-autospace: no-autospace;
+  }
+
+  .stroke-name {
+    paint-order: stroke fill;
+    -webkit-text-stroke: 3px
+      oklch(
+        from var(--name-color) calc((1 - var(--mode-sign)) / 2) 0 0 /
+          clamp(0, (l - var(--light-threshold)) * var(--mode-sign) * 999, 1)
+      );
   }
 
   .scrollbar-hidden {

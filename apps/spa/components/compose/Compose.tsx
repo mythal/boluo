@@ -2,7 +2,7 @@
 import type { MemberWithUser, User } from '@boluo/api';
 import { useAtomValue } from 'jotai';
 import { selectAtom } from 'jotai/utils';
-import { type FC, useDeferredValue, useEffect, useMemo, useState } from 'react';
+import { type FC, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import { useMediaDrop } from '../../hooks/useMediaDrop';
 import { AddDiceButton } from './AddDiceButton';
 import { ComposeTextArea } from './ComposeTextArea';
@@ -71,6 +71,7 @@ export const Compose = ({ member, channelAtoms }: Props) => {
     if (!isEditing) return null;
     return <EditMessageBanner currentUser={member.user} />;
   }, [isEditing, member.user]);
+  const composeContainerRef = useRef<HTMLDivElement>(null);
   const fileButton = useMemo(() => <FileButton />, []);
   const inGameSwitchButton = useMemo(() => <InGameSwitchButton />, []);
   const addDiceButton = useMemo(() => <AddDiceButton />, []);
@@ -87,10 +88,11 @@ export const Compose = ({ member, channelAtoms }: Props) => {
         onDragOver={handleDragOver}
         className="Compose group/compose bg-surface-default standalone-bottom-padding border-border-subtle relative col-span-full border-t p-2"
       >
-        <ComposeResizer />
+        <ComposeResizer composeContainerRef={composeContainerRef} />
         {mediaLine}
         {editMessageBanner}
         <div
+          ref={composeContainerRef}
           data-in-game={inGame}
           data-whisper={isWhisper}
           className={clsx(

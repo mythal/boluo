@@ -21,6 +21,7 @@ import { chatAtom } from '../../state/chat.atoms';
 import * as L from 'list';
 import { useDefaultInGame } from '../../hooks/useDefaultInGame';
 import { composeSizeAtom } from '../../state/compose.atoms';
+import { COMPOSE_AUTO_MAX_HEIGHT, COMPOSE_LARGE_HEIGHT } from './composeSize';
 import { type ComposeState } from '../../state/compose.reducer';
 
 interface Props {
@@ -68,7 +69,6 @@ const useReflectRangeChange = (
 };
 
 const MAX_FIND_LENGTH = 64;
-const LARGE_SIZE = '40vh';
 
 export const ComposeTextArea: FC<Props> = ({ parsed, enterSend, send, myId }) => {
   const { composeAtom, parsedAtom } = useChannelAtoms();
@@ -85,8 +85,8 @@ export const ComposeTextArea: FC<Props> = ({ parsed, enterSend, send, myId }) =>
   const style = useMemo(
     (): React.CSSProperties => ({
       width: '100%',
-      height: !autoSize ? LARGE_SIZE : undefined,
-      maxHeight: !autoSize ? LARGE_SIZE : '12rem',
+      height: !autoSize ? COMPOSE_LARGE_HEIGHT : undefined,
+      maxHeight: !autoSize ? COMPOSE_LARGE_HEIGHT : COMPOSE_AUTO_MAX_HEIGHT,
       scrollbarWidth: 'none',
       WebkitTextSizeAdjust: 'none',
       MozTextSizeAdjust: 'none',

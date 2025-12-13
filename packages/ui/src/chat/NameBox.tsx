@@ -27,16 +27,16 @@ export const NameBox = ({
       role={interactive ? 'button' : undefined}
       tabIndex={interactive ? 0 : undefined}
       aria-pressed={pressed}
+      style={{ '--name-color': color } as React.CSSProperties}
       className={clsx(
         'NameBox',
         'bg-name-bg aria-pressed:bg-name-editable-hover irc:w-48 relative mr-1 w-32 flex-none rounded-sm font-bold break-all @xl:w-40',
+        'stroke-name',
         interactive && 'hover:bg-name-editable-hover cursor-pointer select-text focus:ring',
       )}
       {...props}
     >
-      <span className="mx-1" style={{ color }}>
-        {children}
-      </span>
+      <span className="mx-1 text-(--name-color)">{children}</span>
       {icon && <Delay fallback={<FallbackIcon />}>{icon}</Delay>}
     </span>
   );

@@ -6,6 +6,7 @@ import { messageToParsed, toSimpleText } from '@boluo/interpreter';
 import { type LatestMessageAtom } from './SidebarChannelItem';
 import { type PreviewItem } from '../../state/channel.types';
 import clsx from 'clsx';
+import * as L from 'list';
 
 interface Props {
   hasUnread: boolean;
@@ -28,6 +29,10 @@ export const SidebarChannelItemPreview: FC<Props> = ({
     () => atom((read) => read(chatAtom).channels[channelId]?.previewMap),
     [channelId],
   );
+  const messagesAtom = useMemo(
+    () => atom((read) => read(chatAtom).channels[channelId]?.messages),
+    [channelId],
+  );
 
   // Sort by timestamp, ascending (oldest first), so we can schedule a single timeout
   // to re-check when the oldest preview expires.
@@ -35,9 +40,22 @@ export const SidebarChannelItemPreview: FC<Props> = ({
   const updateRecentPreviews = useCallback(() => {
     const now = Date.now();
     const previewMap = store.get(previewMapAtom) ?? {};
+    const messages = store.get(messagesAtom);
+    const latestMessagePosSet = new Set<number>();
+    if (messages) {
+      const start = Math.max(0, messages.length - 30);
+      for (let i = start; i < messages.length; i++) {
+        const message = L.nth(i, messages);
+        if (message) {
+          latestMessagePosSet.add(message.pos);
+        }
+      }
+    }
     const previews = Object.values(previewMap).filter(
       (preview) =>
         preview.senderId !== myId &&
+        preview.edit == null &&
+        !latestMessagePosSet.has(preview.pos) &&
         now - preview.timestamp < TYPEING_TIMEOUT &&
         (preview.text == null || preview.text.length > 0),
     );
@@ -55,17 +73,19 @@ export const SidebarChannelItemPreview: FC<Props> = ({
       }
       return oldPreviews;
     });
-  }, [myId, previewMapAtom, store]);
+  }, [messagesAtom, myId, previewMapAtom, store]);
 
-  // Update recent previews when previewMap changes
+  // Update recent previews when previewMap/messages changes
   useEffect(() => {
     const handle = window.setTimeout(updateRecentPreviews, 0);
     const unsubscribe = store.sub(previewMapAtom, updateRecentPreviews);
+    const unsubscribeMessages = store.sub(messagesAtom, updateRecentPreviews);
     return () => {
       window.clearTimeout(handle);
       unsubscribe();
+      unsubscribeMessages();
     };
-  }, [previewMapAtom, store, updateRecentPreviews]);
+  }, [messagesAtom, previewMapAtom, store, updateRecentPreviews]);
 
   // Schedule re-check when the oldest preview expires
   const oldestRecentPreviewTimestamp = recentPreviews[0]?.timestamp;

@@ -51,7 +51,10 @@ export const ThemeSelect: FC<Props> = ({ id }) => {
       { value: 'light', label: intl.formatMessage({ defaultMessage: 'Light' }) },
       { value: 'dark', label: intl.formatMessage({ defaultMessage: 'Midnight' }) },
       { value: 'graphite', label: intl.formatMessage({ defaultMessage: 'Graphite' }) },
-      { value: 'dusha', label: intl.formatMessage({ id: 'tiLDlf', defaultMessage: 'Dusha Green' }) },
+      {
+        value: 'dusha',
+        label: intl.formatMessage({ id: 'tiLDlf', defaultMessage: 'Dusha Green' }),
+      },
     ],
     [intl],
   );

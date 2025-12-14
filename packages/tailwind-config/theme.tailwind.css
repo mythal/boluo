@@ -108,11 +108,7 @@
   --color-entity-fate-dice-bg: var(--dusha-400);
   --color-entity-fate-dice-border: var(--dusha-500);
 
-  --gradient-kbd-bg: radial-gradient(
-    ellipse at 50% 0%,
-    var(--dusha-500) 0%,
-    var(--dusha-700) 60%
-  );
+  --gradient-kbd-bg: radial-gradient(ellipse at 50% 0%, var(--dusha-500) 0%, var(--dusha-700) 60%);
   --color-kbd-shadow: var(--dusha-400);
   --color-kbd-text: #fffef9;
 

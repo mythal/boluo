@@ -8,12 +8,7 @@ export interface ColorCellProps {
   isLoading?: boolean;
 }
 
-export const ColorCell: FC<ColorCellProps> = ({
-  color,
-  selected,
-  onClick,
-  isLoading = false,
-}) => {
+export const ColorCell: FC<ColorCellProps> = ({ color, selected, onClick, isLoading = false }) => {
   return (
     <button
       type="button"

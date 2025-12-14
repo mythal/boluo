@@ -920,7 +920,7 @@ const asModifier: P<Modifier> = new P(({ text, rest }) => {
   const prefix = rest.match(/^[.。]as\b/i);
   if (!prefix) return null;
   const afterPrefix = rest.slice(prefix[0].length);
-  const matchName = afterPrefix.match(/^\s*([^;；\r\n]+?)\s*(?:[;；]|\r?\n)/);
+  const matchName = afterPrefix.match(/^\s*([^;；\r\n]+?)\s*?(?:[;；]|\r?\n)/);
   if (!matchName) {
     const consumedLen = prefix[0].length;
     const modifier: AsModifier = {

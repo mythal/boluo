@@ -1,4 +1,3 @@
-/* eslint-disable @next/next/no-page-custom-font */
 import { type IntlMessages, LOCALES, toLocale } from '@boluo/locale';
 import { loadMessages } from '@boluo/locale/dynamic';
 import { ClientProviders } from '../../components/ClientProviders';

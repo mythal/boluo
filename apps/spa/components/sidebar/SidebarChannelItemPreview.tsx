@@ -29,10 +29,11 @@ export const SidebarChannelItemPreview: FC<Props> = ({
     [channelId],
   );
 
-  // Sort by timestamp, descending.
+  // Sort by timestamp, ascending (oldest first), so we can schedule a single timeout
+  // to re-check when the oldest preview expires.
   const [recentPreviews, setRecentPreviews] = useState<PreviewItem[]>([]);
   const updateRecentPreviews = useCallback(() => {
-    const now = new Date().getTime();
+    const now = Date.now();
     const previewMap = store.get(previewMapAtom) ?? {};
     const previews = Object.values(previewMap).filter(
       (preview) =>
@@ -55,23 +56,28 @@ export const SidebarChannelItemPreview: FC<Props> = ({
       return oldPreviews;
     });
   }, [myId, previewMapAtom, store]);
-  useEffect(
-    () => store.sub(previewMapAtom, updateRecentPreviews),
-    [previewMapAtom, store, updateRecentPreviews],
-  );
+
+  // Update recent previews when previewMap changes
+  useEffect(() => {
+    const handle = window.setTimeout(updateRecentPreviews, 0);
+    const unsubscribe = store.sub(previewMapAtom, updateRecentPreviews);
+    return () => {
+      window.clearTimeout(handle);
+      unsubscribe();
+    };
+  }, [previewMapAtom, store, updateRecentPreviews]);
+
+  // Schedule re-check when the oldest preview expires
   const oldestRecentPreviewTimestamp = recentPreviews[0]?.timestamp;
   useEffect(() => {
     if (oldestRecentPreviewTimestamp == null) return;
-    const now = new Date().getTime();
+    const now = Date.now();
     const distance = now - oldestRecentPreviewTimestamp;
-    if (distance < TYPEING_TIMEOUT) {
-      const handle = window.setTimeout(updateRecentPreviews, TYPEING_TIMEOUT - distance);
-      return () => window.clearTimeout(handle);
-    } else {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      updateRecentPreviews();
-    }
+    const delay = distance < TYPEING_TIMEOUT ? TYPEING_TIMEOUT - distance : 0;
+    const handle = window.setTimeout(updateRecentPreviews, delay);
+    return () => window.clearTimeout(handle);
   }, [oldestRecentPreviewTimestamp, updateRecentPreviews]);
+
   const typingNames: string[] = useMemo(() => {
     const previews: PreviewItem[] = [];
     const masterPreview = recentPreviews.find((preview) => preview.isMaster);

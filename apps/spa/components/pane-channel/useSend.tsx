@@ -65,13 +65,18 @@ export const useSend = () => {
         return member.user.nickname;
       },
     });
-    const { text, entities, whisperToUsernames, characterName: parsedCharacterNameForSend } =
-      parsedForSend;
+    const {
+      text,
+      entities,
+      whisperToUsernames,
+      characterName: parsedCharacterNameForSend,
+    } = parsedForSend;
     let name = nickname;
-    const effectiveCharacterName =
-      (parsedCharacterNameForSend || parsedPreview.characterName).trim();
+    const effectiveCharacterName = (
+      parsedCharacterNameForSend || parsedPreview.characterName
+    ).trim();
     const parsedInGame = parsedPreview.inGame ?? parsedForSend.inGame ?? null;
-    const inGame = effectiveCharacterName ? true : parsedInGame ?? defaultInGame;
+    const inGame = effectiveCharacterName ? true : (parsedInGame ?? defaultInGame);
     if (inGame) {
       if (effectiveCharacterName !== '') {
         name = effectiveCharacterName;

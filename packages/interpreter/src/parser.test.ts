@@ -173,6 +173,14 @@ test('parse temporary character name modifier', () => {
   const newlineDelimiterAndWhitespace = parseModifiers('.as 魔女工艺掌门 玻璃匠薇儿   \n逃跑!');
   assert.strictEqual(newlineDelimiterAndWhitespace.characterName, '魔女工艺掌门 玻璃匠薇儿');
   assert.strictEqual(newlineDelimiterAndWhitespace.rest.trimStart(), '逃跑!');
+
+  const delimiterAndNewline = parseModifiers('.as 魔女工艺掌门 玻璃匠薇儿;   \n逃跑!');
+  assert.strictEqual(delimiterAndNewline.characterName, '魔女工艺掌门 玻璃匠薇儿');
+  assert.strictEqual(delimiterAndNewline.rest.trimStart(), '逃跑!');
+
+  const delimiterAndNewlineAndRest = parseModifiers('.as 魔女工艺掌门 玻璃匠薇儿;Magic\n逃跑!');
+  assert.strictEqual(delimiterAndNewlineAndRest.characterName, '魔女工艺掌门 玻璃匠薇儿');
+  assert.strictEqual(delimiterAndNewlineAndRest.rest.trimStart(), 'Magic\n逃跑!');
 });
 
 test('parse .as without name acts as in-game', () => {

@@ -1,6 +1,7 @@
 import type { Preview } from '@storybook/react-vite';
 import '@boluo/tailwind-config';
-import { defaultLocale, LOCALES, onIntlError, type IntlMessages, type Locale } from '@boluo/locale';
+import { defaultLocale, LOCALES, onIntlError, type IntlMessages } from '@boluo/locale';
+import { CONCRETE_THEMES } from '@boluo/theme';
 import en from '@boluo/lang/en.json';
 import ja from '@boluo/lang/ja_JP.json';
 import zhCN from '@boluo/lang/zh_CN.json';
@@ -9,6 +10,7 @@ import { IntlProvider } from 'react-intl';
 import { withThemeByDataAttribute } from '@storybook/addon-themes';
 import React, { useEffect, useState } from 'react';
 import { DecoratorFunction } from 'storybook/internal/types';
+import type { Locale } from '@boluo/types';
 
 const preview: Preview = {
   parameters: {
@@ -128,11 +130,7 @@ const withLocale: DecoratorFunction = (Story, context) => {
 
 export const decorators = [
   withThemeByDataAttribute({
-    themes: {
-      light: 'light',
-      dark: 'dark',
-      graphite: 'graphite',
-    },
+    themes: Object.fromEntries(CONCRETE_THEMES.map((theme) => [theme, theme])),
     defaultTheme: 'light',
   }),
   withLocale,

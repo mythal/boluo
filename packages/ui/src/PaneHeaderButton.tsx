@@ -24,15 +24,16 @@ export const PaneHeaderButton = ({
   return (
     <button
       ref={ref}
+      type={props.type ?? 'button'}
       onClick={isLoading ? undefined : onClick}
       aria-pressed={active}
       className={clsx(
         'PaneHeaderButton',
         'inline-flex items-center gap-1 rounded-sm px-2 py-2',
         active
-          ? 'bg-action-toggle-selected-bg text-action-toggle-text shadow-inner'
+          ? 'bg-action-secondary-bg-active text-action-toggle-text shadow-[0_2px_0_0px_rgba(0,0,0,0.25)_inset]'
           : 'hover:bg-surface-interactive-hover active:bg-surface-interactive-active',
-        isLoading ? 'animate-pulse cursor-wait' : 'cursor-pointer',
+        isLoading ? 'cursor-wait' : 'cursor-pointer',
         size === 'medium' ? 'text-sm' : '',
         size === 'small' ? 'text-xs' : '',
         className,

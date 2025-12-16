@@ -30,6 +30,7 @@ export const PaneHeaderButton = ({
       className={clsx(
         'PaneHeaderButton',
         'inline-flex items-center gap-1 rounded-sm px-2 py-2',
+        'transition-shadow duration-100',
         active
           ? 'bg-action-secondary-bg-active text-action-toggle-text shadow-[0_2px_0_0px_rgba(0,0,0,0.25)_inset]'
           : 'hover:bg-surface-interactive-hover active:bg-surface-interactive-active',

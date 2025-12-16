@@ -69,7 +69,9 @@ You can find testing users in [`apps/server/fixtures/0-users.sql`](https://githu
 #### Start Development Servers
 
 ```bash
-cargo run # Server
+# Do not connect to the database at first building to avoid migration issues.
+SQLX_OFFLINE=true cargo run
+cargo run
 
 npm install
 npm run build

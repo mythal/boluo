@@ -64,4 +64,10 @@ export const config = [
       'no-restricted-globals': ['warn', 'process'],
     },
   },
+  {
+    files: ['**/*.test.ts', '**/*.test.tsx'],
+    rules: {
+      '@typescript-eslint/no-floating-promises': 'off',
+    },
+  },
 ];

@@ -3,10 +3,10 @@ import { type FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { chatAtom } from '../../state/chat.atoms';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { messageToParsed, toSimpleText } from '@boluo/interpreter';
+import { binarySearchPosList } from '@boluo/sort';
 import { type LatestMessageAtom } from './SidebarChannelItem';
 import { type PreviewItem } from '../../state/channel.types';
 import clsx from 'clsx';
-import * as L from 'list';
 
 interface Props {
   hasUnread: boolean;
@@ -41,21 +41,16 @@ export const SidebarChannelItemPreview: FC<Props> = ({
     const now = Date.now();
     const previewMap = store.get(previewMapAtom) ?? {};
     const messages = store.get(messagesAtom);
-    const latestMessagePosSet = new Set<number>();
-    if (messages) {
-      const start = Math.max(0, messages.length - 30);
-      for (let i = start; i < messages.length; i++) {
-        const message = L.nth(i, messages);
-        if (message) {
-          latestMessagePosSet.add(message.pos);
-        }
-      }
-    }
+    const hasMessageAtPos = (pos: number): boolean => {
+      if (!messages) return false;
+      const [, message] = binarySearchPosList(messages, pos);
+      return message != null;
+    };
     const previews = Object.values(previewMap).filter(
       (preview) =>
         preview.senderId !== myId &&
         preview.edit == null &&
-        !latestMessagePosSet.has(preview.pos) &&
+        !hasMessageAtPos(preview.pos) &&
         now - preview.timestamp < TYPEING_TIMEOUT &&
         (preview.text == null || preview.text.length > 0),
     );

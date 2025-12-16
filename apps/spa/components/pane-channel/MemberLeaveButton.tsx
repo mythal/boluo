@@ -56,6 +56,7 @@ export const MemberLeaveButton: FC<Props> = ({ channelId, onSuccess }) => {
   return (
     <>
       <PaneHeaderButton
+        active={isConfirmOpen}
         ref={refs.setReference}
         disabled={myMember == null || isMutating || isLoading}
         {...getReferenceProps()}

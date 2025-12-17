@@ -1,5 +1,12 @@
 This project is an open‑source chat tool designed for playing traditional tabletop RPGs (e.g., D&D, CoC). It is structured as a Rust + TypeScript monorepo managed with Turborepo. The repository consists of a Rust backend and multiple Next.js frontend applications.
 
+## General Notes
+
+- You can use `ast-grep` to search and refactor code if needed.
+- The language of the codebase is English. But you should response user by the language they used.
+- Before making changes, ensure you understand the relevant parts of the codebase.
+- After making changes, provide 2-3 concise possible commit messages as options to summarize your work using conventional commit format, package name as scope.
+
 ---
 
 ## Backend (`apps/server`)
@@ -56,9 +63,3 @@ Turborepo's options are available for both commands, e.g., `npm run check -- --f
 
 - Contains common stateless UI components.
 - Components here should have associated stories in `apps/storybook`.
-
----
-
-## Suggested Commit Messages
-
-After making changes, provide 2-3 concise commit messages summarizing your work using conventional commit format (package name as scope).

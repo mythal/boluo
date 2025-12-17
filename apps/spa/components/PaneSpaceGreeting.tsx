@@ -1,6 +1,6 @@
 import { type FC } from 'react';
 import { PaneBox } from './PaneBox';
-import { useQuerySpace } from '../hooks/useQuerySpace';
+import { useQuerySpace } from '@boluo/hooks/useQuerySpace';
 import { GreetingHeader } from './GreetingHeader';
 
 interface Props {

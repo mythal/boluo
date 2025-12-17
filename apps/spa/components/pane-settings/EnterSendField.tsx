@@ -4,7 +4,7 @@ import { Kbd } from '@boluo/ui/Kbd';
 import { isApple } from '@boluo/utils/browser';
 import { useSettings } from '../../hooks/useSettings';
 import { SelectBox } from '@boluo/ui/SelectBox';
-import { useMutateSettings } from '../../hooks/useMutateSettings';
+import { useMutateSettings } from '@boluo/hooks/useMutateSettings';
 
 export const EneterSendField: FC = () => {
   const { trigger: updateSettings } = useMutateSettings();

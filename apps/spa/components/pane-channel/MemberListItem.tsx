@@ -17,7 +17,7 @@ import Icon from '@boluo/ui/Icon';
 import { Avatar } from '@boluo/ui/users/Avatar';
 import { GameMasterBadge } from './GameMasterBadge';
 import { MemberCard } from './MemberCard';
-import { useQueryAppSettings } from '@boluo/common/hooks/useQueryAppSettings';
+import { useQueryAppSettings } from '@boluo/hooks/useQueryAppSettings';
 import { LampOnline } from '@boluo/ui/LampOneline';
 
 interface Props {

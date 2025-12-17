@@ -5,7 +5,7 @@ import { ButtonWithLamp } from '@boluo/ui/ButtonWithLamp';
 import { HelpText } from '@boluo/ui/HelpText';
 import { TextArea } from '@boluo/ui/TextInput';
 import { useSettings } from '../../hooks/useSettings';
-import { useMutateSettings } from '../../hooks/useMutateSettings';
+import { useMutateSettings } from '@boluo/hooks/useMutateSettings';
 import type { Settings } from '@boluo/settings';
 
 const normalizeSettings = (settings: Settings) => {

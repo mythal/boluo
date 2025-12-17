@@ -12,7 +12,7 @@ import { SidebarGroupHeader } from './SidebarGroupHeader';
 import { SidebarItem } from './SidebarItem';
 import { type User } from '@boluo/api';
 import { usePaneLimit } from '../../hooks/useMaxPane';
-import { useQueryAppSettings } from '@boluo/common/hooks/useQueryAppSettings';
+import { useQueryAppSettings } from '@boluo/hooks/useQueryAppSettings';
 
 interface Props {
   currentUser: User | null | undefined;

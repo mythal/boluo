@@ -1,5 +1,5 @@
-import { useQueryAppSettings } from '@boluo/common/hooks/useQueryAppSettings';
-import { useQueryUser } from '@boluo/common/hooks/useQueryUser';
+import { useQueryAppSettings } from '@boluo/hooks/useQueryAppSettings';
+import { useQueryUser } from '@boluo/hooks/useQueryUser';
 import { UserCard } from '@boluo/ui/users/UserCard';
 import { UserCardLoading } from '@boluo/ui/users/UserCardLoading';
 import { UserCardError } from '@boluo/ui/users/UserCardError';

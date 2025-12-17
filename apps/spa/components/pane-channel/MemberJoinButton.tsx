@@ -6,17 +6,17 @@ import {
   type User,
 } from '@boluo/api';
 import { post } from '@boluo/api-browser';
-import { useQueryCurrentUser } from '@boluo/common/hooks/useQueryCurrentUser';
+import { useQueryCurrentUser } from '@boluo/hooks/useQueryCurrentUser';
 import { UserPlus } from '@boluo/icons';
 import { type FC, type ReactNode, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
 import useSWRMutation, { type MutationFetcher } from 'swr/mutation';
 import { Spinner } from '@boluo/ui/Spinner';
-import { useMySpaceMember } from '../../hooks/useQueryMySpaceMember';
+import { useMySpaceMember } from '@boluo/hooks/useQueryMySpaceMember';
 import { PaneHeaderButton } from '@boluo/ui/PaneHeaderButton';
 import { FailedBanner } from '@boluo/ui/chat/FailedBanner';
 import { usePaneAdd } from '../../hooks/usePaneAdd';
-import { useQueryChannelMembers } from '../../hooks/useQueryChannelMembers';
+import { useQueryChannelMembers } from '@boluo/hooks/useQueryChannelMembers';
 import { ButtonInline } from '@boluo/ui/ButtonInline';
 import { useBannerNode } from '../../hooks/useBannerNode';
 import ReactDOM from 'react-dom';

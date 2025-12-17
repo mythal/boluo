@@ -4,7 +4,7 @@ import { useStore } from 'jotai';
 import { useCallback, useMemo, useRef } from 'react';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { useChannelId } from '../../hooks/useChannelId';
-import { useQueryChannelMembers } from '../../hooks/useQueryChannelMembers';
+import { useQueryChannelMembers } from '@boluo/hooks/useQueryChannelMembers';
 import { parse } from '@boluo/interpreter';
 import { upload } from '../../media';
 import { type ComposeActionUnion } from '../../state/compose.actions';

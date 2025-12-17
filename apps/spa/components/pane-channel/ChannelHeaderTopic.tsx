@@ -1,12 +1,12 @@
 import { useCallback, useMemo, type FC, type MouseEventHandler } from 'react';
-import { useQueryChannel } from '../../hooks/useQueryChannel';
+import { useQueryChannel } from '@boluo/hooks/useQueryChannel';
 import { SomethingWentWrong } from '@boluo/ui/SomethingWentWrong';
 import { useIntl } from 'react-intl';
 import clsx from 'clsx';
 import { PaneHeaderButton } from '@boluo/ui/PaneHeaderButton';
 import { ChevronUp, Edit } from '@boluo/icons';
 import Icon from '@boluo/ui/Icon';
-import { useQueryChannelMembers } from '../../hooks/useQueryChannelMembers';
+import { useQueryChannelMembers } from '@boluo/hooks/useQueryChannelMembers';
 import { MemberWithUser } from '@boluo/api';
 import { usePaneToggle } from '../../hooks/usePaneToggle';
 import { usePaneKey } from '../../hooks/usePaneKey';

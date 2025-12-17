@@ -1,10 +1,10 @@
-import { useQueryCurrentUser } from '@boluo/common/hooks/useQueryCurrentUser';
+import { useQueryCurrentUser } from '@boluo/hooks/useQueryCurrentUser';
 import { FormattedMessage } from 'react-intl';
 import { ComposeFallbackBox } from '@boluo/ui/ComposeFallbackBox';
 import { type ReactNode, type FC } from 'react';
-import { useQuerySpaceMembers } from '../../hooks/useQuerySpaceMembers';
+import { useQuerySpaceMembers } from '@boluo/hooks/useQuerySpaceMembers';
 import { ButtonInline } from '@boluo/ui/ButtonInline';
-import { useMutateJoinChannel } from '../../hooks/useMutateJoinChannel';
+import { useMutateJoinChannel } from '@boluo/hooks/useMutateJoinChannel';
 import { AlertTriangle, UserPlus } from '@boluo/icons';
 import Icon from '@boluo/ui/Icon';
 import { Spinner } from '@boluo/ui/Spinner';

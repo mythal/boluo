@@ -3,7 +3,7 @@ import { useSetAtom, useStore, useAtomValue } from 'jotai';
 import { selectAtom } from 'jotai/utils';
 import { useEffect, useMemo, useRef } from 'react';
 import { chatAtom, isChatInitializedAtom } from '../state/chat.atoms';
-import { useQueryChannelList } from './useQueryChannelList';
+import { useQueryChannelList } from '@boluo/hooks/useQueryChannelList';
 import { panesAtom } from '../state/view.atoms';
 
 const INITIAL_LOAD_LIMIT = 5;

@@ -1,4 +1,4 @@
-import { useQueryCurrentUser } from '@boluo/common/hooks/useQueryCurrentUser';
+import { useQueryCurrentUser } from '@boluo/hooks/useQueryCurrentUser';
 import { type FC, type ReactNode, useMemo } from 'react';
 import { PaneList } from './PaneList';
 import PaneLogin from './PaneLogin';

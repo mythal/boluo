@@ -1,11 +1,11 @@
-import { useQueryCurrentUser } from '@boluo/common/hooks/useQueryCurrentUser';
-import { useQueryUser } from '@boluo/common/hooks/useQueryUser';
+import { useQueryCurrentUser } from '@boluo/hooks/useQueryCurrentUser';
+import { useQueryUser } from '@boluo/hooks/useQueryUser';
 import { Edit, LogOut, User } from '@boluo/icons';
 import { type FC, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { Loading } from '@boluo/ui/Loading';
 import { toggle } from '@boluo/utils/function';
-import { useLogout } from '@boluo/common/hooks/useLogout';
+import { useLogout } from '@boluo/hooks/useLogout';
 import { PaneBox } from '../PaneBox';
 import { PaneHeaderBox } from '../PaneHeaderBox';
 import { PaneHeaderButton } from '@boluo/ui/PaneHeaderButton';

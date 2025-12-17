@@ -2,8 +2,8 @@ import { Users } from '@boluo/icons';
 import { useAtom } from 'jotai';
 import { type FC, useMemo } from 'react';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
-import { useQueryChannelMembers } from '../../hooks/useQueryChannelMembers';
-import { useQueryUsersStatus } from '../../hooks/useQueryUsersStatus';
+import { useQueryChannelMembers } from '@boluo/hooks/useQueryChannelMembers';
+import { useQueryUsersStatus } from '@boluo/hooks/useQueryUsersStatus';
 import { PaneHeaderButton } from '@boluo/ui/PaneHeaderButton';
 
 interface Props {

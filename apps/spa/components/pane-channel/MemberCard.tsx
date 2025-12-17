@@ -7,7 +7,7 @@ import {
 } from '@boluo/api';
 import { post } from '@boluo/api-browser';
 import clsx from 'clsx';
-import { useQueryCurrentUser } from '@boluo/common/hooks/useQueryCurrentUser';
+import { useQueryCurrentUser } from '@boluo/hooks/useQueryCurrentUser';
 import { Gamemaster, Mask, UserCog, UserPlus, UserX } from '@boluo/icons';
 import React, { type FC, type ReactNode, useEffect, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
@@ -17,7 +17,7 @@ import { Button } from '@boluo/ui/Button';
 import Icon from '@boluo/ui/Icon';
 import { Avatar } from '@boluo/ui/users/Avatar';
 import { FloatingBox } from '@boluo/ui/FloatingBox';
-import { useQueryAppSettings } from '@boluo/common/hooks/useQueryAppSettings';
+import { useQueryAppSettings } from '@boluo/hooks/useQueryAppSettings';
 
 const JUST_NOW = 1000 * 10;
 const SECONDS_IN_MS = 1000;

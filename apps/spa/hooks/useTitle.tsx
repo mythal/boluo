@@ -4,7 +4,7 @@ import { useEffect, useMemo } from 'react';
 import { useIntl } from 'react-intl';
 import { chatAtom, notifyTimestampAtom } from '../state/chat.atoms';
 import { channelReadFamily } from '../state/unread.atoms';
-import { useQueryChannelList } from './useQueryChannelList';
+import { useQueryChannelList } from '@boluo/hooks/useQueryChannelList';
 import { backwards } from 'list';
 
 const hasUnreadMessages = (

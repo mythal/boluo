@@ -1,8 +1,8 @@
 import { Users } from '@boluo/icons';
 import { type FC, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { useMySpaceMember } from '../../hooks/useQueryMySpaceMember';
-import { useQuerySpace } from '../../hooks/useQuerySpace';
+import { useMySpaceMember } from '@boluo/hooks/useQueryMySpaceMember';
+import { useQuerySpace } from '@boluo/hooks/useQuerySpace';
 import { HeaderTab, type TabItem } from '@boluo/ui/HeaderTab';
 import { InviteSpaceMember } from '../InviteSpaceMember';
 import { PaneBox } from '../PaneBox';

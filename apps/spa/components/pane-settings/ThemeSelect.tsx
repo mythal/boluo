@@ -1,6 +1,6 @@
 'use client';
 import { patch } from '@boluo/api-browser';
-import { useQueryCurrentUser } from '@boluo/common/hooks/useQueryCurrentUser';
+import { useQueryCurrentUser } from '@boluo/hooks/useQueryCurrentUser';
 import { type FC, useCallback } from 'react';
 import { useMemo } from 'react';
 import { useIntl } from 'react-intl';

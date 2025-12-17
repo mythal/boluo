@@ -7,7 +7,7 @@ import { FormattedMessage } from 'react-intl';
 import { Button } from '@boluo/ui/Button';
 import { useSetBanner } from '../../hooks/useBanner';
 import { useChannelId } from '../../hooks/useChannelId';
-import { useMountedRef } from '@boluo/common/hooks/useMounted';
+import { useMountedRef } from '@boluo/hooks/useMounted';
 import { chatAtom } from '../../state/chat.atoms';
 import { head } from 'list';
 

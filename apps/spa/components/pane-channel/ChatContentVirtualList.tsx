@@ -13,7 +13,7 @@ import {
   useVirtualKeybroadChange,
 } from '../../hooks/useVirtualKeybroadChange';
 import { useSettings } from '../../hooks/useSettings';
-import { useMutateSettings } from '../../hooks/useMutateSettings';
+import { useMutateSettings } from '@boluo/hooks/useMutateSettings';
 import { IsOptimisticContext } from '../../hooks/useIsOptimistic';
 import { ChatItemMessage } from './ChatItemMessage';
 import { SelfPreview } from './SelfPreview';

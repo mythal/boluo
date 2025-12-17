@@ -20,7 +20,7 @@ import { PaneFooterBox } from '../PaneFooterBox';
 import { PaneHeaderBox } from '../PaneHeaderBox';
 import { type ChannelType } from '@boluo/api';
 import { ChannelTypeField } from './ChannelTypeField';
-import { useQuerySpace } from '../../hooks/useQuerySpace';
+import { useQuerySpace } from '@boluo/hooks/useQuerySpace';
 import { PaneLoading } from '../PaneLoading';
 import { PaneFailed } from '../pane-failed/PaneFailed';
 

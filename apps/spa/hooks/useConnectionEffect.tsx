@@ -6,8 +6,8 @@ import {
   type UserStatus,
 } from '@boluo/api';
 import { isServerUpdate } from '@boluo/api/events';
-import { useQueryCurrentUser } from '@boluo/common/hooks/useQueryCurrentUser';
-import { webSocketUrlAtom } from '@boluo/common/hooks/useWebSocketUrl';
+import { useQueryCurrentUser } from '@boluo/hooks/useQueryCurrentUser';
+import { webSocketUrlAtom } from '@boluo/hooks/useWebSocketUrl';
 import { useAtomValue, useSetAtom, useStore } from 'jotai';
 import { useCallback, useEffect } from 'react';
 import { useSWRConfig } from 'swr';

@@ -1,6 +1,6 @@
 import type { ApiError, EditSpace, Space } from '@boluo/api';
 import { post } from '@boluo/api-browser';
-import { useQueryCurrentUser } from '@boluo/common/hooks/useQueryCurrentUser';
+import { useQueryCurrentUser } from '@boluo/hooks/useQueryCurrentUser';
 import { Settings } from '@boluo/icons';
 import { type FC, useCallback, useState } from 'react';
 import { useId } from 'react';
@@ -15,7 +15,7 @@ import { Spinner } from '@boluo/ui/Spinner';
 import { TextArea, TextInput } from '@boluo/ui/TextInput';
 import { type ChildrenProps } from '@boluo/types';
 import { usePaneClose } from '../../hooks/usePaneClose';
-import { useQuerySpace } from '../../hooks/useQuerySpace';
+import { useQuerySpace } from '@boluo/hooks/useQuerySpace';
 import { DangerZone } from '@boluo/ui/DangerZone';
 import { DiceSelect } from '@boluo/ui/DiceSelect';
 import { ErrorDisplay } from '../ErrorDisplay';

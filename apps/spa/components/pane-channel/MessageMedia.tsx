@@ -11,7 +11,7 @@ import {
 import Icon from '@boluo/ui/Icon';
 import { showFileSize } from '@boluo/utils/files';
 import { getMediaUrl, supportedMediaType } from '../../media';
-import { useQueryAppSettings } from '@boluo/common/hooks/useQueryAppSettings';
+import { useQueryAppSettings } from '@boluo/hooks/useQueryAppSettings';
 import { useImagePreview } from './ImagePreviewOverlay';
 
 type Props = {

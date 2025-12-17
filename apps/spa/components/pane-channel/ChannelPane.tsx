@@ -8,7 +8,7 @@ import {
   ChannelAtomsContext,
   useMakeChannelAtoms,
 } from '../../hooks/useChannelAtoms';
-import { useQueryChannel } from '../../hooks/useQueryChannel';
+import { useQueryChannel } from '@boluo/hooks/useQueryChannel';
 import { Compose } from '../compose/Compose';
 import { useSendPreview } from '../compose/useSendPreview';
 import { PaneBox } from '../PaneBox';
@@ -23,14 +23,14 @@ import { PaneFailed } from '../pane-failed/PaneFailed';
 import { ChannelContext } from '../../hooks/useChannel';
 import { parseDiceFace } from '../../dice';
 import { MemberContext, useMember } from '../../hooks/useMember';
-import { useQueryChannelMembers } from '../../hooks/useQueryChannelMembers';
+import { useQueryChannelMembers } from '@boluo/hooks/useQueryChannelMembers';
 import { GuestCompose } from '../compose/GuestCompose';
 import { type Channel, ChannelMembers, type MemberWithUser } from '@boluo/api';
 import { useBannerNode } from '../../hooks/useBannerNode';
 import ReactDOM from 'react-dom';
 import { useChannelFileDrop } from './useChannelFileDrop';
 import { FileDropOverlay } from '@boluo/ui/chat/FileDropOverlay';
-import { useQueryCurrentUser } from '@boluo/common/hooks/useQueryCurrentUser';
+import { useQueryCurrentUser } from '@boluo/hooks/useQueryCurrentUser';
 
 interface Props {
   channelId: string;

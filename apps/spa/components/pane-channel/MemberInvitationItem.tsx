@@ -10,7 +10,7 @@ import { type Channel, type SpaceMember, type User, type UserStatus } from '@bol
 import { type FC, useState } from 'react';
 import { Avatar } from '@boluo/ui/users/Avatar';
 import { MemberCard } from './MemberCard';
-import { useQueryAppSettings } from '@boluo/common/hooks/useQueryAppSettings';
+import { useQueryAppSettings } from '@boluo/hooks/useQueryAppSettings';
 import { LampOnline } from '@boluo/ui/LampOneline';
 
 interface Props {

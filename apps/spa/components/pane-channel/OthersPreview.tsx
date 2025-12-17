@@ -5,7 +5,7 @@ import { Content } from './Content';
 import { Name } from './Name';
 import { OthersPreviewNoBroadcast } from './OthersPreviewNoBroadcast';
 import { PreviewBox } from '@boluo/ui/chat/PreviewBox';
-import { useQueryUser } from '@boluo/common/hooks/useQueryUser';
+import { useQueryUser } from '@boluo/hooks/useQueryUser';
 import { useIsInGameChannel } from '../../hooks/useIsInGameChannel';
 
 interface Props {

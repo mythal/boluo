@@ -5,7 +5,7 @@ import { type FC, useCallback, useMemo, useState, type ReactNode } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import Icon from '@boluo/ui/Icon';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
-import { useQueryChannelMembers } from '../../hooks/useQueryChannelMembers';
+import { useQueryChannelMembers } from '@boluo/hooks/useQueryChannelMembers';
 import {
   FloatingPortal,
   offset,
@@ -15,7 +15,7 @@ import {
   useInteractions,
 } from '@floating-ui/react';
 import { Avatar } from '@boluo/ui/users/Avatar';
-import { useQueryAppSettings } from '@boluo/common/hooks/useQueryAppSettings';
+import { useQueryAppSettings } from '@boluo/hooks/useQueryAppSettings';
 import { ButtonInline } from '@boluo/ui/ButtonInline';
 import { FloatingBox } from '@boluo/ui/FloatingBox';
 

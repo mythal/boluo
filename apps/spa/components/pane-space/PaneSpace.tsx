@@ -1,12 +1,12 @@
 import { type SpaceMemberWithUser } from '@boluo/api';
-import { useQueryCurrentUser } from '@boluo/common/hooks/useQueryCurrentUser';
+import { useQueryCurrentUser } from '@boluo/hooks/useQueryCurrentUser';
 import { Globe, Key, MoonStar } from '@boluo/icons';
 import { type FC, type ReactNode, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Badge } from '@boluo/ui/Badge';
 import Icon from '@boluo/ui/Icon';
-import { useQuerySpace } from '../../hooks/useQuerySpace';
-import { useQuerySpaceMembers } from '../../hooks/useQuerySpaceMembers';
+import { useQuerySpace } from '@boluo/hooks/useQuerySpace';
+import { useQuerySpaceMembers } from '@boluo/hooks/useQuerySpaceMembers';
 import { PaneBox } from '../PaneBox';
 import { PaneHeaderBox } from '../PaneHeaderBox';
 import { PaneLoading } from '../PaneLoading';

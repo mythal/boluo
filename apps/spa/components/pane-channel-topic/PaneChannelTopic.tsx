@@ -12,7 +12,7 @@ import { PaneHeaderBox } from '../PaneHeaderBox';
 import { PaneFooterBox } from '../PaneFooterBox';
 import { TopicField } from '../pane-channel-settings/TopicField';
 import { ErrorDisplay } from '../ErrorDisplay';
-import { useQueryChannel } from '../../hooks/useQueryChannel';
+import { useQueryChannel } from '@boluo/hooks/useQueryChannel';
 import { usePaneClose } from '../../hooks/usePaneClose';
 import { Failed } from '@boluo/ui/Failed';
 

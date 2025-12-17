@@ -7,7 +7,7 @@ import {
 import { type FC, type ReactNode, useMemo, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { TextInput } from '@boluo/ui/TextInput';
-import { useQuerySpaceMembers } from '../../hooks/useQuerySpaceMembers';
+import { useQuerySpaceMembers } from '@boluo/hooks/useQuerySpaceMembers';
 import { MemberInvitationItem } from './MemberInvitationItem';
 
 interface Props {

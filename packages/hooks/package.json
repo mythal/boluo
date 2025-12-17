@@ -1,33 +1,41 @@
 {
-  "name": "@boluo/common",
+  "name": "@boluo/hooks",
   "version": "0.0.0",
   "dependencies": {
     "@boluo/api-browser": "0.0.0",
-    "react-hook-form": "^7.54.2"
+    "@boluo/locale": "0.0.0",
+    "@boluo/settings": "0.0.0",
+    "@boluo/types": "0.0.0",
+    "@boluo/utils": "0.0.0",
+    "zod": "^4.0.5"
   },
   "devDependencies": {
     "@boluo/api": "0.0.0",
     "@boluo/eslint-config": "0.0.0",
     "@boluo/typescript-config": "0.0.0",
-    "@boluo/utils": "0.0.0",
     "@types/node": "^24.0.12",
     "@types/react": "^19.0.12",
+    "@types/react-dom": "^19.0.4",
     "eslint": "^9.23.0",
+    "jotai": "^2.12.2",
     "react": "^19.0.0",
+    "react-dom": "^19.0.0",
     "react-intl": "^7.1.11",
+    "swr": "^2.3.3",
+    "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   },
   "exports": {
-    "./*": "./*.ts",
-    "./server": "./server/index.ts",
-    "./server/*": "./server/*.ts"
+    "./*": "./*.tsx"
   },
   "homepage": "https://github.com/mythal/boluo",
   "license": "AGPL-3.0",
   "peerDependencies": {
+    "jotai": "^2.12.2",
     "react": "^19.0.0",
-    "react-hook-form": "^7.54.2",
-    "react-intl": "^7.1.11"
+    "react-dom": "^19.0.0",
+    "react-intl": "^7.1.11",
+    "swr": "^2.3.3"
   },
   "scripts": {
     "check": "tsc --project tsconfig.json --noEmit",

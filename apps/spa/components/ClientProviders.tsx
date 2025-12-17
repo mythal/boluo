@@ -5,7 +5,7 @@ import { store } from '@boluo/store';
 import { SWRConfig, type SWRConfiguration } from 'swr';
 import type { IntlMessages } from '@boluo/locale';
 import { IntlProvider, type ResolvedIntlConfig, ReactIntlErrorCode } from 'react-intl';
-import { ChangeLocaleContext } from '@boluo/common/hooks/useLocale';
+import { ChangeLocaleContext } from '@boluo/hooks/useLocale';
 import { recordWarn } from '../error';
 import { isApiError } from '@boluo/api';
 import { captureException } from '@sentry/nextjs';

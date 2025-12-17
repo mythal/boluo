@@ -1,7 +1,7 @@
 import { computeColors, parseGameColor } from '@boluo/color';
 import { useMemo } from 'react';
 import { useResolvedTheme } from './useResolvedTheme';
-import { useQueryUser } from '@boluo/common/hooks/useQueryUser';
+import { useQueryUser } from '@boluo/hooks/useQueryUser';
 import { classifyLightOrDark } from '@boluo/theme';
 
 export const useMessageColor = (

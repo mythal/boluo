@@ -20,10 +20,10 @@ import {
   setThemeToDom,
   writeThemeToCookie,
 } from '@boluo/theme';
-import { useQuerySettings } from '../hooks/useQuerySettings';
+import { useQuerySettings } from '@boluo/hooks/useQuerySettings';
 import { ChatInvite } from './ChatInvite';
 import { PaneEmpty } from './PaneEmpty';
-import { useIsClient } from '@boluo/common/hooks/useIsClient';
+import { useIsClient } from '@boluo/hooks/useIsClient';
 import clsx from 'clsx';
 import { ResolvedThemeContext } from '../hooks/useResolvedTheme';
 import { SettingsContext } from '../hooks/useSettings';

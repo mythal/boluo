@@ -6,7 +6,7 @@ import { useIntl } from 'react-intl';
 import { Button } from '@boluo/ui/Button';
 import { Avatar } from '@boluo/ui/users/Avatar';
 import type { ProfileEditSchema } from './PaneProfileEdit';
-import { useQueryAppSettings } from '@boluo/common/hooks/useQueryAppSettings';
+import { useQueryAppSettings } from '@boluo/hooks/useQueryAppSettings';
 
 interface Props {
   userId: string;

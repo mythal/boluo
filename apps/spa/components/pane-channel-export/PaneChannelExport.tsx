@@ -1,5 +1,5 @@
 import { FormattedMessage, useIntl } from 'react-intl';
-import { useQueryChannel } from '../../hooks/useQueryChannel';
+import { useQueryChannel } from '@boluo/hooks/useQueryChannel';
 import { Failed } from '@boluo/ui/Failed';
 import { type FC, type ReactNode, useId, useRef, useState } from 'react';
 import { Loading } from '@boluo/ui/Loading';
@@ -14,7 +14,7 @@ import { Spinner } from '@boluo/ui/Spinner';
 import * as Sentry from '@sentry/browser';
 import { PaneFooterBox } from '../PaneFooterBox';
 import { type ExportOptions, exportChannel } from './export';
-import { useQueryAppSettings } from '@boluo/common/hooks/useQueryAppSettings';
+import { useQueryAppSettings } from '@boluo/hooks/useQueryAppSettings';
 
 export interface ExportSchema {
   format: string;

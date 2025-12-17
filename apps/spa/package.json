@@ -7,6 +7,7 @@
     "@boluo/backend-proxy": "0.0.0",
     "@boluo/color": "0.0.0",
     "@boluo/common": "0.0.0",
+    "@boluo/hooks": "0.0.0",
     "@boluo/icons": "0.0.0",
     "@boluo/interpreter": "0.0.0",
     "@boluo/lang": "0.0.0",

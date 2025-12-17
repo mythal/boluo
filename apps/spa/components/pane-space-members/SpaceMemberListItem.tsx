@@ -6,7 +6,7 @@ import { usePaneAdd } from '../../hooks/usePaneAdd';
 import { Avatar } from '@boluo/ui/users/Avatar';
 import { ExileButton } from './ExileButton';
 import { InListButton } from './InListButton';
-import { useQueryAppSettings } from '@boluo/common/hooks/useQueryAppSettings';
+import { useQueryAppSettings } from '@boluo/hooks/useQueryAppSettings';
 
 interface Props {
   myId: string | null;

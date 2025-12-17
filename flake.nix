@@ -486,6 +486,7 @@
                 gnumake
                 nixfmt-rfc-style
                 sqlx-cli
+                ast-grep
                 flyctl
                 cargo-nextest
               ];

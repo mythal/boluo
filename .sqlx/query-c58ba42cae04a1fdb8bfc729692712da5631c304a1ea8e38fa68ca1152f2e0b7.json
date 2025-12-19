@@ -1,0 +1,100 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE characters\nSET name = COALESCE($2, name),\n    description = COALESCE($3, description),\n    color = COALESCE($4, color),\n    alias = CASE\n        WHEN $5::text IS NULL THEN alias\n        ELSE NULLIF($5::text, '')\n    END,\n    image_id = COALESCE($6, image_id),\n    visibility = COALESCE(($7::text)::character_visibility, visibility),\n    is_archived = COALESCE($8, is_archived),\n    metadata = COALESCE($9, metadata),\n    modified = (now() at time zone 'utc')\nWHERE id = $1\nRETURNING characters as \"character!: Character\";\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "character!: Character",
+        "type_info": {
+          "Custom": {
+            "name": "characters",
+            "kind": {
+              "Composite": [
+                [
+                  "id",
+                  "Uuid"
+                ],
+                [
+                  "name",
+                  "Text"
+                ],
+                [
+                  "description",
+                  "Text"
+                ],
+                [
+                  "color",
+                  "Text"
+                ],
+                [
+                  "alias",
+                  "Text"
+                ],
+                [
+                  "image_id",
+                  "Uuid"
+                ],
+                [
+                  "space_id",
+                  "Uuid"
+                ],
+                [
+                  "owner_id",
+                  "Uuid"
+                ],
+                [
+                  "visibility",
+                  {
+                    "Custom": {
+                      "name": "character_visibility",
+                      "kind": {
+                        "Enum": [
+                          "Private",
+                          "Public"
+                        ]
+                      }
+                    }
+                  }
+                ],
+                [
+                  "is_archived",
+                  "Bool"
+                ],
+                [
+                  "metadata",
+                  "Jsonb"
+                ],
+                [
+                  "created",
+                  "Timestamptz"
+                ],
+                [
+                  "modified",
+                  "Timestamptz"
+                ]
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Uuid",
+        "Text",
+        "Bool",
+        "Jsonb"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "c58ba42cae04a1fdb8bfc729692712da5631c304a1ea8e38fa68ca1152f2e0b7"
+}

@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO notes_history (\n    note_id,\n    operator_id,\n    content\n)\nVALUES ($1, $2, $3);\n",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "91ed104a2db2e00b02a6cf57a9dd79a53c92c61be04f8b70bab3ebc19b1129f0"
+}

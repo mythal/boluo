@@ -4,6 +4,7 @@ use quick_cache::sync::Cache;
 use uuid::Uuid;
 
 use crate::channels::{Channel, ChannelMembers};
+use crate::characters::{Character, CharacterVariables};
 use crate::session::Session;
 use crate::spaces::{Space, SpaceSettings, UserSpaces};
 use crate::users::GetMe;
@@ -126,6 +127,8 @@ impl CacheStore {
 
 define_caches! {
     (Channel, 8192),
+    (Character, 4096),
+    (CharacterVariables, 4096),
     (Session, 8192),
     (User, 8192),
     (UserExt, 8192),

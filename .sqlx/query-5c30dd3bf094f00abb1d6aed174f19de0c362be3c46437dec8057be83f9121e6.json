@@ -1,0 +1,92 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT characters as \"character!: Character\"\nFROM characters\nWHERE space_id = $1\nORDER BY modified DESC;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "character!: Character",
+        "type_info": {
+          "Custom": {
+            "name": "characters",
+            "kind": {
+              "Composite": [
+                [
+                  "id",
+                  "Uuid"
+                ],
+                [
+                  "name",
+                  "Text"
+                ],
+                [
+                  "description",
+                  "Text"
+                ],
+                [
+                  "color",
+                  "Text"
+                ],
+                [
+                  "alias",
+                  "Text"
+                ],
+                [
+                  "image_id",
+                  "Uuid"
+                ],
+                [
+                  "space_id",
+                  "Uuid"
+                ],
+                [
+                  "owner_id",
+                  "Uuid"
+                ],
+                [
+                  "visibility",
+                  {
+                    "Custom": {
+                      "name": "character_visibility",
+                      "kind": {
+                        "Enum": [
+                          "Private",
+                          "Public"
+                        ]
+                      }
+                    }
+                  }
+                ],
+                [
+                  "is_archived",
+                  "Bool"
+                ],
+                [
+                  "metadata",
+                  "Jsonb"
+                ],
+                [
+                  "created",
+                  "Timestamptz"
+                ],
+                [
+                  "modified",
+                  "Timestamptz"
+                ]
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "5c30dd3bf094f00abb1d6aed174f19de0c362be3c46437dec8057be83f9121e6"
+}

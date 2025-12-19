@@ -1,0 +1,87 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE character_variables\nSET display_name = COALESCE($3, display_name),\n    alias = COALESCE($4, alias),\n    sort = COALESCE($5, sort),\n    track_history = COALESCE($6, track_history),\n    value = COALESCE($7, value),\n    metadata = COALESCE($8, metadata),\n    modified = (now() at time zone 'utc')\nWHERE character_id = $1\n  AND key = $2\nRETURNING character_variables as \"variable!: CharacterVariable\";\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "variable!: CharacterVariable",
+        "type_info": {
+          "Custom": {
+            "name": "character_variables",
+            "kind": {
+              "Composite": [
+                [
+                  "key",
+                  {
+                    "Custom": {
+                      "name": "citext",
+                      "kind": "Simple"
+                    }
+                  }
+                ],
+                [
+                  "character_id",
+                  "Uuid"
+                ],
+                [
+                  "display_name",
+                  "Text"
+                ],
+                [
+                  "alias",
+                  "TextArray"
+                ],
+                [
+                  "sort",
+                  "Int4"
+                ],
+                [
+                  "track_history",
+                  "Bool"
+                ],
+                [
+                  "value",
+                  "Jsonb"
+                ],
+                [
+                  "metadata",
+                  "Jsonb"
+                ],
+                [
+                  "created",
+                  "Timestamptz"
+                ],
+                [
+                  "modified",
+                  "Timestamptz"
+                ]
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        {
+          "Custom": {
+            "name": "citext",
+            "kind": "Simple"
+          }
+        },
+        "Text",
+        "TextArray",
+        "Int4",
+        "Bool",
+        "Jsonb",
+        "Jsonb"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "b91894cd46d5427d97c4c93cf7e5daaa913a39a87b31c12010a02527b4fe5222"
+}

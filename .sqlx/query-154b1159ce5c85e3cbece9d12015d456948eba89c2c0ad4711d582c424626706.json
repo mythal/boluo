@@ -1,0 +1,69 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT character_variable_history as \"history!: CharacterVariableHistory\"\nFROM character_variable_history\nWHERE character_id = $1\n  AND key = $2\nORDER BY created DESC;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "history!: CharacterVariableHistory",
+        "type_info": {
+          "Custom": {
+            "name": "character_variable_history",
+            "kind": {
+              "Composite": [
+                [
+                  "id",
+                  "Uuid"
+                ],
+                [
+                  "operator_id",
+                  "Uuid"
+                ],
+                [
+                  "character_id",
+                  "Uuid"
+                ],
+                [
+                  "reason",
+                  "Jsonb"
+                ],
+                [
+                  "key",
+                  {
+                    "Custom": {
+                      "name": "citext",
+                      "kind": "Simple"
+                    }
+                  }
+                ],
+                [
+                  "value",
+                  "Jsonb"
+                ],
+                [
+                  "created",
+                  "Timestamptz"
+                ]
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        {
+          "Custom": {
+            "name": "citext",
+            "kind": "Simple"
+          }
+        }
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "154b1159ce5c85e3cbece9d12015d456948eba89c2c0ad4711d582c424626706"
+}

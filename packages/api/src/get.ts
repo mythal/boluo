@@ -5,12 +5,20 @@ import type {
   ChannelMembers,
   ChannelWithMaybeMember,
   CheckEmailExists,
+  CheckCharacterName,
   CheckUsernameExists,
+  CheckVariableAvailability,
+  Character,
+  CharacterVariable,
+  CharacterVariableHistory,
   EmailVerificationStatus,
   Export,
   GetMessagesByChannel,
+  ListCharacters,
   MakeToken,
   Message,
+  Note,
+  NoteHistory,
   SearchMessagesParams,
   SearchMessagesResult,
   Space,
@@ -20,6 +28,7 @@ import type {
   SpaceWithRelated,
   User,
   UserStatus,
+  VariableHistoryQuery,
   VerifyEmail,
 } from '@boluo/types/bindings';
 
@@ -56,6 +65,20 @@ export interface Get {
     query: SearchMessagesParams;
     result: SearchMessagesResult;
   };
+  // notes
+  '/notes/query': { query: { id: string }; result: Note };
+  '/notes/by_space': { query: { id: string }; result: Note[] };
+  '/notes/history': { query: { id: string }; result: NoteHistory[] };
+  // characters
+  '/characters/query': { query: { id: string }; result: Character };
+  '/characters/by_space': { query: ListCharacters; result: Character[] };
+  '/characters/variables': { query: { id: string }; result: CharacterVariable[] };
+  '/characters/variable_history': {
+    query: VariableHistoryQuery;
+    result: CharacterVariableHistory[];
+  };
+  '/characters/check_name': { query: CheckCharacterName; result: boolean };
+  '/characters/check_variable': { query: CheckVariableAvailability; result: boolean };
   // events
   '/events/token': { query: MakeToken; result: { token: string } };
   // info

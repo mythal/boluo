@@ -52,6 +52,11 @@ pub static DISPLAY_NAME: Validator<str> = Validator(&[
     ("Name length shall not be more than 32.", &max!(32)),
 ]);
 
+pub static IDENT: Validator<str> = Validator(&[
+    ("Identifier length shall not be empty.", &min!(1)),
+    ("Identifier length shall not be more than 64.", &max!(64)),
+]);
+
 pub static CHARACTER_NAME: Validator<str> = Validator(&[
     ("Name length shall not be empty.", &min!(1)),
     ("Name length shall not be more than 32.", &max!(32)),

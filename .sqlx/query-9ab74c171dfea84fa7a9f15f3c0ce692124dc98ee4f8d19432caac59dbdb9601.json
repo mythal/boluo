@@ -1,0 +1,108 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT notes as \"note!: Note\"\nFROM notes\nWHERE space_id = $1\nORDER BY modified DESC;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "note!: Note",
+        "type_info": {
+          "Custom": {
+            "name": "notes",
+            "kind": {
+              "Composite": [
+                [
+                  "id",
+                  "Uuid"
+                ],
+                [
+                  "type",
+                  {
+                    "Custom": {
+                      "name": "note_type",
+                      "kind": {
+                        "Enum": [
+                          "Term",
+                          "Character"
+                        ]
+                      }
+                    }
+                  }
+                ],
+                [
+                  "space_id",
+                  "Uuid"
+                ],
+                [
+                  "title",
+                  "Text"
+                ],
+                [
+                  "keywords",
+                  "TextArray"
+                ],
+                [
+                  "disabled",
+                  "Bool"
+                ],
+                [
+                  "owner_id",
+                  "Uuid"
+                ],
+                [
+                  "content",
+                  "Text"
+                ],
+                [
+                  "visibility",
+                  {
+                    "Custom": {
+                      "name": "note_visibility",
+                      "kind": {
+                        "Enum": [
+                          "Private",
+                          "Channels",
+                          "Users",
+                          "Public"
+                        ]
+                      }
+                    }
+                  }
+                ],
+                [
+                  "visible_to",
+                  "UuidArray"
+                ],
+                [
+                  "everyone_can_edit",
+                  "Bool"
+                ],
+                [
+                  "track_history",
+                  "Bool"
+                ],
+                [
+                  "created",
+                  "Timestamptz"
+                ],
+                [
+                  "modified",
+                  "Timestamptz"
+                ]
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "9ab74c171dfea84fa7a9f15f3c0ce692124dc98ee4f8d19432caac59dbdb9601"
+}

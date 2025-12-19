@@ -5,13 +5,22 @@ import type {
   Channel,
   ChannelMember,
   ChannelWithMember,
+  Character,
+  CharacterVariable,
+  CreateCharacter,
   CreateChannel,
+  CreateNote,
   CreateSpace,
+  CreateVariable,
+  DeleteVariable,
   EditChannel,
   EditChannelMember,
   EditChannelTopic,
+  EditCharacter,
+  EditNote,
   EditSpace,
   EditUser,
+  EditVariable,
   GrantOrRemoveChannelMaster,
   JoinChannel,
   KickFromChannel,
@@ -20,6 +29,7 @@ import type {
   LoginReturn,
   Message,
   NewMessage,
+  Note,
   Register as RegisterData,
   ResendEmailVerification,
   ResendEmailVerificationResult,
@@ -77,6 +87,21 @@ export interface Post {
   '/channels/add_member': { payload: AddChannelMember; query: null; result: ChannelWithMember };
   '/channels/edit_master': { payload: GrantOrRemoveChannelMaster; query: null; result: true };
   '/channels/edit_topic': { payload: EditChannelTopic; query: null; result: Channel };
+  // notes
+  '/notes/create': { payload: CreateNote; query: null; result: Note };
+  '/notes/edit': { payload: EditNote; query: null; result: Note };
+  '/notes/delete': { payload: Empty; query: { id: string }; result: true };
+  // characters
+  '/characters/create': { payload: CreateCharacter; query: null; result: Character };
+  '/characters/edit': { payload: EditCharacter; query: null; result: Character };
+  '/characters/delete': { payload: Empty; query: { id: string }; result: true };
+  '/characters/create_variable': {
+    payload: CreateVariable;
+    query: null;
+    result: CharacterVariable;
+  };
+  '/characters/edit_variable': { payload: EditVariable; query: null; result: CharacterVariable };
+  '/characters/delete_variable': { payload: DeleteVariable; query: null; result: true };
   // meida
   '/media/presigned': { query: PreSign; payload: Empty; result: PreSignResult };
 }

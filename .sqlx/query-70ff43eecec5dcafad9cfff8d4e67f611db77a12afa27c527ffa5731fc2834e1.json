@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO character_variable_history (\n    operator_id,\n    character_id,\n    reason,\n    key,\n    value\n)\nVALUES ($1, $2, $3, $4, $5);\n",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Jsonb",
+        {
+          "Custom": {
+            "name": "citext",
+            "kind": "Simple"
+          }
+        },
+        "Jsonb"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "70ff43eecec5dcafad9cfff8d4e67f611db77a12afa27c527ffa5731fc2834e1"
+}

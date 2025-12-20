@@ -1,7 +1,7 @@
 import { type FC, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { useConnectionEffect } from '../hooks/useConnectionEffect';
-import { useQuerySpace } from '../hooks/useQuerySpace';
+import { useQuerySpace } from '@boluo/hooks/useQuerySpace';
 import { SpaceContext } from '../hooks/useSpace';
 import { PaneLoading } from './PaneLoading';
 import { FailedBanner } from '@boluo/ui/chat/FailedBanner';

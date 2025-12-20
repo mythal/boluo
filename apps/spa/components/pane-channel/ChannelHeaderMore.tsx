@@ -10,8 +10,8 @@ import { type ChannelHeaderState } from './ChannelHeader';
 import { ChannelHeaderFilter } from './ChannelHeaderFilter';
 import { ChannelHeaderFilterShowArchive } from './ChannelHeaderFilterShowArchive';
 import { MemberJoinButton } from './MemberJoinButton';
-import { useQueryChannel } from '../../hooks/useQueryChannel';
-import { useQueryCurrentUser } from '@boluo/common/hooks/useQueryCurrentUser';
+import { useQueryChannel } from '@boluo/hooks/useQueryChannel';
+import { useQueryCurrentUser } from '@boluo/hooks/useQueryCurrentUser';
 import { ChannelExportButton } from './ChannelExportButton';
 import { useMember } from '../../hooks/useMember';
 

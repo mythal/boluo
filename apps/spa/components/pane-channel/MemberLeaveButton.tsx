@@ -14,11 +14,11 @@ import useSWRMutation, { type MutationFetcher } from 'swr/mutation';
 import { Button } from '@boluo/ui/Button';
 import { Spinner } from '@boluo/ui/Spinner';
 import { type Empty } from '@boluo/types';
-import { useQueryChannel } from '../../hooks/useQueryChannel';
+import { useQueryChannel } from '@boluo/hooks/useQueryChannel';
 import { FloatingBox } from '@boluo/ui/FloatingBox';
 import { PaneHeaderButton } from '@boluo/ui/PaneHeaderButton';
 import Icon from '@boluo/ui/Icon';
-import { useQueryChannelMembers } from '../../hooks/useQueryChannelMembers';
+import { useQueryChannelMembers } from '@boluo/hooks/useQueryChannelMembers';
 import { type MemberWithUser } from '@boluo/api';
 import { useMember } from '../../hooks/useMember';
 
@@ -56,6 +56,7 @@ export const MemberLeaveButton: FC<Props> = ({ channelId, onSuccess }) => {
   return (
     <>
       <PaneHeaderButton
+        active={isConfirmOpen}
         ref={refs.setReference}
         disabled={myMember == null || isMutating || isLoading}
         {...getReferenceProps()}

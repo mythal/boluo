@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT EXISTS(\n    SELECT 1\n    FROM character_variables\n    WHERE character_id = $1\n      AND (\n        ($2::citext IS NOT NULL AND key = $2::citext)\n        OR ($3::text[] IS NOT NULL AND alias && $3::text[])\n      )\n) as \"exists!\";\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "exists!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        {
+          "Custom": {
+            "name": "citext",
+            "kind": "Simple"
+          }
+        },
+        "TextArray"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "c6ef70fab17b42569c22a11189c431db39b12fb40e4d8fd9cadc6cd3fcb3e7e2"
+}

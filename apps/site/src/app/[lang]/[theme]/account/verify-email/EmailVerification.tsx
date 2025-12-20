@@ -6,11 +6,11 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import { Button } from '@boluo/ui/Button';
 import { ErrorMessageBox } from '@boluo/ui/ErrorMessageBox';
 import useSWRMutation, { type SWRMutationResponse } from 'swr/mutation';
-import { useQueryCurrentUser } from '@boluo/common/hooks/useQueryCurrentUser';
-import { useCountdown } from '@boluo/common/hooks/useCountdown';
-import { useMutateVerifyEmail } from '@boluo/common/hooks/useMutateVerifyEmail';
+import { useQueryCurrentUser } from '@boluo/hooks/useQueryCurrentUser';
+import { useCountdown } from '@boluo/hooks/useCountdown';
+import { useMutateVerifyEmail } from '@boluo/hooks/useMutateVerifyEmail';
 import type { ResendEmailVerificationResult, User } from '@boluo/api';
-import { useQueryIsEmailVerified } from '@boluo/common/hooks/useQueryIsEmailVerified';
+import { useQueryIsEmailVerified } from '@boluo/hooks/useQueryIsEmailVerified';
 import Link from 'next/link';
 
 const useSendVerificationEmail = (): SWRMutationResponse<

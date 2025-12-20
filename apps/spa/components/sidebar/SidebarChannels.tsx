@@ -4,15 +4,15 @@ import type { FC } from 'react';
 import React, { Suspense, useMemo, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { type Channel, type ChannelWithMaybeMember } from '@boluo/api';
-import { useQueryChannelList } from '../../hooks/useQueryChannelList';
-import { useMySpaceMember } from '../../hooks/useQueryMySpaceMember';
+import { useQueryChannelList } from '@boluo/hooks/useQueryChannelList';
+import { useMySpaceMember } from '@boluo/hooks/useQueryMySpaceMember';
 import { panesAtom } from '../../state/view.atoms';
 import { SidebarItem } from './SidebarItem';
 import Icon from '@boluo/ui/Icon';
 import { SidebarChannelListSkeleton } from './SidebarChannelListSkeleton';
 import { ButtonInline } from '@boluo/ui/ButtonInline';
 import { SidebarChannelsHeaderNewChannel } from './SidebarChannelsHeaderNewChannel';
-import { useQueryCurrentUser } from '@boluo/common/hooks/useQueryCurrentUser';
+import { useQueryCurrentUser } from '@boluo/hooks/useQueryCurrentUser';
 import { SidebarChannelItem } from './SidebarChannelItem';
 
 const SidebarChannelList = React.lazy(() => import('./SidebarChannelList'));

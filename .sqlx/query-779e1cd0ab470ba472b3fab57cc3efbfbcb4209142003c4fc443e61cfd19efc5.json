@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT EXISTS(\n    SELECT 1\n    FROM characters\n    WHERE space_id = $1\n      AND (\n        ($2::text IS NOT NULL AND name = $2::text)\n        OR ($3::text IS NOT NULL AND alias = $3::text)\n      )\n) as \"exists!\";\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "exists!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "779e1cd0ab470ba472b3fab57cc3efbfbcb4209142003c4fc443e61cfd19efc5"
+}

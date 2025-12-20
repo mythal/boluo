@@ -28,6 +28,7 @@ mod utils;
 mod error;
 mod cache;
 mod channels;
+mod characters;
 mod config;
 mod context;
 mod cors;
@@ -39,6 +40,7 @@ mod interface;
 mod mail;
 mod media;
 mod messages;
+mod notes;
 mod notify;
 mod pos;
 mod pubsub;
@@ -97,7 +99,9 @@ async fn router(
     table!("/api/users", users::router);
     table!("/api/media", media::router);
     table!("/api/channels", channels::router);
+    table!("/api/characters", characters::router);
     table!("/api/spaces", spaces::router);
+    table!("/api/notes", notes::router);
     table!("/api/events", events::router);
     missing()
 }
@@ -315,6 +319,7 @@ async fn main() {
     tracing::info!("Startup ID: {}", events::startup_id());
 
     cache::start_expiry_task();
+    cache::start_log_cache_stats();
     let timeout_counter = metrics::counter!("boluo_server_tcp_connections_timeout_total");
     let error_counter = metrics::counter!("boluo_server_tcp_connections_error_total");
 

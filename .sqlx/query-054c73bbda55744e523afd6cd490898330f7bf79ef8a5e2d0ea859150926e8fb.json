@@ -1,0 +1,117 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO notes (\n    type,\n    space_id,\n    title,\n    keywords,\n    owner_id,\n    content,\n    visibility,\n    visible_to,\n    everyone_can_edit,\n    track_history\n)\nVALUES (($1::text)::note_type, $2, $3, $4, $5, $6, ($7::text)::note_visibility, $8, $9, $10)\nRETURNING notes as \"note!: Note\";\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "note!: Note",
+        "type_info": {
+          "Custom": {
+            "name": "notes",
+            "kind": {
+              "Composite": [
+                [
+                  "id",
+                  "Uuid"
+                ],
+                [
+                  "type",
+                  {
+                    "Custom": {
+                      "name": "note_type",
+                      "kind": {
+                        "Enum": [
+                          "Term",
+                          "Character"
+                        ]
+                      }
+                    }
+                  }
+                ],
+                [
+                  "space_id",
+                  "Uuid"
+                ],
+                [
+                  "title",
+                  "Text"
+                ],
+                [
+                  "keywords",
+                  "TextArray"
+                ],
+                [
+                  "disabled",
+                  "Bool"
+                ],
+                [
+                  "owner_id",
+                  "Uuid"
+                ],
+                [
+                  "content",
+                  "Text"
+                ],
+                [
+                  "visibility",
+                  {
+                    "Custom": {
+                      "name": "note_visibility",
+                      "kind": {
+                        "Enum": [
+                          "Private",
+                          "Channels",
+                          "Users",
+                          "Public"
+                        ]
+                      }
+                    }
+                  }
+                ],
+                [
+                  "visible_to",
+                  "UuidArray"
+                ],
+                [
+                  "everyone_can_edit",
+                  "Bool"
+                ],
+                [
+                  "track_history",
+                  "Bool"
+                ],
+                [
+                  "created",
+                  "Timestamptz"
+                ],
+                [
+                  "modified",
+                  "Timestamptz"
+                ]
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Uuid",
+        "Text",
+        "TextArray",
+        "Uuid",
+        "Text",
+        "Text",
+        "UuidArray",
+        "Bool",
+        "Bool"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "054c73bbda55744e523afd6cd490898330f7bf79ef8a5e2d0ea859150926e8fb"
+}

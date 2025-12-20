@@ -16,9 +16,9 @@ import {
 } from '@dnd-kit/core';
 import { restrictToVerticalAxis, restrictToWindowEdges } from '@dnd-kit/modifiers';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { useQuerySpaceSettings } from '../../hooks/useQuerySpaceSettings';
+import { useQuerySpaceSettings } from '@boluo/hooks/useQuerySpaceSettings';
 import { SidebarChannelListSkeleton } from './SidebarChannelListSkeleton';
-import { useMutateSpaceSettings } from '../../hooks/useMutateSpaceSettings';
+import { useMutateSpaceSettings } from '@boluo/hooks/useMutateSpaceSettings';
 
 interface Props {
   spaceId: string;

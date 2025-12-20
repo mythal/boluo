@@ -6,7 +6,7 @@ import { notificationEnableAtom } from '../state/notification.atoms';
 import { useIntl } from 'react-intl';
 import { messageToParsed, toSimpleText } from '@boluo/interpreter';
 import { panesAtom } from '../state/view.atoms';
-import { useQueryChannelList } from './useQueryChannelList';
+import { useQueryChannelList } from '@boluo/hooks/useQueryChannelList';
 import { backwards } from 'list';
 
 export const useNotify = (spaceId: string) => {

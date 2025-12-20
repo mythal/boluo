@@ -20,9 +20,9 @@
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
       "outputs": ["dist/**", ".next/**", "storybook-static/**", "!.next/cache/**"]
     },
-    "lint": { "dependsOn": ["^lint"] },
+    "lint": { "dependsOn": ["@boluo/icons#build", "^lint"] },
     "test": { "dependsOn": ["^build"] },
-    "check": { "dependsOn": ["^check"] },
+    "check": { "dependsOn": ["@boluo/icons#build", "^check"] },
     "storybook": { "dependsOn": ["^build"], "cache": false, "persistent": true },
     "dev": { "dependsOn": ["^generate", "generate", "^build"], "cache": false, "persistent": true },
     "@boluo/lang#generate": { "cache": false },

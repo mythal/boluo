@@ -1,0 +1,101 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO characters (\n    name,\n    description,\n    color,\n    alias,\n    image_id,\n    space_id,\n    owner_id,\n    visibility,\n    is_archived,\n    metadata\n)\nVALUES ($1, $2, $3, $4, $5, $6, $7, ($8::text)::character_visibility, $9, $10)\nRETURNING characters as \"character!: Character\";\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "character!: Character",
+        "type_info": {
+          "Custom": {
+            "name": "characters",
+            "kind": {
+              "Composite": [
+                [
+                  "id",
+                  "Uuid"
+                ],
+                [
+                  "name",
+                  "Text"
+                ],
+                [
+                  "description",
+                  "Text"
+                ],
+                [
+                  "color",
+                  "Text"
+                ],
+                [
+                  "alias",
+                  "Text"
+                ],
+                [
+                  "image_id",
+                  "Uuid"
+                ],
+                [
+                  "space_id",
+                  "Uuid"
+                ],
+                [
+                  "owner_id",
+                  "Uuid"
+                ],
+                [
+                  "visibility",
+                  {
+                    "Custom": {
+                      "name": "character_visibility",
+                      "kind": {
+                        "Enum": [
+                          "Private",
+                          "Public"
+                        ]
+                      }
+                    }
+                  }
+                ],
+                [
+                  "is_archived",
+                  "Bool"
+                ],
+                [
+                  "metadata",
+                  "Jsonb"
+                ],
+                [
+                  "created",
+                  "Timestamptz"
+                ],
+                [
+                  "modified",
+                  "Timestamptz"
+                ]
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Uuid",
+        "Uuid",
+        "Uuid",
+        "Text",
+        "Bool",
+        "Jsonb"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "5a4d3b9a6c8e9d8089ab7b51d0b394b802760ff1778e693b7a652d7d485a5829"
+}

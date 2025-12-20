@@ -6,7 +6,7 @@
   },
   "devDependencies": {
     "@types/node": "^24.0.12",
-    "tsx": "^4.19.2",
+    "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   },
   "private": true,

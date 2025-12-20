@@ -5,7 +5,7 @@ import { LampSwitch } from '@boluo/ui/LampSwitch';
 import { TooltipBox } from '@boluo/ui/TooltipBox';
 import { type FC } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { type MutateSettingsTrigger } from '../../hooks/useMutateSettings';
+import { type MutateSettingsTrigger } from '@boluo/hooks/useMutateSettings';
 import { useAtomValue } from 'jotai';
 import { devMode } from '../../state/dev.atoms';
 

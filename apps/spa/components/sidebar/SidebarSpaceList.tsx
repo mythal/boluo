@@ -1,5 +1,5 @@
 import { type Space, type User } from '@boluo/api';
-import { useQueryMySpaces } from '@boluo/common/hooks/useQueryMySpaces';
+import { useQueryMySpaces } from '@boluo/hooks/useQueryMySpaces';
 import { Plus } from '@boluo/icons';
 import { useAtomValue } from 'jotai';
 import { type FC, useMemo } from 'react';

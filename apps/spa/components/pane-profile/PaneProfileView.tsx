@@ -4,7 +4,7 @@ import type { FC } from 'react';
 import { Avatar } from '@boluo/ui/users/Avatar';
 import { ShowUsername } from './ShowUsername';
 import { FormattedMessage } from 'react-intl';
-import { useQueryAppSettings } from '@boluo/common/hooks/useQueryAppSettings';
+import { useQueryAppSettings } from '@boluo/hooks/useQueryAppSettings';
 
 interface Props {
   user: User;

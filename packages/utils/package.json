@@ -13,12 +13,11 @@
     "typescript": "^5.9.3"
   },
   "exports": {
-    "./*": "./dist/*.js"
+    "./*": "./src/*.ts"
   },
   "homepage": "https://github.com/mythal/boluo",
   "private": true,
   "scripts": {
-    "build": "tsc --project tsconfig.json",
     "check": "tsc --noEmit",
     "lint": "eslint . --ext .ts,.tsx"
   },

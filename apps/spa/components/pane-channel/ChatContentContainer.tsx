@@ -3,7 +3,7 @@ import Icon from '@boluo/ui/Icon';
 import { type FC, useState, type Ref } from 'react';
 import { useIntl } from 'react-intl';
 import { useSettings } from '../../hooks/useSettings';
-import { useMutateSettings } from '../../hooks/useMutateSettings';
+import { useMutateSettings } from '@boluo/hooks/useMutateSettings';
 import { usePaneIsFocus } from '../../hooks/usePaneIsFocus';
 import { ChatContentContainerSettingsFont } from './ChatContentContainerSettingsFont';
 import { ChatContentContainerSettingsLayout } from './ChatContentContainerSettingsLayout';

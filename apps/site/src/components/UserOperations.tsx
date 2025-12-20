@@ -1,12 +1,12 @@
 'use client';
 
-import { useQueryCurrentUser } from '@boluo/common/hooks/useQueryCurrentUser';
-import { useQueryIsEmailVerified } from '@boluo/common/hooks/useQueryIsEmailVerified';
+import { useQueryCurrentUser } from '@boluo/hooks/useQueryCurrentUser';
+import { useQueryIsEmailVerified } from '@boluo/hooks/useQueryIsEmailVerified';
 import Link from 'next/link';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { useLogout } from '@boluo/common/hooks/useLogout';
+import { useLogout } from '@boluo/hooks/useLogout';
 import { LoadingText } from '@boluo/ui/LoadingText';
-import { useQueryAppSettings } from '@boluo/common/hooks/useQueryAppSettings';
+import { useQueryAppSettings } from '@boluo/hooks/useQueryAppSettings';
 import * as classes from '@boluo/ui/classes';
 import type { User } from '@boluo/api';
 

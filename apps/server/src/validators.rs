@@ -52,6 +52,15 @@ pub static DISPLAY_NAME: Validator<str> = Validator(&[
     ("Name length shall not be more than 32.", &max!(32)),
 ]);
 
+pub static IDENT: Validator<str> = Validator(&[
+    ("Identifier length shall not be empty.", &min!(1)),
+    ("Identifier length shall not be more than 64.", &max!(64)),
+    (
+        "Identifier can only contain letters (including Unicode), numbers, emoji, and . ? _ - %.",
+        &is_match!(r"^[\p{L}\p{N}\p{M}\p{So}.。_%?？:：、・—-]+$"),
+    ),
+]);
+
 pub static CHARACTER_NAME: Validator<str> = Validator(&[
     ("Name length shall not be empty.", &min!(1)),
     ("Name length shall not be more than 32.", &max!(32)),
@@ -96,4 +105,12 @@ fn validator_test() {
 
     assert!(EMAIL.run("").is_err());
     assert!(EMAIL.run("example@example.com").is_ok());
+
+    assert!(IDENT.run("HP:满").is_ok());
+    assert!(IDENT.run("魔力：不足").is_ok());
+    assert!(IDENT.run("SAN・低下？").is_ok());
+    assert!(IDENT.run("状態—毒🙂").is_ok());
+    assert!(IDENT.run("สถานะ:อ่อนแรง").is_ok());
+    assert!(IDENT.run("기력:부족").is_ok());
+    assert!(IDENT.run("HP/MP").is_err());
 }

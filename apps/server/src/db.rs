@@ -76,8 +76,12 @@ pub async fn check_db_host() {
 #[tracing::instrument]
 pub async fn check(pool: &sqlx::Pool<sqlx::Postgres>) {
     use crate::channels::{Channel, ChannelMember};
+    use crate::characters::{
+        Character, CharacterVariable, CharacterVariableHistory, CharacterVisibility,
+    };
     use crate::media::models::Media;
     use crate::messages::Message;
+    use crate::notes::{Note, NoteHistory, NoteType, NoteVisibility};
     use crate::spaces::{Space, SpaceMember};
     use crate::users::{User, UserExt};
     use serde_json::json;
@@ -204,6 +208,112 @@ pub async fn check(pool: &sqlx::Pool<sqlx::Postgres>) {
     .fetch_one(&mut *trans)
     .await
     .expect("Cannot create message");
+
+    let character_alias = Some("homura".to_string());
+    let character = sqlx::query_file_scalar!(
+        "sql/characters/create.sql",
+        "Homura",
+        "Time traveler",
+        "#7c4dff",
+        character_alias,
+        Some(media.id),
+        space.id,
+        user.id,
+        CharacterVisibility::Private.as_str(),
+        false,
+        json!({}),
+    )
+    .fetch_one(&mut *trans)
+    .await
+    .expect("Cannot create character");
+
+    let variable_alias = vec!["HP".to_string()];
+    let variable = sqlx::query_file_scalar!(
+        "sql/characters/variables/create.sql",
+        "hp",
+        character.id,
+        "HP",
+        &variable_alias,
+        0,
+        true,
+        json!(100),
+        json!({}),
+    )
+    .fetch_one(&mut *trans)
+    .await
+    .expect("Cannot create character variable");
+
+    let variables = sqlx::query_file_scalar!(
+        "sql/characters/variables/list_by_character.sql",
+        character.id
+    )
+    .fetch_all(&mut *trans)
+    .await
+    .expect("Cannot list character variables");
+    assert_eq!(variables.len(), 1);
+
+    sqlx::query_file!(
+        "sql/characters/variables/insert_history.sql",
+        user.id,
+        character.id,
+        json!({"reason": "db-check"}),
+        variable.key,
+        json!(80),
+    )
+    .execute(&mut *trans)
+    .await
+    .expect("Cannot create character variable history");
+
+    let variable_history = sqlx::query_file_scalar!(
+        "sql/characters/variables/history_by_key.sql",
+        character.id,
+        "hp"
+    )
+    .fetch_all(&mut *trans)
+    .await
+    .expect("Cannot list character variable history");
+    assert_eq!(variable_history.len(), 1);
+
+    let note_keywords = vec!["magic".to_string()];
+    let note_visible_to = vec![channel.id];
+    let note = sqlx::query_file_scalar!(
+        "sql/notes/create.sql",
+        NoteType::Term.as_str(),
+        space.id,
+        "Magic",
+        &note_keywords,
+        user.id,
+        "Magic is everywhere.",
+        NoteVisibility::Channels.as_str(),
+        &note_visible_to,
+        true,
+        true,
+    )
+    .fetch_one(&mut *trans)
+    .await
+    .expect("Cannot create note");
+
+    let notes = sqlx::query_file_scalar!("sql/notes/list_by_space.sql", space.id)
+        .fetch_all(&mut *trans)
+        .await
+        .expect("Cannot list notes");
+    assert_eq!(notes.len(), 1);
+
+    sqlx::query_file!(
+        "sql/notes/insert_history.sql",
+        note.id,
+        Some(user.id),
+        "Magic is everywhere.",
+    )
+    .execute(&mut *trans)
+    .await
+    .expect("Cannot create note history");
+
+    let note_history = sqlx::query_file_scalar!("sql/notes/history_by_note.sql", note.id)
+        .fetch_all(&mut *trans)
+        .await
+        .expect("Cannot list note history");
+    assert_eq!(note_history.len(), 1);
 
     if let Some(real_user_id) = real_user_id {
         let _session = crate::session::start(real_user_id)

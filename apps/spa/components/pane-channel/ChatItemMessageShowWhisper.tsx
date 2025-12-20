@@ -6,8 +6,8 @@ import { FormattedMessage } from 'react-intl';
 import useSWRMutation from 'swr/mutation';
 import { Button } from '@boluo/ui/Button';
 import { chatAtom } from '../../state/chat.atoms';
-import { useQueryChannelMembers } from '../../hooks/useQueryChannelMembers';
-import { useQueryCurrentUser } from '@boluo/common/hooks/useQueryCurrentUser';
+import { useQueryChannelMembers } from '@boluo/hooks/useQueryChannelMembers';
+import { useQueryCurrentUser } from '@boluo/hooks/useQueryCurrentUser';
 import { useMember } from '../../hooks/useMember';
 
 interface Props {

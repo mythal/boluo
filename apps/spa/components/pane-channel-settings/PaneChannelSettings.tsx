@@ -8,7 +8,7 @@ import { type MutationFetcher } from 'swr/mutation';
 import { Button } from '@boluo/ui/Button';
 import { Loading } from '@boluo/ui/Loading';
 import { usePaneClose } from '../../hooks/usePaneClose';
-import { useQueryChannel } from '../../hooks/useQueryChannel';
+import { useQueryChannel } from '@boluo/hooks/useQueryChannel';
 import { DangerZone } from '@boluo/ui/DangerZone';
 import { ErrorDisplay } from '../ErrorDisplay';
 import { PaneBox } from '../PaneBox';

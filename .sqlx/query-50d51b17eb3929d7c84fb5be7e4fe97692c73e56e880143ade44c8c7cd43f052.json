@@ -1,0 +1,50 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT notes_history as \"history!: NoteHistory\"\nFROM notes_history\nWHERE note_id = $1\nORDER BY created DESC;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "history!: NoteHistory",
+        "type_info": {
+          "Custom": {
+            "name": "notes_history",
+            "kind": {
+              "Composite": [
+                [
+                  "id",
+                  "Uuid"
+                ],
+                [
+                  "note_id",
+                  "Uuid"
+                ],
+                [
+                  "operator_id",
+                  "Uuid"
+                ],
+                [
+                  "content",
+                  "Text"
+                ],
+                [
+                  "created",
+                  "Timestamptz"
+                ]
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "50d51b17eb3929d7c84fb5be7e4fe97692c73e56e880143ade44c8c7cd43f052"
+}

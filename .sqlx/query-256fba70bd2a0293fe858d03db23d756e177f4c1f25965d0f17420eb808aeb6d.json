@@ -1,0 +1,92 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT characters as \"character!: Character\"\nFROM characters\nWHERE id = $1;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "character!: Character",
+        "type_info": {
+          "Custom": {
+            "name": "characters",
+            "kind": {
+              "Composite": [
+                [
+                  "id",
+                  "Uuid"
+                ],
+                [
+                  "name",
+                  "Text"
+                ],
+                [
+                  "description",
+                  "Text"
+                ],
+                [
+                  "color",
+                  "Text"
+                ],
+                [
+                  "alias",
+                  "Text"
+                ],
+                [
+                  "image_id",
+                  "Uuid"
+                ],
+                [
+                  "space_id",
+                  "Uuid"
+                ],
+                [
+                  "owner_id",
+                  "Uuid"
+                ],
+                [
+                  "visibility",
+                  {
+                    "Custom": {
+                      "name": "character_visibility",
+                      "kind": {
+                        "Enum": [
+                          "Private",
+                          "Public"
+                        ]
+                      }
+                    }
+                  }
+                ],
+                [
+                  "is_archived",
+                  "Bool"
+                ],
+                [
+                  "metadata",
+                  "Jsonb"
+                ],
+                [
+                  "created",
+                  "Timestamptz"
+                ],
+                [
+                  "modified",
+                  "Timestamptz"
+                ]
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "256fba70bd2a0293fe858d03db23d756e177f4c1f25965d0f17420eb808aeb6d"
+}

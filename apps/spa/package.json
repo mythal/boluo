@@ -7,6 +7,7 @@
     "@boluo/backend-proxy": "0.0.0",
     "@boluo/color": "0.0.0",
     "@boluo/common": "0.0.0",
+    "@boluo/hooks": "0.0.0",
     "@boluo/icons": "0.0.0",
     "@boluo/interpreter": "0.0.0",
     "@boluo/lang": "0.0.0",
@@ -53,6 +54,7 @@
     "eslint": "^9.23.0",
     "postcss": "^8.5.3",
     "tailwindcss": "^4.1.14",
+    "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   },
   "private": true,
@@ -60,7 +62,8 @@
     "build": "next build",
     "check": "tsc --noEmit",
     "dev": "next dev --turbopack --port 3200",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "tsx --test **/*.test.ts"
   },
   "type": "module"
 }

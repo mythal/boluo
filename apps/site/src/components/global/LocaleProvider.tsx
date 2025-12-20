@@ -1,7 +1,7 @@
 'use client';
 import { patch } from '@boluo/api-browser';
-import { useQueryCurrentUser } from '@boluo/common/hooks/useQueryCurrentUser';
-import { ChangeLocaleContext } from '@boluo/common/hooks/useLocale';
+import { useQueryCurrentUser } from '@boluo/hooks/useQueryCurrentUser';
+import { ChangeLocaleContext } from '@boluo/hooks/useLocale';
 import { defaultLocale, type IntlMessages, LOCALES, onIntlError } from '@boluo/locale';
 import type { Settings } from '@boluo/settings';
 import { useRouter } from 'next/navigation';

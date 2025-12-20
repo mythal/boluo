@@ -1,4 +1,4 @@
-import { useQueryCurrentUser } from '@boluo/common/hooks/useQueryCurrentUser';
+import { useQueryCurrentUser } from '@boluo/hooks/useQueryCurrentUser';
 import { LogOut, Settings, User as UserIcon } from '@boluo/icons';
 import { useAtom, useAtomValue } from 'jotai';
 import { type FC, useCallback } from 'react';
@@ -7,7 +7,7 @@ import { FormattedMessage } from 'react-intl';
 import { Button } from '@boluo/ui/Button';
 import { ButtonWithLamp } from '@boluo/ui/ButtonWithLamp';
 import { type ChildrenProps } from '@boluo/types';
-import { useLogout } from '@boluo/common/hooks/useLogout';
+import { useLogout } from '@boluo/hooks/useLogout';
 import { usePaneToggle } from '../../hooks/usePaneToggle';
 import { devMode as devModeAtom } from '../../state/dev.atoms';
 import { PaneBox } from '../PaneBox';

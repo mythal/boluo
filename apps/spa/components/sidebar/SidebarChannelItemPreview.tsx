@@ -3,6 +3,7 @@ import { type FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { chatAtom } from '../../state/chat.atoms';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { messageToParsed, toSimpleText } from '@boluo/interpreter';
+import { binarySearchPosList } from '@boluo/sort';
 import { type LatestMessageAtom } from './SidebarChannelItem';
 import { type PreviewItem } from '../../state/channel.types';
 import clsx from 'clsx';
@@ -28,15 +29,28 @@ export const SidebarChannelItemPreview: FC<Props> = ({
     () => atom((read) => read(chatAtom).channels[channelId]?.previewMap),
     [channelId],
   );
+  const messagesAtom = useMemo(
+    () => atom((read) => read(chatAtom).channels[channelId]?.messages),
+    [channelId],
+  );
 
-  // Sort by timestamp, descending.
+  // Sort by timestamp, ascending (oldest first), so we can schedule a single timeout
+  // to re-check when the oldest preview expires.
   const [recentPreviews, setRecentPreviews] = useState<PreviewItem[]>([]);
   const updateRecentPreviews = useCallback(() => {
-    const now = new Date().getTime();
+    const now = Date.now();
     const previewMap = store.get(previewMapAtom) ?? {};
+    const messages = store.get(messagesAtom);
+    const hasMessageAtPos = (pos: number): boolean => {
+      if (!messages) return false;
+      const [, message] = binarySearchPosList(messages, pos);
+      return message != null;
+    };
     const previews = Object.values(previewMap).filter(
       (preview) =>
         preview.senderId !== myId &&
+        preview.edit == null &&
+        !hasMessageAtPos(preview.pos) &&
         now - preview.timestamp < TYPEING_TIMEOUT &&
         (preview.text == null || preview.text.length > 0),
     );
@@ -54,24 +68,31 @@ export const SidebarChannelItemPreview: FC<Props> = ({
       }
       return oldPreviews;
     });
-  }, [myId, previewMapAtom, store]);
-  useEffect(
-    () => store.sub(previewMapAtom, updateRecentPreviews),
-    [previewMapAtom, store, updateRecentPreviews],
-  );
+  }, [messagesAtom, myId, previewMapAtom, store]);
+
+  // Update recent previews when previewMap/messages changes
+  useEffect(() => {
+    const handle = window.setTimeout(updateRecentPreviews, 0);
+    const unsubscribe = store.sub(previewMapAtom, updateRecentPreviews);
+    const unsubscribeMessages = store.sub(messagesAtom, updateRecentPreviews);
+    return () => {
+      window.clearTimeout(handle);
+      unsubscribe();
+      unsubscribeMessages();
+    };
+  }, [messagesAtom, previewMapAtom, store, updateRecentPreviews]);
+
+  // Schedule re-check when the oldest preview expires
   const oldestRecentPreviewTimestamp = recentPreviews[0]?.timestamp;
   useEffect(() => {
     if (oldestRecentPreviewTimestamp == null) return;
-    const now = new Date().getTime();
+    const now = Date.now();
     const distance = now - oldestRecentPreviewTimestamp;
-    if (distance < TYPEING_TIMEOUT) {
-      const handle = window.setTimeout(updateRecentPreviews, TYPEING_TIMEOUT - distance);
-      return () => window.clearTimeout(handle);
-    } else {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      updateRecentPreviews();
-    }
+    const delay = distance < TYPEING_TIMEOUT ? TYPEING_TIMEOUT - distance : 0;
+    const handle = window.setTimeout(updateRecentPreviews, delay);
+    return () => window.clearTimeout(handle);
   }, [oldestRecentPreviewTimestamp, updateRecentPreviews]);
+
   const typingNames: string[] = useMemo(() => {
     const previews: PreviewItem[] = [];
     const masterPreview = recentPreviews.find((preview) => preview.isMaster);

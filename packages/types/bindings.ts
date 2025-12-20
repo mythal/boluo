@@ -66,13 +66,62 @@ export type ChannelWithRelated = {
   heartbeatMap: { [key in string]: number };
 };
 
+export type Character = {
+  id: string;
+  name: string;
+  description: string;
+  color: string;
+  alias: string | null;
+  imageId: string | null;
+  spaceId: string;
+  ownerId: string;
+  visibility: CharacterVisibility;
+  isArchived: boolean;
+  metadata: JsonValue;
+  created: string;
+  modified: string;
+};
+
+export type CharacterVariable = {
+  key: string;
+  characterId: string;
+  displayName: string;
+  alias: string[];
+  sort: number;
+  trackHistory: boolean;
+  value: JsonValue;
+  metadata: JsonValue;
+  created: string;
+  modified: string;
+};
+
+export type CharacterVariableHistory = {
+  id: string;
+  operatorId: string | null;
+  characterId: string;
+  reason: JsonValue | null;
+  key: string;
+  value: JsonValue;
+  created: string;
+};
+
+export type CharacterVisibility = 'PRIVATE' | 'PUBLIC';
+
 export type CheckChannelName = { spaceId: string; name: string };
+
+export type CheckCharacterName = { spaceId: string; name?: string | null; alias?: string | null };
 
 export type CheckEmailExists = { email: string };
 
 export type CheckResult<T> = { type: 'Ok'; value: T } | { type: 'Error'; message: string };
 
 export type CheckUsernameExists = { username: string };
+
+export type CheckVariableAvailability = {
+  characterId: string;
+  key?: string | null;
+  alias?: string[];
+};
 
 export type ChildText = { type: 'Text' } & Span;
 
@@ -116,6 +165,30 @@ export type CreateChannel = {
   type: ChannelType | null;
 };
 
+export type CreateCharacter = {
+  spaceId: string;
+  name: string;
+  description?: string;
+  color?: string;
+  alias: string | null;
+  imageId: string | null;
+  visibility: CharacterVisibility;
+  isArchived?: boolean;
+  metadata: JsonValue | null;
+};
+
+export type CreateNote = {
+  spaceId: string;
+  type: NoteType;
+  title?: string;
+  keywords?: string[];
+  content?: string;
+  visibility: NoteVisibility;
+  visibleTo?: string[];
+  everyoneCanEdit?: boolean;
+  trackHistory?: boolean;
+};
+
 export type CreateSpace = {
   name: string;
   password: string | null;
@@ -124,6 +197,19 @@ export type CreateSpace = {
   firstChannelName: string;
   firstChannelType: ChannelType | null;
 };
+
+export type CreateVariable = {
+  characterId: string;
+  key: string;
+  displayName?: string;
+  alias?: string[];
+  sort?: number;
+  trackHistory?: boolean;
+  value: JsonValue;
+  metadata: JsonValue | null;
+};
+
+export type DeleteVariable = { characterId: string; key: string };
 
 export type DicePool = {
   counter: number;
@@ -162,6 +248,18 @@ export type EditChannelMember = {
 
 export type EditChannelTopic = { channelId: string; topic: string };
 
+export type EditCharacter = {
+  characterId: string;
+  name: string | null;
+  description: string | null;
+  color: string | null;
+  alias: string | null;
+  imageId: string | null;
+  visibility: CharacterVisibility | null;
+  isArchived: boolean | null;
+  metadata: JsonValue | null;
+};
+
 export type EditMessage = {
   messageId: string;
   name: string;
@@ -171,6 +269,18 @@ export type EditMessage = {
   isAction?: boolean;
   mediaId?: string | null;
   color?: string;
+};
+
+export type EditNote = {
+  noteId: string;
+  type: NoteType | null;
+  title: string | null;
+  keywords: string[] | null;
+  content: string | null;
+  visibility: NoteVisibility | null;
+  visibleTo: string[] | null;
+  everyoneCanEdit: boolean | null;
+  trackHistory: boolean | null;
 };
 
 export type EditSpace = {
@@ -190,6 +300,18 @@ export type EditUser = {
   bio: string | null;
   avatar: string | null;
   defaultColor: string | null;
+};
+
+export type EditVariable = {
+  characterId: string;
+  key: string;
+  displayName: string | null;
+  alias: string[] | null;
+  sort: number | null;
+  trackHistory: boolean | null;
+  value: JsonValue | null;
+  metadata: JsonValue | null;
+  reason: JsonValue | null;
 };
 
 export type EmailVerificationStatus = { isVerified: boolean };
@@ -298,6 +420,8 @@ export type KickFromSpace = { spaceId: string; userId: string };
 
 export type LinkEntity = Span & { href: Href; child: ChildText; title?: string | null };
 
+export type ListCharacters = { id: string; includeArchived?: boolean };
+
 export type Login = { username: string; password: string; withToken?: boolean };
 
 export type LoginReturn = { me: GetMe; token: string | null };
@@ -382,6 +506,34 @@ export type NewMessage = {
   pos?: [number, number] | null;
   color?: string;
 };
+
+export type Note = {
+  id: string;
+  type: NoteType;
+  spaceId: string;
+  title: string;
+  keywords: string[];
+  ownerId: string;
+  content: string;
+  visibility: NoteVisibility;
+  visibleTo: string[];
+  everyoneCanEdit: boolean;
+  trackHistory: boolean;
+  created: string;
+  modified: string;
+};
+
+export type NoteHistory = {
+  id: string;
+  noteId: string;
+  operatorId: string | null;
+  content: string;
+  created: string;
+};
+
+export type NoteType = 'TERM' | 'CHARACTER';
+
+export type NoteVisibility = 'PRIVATE' | 'CHANNELS' | 'USERS' | 'PUBLIC';
 
 export type Operator = '+' | '-' | '×' | '÷';
 
@@ -629,5 +781,7 @@ export type User = {
 };
 
 export type UserStatus = { timestamp: number; kind: StatusKind; focus: string[] };
+
+export type VariableHistoryQuery = { characterId: string; key: string };
 
 export type VerifyEmail = { token: string };

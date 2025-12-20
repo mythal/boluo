@@ -23,7 +23,7 @@ import {
 import { SomethingWentWrong } from '@boluo/ui/SomethingWentWrong';
 import { useMember } from '../../hooks/useMember';
 import { Delay } from '@boluo/ui/Delay';
-import { useMutateMessageArchive } from '../../hooks/useMutateMessageArchive';
+import { useMutateMessageArchive } from '@boluo/hooks/useMutateMessageArchive';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { atom, useAtom, useAtomValue, useSetAtom, useStore } from 'jotai';
 import { generateDetailDate } from '../../date';
@@ -41,7 +41,7 @@ import { MessageToolbarBox } from '@boluo/ui/chat/MessageToolbarBox';
 import { MessageToolbarButton } from '@boluo/ui/chat/MessageToolbarButton';
 import { CircleIndicator } from '@boluo/ui/CircleIndicator';
 import { messageToParsed, toSimpleText } from '@boluo/interpreter';
-import { useMutateMessageDelete } from '../../hooks/useMutateMessageDelete';
+import { useMutateMessageDelete } from '@boluo/hooks/useMutateMessageDelete';
 import { empty, identity } from '@boluo/utils/function';
 import { ErrorBoundary } from '@sentry/nextjs';
 import { useIsOptimistic } from '../../hooks/useIsOptimistic';

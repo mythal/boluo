@@ -1,4 +1,3 @@
-/* eslint-disable @next/next/no-page-custom-font */
 import { type IntlMessages, LOCALES, toLocale } from '@boluo/locale';
 import { loadMessages } from '@boluo/locale/dynamic';
 import { ClientProviders } from '../../components/ClientProviders';
@@ -10,9 +9,9 @@ import { useEffect } from 'react';
 import Chat from '../../components/Chat';
 import { ChatErrorBoundary } from '../../components/ChatErrorBoundary';
 import { UnsupportedBrowser } from '@boluo/ui/UnsupportedBrowser';
-import { useDetectBrowserSupport } from '@boluo/common/hooks/useDetectBrowserSupport';
+import { useDetectBrowserSupport } from '@boluo/hooks/useDetectBrowserSupport';
 import { getOS } from '@boluo/utils/browser';
-import { useQueryAppSettings } from '@boluo/common/hooks/useQueryAppSettings';
+import { useQueryAppSettings } from '@boluo/hooks/useQueryAppSettings';
 
 export const getStaticPaths = (() => {
   return {

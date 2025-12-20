@@ -1,7 +1,7 @@
-import { useQueryCurrentUser } from '@boluo/common/hooks/useQueryCurrentUser';
+import { useQueryCurrentUser } from '@boluo/hooks/useQueryCurrentUser';
 import { type FC, useMemo } from 'react';
 import { Loading } from '@boluo/ui/Loading';
-import { useQuerySpaceMembers } from '../../hooks/useQuerySpaceMembers';
+import { useQuerySpaceMembers } from '@boluo/hooks/useQuerySpaceMembers';
 import { SpaceMemberListItem } from './SpaceMemberListItem';
 import { Failed } from '@boluo/ui/Failed';
 import { FormattedMessage } from 'react-intl';

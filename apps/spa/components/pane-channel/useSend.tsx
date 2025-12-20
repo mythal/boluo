@@ -4,7 +4,7 @@ import { useStore } from 'jotai';
 import { useCallback, useMemo, useRef } from 'react';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { useChannelId } from '../../hooks/useChannelId';
-import { useQueryChannelMembers } from '../../hooks/useQueryChannelMembers';
+import { useQueryChannelMembers } from '@boluo/hooks/useQueryChannelMembers';
 import { parse } from '@boluo/interpreter';
 import { upload } from '../../media';
 import { type ComposeActionUnion } from '../../state/compose.actions';
@@ -65,13 +65,18 @@ export const useSend = () => {
         return member.user.nickname;
       },
     });
-    const { text, entities, whisperToUsernames, characterName: parsedCharacterNameForSend } =
-      parsedForSend;
+    const {
+      text,
+      entities,
+      whisperToUsernames,
+      characterName: parsedCharacterNameForSend,
+    } = parsedForSend;
     let name = nickname;
-    const effectiveCharacterName =
-      (parsedCharacterNameForSend || parsedPreview.characterName).trim();
+    const effectiveCharacterName = (
+      parsedCharacterNameForSend || parsedPreview.characterName
+    ).trim();
     const parsedInGame = parsedPreview.inGame ?? parsedForSend.inGame ?? null;
-    const inGame = effectiveCharacterName ? true : parsedInGame ?? defaultInGame;
+    const inGame = effectiveCharacterName ? true : (parsedInGame ?? defaultInGame);
     if (inGame) {
       if (effectiveCharacterName !== '') {
         name = effectiveCharacterName;

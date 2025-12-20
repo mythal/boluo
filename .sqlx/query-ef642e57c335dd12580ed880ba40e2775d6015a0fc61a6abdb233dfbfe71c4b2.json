@@ -1,0 +1,116 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE notes\nSET type = COALESCE(($2::text)::note_type, type),\n    title = COALESCE($3, title),\n    keywords = COALESCE($4, keywords),\n    content = COALESCE($5, content),\n    visibility = COALESCE(($6::text)::note_visibility, visibility),\n    visible_to = COALESCE($7, visible_to),\n    everyone_can_edit = COALESCE($8, everyone_can_edit),\n    track_history = COALESCE($9, track_history),\n    modified = (now() at time zone 'utc')\nWHERE id = $1\nRETURNING notes as \"note!: Note\";\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "note!: Note",
+        "type_info": {
+          "Custom": {
+            "name": "notes",
+            "kind": {
+              "Composite": [
+                [
+                  "id",
+                  "Uuid"
+                ],
+                [
+                  "type",
+                  {
+                    "Custom": {
+                      "name": "note_type",
+                      "kind": {
+                        "Enum": [
+                          "Term",
+                          "Character"
+                        ]
+                      }
+                    }
+                  }
+                ],
+                [
+                  "space_id",
+                  "Uuid"
+                ],
+                [
+                  "title",
+                  "Text"
+                ],
+                [
+                  "keywords",
+                  "TextArray"
+                ],
+                [
+                  "disabled",
+                  "Bool"
+                ],
+                [
+                  "owner_id",
+                  "Uuid"
+                ],
+                [
+                  "content",
+                  "Text"
+                ],
+                [
+                  "visibility",
+                  {
+                    "Custom": {
+                      "name": "note_visibility",
+                      "kind": {
+                        "Enum": [
+                          "Private",
+                          "Channels",
+                          "Users",
+                          "Public"
+                        ]
+                      }
+                    }
+                  }
+                ],
+                [
+                  "visible_to",
+                  "UuidArray"
+                ],
+                [
+                  "everyone_can_edit",
+                  "Bool"
+                ],
+                [
+                  "track_history",
+                  "Bool"
+                ],
+                [
+                  "created",
+                  "Timestamptz"
+                ],
+                [
+                  "modified",
+                  "Timestamptz"
+                ]
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Text",
+        "TextArray",
+        "Text",
+        "Text",
+        "UuidArray",
+        "Bool",
+        "Bool"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "ef642e57c335dd12580ed880ba40e2775d6015a0fc61a6abdb233dfbfe71c4b2"
+}

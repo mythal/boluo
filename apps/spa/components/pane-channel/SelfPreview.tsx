@@ -164,12 +164,7 @@ export const SelfPreview: FC<Props> = ({ preview, isLast, virtualListIndex }) =>
       return parsed.characterName;
     }
     return member.channel.characterName;
-  }, [
-    inGame,
-    member.channel.characterName,
-    member.user.nickname,
-    parsed.characterName,
-  ]);
+  }, [inGame, member.channel.characterName, member.user.nickname, parsed.characterName]);
   const nameNode = useMemo(() => {
     return (
       <NameEditable

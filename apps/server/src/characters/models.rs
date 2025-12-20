@@ -6,12 +6,11 @@ use uuid::Uuid;
 use crate::cache::{CACHE, CacheType};
 use crate::error::{ModelError, ValidationFailed};
 use crate::ttl::{Lifespan, fetch_entry, fetch_entry_optional, hour, minute};
-use crate::utils::merge_blank;
 
 pub(crate) fn normalize_ident(value: &str) -> Result<String, ValidationFailed> {
-    let value = merge_blank(value);
-    crate::validators::IDENT.run(&value)?;
-    Ok(value)
+    let key = value.trim().replace(char::is_whitespace, "_");
+    crate::validators::IDENT.run(&key)?;
+    Ok(key)
 }
 
 pub(crate) fn normalize_optional_ident(
@@ -20,11 +19,11 @@ pub(crate) fn normalize_optional_ident(
     let Some(value) = value else {
         return Ok(None);
     };
-    let value = merge_blank(&value);
+    let value = value.trim();
     if value.is_empty() {
         return Ok(None);
     }
-    crate::validators::IDENT.run(&value)?;
+    let value = normalize_ident(value)?;
     Ok(Some(value))
 }
 
@@ -32,11 +31,15 @@ pub(crate) fn normalize_aliases(values: Vec<String>) -> Result<Vec<String>, Vali
     let mut seen = HashSet::new();
     let mut normalized = Vec::new();
     for value in values {
-        let value = merge_blank(&value);
-        if value.is_empty() {
+        if value.trim().is_empty() {
             continue;
         }
-        crate::validators::IDENT.run(&value)?;
+        let Ok(value) = normalize_ident(&value) else {
+            continue;
+        };
+        if seen.contains(&value) {
+            continue;
+        }
         if seen.insert(value.clone()) {
             normalized.push(value);
         }
@@ -108,12 +111,12 @@ impl Character {
     ) -> Result<Character, ModelError> {
         use crate::validators;
 
-        let name = merge_blank(name);
-        validators::DISPLAY_NAME.run(&name)?;
+        let name = name.trim();
+        validators::CHARACTER_NAME.run(name)?;
         validators::DESCRIPTION.run(description)?;
-        let color = merge_blank(color);
+        let color = color.trim();
         if !color.is_empty() {
-            validators::HEX_COLOR.run(&color)?;
+            validators::HEX_COLOR.run(color)?;
         }
         let alias = normalize_optional_ident(alias)?;
         let visibility = visibility.as_str();
@@ -178,8 +181,8 @@ impl Character {
         use crate::validators;
 
         let name = if let Some(name) = name {
-            let name = merge_blank(&name);
-            validators::DISPLAY_NAME.run(&name)?;
+            let name = name.trim().to_string();
+            validators::CHARACTER_NAME.run(&name)?;
             Some(name)
         } else {
             None
@@ -193,7 +196,7 @@ impl Character {
         };
 
         let color = if let Some(color) = color {
-            let color = merge_blank(&color);
+            let color = color.trim().to_string();
             if !color.is_empty() {
                 validators::HEX_COLOR.run(&color)?;
             }
@@ -203,11 +206,14 @@ impl Character {
         };
 
         let alias = if let Some(alias) = alias {
-            let alias = merge_blank(&alias);
-            if !alias.is_empty() {
-                validators::IDENT.run(&alias)?;
+            let trimmed = alias.trim();
+            if trimmed.is_empty() {
+                // Set to NULL in database
+                Some(String::new())
+            } else {
+                let alias = normalize_ident(trimmed)?;
+                Some(alias)
             }
-            Some(alias)
         } else {
             None
         };
@@ -258,10 +264,19 @@ impl Character {
         space_id: Uuid,
         name: Option<&str>,
         alias: Option<&str>,
-    ) -> Result<bool, sqlx::Error> {
-        sqlx::query_file_scalar!("sql/characters/check_name_alias.sql", space_id, name, alias)
-            .fetch_one(db)
-            .await
+    ) -> Result<bool, ModelError> {
+        let name = name.map(|name| name.trim()).filter(|name| !name.is_empty());
+        let alias = normalize_optional_ident(alias.map(|alias| alias.to_string()))?;
+
+        sqlx::query_file_scalar!(
+            "sql/characters/check_name_alias.sql",
+            space_id,
+            name,
+            alias.as_deref()
+        )
+        .fetch_one(db)
+        .await
+        .map_err(Into::into)
     }
 }
 
@@ -307,7 +322,8 @@ impl CharacterVariable {
         metadata: serde_json::Value,
     ) -> Result<CharacterVariable, ModelError> {
         let key = normalize_ident(key)?;
-        let display_name = merge_blank(display_name);
+        let display_name = display_name.trim().to_string();
+        crate::validators::DISPLAY_NAME.run(&display_name)?;
         let alias = normalize_aliases(alias)?;
         let variable = sqlx::query_file_scalar!(
             "sql/characters/variables/create.sql",
@@ -370,7 +386,12 @@ impl CharacterVariable {
         metadata: Option<serde_json::Value>,
     ) -> Result<Option<CharacterVariable>, ModelError> {
         let key = normalize_ident(key)?;
-        let display_name = display_name.map(|value| merge_blank(&value));
+        let display_name = display_name.map(|name| name.trim().to_string());
+        if let Some(display_name) = &display_name {
+            if !display_name.is_empty() {
+                crate::validators::DISPLAY_NAME.run(display_name)?;
+            }
+        }
         let alias = match alias {
             Some(alias) => Some(normalize_aliases(alias)?),
             None => None,
@@ -419,15 +440,28 @@ impl CharacterVariable {
         character_id: Uuid,
         key: Option<&str>,
         alias: Option<&[String]>,
-    ) -> Result<bool, sqlx::Error> {
+    ) -> Result<bool, ModelError> {
+        let key = match key {
+            Some(key) => Some(normalize_ident(key)?),
+            None => None,
+        };
+        let alias = match alias {
+            Some(alias) => {
+                let alias = normalize_aliases(alias.to_vec())?;
+                if alias.is_empty() { None } else { Some(alias) }
+            }
+            None => None,
+        };
+
         sqlx::query_file_scalar!(
             "sql/characters/variables/check_key_alias.sql",
             character_id,
-            key,
-            alias
+            key.as_deref(),
+            alias.as_ref().map(|alias| alias.as_slice())
         )
         .fetch_one(db)
         .await
+        .map_err(Into::into)
     }
 }
 
@@ -527,7 +561,7 @@ mod tests {
             "Homura",
             "Time traveler",
             "#7c4dff",
-            Some("homura".to_string()),
+            Some("homu".to_string()),
             None,
             CharacterVisibility::Private,
             false,
@@ -535,6 +569,12 @@ mod tests {
         )
         .await
         .expect("failed to create character");
+
+        let exists_by_alias_trimmed =
+            Character::exists_name_or_alias(&pool, space.id, None, Some(" homu "))
+                .await
+                .expect("exists_name_or_alias failed");
+        assert!(exists_by_alias_trimmed);
 
         let fetched = Character::get_by_id(&pool, &character.id)
             .await
@@ -551,7 +591,7 @@ mod tests {
             &pool,
             &character.id,
             Some("Akemi Homura".to_string()),
-            None,
+            Some("Hentai".to_string()),
             None,
             Some(String::new()),
             None,
@@ -565,6 +605,7 @@ mod tests {
         assert_eq!(updated.name, "Akemi Homura");
         assert_eq!(updated.alias, None);
         assert_eq!(updated.visibility, CharacterVisibility::Public);
+        assert_eq!(updated.description, "Hentai");
         assert!(updated.is_archived);
 
         let exists_by_name =
@@ -654,12 +695,29 @@ mod tests {
                 .expect("exists_key_or_alias failed");
         assert!(exists_key);
 
+        let exists_key_trimmed =
+            CharacterVariable::exists_key_or_alias(&pool, character.id, Some(" hp "), None)
+                .await
+                .expect("exists_key_or_alias failed");
+        assert!(exists_key_trimmed);
+
         let alias_check = vec!["HP".to_string()];
         let exists_alias =
             CharacterVariable::exists_key_or_alias(&pool, character.id, None, Some(&alias_check))
                 .await
                 .expect("exists_key_or_alias failed");
         assert!(exists_alias);
+
+        let alias_trimmed_check = vec![" health ".to_string()];
+        let exists_alias_trimmed = CharacterVariable::exists_key_or_alias(
+            &pool,
+            character.id,
+            None,
+            Some(&alias_trimmed_check),
+        )
+        .await
+        .expect("exists_key_or_alias failed");
+        assert!(exists_alias_trimmed);
 
         let missing_alias = vec!["mp".to_string()];
         let exists_missing =

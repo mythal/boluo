@@ -9,16 +9,10 @@ use crate::csrf::{authenticate, authenticate_optional};
 use crate::error::{AppError, Find};
 use crate::interface::{IdQuery, missing, parse_body, parse_query, response};
 use crate::spaces::SpaceMember;
-use crate::utils::merge_blank;
 use hyper::Request;
 use hyper::body::Body;
+use serde_json::json;
 use uuid::Uuid;
-
-fn normalize_key(raw: &str) -> Result<String, AppError> {
-    let key = merge_blank(raw);
-    crate::validators::IDENT.run(&key)?;
-    Ok(key)
-}
 
 fn can_view_character(character: &Character, user_id: Option<Uuid>) -> bool {
     if let Some(user_id) = user_id
@@ -67,9 +61,7 @@ async fn by_space(
         return Ok(characters);
     };
     let user_id = session.user_id;
-    characters.retain(|character| {
-        character.owner_id == user_id || matches!(character.visibility, CharacterVisibility::Public)
-    });
+    characters.retain(|character| can_view_character(character, Some(user_id)));
     Ok(characters)
 }
 
@@ -77,16 +69,21 @@ async fn check_name(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<bool, AppError> {
+    let session = authenticate(&req).await?;
     let CheckCharacterName {
         space_id,
         name,
         alias,
     } = parse_query(req.uri())?;
+    let mut conn = ctx.db.acquire().await?;
+    SpaceMember::get(&mut *conn, &session.user_id, &space_id)
+        .await?
+        .or_no_permission()?;
     let name = name
-        .map(|name| merge_blank(&name))
+        .map(|name| name.trim().to_string())
         .filter(|name| !name.is_empty());
     let alias = alias
-        .map(|alias| merge_blank(&alias))
+        .map(|alias| alias.trim().to_string())
         .filter(|alias| !alias.is_empty());
 
     if name.is_none() && alias.is_none() {
@@ -102,7 +99,7 @@ async fn check_name(
     }
 
     let exists =
-        Character::exists_name_or_alias(&ctx.db, space_id, name.as_deref(), alias.as_deref())
+        Character::exists_name_or_alias(&mut *conn, space_id, name.as_deref(), alias.as_deref())
             .await?;
     Ok(!exists)
 }
@@ -251,8 +248,9 @@ async fn create_variable(
             "You don't have permission to edit this character".to_string(),
         ));
     }
+    let key = crate::characters::models::normalize_ident(&key)?;
     let metadata = metadata.unwrap_or_else(|| serde_json::json!({}));
-    CharacterVariable::create(
+    let variable = CharacterVariable::create(
         &mut *conn,
         character_id,
         &key,
@@ -260,11 +258,22 @@ async fn create_variable(
         alias,
         sort,
         track_history,
-        value,
+        value.clone(),
         metadata,
     )
-    .await
-    .map_err(Into::into)
+    .await?;
+    if track_history {
+        CharacterVariableHistory::create(
+            &mut *conn,
+            Some(session.user_id),
+            character_id,
+            Some(json!({ "type": "creation" })),
+            &key,
+            value.clone(),
+        )
+        .await?;
+    }
+    Ok(variable)
 }
 
 async fn edit_variable(
@@ -292,8 +301,7 @@ async fn edit_variable(
             "You don't have permission to edit this character".to_string(),
         ));
     }
-    let normalized_key = normalize_key(&key)?;
-    let variable = CharacterVariable::get_by_key(&mut *trans, &character_id, &normalized_key)
+    let variable = CharacterVariable::get_by_key(&mut *trans, &character_id, &key)
         .await?
         .or_not_found()?;
     let content_changed = value
@@ -307,7 +315,7 @@ async fn edit_variable(
             Some(session.user_id),
             character_id,
             reason,
-            &normalized_key,
+            &key,
             variable.value.clone(),
         )
         .await?;
@@ -315,7 +323,7 @@ async fn edit_variable(
     let updated = CharacterVariable::update(
         &mut *trans,
         &character_id,
-        &normalized_key,
+        &key,
         display_name,
         alias,
         sort,
@@ -344,11 +352,21 @@ async fn delete_variable(
             "You don't have permission to edit this character".to_string(),
         ));
     }
-    let normalized_key = normalize_key(&key)?;
-    CharacterVariable::get_by_key(&mut *conn, &character_id, &normalized_key)
+    let variable = CharacterVariable::get_by_key(&mut *conn, &character_id, &key)
         .await?
         .or_not_found()?;
-    CharacterVariable::delete(&mut *conn, &character_id, &normalized_key).await?;
+    CharacterVariable::delete(&mut *conn, &character_id, &key).await?;
+    if variable.track_history {
+        CharacterVariableHistory::create(
+            &mut *conn,
+            Some(session.user_id),
+            character_id,
+            Some(json!({ "type": "deletion" })),
+            &key,
+            serde_json::Value::Null,
+        )
+        .await?
+    };
     Ok(true)
 }
 
@@ -368,8 +386,7 @@ async fn variable_history(
             "You don't have permission to view this character".to_string(),
         ));
     }
-    let normalized_key = normalize_key(&key)?;
-    CharacterVariableHistory::list_by_key(&mut *conn, &character_id, &normalized_key)
+    CharacterVariableHistory::list_by_key(&mut *conn, &character_id, &key)
         .await
         .map_err(Into::into)
 }
@@ -396,7 +413,7 @@ async fn check_variable(
     }
 
     let key = key
-        .map(|key| merge_blank(&key))
+        .map(|key| key.trim().to_string())
         .filter(|key| !key.is_empty());
     if let Some(key) = key.as_deref() {
         crate::validators::IDENT.run(key)?;

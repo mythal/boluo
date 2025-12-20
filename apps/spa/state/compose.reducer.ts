@@ -312,7 +312,10 @@ const handleSent = (
   }
   const modifiers = parseModifiers(state.source);
   let source = '';
-  if (modifiers.inGame) {
+  if (modifiers.as) {
+    const name = modifiers.as.characterName.trim();
+    source += name ? `.as ${name}; ` : '.as ';
+  } else if (modifiers.inGame) {
     source += modifiers.inGame.inGame ? '.in ' : '.out ';
   }
   if (modifiers.mute) {

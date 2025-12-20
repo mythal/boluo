@@ -178,7 +178,7 @@ pub fn start_log_cache_stats() {
                         "UserSpaces": user_spaces,
                     });
 
-                    tracing::info!( "{}", status_json);
+                    tracing::info!("{}", status_json);
                 },
                 _ = crate::shutdown::SHUTDOWN.notified() => {
                     break;

@@ -319,6 +319,7 @@ async fn main() {
     tracing::info!("Startup ID: {}", events::startup_id());
 
     cache::start_expiry_task();
+    cache::start_log_cache_stats();
     let timeout_counter = metrics::counter!("boluo_server_tcp_connections_timeout_total");
     let error_counter = metrics::counter!("boluo_server_tcp_connections_error_total");
 

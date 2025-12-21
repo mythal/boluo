@@ -6,7 +6,6 @@ import { isSidebarExpandedAtom, sidebarContentStateAtom } from '../../state/ui.a
 import { SidebarChannels } from './SidebarChannels';
 import { SidebarSpaceList } from './SidebarSpaceList';
 import { SpaceOptions } from './SidebarSpaceOptions';
-import { SidebarButton } from '@boluo/ui/chat/SidebarButton';
 import { SidebarUserOperations } from './SidebarUserOperations';
 import { ConnectionIndicatior } from './ConnectionIndicator';
 import { useQuerySpace } from '@boluo/hooks/useQuerySpace';
@@ -18,8 +17,8 @@ import { useSetThemeColor } from '../../hooks/useSetThemeColor';
 import { SidebarGuestContent } from './SidebarGuestContent';
 import { SidebarContentLoading } from './SidebarContentLoading';
 import { SidebarConnectionSelector } from './SidebarConnectionSelector';
-import { connectionStateAtom } from '../../state/chat.atoms';
 import { SidebarButtonController } from './SidebarButtonController';
+import { SidebarCharacters } from './SidebarCharacters';
 
 interface Props {
   spaceId?: string;
@@ -41,6 +40,7 @@ const SidebarContent: FC<{ spaceId: string; currentUser: User | undefined | null
   return (
     <>
       <SpaceOptions space={space} />
+      {currentUser != null && <SidebarCharacters spaceId={space.id} currentUser={currentUser} />}
       {contentState === 'CHANNELS' && <SidebarChannels spaceId={space.id} />}
       {contentState === 'SPACES' && (
         <SidebarSpaceList currentUser={currentUser} currentSpaceId={spaceId} />

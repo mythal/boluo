@@ -96,7 +96,6 @@ export const SidebarChannels: FC<Props> = ({ spaceId }) => {
 
         {mySpaceMember?.isAdmin && (
           <>
-            <SidebarChannelsHeaderNewChannel spaceId={spaceId} />
             <ButtonInline
               aria-pressed={isReordering}
               onClick={() => setIsReordering((prev) => !prev)}
@@ -106,6 +105,7 @@ export const SidebarChannels: FC<Props> = ({ spaceId }) => {
                 <FormattedMessage defaultMessage="Reorder" />
               </span>
             </ButtonInline>
+            <SidebarChannelsHeaderNewChannel spaceId={spaceId} />
           </>
         )}
       </div>

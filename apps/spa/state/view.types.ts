@@ -66,6 +66,11 @@ export interface CreateChannelPane {
   spaceId: string;
 }
 
+export interface CreateCharacterPane {
+  type: 'CREATE_CHARACTER';
+  spaceId: string;
+}
+
 export interface CreateSpacePane {
   type: 'CREATE_SPACE';
 }
@@ -91,6 +96,7 @@ export type PaneData =
   | ChannelSettingsPane
   | ChannelTopicPane
   | CreateChannelPane
+  | CreateCharacterPane
   | CreateSpacePane
   | LoginPane
   | SignUpPane

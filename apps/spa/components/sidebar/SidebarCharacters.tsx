@@ -4,8 +4,12 @@ import { ChevronUp, Plus } from '@boluo/icons';
 import { ButtonInline } from '@boluo/ui/ButtonInline';
 import Icon from '@boluo/ui/Icon';
 import clsx from 'clsx';
-import { useState, type FC } from 'react';
-import { FormattedMessage } from 'react-intl';
+import { useAtomValue } from 'jotai';
+import { useMemo, useState, type FC } from 'react';
+import { FormattedMessage, useIntl } from 'react-intl';
+import { usePaneToggle } from '../../hooks/usePaneToggle';
+import { panesAtom } from '../../state/view.atoms';
+import { findPane } from '../../state/view.utils';
 
 interface Props {
   spaceId: string;
@@ -13,10 +17,21 @@ interface Props {
 }
 
 export const SidebarCharacters: FC<Props> = ({ spaceId, currentUser }) => {
+  const panes = useAtomValue(panesAtom);
+  const togglePane = usePaneToggle();
+  const intl = useIntl();
   const { data: mySpaceMember } = useMySpaceMember(spaceId);
   const [expanded, setExpanded] = useState(false);
+  const isCreateCharacterPaneOpened = useMemo(
+    () => findPane(panes, (pane) => pane.type === 'CREATE_CHARACTER') !== null,
+    [panes],
+  );
+  const createCharacterLabel = intl.formatMessage({ defaultMessage: 'New Character' });
   const toggleExpanded = () => {
     setExpanded((prev) => !prev);
+  };
+  const handleToggleCreateCharacterPane = () => {
+    togglePane({ type: 'CREATE_CHARACTER', spaceId });
   };
   if (!mySpaceMember) {
     return null;
@@ -33,7 +48,12 @@ export const SidebarCharacters: FC<Props> = ({ spaceId, currentUser }) => {
             className={clsx({ 'rotate-180': expanded }, 'transition-transform duration-100')}
           />
         </ButtonInline>
-        <ButtonInline>
+        <ButtonInline
+          onClick={handleToggleCreateCharacterPane}
+          aria-label={createCharacterLabel}
+          title={createCharacterLabel}
+          aria-pressed={isCreateCharacterPaneOpened}
+        >
           <Icon icon={Plus} />
         </ButtonInline>
       </div>

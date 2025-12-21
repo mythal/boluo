@@ -3,70 +3,15 @@ import { useAtomValue, useSetAtom, useStore } from 'jotai';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { FormattedMessage } from 'react-intl';
 import { NameEditInput } from './NameInput';
-import { type ChatSpaceState } from '../../state/chat.reducer';
 import { chatAtom } from '../../state/chat.atoms';
 import { type MemberWithUser } from '@boluo/api';
-import { type ChannelState } from '../../state/channel.reducer';
-import { backwards, last } from 'list';
 import { NameEditContentNameHistory } from './NameEditContentNameHistory';
+import { collectCharacterNameHistory } from '../../state/name-history';
 
 interface Props {
   member: MemberWithUser;
   dismiss: () => void;
 }
-
-const searchChannelForNames = (
-  names: string[],
-  channelState: ChannelState,
-  userId: string,
-  searchLimit: number,
-) => {
-  let count = 0;
-  for (const message of backwards(channelState.messages)) {
-    if (
-      !message.inGame ||
-      message.folded ||
-      message.senderId !== userId ||
-      message.name === '' ||
-      names.includes(message.name)
-    )
-      continue;
-    names.push(message.name);
-    if (++count >= searchLimit) return;
-  }
-};
-
-const chatStateToNameList = (
-  state: ChatSpaceState,
-  channelId: string,
-  myId: string,
-  defaultName?: string,
-): string[] => {
-  const names: string[] = defaultName == null || defaultName === '' ? [] : [defaultName];
-
-  const currentChannel = state.channels[channelId];
-  if (currentChannel != null) {
-    searchChannelForNames(names, currentChannel, myId, 2000);
-  }
-
-  const channels = Object.values(state.channels).filter(
-    (channel) => channel.id !== currentChannel?.id && channel.messages.length > 0,
-  );
-  // sort by last message time
-  channels.sort((a, b) => {
-    const aCreated = last(a.messages)!.created;
-    const bCreated = last(b.messages)!.created;
-    const aTime = new Date(aCreated).getTime();
-    const bTime = new Date(bCreated).getTime();
-    return bTime - aTime;
-  });
-
-  for (const channel of channels) {
-    searchChannelForNames(names, channel, myId, 100);
-  }
-
-  return names;
-};
 
 export const NameEditContent: FC<Props> = ({ member, dismiss }) => {
   const { inGameAtom, composeAtom } = useChannelAtoms();
@@ -78,8 +23,15 @@ export const NameEditContent: FC<Props> = ({ member, dismiss }) => {
   const channelId = member.channel.channelId;
   const defaultCharacterName = member.channel.characterName;
   const nameHistory = useMemo(
-    // In this case, we don't need to use `useAtom` hooks.
-    () => chatStateToNameList(store.get(chatAtom), channelId, myId, defaultCharacterName),
+    () =>
+      collectCharacterNameHistory({
+        state: store.get(chatAtom),
+        userId: myId,
+        preferredChannelId: channelId,
+        seedNames: defaultCharacterName === '' ? [] : [defaultCharacterName],
+        preferredLimit: 2000,
+        otherLimit: 100,
+      }),
     [channelId, defaultCharacterName, myId, store],
   );
   const id = {

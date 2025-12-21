@@ -19,6 +19,9 @@ const PaneSpaceSettings = React.lazy(() => import('./pane-space-settings/PaneSpa
 const PaneSpaceMembers = React.lazy(() => import('./pane-space-members/PaneSpaceMembers'));
 const PaneProfile = React.lazy(() => import('./pane-profile/PaneProfile'));
 const PaneCreateChannel = React.lazy(() => import('./pane-create-channel/PaneCreateChannel'));
+const PaneCreateCharacter = React.lazy(
+  () => import('./pane-create-character/PaneCreateCharacter'),
+);
 const PaneCreateSpace = React.lazy(() => import('./PaneCreateSpace'));
 const PaneSettings = React.lazy(() => import('./pane-settings/PaneSettings'));
 const PaneLogin = React.lazy(() => import('./PaneLogin'));
@@ -39,6 +42,7 @@ const PANE_MAP = {
   SPACE_SETTINGS: PaneSpaceSettings,
   SPACE_GREETING: PaneSpaceGreeting,
   CREATE_CHANNEL: PaneCreateChannel,
+  CREATE_CHARACTER: PaneCreateCharacter,
   CREATE_SPACE: PaneCreateSpace,
   LOGIN: PaneLogin,
   SIGN_UP: PaneSignUp,
@@ -77,6 +81,8 @@ const Switch: FC<Props> = ({ pane }) => {
       return <PaneSpaceSettings spaceId={pane.spaceId} />;
     case 'CREATE_CHANNEL':
       return <PaneCreateChannel spaceId={pane.spaceId} />;
+    case 'CREATE_CHARACTER':
+      return <PaneCreateCharacter spaceId={pane.spaceId} />;
     case 'PROFILE':
       return <PaneProfile userId={pane.userId} />;
     case 'SPACE_MEMBERS':

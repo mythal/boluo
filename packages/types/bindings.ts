@@ -109,6 +109,9 @@ export type CharacterVisibility = 'PRIVATE' | 'PUBLIC';
 
 export type CheckChannelName = { spaceId: string; name: string };
 
+/**
+ * Query params for checking name/alias availability.
+ */
 export type CheckCharacterName = { spaceId: string; name?: string | null; alias?: string | null };
 
 export type CheckEmailExists = { email: string };
@@ -117,6 +120,9 @@ export type CheckResult<T> = { type: 'Ok'; value: T } | { type: 'Error'; message
 
 export type CheckUsernameExists = { username: string };
 
+/**
+ * Query params for checking variable key/alias availability.
+ */
 export type CheckVariableAvailability = {
   characterId: string;
   key?: string | null;
@@ -165,6 +171,9 @@ export type CreateChannel = {
   type: ChannelType | null;
 };
 
+/**
+ * Payload for creating a character.
+ */
 export type CreateCharacter = {
   spaceId: string;
   name: string;
@@ -177,6 +186,9 @@ export type CreateCharacter = {
   metadata: JsonValue | null;
 };
 
+/**
+ * Payload for creating a note.
+ */
 export type CreateNote = {
   spaceId: string;
   type: NoteType;
@@ -198,6 +210,9 @@ export type CreateSpace = {
   firstChannelType: ChannelType | null;
 };
 
+/**
+ * Payload for creating a character variable.
+ */
 export type CreateVariable = {
   characterId: string;
   key: string;
@@ -209,6 +224,9 @@ export type CreateVariable = {
   metadata: JsonValue | null;
 };
 
+/**
+ * Payload for deleting a character variable.
+ */
 export type DeleteVariable = { characterId: string; key: string };
 
 export type DicePool = {
@@ -248,6 +266,9 @@ export type EditChannelMember = {
 
 export type EditChannelTopic = { channelId: string; topic: string };
 
+/**
+ * Payload for editing a character; `alias: Some("")` clears it.
+ */
 export type EditCharacter = {
   characterId: string;
   name: string | null;
@@ -271,6 +292,9 @@ export type EditMessage = {
   color?: string;
 };
 
+/**
+ * Payload for editing a note.
+ */
 export type EditNote = {
   noteId: string;
   type: NoteType | null;
@@ -302,6 +326,9 @@ export type EditUser = {
   defaultColor: string | null;
 };
 
+/**
+ * Payload for editing a character variable.
+ */
 export type EditVariable = {
   characterId: string;
   key: string;
@@ -420,6 +447,9 @@ export type KickFromSpace = { spaceId: string; userId: string };
 
 export type LinkEntity = Span & { href: Href; child: ChildText; title?: string | null };
 
+/**
+ * Query params for listing characters in a space.
+ */
 export type ListCharacters = { id: string; includeArchived?: boolean };
 
 export type Login = { username: string; password: string; withToken?: boolean };
@@ -513,6 +543,7 @@ export type Note = {
   spaceId: string;
   title: string;
   keywords: string[];
+  disabled: boolean;
   ownerId: string;
   content: string;
   visibility: NoteVisibility;
@@ -732,7 +763,21 @@ export type SubExprResult = { node: ExprNode; evaluatedNode: EvaluatedExprNode; 
 
 export type Token = { token: string };
 
-export type Update = { mailbox: string; id: EventId; body: UpdateBody };
+export type Update = {
+  mailbox: string;
+  id: EventId;
+  body: UpdateBody;
+  /**
+   * Whether this update is resumable via `/api/events/connect?after=...`.
+   *
+   * `false` means the server persists this update in the in-memory mailbox state so
+   * it can be queried by `Update::get_from_state` on reconnect.
+   *
+   * `true` means it's broadcast-only (transient), and clients should not advance
+   * their resume cursor based on this update.
+   */
+  transient?: boolean;
+};
 
 export type UpdateBody =
   | { type: 'NEW_MESSAGE'; channelId: string; message: Message; previewId: string | null }
@@ -782,6 +827,9 @@ export type User = {
 
 export type UserStatus = { timestamp: number; kind: StatusKind; focus: string[] };
 
+/**
+ * Query params for listing variable history by key.
+ */
 export type VariableHistoryQuery = { characterId: string; key: string };
 
 export type VerifyEmail = { token: string };

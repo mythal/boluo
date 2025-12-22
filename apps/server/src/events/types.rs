@@ -8,6 +8,7 @@ use crate::events::preview::{Preview, PreviewDiff, PreviewDiffPost, PreviewPost}
 use crate::info::BasicInfo;
 use crate::messages::Message;
 use crate::spaces::api::SpaceWithRelated;
+use crate::utils::is_false;
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use std::sync::OnceLock;
@@ -193,6 +194,15 @@ pub struct Update {
     pub mailbox: Uuid,
     pub id: EventId,
     pub body: UpdateBody,
+    /// Whether this update is resumable via `/api/events/connect?after=...`.
+    ///
+    /// `false` means the server persists this update in the in-memory mailbox state so
+    /// it can be queried by `Update::get_from_state` on reconnect.
+    ///
+    /// `true` means it's broadcast-only (transient), and clients should not advance
+    /// their resume cursor based on this update.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub transient: bool,
 }
 
 impl Update {
@@ -201,6 +211,7 @@ impl Update {
             mailbox,
             id: EventId::new(),
             body: UpdateBody::Initialized,
+            transient: true,
         }
     }
 
@@ -224,6 +235,7 @@ impl Update {
                 code,
                 reason: error.to_string(),
             },
+            transient: true,
         }
     }
 
@@ -438,6 +450,7 @@ impl Update {
             mailbox,
             id: EventId::zero(),
             body,
+            transient: true,
         }
     }
 
@@ -461,6 +474,7 @@ impl Update {
                     channel_id,
                 },
                 id: EventId::new(),
+                transient: true,
             });
             encoded_update.encoded.clone()
         })
@@ -472,17 +486,18 @@ impl Update {
         Ok(())
     }
 
-    fn build(body: UpdateBody, mailbox: Uuid) -> Box<EncodedUpdate> {
+    fn build(body: UpdateBody, mailbox: Uuid, transient: bool) -> Box<EncodedUpdate> {
         Box::new(EncodedUpdate::new(Update {
             mailbox,
             body,
             id: EventId::new(),
+            transient,
         }))
     }
 
     async fn async_fire(body: UpdateBody, mailbox_id: Uuid) {
         let Ok(encoded_update) =
-            tokio::task::spawn_blocking(move || Update::build(body, mailbox_id)).await
+            tokio::task::spawn_blocking(move || Update::build(body, mailbox_id, false)).await
         else {
             tracing::error!("Failed to build update");
             return;
@@ -503,7 +518,7 @@ impl Update {
         spawn(
             async move {
                 let Ok(update) =
-                    tokio::task::spawn_blocking(move || Update::build(body, mailbox)).await
+                    tokio::task::spawn_blocking(move || Update::build(body, mailbox, true)).await
                 else {
                     tracing::error!("Failed to build update");
                     return;

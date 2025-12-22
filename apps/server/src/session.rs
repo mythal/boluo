@@ -36,6 +36,8 @@ pub enum AuthenticateFail {
     CheckSignFail,
     #[error("Can not find the session")]
     NoSessionFound,
+    #[error("Session has expired")]
+    Expired,
 }
 
 pub fn token(session_id: &Uuid) -> String {

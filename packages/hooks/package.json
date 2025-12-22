@@ -20,7 +20,7 @@
     "jotai": "^2.12.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-intl": "^7.1.11",
+    "react-intl": "^8.0.6",
     "swr": "^2.3.3",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
@@ -34,7 +34,7 @@
     "jotai": "^2.12.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-intl": "^7.1.11",
+    "react-intl": "^8.0.6",
     "swr": "^2.3.3"
   },
   "scripts": {

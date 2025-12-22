@@ -7,7 +7,7 @@
     "@boluo/utils": "0.0.0",
     "@floating-ui/react": "^0.27.5",
     "clsx": "^2.1.1",
-    "react-intl": "^7.1.11",
+    "react-intl": "^8.0.6",
     "tslib": "^2.8.1"
   },
   "devDependencies": {
@@ -16,12 +16,11 @@
     "@boluo/locale": "0.0.0",
     "@boluo/theme": "0.0.0",
     "@boluo/typescript-config": "0.0.0",
-    "@formatjs/ts-transformer": "^3.13.34",
     "@types/node": "^24.0.12",
     "@types/react": "^19.0.12",
     "@types/react-dom": "^19.0.4",
     "@vitejs/plugin-react": "^5.0.0",
-    "babel-plugin-formatjs": "^10.5.38",
+    "babel-plugin-formatjs": "^11.0.4",
     "eslint": "^9.23.0",
     "postcss": "^8.5.3",
     "react": "^19.0.0",

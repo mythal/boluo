@@ -8,7 +8,7 @@ use uuid::Uuid;
 
 use crate::session::Session;
 
-const TOKEN_VALIDITY: Duration = Duration::from_secs(10);
+const TOKEN_VALIDITY: Duration = Duration::from_secs(60);
 
 struct TokenInfo {
     session: Option<Session>,

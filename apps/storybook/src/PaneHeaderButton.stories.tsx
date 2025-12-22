@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { PaneHeaderButton } from '@boluo/ui/PaneHeaderButton';
-import { Settings, SplitHorizontal } from '@boluo/icons';
+import Settings from '@boluo/icons/Settings';
+import SplitHorizontal from '@boluo/icons/SplitHorizontal';
 import { Spinner } from '@boluo/ui/Spinner';
 
 const meta: Meta<typeof PaneHeaderButton> = {

@@ -1,6 +1,9 @@
 import type { Channel, ChannelType } from '@boluo/api';
 import clsx from 'clsx';
-import { Drama, Hash, Lock, MoveVertical } from '@boluo/icons';
+import Drama from '@boluo/icons/Drama';
+import Hash from '@boluo/icons/Hash';
+import Lock from '@boluo/icons/Lock';
+import MoveVertical from '@boluo/icons/MoveVertical';
 import { type Atom, atom, useAtomValue } from 'jotai';
 import { type FC, useCallback, useMemo } from 'react';
 import { useIntl } from 'react-intl';

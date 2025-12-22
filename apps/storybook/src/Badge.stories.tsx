@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Badge } from '@boluo/ui/Badge';
-import { Gamemaster } from '@boluo/icons';
+import Gamemaster from '@boluo/icons/Gamemaster';
 
 const meta: Meta<typeof Badge> = {
   title: 'Base/Badge',

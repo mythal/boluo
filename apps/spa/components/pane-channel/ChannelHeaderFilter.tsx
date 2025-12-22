@@ -1,4 +1,4 @@
-import { Filter } from '@boluo/icons';
+import Filter from '@boluo/icons/Filter';
 import { useAtom } from 'jotai';
 import { type FC, useMemo } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';

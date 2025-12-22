@@ -1,5 +1,8 @@
 import { type User, type Channel, type MemberWithUser } from '@boluo/api';
-import { ChevronLeft, ChevronRight, UserPlus, X } from '@boluo/icons';
+import ChevronLeft from '@boluo/icons/ChevronLeft';
+import ChevronRight from '@boluo/icons/ChevronRight';
+import UserPlus from '@boluo/icons/UserPlus';
+import X from '@boluo/icons/X';
 import { type FC, useMemo, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import clsx from 'clsx';

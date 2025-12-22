@@ -1,4 +1,5 @@
-import { Drama, Hash } from '@boluo/icons';
+import Drama from '@boluo/icons/Drama';
+import Hash from '@boluo/icons/Hash';
 import { atom } from 'jotai';
 import { type FC, useMemo } from 'react';
 import { ChannelName } from './ChannelName';

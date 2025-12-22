@@ -1,5 +1,5 @@
 import { type NotFoundError } from '@boluo/api';
-import { AlertCircle } from '@boluo/icons';
+import AlertCircle from '@boluo/icons/AlertCircle';
 import { type FC } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { PaneBox } from '../PaneBox';

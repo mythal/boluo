@@ -1,5 +1,5 @@
 import { type FC, useCallback, useMemo } from 'react';
-import { Settings } from '@boluo/icons';
+import Settings from '@boluo/icons/Settings';
 import { PaneHeaderButton } from '@boluo/ui/PaneHeaderButton';
 import { FormattedMessage } from 'react-intl';
 import { usePaneKey } from '../../hooks/usePaneKey';

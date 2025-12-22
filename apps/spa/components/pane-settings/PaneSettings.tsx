@@ -1,5 +1,7 @@
 import { useQueryCurrentUser } from '@boluo/hooks/useQueryCurrentUser';
-import { LogOut, Settings, User as UserIcon } from '@boluo/icons';
+import LogOut from '@boluo/icons/LogOut';
+import Settings from '@boluo/icons/Settings';
+import UserIcon from '@boluo/icons/User';
 import { useAtom, useAtomValue } from 'jotai';
 import { type FC, useCallback } from 'react';
 import { useId } from 'react';

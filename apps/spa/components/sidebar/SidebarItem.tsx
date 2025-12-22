@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { X } from '@boluo/icons';
+import X from '@boluo/icons/X';
 import { type FC, type ReactNode, useMemo } from 'react';
 
 interface Props {

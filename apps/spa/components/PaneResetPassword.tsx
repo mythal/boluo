@@ -1,5 +1,5 @@
 import { post } from '@boluo/api-browser';
-import { Key } from '@boluo/icons';
+import Key from '@boluo/icons/Key';
 import { type FC, type MouseEventHandler, useCallback, useId, useState } from 'react';
 import { type SubmitHandler, type FieldError, useForm } from 'react-hook-form';
 import { FormattedMessage, useIntl } from 'react-intl';

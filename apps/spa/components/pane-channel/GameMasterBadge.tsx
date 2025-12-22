@@ -1,4 +1,4 @@
-import { Gamemaster } from '@boluo/icons';
+import Gamemaster from '@boluo/icons/Gamemaster';
 import { type FC } from 'react';
 import React from 'react';
 import { FormattedMessage } from 'react-intl';

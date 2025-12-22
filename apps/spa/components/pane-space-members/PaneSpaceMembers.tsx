@@ -1,4 +1,4 @@
-import { Users } from '@boluo/icons';
+import Users from '@boluo/icons/Users';
 import { type FC, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { useMySpaceMember } from '@boluo/hooks/useQueryMySpaceMember';

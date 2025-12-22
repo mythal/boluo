@@ -1,6 +1,7 @@
 import { get } from '@boluo/api-browser';
 import clsx from 'clsx';
-import { ChevronDown, CircleNotch } from '@boluo/icons';
+import ChevronDown from '@boluo/icons/ChevronDown';
+import CircleNotch from '@boluo/icons/CircleNotch';
 import { useSetAtom, useStore } from 'jotai';
 import { type FC, useCallback, useEffect, useRef, useState } from 'react';
 import { FormattedMessage } from 'react-intl';

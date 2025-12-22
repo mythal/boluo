@@ -1,4 +1,4 @@
-import { Dice } from '@boluo/icons';
+import Dice from '@boluo/icons/Dice';
 import { useSetAtom } from 'jotai';
 import { type FC } from 'react';
 import { useIntl } from 'react-intl';

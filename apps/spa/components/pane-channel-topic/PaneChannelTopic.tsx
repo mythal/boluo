@@ -1,6 +1,6 @@
 import { type ApiError, type Channel } from '@boluo/api';
 import { post } from '@boluo/api-browser';
-import { Edit } from '@boluo/icons';
+import Edit from '@boluo/icons/Edit';
 import { type FC } from 'react';
 import { FormProvider, type SubmitHandler, useForm } from 'react-hook-form';
 import { FormattedMessage } from 'react-intl';

@@ -1,5 +1,5 @@
 import { type SpaceMemberWithUser } from '@boluo/api';
-import { Users } from '@boluo/icons';
+import Users from '@boluo/icons/Users';
 import { type FC } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Badge } from '@boluo/ui/Badge';

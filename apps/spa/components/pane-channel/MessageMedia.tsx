@@ -1,6 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import clsx from 'clsx';
-import { Paperclip, Refresh } from '@boluo/icons';
+import Paperclip from '@boluo/icons/Paperclip';
+import Refresh from '@boluo/icons/Refresh';
 import {
   type ReactNode,
   type MouseEvent as ReactMouseEvent,

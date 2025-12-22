@@ -7,7 +7,7 @@ import {
 } from '@boluo/api';
 import { post } from '@boluo/api-browser';
 import { useQueryCurrentUser } from '@boluo/hooks/useQueryCurrentUser';
-import { UserPlus } from '@boluo/icons';
+import UserPlus from '@boluo/icons/UserPlus';
 import { type FC, type ReactNode, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
 import useSWRMutation, { type MutationFetcher } from 'swr/mutation';

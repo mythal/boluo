@@ -1,7 +1,7 @@
 import type { ApiError, EditSpace, Space } from '@boluo/api';
 import { post } from '@boluo/api-browser';
 import { useQueryCurrentUser } from '@boluo/hooks/useQueryCurrentUser';
-import { Settings } from '@boluo/icons';
+import Settings from '@boluo/icons/Settings';
 import { type FC, useCallback, useState } from 'react';
 import { useId } from 'react';
 import { FormProvider, useController, useForm, useFormContext, useWatch } from 'react-hook-form';

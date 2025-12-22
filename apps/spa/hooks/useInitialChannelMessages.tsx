@@ -71,4 +71,9 @@ export const useInitialChannelMessages = (spaceId: string) => {
       });
     }
   }, [channelWithMemberList, dispatch, initialized, openChannelIds, store]);
+
+  useEffect(() => {
+    if (initialized) return;
+    requestedRef.current.clear();
+  }, [initialized, spaceId]);
 };

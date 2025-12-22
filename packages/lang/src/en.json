@@ -32,6 +32,9 @@
   "/jxJyw": {
     "message": "The position you are trying to place the message is changed."
   },
+  "/sLMk2": {
+    "message": "You are not authenticated. Please log in to access this resource."
+  },
   "0Azlrb": {
     "message": "Manage"
   },
@@ -49,6 +52,9 @@
   },
   "0ah2ud": {
     "message": "Space"
+  },
+  "0cmG3L": {
+    "message": "Failed to establish connection due to a network error. Please try again later."
   },
   "0eanrB": {
     "message": "Include archived messages"
@@ -277,9 +283,6 @@
   },
   "C81/uG": {
     "message": "Logout"
-  },
-  "C8PHob": {
-    "message": "Connection lost due to inactivity, please refresh the page."
   },
   "CNLipo": {
     "message": "Verification failed. Please try again or contact support."
@@ -1288,6 +1291,9 @@
   },
   "z9LRLa": {
     "message": "Edited at"
+  },
+  "zEwcTp": {
+    "message": "The session is invalid. Please log out and log in again or try another browser."
   },
   "zINlao": {
     "message": "Owner"

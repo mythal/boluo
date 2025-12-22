@@ -6,6 +6,7 @@ use crate::error::{AppError, Find};
 use crate::events::api::MakeToken;
 use crate::events::get_mailbox_broadcast_rx;
 use crate::events::models::StatusKind;
+use crate::events::token::SessionError;
 use crate::events::types::{ClientEvent, GetFromStateError};
 use crate::interface::{Response, err_response, missing, ok_response, parse_query};
 use crate::session::{AuthenticateFail, Session};
@@ -268,6 +269,16 @@ fn connection_error(req: Request<Incoming>, mailbox: Option<Uuid>, error: AppErr
 }
 
 async fn connect(ctx: &crate::context::AppContext, req: hyper::Request<Incoming>) -> Response {
+    let user_agent = req
+        .headers()
+        .get(hyper::header::USER_AGENT)
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("");
+    let origin = req
+        .headers()
+        .get(hyper::header::ORIGIN)
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("");
     let Ok(query) = parse_query::<UpdateQuery>(req.uri()) else {
         tracing::warn!("Failed to parse query {:?}", req.uri());
         return connection_error(
@@ -290,8 +301,9 @@ async fn connect(ctx: &crate::context::AppContext, req: hyper::Request<Incoming>
         super::token::TOKEN_STORE.get_session(token)
     } else {
         match authenticate_optional(&req).await {
-            Ok(session) => session,
-            Err(AppError::Unauthenticated(AuthenticateFail::Guest)) => None,
+            Ok(Some(session)) => Ok(session),
+            Ok(None) => Err(SessionError::Invalid),
+            Err(AppError::Unauthenticated(AuthenticateFail::Guest)) => Err(SessionError::Invalid),
             Err(e) => return connection_error(req, Some(mailbox), e),
         }
     };
@@ -312,35 +324,59 @@ async fn connect(ctx: &crate::context::AppContext, req: hyper::Request<Incoming>
         };
 
         if let Some(space) = space.as_ref() {
-            if let Err(e) = check_permissions(&mut conn, space, &session).await {
+            if let Err(e) = check_permissions(&mut conn, space, &session.ok()).await {
                 return connection_error(req, Some(mailbox), e);
             }
         }
     };
 
     if let Some(user_id) = user_id {
-        if session.is_none() {
-            tracing::warn!(
-                user_id = %user_id,
-                "No session found for the user, but 'user_id' is provided"
-            );
-            return connection_error(
-                req,
-                Some(mailbox),
-                AppError::Unauthenticated(AuthenticateFail::NoSessionFound),
-            );
-        }
-        if session.as_ref().map(|s| s.user_id) != Some(user_id) {
-            tracing::error!(
-                session_user_id = %session.as_ref().map(|s| s.user_id).unwrap_or_default(),
-                user_id = %user_id,
-                "User ID does not match the authenticated user"
-            );
-            return connection_error(
-                req,
-                Some(mailbox),
-                AppError::Unauthenticated(AuthenticateFail::NoSessionFound),
-            );
+        match &session {
+            Err(SessionError::Expired) => {
+                tracing::warn!(
+                    user_id = %user_id,
+                    mailbox_id = %mailbox,
+                    user_agent,
+                    origin,
+                    "The connection token has expired for the user"
+                );
+                return connection_error(
+                    req,
+                    Some(mailbox),
+                    AppError::Unauthenticated(AuthenticateFail::Expired),
+                );
+            }
+            Err(SessionError::Invalid) => {
+                tracing::warn!(
+                    user_id = %user_id,
+                    mailbox_id = %mailbox,
+                    user_agent,
+                    origin,
+                    "Cannot find session of the user from the provided token"
+                );
+                return connection_error(
+                    req,
+                    Some(mailbox),
+                    AppError::Unauthenticated(AuthenticateFail::NoSessionFound),
+                );
+            }
+            Ok(session) => {
+                if session.user_id != user_id {
+                    tracing::error!(
+                        session_user_id = %session.user_id,
+                        user_id = %user_id,
+                        mailbox_id = %mailbox,
+                        user_agent,
+                        origin,
+                        "User ID does not match the authenticated user"
+                    );
+                    return connection_error(
+                        req,
+                        Some(mailbox),
+                        AppError::Unauthenticated(AuthenticateFail::NoSessionFound),
+                    );
+                }
+            }
         }
     }
 
@@ -385,7 +421,8 @@ async fn connect(ctx: &crate::context::AppContext, req: hyper::Request<Incoming>
                         if message == "♡" {
                             return Ok(());
                         }
-                        handle_client_event(&pool, mailbox, error_sender, session, message).await
+                        handle_client_event(&pool, mailbox, error_sender, session.ok(), message)
+                            .await
                     }
                     Ok(())
                 }
@@ -437,7 +474,7 @@ async fn connect(ctx: &crate::context::AppContext, req: hyper::Request<Incoming>
                 tracing::debug!("Stop receiving events");
             }
         }
-        if let Some(session) = session {
+        if let Ok(session) = session {
             if !mailbox.is_nil() {
                 if let Err(e) = Update::status(
                     mailbox,
@@ -476,12 +513,43 @@ pub async fn token(req: Request<impl Body>) -> Result<Token, AppError> {
             }
         }
         (None, Some(user_id)) => {
+            use hyper::header::{AUTHORIZATION, COOKIE, ORIGIN, REFERER};
+
+            let origin = req
+                .headers()
+                .get(ORIGIN)
+                .and_then(|v| v.to_str().ok())
+                .unwrap_or("");
+            let referer = req
+                .headers()
+                .get(REFERER)
+                .and_then(|v| v.to_str().ok())
+                .unwrap_or("");
+            let authorization = req
+                .headers()
+                .get(AUTHORIZATION)
+                .and_then(|v| v.to_str().ok())
+                .unwrap_or("");
+            let cookie = req
+                .headers()
+                .get(COOKIE)
+                .and_then(|v| v.to_str().ok())
+                .unwrap_or("");
+            let user_agent = req
+                .headers()
+                .get(hyper::header::USER_AGENT)
+                .and_then(|v| v.to_str().ok())
+                .unwrap_or("");
             tracing::warn!(
                 user_id = %user_id,
                 space_id = ?space_id,
-                "No session found for the user, but user_id is provided"
+                origin,
+                referer,
+                authorization,
+                cookie,
+                user_agent,
+                "No session found for the user, but 'user_id' is provided"
             );
-            metrics::counter!("boluo_server_events_token_no_session_found_total").increment(1);
             Err(AppError::Unauthenticated(AuthenticateFail::NoSessionFound))
         }
         (session, None) => Ok(Token {

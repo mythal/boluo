@@ -33,7 +33,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.54.2",
-    "react-intl": "^7.1.11",
+    "react-intl": "^8.0.6",
     "react-virtuoso": "^4.12.5",
     "rich-textarea": "^0.27.0",
     "swr": "^2.3.3",

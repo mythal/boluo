@@ -1,6 +1,7 @@
 import { type ApiError, type SpaceWithMember } from '@boluo/api';
 import { post } from '@boluo/api-browser';
-import { AlertTriangle, UserPlus } from '@boluo/icons';
+import AlertTriangle from '@boluo/icons/AlertTriangle';
+import UserPlus from '@boluo/icons/UserPlus';
 import { type ReactNode, type FC } from 'react';
 import { FormattedMessage } from 'react-intl';
 import useSWRMutation from 'swr/mutation';

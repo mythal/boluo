@@ -3,7 +3,7 @@ import { type MutateSettingsTrigger } from '@boluo/hooks/useMutateSettings';
 import { type FC } from 'react';
 import { Button } from '@boluo/ui/Button';
 import Icon from '@boluo/ui/Icon';
-import { Shrink } from '@boluo/icons';
+import Shrink from '@boluo/icons/Shrink';
 import { FormattedMessage } from 'react-intl';
 import { LampSwitch } from '@boluo/ui/LampSwitch';
 

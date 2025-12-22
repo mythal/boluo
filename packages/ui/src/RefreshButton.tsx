@@ -1,4 +1,4 @@
-import { Refresh } from '@boluo/icons';
+import Refresh from '@boluo/icons/Refresh';
 import type { ReactNode } from 'react';
 import { useCallback } from 'react';
 import { Button } from './Button';

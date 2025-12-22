@@ -1,5 +1,6 @@
 import { get, post } from '@boluo/api-browser';
-import { Clipboard, Refresh } from '@boluo/icons';
+import Clipboard from '@boluo/icons/Clipboard';
+import Refresh from '@boluo/icons/Refresh';
 import { type FC, useCallback, useId, useRef, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import useSWR from 'swr';

@@ -1,6 +1,6 @@
 import type { useSortable } from '@dnd-kit/sortable';
 import clsx from 'clsx';
-import { MoveVertical } from '@boluo/icons';
+import MoveVertical from '@boluo/icons/MoveVertical';
 import { type FC, useMemo, type ReactNode } from 'react';
 import { Spinner } from '@boluo/ui/Spinner';
 import { MessageHandleBox } from '@boluo/ui/chat/MessageHandleBox';

@@ -1,6 +1,6 @@
 import { type RefObject, useRef, useState } from 'react';
 import clsx from 'clsx';
-import { ChevronUp } from '@boluo/icons';
+import ChevronUp from '@boluo/icons/ChevronUp';
 import { ButtonInline } from '@boluo/ui/ButtonInline';
 import Icon from '@boluo/ui/Icon';
 import { useAtom } from 'jotai';

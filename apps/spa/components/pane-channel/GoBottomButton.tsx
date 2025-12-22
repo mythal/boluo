@@ -1,4 +1,4 @@
-import { ChevronsDown } from '@boluo/icons';
+import ChevronsDown from '@boluo/icons/ChevronsDown';
 import { memo, useMemo } from 'react';
 import { Button } from '@boluo/ui/Button';
 import { type ChatItem } from '../../state/channel.types';

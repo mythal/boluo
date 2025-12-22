@@ -1,5 +1,5 @@
 'use client';
-import { ChevronLeft } from '@boluo/icons';
+import ChevronLeft from '@boluo/icons/ChevronLeft';
 import Icon from '@boluo/ui/Icon';
 import { type FC } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';

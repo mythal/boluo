@@ -7,7 +7,12 @@ import {
 } from '@boluo/api';
 import { PaneHeaderButton } from '@boluo/ui/PaneHeaderButton';
 import { Failed } from '@boluo/ui/Failed';
-import { Archive, ArrowDownWideShort, ArrowUpWideShort, Mask, SwatchBook, X } from '@boluo/icons';
+import Archive from '@boluo/icons/Archive';
+import ArrowDownWideShort from '@boluo/icons/ArrowDownWideShort';
+import ArrowUpWideShort from '@boluo/icons/ArrowUpWideShort';
+import Mask from '@boluo/icons/Mask';
+import SwatchBook from '@boluo/icons/SwatchBook';
+import X from '@boluo/icons/X';
 import clsx from 'clsx';
 import { type FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';

@@ -1,4 +1,4 @@
-import { Edit } from '@boluo/icons';
+import Edit from '@boluo/icons/Edit';
 import { memo } from 'react';
 import { Delay } from './Delay';
 

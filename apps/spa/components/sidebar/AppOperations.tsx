@@ -1,4 +1,4 @@
-import { Bell } from '@boluo/icons';
+import Bell from '@boluo/icons/Bell';
 import clsx from 'clsx';
 import { type FC } from 'react';
 import { useIntl } from 'react-intl';

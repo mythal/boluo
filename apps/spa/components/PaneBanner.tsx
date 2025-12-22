@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { X } from '@boluo/icons';
+import X from '@boluo/icons/X';
 import { type FC, useCallback } from 'react';
 import { type Banner, useSetBanner } from '../hooks/useBanner';
 import { useIntl } from 'react-intl';

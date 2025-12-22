@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { ChevronDown } from '@boluo/icons';
+import ChevronDown from '@boluo/icons/ChevronDown';
 import React from 'react';
 
 interface ExtendedButtonProps {

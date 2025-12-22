@@ -7,7 +7,9 @@ import { MessageNamePlate } from '@boluo/ui/chat/MessageNamePlate';
 import { MessageToolbarBox } from '@boluo/ui/chat/MessageToolbarBox';
 import { NameBox } from '@boluo/ui/chat/NameBox';
 import type { ReactNode } from 'react';
-import { MoveVertical, PersonRunning, TowerBroadcast } from '@boluo/icons';
+import MoveVertical from '@boluo/icons/MoveVertical';
+import PersonRunning from '@boluo/icons/PersonRunning';
+import TowerBroadcast from '@boluo/icons/TowerBroadcast';
 import { MessageToolbarButton } from '@boluo/ui/chat/MessageToolbarButton';
 
 const meta: Meta<typeof MessageBox> = {

@@ -7,7 +7,7 @@ import {
   useInteractions,
 } from '@floating-ui/react';
 import { post } from '@boluo/api-browser';
-import { UserX } from '@boluo/icons';
+import UserX from '@boluo/icons/UserX';
 import { type FC, useCallback, useState, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 import useSWRMutation, { type MutationFetcher } from 'swr/mutation';

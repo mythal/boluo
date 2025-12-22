@@ -1,6 +1,6 @@
 'use client';
 
-import { Refresh } from '@boluo/icons';
+import Refresh from '@boluo/icons/Refresh';
 import { useEffect } from 'react';
 import { Button } from '@boluo/ui/Button';
 import Link from 'next/link';

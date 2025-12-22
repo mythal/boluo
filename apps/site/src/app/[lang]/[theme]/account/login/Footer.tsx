@@ -1,5 +1,5 @@
 'use client';
-import { ChevronLeft } from '@boluo/icons';
+import ChevronLeft from '@boluo/icons/ChevronLeft';
 import { FormattedMessage } from 'react-intl';
 import { ButtonLink } from '../../../../../components/ButtonLink';
 import Link from 'next/link';

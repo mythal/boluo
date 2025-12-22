@@ -1,5 +1,8 @@
 import clsx from 'clsx';
-import { HelpCircle, LogIn, Settings, User as UserIcon } from '@boluo/icons';
+import HelpCircle from '@boluo/icons/HelpCircle';
+import LogIn from '@boluo/icons/LogIn';
+import Settings from '@boluo/icons/Settings';
+import UserIcon from '@boluo/icons/User';
 import { atom, useAtom, useAtomValue } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
 import { type FC, useCallback, useMemo } from 'react';

@@ -1,4 +1,4 @@
-import { AlertTriangle } from '@boluo/icons';
+import AlertTriangle from '@boluo/icons/AlertTriangle';
 import Icon from './Icon';
 import { Suspense, type FC, type ReactNode } from 'react';
 import { SomethingWentWrong } from './SomethingWentWrong';

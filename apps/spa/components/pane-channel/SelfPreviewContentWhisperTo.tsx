@@ -1,5 +1,6 @@
 import { type MemberWithUser } from '@boluo/api';
-import { Plus, X } from '@boluo/icons';
+import Plus from '@boluo/icons/Plus';
+import X from '@boluo/icons/X';
 import { useSetAtom } from 'jotai';
 import { type FC, useCallback, useMemo, useState, type ReactNode } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';

@@ -1,4 +1,4 @@
-import { ExternalLink } from '@boluo/icons';
+import ExternalLink from '@boluo/icons/ExternalLink';
 import type { FC } from 'react';
 import type { EntityOf } from '@boluo/api';
 import { EntityText } from './EntityText';

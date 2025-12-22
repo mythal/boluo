@@ -2,7 +2,7 @@ import { type Metadata } from 'next';
 import { CreateSpaceForm } from '../../../../../components/CreateSpaceForm';
 import Link from 'next/link';
 import Icon from '@boluo/ui/Icon';
-import { ChevronLeft } from '@boluo/icons';
+import ChevronLeft from '@boluo/icons/ChevronLeft';
 
 import * as classes from '@boluo/ui/classes';
 import { type Params } from '../../../../../server';

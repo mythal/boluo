@@ -2,7 +2,7 @@ import { type ApiError } from '@boluo/api';
 import { post } from '@boluo/api-browser';
 import { explainError } from '@boluo/locale/errors';
 import * as validators from '@boluo/common/validations';
-import { UserPlus } from '@boluo/icons';
+import UserPlus from '@boluo/icons/UserPlus';
 import { type FC, type MouseEventHandler, useCallback, useId, useState } from 'react';
 import {
   type FieldError,

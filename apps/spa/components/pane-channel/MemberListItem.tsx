@@ -11,7 +11,7 @@ import {
 } from '@floating-ui/react';
 import { type Channel, type MemberWithUser, type UserStatus } from '@boluo/api';
 import clsx from 'clsx';
-import { Mask } from '@boluo/icons';
+import Mask from '@boluo/icons/Mask';
 import React, { type FC } from 'react';
 import Icon from '@boluo/ui/Icon';
 import { Avatar } from '@boluo/ui/users/Avatar';

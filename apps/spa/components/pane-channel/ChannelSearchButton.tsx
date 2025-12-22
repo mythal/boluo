@@ -1,4 +1,4 @@
-import { Search } from '@boluo/icons';
+import Search from '@boluo/icons/Search';
 import { PaneHeaderButton } from '@boluo/ui/PaneHeaderButton';
 import { useAtom } from 'jotai';
 import { type FC, useCallback } from 'react';

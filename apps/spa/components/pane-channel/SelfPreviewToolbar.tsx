@@ -2,15 +2,13 @@ import React, { Activity, type FC, type ReactNode, useMemo } from 'react';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { useAtomValue, useSetAtom, useStore } from 'jotai';
 import Icon from '@boluo/ui/Icon';
-import {
-  Edit,
-  PaperPlane,
-  PersonRunning,
-  TowerBroadcast,
-  TriangleAlert,
-  Whisper,
-  X,
-} from '@boluo/icons';
+import Edit from '@boluo/icons/Edit';
+import PaperPlane from '@boluo/icons/PaperPlane';
+import PersonRunning from '@boluo/icons/PersonRunning';
+import TowerBroadcast from '@boluo/icons/TowerBroadcast';
+import TriangleAlert from '@boluo/icons/TriangleAlert';
+import Whisper from '@boluo/icons/Whisper';
+import X from '@boluo/icons/X';
 import { FormattedMessage, type IntlShape, useIntl } from 'react-intl';
 import { useComposeError } from '../../hooks/useComposeError';
 import { useSend } from './useSend';

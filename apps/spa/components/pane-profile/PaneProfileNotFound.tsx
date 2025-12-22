@@ -1,4 +1,4 @@
-import { User } from '@boluo/icons';
+import User from '@boluo/icons/User';
 import { type FC } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { PaneHeaderBox } from '../PaneHeaderBox';

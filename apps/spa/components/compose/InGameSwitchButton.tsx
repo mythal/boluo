@@ -1,4 +1,4 @@
-import { Mask } from '@boluo/icons';
+import Mask from '@boluo/icons/Mask';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { type FC } from 'react';
 import { useIntl } from 'react-intl';

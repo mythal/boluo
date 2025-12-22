@@ -1,4 +1,5 @@
-import { Edit, PaperPlane } from '@boluo/icons';
+import Edit from '@boluo/icons/Edit';
+import PaperPlane from '@boluo/icons/PaperPlane';
 import { type FC } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useComposeError } from '../../hooks/useComposeError';

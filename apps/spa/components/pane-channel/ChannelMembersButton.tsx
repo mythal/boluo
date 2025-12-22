@@ -1,4 +1,4 @@
-import { Users } from '@boluo/icons';
+import Users from '@boluo/icons/Users';
 import { useAtom } from 'jotai';
 import { type FC, useMemo } from 'react';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';

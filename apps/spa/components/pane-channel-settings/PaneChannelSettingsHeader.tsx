@@ -1,5 +1,6 @@
 import { type Channel } from '@boluo/api';
-import { MoonStar, Settings } from '@boluo/icons';
+import MoonStar from '@boluo/icons/MoonStar';
+import Settings from '@boluo/icons/Settings';
 import { type FC, useCallback, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { PaneHeaderButton } from '@boluo/ui/PaneHeaderButton';

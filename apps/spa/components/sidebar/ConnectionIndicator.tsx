@@ -1,5 +1,6 @@
 import clsx from 'clsx';
-import { Cloud, Unplug } from '@boluo/icons';
+import Cloud from '@boluo/icons/Cloud';
+import Unplug from '@boluo/icons/Unplug';
 import { useAtom, useAtomValue } from 'jotai';
 import { type FC, type ReactNode, useEffect, useRef } from 'react';
 import { Spinner } from '@boluo/ui/Spinner';

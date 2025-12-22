@@ -1,4 +1,4 @@
-import { Edit } from '@boluo/icons';
+import Edit from '@boluo/icons/Edit';
 import type { FC } from 'react';
 import { Delay } from '@boluo/ui/Delay';
 

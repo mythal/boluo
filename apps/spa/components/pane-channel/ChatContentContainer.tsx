@@ -1,4 +1,4 @@
-import { MonitorCog } from '@boluo/icons';
+import MonitorCog from '@boluo/icons/MonitorCog';
 import Icon from '@boluo/ui/Icon';
 import { type FC, useState, type Ref } from 'react';
 import { useIntl } from 'react-intl';

@@ -1,4 +1,4 @@
-import { EllipsisVertical } from '@boluo/icons';
+import EllipsisVertical from '@boluo/icons/EllipsisVertical';
 import { type FC } from 'react';
 import { PaneHeaderButton } from '@boluo/ui/PaneHeaderButton';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';

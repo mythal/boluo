@@ -8,7 +8,11 @@ import {
 import { post } from '@boluo/api-browser';
 import clsx from 'clsx';
 import { useQueryCurrentUser } from '@boluo/hooks/useQueryCurrentUser';
-import { Gamemaster, Mask, UserCog, UserPlus, UserX } from '@boluo/icons';
+import Gamemaster from '@boluo/icons/Gamemaster';
+import Mask from '@boluo/icons/Mask';
+import UserCog from '@boluo/icons/UserCog';
+import UserPlus from '@boluo/icons/UserPlus';
+import UserX from '@boluo/icons/UserX';
 import React, { type FC, type ReactNode, useEffect, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import useSWRMutation from 'swr/mutation';

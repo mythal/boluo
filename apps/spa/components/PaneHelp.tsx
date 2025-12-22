@@ -1,4 +1,4 @@
-import { HelpCircle } from '@boluo/icons';
+import HelpCircle from '@boluo/icons/HelpCircle';
 import { useState, type FC } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { PaneBox } from './PaneBox';

@@ -1,4 +1,6 @@
-import { CornerDownRight, Plus, X } from '@boluo/icons';
+import CornerDownRight from '@boluo/icons/CornerDownRight';
+import Plus from '@boluo/icons/Plus';
+import X from '@boluo/icons/X';
 import { ButtonInline } from '@boluo/ui/ButtonInline';
 import { usePaneLimit } from '../../hooks/useMaxPane';
 import { useAtomValue, useSetAtom, useStore } from 'jotai';

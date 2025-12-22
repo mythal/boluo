@@ -1,7 +1,9 @@
 // False positive with useTooltip refs
 /* eslint-disable react-hooks/refs */
 import { type FC } from 'react';
-import { ChevronLeft, ChevronRight, Unplug } from '@boluo/icons';
+import ChevronLeft from '@boluo/icons/ChevronLeft';
+import ChevronRight from '@boluo/icons/ChevronRight';
+import Unplug from '@boluo/icons/Unplug';
 import { useTooltip } from '@boluo/ui/hooks/useTooltip';
 import { useIsTouch } from '@boluo/ui/hooks/useIsTouch';
 import clsx from 'clsx';

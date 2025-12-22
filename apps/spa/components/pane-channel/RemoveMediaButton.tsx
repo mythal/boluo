@@ -1,4 +1,4 @@
-import { Trash } from '@boluo/icons';
+import Trash from '@boluo/icons/Trash';
 import { useSetAtom } from 'jotai';
 import { type FC, memo, useCallback } from 'react';
 import { useComposeAtom } from '../../hooks/useComposeAtom';

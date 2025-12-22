@@ -3,6 +3,7 @@ postgrestools.jsonc
 storybook-static/
 docker-compose.override.yml
 *.dump
+.tmp/
 
 # nix
 .envrc

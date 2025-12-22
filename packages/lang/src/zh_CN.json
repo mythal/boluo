@@ -32,6 +32,9 @@
   "/jxJyw": {
     "message": "试图放置消息的位置发生了变化。"
   },
+  "/sLMk2": {
+    "message": "You are not authenticated. Please log in to access this resource."
+  },
   "0Azlrb": {
     "message": "管理"
   },
@@ -49,6 +52,9 @@
   },
   "0ah2ud": {
     "message": "位面"
+  },
+  "0cmG3L": {
+    "message": "Failed to establish connection due to a network error. Please try again later."
   },
   "0eanrB": {
     "message": "包括已存档的消息"
@@ -277,9 +283,6 @@
   },
   "C81/uG": {
     "message": "登出"
-  },
-  "C8PHob": {
-    "message": "连接因不活动而丢失，请刷新页面。"
   },
   "CNLipo": {
     "message": "验证失败。请重试或联系开发者。"
@@ -1288,6 +1291,9 @@
   },
   "z9LRLa": {
     "message": "修改于"
+  },
+  "zEwcTp": {
+    "message": "The session is invalid. Please log out and log in again or try another browser."
   },
   "zINlao": {
     "message": "所有者"

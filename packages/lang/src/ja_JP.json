@@ -32,6 +32,9 @@
   "/jxJyw": {
     "message": "メッセージを配置しようとしている位置が変更されました。"
   },
+  "/sLMk2": {
+    "message": "You are not authenticated. Please log in to access this resource."
+  },
   "0Azlrb": {
     "message": "管理"
   },
@@ -49,6 +52,9 @@
   },
   "0ah2ud": {
     "message": "次元"
+  },
+  "0cmG3L": {
+    "message": "Failed to establish connection due to a network error. Please try again later."
   },
   "0eanrB": {
     "message": "アーカイブされたメッセージも含める"
@@ -277,9 +283,6 @@
   },
   "C81/uG": {
     "message": "ログアウト"
-  },
-  "C8PHob": {
-    "message": "非アクティブにより接続が失われました。ページを更新してください。"
   },
   "CNLipo": {
     "message": "確認失敗。もう一度試してください。またはサポートにお問い合わせください。"
@@ -1288,6 +1291,9 @@
   },
   "z9LRLa": {
     "message": "編集日時"
+  },
+  "zEwcTp": {
+    "message": "The session is invalid. Please log out and log in again or try another browser."
   },
   "zINlao": {
     "message": "所有者"

@@ -32,6 +32,9 @@
   "/jxJyw": {
     "message": "試圖放置訊息的位置發生了改變。"
   },
+  "/sLMk2": {
+    "message": "You are not authenticated. Please log in to access this resource."
+  },
   "0Azlrb": {
     "message": "管理"
   },
@@ -49,6 +52,9 @@
   },
   "0ah2ud": {
     "message": "位面"
+  },
+  "0cmG3L": {
+    "message": "Failed to establish connection due to a network error. Please try again later."
   },
   "0eanrB": {
     "message": "包括已歸檔的訊息"
@@ -277,9 +283,6 @@
   },
   "C81/uG": {
     "message": "登出"
-  },
-  "C8PHob": {
-    "message": "因不活動而丟失連線，請刷新頁面。"
   },
   "CNLipo": {
     "message": "驗證失敗。請重試或聯繫開發者。"
@@ -1288,6 +1291,9 @@
   },
   "z9LRLa": {
     "message": "修改於"
+  },
+  "zEwcTp": {
+    "message": "The session is invalid. Please log out and log in again or try another browser."
   },
   "zINlao": {
     "message": "所有者"

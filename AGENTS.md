@@ -6,6 +6,7 @@ This project is an open‑source chat tool designed for playing traditional tabl
 - The language of the codebase is English. But you should response user by the language they used.
 - Before making changes, ensure you understand the relevant parts of the codebase.
 - After making changes, provide 2-3 concise possible commit messages as options to summarize your work using conventional commit format, package name as scope.
+- Temprorary files in the development can be placed in the `.tmp/` directory, which is ignored.
 
 ---
 

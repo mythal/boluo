@@ -472,7 +472,7 @@ impl Update {
         }
     }
 
-    async fn send(mailbox: Uuid, update_encoded: Utf8Bytes) {
+    pub(super) async fn send(mailbox: Uuid, update_encoded: Utf8Bytes) {
         let table = crate::events::get_broadcast_table().pin();
         if let Some(tx) = table.get(&mailbox) {
             tx.send(update_encoded).ok();
@@ -538,20 +538,10 @@ impl Update {
         let span = tracing::info_span!("Fire Persistent Update", mailbox = %mailbox);
         spawn(
             async move {
-                let Ok(encoded_update) = tokio::task::spawn_blocking(move || {
-                    Update::build(body, mailbox, UpdateLifetime::Persistent)
-                })
-                .await
-                else {
-                    tracing::error!("Failed to build update");
-                    return;
-                };
                 let mailbox_manager = super::context::store().get_or_create_manager(mailbox);
-                if let Err(e) = mailbox_manager.fire_update(encoded_update.clone()).await {
+                if let Err(e) = mailbox_manager.fire_update(body).await {
                     tracing::error!("Failed to send update to mailbox {}: {}", mailbox, e);
-                    return;
                 }
-                Update::send(mailbox, encoded_update.encoded.clone()).await;
             }
             .instrument(span),
         );

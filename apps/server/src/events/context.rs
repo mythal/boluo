@@ -2,7 +2,7 @@ use crate::channels::ChannelMember;
 use crate::channels::models::Member;
 use crate::events::models::UserStatus;
 use crate::events::status::StatusAction;
-use crate::events::types::{ChannelUserId, UpdateBody};
+use crate::events::types::{ChannelUserId, UpdateBody, UpdateLifetime};
 use crate::events::{StatusMap, Update};
 use crate::spaces::SpaceMember;
 use crate::utils::timestamp;
@@ -38,7 +38,7 @@ impl EncodedUpdate {
 
 pub enum Action {
     Query(tokio::sync::oneshot::Sender<CachedUpdates>),
-    Update(Box<EncodedUpdate>),
+    Update { body: UpdateBody },
     Members(MembersAction),
     Status(super::status::StatusAction),
 }
@@ -188,8 +188,8 @@ impl MailboxManager {
         Ok(rx)
     }
 
-    pub async fn fire_update(&self, update: Box<EncodedUpdate>) -> Result<(), MailboxManageError> {
-        let action = Action::Update(update);
+    pub async fn fire_update(&self, body: UpdateBody) -> Result<(), MailboxManageError> {
+        let action = Action::Update { body };
         self.send_write_action(action).await
     }
 
@@ -475,15 +475,37 @@ impl MailBoxState {
                                     start_at,
                                 }).ok();
                             }
-                            Action::Update(encoded_update) => {
+                            Action::Update { body } => {
                                 last_activity_at = std::time::Instant::now();
+                                let mailbox_id = id;
+                                let encoded_update = match tokio::task::spawn_blocking(move || {
+                                    EncodedUpdate::new(Update {
+                                        mailbox: mailbox_id,
+                                        body,
+                                        id: EventId::new(),
+                                        live: UpdateLifetime::Persistent,
+                                    })
+                                }).await {
+                                    Ok(encoded_update) => encoded_update,
+                                    Err(_) => {
+                                        tracing::error!("Failed to build update");
+                                        continue;
+                                    }
+                                };
                                 let update_name = encoded_update.update.name();
-                                on_update(&mut updates, &mut preview_map, &mut diff_map, *encoded_update);
+                                let encoded_for_broadcast = encoded_update.encoded.clone();
+                                on_update(
+                                    &mut updates,
+                                    &mut preview_map,
+                                    &mut diff_map,
+                                    encoded_update,
+                                );
                                 let elapsed = start.elapsed();
                                 action_duration_histogram.record(elapsed.as_millis() as f64);
                                 if elapsed > std::time::Duration::from_millis(25) {
                                     tracing::warn!(mailbox_id = %id, update_name, "Update took too long to process: {:?}", elapsed);
                                 }
+                                Update::send(id, encoded_for_broadcast).await;
                             }
                             Action::Members(action) => {
                                 members_state.update(action);

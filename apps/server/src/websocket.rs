@@ -53,10 +53,21 @@ where
     let connection_id = uuid::Uuid::new_v4();
     let user_agent = req
         .headers()
-        .get("user-agent")
+        .get(header::USER_AGENT)
         .and_then(|v| v.to_str().ok())
         .unwrap_or("unknown")
         .to_string();
+    let origin = req
+        .headers()
+        .get(header::ORIGIN)
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("unknown")
+        .to_string();
+    let referer = req
+        .headers()
+        .get(header::REFERER)
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("");
 
     let Ok(accept) = check_websocket_header(req.headers()) else {
         tracing::warn!(
@@ -76,6 +87,8 @@ where
         connection_id = %connection_id,
         user_agent = %user_agent,
         duration_ms = tracing::field::Empty,
+        origin = %origin,
+        referer = %referer,
     );
 
     tokio::spawn(

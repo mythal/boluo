@@ -5,7 +5,8 @@ import { type ReactNode, type FC } from 'react';
 import { useQuerySpaceMembers } from '@boluo/hooks/useQuerySpaceMembers';
 import { ButtonInline } from '@boluo/ui/ButtonInline';
 import { useMutateJoinChannel } from '@boluo/hooks/useMutateJoinChannel';
-import { AlertTriangle, UserPlus } from '@boluo/icons';
+import AlertTriangle from '@boluo/icons/AlertTriangle';
+import UserPlus from '@boluo/icons/UserPlus';
 import Icon from '@boluo/ui/Icon';
 import { Spinner } from '@boluo/ui/Spinner';
 

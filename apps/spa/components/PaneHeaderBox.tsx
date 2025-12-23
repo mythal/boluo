@@ -5,7 +5,7 @@ import { usePaneBanner, useSetBanner } from '../hooks/useBanner';
 import { PaneContext } from '../state/view.context';
 import { ClosePaneButton } from './ClosePaneButton';
 import { PaneBanner } from '@boluo/ui/PaneBanner';
-import { Square } from '@boluo/icons';
+import Square from '@boluo/icons/Square';
 import { PaneDragHandle } from './PaneDragHandle';
 
 interface Props {

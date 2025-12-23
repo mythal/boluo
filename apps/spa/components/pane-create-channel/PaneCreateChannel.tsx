@@ -1,7 +1,7 @@
 import { type ApiError, type ChannelWithMember, type Space } from '@boluo/api';
 import { post } from '@boluo/api-browser';
 import { explainError } from '@boluo/locale/errors';
-import { Plus } from '@boluo/icons';
+import Plus from '@boluo/icons/Plus';
 import type { FC } from 'react';
 import { FormProvider, useForm, useFormContext } from 'react-hook-form';
 import { FormattedMessage, type IntlShape, useIntl } from 'react-intl';

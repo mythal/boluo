@@ -1,5 +1,6 @@
 import clsx from 'clsx';
-import { ChevronDown, ChevronUp } from '@boluo/icons';
+import ChevronDown from '@boluo/icons/ChevronDown';
+import ChevronUp from '@boluo/icons/ChevronUp';
 import { type FC, type ReactNode } from 'react';
 
 interface Props {

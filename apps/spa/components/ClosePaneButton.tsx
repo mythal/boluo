@@ -1,4 +1,4 @@
-import { Close } from '@boluo/icons';
+import Close from '@boluo/icons/Close';
 import type { FC } from 'react';
 import { useIntl } from 'react-intl';
 import { usePaneClose } from '../hooks/usePaneClose';

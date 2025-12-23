@@ -1,4 +1,4 @@
-import { MessageSquareText } from '@boluo/icons';
+import MessageSquareText from '@boluo/icons/MessageSquareText';
 import { useCallback, useEffect, useRef, useState, type FC } from 'react';
 import { FormattedMessage } from 'react-intl';
 import Icon from '@boluo/ui/Icon';

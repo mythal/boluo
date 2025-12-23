@@ -6,6 +6,7 @@ This project is an open‑source chat tool designed for playing traditional tabl
 - The language of the codebase is English. But you should response user by the language they used.
 - Before making changes, ensure you understand the relevant parts of the codebase.
 - After making changes, provide 2-3 concise possible commit messages as options to summarize your work using conventional commit format, package name as scope.
+- Temprorary files in the development can be placed in the `.tmp/` directory, which is ignored.
 
 ---
 
@@ -21,7 +22,7 @@ The backend is written in Rust using **hyper** and **tokio**. PostgreSQL is acce
 - Database-related tests:
   - Use `sqlx::test`
   - Test function names must start with `db_test_`
-- When using Cargo commands that don’t require network requests, prefer: `cargo --offline <command>` to avoid triggering sandbox network restrictions.
+- When using Cargo commands that don’t require network requests, prefer: `SQLX_OFFLINE=true cargo --offline <command>` to avoid triggering sandbox restrictions. otherwise, you should request the user for permission for network access.
 
 ---
 

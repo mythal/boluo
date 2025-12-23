@@ -1,4 +1,6 @@
-import { ArrowDownWideShort, ArrowUpWideShort, Dice } from '@boluo/icons';
+import ArrowDownWideShort from '@boluo/icons/ArrowDownWideShort';
+import ArrowUpWideShort from '@boluo/icons/ArrowUpWideShort';
+import Dice from '@boluo/icons/Dice';
 import { type FC } from 'react';
 import { FormattedMessage } from 'react-intl';
 import type { ExprOf, EvaluatedExprOf, MaybeEvalutedExprOf } from '@boluo/api';

@@ -17,45 +17,56 @@ import { chatAtom, type ChatDispatch, connectionStateAtom } from '../state/chat.
 import { type ConnectionState } from '../state/connection.reducer';
 import { get } from '@boluo/api-browser';
 import { type IntlShape, useIntl } from 'react-intl';
+import { sleep } from '@boluo/utils/async';
 
 let lastPongTime = Date.now();
 const RELOAD_TIMEOUT = 1000 * 60 * 30;
 
 const UNAUTHENTICATED = 'UNAUTHENTICATED';
 const NETWORK_ERROR = 'NETWORK_ERROR';
-type ConnectionError = 'UNAUTHENTICATED' | 'NETWORK_ERROR';
+const UNEXPECTED = 'UNEXPECTED';
+type ConnectionError = 'UNAUTHENTICATED' | 'NETWORK_ERROR' | 'UNEXPECTED';
 
-const SLEEP_MS = [0, 7, 17, 37];
-
+const SLEEP_MS = [0, 32, 64, 126, 256, 256, 512, 1024, 512];
+const MAX_ATTEMPTS = 11;
 const getToken = async (
   makeToken: MakeToken,
-  retryCount: number = 0,
-  // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
-): Promise<string | ConnectionError> => {
-  const token = await get('/events/token', makeToken);
-  if (token.isOk) return token.some.token;
-  const err = token.err;
-  if (err.code === 'UNAUTHENTICATED') {
-    return 'UNAUTHENTICATED';
-  } else if (err.code === 'FETCH_FAIL') {
-    if (retryCount >= SLEEP_MS.length) return NETWORK_ERROR;
-    await new Promise((resolve) => setTimeout(resolve, SLEEP_MS[retryCount]));
-    return await getToken(makeToken, retryCount + 1);
-  } else {
-    throw new Error('Failed to get connection token', { cause: err });
+): Promise<{ token: string; timestamp: number } | ConnectionError> => {
+  let errorCode: ConnectionError | null = null;
+  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+    const sleepMs = SLEEP_MS[Math.min(attempt, SLEEP_MS.length - 1)]!;
+    if (sleepMs > 0) {
+      await sleep(sleepMs);
+    }
+    const tokenResult = await get('/events/token', makeToken);
+    if (tokenResult.isOk) {
+      return { token: tokenResult.some.token, timestamp: Date.now() };
+    }
+    const err = tokenResult.err;
+    if (err.code === 'UNAUTHENTICATED') {
+      errorCode = UNAUTHENTICATED;
+      continue;
+    } else if (err.code === 'FETCH_FAIL') {
+      errorCode = NETWORK_ERROR;
+      continue;
+    } else {
+      console.error('Unexpected error when getting event token', err);
+      errorCode = 'UNEXPECTED';
+      break;
+    }
   }
+  return errorCode ?? 'UNEXPECTED';
 };
 
-const createMailboxConnection = async (
+const buildWebsocket = (
   baseUrl: string,
   id: string,
   userId: string | null,
+  token: string,
   after?: EventId,
-): Promise<WebSocket | ConnectionError> => {
+): WebSocket => {
   const paramsObject: Record<string, string> = { mailbox: id };
-  const token = await getToken({ spaceId: id, userId });
-  if (token === 'UNAUTHENTICATED' || token === 'NETWORK_ERROR') return token;
-  if (token) paramsObject.token = token;
+  paramsObject.token = token;
   if (after) {
     paramsObject.after = after.timestamp.toString();
     paramsObject.node = after.node.toString();
@@ -84,18 +95,33 @@ const connect = async (
     return null;
   }
   if (Date.now() - lastPongTime > RELOAD_TIMEOUT) {
-    alert(
-      intl.formatMessage({
-        defaultMessage: 'Connection lost due to inactivity, please refresh the page.',
-      }),
-    );
+    lastPongTime = Date.now();
     dispatch({ type: 'resetChatState', payload: {} });
     return null;
   }
   dispatch({ type: 'connecting', payload: { mailboxId } });
+  const tokenResult = await getToken({ spaceId: mailboxId, userId });
+  if (
+    tokenResult === UNAUTHENTICATED ||
+    tokenResult === NETWORK_ERROR ||
+    tokenResult === UNEXPECTED
+  ) {
+    const code = tokenResult === UNAUTHENTICATED ? 'INVALID_TOKEN' : 'UNEXPECTED';
+    dispatch({ type: 'connectionError', payload: { mailboxId, code } });
+    return tokenResult;
+  }
 
-  const newConnection = await createMailboxConnection(webSocketEndpoint, mailboxId, userId, after);
-  if (newConnection === UNAUTHENTICATED || newConnection === NETWORK_ERROR) return newConnection;
+  if (Date.now() - tokenResult.timestamp > 1000 * 10) {
+    dispatch({ type: 'connectionError', payload: { mailboxId, code: 'UNEXPECTED' } });
+    return 'UNEXPECTED';
+  }
+  const newConnection = buildWebsocket(
+    webSocketEndpoint,
+    mailboxId,
+    userId,
+    tokenResult.token,
+    after,
+  );
   newConnection.onopen = (_) => {
     console.info(`connection established for ${mailboxId}`);
     dispatch({ type: 'connected', payload: { connection: newConnection, mailboxId } });
@@ -110,18 +136,24 @@ const connect = async (
       newConnection.send(PONG);
       lastPongTime = Date.now();
       return;
+    } else if (raw === PONG) {
+      return;
+    } else if (!raw || typeof raw !== 'string') {
+      console.warn('Invalid message received', mailboxId, raw);
+      return;
     }
-    if (!raw || typeof raw !== 'string' || raw === PONG) return;
 
     let update: unknown = null;
     try {
       update = JSON.parse(raw);
     } catch {
+      console.warn('Failed to parse incoming message', mailboxId, raw);
       return;
     }
-    if (!isServerUpdate(update)) return;
-    let updates: Update[];
-
+    if (!isServerUpdate(update)) {
+      console.warn('Received invalid update', mailboxId, update);
+      return;
+    }
     dispatch({ type: 'update', payload: update });
     onUpdateReceived(update);
   };
@@ -173,9 +205,8 @@ export const useConnectionEffect = (mailboxId: string) => {
           return;
         case 'ERROR':
           if (update.body.code === 'NOT_FOUND') {
-            alert(
-              'Cannot find the requested updates. This may be because the client has been offline for a long time or the server has restarted. Please refresh the page.',
-            );
+            dispatch({ type: 'resetChatState', payload: {} });
+            return;
           }
           dispatch({
             type: 'connectionError',
@@ -212,11 +243,35 @@ export const useConnectionEffect = (mailboxId: string) => {
       ).then((connectionResult) => {
         if (connectionResult == null) return;
         if (connectionResult === NETWORK_ERROR) {
-          alert('Failed to establish connection due to a network error. Please try again later.');
+          alert(
+            intl.formatMessage({
+              defaultMessage:
+                'Failed to establish connection due to a network error. Please try again later.',
+            }),
+          );
           return;
         } else if (connectionResult === UNAUTHENTICATED) {
+          if (userId != null) {
+            alert(
+              intl.formatMessage({
+                defaultMessage:
+                  'The session is invalid. Please log out and log in again or try another browser.',
+              }),
+            );
+          } else {
+            alert(
+              intl.formatMessage({
+                defaultMessage: 'You are not authenticated. Please log in to access this resource.',
+              }),
+            );
+          }
+          return;
+        } else if (connectionResult === UNEXPECTED) {
           alert(
-            'The session is invalid. Please clear your cache or try a different browser. This is unexpected behavior; please report this issue.',
+            intl.formatMessage({
+              defaultMessage:
+                'An unexpected error occurred while establishing the connection. Please try again later.',
+            }),
           );
           return;
         }
@@ -232,7 +287,7 @@ export const useConnectionEffect = (mailboxId: string) => {
       if (currentConnection == null) {
         performConnect();
       }
-    });
+    }, 0);
     return () => {
       window.clearTimeout(handle);
       unsub();

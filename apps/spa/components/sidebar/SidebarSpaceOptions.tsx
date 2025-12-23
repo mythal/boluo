@@ -1,5 +1,5 @@
 import type { Space } from '@boluo/api';
-import { Shuffle } from '@boluo/icons';
+import Shuffle from '@boluo/icons/Shuffle';
 import { useAtom } from 'jotai';
 import { type FC } from 'react';
 import { sidebarContentStateAtom } from '../../state/ui.atoms';

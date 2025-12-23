@@ -1,4 +1,4 @@
-import { SplitHorizontal } from '@boluo/icons';
+import SplitHorizontal from '@boluo/icons/SplitHorizontal';
 import {
   type FC,
   type MouseEvent,

@@ -1,4 +1,4 @@
-import { Archive } from '@boluo/icons';
+import Archive from '@boluo/icons/Archive';
 import { useAtom } from 'jotai';
 import { type FC } from 'react';
 import { FormattedMessage } from 'react-intl';

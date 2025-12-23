@@ -1,8 +1,9 @@
-import type { Close } from '@boluo/icons';
 import React from 'react';
 
+type IconComponent = React.ComponentType<React.SVGProps<SVGSVGElement>>;
+
 interface Props {
-  icon: typeof Close;
+  icon: IconComponent;
   className?: string;
   noStrut?: boolean;
   label?: string | undefined;

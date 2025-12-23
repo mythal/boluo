@@ -1,6 +1,8 @@
 import { type SpaceMemberWithUser } from '@boluo/api';
 import { useQueryCurrentUser } from '@boluo/hooks/useQueryCurrentUser';
-import { Globe, Key, MoonStar } from '@boluo/icons';
+import Globe from '@boluo/icons/Globe';
+import Key from '@boluo/icons/Key';
+import MoonStar from '@boluo/icons/MoonStar';
 import { type FC, type ReactNode, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Badge } from '@boluo/ui/Badge';

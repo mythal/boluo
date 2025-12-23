@@ -1,4 +1,5 @@
-import { Dice, FlexibleStar } from '@boluo/icons';
+import Dice from '@boluo/icons/Dice';
+import FlexibleStar from '@boluo/icons/FlexibleStar';
 import { type FC, type ReactNode } from 'react';
 import { type IntlShape, useIntl } from 'react-intl';
 import {

@@ -1,5 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
-import { ExternalLink, Scaling, X } from '@boluo/icons';
+import ExternalLink from '@boluo/icons/ExternalLink';
+import Scaling from '@boluo/icons/Scaling';
+import X from '@boluo/icons/X';
 import { Button } from '@boluo/ui/Button';
 import Icon from '@boluo/ui/Icon';
 import clsx from 'clsx';

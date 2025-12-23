@@ -1,6 +1,6 @@
 import clsx from 'clsx';
 import Icon from '../Icon';
-import { FileDown } from '@boluo/icons';
+import FileDown from '@boluo/icons/FileDown';
 import { FormattedMessage } from 'react-intl';
 
 interface Props {

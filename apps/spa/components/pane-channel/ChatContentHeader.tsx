@@ -7,7 +7,7 @@ import { ButtonInline } from '@boluo/ui/ButtonInline';
 import { Delay } from '@boluo/ui/Delay';
 import { FallbackIcon } from '@boluo/ui/FallbackIcon';
 import Icon from '@boluo/ui/Icon';
-import { FilterX } from '@boluo/icons';
+import FilterX from '@boluo/icons/FilterX';
 import { useClearFilter } from '../../hooks/useClearFilter';
 import { ChatContentHeaderOmega } from './ChatContentHeaderOmega';
 

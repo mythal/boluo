@@ -8,6 +8,9 @@ import { type ChannelPane } from '../state/view.types';
 const SEND_STATUS_INTERVAL = 2000;
 
 function sendStatus(connection: WebSocket, status: StatusKind, focus: string[]) {
+  if (connection.readyState !== WebSocket.OPEN) {
+    return;
+  }
   connection.send(
     JSON.stringify({
       type: 'STATUS',

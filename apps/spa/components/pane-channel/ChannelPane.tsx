@@ -1,5 +1,6 @@
 import clsx from 'clsx';
-import { Lock, LockedHash } from '@boluo/icons';
+import Lock from '@boluo/icons/Lock';
+import LockedHash from '@boluo/icons/LockedHash';
 import { useAtom } from 'jotai';
 import { memo, type ReactNode, useMemo, type FC } from 'react';
 import { FormattedMessage } from 'react-intl';

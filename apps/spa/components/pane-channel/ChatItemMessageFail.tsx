@@ -2,7 +2,7 @@ import { type ReactNode, type FC } from 'react';
 import { type FailTo } from '../../state/channel.types';
 import { Delay } from '@boluo/ui/Delay';
 import { FallbackIcon } from '@boluo/ui/FallbackIcon';
-import { TriangleAlert } from '@boluo/icons';
+import TriangleAlert from '@boluo/icons/TriangleAlert';
 import { FormattedMessage, useIntl } from 'react-intl';
 
 export const ChatItemMessageFail: FC<{ failTo: FailTo; retry?: () => void }> = ({

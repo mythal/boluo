@@ -8,7 +8,15 @@ use uuid::Uuid;
 
 use crate::session::Session;
 
-const TOKEN_VALIDITY: Duration = Duration::from_secs(10);
+const TOKEN_VALIDITY: Duration = Duration::from_secs(60);
+
+#[derive(Debug, Clone, Copy, thiserror::Error)]
+pub enum SessionError {
+    #[error("Token is invalid")]
+    Invalid,
+    #[error("Token has expired")]
+    Expired,
+}
 
 struct TokenInfo {
     session: Option<Session>,
@@ -65,9 +73,17 @@ impl TokenStore {
         Self { tokens }
     }
 
-    pub fn get_session(&self, token: Uuid) -> Option<Session> {
+    pub fn get_session(&self, token: Uuid) -> Result<Session, SessionError> {
         let token_store = self.tokens.pin();
-        token_store.get(&token).and_then(|token| token.session())
+        if let Some(token) = token_store.get(&token) {
+            if let Some(session) = token.session() {
+                Ok(session)
+            } else {
+                Err(SessionError::Expired)
+            }
+        } else {
+            Err(SessionError::Invalid)
+        }
     }
 
     pub fn create_token(&self, session: Option<Session>) -> Uuid {

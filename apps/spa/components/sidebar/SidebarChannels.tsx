@@ -1,4 +1,5 @@
-import { Archive, ArrowDownWideShort } from '@boluo/icons';
+import Archive from '@boluo/icons/Archive';
+import ArrowDownWideShort from '@boluo/icons/ArrowDownWideShort';
 import { useAtomValue } from 'jotai';
 import type { FC } from 'react';
 import React, { Suspense, useMemo, useState } from 'react';

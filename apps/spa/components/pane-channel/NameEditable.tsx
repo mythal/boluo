@@ -1,5 +1,6 @@
 import clsx from 'clsx';
-import { ChevronDown, TriangleAlert } from '@boluo/icons';
+import ChevronDown from '@boluo/icons/ChevronDown';
+import TriangleAlert from '@boluo/icons/TriangleAlert';
 import { useEffect, useMemo, type FC, type ReactNode } from 'react';
 import { FormattedMessage } from 'react-intl';
 import {

@@ -1,4 +1,4 @@
-import { Unplug } from '@boluo/icons';
+import Unplug from '@boluo/icons/Unplug';
 import Icon from './Icon';
 import { type FC } from 'react';
 import { FormattedMessage } from 'react-intl';

@@ -1,4 +1,4 @@
-import { Settings } from '@boluo/icons';
+import Settings from '@boluo/icons/Settings';
 import { type FC, type MouseEventHandler, useCallback, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { PaneHeaderButton } from '@boluo/ui/PaneHeaderButton';

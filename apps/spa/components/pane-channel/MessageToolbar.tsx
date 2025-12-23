@@ -11,15 +11,13 @@ import React, {
 } from 'react';
 import { type Message } from '@boluo/api';
 import { type ReactNode } from 'react';
-import {
-  Archive,
-  ClipboardCopy,
-  Edit,
-  EllipsisVertical,
-  Trash,
-  TriangleAlert,
-  X,
-} from '@boluo/icons';
+import Archive from '@boluo/icons/Archive';
+import ClipboardCopy from '@boluo/icons/ClipboardCopy';
+import Edit from '@boluo/icons/Edit';
+import EllipsisVertical from '@boluo/icons/EllipsisVertical';
+import Trash from '@boluo/icons/Trash';
+import TriangleAlert from '@boluo/icons/TriangleAlert';
+import X from '@boluo/icons/X';
 import { SomethingWentWrong } from '@boluo/ui/SomethingWentWrong';
 import { useMember } from '../../hooks/useMember';
 import { Delay } from '@boluo/ui/Delay';

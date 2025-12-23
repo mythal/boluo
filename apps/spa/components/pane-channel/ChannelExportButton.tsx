@@ -1,4 +1,4 @@
-import { ScrollText } from '@boluo/icons';
+import ScrollText from '@boluo/icons/ScrollText';
 import { type FC, type MouseEventHandler, useCallback, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { PaneHeaderButton } from '@boluo/ui/PaneHeaderButton';

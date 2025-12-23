@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { FailedBanner } from '@boluo/ui/chat/FailedBanner';
-import { AlertTriangle, XCircle } from '@boluo/icons';
+import AlertTriangle from '@boluo/icons/AlertTriangle';
+import XCircle from '@boluo/icons/XCircle';
 
 const meta: Meta<typeof FailedBanner> = {
   title: 'Feedback/FailedBanner',

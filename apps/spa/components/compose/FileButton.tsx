@@ -1,4 +1,5 @@
-import { Trash, Upload } from '@boluo/icons';
+import Trash from '@boluo/icons/Trash';
+import Upload from '@boluo/icons/Upload';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { type FC, useRef } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';

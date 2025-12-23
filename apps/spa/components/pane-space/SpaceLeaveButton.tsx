@@ -8,7 +8,8 @@ import {
 } from '@floating-ui/react';
 import { type ApiError, type Space, type SpaceMemberWithUser } from '@boluo/api';
 import { post } from '@boluo/api-browser';
-import { UserPlus, UserX } from '@boluo/icons';
+import UserPlus from '@boluo/icons/UserPlus';
+import UserX from '@boluo/icons/UserX';
 import { type FC, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
 import useSWRMutation from 'swr/mutation';

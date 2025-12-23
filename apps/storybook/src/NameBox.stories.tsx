@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { NameBox } from '@boluo/ui/chat/NameBox';
-import { Gamemaster, ChevronDown } from '@boluo/icons';
+import Gamemaster from '@boluo/icons/Gamemaster';
+import ChevronDown from '@boluo/icons/ChevronDown';
 import Icon from '@boluo/ui/Icon';
 
 const meta: Meta<typeof NameBox> = {

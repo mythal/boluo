@@ -1,6 +1,6 @@
 import { type ChannelMember } from '@boluo/api';
 import clsx from 'clsx';
-import { Edit } from '@boluo/icons';
+import Edit from '@boluo/icons/Edit';
 import { type FC } from 'react';
 import { FormattedMessage } from 'react-intl';
 import Icon from '@boluo/ui/Icon';

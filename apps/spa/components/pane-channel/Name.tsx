@@ -1,4 +1,5 @@
-import { Gamemaster, TriangleAlert } from '@boluo/icons';
+import Gamemaster from '@boluo/icons/Gamemaster';
+import TriangleAlert from '@boluo/icons/TriangleAlert';
 import { useMemo, useState, type FC } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { NameBox } from '@boluo/ui/chat/NameBox';

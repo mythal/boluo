@@ -1,4 +1,4 @@
-import { LogIn } from '@boluo/icons';
+import LogIn from '@boluo/icons/LogIn';
 import { type FC, type MouseEventHandler, useCallback } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { usePaneClose } from '../hooks/usePaneClose';

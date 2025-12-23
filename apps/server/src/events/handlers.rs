@@ -24,7 +24,6 @@ use thiserror::Error;
 use tokio_stream::StreamExt as _;
 use tokio_tungstenite::WebSocketStream;
 use tokio_tungstenite::tungstenite::{self, Utf8Bytes};
-use tracing::instrument;
 use uuid::Uuid;
 
 type Sender = SplitSink<WebSocketStream<TokioIo<Upgraded>>, tungstenite::Message>;
@@ -70,8 +69,6 @@ enum PushUpdatesError {
 }
 
 // Allow the needless return for keep some visual hints
-#[allow(clippy::needless_return)]
-#[instrument(skip(outgoing))]
 async fn push_updates(
     mailbox: Uuid,
     outgoing: &mut Sender,
@@ -104,7 +101,7 @@ async fn push_updates(
                 "boluo_server_events_push_updates_requested_updates_are_too_early_duration_ms"
             )
             .record(elapsed as f64);
-            tracing::info!(
+            tracing::warn!(
                 mailbox_id = %mailbox,
                 after,
                 seq,
@@ -513,18 +510,8 @@ pub async fn token(req: Request<impl Body>) -> Result<Token, AppError> {
             }
         }
         (None, Some(user_id)) => {
-            use hyper::header::{AUTHORIZATION, COOKIE, ORIGIN, REFERER};
+            use hyper::header::{AUTHORIZATION, COOKIE};
 
-            let origin = req
-                .headers()
-                .get(ORIGIN)
-                .and_then(|v| v.to_str().ok())
-                .unwrap_or("");
-            let referer = req
-                .headers()
-                .get(REFERER)
-                .and_then(|v| v.to_str().ok())
-                .unwrap_or("");
             let authorization = req
                 .headers()
                 .get(AUTHORIZATION)
@@ -535,19 +522,11 @@ pub async fn token(req: Request<impl Body>) -> Result<Token, AppError> {
                 .get(COOKIE)
                 .and_then(|v| v.to_str().ok())
                 .unwrap_or("");
-            let user_agent = req
-                .headers()
-                .get(hyper::header::USER_AGENT)
-                .and_then(|v| v.to_str().ok())
-                .unwrap_or("");
             tracing::warn!(
                 user_id = %user_id,
                 space_id = ?space_id,
-                origin,
-                referer,
                 authorization,
                 cookie,
-                user_agent,
                 "No session found for the user, but 'user_id' is provided"
             );
             Err(AppError::Unauthenticated(AuthenticateFail::NoSessionFound))

@@ -110,12 +110,25 @@ async fn handler(
     ctx: &context::AppContext,
     req: Request<Incoming>,
 ) -> Result<hyper::Response<Full<hyper::body::Bytes>>, hyper::Error> {
+    use hyper::header;
     use tracing::Instrument as _;
 
     let method = req.method().clone();
     let uri = req.uri().clone();
     let path = uri.path();
     let query = uri.query().unwrap_or("");
+
+    let origin = req
+        .headers()
+        .get(header::ORIGIN)
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("");
+
+    let user_agent = req
+        .headers()
+        .get(header::USER_AGENT)
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("unknown");
 
     let client_version = req
         .headers()
@@ -135,6 +148,8 @@ async fn handler(
         error = tracing::field::Empty,
         auth_method = tracing::field::Empty,
         client = %client_version,
+        origin = %origin,
+        user_agent = %user_agent,
     );
 
     let start = std::time::Instant::now();

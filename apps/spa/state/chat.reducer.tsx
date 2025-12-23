@@ -108,14 +108,15 @@ const handleUpdate = (
   { payload: update }: ChatAction<'update'>,
 ): ChatSpaceState => {
   const compareToLast = eventIdCompare(update.id, state.lastEventId);
-  if (!update.transient && compareToLast <= 0) {
+  const isTransient = update.live === 'T';
+  if (!isTransient && compareToLast <= 0) {
     return state;
   }
 
-  const lastEventId = !update.transient && compareToLast > 0 ? update.id : state.lastEventId;
+  const lastEventId = !isTransient && compareToLast > 0 ? update.id : state.lastEventId;
   const chatAction = updateToChatAction(update);
   if (chatAction == null) {
-    if (update.transient) return state;
+    if (isTransient) return state;
     return { ...state, lastEventId };
   }
   return { ...chatReducer(state, chatAction), lastEventId };

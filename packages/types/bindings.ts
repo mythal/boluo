@@ -776,7 +776,7 @@ export type Update = {
    * `true` means it's broadcast-only (transient), and clients should not advance
    * their resume cursor based on this update.
    */
-  transient?: boolean;
+  live?: UpdateLifetime;
 };
 
 export type UpdateBody =
@@ -794,6 +794,16 @@ export type UpdateBody =
   | { type: 'ERROR'; code: ConnectionError; reason: string }
   | { type: 'APP_UPDATED'; version: string }
   | { type: 'APP_INFO'; info: BasicInfo };
+
+export type UpdateLifetime =
+  /**
+   * Transient updates are not stored in mailbox state and cannot be resumed.
+   */
+  | 'T'
+  /**
+   * Persistent updates are stored in mailbox state and can be resumed.
+   */
+  | 'P';
 
 export type UpdateQuery = {
   mailbox: string;

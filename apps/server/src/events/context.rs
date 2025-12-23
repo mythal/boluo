@@ -314,6 +314,7 @@ fn on_update(
         }
         | MessageDeleted { message_id, .. } => {
             updates.retain(|_, encoded| encoded.update.body.message_id() != Some(*message_id));
+            updates.insert(encoded_update.update.id, encoded_update);
         }
         | MessageEdited {
             channel_id,

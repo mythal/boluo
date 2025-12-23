@@ -8,7 +8,6 @@ use crate::events::preview::{Preview, PreviewDiff, PreviewDiffPost, PreviewPost}
 use crate::info::BasicInfo;
 use crate::messages::Message;
 use crate::spaces::api::SpaceWithRelated;
-use crate::utils::is_false;
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use std::sync::OnceLock;
@@ -188,6 +187,25 @@ impl UpdateBody {
     }
 }
 
+#[derive(Serialize, Debug, Clone, Copy, specta::Type)]
+pub enum UpdateLifetime {
+    /// Transient updates are not stored in mailbox state and cannot be resumed.
+    #[serde(rename = "T")]
+    Transient,
+    /// Persistent updates are stored in mailbox state and can be resumed.
+    #[serde(rename = "P")]
+    Persistent,
+}
+
+impl UpdateLifetime {
+    pub fn is_persistent(&self) -> bool {
+        matches!(self, UpdateLifetime::Persistent)
+    }
+    pub fn is_transient(&self) -> bool {
+        matches!(self, UpdateLifetime::Transient)
+    }
+}
+
 #[derive(Serialize, Clone, Debug, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct Update {
@@ -201,8 +219,8 @@ pub struct Update {
     ///
     /// `true` means it's broadcast-only (transient), and clients should not advance
     /// their resume cursor based on this update.
-    #[serde(default, skip_serializing_if = "is_false")]
-    pub transient: bool,
+    #[serde(default, skip_serializing_if = "UpdateLifetime::is_persistent")]
+    pub live: UpdateLifetime,
 }
 
 impl Update {
@@ -211,7 +229,7 @@ impl Update {
             mailbox,
             id: EventId::new(),
             body: UpdateBody::Initialized,
-            transient: true,
+            live: UpdateLifetime::Transient,
         }
     }
 
@@ -235,14 +253,14 @@ impl Update {
                 code,
                 reason: error.to_string(),
             },
-            transient: true,
+            live: UpdateLifetime::Transient,
         }
     }
 
     pub fn new_message(mailbox: Uuid, message: Message, preview_id: Option<Uuid>) {
         let channel_id = message.channel_id;
         let message = Box::new(message);
-        Update::fire(
+        Update::persistent(
             UpdateBody::NewMessage {
                 message,
                 channel_id,
@@ -253,7 +271,7 @@ impl Update {
     }
 
     pub fn message_deleted(mailbox: Uuid, channel_id: Uuid, message_id: Uuid, pos: f64) {
-        Update::fire(
+        Update::persistent(
             UpdateBody::MessageDeleted {
                 message_id,
                 channel_id,
@@ -266,7 +284,7 @@ impl Update {
     pub fn message_edited(mailbox: Uuid, message: Message, old_pos: f64) {
         let channel_id = message.channel_id;
         let message = Box::new(message);
-        Update::fire(
+        Update::persistent(
             UpdateBody::MessageEdited {
                 message,
                 channel_id,
@@ -282,7 +300,7 @@ impl Update {
 
     pub fn message_preview(mailbox: Uuid, preview: Box<Preview>) {
         let channel_id = preview.channel_id;
-        Update::fire(
+        Update::persistent(
             UpdateBody::MessagePreview {
                 preview,
                 channel_id,
@@ -292,7 +310,7 @@ impl Update {
     }
 
     pub fn preview_diff(mailbox: Uuid, diff: PreviewDiff) {
-        Update::fire(
+        Update::persistent(
             UpdateBody::Diff {
                 channel_id: diff.payload.channel_id,
                 diff: Box::new(diff),
@@ -450,7 +468,7 @@ impl Update {
             mailbox,
             id: EventId::zero(),
             body,
-            transient: true,
+            live: UpdateLifetime::Transient,
         }
     }
 
@@ -474,7 +492,7 @@ impl Update {
                     channel_id,
                 },
                 id: EventId::new(),
-                transient: true,
+                live: UpdateLifetime::Transient,
             });
             encoded_update.encoded.clone()
         })
@@ -486,39 +504,26 @@ impl Update {
         Ok(())
     }
 
-    fn build(body: UpdateBody, mailbox: Uuid, transient: bool) -> Box<EncodedUpdate> {
+    fn build(body: UpdateBody, mailbox: Uuid, live: UpdateLifetime) -> Box<EncodedUpdate> {
         Box::new(EncodedUpdate::new(Update {
             mailbox,
             body,
             id: EventId::new(),
-            transient,
+            live,
         }))
-    }
-
-    async fn async_fire(body: UpdateBody, mailbox_id: Uuid) {
-        let Ok(encoded_update) =
-            tokio::task::spawn_blocking(move || Update::build(body, mailbox_id, false)).await
-        else {
-            tracing::error!("Failed to build update");
-            return;
-        };
-        let mailbox_manager = super::context::store().get_or_create_manager(mailbox_id);
-        if let Err(e) = mailbox_manager.fire_update(encoded_update.clone()).await {
-            tracing::error!("Failed to send update to mailbox {}: {}", mailbox_id, e);
-            return;
-        }
-        Update::send(mailbox_id, encoded_update.encoded.clone()).await;
     }
 
     /// Directly send the update to the mailbox.
     ///
     /// This is used for transient updates that are not required to be persisted.
     pub fn transient(mailbox: Uuid, body: UpdateBody) {
-        let span = tracing::info_span!("transient", mailbox = %mailbox);
+        let span = tracing::info_span!("Fire Transient Update", mailbox = %mailbox);
         spawn(
             async move {
-                let Ok(update) =
-                    tokio::task::spawn_blocking(move || Update::build(body, mailbox, true)).await
+                let Ok(update) = tokio::task::spawn_blocking(move || {
+                    Update::build(body, mailbox, UpdateLifetime::Transient)
+                })
+                .await
                 else {
                     tracing::error!("Failed to build update");
                     return;
@@ -529,9 +534,27 @@ impl Update {
         );
     }
 
-    pub fn fire(body: UpdateBody, mailbox: Uuid) {
-        let span = tracing::info_span!("fire", mailbox = %mailbox);
-        spawn(Update::async_fire(body, mailbox).instrument(span));
+    pub fn persistent(body: UpdateBody, mailbox: Uuid) {
+        let span = tracing::info_span!("Fire Persistent Update", mailbox = %mailbox);
+        spawn(
+            async move {
+                let Ok(encoded_update) = tokio::task::spawn_blocking(move || {
+                    Update::build(body, mailbox, UpdateLifetime::Persistent)
+                })
+                .await
+                else {
+                    tracing::error!("Failed to build update");
+                    return;
+                };
+                let mailbox_manager = super::context::store().get_or_create_manager(mailbox);
+                if let Err(e) = mailbox_manager.fire_update(encoded_update.clone()).await {
+                    tracing::error!("Failed to send update to mailbox {}: {}", mailbox, e);
+                    return;
+                }
+                Update::send(mailbox, encoded_update.encoded.clone()).await;
+            }
+            .instrument(span),
+        );
     }
 
     pub fn name(&self) -> &'static str {

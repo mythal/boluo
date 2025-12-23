@@ -22,7 +22,7 @@ The backend is written in Rust using **hyper** and **tokio**. PostgreSQL is acce
 - Database-related tests:
   - Use `sqlx::test`
   - Test function names must start with `db_test_`
-- When using Cargo commands that don’t require network requests, prefer: `cargo --offline <command>` to avoid triggering sandbox network restrictions.
+- When using Cargo commands that don’t require network requests, prefer: `SQLX_OFFLINE=true cargo --offline <command>` to avoid triggering sandbox restrictions. otherwise, you should request the user for permission for network access.
 
 ---
 

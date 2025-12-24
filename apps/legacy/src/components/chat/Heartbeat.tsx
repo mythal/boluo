@@ -7,20 +7,33 @@ import { useSelector } from '../../store';
 export function useHeartbeat() {
   const send = useSend();
   const focus = useSelector((state) => state.ui.focusChannelList);
-  const onlineStatus = useRef<SendStatus>({ type: 'STATUS', kind: 'ONLINE', focus });
-  const leaveStates = useRef<SendStatus>({ type: 'STATUS', kind: 'AWAY', focus });
+  const focusRef = useRef(focus);
+  useEffect(() => {
+    focusRef.current = focus;
+  }, [focus]);
   useEffect(() => {
     const pulse = window.setInterval(() => {
       if (document.visibilityState === 'visible') {
-        send(onlineStatus.current);
+        const onlineStatus: SendStatus = {
+          type: 'STATUS',
+          kind: 'ONLINE',
+          focus: focusRef.current,
+        };
+        send(onlineStatus);
       }
     }, HEARTBEAT_INTERVAL);
     const visibilityListener = () => {
       const state = document.visibilityState;
       if (state === 'visible') {
-        send(onlineStatus.current);
+        const onlineStatus: SendStatus = {
+          type: 'STATUS',
+          kind: 'ONLINE',
+          focus: focusRef.current,
+        };
+        send(onlineStatus);
       } else if (state === 'hidden') {
-        send(leaveStates.current);
+        const awayStatus: SendStatus = { type: 'STATUS', kind: 'AWAY', focus: focusRef.current };
+        send(awayStatus);
       }
     };
     document.addEventListener('visibilitychange', visibilityListener);
@@ -28,6 +41,6 @@ export function useHeartbeat() {
       window.clearInterval(pulse);
       document.removeEventListener('visibilitychange', visibilityListener);
     };
-  }, [send, focus]);
+  }, [send]);
   return null;
 }

@@ -34,11 +34,12 @@ async function getConnectionToken(
   spaceId: Id,
   userId: Id | undefined,
   retryCount: number = 0,
-  // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
-): Promise<string | 'NETWORK_ERROR' | 'UNAUTHENTICATED'> {
+): Promise<
+  { token: string; timestamp: number } | 'NETWORK_ERROR' | 'UNAUTHENTICATED' | 'UNEXPECTED'
+> {
   const tokenResult = await get('/events/token', { spaceId, userId });
   if (tokenResult.isOk) {
-    return tokenResult.value.token;
+    return { token: tokenResult.value.token, timestamp: Date.now() };
   }
   const err = tokenResult.value;
   if (err.code === 'FETCH_FAIL') {
@@ -50,7 +51,8 @@ async function getConnectionToken(
   } else if (err.code === 'UNAUTHENTICATED') {
     return 'UNAUTHENTICATED';
   } else {
-    throw new Error(err.message);
+    console.warn('Unexpected error when getting event token', err);
+    return 'UNEXPECTED';
   }
 }
 
@@ -111,6 +113,7 @@ export const Connector = ({ spaceId, myId }: Props) => {
   const [retrySec, setRetrySec] = useState<number>(0);
   const connectionRef = useRef<WebSocket | null>(null);
   const baseUrlRef = useRef<string>(baseUrl);
+  const mountedRef = useRef(false);
 
   const retryCount = useRef(0);
   const after = useRef<EventId>({ timestamp: 0, node: 0, seq: 0 });
@@ -120,16 +123,37 @@ export const Connector = ({ spaceId, myId }: Props) => {
   }, [state]);
 
   useEffect(() => {
-    baseUrlRef.current = baseUrl;
-    if (stateRef.current === 'OPEN') {
-      if (connectionRef.current) {
-        connectionRef.current.close();
-      }
+    if (!mountedRef.current) {
+      mountedRef.current = true;
+      baseUrlRef.current = baseUrl;
+      return;
     }
-    return () => {
-      setState('CLOSED');
-    };
+    baseUrlRef.current = baseUrl;
+    if (connectionRef.current) {
+      connectionRef.current.onclose = null;
+      connectionRef.current.onerror = null;
+      connectionRef.current.onmessage = null;
+      connectionRef.current.close();
+      connectionRef.current = null;
+    }
+    retryCount.current = 0;
+    setRetrySec(0);
+    setState('CLOSED');
   }, [baseUrl, setState]);
+
+  useEffect(() => {
+    return () => {
+      mountedRef.current = false;
+      const connection = connectionRef.current;
+      if (connection) {
+        connection.onclose = null;
+        connection.onerror = null;
+        connection.onmessage = null;
+        connection.close();
+        connectionRef.current = null;
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const makeConnection = async () => {
@@ -162,11 +186,19 @@ export const Connector = ({ spaceId, myId }: Props) => {
         retry();
         return;
       }
+      if (tokenResult === 'UNEXPECTED') {
+        retry();
+        return;
+      }
+      if (tokenResult.timestamp - Date.now() > 1000 * 10) {
+        retry();
+        return;
+      }
       const connection = connect(
         baseUrlRef.current,
         spaceId,
         myId,
-        tokenResult,
+        tokenResult.token,
         after.current.timestamp,
         after.current.node,
         after.current.seq,
@@ -174,11 +206,7 @@ export const Connector = ({ spaceId, myId }: Props) => {
       connectionRef.current = connection;
       connection.onclose = (event) => {
         console.log('Websocket connection closed', event);
-        if (event.code !== 1000) {
-          retry();
-          return;
-        }
-        connectionRef.current = null;
+        retry();
       };
       connection.onerror = (event) => {
         console.warn('WebSocket error ', event);
@@ -193,7 +221,13 @@ export const Connector = ({ spaceId, myId }: Props) => {
           connection.send(PONG);
           return;
         }
-        const event: Events = JSON.parse(received) as Events;
+        let event: Events;
+        try {
+          event = JSON.parse(received) as Events;
+        } catch (e) {
+          console.warn('Failed to parse websocket message', received, e);
+          return;
+        }
         if (compareEvents(after.current, event.id) > 0) return;
         after.current = event.id;
         handleEvent(dispatch, setState, event);

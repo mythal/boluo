@@ -238,7 +238,7 @@ pub async fn login<B: Body>(
     CACHE.GetMe.insert(user_id, me.clone().into());
     let mut response = ok_response(LoginReturn { me, token });
     let headers = response.headers_mut();
-    add_settings_cookie(&settings, headers);
+    add_settings_cookie(origin.as_deref(), &settings, headers);
     if !form.with_token {
         add_session_cookie(origin.as_deref(), &session.id, is_debug, headers);
     }

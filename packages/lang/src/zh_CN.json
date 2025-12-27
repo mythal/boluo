@@ -320,6 +320,9 @@
   "EWw/tK": {
     "message": "应用"
   },
+  "Eborcf": {
+    "message": "The session is invalid. Re-login may help to resolve this issue. Do you want to log out now?"
+  },
   "EcW+hX": {
     "message": "仅选中的人可见。"
   },
@@ -848,6 +851,9 @@
   "ceSWhW": {
     "message": "显示已存档的消息"
   },
+  "ciPqqe": {
+    "message": "An unexpected error occurred while establishing the connection. Please try again later."
+  },
   "clpFBW": {
     "message": "位面公开性"
   },
@@ -994,6 +1000,9 @@
   },
   "iySl5e": {
     "message": "你已经加入了该频道。"
+  },
+  "j8d+YP": {
+    "message": "Score: {score}"
   },
   "jRANBd": {
     "message": "编辑消息"
@@ -1291,9 +1300,6 @@
   },
   "z9LRLa": {
     "message": "修改于"
-  },
-  "zEwcTp": {
-    "message": "The session is invalid. Please log out and log in again or try another browser."
   },
   "zINlao": {
     "message": "所有者"

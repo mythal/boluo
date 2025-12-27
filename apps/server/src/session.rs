@@ -131,6 +131,8 @@ pub fn add_session_cookie(
     if let Some(origin) = origin {
         if origin.ends_with("boluochat.com") {
             builder = builder.domain(".boluochat.com");
+        } else if origin.ends_with("boluo.chat") {
+            builder = builder.domain(".boluo.chat");
         } else if origin.ends_with("boluo-staging.mythal.net") {
             builder = builder.domain(".boluo-staging.mythal.net");
         }
@@ -140,12 +142,24 @@ pub fn add_session_cookie(
 }
 
 pub fn add_settings_cookie(
+    origin: Option<&str>,
     settings: &serde_json::Value,
     response_header: &mut HeaderMap<HeaderValue>,
 ) {
     use cookie::CookieBuilder;
     use cookie::time::Duration;
     use hyper::header::SET_COOKIE;
+
+    let mut domain: Option<&str> = None;
+    if let Some(origin) = origin {
+        if origin.ends_with("boluochat.com") {
+            domain = Some(".boluochat.com");
+        } else if origin.ends_with("boluo.chat") {
+            domain = Some(".boluo.chat");
+        } else if origin.ends_with("boluo-staging.mythal.net") {
+            domain = Some(".boluo-staging.mythal.net");
+        }
+    }
 
     if settings.is_null() || !settings.is_object() {
         return;
@@ -154,11 +168,13 @@ pub fn add_settings_cookie(
     if let Some(locale) = settings.get("locale") {
         if locale.is_string() {
             let locale = locale.as_str().expect("Failed to get locale string.");
-            let cookie = CookieBuilder::new("boluo-locale", locale)
+            let mut builder = CookieBuilder::new("boluo-locale", locale)
                 .path("/")
-                .max_age(max_age)
-                .build()
-                .to_string();
+                .max_age(max_age);
+            if let Some(domain) = domain {
+                builder = builder.domain(domain);
+            }
+            let cookie = builder.build().to_string();
             response_header.append(
                 SET_COOKIE,
                 HeaderValue::from_str(&cookie).expect("Failed to convert cookie to header value."),
@@ -168,11 +184,13 @@ pub fn add_settings_cookie(
     if let Some(theme) = settings.get("theme") {
         if theme.is_string() {
             let theme = theme.as_str().expect("Failed to get theme string.");
-            let cookie = CookieBuilder::new("boluo-theme", theme)
+            let mut builder = CookieBuilder::new("boluo-theme", theme)
                 .path("/")
-                .max_age(max_age)
-                .build()
-                .to_string();
+                .max_age(max_age);
+            if let Some(domain) = domain {
+                builder = builder.domain(domain);
+            }
+            let cookie = builder.build().to_string();
             response_header.append(
                 SET_COOKIE,
                 HeaderValue::from_str(&cookie).expect("Failed to convert cookie to header value."),

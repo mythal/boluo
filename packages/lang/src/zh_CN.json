@@ -33,7 +33,7 @@
     "message": "试图放置消息的位置发生了变化。"
   },
   "/sLMk2": {
-    "message": "You are not authenticated. Please log in to access this resource."
+    "message": "请登录以访问此资源。"
   },
   "0Azlrb": {
     "message": "管理"
@@ -54,7 +54,7 @@
     "message": "位面"
   },
   "0cmG3L": {
-    "message": "Failed to establish connection due to a network error. Please try again later."
+    "message": "因网络错误无法建立连接。请稍后再试。"
   },
   "0eanrB": {
     "message": "包括已存档的消息"
@@ -321,7 +321,7 @@
     "message": "应用"
   },
   "Eborcf": {
-    "message": "The session is invalid. Re-login may help to resolve this issue. Do you want to log out now?"
+    "message": "会话无效。重新登录可能有助于解决这个问题。现在注销吗？"
   },
   "EcW+hX": {
     "message": "仅选中的人可见。"
@@ -852,7 +852,7 @@
     "message": "显示已存档的消息"
   },
   "ciPqqe": {
-    "message": "An unexpected error occurred while establishing the connection. Please try again later."
+    "message": "建立连接时发生意外错误。请稍后再试。"
   },
   "clpFBW": {
     "message": "位面公开性"
@@ -1002,7 +1002,7 @@
     "message": "你已经加入了该频道。"
   },
   "j8d+YP": {
-    "message": "Score: {score}"
+    "message": "分数：{score}"
   },
   "jRANBd": {
     "message": "编辑消息"

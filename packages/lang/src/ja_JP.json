@@ -320,6 +320,9 @@
   "EWw/tK": {
     "message": "適用"
   },
+  "Eborcf": {
+    "message": "The session is invalid. Re-login may help to resolve this issue. Do you want to log out now?"
+  },
   "EcW+hX": {
     "message": "選ばれた人だけに見えます。"
   },
@@ -848,6 +851,9 @@
   "ceSWhW": {
     "message": "アーカイブされたメッセージを表示"
   },
+  "ciPqqe": {
+    "message": "An unexpected error occurred while establishing the connection. Please try again later."
+  },
   "clpFBW": {
     "message": "次元のパブリシティ"
   },
@@ -994,6 +1000,9 @@
   },
   "iySl5e": {
     "message": "このチャネルのメンバーは既にいます。"
+  },
+  "j8d+YP": {
+    "message": "Score: {score}"
   },
   "jRANBd": {
     "message": "メッセージを編集"
@@ -1291,9 +1300,6 @@
   },
   "z9LRLa": {
     "message": "編集日時"
-  },
-  "zEwcTp": {
-    "message": "The session is invalid. Please log out and log in again or try another browser."
   },
   "zINlao": {
     "message": "所有者"

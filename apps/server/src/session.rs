@@ -11,7 +11,7 @@ use regex::Regex;
 use thiserror::Error;
 use uuid::Uuid;
 
-pub const SESSION_COOKIE_KEY: &str = "boluo-session-v2";
+pub const SESSION_COOKIE_KEY: &str = "boluo-session-v3";
 
 #[derive(Debug, Clone, Copy)]
 pub struct Session {
@@ -366,9 +366,13 @@ mod tests {
     use super::*;
     use hyper::header::HeaderValue;
 
+    fn cookie_header(value: String) -> HeaderValue {
+        HeaderValue::from_str(&value).expect("Failed to build cookie header")
+    }
+
     #[test]
     fn test_parse_cookie_basic() {
-        let cookie_value = HeaderValue::from_static("boluo-session-v2=test-token-123");
+        let cookie_value = cookie_header(format!("{SESSION_COOKIE_KEY}=test-token-123"));
         let result = parse_cookie(&cookie_value);
         assert!(result.is_some());
         assert_eq!(result, Some("test-token-123"));
@@ -376,9 +380,9 @@ mod tests {
 
     #[test]
     fn test_parse_cookie_with_multiple_cookies() {
-        let cookie_value = HeaderValue::from_static(
-            "other=value; boluo-session-v2=test-token-456; another=value2",
-        );
+        let cookie_value = cookie_header(format!(
+            "other=value; {SESSION_COOKIE_KEY}=test-token-456; another=value2"
+        ));
         let result = parse_cookie(&cookie_value);
         assert!(result.is_some());
         assert_eq!(result, Some("test-token-456"));
@@ -386,7 +390,8 @@ mod tests {
 
     #[test]
     fn test_parse_cookie_at_beginning() {
-        let cookie_value = HeaderValue::from_static("boluo-session-v2=first-token; other=value");
+        let cookie_value =
+            cookie_header(format!("{SESSION_COOKIE_KEY}=first-token; other=value"));
         let result = parse_cookie(&cookie_value);
         assert!(result.is_some());
         assert_eq!(result, Some("first-token"));
@@ -394,7 +399,8 @@ mod tests {
 
     #[test]
     fn test_parse_cookie_at_end() {
-        let cookie_value = HeaderValue::from_static("other=value; boluo-session-v2=last-token");
+        let cookie_value =
+            cookie_header(format!("other=value; {SESSION_COOKIE_KEY}=last-token"));
         let result = parse_cookie(&cookie_value);
         assert!(result.is_some());
         assert_eq!(result, Some("last-token"));
@@ -416,8 +422,9 @@ mod tests {
 
     #[test]
     fn test_parse_cookie_similar_name() {
-        let cookie_value =
-            HeaderValue::from_static("test-boluo-session-v2=wrong; boluo-session-v2=correct");
+        let cookie_value = cookie_header(format!(
+            "test-{SESSION_COOKIE_KEY}=wrong; {SESSION_COOKIE_KEY}=correct"
+        ));
         let result = parse_cookie(&cookie_value);
         assert!(result.is_some());
         assert_eq!(result, Some("correct"));
@@ -425,8 +432,9 @@ mod tests {
 
     #[test]
     fn test_parse_cookie_with_spaces() {
-        let cookie_value =
-            HeaderValue::from_static("boluo-session-v2=token with spaces and symbols!@#");
+        let cookie_value = cookie_header(format!(
+            "{SESSION_COOKIE_KEY}=token with spaces and symbols!@#"
+        ));
         let result = parse_cookie(&cookie_value);
         assert!(result.is_some());
         assert_eq!(result, Some("token with spaces and symbols!@#"));
@@ -434,8 +442,9 @@ mod tests {
 
     #[test]
     fn test_parse_cookie_with_equals_in_value() {
-        let cookie_value =
-            HeaderValue::from_static("boluo-session-v2=token=with=equals; other=value");
+        let cookie_value = cookie_header(format!(
+            "{SESSION_COOKIE_KEY}=token=with=equals; other=value"
+        ));
         let result = parse_cookie(&cookie_value);
         assert!(result.is_some());
         assert_eq!(result, Some("token=with=equals"));
@@ -443,7 +452,8 @@ mod tests {
 
     #[test]
     fn test_parse_cookie_no_space_separator() {
-        let cookie_value = HeaderValue::from_static("other=value;boluo-session-v2=no-space-token");
+        let cookie_value =
+            cookie_header(format!("other=value;{SESSION_COOKIE_KEY}=no-space-token"));
         let result = parse_cookie(&cookie_value);
         assert!(result.is_some());
         assert_eq!(result, Some("no-space-token"));
@@ -452,14 +462,14 @@ mod tests {
     #[test]
     fn test_parse_cookie_regex_edge_cases() {
         let test_cases = vec![
-            ("prefix-boluo-session-v2=should-not-match", None),
-            ("boluo-session-v2-suffix=should-not-match", None),
-            ("boluo-session-v2=", None),
-            ("boluo-session-v2=value", Some("value")),
+            (format!("prefix-{SESSION_COOKIE_KEY}=should-not-match"), None),
+            (format!("{SESSION_COOKIE_KEY}-suffix=should-not-match"), None),
+            (format!("{SESSION_COOKIE_KEY}="), None),
+            (format!("{SESSION_COOKIE_KEY}=value"), Some("value")),
         ];
 
         for (input, expected) in test_cases {
-            let cookie_value = HeaderValue::from_static(input);
+            let cookie_value = cookie_header(input);
             let result = parse_cookie(&cookie_value);
             assert_eq!(result, expected);
         }

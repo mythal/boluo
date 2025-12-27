@@ -10,7 +10,7 @@ panic = "abort"
 opt-level = 3
 
 [patch.crates-io]
-specta-macros = { git = "https://github.com/specta-rs/specta.git" }
-specta = { git = "https://github.com/specta-rs/specta.git" }
-specta-serde = { git = "https://github.com/specta-rs/specta.git" }
-specta-typescript = { git = "https://github.com/specta-rs/specta.git" }
+specta-macros = { git = "https://github.com/specta-rs/specta.git", rev = "2d2b4d531214a3d130b4265ab259a6de77cf2e2c" }
+specta = { git = "https://github.com/specta-rs/specta.git", rev = "2d2b4d531214a3d130b4265ab259a6de77cf2e2c" }
+specta-serde = { git = "https://github.com/specta-rs/specta.git", rev = "2d2b4d531214a3d130b4265ab259a6de77cf2e2c" }
+specta-typescript = { git = "https://github.com/specta-rs/specta.git", rev = "2d2b4d531214a3d130b4265ab259a6de77cf2e2c" }

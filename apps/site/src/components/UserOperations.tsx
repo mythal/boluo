@@ -4,6 +4,7 @@ import { useQueryCurrentUser } from '@boluo/hooks/useQueryCurrentUser';
 import { useQueryIsEmailVerified } from '@boluo/hooks/useQueryIsEmailVerified';
 import Link from 'next/link';
 import { FormattedMessage, useIntl } from 'react-intl';
+import { useMemo } from 'react';
 import { useLogout } from '@boluo/hooks/useLogout';
 import { LoadingText } from '@boluo/ui/LoadingText';
 import { useQueryAppSettings } from '@boluo/hooks/useQueryAppSettings';
@@ -22,6 +23,15 @@ const LoggedIn = ({
   const intl = useIntl();
   const { data: isEmailVerified } = useQueryIsEmailVerified();
   const logout = useLogout();
+  const resolvedAppUrl = useMemo(() => {
+    if (typeof window === 'undefined') {
+      return appUrl;
+    }
+    if (window.location.origin.endsWith('boluo.chat')) {
+      return appUrl.replace('boluochat.com', 'boluo.chat');
+    }
+    return appUrl;
+  }, [appUrl]);
   return (
     <div className="flex flex-col gap-4">
       <div>
@@ -36,7 +46,7 @@ const LoggedIn = ({
         )
       </div>
       <div className="text-lg">
-        <Link className={classes.link} href={`${appUrl}/${intl.locale}`} target="_blank">
+        <Link className={classes.link} href={`${resolvedAppUrl}/${intl.locale}`} target="_blank">
           Open Boluo
         </Link>
       </div>

@@ -20,7 +20,8 @@ export const nextJsConfig = [
   ...tseslint.configs.recommended,
   globalIgnores([
     // Default ignores of eslint-config-next:
-    '.next/**',
+    '**/.next/**',
+    '**/_next/**',
     'out/**',
     'build/**',
     'next-env.d.ts',

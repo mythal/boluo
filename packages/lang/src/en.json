@@ -320,6 +320,9 @@
   "EWw/tK": {
     "message": "Apply"
   },
+  "Eborcf": {
+    "message": "The session is invalid. Re-login may help to resolve this issue. Do you want to log out now?"
+  },
   "EcW+hX": {
     "message": "Only visible to selected people."
   },
@@ -848,6 +851,9 @@
   "ceSWhW": {
     "message": "Show archived messages"
   },
+  "ciPqqe": {
+    "message": "An unexpected error occurred while establishing the connection. Please try again later."
+  },
   "clpFBW": {
     "message": "Space Publicity"
   },
@@ -994,6 +1000,9 @@
   },
   "iySl5e": {
     "message": "You are already a member of this channel."
+  },
+  "j8d+YP": {
+    "message": "Score: {score}"
   },
   "jRANBd": {
     "message": "Edit message"
@@ -1291,9 +1300,6 @@
   },
   "z9LRLa": {
     "message": "Edited at"
-  },
-  "zEwcTp": {
-    "message": "The session is invalid. Please log out and log in again or try another browser."
   },
   "zINlao": {
     "message": "Owner"

@@ -57,7 +57,7 @@ export const config = [
     },
   },
   {
-    ignores: ['dist/**', 'out/**', '.next/**', 'postcss.config.cjs'],
+    ignores: ['**/dist/**', 'out/**', '**/.next/**', '**/_next/**', 'postcss.config.cjs'],
   },
   {
     rules: {

@@ -19,7 +19,7 @@ export const ContentGuardButton: FC<Props> = ({ onReveal, className }) => {
       type="button"
       className={clsx(
         'ContentGuard',
-        'absolute inset-1 flex items-center justify-center',
+        'absolute inset-px flex items-center justify-center',
         'bg-surface-unit border-border-default hover:border-border-strong border',
         'text-text-primary focus-visible:border-border-focus cursor-pointer rounded px-4 py-2 text-center text-sm transition focus-visible:outline',
         className,

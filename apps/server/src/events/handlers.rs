@@ -101,15 +101,17 @@ async fn push_updates(
                 "boluo_server_events_push_updates_requested_updates_are_too_early_duration_ms"
             )
             .record(elapsed as f64);
-            tracing::warn!(
-                mailbox_id = %mailbox,
-                after,
-                seq,
-                node,
-                start_at,
-                elapsed,
-                "The user requested updates with 'after', but the cached updates are too new"
-            );
+            if elapsed < 1000 * 60 * 20 {
+                tracing::warn!(
+                    mailbox_id = %mailbox,
+                    after,
+                    seq,
+                    node,
+                    start_at,
+                    elapsed,
+                    "The user requested updates with 'after', but the cached updates are too new"
+                );
+            }
 
             vec![]
         }

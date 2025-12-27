@@ -10,11 +10,12 @@ import { type BaseUrlTestResult } from '../../base-url';
 interface Props {
   proxy: Proxy;
   result: BaseUrlTestResult['rtt'] | null | undefined;
+  score: number;
   selected: boolean;
   setUrl: (url: string) => void;
 }
 
-export const BaseUrlSelectorItem: FC<Props> = ({ proxy, result, setUrl, selected }) => {
+export const BaseUrlSelectorItem: FC<Props> = ({ proxy, result, score, setUrl, selected }) => {
   const { url, name, region } = proxy;
   let resultNode: ReactNode = <span>...</span>;
   let icon: typeof Cloud = Cloud;
@@ -44,6 +45,7 @@ export const BaseUrlSelectorItem: FC<Props> = ({ proxy, result, setUrl, selected
         selected ? 'bg-sidebar-item-active-bg' : 'hover:bg-sidebar-item-hover-bg',
       )}
       aria-pressed={selected}
+      title={url}
     >
       <span
         className={clsx(
@@ -61,7 +63,9 @@ export const BaseUrlSelectorItem: FC<Props> = ({ proxy, result, setUrl, selected
       </div>
       <div className="text-right text-xs">{resultNode}</div>
 
-      <div className="text-text-muted col-start-2 truncate text-left font-mono text-xs">{url}</div>
+      <div className="text-text-muted col-start-2 truncate text-left font-mono text-xs">
+        <FormattedMessage defaultMessage="Score: {score}" values={{ score: score.toFixed(0) }} />
+      </div>
     </button>
   );
 };

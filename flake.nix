@@ -489,6 +489,7 @@
                 ast-grep
                 flyctl
                 cargo-nextest
+                python3
               ];
               shellHook = ''
                 export PATH="node_modules/.bin:$PATH"

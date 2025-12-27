@@ -109,6 +109,20 @@ pub fn is_authenticate_use_cookie(headers: &HeaderMap<HeaderValue>) -> bool {
     !headers.contains_key(AUTHORIZATION)
 }
 
+fn cookie_domain_from_origin(origin: Option<&str>) -> Option<&'static str> {
+    // TODO: do not hardcode the domain
+    let origin = origin?;
+    if origin.ends_with("boluochat.com") {
+        Some(".boluochat.com")
+    } else if origin.ends_with("boluo.chat") {
+        Some(".boluo.chat")
+    } else if origin.ends_with("boluo-staging.mythal.net") {
+        Some(".boluo-staging.mythal.net")
+    } else {
+        None
+    }
+}
+
 pub fn add_session_cookie(
     origin: Option<&str>,
     session: &Uuid,
@@ -127,15 +141,8 @@ pub fn add_session_cookie(
         .path("/")
         .max_age(Duration::days(120));
 
-    // TODO: do not hardcode the domain
-    if let Some(origin) = origin {
-        if origin.ends_with("boluochat.com") {
-            builder = builder.domain(".boluochat.com");
-        } else if origin.ends_with("boluo.chat") {
-            builder = builder.domain(".boluo.chat");
-        } else if origin.ends_with("boluo-staging.mythal.net") {
-            builder = builder.domain(".boluo-staging.mythal.net");
-        }
+    if let Some(domain) = cookie_domain_from_origin(origin) {
+        builder = builder.domain(domain);
     }
     let session_cookie = builder.build().to_string();
     response_header.append(SET_COOKIE, HeaderValue::from_str(&session_cookie).unwrap());
@@ -150,16 +157,7 @@ pub fn add_settings_cookie(
     use cookie::time::Duration;
     use hyper::header::SET_COOKIE;
 
-    let mut domain: Option<&str> = None;
-    if let Some(origin) = origin {
-        if origin.ends_with("boluochat.com") {
-            domain = Some(".boluochat.com");
-        } else if origin.ends_with("boluo.chat") {
-            domain = Some(".boluo.chat");
-        } else if origin.ends_with("boluo-staging.mythal.net") {
-            domain = Some(".boluo-staging.mythal.net");
-        }
-    }
+    let domain = cookie_domain_from_origin(origin);
 
     if settings.is_null() || !settings.is_object() {
         return;
@@ -463,6 +461,25 @@ mod tests {
         for (input, expected) in test_cases {
             let cookie_value = HeaderValue::from_static(input);
             let result = parse_cookie(&cookie_value);
+            assert_eq!(result, expected);
+        }
+    }
+
+    #[test]
+    fn test_cookie_domain_from_origin() {
+        let cases = vec![
+            (Some("https://app.boluochat.com"), Some(".boluochat.com")),
+            (Some("https://proxy1.boluo.chat"), Some(".boluo.chat")),
+            (
+                Some("https://boluo-staging.mythal.net"),
+                Some(".boluo-staging.mythal.net"),
+            ),
+            (Some("https://example.com"), None),
+            (None, None),
+        ];
+
+        for (origin, expected) in cases {
+            let result = cookie_domain_from_origin(origin);
             assert_eq!(result, expected);
         }
     }

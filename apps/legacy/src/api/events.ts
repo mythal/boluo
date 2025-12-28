@@ -1,3 +1,4 @@
+import { type UpdateLifetime } from '@boluo/types/bindings';
 import { type Entity } from '../interpreter/entities';
 import { type Id } from '../utils/id';
 import { type Channel, type MemberWithUser } from './channels';
@@ -46,6 +47,7 @@ interface Event<B> {
   id: EventId;
   mailboxType: MailboxType;
   body: B;
+  live?: UpdateLifetime;
 }
 
 export type Events =

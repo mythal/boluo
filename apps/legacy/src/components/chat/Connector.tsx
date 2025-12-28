@@ -228,8 +228,11 @@ export const Connector = ({ spaceId, myId }: Props) => {
           console.warn('Failed to parse websocket message', received, e);
           return;
         }
-        if (compareEvents(after.current, event.id) > 0) return;
-        after.current = event.id;
+        const isTransient = event.live === 'T';
+        if (!isTransient && compareEvents(after.current, event.id) > 0) return;
+        if (!isTransient) {
+          after.current = event.id;
+        }
         handleEvent(dispatch, setState, event);
       };
       dispatch(connectSpace(spaceId, connection));

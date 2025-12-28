@@ -320,6 +320,9 @@
   "EWw/tK": {
     "message": "套用"
   },
+  "Eborcf": {
+    "message": "The session is invalid. Re-login may help to resolve this issue. Do you want to log out now?"
+  },
   "EcW+hX": {
     "message": "只有選中的人可見。"
   },
@@ -848,6 +851,9 @@
   "ceSWhW": {
     "message": "顯示已歸檔的訊息"
   },
+  "ciPqqe": {
+    "message": "An unexpected error occurred while establishing the connection. Please try again later."
+  },
   "clpFBW": {
     "message": "位面公開性"
   },
@@ -994,6 +1000,9 @@
   },
   "iySl5e": {
     "message": "你已經加入了該頻道。"
+  },
+  "j8d+YP": {
+    "message": "Score: {score}"
   },
   "jRANBd": {
     "message": "編輯訊息"
@@ -1291,9 +1300,6 @@
   },
   "z9LRLa": {
     "message": "修改於"
-  },
-  "zEwcTp": {
-    "message": "The session is invalid. Please log out and log in again or try another browser."
   },
   "zINlao": {
     "message": "所有者"

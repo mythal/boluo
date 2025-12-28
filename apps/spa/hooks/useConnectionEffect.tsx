@@ -18,6 +18,7 @@ import { type ConnectionState } from '../state/connection.reducer';
 import { get } from '@boluo/api-browser';
 import { type IntlShape, useIntl } from 'react-intl';
 import { sleep } from '@boluo/utils/async';
+import { useLogout } from '@boluo/hooks/useLogout';
 
 let lastPongTime = Date.now();
 const RELOAD_TIMEOUT = 1000 * 60 * 30;
@@ -161,6 +162,7 @@ const connect = async (
 };
 
 export const useConnectionEffect = (mailboxId: string) => {
+  const logout = useLogout();
   const { mutate } = useSWRConfig();
   const { data: user, isLoading: isQueryingUser } = useQueryCurrentUser();
   const webSocketEndpoint = useAtomValue(webSocketUrlAtom);
@@ -252,12 +254,16 @@ export const useConnectionEffect = (mailboxId: string) => {
           return;
         } else if (connectionResult === UNAUTHENTICATED) {
           if (userId != null) {
-            alert(
-              intl.formatMessage({
-                defaultMessage:
-                  'The session is invalid. Please log out and log in again or try another browser.',
-              }),
-            );
+            if (
+              confirm(
+                intl.formatMessage({
+                  defaultMessage:
+                    'The session is invalid. Re-login may help to resolve this issue. Do you want to log out now?',
+                }),
+              )
+            ) {
+              logout();
+            }
           } else {
             alert(
               intl.formatMessage({
@@ -302,5 +308,6 @@ export const useConnectionEffect = (mailboxId: string) => {
     dispatch,
     isQueryingUser,
     intl,
+    logout,
   ]);
 };

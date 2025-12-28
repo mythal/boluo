@@ -11,7 +11,7 @@ use regex::Regex;
 use thiserror::Error;
 use uuid::Uuid;
 
-pub const SESSION_COOKIE_KEY: &str = "boluo-session-v2";
+pub const SESSION_COOKIE_KEY: &str = "boluo-session-v3";
 
 #[derive(Debug, Clone, Copy)]
 pub struct Session {
@@ -109,6 +109,20 @@ pub fn is_authenticate_use_cookie(headers: &HeaderMap<HeaderValue>) -> bool {
     !headers.contains_key(AUTHORIZATION)
 }
 
+fn cookie_domain_from_origin(origin: Option<&str>) -> Option<&'static str> {
+    // TODO: do not hardcode the domain
+    let origin = origin?;
+    if origin.ends_with("boluochat.com") {
+        Some(".boluochat.com")
+    } else if origin.ends_with("boluo.chat") {
+        Some(".boluo.chat")
+    } else if origin.ends_with("boluo-staging.mythal.net") {
+        Some(".boluo-staging.mythal.net")
+    } else {
+        None
+    }
+}
+
 pub fn add_session_cookie(
     origin: Option<&str>,
     session: &Uuid,
@@ -127,25 +141,23 @@ pub fn add_session_cookie(
         .path("/")
         .max_age(Duration::days(120));
 
-    // TODO: do not hardcode the domain
-    if let Some(origin) = origin {
-        if origin.ends_with("boluochat.com") {
-            builder = builder.domain(".boluochat.com");
-        } else if origin.ends_with("boluo-staging.mythal.net") {
-            builder = builder.domain(".boluo-staging.mythal.net");
-        }
+    if let Some(domain) = cookie_domain_from_origin(origin) {
+        builder = builder.domain(domain);
     }
     let session_cookie = builder.build().to_string();
     response_header.append(SET_COOKIE, HeaderValue::from_str(&session_cookie).unwrap());
 }
 
 pub fn add_settings_cookie(
+    origin: Option<&str>,
     settings: &serde_json::Value,
     response_header: &mut HeaderMap<HeaderValue>,
 ) {
     use cookie::CookieBuilder;
     use cookie::time::Duration;
     use hyper::header::SET_COOKIE;
+
+    let domain = cookie_domain_from_origin(origin);
 
     if settings.is_null() || !settings.is_object() {
         return;
@@ -154,11 +166,13 @@ pub fn add_settings_cookie(
     if let Some(locale) = settings.get("locale") {
         if locale.is_string() {
             let locale = locale.as_str().expect("Failed to get locale string.");
-            let cookie = CookieBuilder::new("boluo-locale", locale)
+            let mut builder = CookieBuilder::new("boluo-locale", locale)
                 .path("/")
-                .max_age(max_age)
-                .build()
-                .to_string();
+                .max_age(max_age);
+            if let Some(domain) = domain {
+                builder = builder.domain(domain);
+            }
+            let cookie = builder.build().to_string();
             response_header.append(
                 SET_COOKIE,
                 HeaderValue::from_str(&cookie).expect("Failed to convert cookie to header value."),
@@ -168,11 +182,13 @@ pub fn add_settings_cookie(
     if let Some(theme) = settings.get("theme") {
         if theme.is_string() {
             let theme = theme.as_str().expect("Failed to get theme string.");
-            let cookie = CookieBuilder::new("boluo-theme", theme)
+            let mut builder = CookieBuilder::new("boluo-theme", theme)
                 .path("/")
-                .max_age(max_age)
-                .build()
-                .to_string();
+                .max_age(max_age);
+            if let Some(domain) = domain {
+                builder = builder.domain(domain);
+            }
+            let cookie = builder.build().to_string();
             response_header.append(
                 SET_COOKIE,
                 HeaderValue::from_str(&cookie).expect("Failed to convert cookie to header value."),
@@ -350,9 +366,13 @@ mod tests {
     use super::*;
     use hyper::header::HeaderValue;
 
+    fn cookie_header(value: String) -> HeaderValue {
+        HeaderValue::from_str(&value).expect("Failed to build cookie header")
+    }
+
     #[test]
     fn test_parse_cookie_basic() {
-        let cookie_value = HeaderValue::from_static("boluo-session-v2=test-token-123");
+        let cookie_value = cookie_header(format!("{SESSION_COOKIE_KEY}=test-token-123"));
         let result = parse_cookie(&cookie_value);
         assert!(result.is_some());
         assert_eq!(result, Some("test-token-123"));
@@ -360,9 +380,9 @@ mod tests {
 
     #[test]
     fn test_parse_cookie_with_multiple_cookies() {
-        let cookie_value = HeaderValue::from_static(
-            "other=value; boluo-session-v2=test-token-456; another=value2",
-        );
+        let cookie_value = cookie_header(format!(
+            "other=value; {SESSION_COOKIE_KEY}=test-token-456; another=value2"
+        ));
         let result = parse_cookie(&cookie_value);
         assert!(result.is_some());
         assert_eq!(result, Some("test-token-456"));
@@ -370,7 +390,8 @@ mod tests {
 
     #[test]
     fn test_parse_cookie_at_beginning() {
-        let cookie_value = HeaderValue::from_static("boluo-session-v2=first-token; other=value");
+        let cookie_value =
+            cookie_header(format!("{SESSION_COOKIE_KEY}=first-token; other=value"));
         let result = parse_cookie(&cookie_value);
         assert!(result.is_some());
         assert_eq!(result, Some("first-token"));
@@ -378,7 +399,8 @@ mod tests {
 
     #[test]
     fn test_parse_cookie_at_end() {
-        let cookie_value = HeaderValue::from_static("other=value; boluo-session-v2=last-token");
+        let cookie_value =
+            cookie_header(format!("other=value; {SESSION_COOKIE_KEY}=last-token"));
         let result = parse_cookie(&cookie_value);
         assert!(result.is_some());
         assert_eq!(result, Some("last-token"));
@@ -400,8 +422,9 @@ mod tests {
 
     #[test]
     fn test_parse_cookie_similar_name() {
-        let cookie_value =
-            HeaderValue::from_static("test-boluo-session-v2=wrong; boluo-session-v2=correct");
+        let cookie_value = cookie_header(format!(
+            "test-{SESSION_COOKIE_KEY}=wrong; {SESSION_COOKIE_KEY}=correct"
+        ));
         let result = parse_cookie(&cookie_value);
         assert!(result.is_some());
         assert_eq!(result, Some("correct"));
@@ -409,8 +432,9 @@ mod tests {
 
     #[test]
     fn test_parse_cookie_with_spaces() {
-        let cookie_value =
-            HeaderValue::from_static("boluo-session-v2=token with spaces and symbols!@#");
+        let cookie_value = cookie_header(format!(
+            "{SESSION_COOKIE_KEY}=token with spaces and symbols!@#"
+        ));
         let result = parse_cookie(&cookie_value);
         assert!(result.is_some());
         assert_eq!(result, Some("token with spaces and symbols!@#"));
@@ -418,8 +442,9 @@ mod tests {
 
     #[test]
     fn test_parse_cookie_with_equals_in_value() {
-        let cookie_value =
-            HeaderValue::from_static("boluo-session-v2=token=with=equals; other=value");
+        let cookie_value = cookie_header(format!(
+            "{SESSION_COOKIE_KEY}=token=with=equals; other=value"
+        ));
         let result = parse_cookie(&cookie_value);
         assert!(result.is_some());
         assert_eq!(result, Some("token=with=equals"));
@@ -427,7 +452,8 @@ mod tests {
 
     #[test]
     fn test_parse_cookie_no_space_separator() {
-        let cookie_value = HeaderValue::from_static("other=value;boluo-session-v2=no-space-token");
+        let cookie_value =
+            cookie_header(format!("other=value;{SESSION_COOKIE_KEY}=no-space-token"));
         let result = parse_cookie(&cookie_value);
         assert!(result.is_some());
         assert_eq!(result, Some("no-space-token"));
@@ -436,15 +462,34 @@ mod tests {
     #[test]
     fn test_parse_cookie_regex_edge_cases() {
         let test_cases = vec![
-            ("prefix-boluo-session-v2=should-not-match", None),
-            ("boluo-session-v2-suffix=should-not-match", None),
-            ("boluo-session-v2=", None),
-            ("boluo-session-v2=value", Some("value")),
+            (format!("prefix-{SESSION_COOKIE_KEY}=should-not-match"), None),
+            (format!("{SESSION_COOKIE_KEY}-suffix=should-not-match"), None),
+            (format!("{SESSION_COOKIE_KEY}="), None),
+            (format!("{SESSION_COOKIE_KEY}=value"), Some("value")),
         ];
 
         for (input, expected) in test_cases {
-            let cookie_value = HeaderValue::from_static(input);
+            let cookie_value = cookie_header(input);
             let result = parse_cookie(&cookie_value);
+            assert_eq!(result, expected);
+        }
+    }
+
+    #[test]
+    fn test_cookie_domain_from_origin() {
+        let cases = vec![
+            (Some("https://app.boluochat.com"), Some(".boluochat.com")),
+            (Some("https://proxy1.boluo.chat"), Some(".boluo.chat")),
+            (
+                Some("https://boluo-staging.mythal.net"),
+                Some(".boluo-staging.mythal.net"),
+            ),
+            (Some("https://example.com"), None),
+            (None, None),
+        ];
+
+        for (origin, expected) in cases {
+            let result = cookie_domain_from_origin(origin);
             assert_eq!(result, expected);
         }
     }

@@ -400,6 +400,18 @@ fn cleanup(
     } else {
         None
     };
+    if has_been_cleaned {
+        if let Some(start_at) = start_at {
+            let age = now - start_at.timestamp;
+            if age < 1000 * 60 * 30 {
+                tracing::warn!(
+                    start_at = start_at.timestamp,
+                    age_s = age / 1000,
+                    "Mailbox updates trimmed close to current time"
+                );
+            }
+        }
+    }
 
     preview_map.retain(|_, preview_update| match preview_update.update.body {
         | MessagePreview { .. } => {

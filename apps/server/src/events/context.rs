@@ -384,9 +384,16 @@ fn cleanup(
 
     let now = timestamp();
     let mut has_been_cleaned = false;
+    let mut last_removed_timestamp: Option<i64> = None;
     while updates.len() > 512 {
-        updates.pop_first();
+        if let Some((event_id, _)) = updates.pop_first() {
+            last_removed_timestamp = Some(event_id.timestamp);
+        }
         has_been_cleaned = true;
+    }
+    // Drop all updates with the same timestamp as the last removed one, to avoid partial cleanup
+    if let Some(removed_timestamp) = last_removed_timestamp {
+        updates.retain(|event_id, _| event_id.timestamp != removed_timestamp);
     }
     let start_at = if has_been_cleaned {
         updates.first_key_value().map(|(id, _)| *id)

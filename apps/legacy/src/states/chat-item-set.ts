@@ -3,6 +3,14 @@ import { isEmptyPreview, type Preview } from '../api/events';
 import { type Message } from '../api/messages';
 import { type Id } from '../utils/id';
 
+export interface PreviewKeyframe {
+  id: string;
+  version: number;
+  name: string;
+  text: string | null;
+  entities: Preview['entities'];
+}
+
 export interface ChatNode {
   id: Id;
   pos: number;
@@ -28,6 +36,7 @@ export const makeMessageItem =
 export interface PreviewItem extends ChatNode {
   type: 'PREVIEW';
   preview: Preview;
+  keyframe?: PreviewKeyframe;
 }
 
 export type ChatItem = MessageItem | PreviewItem;

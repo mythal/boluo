@@ -266,7 +266,7 @@ fn on_update(
             if let Some(diff) = diff_map.get(&key) {
                 if let UpdateBody::Diff { diff, .. } = &diff.update.body {
                     if diff.payload.id != preview.id
-                        || diff.payload.reference_version != preview.version
+                        || diff.payload.keyframe_version != preview.version
                     {
                         diff_map.remove(&key);
                     }
@@ -291,7 +291,9 @@ fn on_update(
             else {
                 return;
             };
-            if reference_preview.version != diff.payload.reference_version {
+            if reference_preview.id != diff.payload.id
+                || reference_preview.version != diff.payload.keyframe_version
+            {
                 return;
             }
 
@@ -315,6 +317,13 @@ fn on_update(
                             }
                         }
                         _ => tracing::warn!("Expected preview, but got {:?}", existing.update.body),
+                    }
+                }
+                if let Some(existing) = diff_map.get(&key) {
+                    if let UpdateBody::Diff { diff, .. } = &existing.update.body {
+                        if diff.payload.id == preview_id {
+                            diff_map.remove(&key);
+                        }
                     }
                 }
             }
@@ -453,7 +462,7 @@ fn cleanup(
             else {
                 return false;
             };
-            diff.payload.id == preview.id && diff.payload.reference_version == preview.version
+            diff.payload.id == preview.id && diff.payload.keyframe_version == preview.version
         }
         _ => false,
     });

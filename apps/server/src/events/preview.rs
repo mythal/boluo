@@ -13,9 +13,17 @@ use uuid::Uuid;
 pub enum PreviewDiffOp {
     #[serde(rename = "SPLICE")]
     Splice {
-        /// The start index for inserting
+        /// The start index for inserting.
+        ///
+        /// UTF-16 code units.
+        ///
+        /// Assumes the text length fits within u16 (no overflow expected).
         i: u16,
-        /// The length of the text to be replaced
+        /// The length of the text to be replaced.
+        ///
+        /// UTF-16 code units.
+        ///
+        /// Assumes the text length fits within u16 (no overflow expected).
         len: u16,
         /// The text to be inserted
         #[serde(rename = "_")]
@@ -31,26 +39,36 @@ pub enum PreviewDiffOp {
     ChangeName { name: String },
 }
 
+/// A diff to be applied to a keyframe preview
+///
+/// Diff ops are a full patch relative to the referenced keyframe preview.
+///
+/// Changes to fields outside text/name/entities (e.g., media_id, in_game, is_action, clear,
+/// edit_for, edit) must be sent as a full Preview keyframe.
 #[derive(Debug, Serialize, Deserialize, Clone, specta::Type)]
 pub struct PreviewDiffPost {
     /// Channel ID
     #[serde(rename = "ch")]
     pub channel_id: Uuid,
-    /// The id of the preview that is being edited
+    /// The id of the keyframe preview that is being edited
     pub id: Uuid,
-    /// The version of the diff reference
+    /// The version of the keyframe preview that this diff is based on.
+    ///
+    /// Assumes the version fits within u16 (no overflow expected).
     #[serde(rename = "ref")]
-    pub reference_version: u16,
+    pub keyframe_version: u16,
     /// The version of the diff
     ///
     /// Every edit will increase the version.
+    ///
+    /// Assumes the version fits within u16 (no overflow expected).
     #[serde(default, rename = "v")]
     pub version: u16,
-    /// The operation of the diff
-    pub op: PreviewDiffOp,
-    /// Changed entities
-    #[serde(default, rename = "~")]
-    pub entities: Vec<(u16, shared_types::entities::Entity)>,
+    /// The modifications to be applied
+    pub op: Vec<PreviewDiffOp>,
+    /// Entities. If empty, the client should parse the text to regenerate entities.
+    #[serde(default, rename = "xs", skip_serializing_if = "Vec::is_empty")]
+    pub entities: Vec<shared_types::entities::Entity>,
 }
 
 impl PreviewDiffPost {

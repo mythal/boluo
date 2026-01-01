@@ -2,6 +2,14 @@ import { type Message, type Preview } from '@boluo/api';
 import { ComposeState } from './compose.reducer';
 import { type UploadError } from '../media';
 
+export type PreviewKeyframe = {
+  id: string;
+  version: number;
+  name: string;
+  text: string | null;
+  entities: Preview['entities'];
+};
+
 export type PreviewItem = Preview & {
   type: 'PREVIEW';
   posP: number;
@@ -10,6 +18,7 @@ export type PreviewItem = Preview & {
   failTo?: FailTo;
   key: string;
   timestamp: number;
+  keyframe?: PreviewKeyframe;
 };
 
 export type FailTo =

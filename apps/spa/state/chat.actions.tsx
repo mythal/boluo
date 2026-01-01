@@ -5,6 +5,7 @@ import type {
   Message,
   NewMessage,
   Preview,
+  PreviewDiff,
   Update,
   SpaceWithRelated,
 } from '@boluo/api';
@@ -50,6 +51,7 @@ export type ChatActionMap = {
   reachBottom: { channelId: string };
   setComposeSource: { channelId: string; source: string };
   messagePreview: { channelId: string; preview: Preview; timestamp: number };
+  messagePreviewDiff: { channelId: string; diff: PreviewDiff; timestamp: number };
   messageDeleted: { channelId: string; messageId: string; pos: number };
   channelDeleted: { channelId: string };
   resetGc: { pos: number };
@@ -75,6 +77,8 @@ export const updateToChatAction = (e: Update): ChatActionUnion | null => {
       return { type: 'messageDeleted', payload: e.body };
     case 'MESSAGE_PREVIEW':
       return { type: 'messagePreview', payload: { ...e.body, timestamp: e.id.timestamp } };
+    case 'DIFF':
+      return { type: 'messagePreviewDiff', payload: { ...e.body, timestamp: e.id.timestamp } };
     case 'CHANNEL_DELETED':
       return { type: 'channelDeleted', payload: e.body };
     case 'CHANNEL_EDITED':

@@ -38,7 +38,10 @@ impl EncodedUpdate {
 
 pub enum Action {
     Query(tokio::sync::oneshot::Sender<CachedUpdates>),
-    Update { body: UpdateBody },
+    Update {
+        body: UpdateBody,
+        live: UpdateLifetime,
+    },
     Members(MembersAction),
     Status(super::status::StatusAction),
 }
@@ -188,8 +191,12 @@ impl MailboxManager {
         Ok(rx)
     }
 
-    pub async fn fire_update(&self, body: UpdateBody) -> Result<(), MailboxManageError> {
-        let action = Action::Update { body };
+    pub async fn fire_update(
+        &self,
+        body: UpdateBody,
+        live: UpdateLifetime,
+    ) -> Result<(), MailboxManageError> {
+        let action = Action::Update { body, live };
         self.send_write_action(action).await
     }
 
@@ -496,7 +503,7 @@ impl MailBoxState {
                                     start_at,
                                 }).ok();
                             }
-                            Action::Update { body } => {
+                            Action::Update { body, live } => {
                                 last_activity_at = std::time::Instant::now();
                                 let mailbox_id = id;
                                 let encoded_update = match tokio::task::spawn_blocking(move || {
@@ -504,7 +511,7 @@ impl MailBoxState {
                                         mailbox: mailbox_id,
                                         body,
                                         id: EventId::new(),
-                                        live: UpdateLifetime::Persistent,
+                                        live,
                                     })
                                 }).await {
                                     Ok(encoded_update) => encoded_update,

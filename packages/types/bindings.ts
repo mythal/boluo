@@ -768,13 +768,7 @@ export type Update = {
   id: EventId;
   body: UpdateBody;
   /**
-   * Whether this update is resumable via `/api/events/connect?after=...`.
-   *
-   * `false` means the server persists this update in the in-memory mailbox state so
-   * it can be queried by `Update::get_from_state` on reconnect.
-   *
-   * `true` means it's broadcast-only (transient), and clients should not advance
-   * their resume cursor based on this update.
+   * How clients should treat this update for reconnect/cursor purposes.
    */
   live?: UpdateLifetime;
 };
@@ -800,6 +794,13 @@ export type UpdateLifetime =
    * Transient updates are not stored in mailbox state and cannot be resumed.
    */
   | 'T'
+  /**
+   * Volatile updates are stored in mailbox state but are best-effort and may be replaced/pruned.
+   *
+   * Clients should treat them as non-resumable for cursor advancing (same as `Transient`),
+   * while the server may still include the latest ones in `Update::get_from_state`.
+   */
+  | 'V'
   /**
    * Persistent updates are stored in mailbox state and can be resumed.
    */

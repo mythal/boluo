@@ -228,9 +228,9 @@ export const Connector = ({ spaceId, myId }: Props) => {
           console.warn('Failed to parse websocket message', received, e);
           return;
         }
-        const isTransient = event.live === 'T';
-        if (!isTransient && compareEvents(after.current, event.id) > 0) return;
-        if (!isTransient) {
+        const shouldAdvanceCursor = event.live == null || event.live === 'P';
+        if (shouldAdvanceCursor && compareEvents(after.current, event.id) > 0) return;
+        if (shouldAdvanceCursor) {
           after.current = event.id;
         }
         handleEvent(dispatch, setState, event);

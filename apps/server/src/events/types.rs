@@ -192,6 +192,12 @@ pub enum UpdateLifetime {
     /// Transient updates are not stored in mailbox state and cannot be resumed.
     #[serde(rename = "T")]
     Transient,
+    /// Volatile updates are stored in mailbox state but are best-effort and may be replaced/pruned.
+    ///
+    /// Clients should treat them as non-resumable for cursor advancing (same as `Transient`),
+    /// while the server may still include the latest ones in `Update::get_from_state`.
+    #[serde(rename = "V")]
+    Volatile,
     /// Persistent updates are stored in mailbox state and can be resumed.
     #[serde(rename = "P")]
     Persistent,
@@ -204,6 +210,9 @@ impl UpdateLifetime {
     pub fn is_transient(&self) -> bool {
         matches!(self, UpdateLifetime::Transient)
     }
+    pub fn is_volatile(&self) -> bool {
+        matches!(self, UpdateLifetime::Volatile)
+    }
 }
 
 #[derive(Serialize, Clone, Debug, specta::Type)]
@@ -212,13 +221,7 @@ pub struct Update {
     pub mailbox: Uuid,
     pub id: EventId,
     pub body: UpdateBody,
-    /// Whether this update is resumable via `/api/events/connect?after=...`.
-    ///
-    /// `false` means the server persists this update in the in-memory mailbox state so
-    /// it can be queried by `Update::get_from_state` on reconnect.
-    ///
-    /// `true` means it's broadcast-only (transient), and clients should not advance
-    /// their resume cursor based on this update.
+    /// How clients should treat this update for reconnect/cursor purposes.
     #[serde(default, skip_serializing_if = "UpdateLifetime::is_persistent")]
     pub live: UpdateLifetime,
 }
@@ -300,7 +303,7 @@ impl Update {
 
     pub fn message_preview(mailbox: Uuid, preview: Box<Preview>) {
         let channel_id = preview.channel_id;
-        Update::persistent(
+        Update::volatile(
             UpdateBody::MessagePreview {
                 preview,
                 channel_id,
@@ -310,7 +313,7 @@ impl Update {
     }
 
     pub fn preview_diff(mailbox: Uuid, diff: PreviewDiff) {
-        Update::persistent(
+        Update::volatile(
             UpdateBody::Diff {
                 channel_id: diff.payload.channel_id,
                 diff: Box::new(diff),
@@ -539,7 +542,26 @@ impl Update {
         spawn(
             async move {
                 let mailbox_manager = super::context::store().get_or_create_manager(mailbox);
-                if let Err(e) = mailbox_manager.fire_update(body).await {
+                if let Err(e) = mailbox_manager
+                    .fire_update(body, UpdateLifetime::Persistent)
+                    .await
+                {
+                    tracing::error!("Failed to send update to mailbox {}: {}", mailbox, e);
+                }
+            }
+            .instrument(span),
+        );
+    }
+
+    pub fn volatile(body: UpdateBody, mailbox: Uuid) {
+        let span = tracing::info_span!("Fire Volatile Update", mailbox = %mailbox);
+        spawn(
+            async move {
+                let mailbox_manager = super::context::store().get_or_create_manager(mailbox);
+                if let Err(e) = mailbox_manager
+                    .fire_update(body, UpdateLifetime::Volatile)
+                    .await
+                {
                     tracing::error!("Failed to send update to mailbox {}: {}", mailbox, e);
                 }
             }

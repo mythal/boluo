@@ -426,12 +426,13 @@ fn cleanup(
         _ => false,
     });
     if preview_map.capacity() > 64 {
+        let old_capacity = preview_map.capacity();
+        preview_map.shrink_to_fit();
         tracing::info!(
             "Shrinking preview map from {} to {}",
-            preview_map.capacity(),
-            64
+            old_capacity,
+            preview_map.capacity()
         );
-        preview_map.shrink_to_fit();
     }
     diff_map.retain(|_, diff_update| match &diff_update.update.body {
         | Diff {

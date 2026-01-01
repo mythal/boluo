@@ -38,7 +38,10 @@ impl EncodedUpdate {
 
 pub enum Action {
     Query(tokio::sync::oneshot::Sender<CachedUpdates>),
-    Update { body: UpdateBody },
+    Update {
+        body: UpdateBody,
+        live: UpdateLifetime,
+    },
     Members(MembersAction),
     Status(super::status::StatusAction),
 }
@@ -188,8 +191,12 @@ impl MailboxManager {
         Ok(rx)
     }
 
-    pub async fn fire_update(&self, body: UpdateBody) -> Result<(), MailboxManageError> {
-        let action = Action::Update { body };
+    pub async fn fire_update(
+        &self,
+        body: UpdateBody,
+        live: UpdateLifetime,
+    ) -> Result<(), MailboxManageError> {
+        let action = Action::Update { body, live };
         self.send_write_action(action).await
     }
 
@@ -259,7 +266,7 @@ fn on_update(
             if let Some(diff) = diff_map.get(&key) {
                 if let UpdateBody::Diff { diff, .. } = &diff.update.body {
                     if diff.payload.id != preview.id
-                        || diff.payload.reference_version != preview.version
+                        || diff.payload.keyframe_version != preview.version
                     {
                         diff_map.remove(&key);
                     }
@@ -284,7 +291,9 @@ fn on_update(
             else {
                 return;
             };
-            if reference_preview.version != diff.payload.reference_version {
+            if reference_preview.id != diff.payload.id
+                || reference_preview.version != diff.payload.keyframe_version
+            {
                 return;
             }
 
@@ -308,6 +317,13 @@ fn on_update(
                             }
                         }
                         _ => tracing::warn!("Expected preview, but got {:?}", existing.update.body),
+                    }
+                }
+                if let Some(existing) = diff_map.get(&key) {
+                    if let UpdateBody::Diff { diff, .. } = &existing.update.body {
+                        if diff.payload.id == preview_id {
+                            diff_map.remove(&key);
+                        }
                     }
                 }
             }
@@ -384,15 +400,34 @@ fn cleanup(
 
     let now = timestamp();
     let mut has_been_cleaned = false;
+    let mut last_removed_timestamp: Option<i64> = None;
     while updates.len() > 512 {
-        updates.pop_first();
+        if let Some((event_id, _)) = updates.pop_first() {
+            last_removed_timestamp = Some(event_id.timestamp);
+        }
         has_been_cleaned = true;
+    }
+    // Drop all updates with the same timestamp as the last removed one, to avoid partial cleanup
+    if let Some(removed_timestamp) = last_removed_timestamp {
+        updates.retain(|event_id, _| event_id.timestamp != removed_timestamp);
     }
     let start_at = if has_been_cleaned {
         updates.first_key_value().map(|(id, _)| *id)
     } else {
         None
     };
+    if has_been_cleaned {
+        if let Some(start_at) = start_at {
+            let age = now - start_at.timestamp;
+            if age < 1000 * 60 * 30 {
+                tracing::warn!(
+                    start_at = start_at.timestamp,
+                    age_s = age / 1000,
+                    "Mailbox updates trimmed close to current time"
+                );
+            }
+        }
+    }
 
     preview_map.retain(|_, preview_update| match preview_update.update.body {
         | MessagePreview { .. } => {
@@ -407,12 +442,13 @@ fn cleanup(
         _ => false,
     });
     if preview_map.capacity() > 64 {
+        let old_capacity = preview_map.capacity();
+        preview_map.shrink_to_fit();
         tracing::info!(
             "Shrinking preview map from {} to {}",
-            preview_map.capacity(),
-            64
+            old_capacity,
+            preview_map.capacity()
         );
-        preview_map.shrink_to_fit();
     }
     diff_map.retain(|_, diff_update| match &diff_update.update.body {
         | Diff {
@@ -426,7 +462,7 @@ fn cleanup(
             else {
                 return false;
             };
-            diff.payload.id == preview.id && diff.payload.reference_version == preview.version
+            diff.payload.id == preview.id && diff.payload.keyframe_version == preview.version
         }
         _ => false,
     });
@@ -476,7 +512,7 @@ impl MailBoxState {
                                     start_at,
                                 }).ok();
                             }
-                            Action::Update { body } => {
+                            Action::Update { body, live } => {
                                 last_activity_at = std::time::Instant::now();
                                 let mailbox_id = id;
                                 let encoded_update = match tokio::task::spawn_blocking(move || {
@@ -484,7 +520,7 @@ impl MailBoxState {
                                         mailbox: mailbox_id,
                                         body,
                                         id: EventId::new(),
-                                        live: UpdateLifetime::Persistent,
+                                        live,
                                     })
                                 }).await {
                                     Ok(encoded_update) => encoded_update,

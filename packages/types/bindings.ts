@@ -606,33 +606,45 @@ export type PreviewDiffOp =
   | { type: 'A'; _: string }
   | { type: 'NAME'; name: string };
 
+/**
+ * A diff to be applied to a keyframe preview
+ *
+ * Diff ops are a full patch relative to the referenced keyframe preview.
+ *
+ * Changes to fields outside text/name/entities (e.g., media_id, in_game, is_action, clear,
+ * edit_for, edit) must be sent as a full Preview keyframe.
+ */
 export type PreviewDiffPost = {
   /**
    * Channel ID
    */
   ch: string;
   /**
-   * The id of the preview that is being edited
+   * The id of the keyframe preview that is being edited
    */
   id: string;
   /**
-   * The version of the diff reference
+   * The version of the keyframe preview that this diff is based on.
+   *
+   * Assumes the version fits within u16 (no overflow expected).
    */
   ref: number;
   /**
    * The version of the diff
    *
    * Every edit will increase the version.
+   *
+   * Assumes the version fits within u16 (no overflow expected).
    */
   v?: number;
   /**
-   * The operation of the diff
+   * The modifications to be applied
    */
-  op: PreviewDiffOp;
+  op: PreviewDiffOp[];
   /**
-   * Changed entities
+   * Entities. If empty, the client should parse the text to regenerate entities.
    */
-  '~'?: [number, Entity][];
+  xs?: Entity[];
 };
 
 export type PreviewEdit = { time: string; p: number; q: number };
@@ -768,13 +780,7 @@ export type Update = {
   id: EventId;
   body: UpdateBody;
   /**
-   * Whether this update is resumable via `/api/events/connect?after=...`.
-   *
-   * `false` means the server persists this update in the in-memory mailbox state so
-   * it can be queried by `Update::get_from_state` on reconnect.
-   *
-   * `true` means it's broadcast-only (transient), and clients should not advance
-   * their resume cursor based on this update.
+   * How clients should treat this update for reconnect/cursor purposes.
    */
   live?: UpdateLifetime;
 };
@@ -800,6 +806,13 @@ export type UpdateLifetime =
    * Transient updates are not stored in mailbox state and cannot be resumed.
    */
   | 'T'
+  /**
+   * Volatile updates are stored in mailbox state but are best-effort and may be replaced/pruned.
+   *
+   * Clients should treat them as non-resumable for cursor advancing (same as `Transient`),
+   * while the server may still include the latest ones in `Update::get_from_state`.
+   */
+  | 'V'
   /**
    * Persistent updates are stored in mailbox state and can be resumed.
    */

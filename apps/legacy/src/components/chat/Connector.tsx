@@ -228,8 +228,11 @@ export const Connector = ({ spaceId, myId }: Props) => {
           console.warn('Failed to parse websocket message', received, e);
           return;
         }
-        if (compareEvents(after.current, event.id) > 0) return;
-        after.current = event.id;
+        const shouldAdvanceCursor = event.live == null || event.live === 'P';
+        if (shouldAdvanceCursor && compareEvents(after.current, event.id) > 0) return;
+        if (shouldAdvanceCursor) {
+          after.current = event.id;
+        }
         handleEvent(dispatch, setState, event);
       };
       dispatch(connectSpace(spaceId, connection));

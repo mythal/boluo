@@ -64,14 +64,14 @@ const buildWebsocket = (
   id: string,
   userId: string | null,
   token: string,
-  after?: EventId,
+  cursor?: EventId,
 ): WebSocket => {
   const paramsObject: Record<string, string> = { mailbox: id };
   paramsObject.token = token;
-  if (after) {
-    paramsObject.after = after.timestamp.toString();
-    paramsObject.node = after.node.toString();
-    paramsObject.seq = after.seq.toString();
+  if (cursor) {
+    paramsObject.after = cursor.timestamp.toString();
+    paramsObject.node = cursor.node.toString();
+    paramsObject.seq = cursor.seq.toString();
   }
   if (userId != null) paramsObject.userId = userId;
   const params = new URLSearchParams(paramsObject);
@@ -85,7 +85,7 @@ const connect = async (
   mailboxId: string,
   userId: string | null,
   connectionState: ConnectionState,
-  after: EventId,
+  cursor: EventId,
   onUpdateReceived: (update: Update) => void,
   dispatch: ChatDispatch,
 ): Promise<WebSocket | ConnectionError | null> => {
@@ -121,7 +121,7 @@ const connect = async (
     mailboxId,
     userId,
     tokenResult.token,
-    after,
+    cursor,
   );
   newConnection.onopen = (_) => {
     console.info(`connection established for ${mailboxId}`);
@@ -239,7 +239,7 @@ export const useConnectionEffect = (mailboxId: string) => {
         mailboxId,
         userId,
         chatState.connection,
-        chatState.lastEventId,
+        chatState.cursor,
         onUpdateReceived,
         dispatch,
       ).then((connectionResult) => {

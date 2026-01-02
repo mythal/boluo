@@ -116,7 +116,7 @@ export const Connector = ({ spaceId, myId }: Props) => {
   const mountedRef = useRef(false);
 
   const retryCount = useRef(0);
-  const after = useRef<EventId>({ timestamp: 0, node: 0, seq: 0 });
+  const cursor = useRef<EventId>({ timestamp: 0, node: 0, seq: 0 });
 
   useEffect(() => {
     stateRef.current = state;
@@ -199,9 +199,9 @@ export const Connector = ({ spaceId, myId }: Props) => {
         spaceId,
         myId,
         tokenResult.token,
-        after.current.timestamp,
-        after.current.node,
-        after.current.seq,
+        cursor.current.timestamp,
+        cursor.current.node,
+        cursor.current.seq,
       );
       connectionRef.current = connection;
       connection.onclose = (event) => {
@@ -228,11 +228,13 @@ export const Connector = ({ spaceId, myId }: Props) => {
           console.warn('Failed to parse websocket message', received, e);
           return;
         }
-        const shouldAdvanceCursor = event.live == null || event.live === 'P';
-        if (shouldAdvanceCursor && compareEvents(after.current, event.id) > 0) return;
-        if (shouldAdvanceCursor) {
-          after.current = event.id;
+
+        // Advance cursor
+        if (event.live == null || event.live === 'P') {
+          if (compareEvents(event.id, cursor.current) <= 0) return;
+          cursor.current = event.id;
         }
+
         handleEvent(dispatch, setState, event);
       };
       dispatch(connectSpace(spaceId, connection));

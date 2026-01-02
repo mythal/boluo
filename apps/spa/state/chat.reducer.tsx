@@ -3,7 +3,7 @@ import type { Reducer } from 'react';
 import { eventIdCompare } from '@boluo/sort';
 import type { ChannelState } from './channel.reducer';
 import { channelReducer, makeInitialChannelState } from './channel.reducer';
-import { type ChatAction, type ChatActionUnion, updateToChatAction } from './chat.actions';
+import { type ChatAction, type ChatActionUnion, toChatAction } from './chat.actions';
 import type { ConnectionState } from './connection.reducer';
 import { connectionReducer, initialConnectionState } from './connection.reducer';
 
@@ -16,7 +16,7 @@ export interface ChatSpaceState {
   connection: ConnectionState;
   channels: Record<string, ChannelState>;
   context: ChatReducerContext;
-  lastEventId: EventId;
+  cursor: EventId;
   /**
    * A timestamp is used to trigger the responsive system to check
    * if an event has occurred that is worth notifying the user about.
@@ -37,7 +37,7 @@ export const initialChatState: ChatSpaceState = {
     spaceId: '',
     initialized: false,
   },
-  lastEventId: zeroEventId,
+  cursor: zeroEventId,
   notifyTimestamp: 0,
 };
 
@@ -89,7 +89,7 @@ export const makeChatState = (spaceId: string): ChatSpaceState => ({
     spaceId,
     initialized: false,
   },
-  lastEventId: zeroEventId,
+  cursor: zeroEventId,
   notifyTimestamp: 0,
 });
 
@@ -107,20 +107,22 @@ const handleUpdate = (
   state: ChatSpaceState,
   { payload: update }: ChatAction<'update'>,
 ): ChatSpaceState => {
-  const compareToLast = eventIdCompare(update.id, state.lastEventId);
+  let nextCursor = state.cursor;
   const shouldAdvanceCursor = update.live == null || update.live === 'P';
-  if (shouldAdvanceCursor && compareToLast <= 0) {
-    return state;
+  if (shouldAdvanceCursor) {
+    if (eventIdCompare(update.id, state.cursor) <= 0) {
+      return state;
+    }
+    nextCursor = update.id;
   }
-
-  const lastEventId = shouldAdvanceCursor && compareToLast > 0 ? update.id : state.lastEventId;
-  const chatAction = updateToChatAction(update);
+  const chatAction = toChatAction(update);
   if (chatAction == null) {
     if (!shouldAdvanceCursor) return state;
-    return { ...state, lastEventId };
+    return { ...state, cursor: nextCursor };
   }
-  return { ...chatReducer(state, chatAction), lastEventId };
+  return { ...chatReducer(state, chatAction), cursor: nextCursor };
 };
+
 export const chatReducer: Reducer<ChatSpaceState, ChatActionUnion> = (
   state: ChatSpaceState,
   action: ChatActionUnion,

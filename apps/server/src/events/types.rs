@@ -1,7 +1,6 @@
 use crate::channels::Channel;
 use crate::channels::api::MemberWithUser;
 
-use crate::error::AppError;
 use crate::events::context::{CachedUpdates, EncodedUpdate};
 use crate::events::models::{StatusKind, UserStatus};
 use crate::events::preview::{Preview, PreviewDiff, PreviewDiffPost, PreviewPost};
@@ -12,6 +11,7 @@ use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use std::sync::OnceLock;
 use std::sync::atomic::AtomicU32;
+use thiserror::Error;
 use tokio::spawn;
 use tokio_tungstenite::tungstenite::{self, Utf8Bytes};
 use tracing::Instrument as _;
@@ -41,13 +41,21 @@ pub struct UpdateQuery {
     pub user_id: Option<Uuid>,
 }
 
-#[derive(Deserialize, Serialize, Debug, Copy, Clone, PartialEq, Eq, specta::Type)]
+#[derive(Deserialize, Serialize, Debug, Copy, Clone, PartialEq, Eq, specta::Type, Error)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum ConnectionError {
-    NotFound,
+    #[error("You are attempting to retrive updates that are too early")]
+    CursorTooOld,
+    #[error("No permission to access mailbox")]
     NoPermission,
+    #[error("Unauthenticated")]
+    Unauthenticated,
+    #[error("Invalid authentication token")]
     InvalidToken,
+    #[error("Unexpected server error")]
     Unexpected,
+    #[error("Bad request")]
+    BadRequest,
 }
 
 #[derive(Deserialize, Debug, specta::Type)]
@@ -126,6 +134,7 @@ pub enum UpdateBody {
     Error {
         code: ConnectionError,
         reason: String,
+        span: String,
     },
     AppUpdated {
         version: String,
@@ -244,19 +253,15 @@ impl Update {
         unsafe { tungstenite::Utf8Bytes::from_bytes_unchecked(bytes) }
     }
 
-    pub fn error(mailbox: Uuid, error: AppError) -> Update {
-        let code = match error {
-            AppError::NotFound(_) => ConnectionError::NotFound,
-            AppError::NoPermission(_) => ConnectionError::NoPermission,
-            AppError::Unauthenticated(_) => ConnectionError::InvalidToken,
-            _ => ConnectionError::Unexpected,
-        };
+    pub fn error(mailbox: Uuid, error: ConnectionError) -> Update {
+        let span = tracing::Span::current();
         Update {
             mailbox,
             id: EventId::new(),
             body: UpdateBody::Error {
-                code,
+                code: error,
                 reason: error.to_string(),
+                span: span.id().map(|id| id.into_u64()).unwrap_or(0).to_string(),
             },
             live: UpdateLifetime::Transient,
         }

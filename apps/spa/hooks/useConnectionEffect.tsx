@@ -206,7 +206,7 @@ export const useConnectionEffect = (mailboxId: string) => {
           );
           return;
         case 'ERROR':
-          if (update.body.code === 'NOT_FOUND') {
+          if (update.body.code === 'CURSOR_TOO_OLD') {
             dispatch({ type: 'resetChatState', payload: {} });
             return;
           }

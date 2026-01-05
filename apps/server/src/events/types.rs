@@ -196,6 +196,8 @@ pub enum UpdateLifetime {
     ///
     /// Clients should treat them as non-resumable for cursor advancing (same as `Transient`),
     /// while the server may still include the latest ones in `Update::get_from_state`.
+    ///
+    /// Clients should can safely replay them if they receive them again.
     #[serde(rename = "V")]
     Volatile,
     /// Persistent updates are stored in mailbox state and can be resumed.

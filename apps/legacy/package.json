@@ -48,7 +48,7 @@
   "private": true,
   "scripts": {
     "build": "vite build",
-    "check-types": "tsc --project tsconfig.json",
+    "check": "tsc --project tsconfig.json",
     "dev": "vite",
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",

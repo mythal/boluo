@@ -40,13 +40,28 @@ export const initialConnectionState: ConnectionState = {
   recoveringFromError: null,
 };
 
+const closeConnection = (connection: WebSocket): void => {
+  connection.onclose = null;
+  if (
+    connection.readyState === WebSocket.CLOSING ||
+    connection.readyState === WebSocket.CLOSED
+  ) {
+    return;
+  }
+  connection.close();
+};
+
 const handleConnected = (
   state: ConnectionState,
   action: ChatAction<'connected'>,
   mailboxId: string,
 ): ConnectionState => {
   if (mailboxId && action.payload.mailboxId !== mailboxId) {
+    closeConnection(action.payload.connection);
     return state;
+  }
+  if (state.type === 'CONNECTED' && state.connection !== action.payload.connection) {
+    closeConnection(state.connection);
   }
   return { type: 'CONNECTED', connection: action.payload.connection };
 };
@@ -58,6 +73,9 @@ const handleConnecting = (
 ): ConnectionState => {
   if (mailboxId && action.payload.mailboxId !== mailboxId) {
     return state;
+  }
+  if (state.type === 'CONNECTED') {
+    closeConnection(state.connection);
   }
   let retry = 0;
   if (state.type === 'CLOSED') {
@@ -115,8 +133,7 @@ const handleConnectionError = (
       ? state.retry
       : 0;
   if (state.type === 'CONNECTED') {
-    state.connection.onclose = null;
-    state.connection.close();
+    closeConnection(state.connection);
   }
   const recoveringFromError = getRecoveringFromError(state);
   if (shouldAutoRetry(payload.code) && recoveringFromError == null) {
@@ -149,8 +166,7 @@ const handleDebugCloseConnection = (
   { payload: { countdown } }: ChatAction<'debugCloseConnection'>,
 ): ConnectionState => {
   if (state.type === 'CONNECTED') {
-    state.connection.onclose = null;
-    state.connection.close();
+    closeConnection(state.connection);
   }
   return { type: 'CLOSED', retry: 4, countdown, recoveringFromError: null };
 };
@@ -164,8 +180,7 @@ const handleRetryConnection = (
     return state;
   }
   if (state.type === 'CONNECTED') {
-    state.connection.onclose = null;
-    state.connection.close();
+    closeConnection(state.connection);
   }
   const retry =
     state.type === 'CONNECTING' || state.type === 'CLOSED' || state.type === 'ERROR'

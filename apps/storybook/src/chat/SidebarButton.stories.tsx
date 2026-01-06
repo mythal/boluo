@@ -28,12 +28,23 @@ const canvasStyle: CanvasStyle = {
   '--spacing-sidebar': '15rem',
 };
 
-const SidebarButtonCanvas = ({ initialExpanded = false }: { initialExpanded?: boolean }) => {
+const SidebarButtonCanvas = ({
+  initialExpanded = false,
+  error,
+}: {
+  initialExpanded?: boolean;
+  error?: { message: string; onRetry?: () => void };
+}) => {
   const [isExpanded, setExpanded] = useState(initialExpanded);
 
   return (
     <div style={canvasStyle}>
-      <SidebarButton isSidebarExpanded={isExpanded} setSidebarExpanded={setExpanded} />
+      <SidebarButton
+        isSidebarExpanded={isExpanded}
+        setSidebarExpanded={setExpanded}
+        error={error}
+        disconnected={error != null}
+      />
     </div>
   );
 };
@@ -60,5 +71,18 @@ export const Touch: Story = {
     <IsTouchContext.Provider value={true}>
       <SidebarButtonCanvas initialExpanded={args.isSidebarExpanded} />
     </IsTouchContext.Provider>
+  ),
+};
+
+export const Error: Story = {
+  args: {
+    isSidebarExpanded: false,
+    disconnected: true,
+  },
+  render: (args) => (
+    <SidebarButtonCanvas
+      initialExpanded={args.isSidebarExpanded}
+      error={{ message: 'Connection error.', onRetry: () => console.info('retry') }}
+    />
   ),
 };

@@ -7,7 +7,7 @@ use crate::events::api::MakeToken;
 use crate::events::get_mailbox_broadcast_rx;
 use crate::events::models::StatusKind;
 use crate::events::token::SessionError;
-use crate::events::types::{ClientEvent, GetFromStateError};
+use crate::events::types::{ClientEvent, ConnectionError, GetFromStateError};
 use crate::interface::{Response, err_response, missing, ok_response, parse_query};
 use crate::session::{AuthenticateFail, Session};
 use crate::spaces::{Space, SpaceMember};
@@ -46,13 +46,11 @@ async fn check_permissions(
                 .or_no_permission()?;
         }
         None => {
-            tracing::warn!(
+            tracing::info!(
                 space_id = %space.id,
                 "A user tried to access private space but did not pass authentication"
             );
-            return Err(AppError::NoPermission(
-                "This space does not allow non-members to view it.".to_string(),
-            ));
+            return Err(AppError::Unauthenticated(AuthenticateFail::Guest));
         }
     }
     Ok(())
@@ -72,7 +70,7 @@ enum PushUpdatesError {
 async fn push_updates(
     mailbox: Uuid,
     outgoing: &mut Sender,
-    mut error_receiver: tokio::sync::mpsc::Receiver<AppError>,
+    mut error_receiver: tokio::sync::mpsc::Receiver<ConnectionError>,
     after: Option<i64>,
     seq: Option<Seq>,
     node: Option<u16>,
@@ -87,11 +85,7 @@ async fn push_updates(
                 mailbox_id = %mailbox,
                 "Failed to get cached updates"
             );
-            let error_update = Update::error(
-                mailbox,
-                AppError::Unexpected(anyhow::anyhow!("Failed to get cached updates")),
-            )
-            .encode();
+            let error_update = Update::error(mailbox, ConnectionError::Unexpected).encode();
             outgoing.send(WsMessage::Text(error_update)).await?;
             return Err(PushUpdatesError::FailedToGetCachedUpdates);
         }
@@ -183,7 +177,7 @@ async fn push_updates(
 async fn handle_client_event(
     pool: &sqlx::PgPool,
     mailbox: Uuid,
-    error_sender: tokio::sync::mpsc::Sender<AppError>,
+    error_sender: tokio::sync::mpsc::Sender<ConnectionError>,
     session: Option<Session>,
     message: Utf8Bytes,
 ) {
@@ -191,24 +185,14 @@ async fn handle_client_event(
         tokio::task::spawn_blocking(move || serde_json::from_str::<ClientEvent>(&message)).await
     else {
         tracing::warn!("Failed to parse event from client");
-        error_sender
-            .send(AppError::BadRequest(
-                "Failed to parse event from client".to_string(),
-            ))
-            .await
-            .ok();
+        error_sender.send(ConnectionError::BadRequest).await.ok();
         return;
     };
     let event = match deserialize_result {
         Ok(event) => event,
         Err(e) => {
             tracing::warn!(error = %e, "Failed to parse event from client");
-            error_sender
-                .send(AppError::BadRequest(
-                    "Failed to parse event from client".to_string(),
-                ))
-                .await
-                .ok();
+            error_sender.send(ConnectionError::BadRequest).await.ok();
             return;
         }
     };
@@ -220,7 +204,7 @@ async fn handle_client_event(
                     .increment(1);
 
                 error_sender
-                    .send(AppError::Unauthenticated(AuthenticateFail::Guest))
+                    .send(ConnectionError::Unauthenticated)
                     .await
                     .ok();
 
@@ -235,7 +219,7 @@ async fn handle_client_event(
             let Some(session) = session else {
                 tracing::warn!("An user tried to diff preview without authentication");
                 error_sender
-                    .send(AppError::Unauthenticated(AuthenticateFail::Guest))
+                    .send(ConnectionError::Unauthenticated)
                     .await
                     .ok();
 
@@ -257,7 +241,11 @@ async fn handle_client_event(
     }
 }
 
-fn connection_error(req: Request<Incoming>, mailbox: Option<Uuid>, error: AppError) -> Response {
+fn connection_error(
+    req: Request<Incoming>,
+    mailbox: Option<Uuid>,
+    error: ConnectionError,
+) -> Response {
     let mailbox = mailbox.unwrap_or_default();
     tracing::error!(error = %error, "WebSocket connection error");
     let error_update = Update::error(mailbox, error).encode();
@@ -280,11 +268,7 @@ async fn connect(ctx: &crate::context::AppContext, req: hyper::Request<Incoming>
         .unwrap_or("");
     let Ok(query) = parse_query::<UpdateQuery>(req.uri()) else {
         tracing::warn!("Failed to parse query {:?}", req.uri());
-        return connection_error(
-            req,
-            None,
-            AppError::BadRequest("Failed to parse query".to_string()),
-        );
+        return connection_error(req, None, ConnectionError::BadRequest);
     };
     use futures::future;
     let UpdateQuery {
@@ -303,7 +287,10 @@ async fn connect(ctx: &crate::context::AppContext, req: hyper::Request<Incoming>
             Ok(Some(session)) => Ok(session),
             Ok(None) => Err(SessionError::Invalid),
             Err(AppError::Unauthenticated(AuthenticateFail::Guest)) => Err(SessionError::Invalid),
-            Err(e) => return connection_error(req, Some(mailbox), e),
+            Err(e) => {
+                tracing::error!(error = %e, "Failed to authenticate the user");
+                return connection_error(req, Some(mailbox), ConnectionError::Unexpected);
+            }
         }
     };
     {
@@ -311,20 +298,35 @@ async fn connect(ctx: &crate::context::AppContext, req: hyper::Request<Incoming>
             Ok(conn) => conn,
             Err(e) => {
                 tracing::error!(error = %e, "Failed to acquire database connection");
-                return connection_error(req, Some(mailbox), e.into());
+                return connection_error(req, Some(mailbox), ConnectionError::Unexpected);
             }
         };
         let space = match Space::get_by_id(&mut *conn, &mailbox).await {
             Ok(space) => space,
             Err(e) => {
                 tracing::error!(error = %e, "Failed to get space");
-                return connection_error(req, Some(mailbox), e.into());
+                return connection_error(req, Some(mailbox), ConnectionError::Unexpected);
             }
         };
 
         if let Some(space) = space.as_ref() {
             if let Err(e) = check_permissions(&mut conn, space, &session.ok()).await {
-                return connection_error(req, Some(mailbox), e);
+                match &e {
+                    AppError::NoPermission(_) => {
+                        return connection_error(req, Some(mailbox), ConnectionError::NoPermission);
+                    }
+                    AppError::Unauthenticated(_) => {
+                        return connection_error(
+                            req,
+                            Some(mailbox),
+                            ConnectionError::Unauthenticated,
+                        );
+                    }
+                    _ => {
+                        tracing::error!(error = %e, "Failed to check permissions");
+                        return connection_error(req, Some(mailbox), ConnectionError::Unexpected);
+                    }
+                }
             }
         }
     };
@@ -339,11 +341,7 @@ async fn connect(ctx: &crate::context::AppContext, req: hyper::Request<Incoming>
                     origin,
                     "The connection token has expired for the user"
                 );
-                return connection_error(
-                    req,
-                    Some(mailbox),
-                    AppError::Unauthenticated(AuthenticateFail::Expired),
-                );
+                return connection_error(req, Some(mailbox), ConnectionError::InvalidToken);
             }
             Err(SessionError::Invalid) => {
                 tracing::warn!(
@@ -353,11 +351,7 @@ async fn connect(ctx: &crate::context::AppContext, req: hyper::Request<Incoming>
                     origin,
                     "Cannot find session of the user from the provided token"
                 );
-                return connection_error(
-                    req,
-                    Some(mailbox),
-                    AppError::Unauthenticated(AuthenticateFail::NoSessionFound),
-                );
+                return connection_error(req, Some(mailbox), ConnectionError::InvalidToken);
             }
             Ok(session) => {
                 if session.user_id != user_id {
@@ -369,11 +363,7 @@ async fn connect(ctx: &crate::context::AppContext, req: hyper::Request<Incoming>
                         origin,
                         "User ID does not match the authenticated user"
                     );
-                    return connection_error(
-                        req,
-                        Some(mailbox),
-                        AppError::Unauthenticated(AuthenticateFail::NoSessionFound),
-                    );
+                    return connection_error(req, Some(mailbox), ConnectionError::BadRequest);
                 }
             }
         }
@@ -586,11 +576,7 @@ async fn sse(ctx: &crate::context::AppContext, req: Request<Incoming>) -> Respon
     match Update::get_from_state(&mailbox, after, seq, node).await {
         Ok(mut cached) => messages.append(&mut cached),
         Err(GetFromStateError::FailedToQuery) => {
-            let error_update = Update::error(
-                mailbox,
-                AppError::Unexpected(anyhow::anyhow!("Failed to get cached updates")),
-            )
-            .encode();
+            let error_update = Update::error(mailbox, ConnectionError::Unexpected).encode();
             messages.push(error_update);
         }
         Err(GetFromStateError::RequestedUpdatesAreTooEarly { start_at: _ }) => {}

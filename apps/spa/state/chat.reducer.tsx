@@ -31,6 +31,7 @@ export const initialChatState: ChatSpaceState = {
     type: 'CLOSED',
     retry: 0,
     countdown: 0,
+    recoveringFromError: null,
   },
   channels: {},
   context: {
@@ -127,25 +128,30 @@ export const chatReducer: Reducer<ChatSpaceState, ChatActionUnion> = (
   state: ChatSpaceState,
   action: ChatActionUnion,
 ): ChatSpaceState => {
-  if (action.type === 'update') {
-    return handleUpdate(state, action);
-  }
-  if (action.type === 'resetChatState') {
-    return makeChatState(state.context.spaceId);
-  }
-  if (action.type === 'spaceUpdated') {
-    return handleSpaceUpdated(state, action);
-  } else if (action.type === 'enterSpace') {
-    if (state.context.spaceId === action.payload.spaceId) {
-      return state;
-    }
-    return makeChatState(action.payload.spaceId);
-  } else if (action.type === 'channelDeleted') {
-    return handleChannelDeleted(state, action);
-  }
   const { context } = state;
-  if (action.type === 'initialized') {
-    return { ...state, context: { ...context, initialized: true } };
+  if (
+    action.type === 'resetChatState' ||
+    // When the client sleeps for too long, the server may have discarded
+    // cached events. In this case, we need to reset the chat state.
+    (action.type === 'connectionError' &&
+      action.payload.code === 'CURSOR_TOO_OLD' &&
+      action.payload.mailboxId === context.spaceId)
+  ) {
+    return makeChatState(context.spaceId);
+  }
+  switch (action.type) {
+    case 'update':
+      return handleUpdate(state, action);
+    case 'spaceUpdated':
+      return handleSpaceUpdated(state, action);
+    case 'enterSpace':
+      return state.context.spaceId === action.payload.spaceId
+        ? state
+        : makeChatState(action.payload.spaceId);
+    case 'channelDeleted':
+      return handleChannelDeleted(state, action);
+    case 'initialized':
+      return { ...state, context: { ...context, initialized: true } };
   }
 
   const { channels, connection, ...rest } = state;

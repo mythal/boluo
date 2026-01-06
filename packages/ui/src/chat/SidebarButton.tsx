@@ -1,8 +1,9 @@
 // False positive with useTooltip refs
 /* eslint-disable react-hooks/refs */
-import { type FC } from 'react';
+import { type FC, type ReactNode } from 'react';
 import ChevronLeft from '@boluo/icons/ChevronLeft';
 import ChevronRight from '@boluo/icons/ChevronRight';
+import AlertTriangle from '@boluo/icons/AlertTriangle';
 import Unplug from '@boluo/icons/Unplug';
 import { useTooltip } from '@boluo/ui/hooks/useTooltip';
 import { useIsTouch } from '@boluo/ui/hooks/useIsTouch';
@@ -11,10 +12,17 @@ import { FormattedMessage } from 'react-intl';
 import { Kbd } from '../Kbd';
 import { isApple } from '@boluo/utils/browser';
 import Icon from '../Icon';
+import { ButtonInline } from '../ButtonInline';
+
+interface SidebarButtonError {
+  message: ReactNode;
+  onRetry?: () => void;
+}
 
 interface Props {
   isSidebarExpanded: boolean;
   disconnected: boolean;
+  error?: SidebarButtonError;
   setSidebarExpanded: (expanded: boolean | ((prev: boolean) => boolean)) => void;
   switchToConnections?: () => void;
 }
@@ -23,6 +31,7 @@ export const SidebarButton: FC<Props> = ({
   isSidebarExpanded,
   setSidebarExpanded,
   disconnected,
+  error,
   switchToConnections,
 }) => {
   const isTouch = useIsTouch();
@@ -94,7 +103,24 @@ export const SidebarButton: FC<Props> = ({
           </div>
         </div>
       )}
-      {disconnected && (
+      {error && (
+        <div
+          ref={refs.setFloating}
+          style={floatingStyles}
+          {...getFloatingProps()}
+          className="dark text-text-primary w-max max-w-xs rounded border border-black bg-black px-3 py-2 text-left text-sm shadow-lg"
+        >
+          {error.onRetry && (
+            <div className="float-right ml-2">
+              <ButtonInline onClick={error.onRetry}>
+                <FormattedMessage defaultMessage="Retry" />
+              </ButtonInline>
+            </div>
+          )}
+          <Icon icon={AlertTriangle} /> <span>{error.message}</span>
+        </div>
+      )}
+      {disconnected && !error && (
         <button
           ref={refs.setFloating}
           style={floatingStyles}

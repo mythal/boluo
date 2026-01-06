@@ -9,7 +9,7 @@ import { isServerUpdate } from '@boluo/api/events';
 import { useQueryCurrentUser } from '@boluo/hooks/useQueryCurrentUser';
 import { webSocketUrlAtom } from '@boluo/hooks/useWebSocketUrl';
 import { useAtomValue, useSetAtom, useStore } from 'jotai';
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useSWRConfig } from 'swr';
 import { isUuid } from '@boluo/utils/id';
 import { PING, PONG } from '../const';
@@ -19,6 +19,7 @@ import { get } from '@boluo/api-browser';
 import { type IntlShape, useIntl } from 'react-intl';
 import { sleep } from '@boluo/utils/async';
 import { useLogout } from '@boluo/hooks/useLogout';
+import { type ClientConnectionError } from '../state/chat.actions';
 
 let lastPongTime = Date.now();
 const RELOAD_TIMEOUT = 1000 * 60 * 30;
@@ -26,14 +27,13 @@ const RELOAD_TIMEOUT = 1000 * 60 * 30;
 const UNAUTHENTICATED = 'UNAUTHENTICATED';
 const NETWORK_ERROR = 'NETWORK_ERROR';
 const UNEXPECTED = 'UNEXPECTED';
-type ConnectionError = 'UNAUTHENTICATED' | 'NETWORK_ERROR' | 'UNEXPECTED';
 
 const SLEEP_MS = [0, 32, 64, 126, 256, 256, 512, 1024, 512];
 const MAX_ATTEMPTS = 11;
 const getToken = async (
   makeToken: MakeToken,
-): Promise<{ token: string; timestamp: number } | ConnectionError> => {
-  let errorCode: ConnectionError | null = null;
+): Promise<{ token: string; timestamp: number } | ClientConnectionError> => {
+  let errorCode: ClientConnectionError | null = null;
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
     const sleepMs = SLEEP_MS[Math.min(attempt, SLEEP_MS.length - 1)]!;
     if (sleepMs > 0) {
@@ -47,6 +47,9 @@ const getToken = async (
     if (err.code === 'UNAUTHENTICATED') {
       errorCode = UNAUTHENTICATED;
       continue;
+    } else if (err.code === 'NO_PERMISSION') {
+      errorCode = 'NO_PERMISSION';
+      break;
     } else if (err.code === 'FETCH_FAIL') {
       errorCode = NETWORK_ERROR;
       continue;
@@ -79,16 +82,17 @@ const buildWebsocket = (
   return new WebSocket(url);
 };
 
+const TOKEN_SPAN = 'CLIENT';
+
 const connect = async (
-  intl: IntlShape,
   webSocketEndpoint: string,
   mailboxId: string,
   userId: string | null,
   connectionState: ConnectionState,
   cursor: EventId,
-  onUpdateReceived: (update: Update) => void,
+  updateSideEffect: (update: Update) => void,
   dispatch: ChatDispatch,
-): Promise<WebSocket | ConnectionError | null> => {
+): Promise<WebSocket | null> => {
   if (!isUuid(mailboxId)) return null;
   if (connectionState.type !== 'CLOSED') return null;
   if (connectionState.countdown > 0) {
@@ -102,19 +106,20 @@ const connect = async (
   }
   dispatch({ type: 'connecting', payload: { mailboxId } });
   const tokenResult = await getToken({ spaceId: mailboxId, userId });
-  if (
-    tokenResult === UNAUTHENTICATED ||
-    tokenResult === NETWORK_ERROR ||
-    tokenResult === UNEXPECTED
-  ) {
-    const code = tokenResult === UNAUTHENTICATED ? 'INVALID_TOKEN' : 'UNEXPECTED';
-    dispatch({ type: 'connectionError', payload: { mailboxId, code } });
-    return tokenResult;
+  if (typeof tokenResult === 'string') {
+    dispatch({
+      type: 'connectionError',
+      payload: { mailboxId, code: tokenResult, span: TOKEN_SPAN, timestamp: Date.now() },
+    });
+    return null;
   }
 
   if (Date.now() - tokenResult.timestamp > 1000 * 10) {
-    dispatch({ type: 'connectionError', payload: { mailboxId, code: 'UNEXPECTED' } });
-    return 'UNEXPECTED';
+    dispatch({
+      type: 'connectionError',
+      payload: { mailboxId, code: UNEXPECTED, span: TOKEN_SPAN, timestamp: tokenResult.timestamp },
+    });
+    return null;
   }
   const newConnection = buildWebsocket(
     webSocketEndpoint,
@@ -156,21 +161,21 @@ const connect = async (
       return;
     }
     dispatch({ type: 'update', payload: update });
-    onUpdateReceived(update);
+    updateSideEffect(update);
   };
   return newConnection;
 };
 
 export const useConnectionEffect = (mailboxId: string) => {
-  const logout = useLogout();
   const { mutate } = useSWRConfig();
   const { data: user, isLoading: isQueryingUser } = useQueryCurrentUser();
   const webSocketEndpoint = useAtomValue(webSocketUrlAtom);
+  const connectionState = useAtomValue(connectionStateAtom);
   const userId = user?.id ?? null;
   const store = useStore();
-  const dispatch = useSetAtom(chatAtom);
-  const intl = useIntl();
-  const onUpdateReceived = useCallback(
+  const logout = useLogout();
+  const handledUnauthenticatedRef = useRef<number | null>(null);
+  const updateSideEffect = useCallback(
     (update: Update) => {
       switch (update.body.type) {
         case 'CHANNEL_DELETED':
@@ -206,15 +211,6 @@ export const useConnectionEffect = (mailboxId: string) => {
           );
           return;
         case 'ERROR':
-          if (update.body.code === 'CURSOR_TOO_OLD') {
-            dispatch({ type: 'resetChatState', payload: {} });
-            return;
-          }
-          dispatch({
-            type: 'connectionError',
-            payload: { mailboxId, code: update.body.code ?? 'UNEXPECTED' },
-          });
-          return;
         case 'NEW_MESSAGE':
         case 'MESSAGE_DELETED':
         case 'MESSAGE_EDITED':
@@ -224,8 +220,20 @@ export const useConnectionEffect = (mailboxId: string) => {
           return;
       }
     },
-    [dispatch, mailboxId, mutate],
+    [mutate],
   );
+  const dispatch = useSetAtom(chatAtom);
+
+  useEffect(() => {
+    if (connectionState.type !== 'ERROR') return;
+    if (connectionState.code !== UNAUTHENTICATED) return;
+    if (handledUnauthenticatedRef.current === connectionState.timestamp) return;
+    handledUnauthenticatedRef.current = connectionState.timestamp;
+    if (user == null) return;
+    if (confirm("Your session has expired. You'll be logged out now.")) {
+      logout();
+    }
+  }, [connectionState, logout, user]);
 
   useEffect(() => {
     if (mailboxId === '') return;
@@ -234,53 +242,14 @@ export const useConnectionEffect = (mailboxId: string) => {
     const performConnect = () => {
       const chatState = store.get(chatAtom);
       void connect(
-        intl,
         webSocketEndpoint,
         mailboxId,
         userId,
         chatState.connection,
         chatState.cursor,
-        onUpdateReceived,
+        updateSideEffect,
         dispatch,
       ).then((connectionResult) => {
-        if (connectionResult == null) return;
-        if (connectionResult === NETWORK_ERROR) {
-          alert(
-            intl.formatMessage({
-              defaultMessage:
-                'Failed to establish connection due to a network error. Please try again later.',
-            }),
-          );
-          return;
-        } else if (connectionResult === UNAUTHENTICATED) {
-          if (userId != null) {
-            if (
-              confirm(
-                intl.formatMessage({
-                  defaultMessage:
-                    'The session is invalid. Re-login may help to resolve this issue. Do you want to log out now?',
-                }),
-              )
-            ) {
-              logout();
-            }
-          } else {
-            alert(
-              intl.formatMessage({
-                defaultMessage: 'You are not authenticated. Please log in to access this resource.',
-              }),
-            );
-          }
-          return;
-        } else if (connectionResult === UNEXPECTED) {
-          alert(
-            intl.formatMessage({
-              defaultMessage:
-                'An unexpected error occurred while establishing the connection. Please try again later.',
-            }),
-          );
-          return;
-        }
         currentConnection = connectionResult;
       });
     };
@@ -299,15 +268,5 @@ export const useConnectionEffect = (mailboxId: string) => {
       unsub();
       if (currentConnection) currentConnection.close();
     };
-  }, [
-    onUpdateReceived,
-    userId,
-    mailboxId,
-    store,
-    webSocketEndpoint,
-    dispatch,
-    isQueryingUser,
-    intl,
-    logout,
-  ]);
+  }, [dispatch, isQueryingUser, mailboxId, store, updateSideEffect, userId, webSocketEndpoint]);
 };

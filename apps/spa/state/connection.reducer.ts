@@ -1,8 +1,7 @@
 import { store } from '@boluo/store';
-import { type ChatAction, type ChatActionUnion } from './chat.actions';
+import { type ClientConnectionError, type ChatAction, type ChatActionUnion } from './chat.actions';
 import { chatAtom } from './chat.atoms';
 import { type ChatReducerContext } from './chat.reducer';
-import { type ConnectionError } from '@boluo/api';
 
 export interface Connected {
   type: 'CONNECTED';
@@ -12,17 +11,24 @@ export interface Connected {
 export interface Connecting {
   type: 'CONNECTING';
   retry: number;
+  recoveringFromError: ClientConnectionError | null;
 }
 
 export interface Closed {
   type: 'CLOSED';
   retry: number;
   countdown: number;
+  recoveringFromError: ClientConnectionError | null;
 }
 
 export interface Error {
   type: 'ERROR';
-  code: ConnectionError;
+  code: ClientConnectionError;
+  retry: number;
+  timestamp: number;
+  reason?: string;
+  span?: string;
+  recoveringFromError: ClientConnectionError | null;
 }
 
 export type ConnectionState = Connected | Connecting | Closed | Error;
@@ -31,6 +37,7 @@ export const initialConnectionState: ConnectionState = {
   type: 'CLOSED',
   retry: 0,
   countdown: 0,
+  recoveringFromError: null,
 };
 
 const handleConnected = (
@@ -56,10 +63,15 @@ const handleConnecting = (
   if (state.type === 'CLOSED') {
     retry = state.retry + 1;
   }
-  return { type: 'CONNECTING', retry };
+  return { type: 'CONNECTING', retry, recoveringFromError: getRecoveringFromError(state) };
 };
 
 const RETRY_COUNTDOWN = [0, 0, 2, 3, 3, 5, 3, 5, 7];
+const AUTO_RETRY_ERRORS: ClientConnectionError[] = ['NETWORK_ERROR', 'INVALID_TOKEN', 'UNEXPECTED'];
+
+const shouldAutoRetry = (code: ClientConnectionError): boolean => AUTO_RETRY_ERRORS.includes(code);
+const getRecoveringFromError = (state: ConnectionState): ClientConnectionError | null =>
+  state.type === 'CONNECTED' ? null : state.recoveringFromError;
 
 const handleConnectionClosed = (
   state: ConnectionState,
@@ -87,7 +99,7 @@ const handleConnectionClosed = (
     }
     countdown = RETRY_COUNTDOWN[retry] ?? 8 + offset;
   }
-  return { type: 'CLOSED', retry, countdown };
+  return { type: 'CLOSED', retry, countdown, recoveringFromError: getRecoveringFromError(state) };
 };
 
 const handleConnectionError = (
@@ -98,7 +110,27 @@ const handleConnectionError = (
   if (mailboxId && payload.mailboxId !== mailboxId) {
     return state;
   }
-  return { type: 'ERROR', code: payload.code };
+  const retry =
+    state.type === 'CONNECTING' || state.type === 'CLOSED' || state.type === 'ERROR'
+      ? state.retry
+      : 0;
+  if (state.type === 'CONNECTED') {
+    state.connection.onclose = null;
+    state.connection.close();
+  }
+  const recoveringFromError = getRecoveringFromError(state);
+  if (shouldAutoRetry(payload.code) && recoveringFromError == null) {
+    return { type: 'CLOSED', retry, countdown: 0, recoveringFromError: payload.code };
+  }
+  return {
+    type: 'ERROR',
+    code: payload.code,
+    retry,
+    timestamp: payload.timestamp,
+    reason: payload.reason,
+    span: payload.span,
+    recoveringFromError,
+  };
 };
 
 const handleReconnectCountdownTick = (
@@ -120,7 +152,26 @@ const handleDebugCloseConnection = (
     state.connection.onclose = null;
     state.connection.close();
   }
-  return { type: 'CLOSED', retry: 4, countdown };
+  return { type: 'CLOSED', retry: 4, countdown, recoveringFromError: null };
+};
+
+const handleRetryConnection = (
+  state: ConnectionState,
+  { payload }: ChatAction<'retryConnection'>,
+  mailboxId: string,
+): ConnectionState => {
+  if (mailboxId && payload.mailboxId !== mailboxId) {
+    return state;
+  }
+  if (state.type === 'CONNECTED') {
+    state.connection.onclose = null;
+    state.connection.close();
+  }
+  const retry =
+    state.type === 'CONNECTING' || state.type === 'CLOSED' || state.type === 'ERROR'
+      ? state.retry
+      : 0;
+  return { type: 'CLOSED', retry, countdown: 0, recoveringFromError: null };
 };
 
 export const connectionReducer = (
@@ -137,6 +188,8 @@ export const connectionReducer = (
       return handleConnectionClosed(state, action, mailboxId);
     case 'connectionError':
       return handleConnectionError(state, action, mailboxId);
+    case 'retryConnection':
+      return handleRetryConnection(state, action, mailboxId);
     case 'reconnectCountdownTick':
       return handleReconnectCountdownTick(state, action);
     case 'debugCloseConnection':

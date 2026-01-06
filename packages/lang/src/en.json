@@ -32,9 +32,6 @@
   "/jxJyw": {
     "message": "The position you are trying to place the message is changed."
   },
-  "/sLMk2": {
-    "message": "You are not authenticated. Please log in to access this resource."
-  },
   "0Azlrb": {
     "message": "Manage"
   },
@@ -52,9 +49,6 @@
   },
   "0ah2ud": {
     "message": "Space"
-  },
-  "0cmG3L": {
-    "message": "Failed to establish connection due to a network error. Please try again later."
   },
   "0eanrB": {
     "message": "Include archived messages"
@@ -152,6 +146,9 @@
   "62nsdy": {
     "message": "Retry"
   },
+  "64owOH": {
+    "message": "Network error. Please retry."
+  },
   "64sfSN": {
     "message": "Nevermind"
   },
@@ -214,6 +211,9 @@
   },
   "8HQJF3": {
     "message": "Paste CSS variables or any custom CSS to override the theme."
+  },
+  "8MYOsd": {
+    "message": "Invalid token. Please retry."
   },
   "8be59M": {
     "message": "Email verified successfully!"
@@ -320,9 +320,6 @@
   "EWw/tK": {
     "message": "Apply"
   },
-  "Eborcf": {
-    "message": "The session is invalid. Re-login may help to resolve this issue. Do you want to log out now?"
-  },
   "EcW+hX": {
     "message": "Only visible to selected people."
   },
@@ -409,6 +406,9 @@
   },
   "IvjoDS": {
     "message": "Connected"
+  },
+  "J78glR": {
+    "message": "Please log in to continue."
   },
   "JBWS0c": {
     "message": "Link"
@@ -584,6 +584,9 @@
   "Q8Qw5B": {
     "message": "Description"
   },
+  "QAF77H": {
+    "message": "You do not have permission to access."
+  },
   "QBYqL5": {
     "message": "Failed to query members of the space"
   },
@@ -749,6 +752,9 @@
   "XOi37d": {
     "message": "Plain Text"
   },
+  "XPj4VR": {
+    "message": "An unknown error occurred. Please refresh."
+  },
   "XTqS60": {
     "message": "Please send {errorCode} to the system administrator."
   },
@@ -850,9 +856,6 @@
   },
   "ceSWhW": {
     "message": "Show archived messages"
-  },
-  "ciPqqe": {
-    "message": "An unexpected error occurred while establishing the connection. Please try again later."
   },
   "clpFBW": {
     "message": "Space Publicity"

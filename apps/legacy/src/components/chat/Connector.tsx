@@ -67,8 +67,11 @@ const handleEvent = (
   if (body.type === 'APP_UPDATED') {
     location.reload();
   } else if (body.type === 'ERROR') {
-    if (body.code === 'NOT_FOUND') {
-      alert('找不到请求的更新，这可能由于客户端长时间没连接网络或者服务器重启，请刷新页面重试');
+    if (body.code === 'CURSOR_TOO_OLD') {
+      if (confirm('客户端状态已过期，是否刷新页面？')) {
+        location.reload();
+      }
+      return;
     }
     console.error('Connection Error', body);
     setState('CLOSED');

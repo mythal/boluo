@@ -32,9 +32,6 @@
   "/jxJyw": {
     "message": "試圖放置訊息的位置發生了改變。"
   },
-  "/sLMk2": {
-    "message": "You are not authenticated. Please log in to access this resource."
-  },
   "0Azlrb": {
     "message": "管理"
   },
@@ -52,9 +49,6 @@
   },
   "0ah2ud": {
     "message": "位面"
-  },
-  "0cmG3L": {
-    "message": "Failed to establish connection due to a network error. Please try again later."
   },
   "0eanrB": {
     "message": "包括已歸檔的訊息"
@@ -152,6 +146,9 @@
   "62nsdy": {
     "message": "重試"
   },
+  "64owOH": {
+    "message": "Network error. Please retry."
+  },
   "64sfSN": {
     "message": "沒差"
   },
@@ -214,6 +211,9 @@
   },
   "8HQJF3": {
     "message": "Paste CSS variables or any custom CSS to override the theme."
+  },
+  "8MYOsd": {
+    "message": "Invalid token. Please retry."
   },
   "8be59M": {
     "message": "電子郵件驗證成功。"
@@ -320,9 +320,6 @@
   "EWw/tK": {
     "message": "套用"
   },
-  "Eborcf": {
-    "message": "The session is invalid. Re-login may help to resolve this issue. Do you want to log out now?"
-  },
   "EcW+hX": {
     "message": "只有選中的人可見。"
   },
@@ -409,6 +406,9 @@
   },
   "IvjoDS": {
     "message": "已連接"
+  },
+  "J78glR": {
+    "message": "Please log in to continue."
   },
   "JBWS0c": {
     "message": "連結"
@@ -584,6 +584,9 @@
   "Q8Qw5B": {
     "message": "描述"
   },
+  "QAF77H": {
+    "message": "You do not have permission to access."
+  },
   "QBYqL5": {
     "message": "查詢位面成員失敗"
   },
@@ -749,6 +752,9 @@
   "XOi37d": {
     "message": "純文本"
   },
+  "XPj4VR": {
+    "message": "An unknown error occurred. Please refresh."
+  },
   "XTqS60": {
     "message": "請將 {errorCode} 告訴系統管理員。"
   },
@@ -850,9 +856,6 @@
   },
   "ceSWhW": {
     "message": "顯示已歸檔的訊息"
-  },
-  "ciPqqe": {
-    "message": "An unexpected error occurred while establishing the connection. Please try again later."
   },
   "clpFBW": {
     "message": "位面公開性"

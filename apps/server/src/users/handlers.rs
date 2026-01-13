@@ -1,4 +1,5 @@
 use std::net::IpAddr;
+use std::num::NonZeroU32;
 use std::sync::LazyLock;
 
 use super::api::{
@@ -24,9 +25,52 @@ use crate::users::api::{
 };
 use crate::users::models::UserExt;
 use crate::utils::{get_ip, id};
+use governor::{DefaultKeyedRateLimiter, Quota, RateLimiter};
 use hyper::body::{Body, Incoming};
 use hyper::{Method, Request, Response};
 use uuid::Uuid;
+
+const RATE_LIMITER_CLEAN_INTERVAL_S: u64 = 60 * 10;
+const RATE_LIMITER_SHRINK_INTERVAL_S: u64 = 60 * 60;
+
+static LOGIN_LIMITER: LazyLock<DefaultKeyedRateLimiter<String>> =
+    LazyLock::new(|| RateLimiter::keyed(Quota::per_minute(NonZeroU32::new(10).unwrap())));
+static RESET_PASSWORD_IP_LIMITER: LazyLock<DefaultKeyedRateLimiter<IpAddr>> =
+    LazyLock::new(|| RateLimiter::keyed(Quota::per_hour(NonZeroU32::new(32).unwrap())));
+static RESET_PASSWORD_EMAIL_LIMITER: LazyLock<DefaultKeyedRateLimiter<String>> =
+    LazyLock::new(|| RateLimiter::keyed(Quota::per_hour(NonZeroU32::new(16).unwrap())));
+static EMAIL_CHANGE_IP_LIMITER: LazyLock<DefaultKeyedRateLimiter<IpAddr>> =
+    LazyLock::new(|| RateLimiter::keyed(Quota::per_hour(NonZeroU32::new(10).unwrap())));
+static EMAIL_CHANGE_EMAIL_LIMITER: LazyLock<DefaultKeyedRateLimiter<String>> =
+    LazyLock::new(|| RateLimiter::keyed(Quota::per_hour(NonZeroU32::new(5).unwrap())));
+
+pub fn start_rate_limiter_cleanup() {
+    tokio::spawn(async move {
+        let mut interval = crate::utils::cleaner_interval(RATE_LIMITER_CLEAN_INTERVAL_S);
+        let mut shrink_interval = crate::utils::cleaner_interval(RATE_LIMITER_SHRINK_INTERVAL_S);
+        loop {
+            tokio::select! {
+                _ = interval.tick() => {
+                    LOGIN_LIMITER.retain_recent();
+                    RESET_PASSWORD_IP_LIMITER.retain_recent();
+                    RESET_PASSWORD_EMAIL_LIMITER.retain_recent();
+                    EMAIL_CHANGE_IP_LIMITER.retain_recent();
+                    EMAIL_CHANGE_EMAIL_LIMITER.retain_recent();
+                }
+                _ = shrink_interval.tick() => {
+                    LOGIN_LIMITER.shrink_to_fit();
+                    RESET_PASSWORD_IP_LIMITER.shrink_to_fit();
+                    RESET_PASSWORD_EMAIL_LIMITER.shrink_to_fit();
+                    EMAIL_CHANGE_IP_LIMITER.shrink_to_fit();
+                    EMAIL_CHANGE_EMAIL_LIMITER.shrink_to_fit();
+                }
+                _ = crate::shutdown::SHUTDOWN.notified() => {
+                    break;
+                }
+            }
+        }
+    });
+}
 
 async fn register(
     ctx: &crate::context::AppContext,
@@ -164,8 +208,6 @@ pub async fn login<B: Body>(
     req: Request<B>,
 ) -> Result<Response<Vec<u8>>, AppError> {
     use crate::session;
-    use governor::{DefaultKeyedRateLimiter, Quota, RateLimiter};
-    use std::num::NonZeroU32;
 
     let origin = req
         .headers()
@@ -176,9 +218,6 @@ pub async fn login<B: Body>(
     let form: Login = interface::parse_body(req).await?;
 
     // Rate limiting for login attempts: 10 attempts per minute per username
-    static LOGIN_LIMITER: LazyLock<DefaultKeyedRateLimiter<String>> =
-        LazyLock::new(|| RateLimiter::keyed(Quota::per_minute(NonZeroU32::new(10).unwrap())));
-
     // Normalize username for consistent rate limiting (case-insensitive, trimmed)
     let username = if form.username.contains('@') {
         form.username.trim().to_lowercase()
@@ -380,12 +419,8 @@ pub async fn reset_password(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<(), AppError> {
-    use governor::{DefaultKeyedRateLimiter, Quota, RateLimiter};
-    static IP_LIMITER: LazyLock<DefaultKeyedRateLimiter<IpAddr>> = LazyLock::new(|| {
-        RateLimiter::keyed(Quota::per_hour(std::num::NonZeroU32::new(32).unwrap()))
-    });
     let ip = get_ip(&req)?;
-    IP_LIMITER
+    RESET_PASSWORD_IP_LIMITER
         .check_key(&ip)
         .map_err(|_| AppError::LimitExceeded("Too many requests, please try again later."))?;
 
@@ -393,10 +428,7 @@ pub async fn reset_password(
     let email = email.trim().to_lowercase();
     crate::validators::EMAIL.run(&email)?;
 
-    static EMAIL_LIMITER: LazyLock<DefaultKeyedRateLimiter<String>> = LazyLock::new(|| {
-        RateLimiter::keyed(Quota::per_hour(std::num::NonZeroU32::new(16).unwrap()))
-    });
-    EMAIL_LIMITER
+    RESET_PASSWORD_EMAIL_LIMITER
         .check_key(&email)
         .map_err(|_| AppError::LimitExceeded("This email is requested too many times."))?;
 
@@ -682,14 +714,8 @@ pub async fn request_email_change(
 ) -> Result<(), AppError> {
     use crate::session::authenticate;
     use crate::users::api::RequestEmailChange;
-    use governor::{DefaultKeyedRateLimiter, Quota, RateLimiter};
-    use std::net::IpAddr;
-
-    static IP_LIMITER: LazyLock<DefaultKeyedRateLimiter<IpAddr>> = LazyLock::new(|| {
-        RateLimiter::keyed(Quota::per_hour(std::num::NonZeroU32::new(10).unwrap()))
-    });
     let ip = get_ip(&req)?;
-    IP_LIMITER
+    EMAIL_CHANGE_IP_LIMITER
         .check_key(&ip)
         .map_err(|_| AppError::LimitExceeded("Too many requests, please try again later."))?;
 
@@ -699,10 +725,7 @@ pub async fn request_email_change(
     let new_email = new_email.trim().to_lowercase();
     crate::validators::EMAIL.run(&new_email)?;
 
-    static EMAIL_LIMITER: LazyLock<DefaultKeyedRateLimiter<String>> = LazyLock::new(|| {
-        RateLimiter::keyed(Quota::per_hour(std::num::NonZeroU32::new(5).unwrap()))
-    });
-    EMAIL_LIMITER
+    EMAIL_CHANGE_EMAIL_LIMITER
         .check_key(&new_email)
         .map_err(|_| AppError::LimitExceeded("This email is requested too many times."))?;
 

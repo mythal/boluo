@@ -55,6 +55,8 @@ impl StatusState {
                         space_id: self.space_id,
                     },
                 );
+                metrics::histogram!("boluo_server_events_status_map_size")
+                    .record(self.status_map.len() as f64);
                 if self.last_cleanup.elapsed() > Duration::from_secs(60 * 60) {
                     self.last_cleanup = std::time::Instant::now();
                     let one_week_ago = timestamp() - 60 * 60 * 24 * 7;

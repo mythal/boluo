@@ -629,6 +629,10 @@ impl Store {
             .clone()
     }
 
+    pub fn mailbox_count(&self) -> usize {
+        self.mailboxes.pin().len()
+    }
+
     fn remove(&self, id: Uuid) {
         self.mailboxes.pin().remove(&id);
     }
@@ -638,4 +642,8 @@ static STORE: OnceCell<Store> = OnceCell::new();
 
 pub fn store() -> &'static Store {
     STORE.get_or_init(Store::new)
+}
+
+pub fn mailbox_count() -> usize {
+    store().mailbox_count()
 }

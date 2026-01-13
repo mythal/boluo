@@ -104,6 +104,7 @@ impl ChannelPosActor {
         let pending_gauge = metrics::gauge!("boluo_server_pos_pending_actions", labels.clone());
         let action_duration_histogram =
             metrics::histogram!("boluo_server_pos_action_duration_ms", labels.clone());
+        let positions_len_histogram = metrics::histogram!("boluo_server_pos_positions_len");
 
         while let Some(action) = self.receiver.recv().await {
             let pending = self.receiver.len();
@@ -164,6 +165,7 @@ impl ChannelPosActor {
                 PosAction::Tick => {
                     if !self.receiver.is_empty() {
                         tracing::info!("Clean up skipped because of pending actions");
+                        positions_len_histogram.record(self.positions.len() as f64);
                         continue;
                     }
                     let now = Instant::now();
@@ -191,6 +193,7 @@ impl ChannelPosActor {
                             "Cleaned up pos items"
                         );
                     }
+                    positions_len_histogram.record(self.positions.len() as f64);
                     if let Some((last_key_after, _)) = self.positions.last_key_value() {
                         if *last_key_after >= last_key {
                             continue;
@@ -648,6 +651,10 @@ impl ChannelPosManager {
             }
             true
         });
+    }
+
+    pub(crate) fn actor_count(&self) -> usize {
+        self.actors.pin().len()
     }
 }
 

@@ -42,6 +42,13 @@ pub fn get_broadcast_table() -> &'static BroadcastTable {
     table
 }
 
+pub fn broadcast_table_len() -> usize {
+    BROADCAST_TABLE
+        .get()
+        .map(|table| table.pin().len())
+        .unwrap_or(0)
+}
+
 async fn broadcast_clean() {
     let Some(broadcast_table) = BROADCAST_TABLE.get() else {
         return;

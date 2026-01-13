@@ -148,6 +148,51 @@ pub fn start_log_cache_stats() {
     tokio::spawn(async move {
         let mut interval = interval(Duration::from_mins(10));
         interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
+        let channel_gauge = metrics::gauge!(
+            "boluo_server_cache_items",
+            vec![metrics::Label::new("cache", "Channel")]
+        );
+        let character_gauge = metrics::gauge!(
+            "boluo_server_cache_items",
+            vec![metrics::Label::new("cache", "Character")]
+        );
+        let character_variables_gauge = metrics::gauge!(
+            "boluo_server_cache_items",
+            vec![metrics::Label::new("cache", "CharacterVariables")]
+        );
+        let session_gauge = metrics::gauge!(
+            "boluo_server_cache_items",
+            vec![metrics::Label::new("cache", "Session")]
+        );
+        let user_gauge = metrics::gauge!(
+            "boluo_server_cache_items",
+            vec![metrics::Label::new("cache", "User")]
+        );
+        let user_ext_gauge = metrics::gauge!(
+            "boluo_server_cache_items",
+            vec![metrics::Label::new("cache", "UserExt")]
+        );
+        let space_gauge = metrics::gauge!(
+            "boluo_server_cache_items",
+            vec![metrics::Label::new("cache", "Space")]
+        );
+        let space_settings_gauge = metrics::gauge!(
+            "boluo_server_cache_items",
+            vec![metrics::Label::new("cache", "SpaceSettings")]
+        );
+        let get_me_gauge = metrics::gauge!(
+            "boluo_server_cache_items",
+            vec![metrics::Label::new("cache", "GetMe")]
+        );
+        let channel_members_gauge = metrics::gauge!(
+            "boluo_server_cache_items",
+            vec![metrics::Label::new("cache", "ChannelMembers")]
+        );
+        let user_spaces_gauge = metrics::gauge!(
+            "boluo_server_cache_items",
+            vec![metrics::Label::new("cache", "UserSpaces")]
+        );
+        let total_gauge = metrics::gauge!("boluo_server_cache_items_total");
         loop {
             tokio::select! {
                 _ = interval.tick() => {
@@ -162,23 +207,30 @@ pub fn start_log_cache_stats() {
                     let get_me = CACHE.GetMe.len();
                     let channel_members = CACHE.ChannelMembers.len();
                     let user_spaces = CACHE.UserSpaces.len();
+                    let total = channel
+                        + character
+                        + character_variables
+                        + session
+                        + user
+                        + user_ext
+                        + space
+                        + space_settings
+                        + get_me
+                        + channel_members
+                        + user_spaces;
 
-                    let status_json = serde_json::json!({
-                        "type": "CacheStats",
-                        "Channels": channel,
-                        "Characters": character,
-                        "CharacterVariables": character_variables,
-                        "Sessions": session,
-                        "Users": user,
-                        "UserExts": user_ext,
-                        "Spaces": space,
-                        "SpaceSettings": space_settings,
-                        "GetMe": get_me,
-                        "ChannelMembers": channel_members,
-                        "UserSpaces": user_spaces,
-                    });
-
-                    tracing::info!("{}", status_json);
+                    channel_gauge.set(channel as f64);
+                    character_gauge.set(character as f64);
+                    character_variables_gauge.set(character_variables as f64);
+                    session_gauge.set(session as f64);
+                    user_gauge.set(user as f64);
+                    user_ext_gauge.set(user_ext as f64);
+                    space_gauge.set(space as f64);
+                    space_settings_gauge.set(space_settings as f64);
+                    get_me_gauge.set(get_me as f64);
+                    channel_members_gauge.set(channel_members as f64);
+                    user_spaces_gauge.set(user_spaces as f64);
+                    total_gauge.set(total as f64);
                 },
                 _ = crate::shutdown::SHUTDOWN.notified() => {
                     break;

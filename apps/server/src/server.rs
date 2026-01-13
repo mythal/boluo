@@ -335,6 +335,7 @@ async fn main() {
 
     cache::start_expiry_task();
     cache::start_log_cache_stats();
+    users::start_rate_limiter_cleanup();
     let timeout_counter = metrics::counter!("boluo_server_tcp_connections_timeout_total");
     let error_counter = metrics::counter!("boluo_server_tcp_connections_error_total");
 

@@ -1,22 +1,14 @@
-import {
-  type MakeToken,
-  type ChannelMembers,
-  type EventId,
-  type Update,
-  type UserStatus,
-} from '@boluo/api';
+import { type MakeToken, type EventId } from '@boluo/api';
 import { isServerUpdate } from '@boluo/api/events';
 import { useQueryCurrentUser } from '@boluo/hooks/useQueryCurrentUser';
 import { webSocketUrlAtom } from '@boluo/hooks/useWebSocketUrl';
 import { useAtomValue, useSetAtom, useStore } from 'jotai';
-import { useCallback, useEffect, useRef } from 'react';
-import { useSWRConfig } from 'swr';
+import { useEffect, useRef } from 'react';
 import { isUuid } from '@boluo/utils/id';
 import { PING, PONG } from '../const';
 import { chatAtom, type ChatDispatch, connectionStateAtom } from '../state/chat.atoms';
 import { type ConnectionState } from '../state/connection.reducer';
 import { get } from '@boluo/api-browser';
-import { type IntlShape, useIntl } from 'react-intl';
 import { sleep } from '@boluo/utils/async';
 import { useLogout } from '@boluo/hooks/useLogout';
 import { type ClientConnectionError } from '../state/chat.actions';
@@ -90,7 +82,6 @@ const connect = async (
   userId: string | null,
   connectionState: ConnectionState,
   cursor: EventId,
-  updateSideEffect: (update: Update) => void,
   dispatch: ChatDispatch,
 ): Promise<WebSocket | null> => {
   if (!isUuid(mailboxId)) return null;
@@ -161,13 +152,11 @@ const connect = async (
       return;
     }
     dispatch({ type: 'update', payload: update });
-    updateSideEffect(update);
   };
   return newConnection;
 };
 
 export const useConnectionEffect = (mailboxId: string) => {
-  const { mutate } = useSWRConfig();
   const { data: user, isLoading: isQueryingUser } = useQueryCurrentUser();
   const webSocketEndpoint = useAtomValue(webSocketUrlAtom);
   const connectionState = useAtomValue(connectionStateAtom);
@@ -175,53 +164,6 @@ export const useConnectionEffect = (mailboxId: string) => {
   const store = useStore();
   const logout = useLogout();
   const handledUnauthenticatedRef = useRef<number | null>(null);
-  const updateSideEffect = useCallback(
-    (update: Update) => {
-      switch (update.body.type) {
-        case 'CHANNEL_DELETED':
-          void mutate(['/channels/by_space', update.mailbox]);
-          void mutate(['/channels/query', update.body.channelId]);
-          return;
-        case 'CHANNEL_EDITED':
-          void mutate(['/channels/by_space', update.mailbox]);
-          void mutate(['/channels/query', update.body.channelId], update.body.channel);
-          return;
-        case 'SPACE_UPDATED': {
-          const { space } = update.body.spaceWithRelated;
-          void mutate(['/spaces/query', space.id], space);
-          void mutate(['/channels/by_space', space.id]);
-          return;
-        }
-        case 'MEMBERS': {
-          const members = update.body.members;
-          void mutate<ChannelMembers>(
-            ['/channels/members', update.body.channelId],
-            (channelMembers) => {
-              if (channelMembers != null) {
-                return { ...channelMembers, members };
-              }
-            },
-          );
-          return;
-        }
-        case 'STATUS_MAP':
-          void mutate<Record<string, UserStatus | undefined>>(
-            ['/spaces/users_status', update.body.spaceId],
-            update.body.statusMap,
-          );
-          return;
-        case 'ERROR':
-        case 'NEW_MESSAGE':
-        case 'MESSAGE_DELETED':
-        case 'MESSAGE_EDITED':
-        case 'MESSAGE_PREVIEW':
-        case 'INITIALIZED':
-        case 'APP_INFO':
-          return;
-      }
-    },
-    [mutate],
-  );
   const dispatch = useSetAtom(chatAtom);
 
   useEffect(() => {
@@ -247,7 +189,6 @@ export const useConnectionEffect = (mailboxId: string) => {
         userId,
         chatState.connection,
         chatState.cursor,
-        updateSideEffect,
         dispatch,
       ).then((connectionResult) => {
         currentConnection = connectionResult;
@@ -268,5 +209,5 @@ export const useConnectionEffect = (mailboxId: string) => {
       unsub();
       if (currentConnection) currentConnection.close();
     };
-  }, [dispatch, isQueryingUser, mailboxId, store, updateSideEffect, userId, webSocketEndpoint]);
+  }, [dispatch, isQueryingUser, mailboxId, store, userId, webSocketEndpoint]);
 };

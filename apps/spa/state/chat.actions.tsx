@@ -14,6 +14,7 @@ import { type MakeAction } from './actions';
 import { type FailTo } from './channel.types';
 import { type OptimisticMessage } from './channel.reducer';
 import { type ComposeState } from './compose.reducer';
+import type { ChatEffect } from './chat.types';
 
 export type ClientConnectionError = ConnectionError | 'NETWORK_ERROR';
 
@@ -66,6 +67,7 @@ export type ChatActionMap = {
   resetGc: { pos: number };
   update: Update;
   resetChatState: Empty;
+  effectsHandled: { effectIds: string[] };
 };
 
 export type ChatActionUnion = MakeAction<ChatActionMap, keyof ChatActionMap>;

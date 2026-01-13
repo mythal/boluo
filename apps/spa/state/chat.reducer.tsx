@@ -6,6 +6,8 @@ import { channelReducer, makeInitialChannelState } from './channel.reducer';
 import { type ChatAction, type ChatActionUnion, toChatAction } from './chat.actions';
 import type { ConnectionState } from './connection.reducer';
 import { connectionReducer, initialConnectionState } from './connection.reducer';
+import type { ChatEffect } from './chat.types';
+import { createEffectId, mergeEffects } from './chat.effects';
 
 export interface ChatReducerContext {
   spaceId: string;
@@ -22,6 +24,7 @@ export interface ChatSpaceState {
    * if an event has occurred that is worth notifying the user about.
    */
   notifyTimestamp: number;
+  effects: ChatEffect[];
 }
 
 export const zeroEventId: EventId = { timestamp: 0, seq: 0, node: 0 };
@@ -31,6 +34,7 @@ export const initialChatState: ChatSpaceState = {
     type: 'CLOSED',
     retry: 0,
     countdown: 0,
+    recoveringFromError: null,
   },
   channels: {},
   context: {
@@ -39,13 +43,14 @@ export const initialChatState: ChatSpaceState = {
   },
   cursor: zeroEventId,
   notifyTimestamp: 0,
+  effects: [],
 };
 
 const channelsReducer = (
   channels: ChatSpaceState['channels'],
   action: ChatActionUnion,
   context: ChatReducerContext,
-): ChatSpaceState['channels'] => {
+): [ChatSpaceState['channels'], ChatEffect[]] => {
   if ('channelId' in action.payload) {
     const { channelId } = action.payload;
     const channelState = channelReducer(
@@ -53,13 +58,13 @@ const channelsReducer = (
       action,
       context,
     );
-    return { ...channels, [channelId]: channelState };
+    return [{ ...channels, [channelId]: channelState }, []];
   } else {
     const nextChannels: ChatSpaceState['channels'] = {};
     for (const channelState of Object.values(channels)) {
       nextChannels[channelState.id] = channelReducer(channelState, action, context);
     }
-    return nextChannels;
+    return [nextChannels, []];
   }
 };
 
@@ -91,6 +96,7 @@ export const makeChatState = (spaceId: string): ChatSpaceState => ({
   },
   cursor: zeroEventId,
   notifyTimestamp: 0,
+  effects: [],
 });
 
 const handleChannelDeleted = (
@@ -115,37 +121,127 @@ const handleUpdate = (
     }
     nextCursor = update.id;
   }
+  const updateEffects: ChatEffect[] = (() => {
+    switch (update.body.type) {
+      case 'CHANNEL_DELETED':
+        return [
+          {
+            type: 'CHANNEL_CHANGED',
+            id: createEffectId(),
+            spaceId: update.mailbox,
+            channelId: update.body.channelId,
+            channel: null,
+            dedupeKey: `channel:${update.mailbox}:${update.body.channelId}`,
+          },
+        ];
+      case 'CHANNEL_EDITED':
+        return [
+          {
+            type: 'CHANNEL_CHANGED',
+            id: createEffectId(),
+            spaceId: update.mailbox,
+            channelId: update.body.channelId,
+            channel: update.body.channel,
+            dedupeKey: `channel:${update.mailbox}:${update.body.channelId}`,
+          },
+        ];
+      case 'SPACE_UPDATED': {
+        const { space } = update.body.spaceWithRelated;
+        return [
+          {
+            type: 'SPACE_CHANGED',
+            id: createEffectId(),
+            spaceId: space.id,
+            space,
+            dedupeKey: `space:${space.id}`,
+          },
+        ];
+      }
+      case 'MEMBERS':
+        return [
+          {
+            type: 'MEMBERS_UPDATED',
+            id: createEffectId(),
+            channelId: update.body.channelId,
+            members: update.body.members,
+            dedupeKey: `members:${update.body.channelId}`,
+          },
+        ];
+      case 'STATUS_MAP':
+        return [
+          {
+            type: 'STATUS_UPDATED',
+            id: createEffectId(),
+            spaceId: update.body.spaceId,
+            statusMap: update.body.statusMap,
+            dedupeKey: `status:${update.body.spaceId}`,
+          },
+        ];
+      case 'ERROR':
+      case 'NEW_MESSAGE':
+      case 'MESSAGE_DELETED':
+      case 'MESSAGE_EDITED':
+      case 'MESSAGE_PREVIEW':
+      case 'INITIALIZED':
+      case 'DIFF':
+      case 'APP_INFO':
+      case 'APP_UPDATED':
+        return [];
+    }
+  })();
   const chatAction = toChatAction(update);
   if (chatAction == null) {
-    if (!shouldAdvanceCursor) return state;
-    return { ...state, cursor: nextCursor };
+    const nextState = shouldAdvanceCursor ? { ...state, cursor: nextCursor } : state;
+    return updateEffects.length === 0
+      ? nextState
+      : { ...nextState, effects: mergeEffects(nextState.effects, updateEffects) };
   }
-  return { ...chatReducer(state, chatAction), cursor: nextCursor };
+  const nextState = chatReducer(state, chatAction);
+  return {
+    ...nextState,
+    cursor: nextCursor,
+    effects:
+      updateEffects.length === 0
+        ? nextState.effects
+        : mergeEffects(nextState.effects, updateEffects),
+  };
 };
 
 export const chatReducer: Reducer<ChatSpaceState, ChatActionUnion> = (
   state: ChatSpaceState,
   action: ChatActionUnion,
 ): ChatSpaceState => {
-  if (action.type === 'update') {
-    return handleUpdate(state, action);
-  }
-  if (action.type === 'resetChatState') {
-    return makeChatState(state.context.spaceId);
-  }
-  if (action.type === 'spaceUpdated') {
-    return handleSpaceUpdated(state, action);
-  } else if (action.type === 'enterSpace') {
-    if (state.context.spaceId === action.payload.spaceId) {
-      return state;
-    }
-    return makeChatState(action.payload.spaceId);
-  } else if (action.type === 'channelDeleted') {
-    return handleChannelDeleted(state, action);
-  }
   const { context } = state;
-  if (action.type === 'initialized') {
-    return { ...state, context: { ...context, initialized: true } };
+  if (
+    action.type === 'resetChatState' ||
+    // When the client sleeps for too long, the server may have discarded
+    // cached events. In this case, we need to reset the chat state.
+    (action.type === 'connectionError' &&
+      action.payload.code === 'CURSOR_TOO_OLD' &&
+      action.payload.mailboxId === context.spaceId)
+  ) {
+    return makeChatState(context.spaceId);
+  }
+  switch (action.type) {
+    case 'update':
+      return handleUpdate(state, action);
+    case 'effectsHandled': {
+      if (state.effects.length === 0) return state;
+      const handled = new Set(action.payload.effectIds);
+      const remaining = state.effects.filter((effect) => !handled.has(effect.id));
+      if (remaining.length === state.effects.length) return state;
+      return { ...state, effects: remaining };
+    }
+    case 'spaceUpdated':
+      return handleSpaceUpdated(state, action);
+    case 'enterSpace':
+      return state.context.spaceId === action.payload.spaceId
+        ? state
+        : makeChatState(action.payload.spaceId);
+    case 'channelDeleted':
+      return handleChannelDeleted(state, action);
+    case 'initialized':
+      return { ...state, context: { ...context, initialized: true } };
   }
 
   const { channels, connection, ...rest } = state;
@@ -157,10 +253,18 @@ export const chatReducer: Reducer<ChatSpaceState, ChatActionUnion> = (
     }
   }
 
+  const [connectionState, connectionEffects] = connectionReducer(connection, action, context);
+  const [channelsState, channelEffects] = channelsReducer(channels, action, context);
+  const effects =
+    connectionEffects.length === 0 && channelEffects.length === 0
+      ? state.effects
+      : mergeEffects(state.effects, [...connectionEffects, ...channelEffects]);
+
   return {
-    connection: connectionReducer(connection, action, context),
-    channels: channelsReducer(channels, action, context),
+    connection: connectionState,
+    channels: channelsState,
     ...rest,
     notifyTimestamp,
+    effects,
   };
 };

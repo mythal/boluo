@@ -44,6 +44,7 @@ export const notifyTimestampAtom = selectAtom(chatAtom, (chat) =>
 export type ChatDispatch = ReturnType<typeof useSetAtom<typeof chatAtom>>;
 
 export const connectionStateAtom = selectAtom(chatAtom, (chatState) => chatState.connection);
+export const chatEffectsAtom = selectAtom(chatAtom, (chatState) => chatState.effects);
 
 store.sub(apiUrlAtom, () => {
   const connection = store.get(connectionStateAtom);

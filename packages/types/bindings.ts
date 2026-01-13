@@ -149,7 +149,13 @@ export type CocRollSubType = 'NORMAL' | 'BONUS' | 'BONUS_2' | 'PENALTY' | 'PENAL
 
 export type ConfirmEmailChange = { token: string };
 
-export type ConnectionError = 'NOT_FOUND' | 'NO_PERMISSION' | 'INVALID_TOKEN' | 'UNEXPECTED';
+export type ConnectionError =
+  | 'CURSOR_TOO_OLD'
+  | 'NO_PERMISSION'
+  | 'UNAUTHENTICATED'
+  | 'INVALID_TOKEN'
+  | 'UNEXPECTED'
+  | 'BAD_REQUEST';
 
 export type ConnectionState = {
   rtt_ms: number;
@@ -797,7 +803,7 @@ export type UpdateBody =
   | { type: 'INITIALIZED' }
   | { type: 'STATUS_MAP'; statusMap: { [key in string]: UserStatus }; spaceId: string }
   | { type: 'SPACE_UPDATED'; spaceWithRelated: SpaceWithRelated }
-  | { type: 'ERROR'; code: ConnectionError; reason: string }
+  | { type: 'ERROR'; code: ConnectionError; reason: string; span: string }
   | { type: 'APP_UPDATED'; version: string }
   | { type: 'APP_INFO'; info: BasicInfo };
 
@@ -811,6 +817,8 @@ export type UpdateLifetime =
    *
    * Clients should treat them as non-resumable for cursor advancing (same as `Transient`),
    * while the server may still include the latest ones in `Update::get_from_state`.
+   *
+   * Clients should can safely replay them if they receive them again.
    */
   | 'V'
   /**

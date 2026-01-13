@@ -14,6 +14,9 @@ import { type MakeAction } from './actions';
 import { type FailTo } from './channel.types';
 import { type OptimisticMessage } from './channel.reducer';
 import { type ComposeState } from './compose.reducer';
+import type { ChatEffect } from './chat.types';
+
+export type ClientConnectionError = ConnectionError | 'NETWORK_ERROR';
 
 export type ChatActionMap = {
   receiveMessage: UpdateBody & { type: 'NEW_MESSAGE' };
@@ -46,7 +49,14 @@ export type ChatActionMap = {
   connecting: { mailboxId: string };
   reconnectCountdownTick: { immediately?: boolean };
   connectionClosed: { mailboxId: string; random: number };
-  connectionError: { mailboxId: string; code: ConnectionError };
+  retryConnection: { mailboxId: string };
+  connectionError: {
+    mailboxId: string;
+    code: ClientConnectionError;
+    timestamp: number;
+    reason?: string;
+    span?: string;
+  };
   debugCloseConnection: { countdown: number };
   reachBottom: { channelId: string };
   setComposeSource: { channelId: string; source: string };
@@ -57,6 +67,7 @@ export type ChatActionMap = {
   resetGc: { pos: number };
   update: Update;
   resetChatState: Empty;
+  effectsHandled: { effectIds: string[] };
 };
 
 export type ChatActionUnion = MakeAction<ChatActionMap, keyof ChatActionMap>;
@@ -87,11 +98,22 @@ export const toChatAction = (update: Update): ChatActionUnion | null => {
       };
     case 'CHANNEL_DELETED':
       return { type: 'channelDeleted', payload: update.body };
+    case 'ERROR':
+      return {
+        type: 'connectionError',
+        payload: {
+          mailboxId: update.mailbox,
+          code: update.body.code,
+          reason: update.body.reason,
+          timestamp: update.id.timestamp,
+          span: update.body.span,
+        },
+      };
     case 'CHANNEL_EDITED':
     case 'MEMBERS':
     case 'STATUS_MAP':
     case 'APP_INFO':
-    default:
+    case 'APP_UPDATED':
       return null;
   }
 };

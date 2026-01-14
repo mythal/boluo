@@ -1,31 +1,87 @@
-import { useEffect } from 'react';
-import { get } from '../api/request';
-import { type Dispatch } from '../store';
+import { useRef } from 'react';
+import useSWR from 'swr';
+import { FETCH_FAIL, type AppError } from '../api/error';
+import { type ChannelWithMember } from '../api/channels';
+import { type AppResult, get } from '../api/request';
+import { type SpaceWithMember } from '../api/spaces';
+import { type Settings, type User } from '../api/users';
+import { type Dispatch, useSelector } from '../store';
+
+type MeSnapshot = {
+  user: User;
+  settings: Settings;
+  mySpaces: SpaceWithMember[];
+  myChannels: ChannelWithMember[];
+};
 
 export const useGetMe = (dispatch: Dispatch, finish: () => void): void => {
-  useEffect(() => {
-    const cancel = new AbortController();
-    const loadMe = async () => {
-      let me = await get('/users/get_me');
-      if (me.isErr && me.value.code === 'FETCH_FAIL') {
-        await new Promise((resolve) => setTimeout(resolve, 100));
-        me = await get('/users/get_me');
-      }
-      if (cancel.signal.aborted) return;
-      if (me.isOk) {
-        if (me.value) {
-          const { user, mySpaces, myChannels, settings } = me.value;
-          dispatch({ type: 'LOGGED_IN', user, myChannels, mySpaces, settings });
-        } else {
-          dispatch({ type: 'LOGGED_OUT' });
+  const baseUrl = useSelector((state) => state.ui.baseUrl);
+  const finishedRef = useRef(false);
+  useSWR<MeSnapshot | null, AppError>(
+    ['legacy/me', baseUrl],
+    async () => {
+      const unwrapResult = <T>(result: AppResult<T>): T => {
+        if (result.isErr) {
+          throw result.value;
+        }
+        return result.value;
+      };
+      const me = unwrapResult(await get('/users/query', { id: null }));
+      if (!me) return null;
+      const [settings, spaces] = await Promise.all([
+        get('/users/settings').then(unwrapResult),
+        get('/spaces/my').then(unwrapResult),
+      ]);
+      const channelResults = await Promise.all(
+        spaces.map((spaceWithMember) =>
+          get('/channels/by_space', { id: spaceWithMember.space.id }).then(unwrapResult),
+        ),
+      );
+      const myChannels: ChannelWithMember[] = [];
+      for (const channelResult of channelResults) {
+        for (const channelWithMember of channelResult) {
+          if (channelWithMember.member) {
+            myChannels.push({
+              channel: channelWithMember.channel,
+              member: channelWithMember.member,
+            });
+          }
         }
       }
-    };
-    loadMe().then(() => finish());
-    const handle = setInterval(loadMe, 20 * 1000);
-    return () => {
-      cancel.abort();
-      clearInterval(handle);
-    };
-  }, [dispatch, finish]);
+      return {
+        user: me,
+        myChannels,
+        mySpaces: spaces,
+        settings,
+      };
+    },
+    {
+      refreshInterval: 20_000,
+      onErrorRetry: (error, _key, _config, revalidate, context) => {
+        if (error.code !== FETCH_FAIL || context.retryCount >= 1) {
+          return;
+        }
+        setTimeout(() => {
+          void revalidate({ retryCount: context.retryCount + 1 });
+        }, 100);
+      },
+      onSuccess: (snapshot) => {
+        if (!finishedRef.current) {
+          finishedRef.current = true;
+          finish();
+        }
+        if (!snapshot) {
+          dispatch({ type: 'LOGGED_OUT' });
+          return;
+        }
+        dispatch({ type: 'LOGGED_IN', ...snapshot });
+      },
+      onError: () => {
+        if (!finishedRef.current) {
+          finishedRef.current = true;
+          finish();
+        }
+      },
+    },
+  );
 };

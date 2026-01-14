@@ -1,6 +1,6 @@
 services:
   db:
-    image: postgres:18-trixie
+    image: docker.io/library/postgres:18-trixie
     build:
       context: ./apps/db
       dockerfile: Dockerfile
@@ -12,7 +12,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql
   redis:
-    image: redis
+    image: docker.io/library/redis
     volumes:
       - redis_data:/data
 

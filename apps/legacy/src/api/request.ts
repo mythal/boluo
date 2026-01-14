@@ -43,7 +43,6 @@ import {
   type CheckEmail,
   type CheckUsername,
   type EditUser,
-  type GetMe,
   type LoginData,
   type LoginResult,
   type RegisterData,
@@ -265,8 +264,11 @@ export function patch<T, U extends object = object, Q extends object = {}>(
   return request(makeUri(path, query), 'PATCH', JSON.stringify(payload));
 }
 
-export function get(path: '/users/query', query: { id?: Id }): Promise<AppResult<User | null>>;
-export function get(path: '/users/get_me'): Promise<AppResult<GetMe | null>>;
+export function get(
+  path: '/users/query',
+  query: { id?: Id | null },
+): Promise<AppResult<User | null>>;
+export function get(path: '/users/settings'): Promise<AppResult<Settings>>;
 export function get(path: '/users/logout'): Promise<AppResult<true>>;
 export function get(
   path: '/users/check_username',
@@ -278,6 +280,7 @@ export function get(
   query: ResetPasswordTokenCheck,
 ): Promise<AppResult<boolean>>;
 export function get(path: '/spaces/list'): Promise<AppResult<Space[]>>;
+export function get(path: '/spaces/my'): Promise<AppResult<SpaceWithMember[]>>;
 export function get(path: '/spaces/search', query: SearchParams): Promise<AppResult<Space[]>>;
 export function get(path: '/spaces/query', query: IdQuery): Promise<AppResult<Space>>;
 export function get(

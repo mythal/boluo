@@ -32,9 +32,6 @@
   "/jxJyw": {
     "message": "试图放置消息的位置发生了变化。"
   },
-  "/sLMk2": {
-    "message": "请登录以访问此资源。"
-  },
   "0Azlrb": {
     "message": "管理"
   },
@@ -52,9 +49,6 @@
   },
   "0ah2ud": {
     "message": "位面"
-  },
-  "0cmG3L": {
-    "message": "因网络错误无法建立连接。请稍后再试。"
   },
   "0eanrB": {
     "message": "包括已存档的消息"
@@ -152,6 +146,9 @@
   "62nsdy": {
     "message": "重试"
   },
+  "64owOH": {
+    "message": "Network error. Please retry."
+  },
   "64sfSN": {
     "message": "罢了"
   },
@@ -214,6 +211,9 @@
   },
   "8HQJF3": {
     "message": "粘贴CSS变量或其他自定义CSS来覆盖主题。"
+  },
+  "8MYOsd": {
+    "message": "Invalid token. Please retry."
   },
   "8be59M": {
     "message": "邮箱验证成功！"
@@ -320,9 +320,6 @@
   "EWw/tK": {
     "message": "应用"
   },
-  "Eborcf": {
-    "message": "会话无效。重新登录可能有助于解决这个问题。现在注销吗？"
-  },
   "EcW+hX": {
     "message": "仅选中的人可见。"
   },
@@ -409,6 +406,9 @@
   },
   "IvjoDS": {
     "message": "已连接"
+  },
+  "J78glR": {
+    "message": "Please log in to continue."
   },
   "JBWS0c": {
     "message": "链接"
@@ -584,6 +584,9 @@
   "Q8Qw5B": {
     "message": "描述"
   },
+  "QAF77H": {
+    "message": "You do not have permission to access."
+  },
   "QBYqL5": {
     "message": "查询位面成员失败"
   },
@@ -749,6 +752,9 @@
   "XOi37d": {
     "message": "纯文本"
   },
+  "XPj4VR": {
+    "message": "An unknown error occurred. Please refresh."
+  },
   "XTqS60": {
     "message": "请将 {errorCode} 告诉系统管理员。"
   },
@@ -850,9 +856,6 @@
   },
   "ceSWhW": {
     "message": "显示已存档的消息"
-  },
-  "ciPqqe": {
-    "message": "建立连接时发生意外错误。请稍后再试。"
   },
   "clpFBW": {
     "message": "位面公开性"

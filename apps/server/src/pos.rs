@@ -33,6 +33,7 @@ pub fn check_pos((p, q): (i32, i32)) -> Result<(), ValidationFailed> {
 const PLACEHOLDER_POS_TIMEOUT: Duration = Duration::from_secs(60 * 60);
 const INACTIVE_TIMEOUT: Duration = Duration::from_secs(60 * 60 * 12);
 const TICK_INTERVAL: Duration = Duration::from_secs(60);
+const SUBMITTED_RETENTION: Duration = Duration::from_secs(60 * 60 * 6);
 
 #[derive(Debug)]
 pub enum PosAction {
@@ -104,6 +105,7 @@ impl ChannelPosActor {
         let pending_gauge = metrics::gauge!("boluo_server_pos_pending_actions", labels.clone());
         let action_duration_histogram =
             metrics::histogram!("boluo_server_pos_action_duration_ms", labels.clone());
+        let positions_len_histogram = metrics::histogram!("boluo_server_pos_positions_len");
 
         while let Some(action) = self.receiver.recv().await {
             let pending = self.receiver.len();
@@ -164,6 +166,7 @@ impl ChannelPosActor {
                 PosAction::Tick => {
                     if !self.receiver.is_empty() {
                         tracing::info!("Clean up skipped because of pending actions");
+                        positions_len_histogram.record(self.positions.len() as f64);
                         continue;
                     }
                     let now = Instant::now();
@@ -191,6 +194,8 @@ impl ChannelPosActor {
                             "Cleaned up pos items"
                         );
                     }
+                    self.trim_submitted_positions(now);
+                    positions_len_histogram.record(self.positions.len() as f64);
                     if let Some((last_key_after, _)) = self.positions.last_key_value() {
                         if *last_key_after >= last_key {
                             continue;
@@ -427,6 +432,36 @@ impl ChannelPosActor {
         self.positions.insert(pos, PosItem::submitting(message_id));
         Ok(pos)
     }
+
+    fn trim_submitted_positions(&mut self, now: Instant) {
+        let Some((last_key, _)) = self.positions.last_key_value() else {
+            return;
+        };
+        let mut remove_keys = Vec::new();
+        for (key, pos_item) in self.positions.iter() {
+            if *key == *last_key {
+                continue;
+            }
+            if pos_item.state == PosItemState::Submitted
+                && now.saturating_duration_since(pos_item.created) > SUBMITTED_RETENTION
+            {
+                remove_keys.push(*key);
+            }
+        }
+        if remove_keys.is_empty() {
+            return;
+        }
+        let removed = remove_keys.len();
+        for key in remove_keys {
+            self.positions.remove(&key);
+        }
+        tracing::info!(
+            removed,
+            remaining = self.positions.len(),
+            retention_s = SUBMITTED_RETENTION.as_secs(),
+            "Trimmed submitted pos items"
+        );
+    }
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -648,6 +683,10 @@ impl ChannelPosManager {
             }
             true
         });
+    }
+
+    pub(crate) fn actor_count(&self) -> usize {
+        self.actors.pin().len()
     }
 }
 

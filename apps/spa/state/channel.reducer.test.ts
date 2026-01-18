@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test, { describe } from 'node:test';
-import type { Message, Preview } from '@boluo/api';
+import type { Message, Preview, PreviewDiff, PreviewDiffOp, PreviewDiffPost } from '@boluo/api';
+import { parse } from '@boluo/interpreter';
 import * as L from 'list';
 import type { ChatReducerContext } from './chat.reducer';
 import type { PreviewItem, MessageItem } from './channel.types';
@@ -74,6 +75,23 @@ const makeMessageItem = (message: Message): MessageItem => ({
   ...message,
   type: 'MESSAGE',
   key: message.id,
+});
+
+const makeDiff = (
+  previewId: string,
+  ref: number,
+  op: PreviewDiffOp[],
+  overrides: Partial<PreviewDiffPost> = {},
+): PreviewDiff => ({
+  sender: userId,
+  _: {
+    ch: channelId,
+    id: previewId,
+    ref,
+    v: ref + 1,
+    op,
+    ...overrides,
+  },
 });
 
 const positions = (list: L.List<MessageItem>): number[] =>
@@ -455,6 +473,118 @@ describe('channelReducer', () => {
     assert.strictEqual(entry.posP, 3);
     assert.strictEqual(entry.posQ, 1);
     assert.strictEqual(entry.timestamp, 10);
+  });
+
+  test('messagePreviewDiff applies splice op and uses provided entities', () => {
+    const preview = makePreview(previewId1, 1, { v: 1, text: 'hello', name: 'Alice' });
+    const baseState = channelReducer(
+      makeInitialChannelState(channelId),
+      { type: 'messagePreview', payload: { channelId, preview, timestamp: 1 } },
+      context,
+    );
+    const diffEntities: Preview['entities'] = [{ type: 'Text', start: 0, len: 2 }];
+    const diff = makeDiff(
+      preview.id,
+      1,
+      [{ type: 'SPLICE', i: 0, len: 5, _: 'hi' }],
+      { v: 2, xs: diffEntities },
+    );
+    const next = channelReducer(
+      baseState,
+      { type: 'messagePreviewDiff', payload: { channelId, diff, timestamp: 2 } },
+      context,
+    );
+
+    const previewItem = next.previewMap[preview.senderId];
+    assert.ok(previewItem);
+    assert.strictEqual(previewItem.text, 'hi');
+    assert.deepStrictEqual(previewItem.entities, diffEntities);
+    assert.strictEqual(previewItem.v, 2);
+    assert.strictEqual(previewItem.timestamp, 2);
+  });
+
+  test('messagePreviewDiff applies append op and parses entities when xs empty', () => {
+    const preview = makePreview(previewId1, 1, { v: 1, text: 'hi', name: 'Alice' });
+    const baseState = channelReducer(
+      makeInitialChannelState(channelId),
+      { type: 'messagePreview', payload: { channelId, preview, timestamp: 1 } },
+      context,
+    );
+    const diff = makeDiff(preview.id, 1, [{ type: 'A', _: '!' }], { v: 2, xs: [] });
+    const next = channelReducer(
+      baseState,
+      { type: 'messagePreviewDiff', payload: { channelId, diff, timestamp: 2 } },
+      context,
+    );
+
+    const previewItem = next.previewMap[preview.senderId];
+    assert.ok(previewItem);
+    assert.strictEqual(previewItem.text, 'hi!');
+    assert.deepStrictEqual(previewItem.entities, parse('hi!').entities);
+  });
+
+  test('messagePreviewDiff applies name change', () => {
+    const preview = makePreview(previewId1, 1, { v: 1, text: 'hello', name: 'Alice' });
+    const baseState = channelReducer(
+      makeInitialChannelState(channelId),
+      { type: 'messagePreview', payload: { channelId, preview, timestamp: 1 } },
+      context,
+    );
+    const diff = makeDiff(
+      preview.id,
+      1,
+      [{ type: 'NAME', name: 'Bob' }],
+      { v: 2, xs: parse('hello').entities },
+    );
+    const next = channelReducer(
+      baseState,
+      { type: 'messagePreviewDiff', payload: { channelId, diff, timestamp: 2 } },
+      context,
+    );
+
+    const previewItem = next.previewMap[preview.senderId];
+    assert.ok(previewItem);
+    assert.strictEqual(previewItem.name, 'Bob');
+    assert.strictEqual(previewItem.text, 'hello');
+  });
+
+  test('messagePreviewDiff applies multiple diffs against keyframe', () => {
+    const preview = makePreview(previewId1, 1, { v: 1, text: 'hello', name: 'Alice' });
+    let state = channelReducer(
+      makeInitialChannelState(channelId),
+      { type: 'messagePreview', payload: { channelId, preview, timestamp: 1 } },
+      context,
+    );
+    const diff1Text = 'hello world';
+    const diff1 = makeDiff(
+      preview.id,
+      1,
+      [{ type: 'A', _: ' world' }],
+      { v: 2, xs: parse(diff1Text).entities },
+    );
+    state = channelReducer(
+      state,
+      { type: 'messagePreviewDiff', payload: { channelId, diff: diff1, timestamp: 2 } },
+      context,
+    );
+
+    const diff2Text = 'hi';
+    const diff2 = makeDiff(
+      preview.id,
+      1,
+      [{ type: 'SPLICE', i: 0, len: 5, _: 'hi' }],
+      { v: 3, xs: parse(diff2Text).entities },
+    );
+    const next = channelReducer(
+      state,
+      { type: 'messagePreviewDiff', payload: { channelId, diff: diff2, timestamp: 3 } },
+      context,
+    );
+
+    const previewItem = next.previewMap[preview.senderId];
+    assert.ok(previewItem);
+    assert.strictEqual(previewItem.text, diff2Text);
+    assert.strictEqual(previewItem.v, 3);
   });
 
   test('fail on SEND attaches failTo to optimistic message', () => {

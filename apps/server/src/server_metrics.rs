@@ -29,10 +29,19 @@ pub fn update_db_pool_metrics(pool: &sqlx::PgPool) {
     gauge!("boluo_server_db_pool_connections_total").set(pool.size() as f64);
 }
 
+pub fn update_runtime_metrics() {
+    gauge!("boluo_server_events_mailboxes").set(crate::events::context::mailbox_count() as f64);
+    gauge!("boluo_server_events_broadcast_mailboxes")
+        .set(crate::events::broadcast_table_len() as f64);
+    gauge!("boluo_server_events_token_store_entries").set(crate::events::token_store_len() as f64);
+    gauge!("boluo_server_pos_actors").set(crate::pos::CHANNEL_POS_MANAGER.actor_count() as f64);
+}
+
 pub fn start_update_metrics(pool: sqlx::PgPool) {
     tokio::task::spawn(async move {
         let mut interval_4s = crate::utils::cleaner_interval(4);
         let mut interval_8s = crate::utils::cleaner_interval(8);
+        let mut interval_30s = crate::utils::cleaner_interval(30);
         loop {
             tokio::select! {
                 _ = interval_4s.tick() => {
@@ -43,6 +52,9 @@ pub fn start_update_metrics(pool: sqlx::PgPool) {
                     if let Ok(Err(e)) = tokio::task::spawn_blocking(update_network_metrics).await {
                         tracing::error!("Failed to update network metrics: {}", e);
                     }
+                }
+                _ = interval_30s.tick() => {
+                    update_runtime_metrics();
                 }
                 _ = crate::shutdown::SHUTDOWN.notified() => {
                     break;

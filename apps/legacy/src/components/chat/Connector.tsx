@@ -67,8 +67,11 @@ const handleEvent = (
   if (body.type === 'APP_UPDATED') {
     location.reload();
   } else if (body.type === 'ERROR') {
-    if (body.code === 'NOT_FOUND') {
-      alert('找不到请求的更新，这可能由于客户端长时间没连接网络或者服务器重启，请刷新页面重试');
+    if (body.code === 'CURSOR_TOO_OLD') {
+      if (confirm('客户端状态已过期，是否刷新页面？')) {
+        location.reload();
+      }
+      return;
     }
     console.error('Connection Error', body);
     setState('CLOSED');
@@ -116,7 +119,7 @@ export const Connector = ({ spaceId, myId }: Props) => {
   const mountedRef = useRef(false);
 
   const retryCount = useRef(0);
-  const after = useRef<EventId>({ timestamp: 0, node: 0, seq: 0 });
+  const cursor = useRef<EventId>({ timestamp: 0, node: 0, seq: 0 });
 
   useEffect(() => {
     stateRef.current = state;
@@ -199,9 +202,9 @@ export const Connector = ({ spaceId, myId }: Props) => {
         spaceId,
         myId,
         tokenResult.token,
-        after.current.timestamp,
-        after.current.node,
-        after.current.seq,
+        cursor.current.timestamp,
+        cursor.current.node,
+        cursor.current.seq,
       );
       connectionRef.current = connection;
       connection.onclose = (event) => {
@@ -228,11 +231,13 @@ export const Connector = ({ spaceId, myId }: Props) => {
           console.warn('Failed to parse websocket message', received, e);
           return;
         }
-        const shouldAdvanceCursor = event.live == null || event.live === 'P';
-        if (shouldAdvanceCursor && compareEvents(after.current, event.id) > 0) return;
-        if (shouldAdvanceCursor) {
-          after.current = event.id;
+
+        // Advance cursor
+        if (event.live == null || event.live === 'P') {
+          if (compareEvents(event.id, cursor.current) <= 0) return;
+          cursor.current = event.id;
         }
+
         handleEvent(dispatch, setState, event);
       };
       dispatch(connectSpace(spaceId, connection));

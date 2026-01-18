@@ -5,6 +5,7 @@ import type {
   Message,
   NewMessage,
   Preview,
+  PreviewDiff,
   Update,
   SpaceWithRelated,
 } from '@boluo/api';
@@ -13,6 +14,9 @@ import { type MakeAction } from './actions';
 import { type FailTo } from './channel.types';
 import { type OptimisticMessage } from './channel.reducer';
 import { type ComposeState } from './compose.reducer';
+import type { ChatEffect } from './chat.types';
+
+export type ClientConnectionError = ConnectionError | 'NETWORK_ERROR';
 
 export type ChatActionMap = {
   receiveMessage: UpdateBody & { type: 'NEW_MESSAGE' };
@@ -45,43 +49,71 @@ export type ChatActionMap = {
   connecting: { mailboxId: string };
   reconnectCountdownTick: { immediately?: boolean };
   connectionClosed: { mailboxId: string; random: number };
-  connectionError: { mailboxId: string; code: ConnectionError };
+  retryConnection: { mailboxId: string };
+  connectionError: {
+    mailboxId: string;
+    code: ClientConnectionError;
+    timestamp: number;
+    reason?: string;
+    span?: string;
+  };
   debugCloseConnection: { countdown: number };
   reachBottom: { channelId: string };
   setComposeSource: { channelId: string; source: string };
   messagePreview: { channelId: string; preview: Preview; timestamp: number };
+  messagePreviewDiff: { channelId: string; diff: PreviewDiff; timestamp: number };
   messageDeleted: { channelId: string; messageId: string; pos: number };
   channelDeleted: { channelId: string };
   resetGc: { pos: number };
   update: Update;
   resetChatState: Empty;
+  effectsHandled: { effectIds: string[] };
 };
 
 export type ChatActionUnion = MakeAction<ChatActionMap, keyof ChatActionMap>;
 
 export type ChatAction<T extends keyof ChatActionMap> = MakeAction<ChatActionMap, T>;
 
-export const updateToChatAction = (e: Update): ChatActionUnion | null => {
-  switch (e.body.type) {
+export const toChatAction = (update: Update): ChatActionUnion | null => {
+  switch (update.body.type) {
     case 'NEW_MESSAGE':
-      return { type: 'receiveMessage', payload: e.body };
+      return { type: 'receiveMessage', payload: update.body };
     case 'INITIALIZED':
       return { type: 'initialized', payload: {} };
     case 'SPACE_UPDATED':
-      return { type: 'spaceUpdated', payload: e.body.spaceWithRelated };
+      return { type: 'spaceUpdated', payload: update.body.spaceWithRelated };
     case 'MESSAGE_EDITED':
-      return { type: 'messageEdited', payload: e.body };
+      return { type: 'messageEdited', payload: update.body };
     case 'MESSAGE_DELETED':
-      return { type: 'messageDeleted', payload: e.body };
+      return { type: 'messageDeleted', payload: update.body };
     case 'MESSAGE_PREVIEW':
-      return { type: 'messagePreview', payload: { ...e.body, timestamp: e.id.timestamp } };
+      return {
+        type: 'messagePreview',
+        payload: { ...update.body, timestamp: update.id.timestamp },
+      };
+    case 'DIFF':
+      return {
+        type: 'messagePreviewDiff',
+        payload: { ...update.body, timestamp: update.id.timestamp },
+      };
     case 'CHANNEL_DELETED':
-      return { type: 'channelDeleted', payload: e.body };
+      return { type: 'channelDeleted', payload: update.body };
+    case 'ERROR':
+      return {
+        type: 'connectionError',
+        payload: {
+          mailboxId: update.mailbox,
+          code: update.body.code,
+          reason: update.body.reason,
+          timestamp: update.id.timestamp,
+          span: update.body.span,
+        },
+      };
     case 'CHANNEL_EDITED':
     case 'MEMBERS':
     case 'STATUS_MAP':
     case 'APP_INFO':
-    default:
+    case 'APP_UPDATED':
       return null;
   }
 };

@@ -92,6 +92,10 @@ impl TokenStore {
         token_store.insert(token, TokenInfo::new(session));
         token
     }
+
+    pub fn len(&self) -> usize {
+        self.tokens.pin().len()
+    }
 }
 
 pub static TOKEN_STORE: std::sync::LazyLock<TokenStore> = std::sync::LazyLock::new(TokenStore::new);

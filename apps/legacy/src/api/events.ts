@@ -1,4 +1,4 @@
-import { type UpdateLifetime } from '@boluo/types/bindings';
+import { type PreviewDiffOp, type UpdateLifetime } from '@boluo/types/bindings';
 import { type Entity } from '../interpreter/entities';
 import { type Id } from '../utils/id';
 import { type Channel, type MemberWithUser } from './channels';
@@ -16,6 +16,9 @@ export type MESSAGE_EDITED = typeof MESSAGE_EDITED;
 
 export const MESSAGE_PREVIEW = 'MESSAGE_PREVIEW';
 export type MESSAGE_PREVIEW = typeof MESSAGE_PREVIEW;
+
+export const DIFF = 'DIFF';
+export type DIFF = typeof DIFF;
 
 export const CHANNEL_DELETED = 'CHANNEL_DELETED';
 export type CHANNEL_DELETED = typeof CHANNEL_DELETED;
@@ -55,6 +58,7 @@ export type Events =
   | Event<MessageDeleted>
   | Event<MessageEdited>
   | Event<MessagePreview>
+  | Event<PreviewDiffUpdate>
   | Event<ChannelEdited>
   | Event<ChannelDeleted>
   | Event<PushMembers>
@@ -107,6 +111,7 @@ export interface Preview {
   id: string;
   senderId: Id;
   channelId: Id;
+  v?: number;
   parentMessageId?: string | null;
   name: string;
   mediaId?: Id | null;
@@ -119,6 +124,20 @@ export interface Preview {
   entities: Entity[];
   pos: number;
   edit?: EditPreview | null;
+}
+
+export interface PreviewDiffPost {
+  ch: Id;
+  id: Id;
+  ref: number;
+  v?: number;
+  op: PreviewDiffOp[];
+  xs?: Entity[];
+}
+
+export interface PreviewDiff {
+  sender: Id;
+  _: PreviewDiffPost;
 }
 
 export interface PreviewPost {
@@ -138,6 +157,12 @@ export interface MessagePreview {
   type: MESSAGE_PREVIEW;
   preview: Preview;
   channelId: Id;
+}
+
+export interface PreviewDiffUpdate {
+  type: DIFF;
+  channelId: Id;
+  diff: PreviewDiff;
 }
 
 export interface AppUpdated {

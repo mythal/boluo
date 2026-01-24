@@ -3,7 +3,13 @@ import { useAtom } from 'jotai';
 import { useEffect, useRef, useState } from 'react';
 import { connectSpace } from '../../actions';
 import { connect } from '../../api/connect';
-import { compareEvents, type EventId, type Events, type SpaceUpdated } from '../../api/events';
+import {
+  compareEvents,
+  type EventId,
+  type Events,
+  type SpaceUpdated,
+  shouldAdvanceCursor,
+} from '../../api/events';
 import { get } from '../../api/request';
 import { connectionStateAtom } from '../../states/connection';
 import store, { type Dispatch, useDispatch, useSelector } from '../../store';
@@ -233,7 +239,7 @@ export const Connector = ({ spaceId, myId }: Props) => {
         }
 
         // Advance cursor
-        if (event.live == null || event.live === 'P') {
+        if (shouldAdvanceCursor(event)) {
           if (compareEvents(event.id, cursor.current) <= 0) return;
           cursor.current = event.id;
         }

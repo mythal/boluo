@@ -31,6 +31,7 @@ import {
   type Events,
   type PreviewDiff,
   type Preview,
+  shouldAdvanceCursor,
 } from '../api/events';
 import { type Message } from '../api/messages';
 import { type SpaceWithRelated } from '../api/spaces';
@@ -482,7 +483,8 @@ const handleComposeRestore = (state: ChatState, { compose }: RestoreComposeState
 const handleChannelEvent = (chat: ChatState, event: Events, myId: Id | undefined): ChatState => {
   const body = event.body;
   let { itemSet, channel, colorMap, members, eventAfter, initialized, compose } = chat;
-  if (compareEvents(event.id, eventAfter) <= 0) {
+  const advanceCursor = shouldAdvanceCursor(event);
+  if (advanceCursor && compareEvents(event.id, eventAfter) <= 0) {
     return chat;
   }
   if ('channelId' in body && body.channelId !== channel.id) {
@@ -511,9 +513,11 @@ const handleChannelEvent = (chat: ChatState, event: Events, myId: Id | undefined
       itemSet = handleMessageDelete(itemSet, body.messageId);
       break;
     case 'MESSAGE_EDITED':
-      eventAfter = eventIdMax(eventAfter, event.id);
       chat = handleEditMessage(chat, body.message, myId);
-      return { ...chat, eventAfter };
+      return {
+        ...chat,
+        eventAfter: advanceCursor ? eventIdMax(eventAfter, event.id) : eventAfter,
+      };
     case 'CHANNEL_EDITED':
       channel = body.channel;
       break;
@@ -531,7 +535,9 @@ const handleChannelEvent = (chat: ChatState, event: Events, myId: Id | undefined
       }
       break;
   }
-  eventAfter = eventIdMax(eventAfter, event.id);
+  if (advanceCursor) {
+    eventAfter = eventIdMax(eventAfter, event.id);
+  }
   return {
     ...chat,
     channel,

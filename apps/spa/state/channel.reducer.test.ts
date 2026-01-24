@@ -483,12 +483,10 @@ describe('channelReducer', () => {
       context,
     );
     const diffEntities: Preview['entities'] = [{ type: 'Text', start: 0, len: 2 }];
-    const diff = makeDiff(
-      preview.id,
-      1,
-      [{ type: 'SPLICE', i: 0, len: 5, _: 'hi' }],
-      { v: 2, xs: diffEntities },
-    );
+    const diff = makeDiff(preview.id, 1, [{ type: 'SPLICE', i: 0, len: 5, _: 'hi' }], {
+      v: 2,
+      xs: diffEntities,
+    });
     const next = channelReducer(
       baseState,
       { type: 'messagePreviewDiff', payload: { channelId, diff, timestamp: 2 } },
@@ -530,12 +528,10 @@ describe('channelReducer', () => {
       { type: 'messagePreview', payload: { channelId, preview, timestamp: 1 } },
       context,
     );
-    const diff = makeDiff(
-      preview.id,
-      1,
-      [{ type: 'NAME', name: 'Bob' }],
-      { v: 2, xs: parse('hello').entities },
-    );
+    const diff = makeDiff(preview.id, 1, [{ type: 'NAME', name: 'Bob' }], {
+      v: 2,
+      xs: parse('hello').entities,
+    });
     const next = channelReducer(
       baseState,
       { type: 'messagePreviewDiff', payload: { channelId, diff, timestamp: 2 } },
@@ -556,12 +552,10 @@ describe('channelReducer', () => {
       context,
     );
     const diff1Text = 'hello world';
-    const diff1 = makeDiff(
-      preview.id,
-      1,
-      [{ type: 'A', _: ' world' }],
-      { v: 2, xs: parse(diff1Text).entities },
-    );
+    const diff1 = makeDiff(preview.id, 1, [{ type: 'A', _: ' world' }], {
+      v: 2,
+      xs: parse(diff1Text).entities,
+    });
     state = channelReducer(
       state,
       { type: 'messagePreviewDiff', payload: { channelId, diff: diff1, timestamp: 2 } },
@@ -569,12 +563,10 @@ describe('channelReducer', () => {
     );
 
     const diff2Text = 'hi';
-    const diff2 = makeDiff(
-      preview.id,
-      1,
-      [{ type: 'SPLICE', i: 0, len: 5, _: 'hi' }],
-      { v: 3, xs: parse(diff2Text).entities },
-    );
+    const diff2 = makeDiff(preview.id, 1, [{ type: 'SPLICE', i: 0, len: 5, _: 'hi' }], {
+      v: 3,
+      xs: parse(diff2Text).entities,
+    });
     const next = channelReducer(
       state,
       { type: 'messagePreviewDiff', payload: { channelId, diff: diff2, timestamp: 3 } },

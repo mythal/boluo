@@ -1,9 +1,6 @@
 services:
   db:
     image: docker.io/library/postgres:18-trixie
-    build:
-      context: ./apps/db
-      dockerfile: Dockerfile
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres

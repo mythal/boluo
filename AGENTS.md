@@ -2,11 +2,10 @@ This project is an open‑source chat tool designed for playing traditional tabl
 
 ## General Notes
 
-- You can use `ast-grep` to search and refactor code if needed.
-- The language of the codebase is English. But you should response user by the language they used.
+- The language of the codebase is English. However, you should respond to the user in the language they used.
 - Before making changes, ensure you understand the relevant parts of the codebase.
-- After making changes, provide 2-3 concise possible commit messages as options to summarize your work using conventional commit format, package name as scope.
-- Temprorary files in the development can be placed in the `.tmp/` directory, which is ignored.
+- After making changes, provide 2-3 concise possible commit messages as options to summarize your work using the conventional commit format, with the package name as the scope.
+- Temporary files created during development can be placed in the `.tmp/` directory, which is ignored.
 
 ---
 
@@ -14,7 +13,9 @@ This project is an open‑source chat tool designed for playing traditional tabl
 
 The backend is written in Rust using **hyper** and **tokio**. PostgreSQL is accessed through **sqlx**.
 
-The standalone database schema is in `apps/db/schema.sql`. Migrations are in `apps/db/migrations`.
+The standalone database schema is located in `apps/db/schema.sql`. Migrations are in `apps/db/migrations`.
+
+While multi-node support is planned, currently only single-node deployment is available.
 
 ### Development Notes
 
@@ -24,7 +25,7 @@ The standalone database schema is in `apps/db/schema.sql`. Migrations are in `ap
 - Database-related tests:
   - Use `sqlx::test`
   - Test function names must start with `db_test_`
-- When using Cargo commands that don’t require network requests, prefer: `SQLX_OFFLINE=true cargo --offline <command>` to avoid triggering sandbox restrictions. otherwise, you should request the user for permission for network access.
+- When using Cargo commands that don’t require network requests, prefer using `SQLX_OFFLINE=true cargo --offline <command>` to avoid triggering sandbox restrictions. Otherwise, you should request permission from the user for network access.
 
 ---
 
@@ -49,7 +50,7 @@ Turborepo's options are available for both commands, e.g., `npm run check -- --f
 - Styling: **tailwindcss v4** (config in `packages/tailwind-config/tailwind.css`).
 - State management: **jotai**.
 - Default UI language: English, with internationalization via **react-intl**.
-- Basic components in `packages/ui`.
+- Basic components are located in `packages/ui`. Prioritize using existing base components; if necessary, you can add new components in `packages/ui`.
 
 ### Main Site (`apps/site`)
 

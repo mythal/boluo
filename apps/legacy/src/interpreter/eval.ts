@@ -266,7 +266,7 @@ export const nodeToText = (node: EvaluatedExprNode): string => {
         ? ''
         : `=${node.rolled}${typeDisplay}[${node.modifiers.join(', ')}]`;
     const successLevel =
-      node.targetValue === undefined
+      node.targetValue == null
         ? ''
         : `: (基准${node.targetValue})${cocSuccessLevelDisplay(node.value, node.targetValue)}`;
     return `${node.value}${modifier}${successLevel}`;

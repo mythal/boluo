@@ -14,6 +14,8 @@ This project is an open‑source chat tool designed for playing traditional tabl
 
 The backend is written in Rust using **hyper** and **tokio**. PostgreSQL is accessed through **sqlx**.
 
+The standalone database schema is in `apps/db/schema.sql`. Migrations are in `apps/db/migrations`.
+
 ### Development Notes
 
 - When modifying SQL statements or RESTful APIs, run: `./scripts/generate-types.sh` to regenerate types.

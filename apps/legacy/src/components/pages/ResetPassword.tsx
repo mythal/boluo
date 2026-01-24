@@ -25,7 +25,7 @@ function ResetPassword() {
   const onSubmit = useCallback(
     async ({ email }: FormData) => {
       setState('loading');
-      const result = await post('/users/reset_password', { email });
+      const result = await post('/users/reset_password', { email, lang: null });
       if (result.isErr) {
         const error = result.value;
         if (error.code === 'LIMIT_EXCEEDED') {

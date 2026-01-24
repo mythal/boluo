@@ -49,7 +49,7 @@ const editUser = (
 };
 
 const joinSpace = (state: ProfileState, { space, member }: JoinedSpace) => {
-  const spaces = state.spaces.set(space.id, { space, member });
+  const spaces = state.spaces.set(space.id, { space, member, user: state.user });
   return { ...state, spaces };
 };
 
@@ -101,7 +101,11 @@ const editChannelMemberByList = (
   }
   const spaceWithMember = spaces.get(member.space.spaceId, undefined);
   if (spaceWithMember !== undefined) {
-    spaces = spaces.set(member.space.spaceId, { ...spaceWithMember, member: member.space });
+    spaces = spaces.set(member.space.spaceId, {
+      ...spaceWithMember,
+      member: member.space,
+      user: member.user,
+    });
   }
   return { channels, spaces, user, settings };
 };
@@ -119,7 +123,11 @@ export const editChannel = (state: ProfileState, { channel }: ChannelEdited): Pr
 function updateSpace(state: ProfileState, { space, members }: SpaceWithRelated): ProfileState {
   const member = members[state.user.id];
   if (member) {
-    const spaces = state.spaces.set(space.id, { space, member: member.space });
+    const spaces = state.spaces.set(space.id, {
+      space,
+      member: member.space,
+      user: member.user,
+    });
     return { ...state, spaces };
   } else if (state.spaces.get(space.id)) {
     const spaces = state.spaces.remove(space.id);

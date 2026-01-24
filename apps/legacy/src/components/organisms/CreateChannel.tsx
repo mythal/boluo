@@ -56,13 +56,14 @@ function CreateChannel({ space, dismiss }: Props) {
     );
   }
   const onSubmit = async ({ name, characterName, isPrivate }: FormData) => {
-    const defaultDiceType = defaultDice?.value;
+    const defaultDiceType = defaultDice?.value ?? null;
     const payload: CreateChannelData = {
       name,
       spaceId,
       defaultDiceType,
       characterName,
       isPublic: !isPrivate,
+      type: null,
     };
     setSubmitting(true);
     const result = await post('/channels/create', payload);

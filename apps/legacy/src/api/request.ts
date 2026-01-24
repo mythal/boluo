@@ -1,15 +1,22 @@
 /* eslint-disable @typescript-eslint/no-empty-object-type */
 import { isCrossOrigin } from '../settings';
 import store from '../store';
-import { type Id } from '../utils/id';
 import { Err, Ok, type Result } from '../utils/result';
 import { getAuthToken, clearAuthToken } from '../utils/token';
-import type { MakeToken, MoveMessageBetween } from '@boluo/api';
+import type {
+  IdQuery,
+  IdWithToken,
+  KickFromChannel,
+  MakeToken,
+  MoveMessageBetween,
+  QueryUser,
+} from '@boluo/api';
 import {
   type AddMember,
   type Channel,
   type ChannelMember,
   type ChannelMemberWithUser,
+  type ChannelWithMaybeMember,
   type ChannelWithMember,
   type ChannelWithRelated,
   type CheckChannelName,
@@ -153,18 +160,9 @@ export const makeUri = (path: string, query?: object, addBaseUrl = true): string
   return `${path}?${searchParams.toString()}`;
 };
 
-interface IdQuery {
-  id: Id;
-}
-
-interface IdWithToken {
-  id: Id;
-  token?: string;
-}
-
 export function post(path: '/users/login', payload: LoginData): Promise<AppResult<LoginResult>>;
 export function post(path: '/users/register', payload: RegisterData): Promise<AppResult<User>>;
-export function post(path: '/users/edit', payload: EditUser): Promise<AppResult<User>>;
+export function post(path: '/users/edit', payload: Partial<EditUser>): Promise<AppResult<User>>;
 export function post(
   path: '/users/update_settings',
   payload: Settings,
@@ -219,7 +217,7 @@ export function post(
 export function post(
   path: '/channels/kick',
   payload: {},
-  query: { channelId: string; userId: string; spaceId: string },
+  query: KickFromChannel,
 ): Promise<AppResult<true>>;
 export function post(
   path: '/channels/delete',
@@ -264,10 +262,7 @@ export function patch<T, U extends object = object, Q extends object = {}>(
   return request(makeUri(path, query), 'PATCH', JSON.stringify(payload));
 }
 
-export function get(
-  path: '/users/query',
-  query: { id?: Id | null },
-): Promise<AppResult<User | null>>;
+export function get(path: '/users/query', query: QueryUser): Promise<AppResult<User | null>>;
 export function get(path: '/users/settings'): Promise<AppResult<Settings>>;
 export function get(path: '/users/logout'): Promise<AppResult<true>>;
 export function get(
@@ -300,7 +295,7 @@ export function get(
 export function get(
   path: '/channels/by_space',
   query: IdQuery,
-): Promise<AppResult<Array<{ channel: Channel; member: ChannelMember | null }>>>;
+): Promise<AppResult<ChannelWithMaybeMember[]>>;
 export function get(
   path: '/channels/all_members',
   query: IdQuery,

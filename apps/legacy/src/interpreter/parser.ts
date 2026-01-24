@@ -379,7 +379,7 @@ const cocRoll: P<CocRoll> = regex(/^[Cc][Oo][Cc]([Bb][Bb]?|[Pp][Pp]?)?\s*/).then
     const right = atom(true).run(state, env);
     if (right) {
       const [target, state] = right;
-      node.target = target;
+      node.target = target as CocRoll['target'];
       return [node, state];
     }
     return [node, state];

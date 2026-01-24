@@ -23,7 +23,16 @@ export const LoadMoreContainer = styled.div`
 function LoadMore() {
   const pane = useChannelId();
   const channelId = useSelector((state) => state.chatStates.get(pane)!.channel.id);
-  const before = useSelector((state) => state.chatStates.get(pane)?.itemSet.messages.first()?.pos);
+  const before = useSelector((state) => {
+    const messages = state.chatStates.get(pane)?.itemSet.messages;
+    if (!messages) {
+      return undefined;
+    }
+    const oldestMessage = messages.find(
+      (item) => item.type === 'MESSAGE' && Number.isFinite(item.pos),
+    );
+    return oldestMessage?.pos;
+  });
   const finished = useSelector((state) => state.chatStates.get(pane)!.finished);
   const moving = useSelector((state) => state.chatStates.get(pane)!.moving);
   const dispatch = useDispatch();

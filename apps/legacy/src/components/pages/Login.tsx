@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { type LoggedIn } from '../../actions';
 import { type AppError, NO_PERMISSION } from '../../api/error';
 import { get, post } from '../../api/request';
-import { type LoginData } from '../../api/users';
+import { type LoginData, type Settings } from '../../api/users';
 import SignIn from '../../assets/icons/sign-in.svg';
 import Icon from '../../components/atoms/Icon';
 import { useTitle } from '../../hooks/useTitle';
@@ -58,7 +58,7 @@ function Login() {
       }
 
       // Double check if the login is successful
-      const querySelf = await get('/users/query', {});
+      const querySelf = await get('/users/query', { id: null });
       if (querySelf.isErr) {
         setLoginError(querySelf.value);
         return;
@@ -66,7 +66,15 @@ function Login() {
         alert('登录失败，请清理缓存或者更换浏览器重试');
         return;
       }
-      dispatch<LoggedIn>({ type: 'LOGGED_IN', ...result.value.me });
+      const me = result.value.me;
+      const settings = (me.settings ?? {}) as Settings;
+      dispatch<LoggedIn>({
+        type: 'LOGGED_IN',
+        user: me.user,
+        settings,
+        myChannels: me.myChannels,
+        mySpaces: me.mySpaces,
+      });
       const next = popNext() || '/';
       navigate(next, { replace: true });
     } else {

@@ -104,7 +104,7 @@ function ManageChannel({ channel, dismiss }: Props) {
   const dismissDeleteDialog = () => setDeleteDialog(false);
 
   const onSubmit = async ({ name, topic, defaultRollCommand, isPrivate }: FormData) => {
-    const defaultDiceType = defaultDice?.value;
+    const defaultDiceType = defaultDice?.value ?? null;
     const current = Set(currentMaster.map((member) => member.value));
     const selected = Set(selectedMember.map((member) => member.value));
     const grantMasters = selected.subtract(current).toArray();
@@ -116,8 +116,11 @@ function ManageChannel({ channel, dismiss }: Props) {
       defaultDiceType,
       grantMasters,
       removeMasters,
-      defaultRollCommand,
+      defaultRollCommand: defaultRollCommand ?? null,
       isPublic: !isPrivate,
+      isDocument: null,
+      isArchived: null,
+      type: null,
     };
     setSubmitting(true);
     const result = await post('/channels/edit', editChannel);

@@ -72,7 +72,11 @@ function LoadMore() {
     if (mounted.current) {
       setLoading(true);
     }
-    const result = await get('/messages/by_channel', { channelId, before, limit });
+    const result = await get('/messages/by_channel', {
+      channelId,
+      before: before ?? null,
+      limit,
+    });
     if (mounted.current) {
       setLoading(false);
     }

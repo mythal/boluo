@@ -31,6 +31,7 @@ import {
   type Events,
   type PreviewDiff,
   type Preview,
+  type PreviewDiffOp,
   shouldAdvanceCursor,
 } from '../api/events';
 import { type Message } from '../api/messages';
@@ -51,7 +52,6 @@ import {
   resetMovingMessage,
 } from '../states/chat-item-set';
 import { type Id, newId } from '../utils/id';
-import { type PreviewDiffOp } from '@boluo/types/bindings';
 
 export interface UserItem {
   label: string;

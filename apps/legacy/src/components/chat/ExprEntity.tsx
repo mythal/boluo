@@ -185,7 +185,7 @@ const CocRollNode: React.FC<{ node: CocRollResult }> = ({ node }) => {
   const modifierName: React.ReactNode = cocRollSubTypeDisplay(node.subType);
 
   let successName: string | null;
-  if (targetValue === undefined) {
+  if (targetValue == null) {
     successName = null;
   } else {
     successName = cocSuccessLevelDisplay(value, targetValue);
@@ -201,7 +201,7 @@ const CocRollNode: React.FC<{ node: CocRollResult }> = ({ node }) => {
         <span css={[mL(1)]}>[{node.modifiers.join(', ')}]</span>
       )}
       {successName && <span css={[mL(1)]}>{successName}</span>}
-      {expand && node.targetValue && <span>({targetValue})</span>}
+      {expand && targetValue != null && <span>({targetValue})</span>}
     </Roll>
   );
 };

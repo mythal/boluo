@@ -26,7 +26,12 @@ const nicknameFieldStyle = css`
   justify-content: flex-end;
 `;
 
-interface SettingsForm extends EditUser, SettingsData {}
+interface SettingsForm {
+  nickname: string;
+  bio: string;
+  enterSend?: boolean;
+  expandDice?: boolean;
+}
 
 function Settings() {
   const dispatch = useDispatch();
@@ -46,7 +51,11 @@ function Settings() {
   const onSubmit = async (data: SettingsForm) => {
     if (data.bio !== user.bio || data.nickname !== user.nickname) {
       setSubmitting(true);
-      const result = await post('/users/edit', data);
+      const editPayload: Partial<EditUser> = {
+        nickname: data.nickname,
+        bio: data.bio,
+      };
+      const result = await post('/users/edit', editPayload);
       setSubmitting(false);
       if (!result.isOk) {
         setAppError(result.value);

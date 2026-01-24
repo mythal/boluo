@@ -1,23 +1,3 @@
-import { type Id } from '../utils/id';
+import type { Media, PreSign, PreSignResult } from '@boluo/api';
 
-export interface Media {
-  id: Id;
-  mimeType: string;
-  uploaderId: Id;
-  filename: string;
-  originalFilename: string;
-  hash: string;
-  description: string;
-  created: number;
-}
-
-export interface PreSign {
-  filename: string;
-  mimeType: string;
-  size: number;
-}
-
-export interface PreSignResult {
-  url: string;
-  mediaId: string;
-}
+export type { Media, PreSign, PreSignResult };

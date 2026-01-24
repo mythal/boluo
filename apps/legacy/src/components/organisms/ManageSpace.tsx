@@ -48,6 +48,15 @@ interface Props {
   dismiss: () => void;
 }
 
+interface FormData {
+  spaceId: string;
+  name: string;
+  description: string;
+  explorable?: boolean;
+  isPublic?: boolean;
+  allowSpectator?: boolean;
+}
+
 const panelStyle = css`
   width: ${spacingN(64)};
   ${mediaQuery(breakpoint.md)} {
@@ -60,7 +69,7 @@ function ManageSpace({ space, my, dismiss }: Props) {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<EditSpace>();
+  } = useForm<FormData>();
   const [editError, setEditError] = useState<AppError | null>(null);
   const [defaultDice, setDefaultDice] = useState<DiceOption | null | undefined>(undefined);
   const [deleteDialog, showDeleteDialog] = useState(false);
@@ -70,10 +79,16 @@ function ManageSpace({ space, my, dismiss }: Props) {
   if (space.ownerId !== my.userId && !my.isAdmin) {
     return <PanelTitle>没有权限管理位面</PanelTitle>;
   }
-  const onSubmit = async (payload: EditSpace) => {
+  const onSubmit = async (payload: FormData) => {
     setSubmitting(true);
-    payload.defaultDiceType = defaultDice?.value;
-    const result = await post('/spaces/edit', payload);
+    const editSpace: EditSpace = {
+      ...payload,
+      defaultDiceType: defaultDice?.value ?? null,
+      explorable: payload.explorable ?? null,
+      isPublic: payload.isPublic ?? null,
+      allowSpectator: payload.allowSpectator ?? null,
+    };
+    const result = await post('/spaces/edit', editSpace);
     setSubmitting(false);
     if (!result.isOk) {
       setEditError(result.value);

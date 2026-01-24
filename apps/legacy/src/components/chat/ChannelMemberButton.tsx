@@ -3,7 +3,6 @@ import * as React from 'react';
 import { useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { type ChannelMemberEdited } from '../../actions';
-import { type EditChannelMember } from '../../api/channels';
 import { post } from '../../api/request';
 import Cog from '../../assets/icons/cog.svg';
 import DoorOpen from '../../assets/icons/door-open.svg';
@@ -36,7 +35,7 @@ const buttonBarStyle = css`
 
 interface ChannelMemberOperators {
   join: (characterName?: string) => Promise<void>;
-  edit: (characterName?: string) => Promise<void>;
+  edit: (characterName?: string | null) => Promise<void>;
   leave: () => Promise<void>;
 }
 
@@ -62,12 +61,16 @@ function useChannelJoinLeave(id: Id): ChannelMemberOperators {
       throwE(result.value);
     }
   };
-  const edit = async (characterName?: string) => {
+  const edit = async (characterName?: string | null) => {
     const channelId = id;
     if (characterName === undefined) {
       return;
     }
-    const result = await post('/channels/edit_member', { characterName, channelId });
+    const result = await post('/channels/edit_member', {
+      characterName,
+      channelId,
+      textColor: null,
+    });
     if (result.isOk) {
       const member = result.value;
       dispatch<ChannelMemberEdited>({ type: 'CHANNEL_MEMBER_EDITED', channelId, member });
@@ -82,7 +85,9 @@ interface Props {
   className?: string;
 }
 
-type FormData = Pick<EditChannelMember, 'characterName'>;
+interface FormData {
+  characterName?: string;
+}
 
 function ChannelMemberButton({ className }: Props) {
   const pane = useChannelId();
@@ -125,7 +130,7 @@ function ChannelMemberButton({ className }: Props) {
     setDialog(false);
   };
   const onSubmitEdit = async ({ characterName }: FormData) => {
-    await edit(characterName);
+    await edit(characterName ?? null);
     dispatch({ type: 'SET_INPUT_NAME', name: '', pane: channelId });
     dismissDialog();
   };
@@ -138,7 +143,7 @@ function ChannelMemberButton({ className }: Props) {
       <Input
         id="characterName"
         placeholder="例如：甘道夫"
-        defaultValue={member?.characterName}
+        defaultValue={member?.characterName ?? undefined}
         {...register('characterName', characterNameValidation)}
       />
       {errors.characterName && <ErrorMessage>{errors.characterName.message}</ErrorMessage>}

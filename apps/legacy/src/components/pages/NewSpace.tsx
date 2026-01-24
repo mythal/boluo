@@ -58,7 +58,9 @@ function NewSpace() {
   const dispatch = useDispatch();
 
   const onSubmit = async (data: CreateSpace) => {
-    data.defaultDiceType = defaultDice?.value;
+    data.defaultDiceType = defaultDice?.value ?? null;
+    data.password = null;
+    data.firstChannelType = null;
     setSubmitting(true);
     const result = await post('/spaces/create', data);
     setSubmitting(false);

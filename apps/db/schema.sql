@@ -1,5 +1,5 @@
--- Dumped from database version 17.6 (Debian 17.6-1.pgdg13+1)
--- Dumped by pg_dump version 17.6 (Debian 17.6-1.pgdg13+1)
+-- Dumped from database version 18.1 (Debian 18.1-1.pgdg13+2)
+-- Dumped by pg_dump version 18.1 (Debian 18.1-1.pgdg13+2)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -14,10 +14,17 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
--- Name: _sqlx_test; Type: SCHEMA; Schema: -; Owner: -
+-- Name: citext; Type: EXTENSION; Schema: -; Owner: -
 --
 
-CREATE SCHEMA _sqlx_test;
+CREATE EXTENSION IF NOT EXISTS citext WITH SCHEMA public;
+
+
+--
+-- Name: EXTENSION citext; Type: COMMENT; Schema: -; Owner: -
+--
+
+COMMENT ON EXTENSION citext IS 'data type for case-insensitive character strings';
 
 
 --
@@ -63,6 +70,16 @@ COMMENT ON EXTENSION "uuid-ossp" IS 'generate universally unique identifiers (UU
 
 
 --
+-- Name: character_visibility; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.character_visibility AS ENUM (
+    'Private',
+    'Public'
+);
+
+
+--
 -- Name: event_type; Type: TYPE; Schema: public; Owner: -
 --
 
@@ -71,6 +88,28 @@ CREATE TYPE public.event_type AS ENUM (
     'Left',
     'NewMaster',
     'NewAdmin'
+);
+
+
+--
+-- Name: note_type; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.note_type AS ENUM (
+    'Term',
+    'Character'
+);
+
+
+--
+-- Name: note_visibility; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.note_visibility AS ENUM (
+    'Private',
+    'Channels',
+    'Users',
+    'Public'
 );
 
 
@@ -114,32 +153,9 @@ END;
 $$;
 
 
---
--- Name: database_ids; Type: SEQUENCE; Schema: _sqlx_test; Owner: -
---
-
-CREATE SEQUENCE _sqlx_test.database_ids
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
-
---
--- Name: databases; Type: TABLE; Schema: _sqlx_test; Owner: -
---
-
-CREATE TABLE _sqlx_test.databases (
-    db_name text NOT NULL,
-    test_path text NOT NULL,
-    created_at timestamp with time zone DEFAULT now() NOT NULL
-);
-
 
 --
 -- Name: _sqlx_migrations; Type: TABLE; Schema: public; Owner: -
@@ -186,7 +202,63 @@ CREATE TABLE public.channels (
     default_roll_command text DEFAULT 'd'::text NOT NULL,
     is_document boolean DEFAULT false NOT NULL,
     old_name text DEFAULT ''::text NOT NULL,
-    type text DEFAULT 'in_game'::text NOT NULL
+    type text DEFAULT 'in_game'::text NOT NULL,
+    is_archived boolean DEFAULT false NOT NULL
+);
+
+
+--
+-- Name: character_variable_history; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.character_variable_history (
+    id uuid DEFAULT public.uuid_generate_v1mc() NOT NULL,
+    operator_id uuid,
+    character_id uuid NOT NULL,
+    reason jsonb,
+    key public.citext NOT NULL,
+    value jsonb NOT NULL,
+    created timestamp with time zone DEFAULT (now() AT TIME ZONE 'utc'::text) NOT NULL
+);
+
+
+--
+-- Name: character_variables; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.character_variables (
+    key public.citext NOT NULL,
+    character_id uuid NOT NULL,
+    display_name text DEFAULT ''::text NOT NULL,
+    alias text[] DEFAULT '{}'::text[] NOT NULL,
+    sort integer DEFAULT 0 NOT NULL,
+    track_history boolean DEFAULT true NOT NULL,
+    value jsonb NOT NULL,
+    metadata jsonb DEFAULT '{}'::jsonb NOT NULL,
+    created timestamp with time zone DEFAULT (now() AT TIME ZONE 'utc'::text) NOT NULL,
+    modified timestamp with time zone DEFAULT (now() AT TIME ZONE 'utc'::text) NOT NULL,
+    CONSTRAINT character_variables_key_check CHECK ((length(TRIM(BOTH FROM key)) > 0))
+);
+
+
+--
+-- Name: characters; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.characters (
+    id uuid DEFAULT public.uuid_generate_v1mc() NOT NULL,
+    name text NOT NULL,
+    description text DEFAULT ''::text NOT NULL,
+    color text DEFAULT ''::text NOT NULL,
+    alias text,
+    image_id uuid,
+    space_id uuid NOT NULL,
+    owner_id uuid NOT NULL,
+    visibility public.character_visibility DEFAULT 'Private'::public.character_visibility NOT NULL,
+    is_archived boolean DEFAULT false NOT NULL,
+    metadata jsonb DEFAULT '{}'::jsonb NOT NULL,
+    created timestamp with time zone DEFAULT (now() AT TIME ZONE 'utc'::text) NOT NULL,
+    modified timestamp with time zone DEFAULT (now() AT TIME ZONE 'utc'::text) NOT NULL
 );
 
 
@@ -251,6 +323,41 @@ CREATE TABLE public.messages (
     pos_q integer NOT NULL,
     pos double precision GENERATED ALWAYS AS (((pos_p)::double precision / (pos_q)::double precision)) STORED,
     color text DEFAULT ''::text NOT NULL
+);
+
+
+--
+-- Name: notes; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.notes (
+    id uuid DEFAULT public.uuid_generate_v1mc() NOT NULL,
+    type public.note_type DEFAULT 'Term'::public.note_type NOT NULL,
+    space_id uuid NOT NULL,
+    title text DEFAULT ''::text NOT NULL,
+    keywords text[] DEFAULT '{}'::text[] NOT NULL,
+    disabled boolean DEFAULT false NOT NULL,
+    owner_id uuid NOT NULL,
+    content text DEFAULT ''::text NOT NULL,
+    visibility public.note_visibility DEFAULT 'Private'::public.note_visibility NOT NULL,
+    visible_to uuid[] DEFAULT '{}'::uuid[] NOT NULL,
+    everyone_can_edit boolean DEFAULT false NOT NULL,
+    track_history boolean DEFAULT false NOT NULL,
+    created timestamp with time zone DEFAULT (now() AT TIME ZONE 'utc'::text) NOT NULL,
+    modified timestamp with time zone DEFAULT (now() AT TIME ZONE 'utc'::text) NOT NULL
+);
+
+
+--
+-- Name: notes_history; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.notes_history (
+    id uuid DEFAULT public.uuid_generate_v1mc() NOT NULL,
+    note_id uuid NOT NULL,
+    operator_id uuid,
+    content text DEFAULT ''::text NOT NULL,
+    created timestamp with time zone DEFAULT (now() AT TIME ZONE 'utc'::text) NOT NULL
 );
 
 
@@ -382,14 +489,6 @@ CREATE TABLE public.users_extension (
 
 
 --
--- Name: databases databases_pkey; Type: CONSTRAINT; Schema: _sqlx_test; Owner: -
---
-
-ALTER TABLE ONLY _sqlx_test.databases
-    ADD CONSTRAINT databases_pkey PRIMARY KEY (db_name);
-
-
---
 -- Name: _sqlx_migrations _sqlx_migrations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -403,6 +502,46 @@ ALTER TABLE ONLY public._sqlx_migrations
 
 ALTER TABLE ONLY public.channels
     ADD CONSTRAINT channels_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: characters character_space_alias_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.characters
+    ADD CONSTRAINT character_space_alias_unique UNIQUE (space_id, alias);
+
+
+--
+-- Name: characters character_space_name_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.characters
+    ADD CONSTRAINT character_space_name_unique UNIQUE (space_id, name);
+
+
+--
+-- Name: character_variable_history character_variable_history_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.character_variable_history
+    ADD CONSTRAINT character_variable_history_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: character_variables character_variable_primary; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.character_variables
+    ADD CONSTRAINT character_variable_primary PRIMARY KEY (character_id, key);
+
+
+--
+-- Name: characters characters_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.characters
+    ADD CONSTRAINT characters_pkey PRIMARY KEY (id);
 
 
 --
@@ -427,6 +566,22 @@ ALTER TABLE ONLY public.media
 
 ALTER TABLE ONLY public.messages
     ADD CONSTRAINT messages_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: notes_history notes_history_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.notes_history
+    ADD CONSTRAINT notes_history_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: notes notes_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.notes
+    ADD CONSTRAINT notes_pkey PRIMARY KEY (id);
 
 
 --
@@ -542,10 +697,24 @@ ALTER TABLE ONLY public.users
 
 
 --
--- Name: databases_created_at; Type: INDEX; Schema: _sqlx_test; Owner: -
+-- Name: character_space_id_index; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX databases_created_at ON _sqlx_test.databases USING btree (created_at);
+CREATE INDEX character_space_id_index ON public.characters USING btree (space_id);
+
+
+--
+-- Name: character_variable_character_sort_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX character_variable_character_sort_index ON public.character_variables USING btree (character_id, sort);
+
+
+--
+-- Name: character_variable_history_character_created_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX character_variable_history_character_created_index ON public.character_variable_history USING btree (character_id, created DESC);
 
 
 --
@@ -553,6 +722,27 @@ CREATE INDEX databases_created_at ON _sqlx_test.databases USING btree (created_a
 --
 
 CREATE INDEX message_tags ON public.messages USING gin (tags);
+
+
+--
+-- Name: notes_history_note_created_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX notes_history_note_created_index ON public.notes_history USING btree (note_id, created DESC);
+
+
+--
+-- Name: notes_space_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX notes_space_index ON public.notes USING btree (space_id);
+
+
+--
+-- Name: notes_space_owner_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX notes_space_owner_index ON public.notes USING btree (space_id, owner_id);
 
 
 --
@@ -584,6 +774,54 @@ ALTER TABLE ONLY public.channel_members
 
 ALTER TABLE ONLY public.channels
     ADD CONSTRAINT channel_space FOREIGN KEY (space_id) REFERENCES public.spaces(id) ON DELETE CASCADE;
+
+
+--
+-- Name: characters character_image; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.characters
+    ADD CONSTRAINT character_image FOREIGN KEY (image_id) REFERENCES public.media(id) ON DELETE SET NULL;
+
+
+--
+-- Name: characters character_owner; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.characters
+    ADD CONSTRAINT character_owner FOREIGN KEY (owner_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+--
+-- Name: characters character_space; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.characters
+    ADD CONSTRAINT character_space FOREIGN KEY (space_id) REFERENCES public.spaces(id) ON DELETE CASCADE;
+
+
+--
+-- Name: character_variables character_variable_character; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.character_variables
+    ADD CONSTRAINT character_variable_character FOREIGN KEY (character_id) REFERENCES public.characters(id) ON DELETE CASCADE;
+
+
+--
+-- Name: character_variable_history character_variable_history_character; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.character_variable_history
+    ADD CONSTRAINT character_variable_history_character FOREIGN KEY (character_id) REFERENCES public.characters(id) ON DELETE CASCADE;
+
+
+--
+-- Name: character_variable_history character_variable_history_operator; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.character_variable_history
+    ADD CONSTRAINT character_variable_history_operator FOREIGN KEY (operator_id) REFERENCES public.users(id) ON DELETE SET NULL;
 
 
 --
@@ -632,6 +870,39 @@ ALTER TABLE ONLY public.users_extension
 
 ALTER TABLE ONLY public.media
     ADD CONSTRAINT media_uploader FOREIGN KEY (uploader_id) REFERENCES public.users(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: notes_history notes_history_note; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.notes_history
+    ADD CONSTRAINT notes_history_note FOREIGN KEY (note_id) REFERENCES public.notes(id) ON DELETE CASCADE;
+
+
+--
+-- Name: notes_history notes_history_operator; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.notes_history
+    ADD CONSTRAINT notes_history_operator FOREIGN KEY (operator_id) REFERENCES public.users(id) ON DELETE SET NULL;
+
+
+--
+-- Name: notes notes_owner; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.notes
+    ADD CONSTRAINT notes_owner FOREIGN KEY (owner_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+--
+-- Name: notes notes_space; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.notes
+    ADD CONSTRAINT notes_space FOREIGN KEY (space_id) REFERENCES public.spaces(id) ON DELETE CASCADE;
+
 
 --
 -- Name: reset_tokens password_reset_user; Type: FK CONSTRAINT; Schema: public; Owner: -

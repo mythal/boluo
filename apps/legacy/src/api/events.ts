@@ -210,6 +210,9 @@ export const isEmptyPreview = (preview: Preview): boolean =>
   preview.text === '' ||
   (preview.text != null && (preview.entities == null || preview.entities.length === 0));
 
+export const shouldAdvanceCursor = (event: Events): boolean =>
+  event.live == null || event.live === 'P';
+
 export const compareEvents = (a: EventId, b: EventId): number => {
   if (a.timestamp !== b.timestamp) {
     return a.timestamp - b.timestamp;

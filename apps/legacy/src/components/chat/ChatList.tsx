@@ -53,16 +53,35 @@ const listWrapperStyle = css`
   }
 `;
 
-const itemPos = (item: PreviewItem | MessageItem | undefined | null): [number, number] | null => {
-  if (!item) {
-    return null;
+const findMessageFrom = (
+  items: List<MessageItem | PreviewItem>,
+  startIndex: number,
+  step: number,
+  excludeId: Id,
+): MessageItem | null => {
+  for (let i = startIndex; i >= 0 && i < items.size; i += step) {
+    const item = items.get(i);
+    if (!item || item.id === excludeId) {
+      continue;
+    }
+    if (item.type === 'MESSAGE') {
+      return item;
+    }
   }
-  switch (item.type) {
-    case 'MESSAGE':
-      return [item.message.posP, item.message.posQ];
-    case 'PREVIEW':
-      return [Math.ceil(item.preview.pos), 1];
+  return null;
+};
+
+const areAdjacentInAllMessages = (
+  allMessages: List<MessageItem>,
+  aId: Id,
+  bId: Id,
+): boolean => {
+  const aIndex = allMessages.findIndex((item) => item.id === aId);
+  const bIndex = allMessages.findIndex((item) => item.id === bId);
+  if (aIndex === -1 || bIndex === -1) {
+    return false;
   }
+  return Math.abs(aIndex - bIndex) === 1;
 };
 
 const useAutoScroll = (chatListRef: React.RefObject<HTMLDivElement | null>) => {
@@ -95,6 +114,7 @@ const useAutoScroll = (chatListRef: React.RefObject<HTMLDivElement | null>) => {
 function useOnDragEnd(
   channelId: Id,
   filteredMessages: List<MessageItem | PreviewItem>,
+  allMessages: List<MessageItem>,
 ): DragDropContextProps['onDragEnd'] {
   const dispatch = useDispatch();
 
@@ -110,22 +130,41 @@ function useOnDragEnd(
       if (sourceItem?.type !== 'MESSAGE') {
         return;
       }
-      let a: [number, number] | null = null;
-      let b: [number, number] | null = null;
-      if (source.index > destination.index) {
-        if (destination.index > 0) {
-          const above = filteredMessages.get(destination.index - 1, null);
-          a = itemPos(above);
-        }
-        b = itemPos(filteredMessages.get(destination.index, null));
-      } else {
-        a = itemPos(filteredMessages.get(destination.index, null));
-        b = itemPos(filteredMessages.get(destination.index + 1, null));
-      }
+      const movingUp = source.index > destination.index;
+      const lower = movingUp
+        ? findMessageFrom(filteredMessages, destination.index - 1, -1, messageId)
+        : findMessageFrom(filteredMessages, destination.index, -1, messageId);
+      const upper = movingUp
+        ? findMessageFrom(filteredMessages, destination.index, 1, messageId)
+        : findMessageFrom(filteredMessages, destination.index + 1, 1, messageId);
       dispatch(finishMove);
 
-      if (a === undefined && b === undefined) {
+      if (!lower && !upper) {
         console.warn('no target item');
+        return;
+      }
+
+      // Avoid using preview positions or filtered gaps as bounds; rely on DB neighbors when needed.
+      let range: [[number, number] | null, [number, number] | null] | null = null;
+      if (lower && upper && areAdjacentInAllMessages(allMessages, lower.id, upper.id)) {
+        range = [
+          [lower.message.posP, lower.message.posQ],
+          [upper.message.posP, upper.message.posQ],
+        ];
+      } else if (movingUp) {
+        if (upper) {
+          range = [null, [upper.message.posP, upper.message.posQ]];
+        } else if (lower) {
+          range = [[lower.message.posP, lower.message.posQ], null];
+        }
+      } else if (lower) {
+        range = [[lower.message.posP, lower.message.posQ], null];
+      } else if (upper) {
+        range = [null, [upper.message.posP, upper.message.posQ]];
+      }
+
+      if (!range) {
+        console.warn('no target range');
         return;
       }
 
@@ -133,7 +172,7 @@ function useOnDragEnd(
         messageId,
         channelId,
         expectPos: [sourceItem.message.posP, sourceItem.message.posQ],
-        range: [a, b],
+        range,
       });
       if (!result.isOk) {
         const reset: ResetMessageMoving = {
@@ -145,7 +184,7 @@ function useOnDragEnd(
         throwErr(dispatch)(result.value);
       }
     },
-    [channelId, dispatch, filteredMessages],
+    [allMessages, channelId, dispatch, filteredMessages],
   );
 }
 
@@ -169,11 +208,19 @@ function ChatList({ channelId, focus }: Props) {
   const filter = useSelector((state) => state.chatStates.get(channelId)!.filter);
   const showFolded = useSelector((state) => state.chatStates.get(channelId)!.showFolded);
   const messages = useSelector((state) => state.chatStates.get(channelId)!.itemSet.messages);
+  const allMessages = useMemo(
+    () => messages.filter((item) => item.type === 'MESSAGE') as List<MessageItem>,
+    [messages],
+  );
   const filteredMessages = useMemo(() => {
     const show = filterMessages(filter, showFolded);
     return messages.filter(show);
   }, [messages, filter, showFolded]);
-  const onDragEnd: DragDropContextProps['onDragEnd'] = useOnDragEnd(channelId, filteredMessages);
+  const onDragEnd: DragDropContextProps['onDragEnd'] = useOnDragEnd(
+    channelId,
+    filteredMessages,
+    allMessages,
+  );
 
   const onDragStart = useCallback(() => {
     dispatch({ type: 'START_MOVE_MESSAGE', pane: channelId });

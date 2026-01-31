@@ -71,6 +71,7 @@ export const useSendPreview = (
   const sendTimoutRef = useRef<number | undefined>(undefined);
   const isFocused = usePaneIsFocus();
   const isFocusedRef = useRef(isFocused);
+  isFocusedRef.current = isFocused;
   const connectionState = useAtomValue(connectionStateAtom);
   const hasCollidedAtom = useMemo(
     () =>

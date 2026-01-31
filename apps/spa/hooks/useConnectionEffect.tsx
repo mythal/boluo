@@ -14,7 +14,6 @@ import { useLogout } from '@boluo/hooks/useLogout';
 import { type ClientConnectionError } from '../state/chat.actions';
 
 let lastPongTime = Date.now();
-const RELOAD_TIMEOUT = 1000 * 60 * 30;
 
 const UNAUTHENTICATED = 'UNAUTHENTICATED';
 const NETWORK_ERROR = 'NETWORK_ERROR';
@@ -88,11 +87,6 @@ const connect = async (
   if (connectionState.type !== 'CLOSED') return null;
   if (connectionState.countdown > 0) {
     setTimeout(() => dispatch({ type: 'reconnectCountdownTick', payload: {} }), 1000);
-    return null;
-  }
-  if (Date.now() - lastPongTime > RELOAD_TIMEOUT) {
-    lastPongTime = Date.now();
-    dispatch({ type: 'resetChatState', payload: {} });
     return null;
   }
   dispatch({ type: 'connecting', payload: { mailboxId } });

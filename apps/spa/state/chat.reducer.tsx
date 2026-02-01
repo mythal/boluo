@@ -220,7 +220,18 @@ export const chatReducer: Reducer<ChatSpaceState, ChatActionUnion> = (
       action.payload.code === 'CURSOR_TOO_OLD' &&
       action.payload.mailboxId === context.spaceId)
   ) {
-    return makeChatState(context.spaceId);
+    const effects: ChatEffect[] = [];
+    if (state.connection.type === 'CONNECTED') {
+      effects.push({
+        type: 'CLOSE_CONNECTION',
+        id: createEffectId(),
+        connection: state.connection.connection,
+      });
+    }
+    const nextState = makeChatState(context.spaceId);
+    return effects.length === 0
+      ? nextState
+      : { ...nextState, effects: mergeEffects(nextState.effects, effects) };
   }
   switch (action.type) {
     case 'update':

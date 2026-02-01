@@ -407,7 +407,7 @@ impl ChannelMember {
         space_id: Uuid,
     ) -> Result<bool, sqlx::Error> {
         if let Some(manager) = crate::events::context::store().get_manager(&space_id) {
-            if let Ok(is_master) = manager.is_master(channel_id, user_id).await {
+            if let Ok(Ok(is_master)) = manager.is_master(channel_id, user_id).await {
                 return Ok(is_master);
             }
         }
@@ -424,7 +424,7 @@ impl ChannelMember {
     ) -> Result<Option<(ChannelMember, SpaceMember)>, sqlx::Error> {
         {
             if let Some(manager) = crate::events::context::store().get_manager(space_id) {
-                if let Ok(Some(member)) = manager.get_member(channel_id, user_id).await {
+                if let Ok(Ok(Some(member))) = manager.get_member(channel_id, user_id).await {
                     return Ok(Some((member.channel.clone(), member.space.clone())));
                 }
             }
@@ -447,7 +447,7 @@ impl ChannelMember {
     ) -> Result<Option<ChannelMember>, sqlx::Error> {
         {
             if let Some(manager) = crate::events::context::store().get_manager(&space_id) {
-                if let Ok(Some(member)) = manager.get_member(channel_id, user_id).await {
+                if let Ok(Ok(Some(member))) = manager.get_member(channel_id, user_id).await {
                     return Ok(Some(member.channel));
                 }
             }
@@ -472,10 +472,6 @@ impl ChannelMember {
         .fetch_optional(db)
         .await?;
         if let Some(record) = record {
-            if let Some(manager) = crate::events::context::store().get_manager(&space_id) {
-                let _ = manager.update_space_member(record.space).await;
-                let _ = manager.update_channel_member(record.channel.clone()).await;
-            }
             tracing::warn!(
                 "Loaded channel member from DB for user {} in channel {}",
                 user_id,
@@ -663,7 +659,7 @@ impl Member {
         {
             let manager = store.get_manager(&space_id);
             if let Some(manager) = manager {
-                if let Ok(members) = manager.get_members_in_channel(channel_id).await {
+                if let Ok(Ok(members)) = manager.get_members_in_channel(channel_id).await {
                     if !members.is_empty() {
                         return Ok(members);
                     }
@@ -696,7 +692,7 @@ impl Member {
         {
             crate::events::context::store()
                 .get_or_create_manager(space_id)
-                .set_members(members.clone())
+                .set_members(channel_id, members.clone())
                 .await
                 .ok();
         }

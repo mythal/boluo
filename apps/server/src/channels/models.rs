@@ -407,7 +407,7 @@ impl ChannelMember {
         space_id: Uuid,
     ) -> Result<bool, sqlx::Error> {
         if let Some(manager) = crate::events::context::store().get_manager(&space_id) {
-            if let Ok(is_master) = manager.is_master(channel_id, user_id).await {
+            if let Ok(Ok(is_master)) = manager.is_master(channel_id, user_id).await {
                 return Ok(is_master);
             }
         }
@@ -424,7 +424,7 @@ impl ChannelMember {
     ) -> Result<Option<(ChannelMember, SpaceMember)>, sqlx::Error> {
         {
             if let Some(manager) = crate::events::context::store().get_manager(space_id) {
-                if let Ok(Some(member)) = manager.get_member(channel_id, user_id).await {
+                if let Ok(Ok(Some(member))) = manager.get_member(channel_id, user_id).await {
                     return Ok(Some((member.channel.clone(), member.space.clone())));
                 }
             }
@@ -439,20 +439,21 @@ impl ChannelMember {
         .map(|row| row.map(|record| (record.channel, record.space)))
     }
 
-    pub async fn get<'c, T: sqlx::PgExecutor<'c>>(
-        db: T,
+    pub async fn get(
+        db: &mut sqlx::PgConnection,
         user_id: Uuid,
         space_id: Uuid,
         channel_id: Uuid,
     ) -> Result<Option<ChannelMember>, sqlx::Error> {
         {
             if let Some(manager) = crate::events::context::store().get_manager(&space_id) {
-                if let Ok(Some(member)) = manager.get_member(channel_id, user_id).await {
+                if let Ok(Ok(Some(member))) = manager.get_member(channel_id, user_id).await {
                     return Ok(Some(member.channel));
                 }
             }
         }
-        Member::get_by_channel(db, space_id, channel_id)
+
+        if let Ok(Some(member)) = Member::get_by_channel(&mut *db, space_id, channel_id)
             .await
             .map(|members| {
                 members
@@ -460,6 +461,25 @@ impl ChannelMember {
                     .map(|member| member.channel)
                     .find(|member| member.user_id == user_id)
             })
+        {
+            return Ok(Some(member));
+        }
+        let record = sqlx::query_file!(
+            "sql/channels/get_with_space_member.sql",
+            user_id,
+            channel_id
+        )
+        .fetch_optional(db)
+        .await?;
+        if let Some(record) = record {
+            tracing::warn!(
+                "Loaded channel member from DB for user {} in channel {}",
+                user_id,
+                channel_id
+            );
+            return Ok(Some(record.channel));
+        }
+        Ok(None)
     }
 
     pub async fn remove_user<'c, T: sqlx::PgExecutor<'c>>(
@@ -639,7 +659,7 @@ impl Member {
         {
             let manager = store.get_manager(&space_id);
             if let Some(manager) = manager {
-                if let Ok(members) = manager.get_members_in_channel(channel_id).await {
+                if let Ok(Ok(members)) = manager.get_members_in_channel(channel_id).await {
                     if !members.is_empty() {
                         return Ok(members);
                     }
@@ -672,7 +692,7 @@ impl Member {
         {
             crate::events::context::store()
                 .get_or_create_manager(space_id)
-                .set_members(members.clone())
+                .set_members(channel_id, members.clone())
                 .await
                 .ok();
         }
@@ -935,46 +955,46 @@ mod tests {
         assert_eq!(with_space_member.0.user_id, member.id);
         assert_eq!(with_space_member.1.user_id, member.id);
         assert_eq!(with_space_member.1.space_id, space.id);
-
-        let fetched_member = ChannelMember::get(&pool, member.id, space.id, channel.id)
+        let mut conn = pool.acquire().await.expect("acquire conn failed");
+        let fetched_member = ChannelMember::get(&mut *conn, member.id, space.id, channel.id)
             .await
             .expect("get member failed")
             .expect("member should exist");
         assert_eq!(fetched_member.user_id, member.id);
 
-        let members_state = Member::get_by_channel_from_db(&pool, space.id, channel.id)
+        let members_state = Member::get_by_channel_from_db(&mut *conn, space.id, channel.id)
             .await
             .expect("get_by_channel_from_db failed");
         assert_eq!(members_state.len(), 2);
 
-        let attached = members_attach_user(&pool, members_state.clone())
+        let attached = members_attach_user(&mut *conn, members_state.clone())
             .await
             .expect("members_attach_user failed");
         assert_eq!(attached.len(), 2);
         assert!(attached.iter().any(|item| item.user.id == member.id));
 
-        ChannelMember::remove_user(&pool, member.id, channel.id, space.id)
+        ChannelMember::remove_user(&mut *conn, member.id, channel.id, space.id)
             .await
             .expect("remove_user failed");
 
-        let member_channels_after_remove = ChannelMember::get_by_user(&pool, member.id)
+        let member_channels_after_remove = ChannelMember::get_by_user(&mut *conn, member.id)
             .await
             .expect("get_by_user failed after remove");
         assert!(member_channels_after_remove.is_empty());
 
-        let remaining_members = ChannelMember::get_by_channel(&pool, &channel.id, false)
+        let remaining_members = ChannelMember::get_by_channel(&mut *conn, &channel.id, false)
             .await
             .expect("get_by_channel failed after remove");
         assert_eq!(remaining_members.len(), 1);
         assert_eq!(remaining_members[0].member.user_id, owner.id);
 
-        let removed_channels = ChannelMember::remove_user_by_space(&pool, owner.id, space.id)
+        let removed_channels = ChannelMember::remove_user_by_space(&mut *conn, owner.id, space.id)
             .await
             .expect("remove_user_by_space failed");
         assert_eq!(removed_channels, vec![channel.id]);
 
         CACHE.invalidate(CacheType::ChannelMembers, owner.id).await;
-        let owner_channels_after = ChannelMember::get_by_user(&pool, owner.id)
+        let owner_channels_after = ChannelMember::get_by_user(&mut *conn, owner.id)
             .await
             .expect("owner channels after space removal failed");
         assert!(owner_channels_after.is_empty());

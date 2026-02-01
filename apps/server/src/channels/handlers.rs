@@ -315,7 +315,7 @@ async fn edit_topic(
 
     if !has_permission {
         if let Some(channel_member) =
-            ChannelMember::get(&mut *trans, session.user_id, channel.space_id, channel_id).await?
+            ChannelMember::get(&mut trans, session.user_id, channel.space_id, channel_id).await?
         {
             has_permission = channel_member.is_master;
         }
@@ -402,7 +402,7 @@ async fn add_member(
         .await
         .or_not_found()?;
 
-    ChannelMember::get(&mut *trans, session.user_id, channel.space_id, channel_id)
+    ChannelMember::get(&mut trans, session.user_id, channel.space_id, channel_id)
         .await
         .or_no_permission()?;
     SpaceMember::get(&mut *trans, &session.user_id, &channel.space_id)
@@ -438,7 +438,7 @@ async fn edit_member(
 
     let mut trans = ctx.db.begin().await?;
 
-    ChannelMember::get(&mut *trans, session.user_id, channel.space_id, channel_id)
+    ChannelMember::get(&mut trans, session.user_id, channel.space_id, channel_id)
         .await
         .or_no_permission()?;
 
@@ -543,10 +543,9 @@ async fn kick(ctx: &crate::context::AppContext, req: Request<impl Body>) -> Resu
         .await
         .or_no_permission()?;
     if !space_member.is_admin {
-        let channel_member =
-            ChannelMember::get(&mut *trans, operator_user_id, space_id, channel_id)
-                .await
-                .or_no_permission()?;
+        let channel_member = ChannelMember::get(&mut trans, operator_user_id, space_id, channel_id)
+            .await
+            .or_no_permission()?;
         if !channel_member.is_master {
             return Err(AppError::NoPermission(
                 "You have no permission to kick user from this channel.".to_string(),
@@ -623,7 +622,7 @@ async fn export(
         .await
         .or_no_permission()?;
     let channel_member =
-        ChannelMember::get(&mut *trans, session.user_id, channel.space_id, channel_id).await?;
+        ChannelMember::get(&mut trans, session.user_id, channel.space_id, channel_id).await?;
     if channel_member.is_none() && !space_member.is_admin {
         return Err(AppError::NoPermission(
             "user is not channel member".to_string(),

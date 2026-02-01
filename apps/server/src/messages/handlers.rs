@@ -176,7 +176,7 @@ async fn move_between(
         .await
         .or_not_found()?;
     let channel_member = ChannelMember::get(
-        &mut *conn,
+        &mut conn,
         session.user_id,
         channel.space_id,
         message.channel_id,
@@ -272,7 +272,7 @@ async fn toggle_fold(
         .await
         .or_not_found()?;
     let channel_member = ChannelMember::get(
-        &mut *conn,
+        &mut conn,
         session.user_id,
         channel.space_id,
         message.channel_id,
@@ -308,7 +308,7 @@ async fn by_channel(
     let session = authenticate(&req).await;
     let current_user_id = session.as_ref().ok().map(|session| session.user_id);
     if !channel.is_public {
-        ChannelMember::get(&mut *conn, session?.user_id, channel.space_id, channel_id)
+        ChannelMember::get(&mut conn, session?.user_id, channel.space_id, channel_id)
             .await
             .or_no_permission()?;
     }
@@ -365,7 +365,7 @@ async fn search(
     let session = authenticate(&req).await;
     let current_user_id = session.as_ref().ok().map(|session| session.user_id);
     if !channel.is_public {
-        ChannelMember::get(&mut *conn, session?.user_id, channel.space_id, channel_id)
+        ChannelMember::get(&mut conn, session?.user_id, channel.space_id, channel_id)
             .await
             .or_no_permission()?;
     }

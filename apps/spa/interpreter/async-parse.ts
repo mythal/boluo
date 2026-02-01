@@ -1,5 +1,15 @@
 import type { ParseResult } from '@boluo/interpreter';
-import type { ParserArguments } from './parser-worker';
+import type { ParserArguments, ParserWorkerResponse } from './parser-worker';
+
+const PARSE_ERROR_ALERT_INTERVAL_MS = 30000;
+let lastParseErrorAlertAt = 0;
+
+const alertParseError = (message: string) => {
+  const now = Date.now();
+  if (now - lastParseErrorAlertAt < PARSE_ERROR_ALERT_INTERVAL_MS) return;
+  lastParseErrorAlertAt = now;
+  alert(`Failed to parse input. ${message ? `(${message})` : 'Please try again.'}`);
+};
 
 const create = (): Worker =>
   new Worker(new URL('./parser-worker.ts', import.meta.url), { type: 'module' });
@@ -27,11 +37,23 @@ export const asyncParse = (
       return;
     }
     let aborted = false;
-    const handleMessage = ({ data }: MessageEvent<ParseResult>) => {
+    const handleMessage = ({ data }: MessageEvent<ParserWorkerResponse | ParseResult>) => {
       worker.removeEventListener('message', handleMessage);
       putBack(worker);
       if (aborted) return;
-      resolve(data);
+      if (data && typeof data === 'object' && 'type' in data) {
+        const payload = data;
+        if (payload.type === 'result') {
+          resolve(payload.data);
+          return;
+        }
+        if (payload.type === 'error') {
+          alertParseError(payload.message);
+          reject(new Error(payload.message));
+          return;
+        }
+      }
+      resolve(data as ParseResult);
     };
     signal?.addEventListener('abort', () => {
       aborted = true;

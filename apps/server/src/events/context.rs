@@ -17,7 +17,9 @@ use super::types::EventId;
 
 mod members;
 
-pub use self::members::Action as MembersAction;
+pub use self::members::{
+    Action as MembersAction, MemberQueryResult, MembersQueryResult, NotFullyLoaded,
+};
 
 #[derive(Debug, Clone)]
 pub struct EncodedUpdate {
@@ -105,15 +107,22 @@ impl MailboxManager {
     pub async fn get_members_in_channel(
         &self,
         channel_id: Uuid,
-    ) -> Result<Vec<Member>, MailboxManageError> {
+    ) -> Result<MembersQueryResult, MailboxManageError> {
         let (tx, rx) = tokio::sync::oneshot::channel();
         let action = Action::Members(MembersAction::QueryByChannel(channel_id, tx));
         self.send_read_action(action).await?;
         rx.await.map_err(|_| MailboxManageError::Closed)
     }
 
-    pub async fn set_members(&self, members: Vec<Member>) -> Result<(), MailboxManageError> {
-        let action = Action::Members(MembersAction::UpdateByMembers(members.clone()));
+    pub async fn set_members(
+        &self,
+        channel_id: Uuid,
+        members: Vec<Member>,
+    ) -> Result<(), MailboxManageError> {
+        let action = Action::Members(MembersAction::UpdateByMembers {
+            channel_id,
+            members,
+        });
         self.send_write_action(action).await?;
         Ok(())
     }
@@ -128,7 +137,7 @@ impl MailboxManager {
         &self,
         channel_id: Uuid,
         user_id: Uuid,
-    ) -> Result<Option<Member>, MailboxManageError> {
+    ) -> Result<MemberQueryResult, MailboxManageError> {
         let (tx, rx) = tokio::sync::oneshot::channel();
         let action = Action::Members(MembersAction::QueryByChannelUser(
             ChannelUserId::new(channel_id, user_id),
@@ -142,13 +151,13 @@ impl MailboxManager {
         &self,
         channel_id: Uuid,
         user_id: Uuid,
-    ) -> Result<bool, MailboxManageError> {
+    ) -> Result<Result<bool, NotFullyLoaded>, MailboxManageError> {
         let member = self.get_member(channel_id, user_id).await?;
-        if let Some(member) = member {
-            Ok(member.channel.is_master)
-        } else {
-            Ok(false)
-        }
+        Ok(member.map(|member| {
+            member
+                .map(|member| member.channel.is_master)
+                .unwrap_or(false)
+        }))
     }
 
     pub async fn update_channel_member(

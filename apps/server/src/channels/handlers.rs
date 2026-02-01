@@ -543,10 +543,9 @@ async fn kick(ctx: &crate::context::AppContext, req: Request<impl Body>) -> Resu
         .await
         .or_no_permission()?;
     if !space_member.is_admin {
-        let channel_member =
-            ChannelMember::get(&mut trans, operator_user_id, space_id, channel_id)
-                .await
-                .or_no_permission()?;
+        let channel_member = ChannelMember::get(&mut trans, operator_user_id, space_id, channel_id)
+            .await
+            .or_no_permission()?;
         if !channel_member.is_master {
             return Err(AppError::NoPermission(
                 "You have no permission to kick user from this channel.".to_string(),

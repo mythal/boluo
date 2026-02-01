@@ -390,8 +390,7 @@ mod tests {
 
     #[test]
     fn test_parse_cookie_at_beginning() {
-        let cookie_value =
-            cookie_header(format!("{SESSION_COOKIE_KEY}=first-token; other=value"));
+        let cookie_value = cookie_header(format!("{SESSION_COOKIE_KEY}=first-token; other=value"));
         let result = parse_cookie(&cookie_value);
         assert!(result.is_some());
         assert_eq!(result, Some("first-token"));
@@ -399,8 +398,7 @@ mod tests {
 
     #[test]
     fn test_parse_cookie_at_end() {
-        let cookie_value =
-            cookie_header(format!("other=value; {SESSION_COOKIE_KEY}=last-token"));
+        let cookie_value = cookie_header(format!("other=value; {SESSION_COOKIE_KEY}=last-token"));
         let result = parse_cookie(&cookie_value);
         assert!(result.is_some());
         assert_eq!(result, Some("last-token"));
@@ -462,8 +460,14 @@ mod tests {
     #[test]
     fn test_parse_cookie_regex_edge_cases() {
         let test_cases = vec![
-            (format!("prefix-{SESSION_COOKIE_KEY}=should-not-match"), None),
-            (format!("{SESSION_COOKIE_KEY}-suffix=should-not-match"), None),
+            (
+                format!("prefix-{SESSION_COOKIE_KEY}=should-not-match"),
+                None,
+            ),
+            (
+                format!("{SESSION_COOKIE_KEY}-suffix=should-not-match"),
+                None,
+            ),
             (format!("{SESSION_COOKIE_KEY}="), None),
             (format!("{SESSION_COOKIE_KEY}=value"), Some("value")),
         ];

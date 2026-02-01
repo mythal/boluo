@@ -206,7 +206,7 @@ impl PreviewPost {
                 .await?;
             pos = (*pos_ratio.numer() as f64 / *pos_ratio.denom() as f64).ceil();
         }
-        let is_master = ChannelMember::get(&mut *conn, user_id, space_id, channel_id)
+        let is_master = ChannelMember::get(&mut conn, user_id, space_id, channel_id)
             .await
             .or_no_permission()?
             .is_master;

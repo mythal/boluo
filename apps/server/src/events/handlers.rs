@@ -196,6 +196,19 @@ async fn handle_client_event(
             return;
         }
     };
+    if !mailbox.is_nil() {
+        match event {
+            ClientEvent::Preview { .. } | ClientEvent::Diff { .. } => {
+                // Mark activity even if the event fails to broadcast, so refresh gating can trigger.
+                if let Some(manager) = crate::events::context::store().get_manager(&mailbox) {
+                    manager.touch_activity().ok();
+                }
+            }
+            ClientEvent::Status { .. } => {
+                // Do nothing
+            }
+        }
+    }
     match event {
         ClientEvent::Preview { preview } => {
             let Some(session) = session else {

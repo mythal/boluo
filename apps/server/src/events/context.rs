@@ -6,8 +6,9 @@ use crate::events::types::{ChannelUserId, UpdateBody, UpdateLifetime};
 use crate::events::{StatusMap, Update};
 use crate::spaces::SpaceMember;
 use crate::utils::timestamp;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 use std::sync::OnceLock as OnceCell;
+use std::time::Instant;
 use tokio::sync::mpsc::error::TrySendError;
 use tokio_tungstenite::tungstenite::Utf8Bytes;
 use tracing::Instrument;
@@ -46,10 +47,16 @@ pub enum Action {
     },
     Members(MembersAction),
     Status(super::status::StatusAction),
+    TouchActivity,
+    CheckMembersRefresh {
+        channel_id: Uuid,
+        respond_to: tokio::sync::oneshot::Sender<bool>,
+    },
 }
 
 const MAILBOX_STATE_WRITE_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(16);
 const MAILBOX_STATE_READ_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(2);
+const MEMBERS_REFRESH_COOLDOWN: std::time::Duration = std::time::Duration::from_secs(60 * 5);
 
 #[derive(Clone)]
 pub struct MailboxManager {
@@ -227,11 +234,38 @@ impl MailboxManager {
         }
         Ok(())
     }
+
+    pub fn touch_activity(&self) -> Result<(), MailboxManageError> {
+        let action = Action::TouchActivity;
+        match self.sender.try_send(action) {
+            Ok(_) => Ok(()),
+            Err(TrySendError::Closed(_)) => Err(MailboxManageError::Closed),
+            Err(TrySendError::Full(_)) => Ok(()),
+        }
+    }
+
+    pub async fn should_refresh_members(
+        &self,
+        channel_id: Uuid,
+    ) -> Result<bool, MailboxManageError> {
+        let (tx, rx) = tokio::sync::oneshot::channel();
+        let action = Action::CheckMembersRefresh {
+            channel_id,
+            respond_to: tx,
+        };
+        self.send_write_action(action).await?;
+        rx.await.map_err(|_| MailboxManageError::Closed)
+    }
 }
 
 pub struct CachedUpdates {
     pub updates: BTreeMap<EventId, Utf8Bytes>,
     pub start_at: i64,
+}
+
+struct MembersRefreshState {
+    last_refresh_at: Instant,
+    last_event_at: Instant,
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -486,13 +520,16 @@ impl MailBoxState {
             let mut updates: BTreeMap<EventId, EncodedUpdate> = BTreeMap::new();
             let mut preview_map = PreviewMap::with_hasher(ahash::RandomState::new());
             let mut diff_map = DiffMap::with_hasher(ahash::RandomState::new());
-            let mut last_activity_at = std::time::Instant::now();
+            let created_at = Instant::now();
+            let mut last_event_at: Option<Instant> = None;
             let mut members_state = members::MembersCache::new();
             let mut status_state = super::status::StatusState::new(id);
             let mut broadcast_status_interval = crate::utils::cleaner_interval(12);
             let mut cleanup_interval = crate::utils::cleaner_interval(120);
             let mut start_at = timestamp();
             let mut last_pending_actions_warned = 0;
+            let mut members_refresh_state: HashMap<Uuid, MembersRefreshState, ahash::RandomState> =
+                HashMap::with_hasher(ahash::RandomState::new());
             let labels = vec![metrics::Label::new("mailbox_id", id.to_string())];
             let pending_gauge = metrics::gauge!("boluo_server_events_pending_actions", labels.clone());
             let action_duration_histogram = metrics::histogram!("boluo_server_events_update_duration_ms", labels.clone());
@@ -508,7 +545,6 @@ impl MailBoxState {
                         let start = std::time::Instant::now();
                         match action {
                             Action::Query(sender) => {
-                                last_activity_at = std::time::Instant::now();
                                 let mut response_updates: BTreeMap<EventId, Utf8Bytes> = updates.iter().map(|(event_id, value)| (*event_id, value.encoded.clone())).collect();
                                 for preview in preview_map.values() {
                                     response_updates.insert(preview.update.id, preview.encoded.clone());
@@ -522,7 +558,7 @@ impl MailBoxState {
                                 }).ok();
                             }
                             Action::Update { body, live } => {
-                                last_activity_at = std::time::Instant::now();
+                                last_event_at = Some(Instant::now());
                                 let mailbox_id = id;
                                 let encoded_update = match tokio::task::spawn_blocking(move || {
                                     EncodedUpdate::new(Update {
@@ -553,6 +589,39 @@ impl MailBoxState {
                                 }
                                 Update::send(id, encoded_for_broadcast).await;
                             }
+                            Action::TouchActivity => {
+                                last_event_at = Some(Instant::now());
+                            }
+                            Action::CheckMembersRefresh { channel_id, respond_to } => {
+                                let now = Instant::now();
+                                let should_refresh = if let Some(event_at) = last_event_at {
+                                    if let Some(state) = members_refresh_state.get(&channel_id) {
+                                        if now.duration_since(state.last_refresh_at)
+                                            < MEMBERS_REFRESH_COOLDOWN
+                                        {
+                                            false
+                                        } else {
+                                            event_at > state.last_event_at
+                                        }
+                                    } else {
+                                        true
+                                    }
+                                } else {
+                                    false
+                                };
+                                if should_refresh {
+                                    if let Some(event_at) = last_event_at {
+                                        members_refresh_state.insert(
+                                            channel_id,
+                                            MembersRefreshState {
+                                                last_refresh_at: now,
+                                                last_event_at: event_at,
+                                            },
+                                        );
+                                    }
+                                }
+                                respond_to.send(should_refresh).ok();
+                            }
                             Action::Members(action) => {
                                 members_state.update(action);
                             },
@@ -569,6 +638,7 @@ impl MailBoxState {
                         if !rx.is_empty() {
                             continue;
                         }
+                        let last_activity_at = last_event_at.unwrap_or(created_at);
                         if last_activity_at.elapsed() > std::time::Duration::from_secs(60 * 60 * 2) {
                             store().remove(id);
                             tracing::info!(mailbox_id = %id, "Mailbox state is idle, shutting down");

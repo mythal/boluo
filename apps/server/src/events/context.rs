@@ -263,7 +263,7 @@ pub struct CachedUpdates {
     pub start_at: i64,
 }
 
-struct MembersRefreshState {
+struct MembersRefreshGate {
     last_refresh_at: Instant,
     last_event_at: Instant,
 }
@@ -528,7 +528,7 @@ impl MailBoxState {
             let mut cleanup_interval = crate::utils::cleaner_interval(120);
             let mut start_at = timestamp();
             let mut last_pending_actions_warned = 0;
-            let mut members_refresh_state: HashMap<Uuid, MembersRefreshState, ahash::RandomState> =
+            let mut members_refresh_gate: HashMap<Uuid, MembersRefreshGate, ahash::RandomState> =
                 HashMap::with_hasher(ahash::RandomState::new());
             let labels = vec![metrics::Label::new("mailbox_id", id.to_string())];
             let pending_gauge = metrics::gauge!("boluo_server_events_pending_actions", labels.clone());
@@ -595,7 +595,7 @@ impl MailBoxState {
                             Action::CheckMembersRefresh { channel_id, respond_to } => {
                                 let now = Instant::now();
                                 let should_refresh = if let Some(event_at) = last_event_at {
-                                    if let Some(state) = members_refresh_state.get(&channel_id) {
+                                    if let Some(state) = members_refresh_gate.get(&channel_id) {
                                         if now.duration_since(state.last_refresh_at)
                                             < MEMBERS_REFRESH_COOLDOWN
                                         {
@@ -611,9 +611,9 @@ impl MailBoxState {
                                 };
                                 if should_refresh {
                                     if let Some(event_at) = last_event_at {
-                                        members_refresh_state.insert(
+                                        members_refresh_gate.insert(
                                             channel_id,
-                                            MembersRefreshState {
+                                            MembersRefreshGate {
                                                 last_refresh_at: now,
                                                 last_event_at: event_at,
                                             },

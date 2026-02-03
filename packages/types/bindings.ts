@@ -779,7 +779,7 @@ export type StatusKind = 'OFFLINE' | 'AWAY' | 'ONLINE';
 
 export type SubExprResult = { node: ExprNode; evaluatedNode: EvaluatedExprNode; value: number };
 
-export type Token = { token: string };
+export type Token = { token: string; issuedAt: number };
 
 export type Update = {
   mailbox: string;

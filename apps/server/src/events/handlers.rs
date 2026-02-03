@@ -511,6 +511,7 @@ pub async fn token(req: Request<impl Body>) -> Result<Token, AppError> {
             } else {
                 Ok(Token {
                     token: super::token::TOKEN_STORE.create_token(Some(session)),
+                    issued_at: timestamp(),
                 })
             }
         }
@@ -538,6 +539,7 @@ pub async fn token(req: Request<impl Body>) -> Result<Token, AppError> {
         }
         (session, None) => Ok(Token {
             token: super::token::TOKEN_STORE.create_token(session),
+            issued_at: timestamp(),
         }),
     }
 }

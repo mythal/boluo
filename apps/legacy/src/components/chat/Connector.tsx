@@ -35,17 +35,20 @@ export const style = css`
 `;
 
 const RETRY_SLEEP_MS = [0, 20, 100];
+const TOKEN_VALIDITY_MS = 60_000;
+const TOKEN_EXPIRY_SAFETY_MS = 5_000;
+const MAX_TOKEN_AGE_MS = TOKEN_VALIDITY_MS - TOKEN_EXPIRY_SAFETY_MS;
 
 async function getConnectionToken(
   spaceId: Id,
   userId: Id | undefined,
   retryCount: number = 0,
 ): Promise<
-  { token: string; timestamp: number } | 'NETWORK_ERROR' | 'UNAUTHENTICATED' | 'UNEXPECTED'
+  { token: string; issuedAt: number } | 'NETWORK_ERROR' | 'UNAUTHENTICATED' | 'UNEXPECTED'
 > {
   const tokenResult = await get('/events/token', { spaceId, userId });
   if (tokenResult.isOk) {
-    return { token: tokenResult.value.token, timestamp: Date.now() };
+    return { token: tokenResult.value.token, issuedAt: tokenResult.value.issuedAt };
   }
   const err = tokenResult.value;
   if (err.code === 'FETCH_FAIL') {
@@ -199,7 +202,8 @@ export const Connector = ({ spaceId, myId }: Props) => {
         retry();
         return;
       }
-      if (tokenResult.timestamp - Date.now() > 1000 * 10) {
+      const tokenAgeMs = Math.max(0, Date.now() - tokenResult.issuedAt);
+      if (tokenAgeMs > MAX_TOKEN_AGE_MS) {
         retry();
         return;
       }

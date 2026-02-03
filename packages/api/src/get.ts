@@ -80,7 +80,7 @@ export interface Get {
   '/characters/check_name': { query: CheckCharacterName; result: boolean };
   '/characters/check_variable': { query: CheckVariableAvailability; result: boolean };
   // events
-  '/events/token': { query: MakeToken; result: { token: string } };
+  '/events/token': { query: MakeToken; result: { token: string; issuedAt: number } };
   // info
   '/info/settings': { query: null; result: AppSettings };
 }

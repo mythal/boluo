@@ -19,11 +19,15 @@ const UNAUTHENTICATED = 'UNAUTHENTICATED';
 const NETWORK_ERROR = 'NETWORK_ERROR';
 const UNEXPECTED = 'UNEXPECTED';
 
+const TOKEN_VALIDITY_MS = 60_000;
+const TOKEN_EXPIRY_SAFETY_MS = 5_000;
+const MAX_TOKEN_AGE_MS = TOKEN_VALIDITY_MS - TOKEN_EXPIRY_SAFETY_MS;
+
 const SLEEP_MS = [0, 32, 64, 126, 256, 256, 512, 1024, 512];
 const MAX_ATTEMPTS = 11;
 const getToken = async (
   makeToken: MakeToken,
-): Promise<{ token: string; timestamp: number } | ClientConnectionError> => {
+): Promise<{ token: string; issuedAt: number } | ClientConnectionError> => {
   let errorCode: ClientConnectionError | null = null;
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
     const sleepMs = SLEEP_MS[Math.min(attempt, SLEEP_MS.length - 1)]!;
@@ -32,7 +36,7 @@ const getToken = async (
     }
     const tokenResult = await get('/events/token', makeToken);
     if (tokenResult.isOk) {
-      return { token: tokenResult.some.token, timestamp: Date.now() };
+      return { token: tokenResult.some.token, issuedAt: tokenResult.some.issuedAt };
     }
     const err = tokenResult.err;
     if (err.code === 'UNAUTHENTICATED') {
@@ -99,10 +103,11 @@ const connect = async (
     return null;
   }
 
-  if (Date.now() - tokenResult.timestamp > 1000 * 10) {
+  const tokenAgeMs = Math.max(0, Date.now() - tokenResult.issuedAt);
+  if (tokenAgeMs > MAX_TOKEN_AGE_MS) {
     dispatch({
       type: 'connectionError',
-      payload: { mailboxId, code: UNEXPECTED, span: TOKEN_SPAN, timestamp: tokenResult.timestamp },
+      payload: { mailboxId, code: 'INVALID_TOKEN', span: TOKEN_SPAN, timestamp: Date.now() },
     });
     return null;
   }

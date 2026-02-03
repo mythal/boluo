@@ -88,7 +88,11 @@ const editChannelMemberByList = (
   const { settings } = state;
   const member = event.members.find((member) => member.user.id === state.user.id);
   if (!member) {
-    return state;
+    if (!state.channels.has(channelId)) {
+      return state;
+    }
+    const channels = state.channels.remove(channelId);
+    return { ...state, channels };
   }
   const { user } = member;
   let { channels, spaces } = state;

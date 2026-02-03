@@ -1,8 +1,9 @@
-use crate::channels::ChannelMember;
+use crate::channels::{Channel, ChannelMember};
 use crate::error::AppError;
 use crate::error::Find;
 use crate::events::Update;
 use crate::messages::Entities;
+use crate::spaces::SpaceMember;
 use crate::utils::is_false;
 use chrono::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -206,10 +207,36 @@ impl PreviewPost {
                 .await?;
             pos = (*pos_ratio.numer() as f64 / *pos_ratio.denom() as f64).ceil();
         }
-        let is_master = ChannelMember::get(&mut conn, user_id, space_id, channel_id)
-            .await
-            .or_no_permission()?
-            .is_master;
+        let channel_member = ChannelMember::get(&mut conn, user_id, space_id, channel_id).await?;
+        let is_master = if let Some(channel_member) = channel_member {
+            channel_member.is_master
+        } else {
+            let channel = Channel::get_by_id(&mut *conn, &channel_id)
+                .await
+                .or_not_found()?;
+            if channel.space_id != space_id {
+                return Err(AppError::NoPermission(
+                    "Channel does not belong to this space".to_string(),
+                ));
+            }
+            if !channel.is_public {
+                return Err(AppError::NoPermission(
+                    "You are not a member of this channel".to_string(),
+                ));
+            }
+            let is_space_member = SpaceMember::get(&mut *conn, &user_id, &channel.space_id).await?;
+            if is_space_member.is_none() {
+                return Err(AppError::NoPermission(
+                    "You are not a member of this space".to_string(),
+                ));
+            }
+            tracing::warn!(
+                "User {} is posting preview to public channel {} without being a member",
+                user_id,
+                channel_id
+            );
+            false
+        };
         let whisper_to_users = None;
         let preview = Box::new(Preview {
             id,

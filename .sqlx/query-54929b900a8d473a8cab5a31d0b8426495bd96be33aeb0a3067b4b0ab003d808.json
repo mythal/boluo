@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT\n    c AS \"channel!: Channel\",\n    cm AS \"member?: ChannelMember\"\nFROM\n    channels c\n    LEFT JOIN channel_members cm ON cm.channel_id = c.id\n        AND cm.user_id = $2\n    LEFT JOIN space_members sm ON sm.user_id = cm.user_id\n        AND sm.space_id = c.space_id\nWHERE\n    c.space_id = $1\n    AND c.deleted = FALSE\n    AND (c.is_public\n        OR cm.is_joined\n        OR sm.is_admin)\nORDER BY\n    c.created;\n\n",
+  "query": "SELECT\n    c AS \"channel!: Channel\",\n    cm AS \"member?: ChannelMember\"\nFROM\n    channels c\n    LEFT JOIN channel_members cm ON cm.channel_id = c.id\n        AND cm.user_id = $2\n        AND cm.is_joined\n    LEFT JOIN space_members sm ON sm.user_id = $2\n        AND sm.space_id = c.space_id\nWHERE\n    c.space_id = $1\n    AND c.deleted = FALSE\n    AND (c.is_public\n        OR cm.is_joined\n        OR sm.is_admin)\nORDER BY\n    c.created;\n",
   "describe": {
     "columns": [
       {
@@ -121,5 +121,5 @@
       null
     ]
   },
-  "hash": "5948aca8ba54b5d17d153aa5f25dbadfd64cb640885d2c8b69a63b2ea12a510e"
+  "hash": "54929b900a8d473a8cab5a31d0b8426495bd96be33aeb0a3067b4b0ab003d808"
 }

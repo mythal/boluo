@@ -196,6 +196,19 @@ async fn handle_client_event(
             return;
         }
     };
+    if !mailbox.is_nil() {
+        match event {
+            ClientEvent::Preview { .. } | ClientEvent::Diff { .. } => {
+                // Mark activity even if the event fails to broadcast, so refresh gating can trigger.
+                if let Some(manager) = crate::events::context::store().get_manager(&mailbox) {
+                    manager.touch_activity().ok();
+                }
+            }
+            ClientEvent::Status { .. } => {
+                // Do nothing
+            }
+        }
+    }
     match event {
         ClientEvent::Preview { preview } => {
             let Some(session) = session else {
@@ -498,6 +511,7 @@ pub async fn token(req: Request<impl Body>) -> Result<Token, AppError> {
             } else {
                 Ok(Token {
                     token: super::token::TOKEN_STORE.create_token(Some(session)),
+                    issued_at: timestamp(),
                 })
             }
         }
@@ -525,6 +539,7 @@ pub async fn token(req: Request<impl Body>) -> Result<Token, AppError> {
         }
         (session, None) => Ok(Token {
             token: super::token::TOKEN_STORE.create_token(session),
+            issued_at: timestamp(),
         }),
     }
 }

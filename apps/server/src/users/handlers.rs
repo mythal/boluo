@@ -18,7 +18,7 @@ use crate::session::{
     add_session_cookie, add_settings_cookie, remove_session_cookie, revoke_session,
 };
 use crate::spaces::Space;
-use crate::ttl::{Lifespan, Mortal, minute};
+use crate::ttl::{Lifespan, minute};
 use crate::users::api::{
     CheckEmailExists, CheckUsernameExists, EditUser, EmailVerificationStatus, GetMe, QueryUser,
     ResendEmailVerificationResult,
@@ -169,10 +169,6 @@ pub async fn get_me(
             let mut conn = ctx.db.acquire().await?;
             let user = User::get_by_id(&mut *conn, &session.user_id).await?;
             if let Some(user) = user {
-                let cached = CACHE.GetMe.get(&user.id);
-                if let Some(get_me) = cached.and_then(Mortal::fresh_only) {
-                    return Ok(ok_response(Some(get_me)));
-                }
                 let my_spaces = Space::get_by_user(&mut conn, user.id).await?;
                 let my_channels = Channel::get_by_user(&mut conn, user.id).await?;
                 let user_ext = UserExt::get(&mut *conn, user.id).await.ok();
@@ -274,7 +270,6 @@ pub async fn login<B: Body>(
         my_spaces,
         my_channels,
     };
-    CACHE.GetMe.insert(user_id, me.clone().into());
     let mut response = ok_response(LoginReturn { me, token });
     let headers = response.headers_mut();
     add_settings_cookie(origin.as_deref(), &settings, headers);

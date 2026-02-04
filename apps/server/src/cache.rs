@@ -7,7 +7,6 @@ use crate::channels::{Channel, ChannelMembers};
 use crate::characters::{Character, CharacterVariables};
 use crate::session::Session;
 use crate::spaces::{Space, SpaceSettings, UserSpaces};
-use crate::users::GetMe;
 use crate::users::User;
 use crate::users::UserExt;
 
@@ -134,8 +133,7 @@ define_caches! {
     (UserExt, 4096),
     (Space, 1024),
     (SpaceSettings, 4096),
-    (GetMe, 4096),
-    (ChannelMembers, 8192),
+    (ChannelMembers, 8193),
     (UserSpaces, 4096),
 }
 
@@ -180,10 +178,6 @@ pub fn start_log_cache_stats() {
             "boluo_server_cache_items",
             vec![metrics::Label::new("cache", "SpaceSettings")]
         );
-        let get_me_gauge = metrics::gauge!(
-            "boluo_server_cache_items",
-            vec![metrics::Label::new("cache", "GetMe")]
-        );
         let channel_members_gauge = metrics::gauge!(
             "boluo_server_cache_items",
             vec![metrics::Label::new("cache", "ChannelMembers")]
@@ -204,7 +198,6 @@ pub fn start_log_cache_stats() {
                     let user_ext = CACHE.UserExt.len();
                     let space = CACHE.Space.len();
                     let space_settings = CACHE.SpaceSettings.len();
-                    let get_me = CACHE.GetMe.len();
                     let channel_members = CACHE.ChannelMembers.len();
                     let user_spaces = CACHE.UserSpaces.len();
                     let total = channel
@@ -215,7 +208,6 @@ pub fn start_log_cache_stats() {
                         + user_ext
                         + space
                         + space_settings
-                        + get_me
                         + channel_members
                         + user_spaces;
 
@@ -227,7 +219,6 @@ pub fn start_log_cache_stats() {
                     user_ext_gauge.set(user_ext as f64);
                     space_gauge.set(space as f64);
                     space_settings_gauge.set(space_settings as f64);
-                    get_me_gauge.set(get_me as f64);
                     channel_members_gauge.set(channel_members as f64);
                     user_spaces_gauge.set(user_spaces as f64);
                     total_gauge.set(total as f64);

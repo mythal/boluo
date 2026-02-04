@@ -450,9 +450,7 @@ impl ChannelMember {
                 match manager.get_member(channel_id, user_id).await {
                     Ok(Ok(Some(member))) => return Ok(Some(member.channel)),
                     Ok(Ok(None)) | Ok(Err(_)) => {
-                        if let Ok(true) = manager.should_refresh_members(channel_id).await {
-                            Member::load_to_cache(space_id, channel_id);
-                        }
+                        manager.refresh_members_if_needed(channel_id).await.ok();
                     }
                     Err(_) => {}
                 }

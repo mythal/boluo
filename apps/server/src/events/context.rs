@@ -6,7 +6,7 @@ use crate::events::types::{ChannelUserId, UpdateBody, UpdateLifetime};
 use crate::events::{StatusMap, Update};
 use crate::spaces::SpaceMember;
 use crate::utils::timestamp;
-use std::collections::{BTreeMap, HashMap};
+use std::collections::BTreeMap;
 use std::sync::OnceLock as OnceCell;
 use std::time::Instant;
 use tokio::sync::mpsc::error::TrySendError;
@@ -17,10 +17,12 @@ use uuid::Uuid;
 use super::types::EventId;
 
 mod members;
+mod members_actor;
 
 pub use self::members::{
     Action as MembersAction, MemberQueryResult, MembersQueryResult, NotFullyLoaded,
 };
+use self::members_actor::MembersCommand;
 
 #[derive(Debug, Clone)]
 pub struct EncodedUpdate {
@@ -45,28 +47,31 @@ pub enum Action {
         body: UpdateBody,
         live: UpdateLifetime,
     },
-    Members(MembersAction),
     Status(super::status::StatusAction),
     TouchActivity,
-    CheckMembersRefresh {
-        channel_id: Uuid,
-        respond_to: tokio::sync::oneshot::Sender<bool>,
-    },
 }
 
 const MAILBOX_STATE_WRITE_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(16);
 const MAILBOX_STATE_READ_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(2);
-const MEMBERS_REFRESH_COOLDOWN: std::time::Duration = std::time::Duration::from_secs(60 * 5);
 
 #[derive(Clone)]
 pub struct MailboxManager {
     pub id: Uuid,
     sender: tokio::sync::mpsc::Sender<Action>,
+    members_sender: tokio::sync::mpsc::Sender<MembersCommand>,
 }
 
 impl MailboxManager {
-    pub fn new(id: Uuid, sender: tokio::sync::mpsc::Sender<Action>) -> Self {
-        MailboxManager { id, sender }
+    fn new(
+        id: Uuid,
+        sender: tokio::sync::mpsc::Sender<Action>,
+        members_sender: tokio::sync::mpsc::Sender<MembersCommand>,
+    ) -> Self {
+        MailboxManager {
+            id,
+            sender,
+            members_sender,
+        }
     }
 
     async fn send_read_action(&self, action: Action) -> Result<(), MailboxManageError> {
@@ -86,6 +91,30 @@ impl MailboxManager {
             })?
             .map_err(|_| {
                 tracing::warn!("MailboxManager::send_read_action: closed");
+                MailboxManageError::Closed
+            })
+    }
+
+    async fn send_members_read_action(
+        &self,
+        action: MembersCommand,
+    ) -> Result<(), MailboxManageError> {
+        let action = match self.members_sender.try_send(action) {
+            Ok(_) => return Ok(()),
+            Err(TrySendError::Closed(_)) => return Err(MailboxManageError::Closed),
+            Err(TrySendError::Full(action)) => {
+                tracing::info!("MailboxManager::send_members_read_action: full");
+                action
+            }
+        };
+        tokio::time::timeout(MAILBOX_STATE_READ_TIMEOUT, self.members_sender.send(action))
+            .await
+            .map_err(|_| {
+                tracing::warn!("MailboxManager::send_members_read_action: timeout");
+                MailboxManageError::TimeOut
+            })?
+            .map_err(|_| {
+                tracing::warn!("MailboxManager::send_members_read_action: closed");
                 MailboxManageError::Closed
             })
     }
@@ -111,13 +140,38 @@ impl MailboxManager {
             })
     }
 
+    async fn send_members_write_action(
+        &self,
+        action: MembersCommand,
+    ) -> Result<(), MailboxManageError> {
+        let action = match self.members_sender.try_send(action) {
+            Ok(_) => return Ok(()),
+            Err(TrySendError::Closed(_)) => return Err(MailboxManageError::Closed),
+            Err(TrySendError::Full(action)) => {
+                tracing::info!("MailboxManager::send_members_write_action: full");
+                action
+            }
+        };
+        tokio::time::timeout(MAILBOX_STATE_WRITE_TIMEOUT, self.members_sender.send(action))
+            .await
+            .map_err(|_| {
+                tracing::warn!("MailboxManager::send_members_write_action: timeout");
+                MailboxManageError::TimeOut
+            })?
+            .map_err(|_| {
+                tracing::warn!("MailboxManager::send_members_write_action: closed");
+                MailboxManageError::Closed
+            })
+    }
+
+
     pub async fn get_members_in_channel(
         &self,
         channel_id: Uuid,
     ) -> Result<MembersQueryResult, MailboxManageError> {
         let (tx, rx) = tokio::sync::oneshot::channel();
-        let action = Action::Members(MembersAction::QueryByChannel(channel_id, tx));
-        self.send_read_action(action).await?;
+        let action = MembersCommand::Action(MembersAction::QueryByChannel(channel_id, tx));
+        self.send_members_read_action(action).await?;
         rx.await.map_err(|_| MailboxManageError::Closed)
     }
 
@@ -126,17 +180,17 @@ impl MailboxManager {
         channel_id: Uuid,
         members: Vec<Member>,
     ) -> Result<(), MailboxManageError> {
-        let action = Action::Members(MembersAction::UpdateByMembers {
+        let action = MembersCommand::Action(MembersAction::UpdateByMembers {
             channel_id,
             members,
         });
-        self.send_write_action(action).await?;
+        self.send_members_write_action(action).await?;
         Ok(())
     }
 
     pub async fn remove_channel(&self, channel_id: Uuid) -> Result<(), MailboxManageError> {
-        let action = Action::Members(MembersAction::RemoveChannel(channel_id));
-        self.send_write_action(action).await?;
+        let action = MembersCommand::Action(MembersAction::RemoveChannel(channel_id));
+        self.send_members_write_action(action).await?;
         Ok(())
     }
 
@@ -146,11 +200,11 @@ impl MailboxManager {
         user_id: Uuid,
     ) -> Result<MemberQueryResult, MailboxManageError> {
         let (tx, rx) = tokio::sync::oneshot::channel();
-        let action = Action::Members(MembersAction::QueryByChannelUser(
+        let action = MembersCommand::Action(MembersAction::QueryByChannelUser(
             ChannelUserId::new(channel_id, user_id),
             tx,
         ));
-        self.send_read_action(action).await?;
+        self.send_members_read_action(action).await?;
         rx.await.map_err(|_| MailboxManageError::Closed)
     }
 
@@ -171,21 +225,21 @@ impl MailboxManager {
         &self,
         channel_member: ChannelMember,
     ) -> Result<(), MailboxManageError> {
-        let action = Action::Members(MembersAction::UpdateChannelMember(channel_member));
-        self.send_write_action(action).await
+        let action = MembersCommand::Action(MembersAction::UpdateChannelMember(channel_member));
+        self.send_members_write_action(action).await
     }
 
     pub async fn update_space_member(
         &self,
         space_member: SpaceMember,
     ) -> Result<(), MailboxManageError> {
-        let action = Action::Members(MembersAction::UpdateSpaceMember(space_member));
-        self.send_write_action(action).await
+        let action = MembersCommand::Action(MembersAction::UpdateSpaceMember(space_member));
+        self.send_members_write_action(action).await
     }
 
     pub async fn remove_member(&self, user_id: &Uuid) -> Result<(), MailboxManageError> {
-        let action = Action::Members(MembersAction::RemoveUser(*user_id));
-        self.send_write_action(action).await
+        let action = MembersCommand::Action(MembersAction::RemoveUser(*user_id));
+        self.send_members_write_action(action).await
     }
 
     pub async fn remove_member_from_channel(
@@ -194,8 +248,8 @@ impl MailboxManager {
         user_id: Uuid,
     ) -> Result<(), MailboxManageError> {
         let channel_user_id = ChannelUserId::new(channel_id, user_id);
-        let action = Action::Members(MembersAction::RemoveFromChannel(channel_user_id));
-        self.send_write_action(action).await
+        let action = MembersCommand::Action(MembersAction::RemoveFromChannel(channel_user_id));
+        self.send_members_write_action(action).await
     }
 
     pub async fn query_encoded_updates(
@@ -244,28 +298,18 @@ impl MailboxManager {
         }
     }
 
-    pub async fn should_refresh_members(
+    pub async fn refresh_members_if_needed(
         &self,
         channel_id: Uuid,
-    ) -> Result<bool, MailboxManageError> {
-        let (tx, rx) = tokio::sync::oneshot::channel();
-        let action = Action::CheckMembersRefresh {
-            channel_id,
-            respond_to: tx,
-        };
-        self.send_write_action(action).await?;
-        rx.await.map_err(|_| MailboxManageError::Closed)
+    ) -> Result<(), MailboxManageError> {
+        let action = MembersCommand::Refresh { channel_id };
+        self.send_members_write_action(action).await
     }
 }
 
 pub struct CachedUpdates {
     pub updates: BTreeMap<EventId, Utf8Bytes>,
     pub start_at: i64,
-}
-
-struct MembersRefreshGate {
-    last_refresh_at: Instant,
-    last_event_at: Instant,
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -514,22 +558,21 @@ fn cleanup(
 impl MailBoxState {
     pub fn new(id: Uuid) -> Self {
         let (tx, mut rx) = tokio::sync::mpsc::channel::<Action>(1024);
-        let manager = MailboxManager::new(id, tx);
+        let members_sender = members_actor::spawn(id);
+        let manager = MailboxManager::new(id, tx, members_sender.clone());
         let span = tracing::info_span!("MailboxState", mailbox_id = %id);
         tokio::spawn(async move {
+            let members_sender = members_sender;
             let mut updates: BTreeMap<EventId, EncodedUpdate> = BTreeMap::new();
             let mut preview_map = PreviewMap::with_hasher(ahash::RandomState::new());
             let mut diff_map = DiffMap::with_hasher(ahash::RandomState::new());
             let created_at = Instant::now();
             let mut last_event_at: Option<Instant> = None;
-            let mut members_state = members::MembersCache::new();
             let mut status_state = super::status::StatusState::new(id);
             let mut broadcast_status_interval = crate::utils::cleaner_interval(12);
             let mut cleanup_interval = crate::utils::cleaner_interval(120);
             let mut start_at = timestamp();
             let mut last_pending_actions_warned = 0;
-            let mut members_refresh_gate: HashMap<Uuid, MembersRefreshGate, ahash::RandomState> =
-                HashMap::with_hasher(ahash::RandomState::new());
             let labels = vec![metrics::Label::new("mailbox_id", id.to_string())];
             let pending_gauge = metrics::gauge!("boluo_server_events_pending_actions", labels.clone());
             let action_duration_histogram = metrics::histogram!("boluo_server_events_update_duration_ms", labels.clone());
@@ -559,6 +602,7 @@ impl MailBoxState {
                             }
                             Action::Update { body, live } => {
                                 last_event_at = Some(Instant::now());
+                                let _ = members_sender.try_send(MembersCommand::TouchActivity);
                                 let mailbox_id = id;
                                 let encoded_update = match tokio::task::spawn_blocking(move || {
                                     EncodedUpdate::new(Update {
@@ -591,40 +635,8 @@ impl MailBoxState {
                             }
                             Action::TouchActivity => {
                                 last_event_at = Some(Instant::now());
+                                let _ = members_sender.try_send(MembersCommand::TouchActivity);
                             }
-                            Action::CheckMembersRefresh { channel_id, respond_to } => {
-                                let now = Instant::now();
-                                let should_refresh = if let Some(event_at) = last_event_at {
-                                    if let Some(state) = members_refresh_gate.get(&channel_id) {
-                                        if now.duration_since(state.last_refresh_at)
-                                            < MEMBERS_REFRESH_COOLDOWN
-                                        {
-                                            false
-                                        } else {
-                                            event_at > state.last_event_at
-                                        }
-                                    } else {
-                                        true
-                                    }
-                                } else {
-                                    false
-                                };
-                                if should_refresh {
-                                    if let Some(event_at) = last_event_at {
-                                        members_refresh_gate.insert(
-                                            channel_id,
-                                            MembersRefreshGate {
-                                                last_refresh_at: now,
-                                                last_event_at: event_at,
-                                            },
-                                        );
-                                    }
-                                }
-                                respond_to.send(should_refresh).ok();
-                            }
-                            Action::Members(action) => {
-                                members_state.update(action);
-                            },
                             Action::Status(action) => {
                                 status_state.update(action);
                             }

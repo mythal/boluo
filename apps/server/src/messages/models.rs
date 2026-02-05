@@ -433,114 +433,174 @@ impl Message {
     ) -> Result<Option<Message>, ModelError> {
         check_pos(a)?;
         check_pos(b)?;
-        let find_intermediate_task =
-            tokio::task::spawn_blocking(move || find_intermediate(a.0, a.1, b.0, b.1));
-        let find_intermediate_task_with_timeout =
-            tokio::time::timeout(std::time::Duration::from_secs(8), find_intermediate_task);
-        let pos = match find_intermediate_task_with_timeout
-            .await
-            .map_err(|_| {
-                tracing::error!(a = ?a, b = ?b, ?id, ?channel_id, "Timeout when finding position");
-                ModelError::Unexpected(anyhow::anyhow!("Timeout when finding position"))
-            })?
-            .map_err(|e| ModelError::Unexpected(e.into()))?
-        {
-            Ok(pos) => pos,
-            Err(FailToFindIntermediate::EqualFractions) => {
-                tracing::warn!("Failed to find intermediate position: EqualFractions");
-                a
-            }
-            Err(FailToFindIntermediate::OutOfRange) => {
-                tracing::error!(
-                    "Failed to find intermediate position between ({}, {}) and ({}, {}): Out of range.",
-                    a.0,
-                    a.1,
-                    b.0,
-                    b.1
-                );
-                return Err(ValidationFailed("Out of range position").into());
-            }
+        const MAX_RETRIES: usize = 3;
+        let mut lower = a;
+        let mut upper = b;
+        let cmp_ratio = |left: (i32, i32), right: (i32, i32)| {
+            let left_num = left.0 as i128;
+            let left_den = left.1 as i128;
+            let right_num = right.0 as i128;
+            let right_den = right.1 as i128;
+            (left_num * right_den).cmp(&(right_num * left_den))
+        };
+        if cmp_ratio(lower, upper).is_gt() {
+            std::mem::swap(&mut lower, &mut upper);
+        }
+
+        let compute_pos = |left: (i32, i32), right: (i32, i32)| async move {
+            let find_intermediate_task =
+                tokio::task::spawn_blocking(move || find_intermediate(left.0, left.1, right.0, right.1));
+            let find_intermediate_task_with_timeout =
+                tokio::time::timeout(std::time::Duration::from_secs(8), find_intermediate_task);
+            let pos = match find_intermediate_task_with_timeout
+                .await
+                .map_err(|_| {
+                    tracing::error!(
+                        a = ?left,
+                        b = ?right,
+                        ?id,
+                        ?channel_id,
+                        "Timeout when finding position"
+                    );
+                    ModelError::Unexpected(anyhow::anyhow!("Timeout when finding position"))
+                })?
+                .map_err(|e| ModelError::Unexpected(e.into()))?
+            {
+                Ok(pos) => pos,
+                Err(FailToFindIntermediate::EqualFractions) => {
+                    tracing::warn!("Failed to find intermediate position: EqualFractions");
+                    left
+                }
+                Err(FailToFindIntermediate::OutOfRange) => {
+                    tracing::error!(
+                        "Failed to find intermediate position between ({}, {}) and ({}, {}): Out of range.",
+                        left.0,
+                        left.1,
+                        right.0,
+                        right.1
+                    );
+                    return Err(ValidationFailed("Out of range position").into());
+                }
+            };
+            Ok::<(i32, i32), ModelError>(pos)
         };
 
-        let message_in_pos = sqlx::query_file_scalar!(
-            "sql/messages/set_position.sql",
-            id,
-            channel_id,
-            pos.0,
-            pos.1
-        )
-        .fetch_optional(&mut *db)
-        .await?;
-        let Some(message_in_pos) = message_in_pos else {
-            tracing::warn!("Message {} not found in channel {}", id, channel_id);
-            return Ok(None);
-        };
-        if message_in_pos.id == *id {
+        let mut retries = 0;
+        let (last_conflict, last_attempted_pos) = loop {
+            let pos = compute_pos(lower, upper).await?;
+            let message_in_pos = sqlx::query_file_scalar!(
+                "sql/messages/set_position.sql",
+                id,
+                channel_id,
+                pos.0,
+                pos.1
+            )
+            .fetch_optional(&mut *db)
+            .await?;
+            let Some(message_in_pos) = message_in_pos else {
+                tracing::warn!("Message {} not found in channel {}", id, channel_id);
+                return Ok(None);
+            };
+            if message_in_pos.id == *id {
+                crate::pos::CHANNEL_POS_MANAGER
+                    .submitted(
+                        message_in_pos.channel_id,
+                        message_in_pos.id,
+                        message_in_pos.pos_p,
+                        message_in_pos.pos_q,
+                        Some(message_in_pos.id),
+                    )
+                    .await;
+                return Ok(Some(message_in_pos));
+            }
+
+            let conflict_pos = (message_in_pos.pos_p, message_in_pos.pos_q);
             crate::pos::CHANNEL_POS_MANAGER
                 .submitted(
-                    message_in_pos.channel_id,
+                    channel_id,
                     message_in_pos.id,
                     message_in_pos.pos_p,
                     message_in_pos.pos_q,
                     Some(message_in_pos.id),
                 )
                 .await;
-            Ok(Some(message_in_pos))
-        } else {
-            // Capture current Postgres transaction id to correlate conflicts across logs.
-            let txid_current = sqlx::query_scalar::<sqlx::Postgres, i64>("select txid_current()")
-                .fetch_one(&mut *db)
-                .await
-                .ok();
-            crate::pos::CHANNEL_POS_MANAGER
-                .cancel(channel_id, *id)
-                .await;
-            let message_in_pos_id = message_in_pos.id;
+
+            let lower_cmp = cmp_ratio(lower, conflict_pos);
+            let upper_cmp = cmp_ratio(conflict_pos, upper);
+            if lower_cmp != std::cmp::Ordering::Less || upper_cmp != std::cmp::Ordering::Less {
+                break (message_in_pos, pos);
+            }
+
+            if retries >= MAX_RETRIES {
+                break (message_in_pos, pos);
+            }
+
+            let lower_gap_num = (conflict_pos.0 as i128) * (lower.1 as i128)
+                - (lower.0 as i128) * (conflict_pos.1 as i128);
+            let upper_gap_num = (upper.0 as i128) * (conflict_pos.1 as i128)
+                - (conflict_pos.0 as i128) * (upper.1 as i128);
+            if lower_gap_num <= 0 || upper_gap_num <= 0 {
+                break (message_in_pos, pos);
+            }
+            let lower_scaled = lower_gap_num * (upper.1 as i128);
+            let upper_scaled = upper_gap_num * (lower.1 as i128);
+            let (next_lower, next_upper) = if upper_scaled >= lower_scaled {
+                (conflict_pos, upper)
+            } else {
+                (lower, conflict_pos)
+            };
+            if next_lower == lower && next_upper == upper {
+                break (message_in_pos, pos);
+            }
+            retries += 1;
+            lower = next_lower;
+            upper = next_upper;
+        };
+
+        // Capture current Postgres transaction id to correlate conflicts across logs.
+        let txid_current = sqlx::query_scalar::<sqlx::Postgres, i64>("select txid_current()")
+            .fetch_one(&mut *db)
+            .await
+            .ok();
+        crate::pos::CHANNEL_POS_MANAGER
+            .cancel(channel_id, *id)
+            .await;
+        tracing::warn!(
+            conflict_txid = txid_current,
+            attempted_pos_p = last_attempted_pos.0,
+            attempted_pos_q = last_attempted_pos.1,
+            lower_bound_pos_p = a.0,
+            lower_bound_pos_q = a.1,
+            upper_bound_pos_p = b.0,
+            upper_bound_pos_q = b.1,
+            conflicting_pos_p = last_conflict.pos_p,
+            conflicting_pos_q = last_conflict.pos_q,
+            conflicting_message_id = %last_conflict.id,
+            attempted_message_id = %id,
+            channel_id = %channel_id,
+            retries,
+            "Conflict occurred while moving message; falling back to move_bottom"
+        );
+        let moved_message = Message::move_bottom(
+            db,
+            &channel_id,
+            id,
+            (last_conflict.pos_p, last_conflict.pos_q),
+        )
+        .await?;
+        if let Some(moved_message) = moved_message {
             crate::pos::CHANNEL_POS_MANAGER
                 .submitted(
                     channel_id,
-                    message_in_pos_id,
-                    message_in_pos.pos_p,
-                    message_in_pos.pos_q,
-                    Some(message_in_pos.id),
+                    moved_message.id,
+                    moved_message.pos_p,
+                    moved_message.pos_q,
+                    Some(moved_message.id),
                 )
                 .await;
-            tracing::warn!(
-                conflict_txid = txid_current,
-                attempted_pos_p = pos.0,
-                attempted_pos_q = pos.1,
-                lower_bound_pos_p = a.0,
-                lower_bound_pos_q = a.1,
-                upper_bound_pos_p = b.0,
-                upper_bound_pos_q = b.1,
-                conflicting_pos_p = message_in_pos.pos_p,
-                conflicting_pos_q = message_in_pos.pos_q,
-                conflicting_message_id = %message_in_pos_id,
-                attempted_message_id = %id,
-                channel_id = %channel_id,
-                "Conflict occurred while moving message; falling back to move_bottom"
-            );
-            let moved_message = Message::move_bottom(
-                db,
-                &channel_id,
-                id,
-                (message_in_pos.pos_p, message_in_pos.pos_q),
-            )
-            .await?;
-            if let Some(moved_message) = moved_message {
-                crate::pos::CHANNEL_POS_MANAGER
-                    .submitted(
-                        channel_id,
-                        moved_message.id,
-                        moved_message.pos_p,
-                        moved_message.pos_q,
-                        Some(moved_message.id),
-                    )
-                    .await;
-                Ok(Some(moved_message))
-            } else {
-                Ok(None)
-            }
+            Ok(Some(moved_message))
+        } else {
+            Ok(None)
         }
     }
     pub async fn max_pos<'c, T: sqlx::PgExecutor<'c>>(

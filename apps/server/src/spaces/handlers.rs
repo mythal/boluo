@@ -284,11 +284,11 @@ async fn edit(
 
     if space.owner_id == session.user_id {
         for user_id in grant_admins.iter() {
-            SpaceMember::set_admin(&mut *trans, &space_id, user_id, true).await?;
+            SpaceMember::set_admin(&mut *trans, user_id, &space_id, true).await?;
         }
         for user_id in remove_admins.iter() {
             if user_id != &space.owner_id {
-                SpaceMember::set_admin(&mut *trans, &space_id, user_id, false).await?;
+                SpaceMember::set_admin(&mut *trans, user_id, &space_id, false).await?;
             }
         }
     }

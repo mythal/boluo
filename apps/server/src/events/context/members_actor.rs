@@ -6,8 +6,8 @@ use uuid::Uuid;
 
 use crate::channels::models::Member;
 
-use super::members::MembersCache;
 use super::members::Action as MembersAction;
+use super::members::MembersCache;
 
 const MEMBERS_REFRESH_COOLDOWN: Duration = Duration::from_secs(60 * 5);
 
@@ -45,7 +45,8 @@ pub(super) fn spawn(space_id: Uuid) -> mpsc::Sender<MembersCommand> {
                     let now = Instant::now();
                     let should_refresh = if let Some(event_at) = last_event_at {
                         if let Some(state) = members_refresh_gate.get(&channel_id) {
-                            if now.duration_since(state.last_refresh_at) < MEMBERS_REFRESH_COOLDOWN {
+                            if now.duration_since(state.last_refresh_at) < MEMBERS_REFRESH_COOLDOWN
+                            {
                                 false
                             } else {
                                 event_at > state.last_event_at

@@ -152,18 +152,20 @@ impl MailboxManager {
                 action
             }
         };
-        tokio::time::timeout(MAILBOX_STATE_WRITE_TIMEOUT, self.members_sender.send(action))
-            .await
-            .map_err(|_| {
-                tracing::warn!("MailboxManager::send_members_write_action: timeout");
-                MailboxManageError::TimeOut
-            })?
-            .map_err(|_| {
-                tracing::warn!("MailboxManager::send_members_write_action: closed");
-                MailboxManageError::Closed
-            })
+        tokio::time::timeout(
+            MAILBOX_STATE_WRITE_TIMEOUT,
+            self.members_sender.send(action),
+        )
+        .await
+        .map_err(|_| {
+            tracing::warn!("MailboxManager::send_members_write_action: timeout");
+            MailboxManageError::TimeOut
+        })?
+        .map_err(|_| {
+            tracing::warn!("MailboxManager::send_members_write_action: closed");
+            MailboxManageError::Closed
+        })
     }
-
 
     pub async fn get_members_in_channel(
         &self,

@@ -28,10 +28,10 @@ use uuid::Uuid;
 
 type Sender = SplitSink<WebSocketStream<TokioIo<Upgraded>>, tungstenite::Message>;
 
-async fn check_permissions(
-    db: &mut sqlx::PgConnection,
+async fn check_permissions<'c, T: sqlx::PgExecutor<'c>>(
+    db: T,
     space: &Space,
-    session: &Option<Session>,
+    session: Option<&Session>,
 ) -> Result<(), AppError> {
     if space.is_public || space.allow_spectator {
         return Ok(());
@@ -41,7 +41,7 @@ async fn check_permissions(
             if space.owner_id == session.user_id {
                 return Ok(());
             }
-            SpaceMember::get(&mut *db, &session.user_id, &space.id)
+            SpaceMember::get(db, &session.user_id, &space.id)
                 .await
                 .or_no_permission()?;
         }
@@ -306,15 +306,8 @@ async fn connect(ctx: &crate::context::AppContext, req: hyper::Request<Incoming>
             }
         }
     };
-    {
-        let mut conn = match ctx.db.acquire().await {
-            Ok(conn) => conn,
-            Err(e) => {
-                tracing::error!(error = %e, "Failed to acquire database connection");
-                return connection_error(req, Some(mailbox), ConnectionError::Unexpected);
-            }
-        };
-        let space = match Space::get_by_id(&mut *conn, &mailbox).await {
+    if !mailbox.is_nil() {
+        let space = match Space::get_by_id(&ctx.db, &mailbox).await {
             Ok(space) => space,
             Err(e) => {
                 tracing::error!(error = %e, "Failed to get space");
@@ -323,7 +316,7 @@ async fn connect(ctx: &crate::context::AppContext, req: hyper::Request<Incoming>
         };
 
         if let Some(space) = space.as_ref() {
-            if let Err(e) = check_permissions(&mut conn, space, &session.ok()).await {
+            if let Err(e) = check_permissions(&ctx.db, space, session.as_ref().ok()).await {
                 match &e {
                     AppError::NoPermission(_) => {
                         return connection_error(req, Some(mailbox), ConnectionError::NoPermission);
@@ -342,7 +335,7 @@ async fn connect(ctx: &crate::context::AppContext, req: hyper::Request<Incoming>
                 }
             }
         }
-    };
+    }
 
     if let Some(user_id) = user_id {
         match &session {
@@ -572,7 +565,7 @@ async fn sse(ctx: &crate::context::AppContext, req: Request<Incoming>) -> Respon
             Err(e) => return err_response(e.into()),
         };
         if let Ok(Some(space)) = Space::get_by_id(&mut *conn, &mailbox).await {
-            if let Err(e) = check_permissions(&mut conn, &space, &session).await {
+            if let Err(e) = check_permissions(&mut *conn, &space, session.as_ref()).await {
                 return err_response(e);
             }
         }
@@ -634,7 +627,7 @@ async fn receive_events(ctx: &crate::context::AppContext, req: Request<Incoming>
             Err(e) => return err_response(e.into()),
         };
         if let Ok(Some(space)) = Space::get_by_id(&mut *conn, &mailbox).await {
-            if let Err(e) = check_permissions(&mut conn, &space, &session).await {
+            if let Err(e) = check_permissions(&mut *conn, &space, session.as_ref()).await {
                 return err_response(e);
             }
         }

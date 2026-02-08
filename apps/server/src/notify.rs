@@ -28,7 +28,10 @@ static NOTIFY_SPACE_ACTIVITY: LazyLock<tokio::sync::mpsc::Sender<(Uuid, DateTime
                         if !map.is_empty() {
                             let mut taken_map = HashMap::with_capacity_and_hasher(map.len(), ahash::RandomState::new());
                             std::mem::swap(&mut map, &mut taken_map);
-                            // Update the database with the latest activity
+                            // Update the database with the latest activity.
+                            // Intentionally do NOT invalidate `CACHE.Space` here:
+                            // latest_activity is a high-frequency field and we accept
+                            // short-lived staleness to avoid cache-churn and extra fan-out.
 
                             let Ok(mut conn) = pool.acquire().await else {
                                 tracing::warn!("Failed to acquire connection from pool, skipping.");

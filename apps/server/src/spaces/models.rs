@@ -102,6 +102,7 @@ impl Space {
         let mut invalidate_tasks = vec![
             CACHE.invalidate(CacheType::Space, id),
             CACHE.invalidate(CacheType::SpaceSettings, id),
+            CACHE.invalidate(CacheType::SpacesChannels, id),
         ];
 
         for (_, space_member_with_user) in space_members {

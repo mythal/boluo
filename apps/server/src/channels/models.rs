@@ -72,6 +72,17 @@ impl Lifespan for Channel {
     }
 }
 
+#[derive(Default, Debug, Clone)]
+pub struct SpacesChannels {
+    pub channel_ids: Vec<Uuid>,
+}
+
+impl Lifespan for SpacesChannels {
+    fn ttl_sec() -> u64 {
+        hour::TWO
+    }
+}
+
 fn insert_cache(channel: &Channel) {
     CACHE.Channel.insert(channel.id, channel.clone().into());
 }
@@ -80,6 +91,13 @@ fn maybe_insert_cache(channel: &Option<Channel>) {
     if let Some(channel) = channel {
         insert_cache(channel);
     }
+}
+
+fn insert_spaces_channels_cache(space_id: Uuid, channels: &[Channel]) {
+    let channel_ids = channels.iter().map(|channel| channel.id).collect();
+    CACHE
+        .SpacesChannels
+        .insert(space_id, SpacesChannels { channel_ids }.into());
 }
 
 impl Channel {
@@ -98,7 +116,7 @@ impl Channel {
         if let Some(default_dice_type) = default_dice_type {
             validators::DICE.run(default_dice_type)?;
         }
-        sqlx::query_file_scalar!(
+        let channel = sqlx::query_file_scalar!(
             "sql/channels/create_channel.sql",
             space_id,
             name,
@@ -107,9 +125,12 @@ impl Channel {
             _type.as_str(),
         )
         .fetch_one(db)
-        .await
-        .inspect(insert_cache)
-        .map_err(Into::into)
+        .await?;
+        insert_cache(&channel);
+        CACHE
+            .invalidate(CacheType::SpacesChannels, channel.space_id)
+            .await;
+        Ok(channel)
     }
 
     pub async fn get_by_id<'c, T: sqlx::PgExecutor<'c>>(
@@ -186,12 +207,34 @@ impl Channel {
         db: T,
         space_id: &Uuid,
     ) -> Result<Vec<Channel>, sqlx::Error> {
-        let channels = sqlx::query_file_scalar!("sql/channels/get_by_space.sql", space_id)
+        let space_id = *space_id;
+        if let Some(space_channels) = CACHE
+            .SpacesChannels
+            .get(&space_id)
+            .and_then(Mortal::fresh_only)
+        {
+            let mut cached_channels = Vec::with_capacity(space_channels.channel_ids.len());
+            let mut all_channels_hit = true;
+            for channel_id in space_channels.channel_ids {
+                if let Some(channel) = CACHE.Channel.get(&channel_id).and_then(Mortal::fresh_only) {
+                    cached_channels.push(channel);
+                } else {
+                    all_channels_hit = false;
+                    break;
+                }
+            }
+            if all_channels_hit {
+                return Ok(cached_channels);
+            }
+        }
+
+        let channels = sqlx::query_file_scalar!("sql/channels/get_by_space.sql", &space_id)
             .fetch_all(db)
             .await?;
         for channel in &channels {
             insert_cache(channel);
         }
+        insert_spaces_channels_cache(space_id, &channels);
         Ok(channels)
     }
 
@@ -225,6 +268,7 @@ impl Channel {
             .map(|r| r.rows_affected())?;
         if affected > 0 {
             CACHE.invalidate(CacheType::Channel, *id).await;
+            CACHE.invalidate(CacheType::SpacesChannels, *space_id).await;
             if let Some(manager) = crate::events::context::store().get_manager(space_id) {
                 if let Err(e) = manager.remove_channel(*id).await {
                     tracing::warn!(

@@ -33,6 +33,9 @@ async fn list(
         }))
     }
 
+    // Intentional short-window local cache for `/spaces/list`.
+    // We do not actively invalidate this on create/edit/delete; callers can
+    // observe up to ~10s staleness in exchange for lower read pressure.
     static CACHE: tokio::sync::OnceCell<ArcSwap<SpaceList>> = tokio::sync::OnceCell::const_new();
     let space_list_lock = CACHE.get_or_init(|| init_spaces(ctx)).await;
 

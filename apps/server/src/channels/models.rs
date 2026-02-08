@@ -257,18 +257,29 @@ impl Channel {
         Ok(channel_list)
     }
 
-    pub async fn delete<'c, T: sqlx::PgExecutor<'c>>(
-        db: T,
+    pub async fn delete(
+        db: &mut sqlx::PgConnection,
         id: &Uuid,
         space_id: &Uuid,
     ) -> Result<u64, sqlx::Error> {
         let affected = sqlx::query_file_scalar!("sql/channels/delete_channel.sql", id)
-            .execute(db)
+            .execute(&mut *db)
             .await
             .map(|r| r.rows_affected())?;
         if affected > 0 {
-            CACHE.invalidate(CacheType::Channel, *id).await;
-            CACHE.invalidate(CacheType::SpacesChannels, *space_id).await;
+            let member_user_ids =
+                sqlx::query_file_scalar!("sql/channels/get_joined_member_user_ids.sql", id)
+                    .fetch_all(&mut *db)
+                    .await?;
+
+            let mut invalidate_tasks = Vec::with_capacity(member_user_ids.len() + 2);
+            invalidate_tasks.push(CACHE.invalidate(CacheType::Channel, *id));
+            invalidate_tasks.push(CACHE.invalidate(CacheType::SpacesChannels, *space_id));
+            for user_id in member_user_ids {
+                invalidate_tasks.push(CACHE.invalidate(CacheType::ChannelMembers, user_id));
+            }
+            futures::future::join_all(invalidate_tasks).await;
+
             if let Some(manager) = crate::events::context::store().get_manager(space_id) {
                 if let Err(e) = manager.remove_channel(*id).await {
                     tracing::warn!(
@@ -904,10 +915,12 @@ mod tests {
         assert_eq!(edited.r#type, ChannelType::Document);
         assert!(edited.is_archived);
 
-        let deleted = Channel::delete(&pool, &channel.id, &space.id)
+        let mut conn = pool.acquire().await.expect("failed to acquire connection");
+        let deleted = Channel::delete(&mut *conn, &channel.id, &space.id)
             .await
             .expect("delete failed");
         assert_eq!(deleted, 1);
+        drop(conn);
 
         let after_delete = Channel::get_by_id(&pool, &channel.id)
             .await

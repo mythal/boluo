@@ -571,7 +571,7 @@ async fn delete(
 
     admin_only(&mut *conn, &session.user_id, &channel.space_id).await?;
 
-    Channel::delete(&mut *conn, &id, &channel.space_id).await?;
+    Channel::delete(&mut conn, &id, &channel.space_id).await?;
     tracing::info!("channel {} was deleted.", &id);
     Update::channel_deleted(channel.space_id, id);
     Update::space_updated(ctx, channel.space_id);

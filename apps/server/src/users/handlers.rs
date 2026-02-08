@@ -6,7 +6,6 @@ use super::api::{
     Login, LoginReturn, Register, ResetPassword, ResetPasswordConfirm, ResetPasswordTokenCheck,
 };
 use super::models::User;
-use crate::cache::CACHE;
 use crate::channels::Channel;
 use crate::context::get_site_url;
 use crate::error::{AppError, Find, ValidationFailed};
@@ -773,8 +772,6 @@ pub async fn confirm_email_change(
 
     // Mark the new email as verified since user confirmed the change via email
     User::mark_email_verified(&mut *conn, &user_id).await?;
-
-    CACHE.User.insert(user_id, updated_user.clone().into());
 
     tracing::info!(
         user_id = %user_id,

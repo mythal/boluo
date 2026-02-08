@@ -549,9 +549,7 @@ impl SpaceMember {
         space_id: &Uuid,
         is_admin: bool,
     ) -> Result<Option<SpaceMember>, sqlx::Error> {
-        let result = SpaceMember::set(db, user_id, space_id, Some(is_admin)).await?;
-        CACHE.invalidate(CacheType::UserSpaces, *user_id).await;
-        Ok(result)
+        SpaceMember::set(db, user_id, space_id, Some(is_admin)).await
     }
 
     pub async fn get_by_user<'c, T: sqlx::PgExecutor<'c>>(

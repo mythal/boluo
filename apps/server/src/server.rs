@@ -185,7 +185,6 @@ async fn handler(
                     if duration.as_millis() > 500 {
                         tracing::warn!("Slow request: {}ms", duration.as_millis());
                     } else if path.starts_with("/api/info")
-                        || path.starts_with("/api/users/get_me")
                         || path.starts_with("/api/events/connect")
                     {
                         tracing::debug!("Request Finished");

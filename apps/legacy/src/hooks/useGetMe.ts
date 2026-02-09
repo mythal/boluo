@@ -56,7 +56,9 @@ export const useGetMe = (dispatch: Dispatch, finish: () => void): void => {
       };
     },
     {
-      refreshInterval: 20_000,
+      refreshInterval: 120_000,
+      revalidateOnFocus: true,
+      revalidateOnReconnect: true,
       onErrorRetry: (error, _key, _config, revalidate, context) => {
         if (error.code !== FETCH_FAIL || context.retryCount >= 1) {
           return;

@@ -63,8 +63,7 @@ async fn members<B: Body>(
 ) -> Result<ChannelMembers, AppError> {
     let query: IdQuery = parse_query(req.uri())?;
 
-    let mut conn = ctx.db.acquire().await?;
-    let channel = Channel::get_by_id(&mut *conn, &query.id)
+    let channel = Channel::get_by_id(&ctx.db, &query.id)
         .await
         .or_not_found()?;
     let current_user_id = authenticate_optional(&req)
@@ -79,7 +78,7 @@ async fn members<B: Body>(
             "You are not logged in and this is a private channel".to_string(),
         ));
     }
-    let mut members = Member::get_by_channel(&mut *conn, channel.space_id, channel.id).await?;
+    let mut members = Member::get_by_channel(&ctx.db, channel.space_id, channel.id).await?;
 
     let Ok((members, self_index)) = tokio::task::spawn_blocking(move || {
         members.sort_unstable_by(|a, b| {
@@ -106,7 +105,7 @@ async fn members<B: Body>(
     };
 
     if !channel.is_public && self_index.is_none() {
-        let space = Space::get_by_id(&mut *conn, &channel.space_id).await?;
+        let space = Space::get_by_id(&ctx.db, &channel.space_id).await?;
         if let Some(space) = space
             && Some(space.owner_id) == current_user_id
         {
@@ -124,7 +123,7 @@ async fn members<B: Body>(
     }
 
     Ok(ChannelMembers {
-        members: members_attach_user(&mut *conn, members).await?,
+        members: members_attach_user(&ctx.db, members).await?,
         // Deprecated
         color_list: HashMap::new(),
         heartbeat_map: HashMap::new(),
@@ -584,18 +583,17 @@ async fn by_space(
 ) -> Result<Vec<ChannelWithMaybeMember>, AppError> {
     let IdQuery { id: space_id } = parse_query(req.uri())?;
     let session = authenticate(&req).await.ok();
-    let mut conn = ctx.db.acquire().await?;
-    let channels = Channel::get_by_space(&mut *conn, &space_id)
+    let channels = Channel::get_by_space(&ctx.db, &space_id)
         .await
         .map_err(Into::<AppError>::into)?;
 
     let channels = if let Some(Session { user_id, .. }) = session {
-        let is_admin = SpaceMember::get_by_user(&mut *conn, user_id)
+        let is_admin = SpaceMember::get_by_user(&ctx.db, user_id)
             .await?
             .into_iter()
             .any(|space_member| space_member.space_id == space_id && space_member.is_admin);
         let joined_members: HashMap<Uuid, ChannelMember> =
-            ChannelMember::get_by_user(&mut *conn, user_id)
+            ChannelMember::get_by_user(&ctx.db, user_id)
                 .await?
                 .into_iter()
                 .map(|member| (member.channel_id, member))

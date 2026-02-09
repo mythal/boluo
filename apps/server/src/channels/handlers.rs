@@ -571,7 +571,7 @@ async fn delete(
 
     admin_only(&mut *conn, &session.user_id, &channel.space_id).await?;
 
-    Channel::delete(&mut *conn, &id, &channel.space_id).await?;
+    Channel::delete(&mut conn, &id, &channel.space_id).await?;
     tracing::info!("channel {} was deleted.", &id);
     Update::channel_deleted(channel.space_id, id);
     Update::space_updated(ctx, channel.space_id);
@@ -585,16 +585,35 @@ async fn by_space(
     let IdQuery { id: space_id } = parse_query(req.uri())?;
     let session = authenticate(&req).await.ok();
     let mut conn = ctx.db.acquire().await?;
+    let channels = Channel::get_by_space(&mut *conn, &space_id)
+        .await
+        .map_err(Into::<AppError>::into)?;
+
     let channels = if let Some(Session { user_id, .. }) = session {
-        Channel::get_by_space_and_user(&mut *conn, &space_id, &user_id)
-            .await
-            .map_err(Into::<AppError>::into)?
+        let is_admin = SpaceMember::get_by_user(&mut *conn, user_id)
+            .await?
             .into_iter()
+            .any(|space_member| space_member.space_id == space_id && space_member.is_admin);
+        let joined_members: HashMap<Uuid, ChannelMember> =
+            ChannelMember::get_by_user(&mut *conn, user_id)
+                .await?
+                .into_iter()
+                .map(|member| (member.channel_id, member))
+                .collect();
+
+        channels
+            .into_iter()
+            .filter_map(|channel| {
+                let member = joined_members.get(&channel.id).cloned();
+                if channel.is_public || member.is_some() || is_admin {
+                    Some(ChannelWithMaybeMember { channel, member })
+                } else {
+                    None
+                }
+            })
             .collect()
     } else {
-        Channel::get_by_space(&mut *conn, &space_id)
-            .await
-            .map_err(Into::<AppError>::into)?
+        channels
             .into_iter()
             .filter(|channel| channel.is_public)
             .map(|channel| ChannelWithMaybeMember {

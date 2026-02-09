@@ -182,7 +182,6 @@ impl PreviewPost {
             clear,
             edit,
         } = self;
-        let mut conn = pool.acquire().await?;
         let mut should_clear = false;
         if let Some(text) = text.as_ref() {
             if (text.trim().is_empty() || entities.0.is_empty()) && edit_for.is_none() {
@@ -207,35 +206,55 @@ impl PreviewPost {
                 .await?;
             pos = (*pos_ratio.numer() as f64 / *pos_ratio.denom() as f64).ceil();
         }
-        let channel_member = ChannelMember::get(&mut conn, user_id, space_id, channel_id).await?;
-        let is_master = if let Some(channel_member) = channel_member {
-            channel_member.is_master
+        let cached_master =
+            if let Some(manager) = crate::events::context::store().get_manager(&space_id) {
+                match manager.get_member(channel_id, user_id).await {
+                    Ok(Ok(Some(member))) => Some(member.channel.is_master),
+                    Ok(Ok(None)) | Ok(Err(_)) => {
+                        manager.refresh_members_if_needed(channel_id).await.ok();
+                        None
+                    }
+                    Err(_) => None,
+                }
+            } else {
+                None
+            };
+        let is_master = if let Some(is_master) = cached_master {
+            is_master
         } else {
-            let channel = Channel::get_by_id(&mut *conn, &channel_id)
-                .await
-                .or_not_found()?;
-            if channel.space_id != space_id {
-                return Err(AppError::NoPermission(
-                    "Channel does not belong to this space".to_string(),
-                ));
+            let mut conn = pool.acquire().await?;
+            let channel_member =
+                ChannelMember::get(&mut conn, user_id, space_id, channel_id).await?;
+            if let Some(channel_member) = channel_member {
+                channel_member.is_master
+            } else {
+                let channel = Channel::get_by_id(&mut *conn, &channel_id)
+                    .await
+                    .or_not_found()?;
+                if channel.space_id != space_id {
+                    return Err(AppError::NoPermission(
+                        "Channel does not belong to this space".to_string(),
+                    ));
+                }
+                if !channel.is_public {
+                    return Err(AppError::NoPermission(
+                        "You are not a member of this channel".to_string(),
+                    ));
+                }
+                let is_space_member =
+                    SpaceMember::get(&mut *conn, &user_id, &channel.space_id).await?;
+                if is_space_member.is_none() {
+                    return Err(AppError::NoPermission(
+                        "You are not a member of this space".to_string(),
+                    ));
+                }
+                tracing::warn!(
+                    "User {} is posting preview to public channel {} without being a member",
+                    user_id,
+                    channel_id
+                );
+                false
             }
-            if !channel.is_public {
-                return Err(AppError::NoPermission(
-                    "You are not a member of this channel".to_string(),
-                ));
-            }
-            let is_space_member = SpaceMember::get(&mut *conn, &user_id, &channel.space_id).await?;
-            if is_space_member.is_none() {
-                return Err(AppError::NoPermission(
-                    "You are not a member of this space".to_string(),
-                ));
-            }
-            tracing::warn!(
-                "User {} is posting preview to public channel {} without being a member",
-                user_id,
-                channel_id
-            );
-            false
         };
         let whisper_to_users = None;
         let preview = Box::new(Preview {

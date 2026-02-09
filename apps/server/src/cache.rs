@@ -3,7 +3,7 @@ use std::sync::LazyLock;
 use quick_cache::sync::Cache;
 use uuid::Uuid;
 
-use crate::channels::{Channel, ChannelMembers};
+use crate::channels::{Channel, ChannelMembers, SpacesChannels};
 use crate::characters::{Character, CharacterVariables};
 use crate::session::Session;
 use crate::spaces::{Space, SpaceSettings, UserSpaces};
@@ -134,6 +134,7 @@ define_caches! {
     (Space, 1024),
     (SpaceSettings, 4096),
     (ChannelMembers, 8193),
+    (SpacesChannels, 1024),
     (UserSpaces, 4096),
 }
 
@@ -182,6 +183,10 @@ pub fn start_log_cache_stats() {
             "boluo_server_cache_items",
             vec![metrics::Label::new("cache", "ChannelMembers")]
         );
+        let spaces_channels_gauge = metrics::gauge!(
+            "boluo_server_cache_items",
+            vec![metrics::Label::new("cache", "SpacesChannels")]
+        );
         let user_spaces_gauge = metrics::gauge!(
             "boluo_server_cache_items",
             vec![metrics::Label::new("cache", "UserSpaces")]
@@ -199,6 +204,7 @@ pub fn start_log_cache_stats() {
                     let space = CACHE.Space.len();
                     let space_settings = CACHE.SpaceSettings.len();
                     let channel_members = CACHE.ChannelMembers.len();
+                    let spaces_channels = CACHE.SpacesChannels.len();
                     let user_spaces = CACHE.UserSpaces.len();
                     let total = channel
                         + character
@@ -209,6 +215,7 @@ pub fn start_log_cache_stats() {
                         + space
                         + space_settings
                         + channel_members
+                        + spaces_channels
                         + user_spaces;
 
                     channel_gauge.set(channel as f64);
@@ -220,6 +227,7 @@ pub fn start_log_cache_stats() {
                     space_gauge.set(space as f64);
                     space_settings_gauge.set(space_settings as f64);
                     channel_members_gauge.set(channel_members as f64);
+                    spaces_channels_gauge.set(spaces_channels as f64);
                     user_spaces_gauge.set(user_spaces as f64);
                     total_gauge.set(total as f64);
                 },

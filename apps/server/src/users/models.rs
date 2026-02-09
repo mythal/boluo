@@ -220,6 +220,7 @@ impl User {
         sqlx::query_file!("sql/users/reset_token_invalidate.sql", id)
             .execute(&mut *db)
             .await?;
+        CACHE.invalidate(CacheType::User, id).await;
         Ok(())
     }
 

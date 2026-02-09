@@ -33,6 +33,9 @@ async fn list(
         }))
     }
 
+    // Intentional short-window local cache for `/spaces/list`.
+    // We do not actively invalidate this on create/edit/delete; callers can
+    // observe up to ~10s staleness in exchange for lower read pressure.
     static CACHE: tokio::sync::OnceCell<ArcSwap<SpaceList>> = tokio::sync::OnceCell::const_new();
     let space_list_lock = CACHE.get_or_init(|| init_spaces(ctx)).await;
 
@@ -284,11 +287,11 @@ async fn edit(
 
     if space.owner_id == session.user_id {
         for user_id in grant_admins.iter() {
-            SpaceMember::set_admin(&mut *trans, &space_id, user_id, true).await?;
+            SpaceMember::set_admin(&mut *trans, user_id, &space_id, true).await?;
         }
         for user_id in remove_admins.iter() {
             if user_id != &space.owner_id {
-                SpaceMember::set_admin(&mut *trans, &space_id, user_id, false).await?;
+                SpaceMember::set_admin(&mut *trans, user_id, &space_id, false).await?;
             }
         }
     }

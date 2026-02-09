@@ -72,6 +72,17 @@ impl Lifespan for Channel {
     }
 }
 
+#[derive(Default, Debug, Clone)]
+pub struct SpacesChannels {
+    pub channel_ids: Vec<Uuid>,
+}
+
+impl Lifespan for SpacesChannels {
+    fn ttl_sec() -> u64 {
+        hour::TWO
+    }
+}
+
 fn insert_cache(channel: &Channel) {
     CACHE.Channel.insert(channel.id, channel.clone().into());
 }
@@ -80,6 +91,13 @@ fn maybe_insert_cache(channel: &Option<Channel>) {
     if let Some(channel) = channel {
         insert_cache(channel);
     }
+}
+
+fn insert_spaces_channels_cache(space_id: Uuid, channels: &[Channel]) {
+    let channel_ids = channels.iter().map(|channel| channel.id).collect();
+    CACHE
+        .SpacesChannels
+        .insert(space_id, SpacesChannels { channel_ids }.into());
 }
 
 impl Channel {
@@ -98,7 +116,7 @@ impl Channel {
         if let Some(default_dice_type) = default_dice_type {
             validators::DICE.run(default_dice_type)?;
         }
-        sqlx::query_file_scalar!(
+        let channel = sqlx::query_file_scalar!(
             "sql/channels/create_channel.sql",
             space_id,
             name,
@@ -107,9 +125,12 @@ impl Channel {
             _type.as_str(),
         )
         .fetch_one(db)
-        .await
-        .inspect(insert_cache)
-        .map_err(Into::into)
+        .await?;
+        insert_cache(&channel);
+        CACHE
+            .invalidate(CacheType::SpacesChannels, channel.space_id)
+            .await;
+        Ok(channel)
     }
 
     pub async fn get_by_id<'c, T: sqlx::PgExecutor<'c>>(
@@ -186,12 +207,34 @@ impl Channel {
         db: T,
         space_id: &Uuid,
     ) -> Result<Vec<Channel>, sqlx::Error> {
-        let channels = sqlx::query_file_scalar!("sql/channels/get_by_space.sql", space_id)
+        let space_id = *space_id;
+        if let Some(space_channels) = CACHE
+            .SpacesChannels
+            .get(&space_id)
+            .and_then(Mortal::fresh_only)
+        {
+            let mut cached_channels = Vec::with_capacity(space_channels.channel_ids.len());
+            let mut all_channels_hit = true;
+            for channel_id in space_channels.channel_ids {
+                if let Some(channel) = CACHE.Channel.get(&channel_id).and_then(Mortal::fresh_only) {
+                    cached_channels.push(channel);
+                } else {
+                    all_channels_hit = false;
+                    break;
+                }
+            }
+            if all_channels_hit {
+                return Ok(cached_channels);
+            }
+        }
+
+        let channels = sqlx::query_file_scalar!("sql/channels/get_by_space.sql", &space_id)
             .fetch_all(db)
             .await?;
         for channel in &channels {
             insert_cache(channel);
         }
+        insert_spaces_channels_cache(space_id, &channels);
         Ok(channels)
     }
 
@@ -214,17 +257,29 @@ impl Channel {
         Ok(channel_list)
     }
 
-    pub async fn delete<'c, T: sqlx::PgExecutor<'c>>(
-        db: T,
+    pub async fn delete(
+        db: &mut sqlx::PgConnection,
         id: &Uuid,
         space_id: &Uuid,
     ) -> Result<u64, sqlx::Error> {
         let affected = sqlx::query_file_scalar!("sql/channels/delete_channel.sql", id)
-            .execute(db)
+            .execute(&mut *db)
             .await
             .map(|r| r.rows_affected())?;
         if affected > 0 {
-            CACHE.invalidate(CacheType::Channel, *id).await;
+            let member_user_ids =
+                sqlx::query_file_scalar!("sql/channels/get_joined_member_user_ids.sql", id)
+                    .fetch_all(&mut *db)
+                    .await?;
+
+            let mut invalidate_tasks = Vec::with_capacity(member_user_ids.len() + 2);
+            invalidate_tasks.push(CACHE.invalidate(CacheType::Channel, *id));
+            invalidate_tasks.push(CACHE.invalidate(CacheType::SpacesChannels, *space_id));
+            for user_id in member_user_ids {
+                invalidate_tasks.push(CACHE.invalidate(CacheType::ChannelMembers, user_id));
+            }
+            futures::future::join_all(invalidate_tasks).await;
+
             if let Some(manager) = crate::events::context::store().get_manager(space_id) {
                 if let Err(e) = manager.remove_channel(*id).await {
                     tracing::warn!(
@@ -450,9 +505,7 @@ impl ChannelMember {
                 match manager.get_member(channel_id, user_id).await {
                     Ok(Ok(Some(member))) => return Ok(Some(member.channel)),
                     Ok(Ok(None)) | Ok(Err(_)) => {
-                        if let Ok(true) = manager.should_refresh_members(channel_id).await {
-                            Member::load_to_cache(space_id, channel_id);
-                        }
+                        manager.refresh_members_if_needed(channel_id).await.ok();
                     }
                     Err(_) => {}
                 }
@@ -862,10 +915,12 @@ mod tests {
         assert_eq!(edited.r#type, ChannelType::Document);
         assert!(edited.is_archived);
 
-        let deleted = Channel::delete(&pool, &channel.id, &space.id)
+        let mut conn = pool.acquire().await.expect("failed to acquire connection");
+        let deleted = Channel::delete(&mut *conn, &channel.id, &space.id)
             .await
             .expect("delete failed");
         assert_eq!(deleted, 1);
+        drop(conn);
 
         let after_delete = Channel::get_by_id(&pool, &channel.id)
             .await

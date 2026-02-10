@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT\n    m AS \"member!: ChannelMember\"\nFROM\n    channel_members m\n    INNER JOIN channels c ON c.id = m.channel_id\nWHERE\n    m.user_id = $1\n    AND m.is_joined;\n\n",
+  "query": "SELECT\n    m AS \"member!: ChannelMember\"\nFROM\n    channel_members m\nWHERE\n    m.user_id = $1\n    AND m.is_joined;\n",
   "describe": {
     "columns": [
       {
@@ -54,5 +54,5 @@
       null
     ]
   },
-  "hash": "d3dedc7eaef01ea3a2472653abc7d93d6d81dab9cb19b58c1ce563e6c3c61165"
+  "hash": "90d401f843871555651d28483a8ecb6584fbaf14acf011c0f5d54941a3d923d6"
 }

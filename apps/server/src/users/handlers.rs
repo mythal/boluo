@@ -17,7 +17,6 @@ use crate::session::{
     add_session_cookie, add_settings_cookie, remove_session_cookie, revoke_session,
 };
 use crate::spaces::Space;
-use crate::ttl::{Lifespan, minute};
 use crate::users::api::{
     CheckEmailExists, CheckUsernameExists, EditUser, EmailVerificationStatus, GetMe, QueryUser,
     ResendEmailVerificationResult,
@@ -150,12 +149,6 @@ pub async fn query_settings(
         .unwrap_or(serde_json::json!({})))
 }
 
-impl Lifespan for GetMe {
-    fn ttl_sec() -> u64 {
-        minute::ONE
-    }
-}
-
 pub async fn login<B: Body>(
     ctx: &crate::context::AppContext,
     req: Request<B>,
@@ -212,9 +205,11 @@ pub async fn login<B: Body>(
         })
         .or_no_permission()?;
     let user_id = user.id;
+    drop(conn);
     let session = session::start(user_id).await?;
     let token: String = session::token(&session.id);
     let token = if form.with_token { Some(token) } else { None };
+    let mut conn = ctx.db.acquire().await?;
     let my_spaces = Space::get_by_user(&mut conn, user_id).await?;
     let my_channels = Channel::get_by_user(&mut conn, user_id).await?;
     let user_ext = UserExt::get(&mut *conn, user_id).await;
@@ -384,13 +379,15 @@ pub async fn reset_password(
         .check_key(&email)
         .map_err(|_| AppError::LimitExceeded("This email is requested too many times."))?;
 
-    let mut conn = ctx.db.acquire().await?;
-    let user = User::get_by_email(&mut *conn, &email)
-        .await?
-        .ok_or(AppError::NotFound("email"))?;
-    let token = User::generate_reset_token(&mut *conn, user.id)
-        .await?
-        .to_string();
+    let token = {
+        let mut conn = ctx.db.acquire().await?;
+        let user = User::get_by_email(&mut *conn, &email)
+            .await?
+            .ok_or(AppError::NotFound("email"))?;
+        User::generate_reset_token(&mut *conn, user.id)
+            .await?
+            .to_string()
+    };
 
     let site_url = get_site_url()?;
 
@@ -681,29 +678,33 @@ pub async fn request_email_change(
         .check_key(&new_email)
         .map_err(|_| AppError::LimitExceeded("This email is requested too many times."))?;
 
-    let mut conn = ctx.db.acquire().await?;
+    let current_email = {
+        let mut conn = ctx.db.acquire().await?;
 
-    let current_user = User::get_by_id(&mut *conn, &session.user_id)
-        .await
-        .or_not_found()?;
+        let current_user = User::get_by_id(&mut *conn, &session.user_id)
+            .await
+            .or_not_found()?;
 
-    if current_user.email == new_email {
-        return Err(AppError::BadRequest(
-            "New email is the same as current email".to_string(),
-        ));
-    }
+        if current_user.email == new_email {
+            return Err(AppError::BadRequest(
+                "New email is the same as current email".to_string(),
+            ));
+        }
 
-    if User::get_by_email(&mut *conn, &new_email).await?.is_some() {
-        return Err(AppError::Conflict(
-            "Email address is already in use".to_string(),
-        ));
-    }
+        if User::get_by_email(&mut *conn, &new_email).await?.is_some() {
+            return Err(AppError::Conflict(
+                "Email address is already in use".to_string(),
+            ));
+        }
+
+        current_user.email
+    };
 
     send_email_change_verification(&new_email, &session.user_id, lang.as_deref()).await?;
 
     tracing::info!(
         user_id = %session.user_id,
-        current_email = %current_user.email,
+        current_email = %current_email,
         new_email = %new_email,
         "Email change verification sent"
     );

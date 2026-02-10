@@ -18,7 +18,7 @@ use crate::session::Session;
 use crate::spaces::{Space, SpaceMember};
 use hyper::Request;
 use hyper::body::Body;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use uuid::Uuid;
 
 async fn admin_only<'c, T: sqlx::PgExecutor<'c>>(
@@ -592,10 +592,13 @@ async fn by_space(
             .await?
             .into_iter()
             .any(|space_member| space_member.space_id == space_id && space_member.is_admin);
+        let channel_ids_in_space: HashSet<Uuid> =
+            channels.iter().map(|channel| channel.id).collect();
         let joined_members: HashMap<Uuid, ChannelMember> =
             ChannelMember::get_by_user(&ctx.db, user_id)
                 .await?
                 .into_iter()
+                .filter(|member| channel_ids_in_space.contains(&member.channel_id))
                 .map(|member| (member.channel_id, member))
                 .collect();
 

@@ -35,40 +35,42 @@ async fn send(
         pos: request_pos,
         color,
     } = *new_message;
-    let mut conn = ctx.db.acquire().await?;
-    let channel = Channel::get_by_id(&mut *conn, &channel_id)
+    let channel = Channel::get_by_id(&ctx.db, &channel_id)
         .await
         .or_not_found()?;
     let (channel_member, space_member) = ChannelMember::get_with_space_member(
-        &mut *conn,
+        &ctx.db,
         session.user_id,
         channel_id,
         &channel.space_id,
     )
     .await
     .or_no_permission()?;
-    let message = Message::create(
-        &mut conn,
-        preview_id,
-        channel_id,
-        channel.space_id,
-        &session.user_id,
-        &channel_member.character_name,
-        &name,
-        &text,
-        entities,
-        in_game,
-        is_action,
-        channel_member.is_master,
-        whisper_to_users,
-        media_id,
-        request_pos,
-        color,
-    )
-    .await
-    .inspect_err(|_| {
-        metrics::counter!("boluo_server_messages_created_failed_total").increment(1);
-    })?;
+    let message = {
+        let mut conn = ctx.db.acquire().await?;
+        Message::create(
+            &mut conn,
+            preview_id,
+            channel_id,
+            channel.space_id,
+            &session.user_id,
+            &channel_member.character_name,
+            &name,
+            &text,
+            entities,
+            in_game,
+            is_action,
+            channel_member.is_master,
+            whisper_to_users,
+            media_id,
+            request_pos,
+            color,
+        )
+        .await
+        .inspect_err(|_| {
+            metrics::counter!("boluo_server_messages_created_failed_total").increment(1);
+        })?
+    };
     Update::new_message(space_member.space_id, message.clone(), preview_id);
 
     metrics::counter!("boluo_server_messages_created_total").increment(1);
@@ -156,15 +158,13 @@ async fn move_between(
     let message = Message::get(&mut *conn, &message_id, Some(&session.user_id))
         .await
         .or_not_found()?;
-    crate::pos::CHANNEL_POS_MANAGER
-        .submitted(
-            channel_id,
-            message_id,
-            message.pos_p,
-            message.pos_q,
-            Some(message_id),
-        )
-        .await;
+    crate::pos::CHANNEL_POS_MANAGER.submitted(
+        channel_id,
+        message_id,
+        message.pos_p,
+        message.pos_q,
+        Some(message_id),
+    );
     if let Some((expect_p, expect_q)) = expect_pos {
         if message.pos_p != expect_p || message.pos_q != expect_q {
             return Err(AppError::BadRequest(
@@ -251,9 +251,7 @@ async fn delete(
         message.id,
         message.pos,
     );
-    crate::pos::CHANNEL_POS_MANAGER
-        .cancel(message.channel_id, message.id)
-        .await;
+    crate::pos::CHANNEL_POS_MANAGER.cancel(message.channel_id, message.id);
     metrics::counter!("boluo_server_messages_deleted_total").increment(1);
     Ok(message)
 }
@@ -300,13 +298,12 @@ async fn by_channel(
         before,
     } = parse_query(req.uri())?;
 
-    let mut conn = ctx.db.acquire().await?;
-
-    let channel = Channel::get_by_id(&mut *conn, &channel_id)
+    let channel = Channel::get_by_id(&ctx.db, &channel_id)
         .await
         .or_not_found()?;
     let session = authenticate(&req).await;
     let current_user_id = session.as_ref().ok().map(|session| session.user_id);
+    let mut conn = ctx.db.acquire().await?;
     if !channel.is_public {
         ChannelMember::get(&mut conn, session?.user_id, channel.space_id, channel_id)
             .await
@@ -358,12 +355,12 @@ async fn search(
     }
     const WINDOW_SIZE: i64 = 200;
 
-    let mut conn = ctx.db.acquire().await?;
-    let channel = Channel::get_by_id(&mut *conn, &channel_id)
+    let channel = Channel::get_by_id(&ctx.db, &channel_id)
         .await
         .or_not_found()?;
     let session = authenticate(&req).await;
     let current_user_id = session.as_ref().ok().map(|session| session.user_id);
+    let mut conn = ctx.db.acquire().await?;
     if !channel.is_public {
         ChannelMember::get(&mut conn, session?.user_id, channel.space_id, channel_id)
             .await
@@ -391,6 +388,7 @@ async fn search(
             .await?
         }
     };
+    std::mem::drop(conn);
 
     let scanned = window_messages.len();
     let next_pos = if scanned as i64 == WINDOW_SIZE {

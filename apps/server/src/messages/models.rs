@@ -315,7 +315,7 @@ impl Message {
                     pos = ?(new_pos.numer(), new_pos.denom()),
                     "This should never happen, but a unique violation occurred again while creating a message at channel"
                 );
-                CHANNEL_POS_MANAGER.shutdown(channel_id).await;
+                CHANNEL_POS_MANAGER.shutdown(channel_id);
                 return Err(AppError::Unexpected(anyhow::anyhow!(
                     "Failed to send new message, conflict occurred",
                 )));
@@ -330,13 +330,17 @@ impl Message {
                     err = %err,
                     "Failed to send message at channel"
                 );
-                crate::pos::CHANNEL_POS_MANAGER.cancel(channel_id, id).await;
+                crate::pos::CHANNEL_POS_MANAGER.cancel(channel_id, id);
                 return Err(err.into());
             }
         };
-        crate::pos::CHANNEL_POS_MANAGER
-            .submitted(channel_id, message.id, message.pos_p, message.pos_q, None)
-            .await;
+        crate::pos::CHANNEL_POS_MANAGER.submitted(
+            channel_id,
+            message.id,
+            message.pos_p,
+            message.pos_q,
+            None,
+        );
         message.hide(None);
 
         let created = message.created;
@@ -377,15 +381,13 @@ impl Message {
         .fetch_optional(db)
         .await?;
         if let Some(moved_message) = moved_message {
-            crate::pos::CHANNEL_POS_MANAGER
-                .submitted(
-                    moved_message.channel_id,
-                    moved_message.id,
-                    moved_message.pos_p,
-                    moved_message.pos_q,
-                    Some(moved_message.id),
-                )
-                .await;
+            crate::pos::CHANNEL_POS_MANAGER.submitted(
+                moved_message.channel_id,
+                moved_message.id,
+                moved_message.pos_p,
+                moved_message.pos_q,
+                Some(moved_message.id),
+            );
             Ok(Some(moved_message))
         } else {
             Ok(None)
@@ -409,15 +411,13 @@ impl Message {
         .fetch_optional(db)
         .await?;
         if let Some(moved_message) = moved_message {
-            crate::pos::CHANNEL_POS_MANAGER
-                .submitted(
-                    moved_message.channel_id,
-                    moved_message.id,
-                    moved_message.pos_p,
-                    moved_message.pos_q,
-                    Some(moved_message.id),
-                )
-                .await;
+            crate::pos::CHANNEL_POS_MANAGER.submitted(
+                moved_message.channel_id,
+                moved_message.id,
+                moved_message.pos_p,
+                moved_message.pos_q,
+                Some(moved_message.id),
+            );
             Ok(Some(moved_message))
         } else {
             Ok(None)
@@ -476,15 +476,13 @@ impl Message {
             return Ok(None);
         };
         if message_in_pos.id == *id {
-            crate::pos::CHANNEL_POS_MANAGER
-                .submitted(
-                    message_in_pos.channel_id,
-                    message_in_pos.id,
-                    message_in_pos.pos_p,
-                    message_in_pos.pos_q,
-                    Some(message_in_pos.id),
-                )
-                .await;
+            crate::pos::CHANNEL_POS_MANAGER.submitted(
+                message_in_pos.channel_id,
+                message_in_pos.id,
+                message_in_pos.pos_p,
+                message_in_pos.pos_q,
+                Some(message_in_pos.id),
+            );
             Ok(Some(message_in_pos))
         } else {
             // Capture current Postgres transaction id to correlate conflicts across logs.
@@ -492,19 +490,15 @@ impl Message {
                 .fetch_one(&mut *db)
                 .await
                 .ok();
-            crate::pos::CHANNEL_POS_MANAGER
-                .cancel(channel_id, *id)
-                .await;
+            crate::pos::CHANNEL_POS_MANAGER.cancel(channel_id, *id);
             let message_in_pos_id = message_in_pos.id;
-            crate::pos::CHANNEL_POS_MANAGER
-                .submitted(
-                    channel_id,
-                    message_in_pos_id,
-                    message_in_pos.pos_p,
-                    message_in_pos.pos_q,
-                    Some(message_in_pos.id),
-                )
-                .await;
+            crate::pos::CHANNEL_POS_MANAGER.submitted(
+                channel_id,
+                message_in_pos_id,
+                message_in_pos.pos_p,
+                message_in_pos.pos_q,
+                Some(message_in_pos.id),
+            );
             tracing::warn!(
                 conflict_txid = txid_current,
                 attempted_pos_p = pos.0,
@@ -528,15 +522,13 @@ impl Message {
             )
             .await?;
             if let Some(moved_message) = moved_message {
-                crate::pos::CHANNEL_POS_MANAGER
-                    .submitted(
-                        channel_id,
-                        moved_message.id,
-                        moved_message.pos_p,
-                        moved_message.pos_q,
-                        Some(moved_message.id),
-                    )
-                    .await;
+                crate::pos::CHANNEL_POS_MANAGER.submitted(
+                    channel_id,
+                    moved_message.id,
+                    moved_message.pos_p,
+                    moved_message.pos_q,
+                    Some(moved_message.id),
+                );
                 Ok(Some(moved_message))
             } else {
                 Ok(None)
@@ -854,7 +846,7 @@ mod tests {
             .expect("get after delete failed");
         assert!(after_delete.is_none());
 
-        crate::pos::CHANNEL_POS_MANAGER.shutdown(channel.id).await;
+        crate::pos::CHANNEL_POS_MANAGER.shutdown(channel.id);
     }
 
     #[sqlx::test(migrator = "crate::db::MIGRATOR")]
@@ -971,6 +963,6 @@ mod tests {
         assert_eq!(ordered[1].id, between.id);
         assert_eq!(ordered[2].id, moved_above.id);
 
-        crate::pos::CHANNEL_POS_MANAGER.shutdown(channel.id).await;
+        crate::pos::CHANNEL_POS_MANAGER.shutdown(channel.id);
     }
 }

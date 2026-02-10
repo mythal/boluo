@@ -213,7 +213,7 @@
     "message": "粘贴CSS变量或其他自定义CSS来覆盖主题。"
   },
   "8MYOsd": {
-    "message": "Invalid token. Please retry."
+    "message": "令牌不对，请重试。"
   },
   "8be59M": {
     "message": "邮箱验证成功！"
@@ -408,7 +408,7 @@
     "message": "已连接"
   },
   "J78glR": {
-    "message": "Please log in to continue."
+    "message": "请登录以继续。"
   },
   "JBWS0c": {
     "message": "链接"
@@ -585,7 +585,7 @@
     "message": "描述"
   },
   "QAF77H": {
-    "message": "You do not have permission to access."
+    "message": "您没有访问权限。"
   },
   "QBYqL5": {
     "message": "查询位面成员失败"
@@ -753,7 +753,7 @@
     "message": "纯文本"
   },
   "XPj4VR": {
-    "message": "An unknown error occurred. Please refresh."
+    "message": "发生未知错误。请刷新。"
   },
   "XTqS60": {
     "message": "请将 {errorCode} 告诉系统管理员。"

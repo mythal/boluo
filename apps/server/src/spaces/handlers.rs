@@ -400,10 +400,10 @@ async fn my_space_member(
         return Ok(None);
     };
     let IdQuery { id } = parse_query(req.uri())?;
-    let mut db = ctx.db.acquire().await?;
-    SpaceMember::get(&mut *db, &session.user_id, &id)
-        .await
-        .map_err(Into::into)
+    let my_space_members = SpaceMember::get_by_user(&ctx.db, session.user_id).await?;
+    Ok(my_space_members
+        .into_iter()
+        .find(|space_member| space_member.space_id == id))
 }
 
 async fn members(
@@ -452,9 +452,8 @@ async fn space_settings(
     req: Request<impl Body>,
 ) -> Result<serde_json::Value, AppError> {
     let IdQuery { id } = parse_query(req.uri())?;
-    let mut conn = ctx.db.acquire().await?;
     // TODO: check whether the user is a member of the space
-    let extension = Space::get_settings(&mut *conn, id).await?;
+    let extension = Space::get_settings(&ctx.db, id).await?;
     Ok(extension)
 }
 

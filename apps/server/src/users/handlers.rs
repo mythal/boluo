@@ -156,48 +156,6 @@ impl Lifespan for GetMe {
     }
 }
 
-pub async fn get_me(
-    ctx: &crate::context::AppContext,
-    req: Request<impl Body>,
-) -> Result<Response<Vec<u8>>, AppError> {
-    use crate::session::authenticate;
-    let session = authenticate(&req).await;
-
-    match session {
-        Ok(session) => {
-            let mut conn = ctx.db.acquire().await?;
-            let user = User::get_by_id(&mut *conn, &session.user_id).await?;
-            if let Some(user) = user {
-                let my_spaces = Space::get_by_user(&mut conn, user.id).await?;
-                let my_channels = Channel::get_by_user(&mut conn, user.id).await?;
-                let user_ext = UserExt::get(&mut *conn, user.id).await.ok();
-                let get_me = GetMe {
-                    user,
-                    settings: user_ext
-                        .map(|ext| ext.settings)
-                        .unwrap_or(serde_json::json!({})),
-                    my_channels,
-                    my_spaces,
-                };
-
-                Ok(ok_response(Some(get_me)))
-            } else {
-                revoke_session(&ctx.db.clone(), session.id).await?;
-                tracing::error!(
-                    user_id = %session.user_id,
-                    session_id = %session.id,
-                    "The user has a valid session, but the user cannot be found in the database"
-                );
-                let mut response = ok_response::<Option<GetMe>>(None);
-                remove_session_cookie(response.headers_mut());
-                Ok(response)
-            }
-        }
-        Err(AppError::Unauthenticated(_)) => Ok(ok_response::<Option<GetMe>>(None)),
-        Err(e) => Err(e),
-    }
-}
-
 pub async fn login<B: Body>(
     ctx: &crate::context::AppContext,
     req: Request<B>,
@@ -951,7 +909,6 @@ pub async fn router(
         ("/logout", _) => logout(ctx, req).await,
         ("/query", Method::GET) => response(query_user(ctx, req).await).await,
         ("/query_self", Method::GET) => response(query_self(ctx, req).await).await,
-        ("/get_me", Method::GET) => get_me(ctx, req).await,
         ("/settings", Method::GET) => query_settings(ctx, req).await.map(ok_response),
         ("/edit", Method::POST) => response(edit(ctx, req).await).await,
         ("/edit_avatar", Method::POST) => response(edit_avatar(ctx, req).await).await,

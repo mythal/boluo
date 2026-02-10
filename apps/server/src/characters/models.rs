@@ -5,7 +5,7 @@ use uuid::Uuid;
 
 use crate::cache::{CACHE, CacheType};
 use crate::error::{ModelError, ValidationFailed};
-use crate::ttl::{Lifespan, fetch_entry, fetch_entry_optional, hour, minute};
+use crate::ttl::{Lifespan, fetch_entry, fetch_entry_optional, hour};
 
 pub(crate) fn normalize_ident(value: &str) -> Result<String, ValidationFailed> {
     let key = value.trim().replace(char::is_whitespace, "_");
@@ -301,7 +301,7 @@ pub struct CharacterVariables(pub Vec<CharacterVariable>);
 
 impl Lifespan for CharacterVariables {
     fn ttl_sec() -> u64 {
-        minute::TWO
+        hour::HALF
     }
 }
 

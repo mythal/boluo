@@ -32,9 +32,6 @@
   "/jxJyw": {
     "message": "メッセージを配置しようとしている位置が変更されました。"
   },
-  "/sLMk2": {
-    "message": "You are not authenticated. Please log in to access this resource."
-  },
   "0Azlrb": {
     "message": "管理"
   },
@@ -52,9 +49,6 @@
   },
   "0ah2ud": {
     "message": "次元"
-  },
-  "0cmG3L": {
-    "message": "Failed to establish connection due to a network error. Please try again later."
   },
   "0eanrB": {
     "message": "アーカイブされたメッセージも含める"
@@ -152,6 +146,9 @@
   "62nsdy": {
     "message": "もう一度試してください"
   },
+  "64owOH": {
+    "message": "Network error. Please retry."
+  },
   "64sfSN": {
     "message": "やめる"
   },
@@ -214,6 +211,9 @@
   },
   "8HQJF3": {
     "message": "Paste CSS variables or any custom CSS to override the theme."
+  },
+  "8MYOsd": {
+    "message": "Invalid token. Please retry."
   },
   "8be59M": {
     "message": "メール確認が成功しました！"
@@ -320,9 +320,6 @@
   "EWw/tK": {
     "message": "適用"
   },
-  "Eborcf": {
-    "message": "The session is invalid. Re-login may help to resolve this issue. Do you want to log out now?"
-  },
   "EcW+hX": {
     "message": "選ばれた人だけに見えます。"
   },
@@ -409,6 +406,9 @@
   },
   "IvjoDS": {
     "message": "接続されました"
+  },
+  "J78glR": {
+    "message": "Please log in to continue."
   },
   "JBWS0c": {
     "message": "リンク"
@@ -584,6 +584,9 @@
   "Q8Qw5B": {
     "message": "説明"
   },
+  "QAF77H": {
+    "message": "You do not have permission to access."
+  },
   "QBYqL5": {
     "message": "位面のメンバー照会に失敗しました"
   },
@@ -749,6 +752,9 @@
   "XOi37d": {
     "message": "プレーンテキスト"
   },
+  "XPj4VR": {
+    "message": "An unknown error occurred. Please refresh."
+  },
   "XTqS60": {
     "message": "「{errorCode}」をシステム管理者に送信してください。"
   },
@@ -850,9 +856,6 @@
   },
   "ceSWhW": {
     "message": "アーカイブされたメッセージを表示"
-  },
-  "ciPqqe": {
-    "message": "An unexpected error occurred while establishing the connection. Please try again later."
   },
   "clpFBW": {
     "message": "次元のパブリシティ"

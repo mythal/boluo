@@ -1,5 +1,14 @@
 pub async fn send(to: &str, subject: &str, html: &str) -> Result<(), anyhow::Error> {
-    let client = reqwest::Client::new();
+    use std::sync::LazyLock;
+    use std::time::Duration;
+
+    static CLIENT: LazyLock<reqwest::Client> = LazyLock::new(|| {
+        reqwest::Client::builder()
+            .connect_timeout(Duration::from_secs(3))
+            .timeout(Duration::from_secs(10))
+            .build()
+            .expect("Failed to build mail HTTP client")
+    });
     tracing::info!("Sending email to {to}");
     let domain = std::env::var("MAILGUN_DOMAIN").ok();
 
@@ -34,7 +43,7 @@ pub async fn send(to: &str, subject: &str, html: &str) -> Result<(), anyhow::Err
     let mut url = reqwest::Url::parse(&url)?;
     url.set_username("api").unwrap();
     url.set_password(Some(&*api_key)).unwrap();
-    let res = client.post(url).form(&params).send().await?;
+    let res = CLIENT.post(url).form(&params).send().await?;
     if !res.status().is_success() {
         let error = res.text().await?;
         tracing::warn!(error, "Failed to send email");

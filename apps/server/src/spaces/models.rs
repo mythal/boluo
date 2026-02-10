@@ -20,7 +20,7 @@ pub struct UserSpaces {
 
 impl Lifespan for UserSpaces {
     fn ttl_sec() -> u64 {
-        ttl::minute::TWO
+        ttl::hour::ONE
     }
 }
 

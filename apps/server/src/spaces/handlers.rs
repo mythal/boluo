@@ -59,8 +59,7 @@ async fn query(
     req: Request<impl Body>,
 ) -> Result<Space, AppError> {
     let QuerySpace { id, token } = parse_query(req.uri())?;
-    let mut conn = ctx.db.acquire().await?;
-    let space = Space::get_by_id(&mut *conn, &id).await?.or_not_found()?;
+    let space = Space::get_by_id(&ctx.db, &id).await?.or_not_found()?;
     if space.is_public || space.allow_spectator {
         return Ok(space);
     }
@@ -70,7 +69,7 @@ async fn query(
         }
     }
     let session = authenticate(&req).await?;
-    let Some(_) = SpaceMember::get(&mut *conn, &session.user_id, &id).await? else {
+    let Some(_) = SpaceMember::get(&ctx.db, &session.user_id, &id).await? else {
         tracing::warn!(
             space_id = %id,
             user_id = %session.user_id,
@@ -202,7 +201,7 @@ async fn create(
 
     let mut trans = ctx.db.begin().await?;
     let default_dice_type = default_dice_type.as_deref();
-    let user = User::get_by_id(&ctx.db, &session.user_id)
+    let user = User::get_by_id(&mut *trans, &session.user_id)
         .await?
         .ok_or(AppError::NotFound("user"))?;
     let space = Space::create(
@@ -429,8 +428,8 @@ async fn delete(
     req: Request<impl Body>,
 ) -> Result<Space, AppError> {
     let IdQuery { id } = parse_query(req.uri())?;
-    let mut conn = ctx.db.acquire().await?;
     let session = authenticate(&req).await?;
+    let mut conn = ctx.db.acquire().await?;
     let space = Space::get_by_id(&mut *conn, &id).await.or_not_found()?;
     if space.owner_id == session.user_id {
         Space::delete(&mut conn, id).await?;

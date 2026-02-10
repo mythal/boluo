@@ -8,7 +8,7 @@ use crate::channels::api::{ChannelMemberWithUser, ChannelWithMaybeMember, Channe
 use crate::db;
 use crate::error::ModelError;
 use crate::spaces::{Space, SpaceMember};
-use crate::ttl::{Lifespan, Mortal, fetch_entry, fetch_entry_optional, hour, minute};
+use crate::ttl::{Lifespan, Mortal, fetch_entry, fetch_entry_optional, hour};
 use crate::users::User;
 use crate::utils::{is_false, merge_blank};
 use std::collections::HashMap;
@@ -374,7 +374,7 @@ pub struct ChannelMembers(pub Vec<ChannelMember>);
 
 impl Lifespan for ChannelMembers {
     fn ttl_sec() -> u64 {
-        minute::QUARTER
+        hour::ONE
     }
 }
 

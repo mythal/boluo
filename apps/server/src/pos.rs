@@ -34,6 +34,8 @@ const PLACEHOLDER_POS_TIMEOUT: Duration = Duration::from_secs(60 * 60);
 const INACTIVE_TIMEOUT: Duration = Duration::from_secs(60 * 60 * 12);
 const TICK_INTERVAL: Duration = Duration::from_secs(60);
 const SUBMITTED_RETENTION: Duration = Duration::from_secs(60 * 60 * 6);
+const ACTION_SEND_TIMEOUT: Duration = Duration::from_secs(2);
+const ACTION_RESPONSE_TIMEOUT: Duration = Duration::from_secs(2);
 
 #[derive(Debug)]
 pub enum PosAction {
@@ -498,17 +500,56 @@ impl PosActionSender {
                 return Err(ChannelPosError::ActorShutdown);
             }
             Err(TrySendError::Full(action)) => {
-                tracing::info!("PosActionSender::send: full");
+                tracing::info!(action = action.name(), "PosActionSender::send: full");
                 action
             }
         };
-        tokio::time::timeout(TICK_INTERVAL, self.sender.send(action))
+        let action_name = action.name();
+        tokio::time::timeout(ACTION_SEND_TIMEOUT, self.sender.send(action))
             .await
             .map_err(|_| {
-                tracing::warn!("PosActionSender::send: timeout");
+                tracing::warn!(
+                    action = action_name,
+                    timeout_ms = ACTION_SEND_TIMEOUT.as_millis(),
+                    "PosActionSender::send: timeout"
+                );
                 ChannelPosError::Timeout
             })?
             .map_err(|_| ChannelPosError::ActorShutdown)
+    }
+
+    fn send_nonblocking(&self, action: PosAction) {
+        match self.sender.try_send(action) {
+            Ok(_) => {}
+            Err(TrySendError::Closed(action)) => {
+                tracing::warn!(
+                    action = action.name(),
+                    "PosActionSender::send_nonblocking: actor closed"
+                );
+            }
+            Err(TrySendError::Full(action)) => {
+                let action_name = action.name();
+                let sender = self.sender.clone();
+                tokio::spawn(async move {
+                    match tokio::time::timeout(ACTION_SEND_TIMEOUT, sender.send(action)).await {
+                        Ok(Ok(())) => {}
+                        Ok(Err(_)) => {
+                            tracing::warn!(
+                                action = action_name,
+                                "PosActionSender::send_nonblocking: actor closed while waiting"
+                            );
+                        }
+                        Err(_) => {
+                            tracing::warn!(
+                                action = action_name,
+                                timeout_ms = ACTION_SEND_TIMEOUT.as_millis(),
+                                "PosActionSender::send_nonblocking: timeout"
+                            );
+                        }
+                    }
+                });
+            }
+        }
     }
 }
 
@@ -586,7 +627,17 @@ impl ChannelPosManager {
             .await
             .map_err(|_| ChannelPosError::ActorShutdown)?;
 
-        rx.await
+        tokio::time::timeout(ACTION_RESPONSE_TIMEOUT, rx)
+            .await
+            .map_err(|_| {
+                tracing::warn!(
+                    channel_id = %channel_id,
+                    item_id = %item_id,
+                    timeout_ms = ACTION_RESPONSE_TIMEOUT.as_millis(),
+                    "ChannelPosManager::preview_pos: timeout waiting actor response"
+                );
+                ChannelPosError::Timeout
+            })?
             .map_err(|_| ChannelPosError::ActorShutdown)?
             .map_err(ChannelPosError::DatabaseError)
     }
@@ -610,7 +661,19 @@ impl ChannelPosManager {
             .await
             .map_err(|_| ChannelPosError::ActorShutdown)?;
 
-        rx.await
+        tokio::time::timeout(ACTION_RESPONSE_TIMEOUT, rx)
+            .await
+            .map_err(|_| {
+                tracing::warn!(
+                    channel_id = %channel_id,
+                    message_id = %message_id,
+                    request_pos = ?request_pos,
+                    preview_id = ?preview_id,
+                    timeout_ms = ACTION_RESPONSE_TIMEOUT.as_millis(),
+                    "ChannelPosManager::sending_new_message: timeout waiting actor response"
+                );
+                ChannelPosError::Timeout
+            })?
             .map_err(|_| ChannelPosError::ActorShutdown)?
             .map_err(ChannelPosError::DatabaseError)
     }
@@ -630,12 +693,22 @@ impl ChannelPosManager {
             .await
             .map_err(|_| ChannelPosError::ActorShutdown)?;
 
-        rx.await
+        tokio::time::timeout(ACTION_RESPONSE_TIMEOUT, rx)
+            .await
+            .map_err(|_| {
+                tracing::warn!(
+                    channel_id = %channel_id,
+                    message_id = %message_id,
+                    timeout_ms = ACTION_RESPONSE_TIMEOUT.as_millis(),
+                    "ChannelPosManager::on_conflict: timeout waiting actor response"
+                );
+                ChannelPosError::Timeout
+            })?
             .map_err(|_| ChannelPosError::ActorShutdown)?
             .map_err(ChannelPosError::DatabaseError)
     }
 
-    pub async fn submitted(
+    pub fn submitted(
         &self,
         channel_id: Uuid,
         item_id: Uuid,
@@ -644,29 +717,28 @@ impl ChannelPosManager {
         old_item_id: Option<Uuid>,
     ) {
         let sender = self.get_or_create_actor(channel_id);
-        let _ = sender
-            .send(PosAction::Submitted {
-                item_id,
-                pos_p,
-                pos_q,
-                old_item_id,
-            })
-            .await;
+        sender.send_nonblocking(PosAction::Submitted {
+            item_id,
+            pos_p,
+            pos_q,
+            old_item_id,
+        });
     }
 
-    pub async fn cancel(&self, channel_id: Uuid, item_id: Uuid) {
+    pub fn cancel(&self, channel_id: Uuid, item_id: Uuid) {
         let sender = self.get_or_create_actor(channel_id);
-        let _ = sender.send(PosAction::Cancel { item_id }).await;
+        sender.send_nonblocking(PosAction::Cancel { item_id });
     }
 
-    pub async fn shutdown(&self, channel_id: Uuid) {
+    pub fn shutdown(&self, channel_id: Uuid) {
         let sender = {
             let actors = self.actors.pin();
             actors.remove(&channel_id).cloned()
         };
 
         if let Some(sender) = sender {
-            let _ = sender.send(PosAction::Shutdown).await;
+            let sender = PosActionSender { sender };
+            sender.send_nonblocking(PosAction::Shutdown);
         }
     }
 
@@ -1006,12 +1078,12 @@ mod tests {
         let item_id = Uuid::new_v4();
 
         // Test cancel operation
-        manager.cancel(channel_id, item_id).await;
+        manager.cancel(channel_id, item_id);
 
         // Test submitted operation
-        manager.submitted(channel_id, item_id, 42, 1, None).await;
+        manager.submitted(channel_id, item_id, 42, 1, None);
 
         // Test reset operation
-        manager.shutdown(channel_id).await;
+        manager.shutdown(channel_id);
     }
 }

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT\n    sm AS \"member!: SpaceMember\"\nFROM\n    space_members sm\n    INNER JOIN spaces s ON sm.space_id = s.id\n        AND s.deleted = FALSE\n    INNER JOIN users u ON u.id = $1\nWHERE\n    sm.user_id = $1\nORDER BY\n    s.latest_activity DESC;\n\n",
+  "query": "SELECT\n    sm AS \"member!: SpaceMember\"\nFROM\n    space_members sm\n    INNER JOIN spaces s ON sm.space_id = s.id\n        AND s.deleted = FALSE\nWHERE\n    sm.user_id = $1\nORDER BY\n    s.latest_activity DESC;\n",
   "describe": {
     "columns": [
       {
@@ -42,5 +42,5 @@
       null
     ]
   },
-  "hash": "655152b22238e8ca20e8d1ee68459880d809f74d73cfcb2c9e60ce6d6719d611"
+  "hash": "7bf7ee71d7e70c2cea16d48aecddf8c67a6226db2754df2fe9646378266c2525"
 }

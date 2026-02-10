@@ -695,6 +695,12 @@ ALTER TABLE ONLY public.users
 ALTER TABLE ONLY public.users
     ADD CONSTRAINT users_username_key UNIQUE (username);
 
+--
+-- Name: channel_members_channel_id_is_joined_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX channel_members_channel_id_is_joined_index ON public.channel_members USING btree (channel_id, is_joined);
+
 
 --
 -- Name: character_space_id_index; Type: INDEX; Schema: public; Owner: -
@@ -750,6 +756,13 @@ CREATE INDEX notes_space_owner_index ON public.notes USING btree (space_id, owne
 --
 
 CREATE INDEX reset_token_user ON public.reset_tokens USING btree (user_id);
+
+
+--
+-- Name: space_members_space_id_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX space_members_space_id_index ON public.space_members USING btree (space_id);
 
 
 --

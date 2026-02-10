@@ -278,7 +278,7 @@ impl PreviewPost {
         });
 
         if should_clear {
-            crate::pos::CHANNEL_POS_MANAGER.cancel(channel_id, id).await;
+            crate::pos::CHANNEL_POS_MANAGER.cancel(channel_id, id);
         }
         Update::message_preview(space_id, preview);
         Ok(())

@@ -31,9 +31,9 @@ pub fn check_pos((p, q): (i32, i32)) -> Result<(), ValidationFailed> {
 }
 
 const PLACEHOLDER_POS_TIMEOUT: Duration = Duration::from_secs(60 * 60);
-const INACTIVE_TIMEOUT: Duration = Duration::from_secs(60 * 60 * 12);
+const INACTIVE_TIMEOUT: Duration = Duration::from_secs(60 * 60 * 6);
 const TICK_INTERVAL: Duration = Duration::from_secs(60);
-const SUBMITTED_RETENTION: Duration = Duration::from_secs(60 * 60 * 6);
+const SUBMITTED_RETENTION: Duration = Duration::from_secs(60 * 60 * 1);
 const ACTION_SEND_TIMEOUT: Duration = Duration::from_secs(2);
 const ACTION_RESPONSE_TIMEOUT: Duration = Duration::from_secs(2);
 

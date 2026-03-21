@@ -63,7 +63,7 @@ use crate::error::AppError;
 use crate::interface::{err_response, missing, ok_response};
 
 #[global_allocator]
-static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
+static GLOBAL: bc_mimalloc::MiMalloc = bc_mimalloc::MiMalloc;
 
 async fn router(
     ctx: &context::AppContext,

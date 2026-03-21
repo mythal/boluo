@@ -1,7 +1,10 @@
 import { isApiError } from '@boluo/api/errors';
-import { type IntlShape } from '@formatjs/intl';
 
-export const explainError = <T>(intl: IntlShape<T>, error: unknown): string => {
+interface ErrorIntl {
+  formatMessage(descriptor: { defaultMessage: string }): string;
+}
+
+export const explainError = (intl: ErrorIntl, error: unknown): string => {
   if (isApiError(error)) {
     switch (error.code) {
       case 'BAD_REQUEST':

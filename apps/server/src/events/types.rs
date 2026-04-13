@@ -389,7 +389,7 @@ impl Update {
             }
             return Ok(vec![]);
         };
-        let updates_receiver = match manager.query_encoded_updates().await {
+        let updates_receiver = match manager.query_encoded_updates(after, seq, node).await {
             Ok(receiver) => receiver,
             Err(err) => {
                 tracing::error!(error = ?err, "Failed to query updates for mailbox {}", mailbox_id);
@@ -417,35 +417,7 @@ impl Update {
         if updates.is_empty() {
             return Ok(vec![]);
         }
-        let node = node.unwrap_or(0);
-        let after = after.unwrap_or(i64::MIN);
-        let Ok(encoded_updates) = tokio::task::spawn_blocking(move || {
-            let mut encoded_updates: Vec<tungstenite::Utf8Bytes> =
-                Vec::with_capacity(updates.len());
-            for (event_id, encoded_update) in updates.into_iter() {
-                use std::cmp::Ordering::*;
-                match event_id.timestamp.cmp(&after) {
-                    Less => continue,
-                    Equal => {
-                        if node == event_id.node {
-                            if let Some(seq) = seq {
-                                if event_id.seq <= seq {
-                                    continue;
-                                }
-                            }
-                        }
-                    }
-                    _ => {}
-                }
-                encoded_updates.push(encoded_update.clone());
-            }
-            encoded_updates
-        })
-        .await
-        else {
-            return Err(GetFromStateError::FailedToQuery);
-        };
-        Ok(encoded_updates)
+        Ok(updates)
     }
 
     pub fn space_updated(ctx: &crate::context::AppContext, space_id: Uuid) {

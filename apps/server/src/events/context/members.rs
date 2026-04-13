@@ -9,7 +9,8 @@ use crate::{
 };
 
 pub(super) struct MembersCache {
-    channel_member_map: HashMap<ChannelUserId, ChannelMember, ahash::RandomState>,
+    channel_member_map:
+        HashMap<Uuid, HashMap<Uuid, ChannelMember, ahash::RandomState>, ahash::RandomState>,
     space_member_map: HashMap<Uuid, SpaceMember, ahash::RandomState>,
     loaded_channels: HashSet<Uuid, ahash::RandomState>,
 }
@@ -58,18 +59,26 @@ impl MembersCache {
                 if !self.loaded_channels.contains(&channel_member.channel_id) {
                     return;
                 }
-                let channel_user_id =
-                    ChannelUserId::new(channel_member.channel_id, channel_member.user_id);
                 self.channel_member_map
-                    .insert(channel_user_id, channel_member);
+                    .entry(channel_member.channel_id)
+                    .or_insert_with(|| HashMap::with_hasher(ahash::RandomState::default()))
+                    .insert(channel_member.user_id, channel_member);
             }
             Action::RemoveUser(user_id) => {
                 self.space_member_map.remove(&user_id);
-                self.channel_member_map
-                    .retain(|channel_user_id, _| channel_user_id.user_id != user_id);
+                self.channel_member_map.retain(|_, members| {
+                    members.remove(&user_id);
+                    !members.is_empty()
+                });
             }
             Action::RemoveFromChannel(channel_user_id) => {
-                self.channel_member_map.remove(&channel_user_id);
+                if let Some(members) = self.channel_member_map.get_mut(&channel_user_id.channel_id)
+                {
+                    members.remove(&channel_user_id.user_id);
+                    if members.is_empty() {
+                        self.channel_member_map.remove(&channel_user_id.channel_id);
+                    }
+                }
             }
             Action::UpdateBySpaceMembers(space_members) => {
                 for space_member in space_members {
@@ -81,20 +90,18 @@ impl MembersCache {
                 channel_id,
                 members,
             } => {
-                self.channel_member_map
-                    .retain(|channel_user_id, _| channel_user_id.channel_id != channel_id);
                 self.loaded_channels.insert(channel_id);
+                let mut members_in_channel =
+                    HashMap::with_capacity_and_hasher(members.len(), ahash::RandomState::default());
                 for Member { channel, space } in members {
-                    self.channel_member_map.insert(
-                        ChannelUserId::new(channel.channel_id, channel.user_id),
-                        channel,
-                    );
+                    members_in_channel.insert(channel.user_id, channel);
                     self.space_member_map.insert(space.user_id, space);
                 }
+                self.channel_member_map
+                    .insert(channel_id, members_in_channel);
             }
             Action::RemoveChannel(channel_id) => {
-                self.channel_member_map
-                    .retain(|channel_user_id, _| channel_user_id.channel_id != channel_id);
+                self.channel_member_map.remove(&channel_id);
                 self.loaded_channels.remove(&channel_id);
             }
             Action::QueryByChannel(channel_id, sender) => {
@@ -102,28 +109,22 @@ impl MembersCache {
                     sender.send(Err(NotFullyLoaded)).ok();
                     return;
                 }
-                let mut members = Vec::new();
-                let mut incomplete = false;
-                for member in self
-                    .channel_member_map
-                    .values()
-                    .filter(|member| member.channel_id == channel_id)
-                {
+                let Some(members_in_channel) = self.channel_member_map.get(&channel_id) else {
+                    sender.send(Ok(vec![])).ok();
+                    return;
+                };
+                let mut members = Vec::with_capacity(members_in_channel.len());
+                for member in members_in_channel.values() {
                     let Some(space_member) = self.space_member_map.get(&member.user_id) else {
-                        incomplete = true;
-                        break;
+                        self.loaded_channels.remove(&channel_id);
+                        self.channel_member_map.remove(&channel_id);
+                        sender.send(Err(NotFullyLoaded)).ok();
+                        return;
                     };
                     members.push(Member {
                         channel: member.clone(),
                         space: space_member.clone(),
                     });
-                }
-                if incomplete {
-                    self.loaded_channels.remove(&channel_id);
-                    self.channel_member_map
-                        .retain(|channel_user_id, _| channel_user_id.channel_id != channel_id);
-                    sender.send(Err(NotFullyLoaded)).ok();
-                    return;
                 }
                 if sender.send(Ok(members)).is_err() {
                     tracing::error!(channel_id = %channel_id, "Failed to send members query");
@@ -134,7 +135,11 @@ impl MembersCache {
                     sender.send(Err(NotFullyLoaded)).ok();
                     return;
                 }
-                let Some(channel_member) = self.channel_member_map.get(&channel_user_id) else {
+                let Some(channel_member) = self
+                    .channel_member_map
+                    .get(&channel_user_id.channel_id)
+                    .and_then(|members| members.get(&channel_user_id.user_id))
+                else {
                     tracing::warn!(channel_user_id = ?channel_user_id, "Channel member not found");
                     sender.send(Ok(None)).ok();
                     return;
@@ -142,8 +147,7 @@ impl MembersCache {
                 let Some(space_member) = self.space_member_map.get(&channel_user_id.user_id) else {
                     tracing::warn!(channel_user_id = ?channel_user_id, "Space member not found");
                     self.loaded_channels.remove(&channel_user_id.channel_id);
-                    self.channel_member_map
-                        .retain(|key, _| key.channel_id != channel_user_id.channel_id);
+                    self.channel_member_map.remove(&channel_user_id.channel_id);
                     sender.send(Err(NotFullyLoaded)).ok();
                     return;
                 };

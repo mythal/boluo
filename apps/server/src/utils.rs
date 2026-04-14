@@ -20,7 +20,7 @@ macro_rules! regex {
 }
 
 pub fn id() -> Uuid {
-    use uuid::v1::Context as UuidContext;
+    use uuid::ContextV1 as UuidContext;
     use uuid::v1::Timestamp;
 
     static NODE_ID: OnceCell<[u8; 6]> = OnceCell::new();

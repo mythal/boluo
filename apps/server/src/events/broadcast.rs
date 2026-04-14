@@ -53,7 +53,7 @@ async fn broadcast_clean() {
     let Some(broadcast_table) = BROADCAST_TABLE.get() else {
         return;
     };
-    let mut broadcast_table = broadcast_table.pin();
+    let broadcast_table = broadcast_table.pin();
     let before_count = broadcast_table.len();
     broadcast_table.retain(|_, v| v.receiver_count() != 0);
     tracing::info!(

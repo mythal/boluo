@@ -597,10 +597,12 @@ fn collect_cached_updates(
     let node = node.unwrap_or(0);
     let mut response_updates: Vec<(EventId, Utf8Bytes)> =
         Vec::with_capacity(updates.len() + preview_map.len() + diff_map.len());
-    response_updates.extend(updates.iter().filter_map(|(event_id, update)| {
-        should_include_update(*event_id, after, seq, node)
-            .then(|| (*event_id, update.encoded.clone()))
-    }));
+    response_updates.extend(
+        updates
+            .iter()
+            .filter(|&(event_id, _update)| should_include_update(*event_id, after, seq, node))
+            .map(|(event_id, update)| (*event_id, update.encoded.clone())),
+    );
     response_updates.extend(preview_map.values().filter_map(|preview| {
         let event_id = preview.update.id;
         should_include_update(event_id, after, seq, node)

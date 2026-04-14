@@ -139,6 +139,7 @@
             buildInputs = [ ];
             nativeBuildInputs = [ pkgs.sccache ];
             RUSTC_WRAPPER = "${pkgs.sccache}/bin/sccache";
+            SCCACHE_DIR = "/tmp/sccache";
           };
 
           # Build *just* the cargo dependencies (of the entire workspace),

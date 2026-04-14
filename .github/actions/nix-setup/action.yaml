@@ -15,7 +15,7 @@ runs:
       with:
         diagnostic-endpoint:
         extra-conf: |
-          experimental-features = flakes nix-command ca-derivations
+          sandbox = false
 
 
     # https://github.com/cachix/cachix-action

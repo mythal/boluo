@@ -16,6 +16,7 @@
   "private": true,
   "scripts": {
     "build": "turbo run build",
+    "build:deploy": "turbo build --filter=legacy --filter=site --filter=spa",
     "build:legacy": "turbo build --filter=legacy",
     "build:site": "turbo build --filter=site",
     "build:spa": "turbo build --filter=spa",

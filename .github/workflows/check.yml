@@ -10,6 +10,10 @@ on:
       - master
       - production
 
+concurrency:
+  group: check-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   DO_NOT_TRACK: 1
   TURBO_TELEMETRY_DISABLED: 1
@@ -90,7 +94,7 @@ jobs:
         run: npm ci
 
       - name: Run build
-        run: npm run build
+        run: npm run build:deploy
 
       - name: Run tests
         run: npm run test

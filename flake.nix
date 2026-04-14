@@ -165,7 +165,18 @@
 
                 inherit cargoArtifacts;
                 cargoExtraArgs = "--package=server";
-                cargoTestExtraArgs = "-- --skip db_test_";
+                nativeBuildInputs = commonArgs.nativeBuildInputs ++ [ pkgs.postgresql ];
+                preBuild = ''
+                  export PGDATA=$(mktemp -d)
+                  initdb --no-locale --encoding=UTF8 --username=postgres
+                  pg_ctl start -o "-k $PGDATA -h '''"
+                  createdb -h "$PGDATA" -U postgres boluo_test
+                  psql -h "$PGDATA" -U postgres -d boluo_test -v ON_ERROR_STOP=1 -f ${./apps/db/schema.sql}
+                  export DATABASE_URL="postgresql:///boluo_test?host=$PGDATA&user=postgres"
+                '';
+                postInstall = ''
+                  pg_ctl stop -D "$PGDATA"
+                '';
               }
             );
 

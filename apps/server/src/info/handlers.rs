@@ -115,7 +115,7 @@ pub fn echo(req: Request<Incoming>) -> Response {
         .header(hyper::header::CONTENT_TYPE, "text/plain")
         .status(hyper::StatusCode::OK)
         .body(format!("{:?}", req.headers()).into_bytes())
-        .unwrap_or(hyper::Response::default())
+        .unwrap_or_default()
 }
 
 pub async fn router(

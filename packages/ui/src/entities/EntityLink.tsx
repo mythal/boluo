@@ -10,13 +10,10 @@ interface Props {
 
 export const EntityLink: FC<Props> = ({ source, entity }) => {
   const { title } = entity;
-  let href = '';
-  if (typeof entity.href === 'string') {
-    href = entity.href;
-  } else {
-    const start = entity.href.start;
-    href = source.substring(start, start + entity.href.len);
-  }
+  const href =
+    typeof entity.href === 'string'
+      ? entity.href
+      : source.substring(entity.href.start, entity.href.start + entity.href.len);
   return (
     <a
       target="_blank"

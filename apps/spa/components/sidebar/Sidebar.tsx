@@ -75,22 +75,14 @@ export const Sidebar: FC<Props> = ({ spaceId }) => {
   if (!isExpanded) {
     return sidebarButton;
   }
-  let content: ReactNode = <SidebarContentLoading />;
-  if (!isClient) {
-    content = <SidebarContentLoading />;
-  } else if (contentState === 'CONNECTIONS') {
-    content = <SidebarConnectionSelector />;
-  } else if (spaceId == null) {
-    if (isQueryingUser) {
-      content = <SidebarContentLoading />;
-    } else if (currentUser == null) {
-      content = <SidebarGuestContent />;
-    } else {
-      content = <SidebarSpaceList currentUser={currentUser} currentSpaceId={null} />;
-    }
-  } else {
-    content = <SidebarContent spaceId={spaceId} currentUser={currentUser} />;
-  }
+  const content: ReactNode = (() => {
+    if (!isClient) return <SidebarContentLoading />;
+    if (contentState === 'CONNECTIONS') return <SidebarConnectionSelector />;
+    if (spaceId != null) return <SidebarContent spaceId={spaceId} currentUser={currentUser} />;
+    if (isQueryingUser) return <SidebarContentLoading />;
+    if (currentUser == null) return <SidebarGuestContent />;
+    return <SidebarSpaceList currentUser={currentUser} currentSpaceId={null} />;
+  })();
 
   return (
     <div

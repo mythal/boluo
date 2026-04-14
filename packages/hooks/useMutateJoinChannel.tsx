@@ -10,7 +10,7 @@ interface Args {
 }
 
 const updater: MutationFetcher<ChannelWithMember, Key, Args> = async (
-  [_, channelId],
+  [, channelId],
   { arg: { characterName = '' } },
 ) => {
   const result = await post('/channels/join', null, { channelId, characterName });

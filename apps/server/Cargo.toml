@@ -17,7 +17,7 @@ path = "src/init.rs"
 
 [build-dependencies]
 dotenvy = "0.15"
-url = "2.5"
+sqlx-postgres = "0.8.2"
 
 [dependencies]
 anyhow = "1"

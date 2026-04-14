@@ -5,8 +5,8 @@
     "@boluo/eslint-config": "0.0.0",
     "@boluo/typescript-config": "0.0.0",
     "@types/react": "^19.0.12",
-    "eslint": "^9.23.0",
-    "typescript": "^5.9.3"
+    "eslint": "^9.39.4",
+    "typescript": "^6.0.2"
   },
   "exports": {
     ".": "./index.ts",

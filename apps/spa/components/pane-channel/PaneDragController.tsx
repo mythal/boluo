@@ -255,22 +255,16 @@ export const usePaneDragController = ({
           nextFocus = { key: state.key, isChild: false };
           return [...nextVisible, ...rest];
         }
-        let targetIndex = visible.findIndex((pane) => pane.key === dropTarget.targetKey);
+        const targetIndex = visible.findIndex((pane) => pane.key === dropTarget.targetKey);
         if (targetIndex === -1) return prev;
         if (dropTarget.targetKey === state.key) return prev;
         const nextVisible = [...visible];
         const [draggedPane] = nextVisible.splice(currentFromIndex, 1);
         if (!draggedPane) return prev;
-        if (currentFromIndex < targetIndex) {
-          targetIndex -= 1;
-        }
         const promotedChild = draggedPane.child?.pane;
         if (promotedChild) {
           const promoted: Pane = { ...promotedChild, key: draggedPane.key };
           nextVisible.splice(currentFromIndex, 0, promoted);
-          if (currentFromIndex <= targetIndex) {
-            targetIndex += 1;
-          }
         }
         const nextTargetIndex = nextVisible.findIndex((pane) => pane.key === dropTarget.targetKey);
         if (nextTargetIndex === -1) return prev;
@@ -336,17 +330,18 @@ export const usePaneDragController = ({
       if (rectList.length === 0) return null;
       const top = Math.min(...rectList.map((rect) => rect.top));
       const bottom = Math.max(...rectList.map((rect) => rect.bottom));
-      let left: number | null = null;
-      if (dropTarget.index <= 0) {
-        const firstRect = rects.get(visibleKeys[0]!);
-        left = firstRect ? firstRect.left : null;
-      } else if (dropTarget.index >= visibleKeys.length) {
-        const lastRect = rects.get(visibleKeys[visibleKeys.length - 1]!);
-        left = lastRect ? lastRect.right : null;
-      } else {
+      const left = (() => {
+        if (dropTarget.index <= 0) {
+          const firstRect = rects.get(visibleKeys[0]!);
+          return firstRect ? firstRect.left : null;
+        }
+        if (dropTarget.index >= visibleKeys.length) {
+          const lastRect = rects.get(visibleKeys[visibleKeys.length - 1]!);
+          return lastRect ? lastRect.right : null;
+        }
         const prevRect = rects.get(visibleKeys[dropTarget.index - 1]!);
-        left = prevRect ? prevRect.right : null;
-      }
+        return prevRect ? prevRect.right : null;
+      })();
       if (left == null) return null;
       return { top, height: bottom - top, left, width: 8, kind: 'insert' };
     }

@@ -6,7 +6,9 @@ export interface StyleProps {
   className?: string | undefined;
 }
 
-export type DataAttr<T> = { [P in keyof T & string as `data-${P}`]?: T[P] };
+export type StringKeyOf<T> = Extract<keyof T, string>;
+
+export type DataAttr<T> = { [P in StringKeyOf<T> as `data-${P}`]?: T[P] };
 
 export interface ChildrenProps {
   children: React.ReactNode;

@@ -725,14 +725,12 @@ export const parse = (source: string, parseExpr = true, env: Env = emptyEnv): Pa
   const { action, isRoll, mute, whisper, inGame, modifiers, characterName } = modifiersParseResult;
   let state: State = { text: modifiersParseResult.text, rest: modifiersParseResult.rest };
 
-  let result: [Entity[], State] | null = null;
-  if (modifiersParseResult.rest.length === 0) {
-    result = [[], state];
-  } else if (isRoll) {
-    result = rollCommand.run(state, env);
-  } else {
-    result = message.run(state, env);
-  }
+  const result: [Entity[], State] | null =
+    modifiersParseResult.rest.length === 0
+      ? [[], state]
+      : isRoll
+        ? rollCommand.run(state, env)
+        : message.run(state, env);
 
   if (!result) {
     throw Error('Failed to parse the source: ' + source);

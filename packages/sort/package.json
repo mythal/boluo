@@ -9,9 +9,9 @@
     "@boluo/eslint-config": "0.0.0",
     "@boluo/typescript-config": "0.0.0",
     "@types/node": "^24.0.12",
-    "eslint": "^9.23.0",
+    "eslint": "^9.39.4",
     "tsx": "^4.21.0",
-    "typescript": "^5.9.3"
+    "typescript": "^6.0.2"
   },
   "exports": {
     ".": "./src/index.ts"

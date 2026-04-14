@@ -2,6 +2,7 @@ import 'server-only';
 import type { ApiError, Get, Post } from '@boluo/api';
 import { makeUri } from '@boluo/api';
 import { appFetch } from '@boluo/api';
+import type { StringKeyOf } from '@boluo/types';
 import { type Result } from '@boluo/utils/result';
 
 // eslint-disable-next-line no-restricted-globals
@@ -27,7 +28,7 @@ const getBackEndUrl = () => {
   }
 };
 
-export async function get<P extends keyof Get>(
+export async function get<P extends StringKeyOf<Get>>(
   path: P,
   query: Get[P]['query'],
 ): Promise<Result<Get[P]['result'], ApiError>> {
@@ -35,7 +36,7 @@ export async function get<P extends keyof Get>(
   return appFetch(url, {});
 }
 
-export async function post<P extends keyof Post>(
+export async function post<P extends StringKeyOf<Post>>(
   path: P,
   payload: Post[P]['payload'],
 ): Promise<Result<Post[P]['result'], ApiError>> {

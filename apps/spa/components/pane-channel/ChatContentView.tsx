@@ -142,7 +142,7 @@ const useDndHandles = (channelId: string, chatList: ChatItem[]): UseDragHandlesR
       }
       const timestamp = Date.now();
       const item: MessageItem = { ...draggingMessage, optimistic: true };
-      let range: [[number, number] | null, [number, number] | null] | null = null;
+      let range: [[number, number] | null, [number, number] | null];
       if (sourceIndex < targetIndex) {
         range = [[targetItem.posP, targetItem.posQ], null];
         const targetNext = chatList[targetIndex + 1];
@@ -191,23 +191,21 @@ const useDndHandles = (channelId: string, chatList: ChatItem[]): UseDragHandlesR
           payload: { ref: draggingMessage, item: { optimisticPos, timestamp, item } },
         });
       }
-      if (range) {
-        const result = await Promise.race([
-          post('/messages/move_between', null, {
-            channelId,
-            messageId: draggingMessage.id,
-            expectPos: [draggingMessage.posP, draggingMessage.posQ],
-            range,
-          }),
-          timeout(8000),
-        ]);
-        dispatch({ type: 'removeOptimisticMessage', payload: { id: draggingMessage.id } });
-        if (result === 'TIMEOUT' || result.isErr) {
-          dispatch({
-            type: 'fail',
-            payload: { failTo: { type: 'MOVE' }, key: draggingMessage.id },
-          });
-        }
+      const result = await Promise.race([
+        post('/messages/move_between', null, {
+          channelId,
+          messageId: draggingMessage.id,
+          expectPos: [draggingMessage.posP, draggingMessage.posQ],
+          range,
+        }),
+        timeout(8000),
+      ]);
+      dispatch({ type: 'removeOptimisticMessage', payload: { id: draggingMessage.id } });
+      if (result === 'TIMEOUT' || result.isErr) {
+        dispatch({
+          type: 'fail',
+          payload: { failTo: { type: 'MOVE' }, key: draggingMessage.id },
+        });
       }
     },
     [resetDragging, setBanner, dispatch, channelId],

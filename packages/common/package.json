@@ -8,14 +8,15 @@
   "devDependencies": {
     "@boluo/api": "0.0.0",
     "@boluo/eslint-config": "0.0.0",
+    "@boluo/types": "0.0.0",
     "@boluo/typescript-config": "0.0.0",
     "@boluo/utils": "0.0.0",
     "@types/node": "^24.0.12",
     "@types/react": "^19.0.12",
-    "eslint": "^9.23.0",
+    "eslint": "^9.39.4",
     "react": "^19.0.0",
-    "react-intl": "^8.0.6",
-    "typescript": "^5.9.3"
+    "react-intl": "^10.1.2",
+    "typescript": "^6.0.2"
   },
   "exports": {
     "./*": "./*.ts",
@@ -27,7 +28,7 @@
   "peerDependencies": {
     "react": "^19.0.0",
     "react-hook-form": "^7.54.2",
-    "react-intl": "^8.0.6"
+    "react-intl": "^10.1.2"
   },
   "scripts": {
     "check": "tsc --project tsconfig.json --noEmit",

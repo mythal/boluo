@@ -115,7 +115,7 @@ export const request = async <T>(
       context: null,
     });
   }
-  let resultJson: unknown = null;
+  let resultJson: unknown;
   try {
     resultJson = await result.json();
   } catch (e) {

@@ -200,15 +200,10 @@ const modifyModifier = (
   command: string,
 ): ComposeState => {
   const { source } = state;
-  let nextSource = source;
-  if (!modifier) {
-    const startsWithSpace = source.startsWith(' ');
-    nextSource = (startsWithSpace ? command : `${command} `) + source;
-  } else {
-    const before = source.substring(0, modifier.start);
-    const after = source.substring(modifier.start + modifier.len);
-    nextSource = command + (before + after).trimStart();
-  }
+  const nextSource = !modifier
+    ? (source.startsWith(' ') ? command : `${command} `) + source
+    : command +
+      (source.substring(0, modifier.start) + source.substring(modifier.start + modifier.len)).trimStart();
   return { ...state, source: nextSource, range: [nextSource.length, nextSource.length] };
 };
 
@@ -263,15 +258,11 @@ const toggleModifier = (
   command: string,
 ): ComposeState => {
   const { source } = state;
-  let nextSource = source;
-  if (!modifier) {
-    const startsWithSpace = source.startsWith(' ');
-    nextSource = (startsWithSpace ? command : `${command} `) + source;
-  } else {
-    const before = source.substring(0, modifier.start);
-    const after = source.substring(modifier.start + modifier.len);
-    nextSource = (before + after).trimStart();
-  }
+  const nextSource = !modifier
+    ? (source.startsWith(' ') ? command : `${command} `) + source
+    : (
+        source.substring(0, modifier.start) + source.substring(modifier.start + modifier.len)
+      ).trimStart();
   return { ...state, source: nextSource, range: [nextSource.length, nextSource.length] };
 };
 

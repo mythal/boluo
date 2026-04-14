@@ -82,9 +82,7 @@ export const MessageMedia = memo<Props>(({ media, className, children = null }: 
     console.error('MEDIA_URL is not set.');
     src = '';
   }
-  let content = null;
   const isLoading = loadState === 'LOADING' || isLoadingAppSettings;
-  let isError = false;
   const handlePreview = useCallback(
     (event: ReactMouseEvent<HTMLButtonElement>) => {
       event.preventDefault();
@@ -100,13 +98,12 @@ export const MessageMedia = memo<Props>(({ media, className, children = null }: 
   ) {
     return <Attachment name={media.name} size={media.size} className={className} />;
   }
-  if (isLoadingAppSettings) {
-    content = <Loading />;
-  } else if (loadState === 'ERROR' || src === '') {
-    isError = !isLoading;
-    content = <LoadError onClick={() => setLoadState('LOADING')} />;
-  } else {
-    content = (
+  const isError = !isLoading && (loadState === 'ERROR' || src === '');
+  const content = isLoadingAppSettings ? (
+    <Loading />
+  ) : loadState === 'ERROR' || src === '' ? (
+    <LoadError onClick={() => setLoadState('LOADING')} />
+  ) : (
       <button
         type="button"
         className="block h-full w-fit cursor-zoom-in overflow-hidden"
@@ -121,8 +118,7 @@ export const MessageMedia = memo<Props>(({ media, className, children = null }: 
           onLoad={() => setLoadState('LOADED')}
         />
       </button>
-    );
-  }
+  );
   return (
     <div className={className}>
       <div

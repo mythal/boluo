@@ -25,7 +25,7 @@ export const makeMediaPublicUrl = (raw: unknown) => {
   try {
     new URL(url);
   } catch (e) {
-    throw new Error('The public media URL is not valid');
+    throw new Error('The public media URL is not valid', { cause: e });
   }
   return url;
 };

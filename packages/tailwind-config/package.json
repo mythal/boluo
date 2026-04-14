@@ -7,7 +7,10 @@
     "tailwindcss": "^4.1.14"
   },
   "exports": {
-    ".": "./tailwind.css",
+    ".": {
+      "types": "./tailwind.css.d.ts",
+      "default": "./tailwind.css"
+    },
     "./postcss": "./postcss.config.js"
   },
   "private": true,

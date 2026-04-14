@@ -1,4 +1,4 @@
-import { type FC, type ReactNode, useMemo } from 'react';
+import { type FC, useMemo } from 'react';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { selectAtom } from 'jotai/utils';
@@ -25,33 +25,27 @@ export const MediaLine: FC = () => {
   );
   if (!composeMedia) return null;
 
-  let content: ReactNode = null;
-  if (composeMedia instanceof File) {
-    const isTypeValid = supportedMediaType.includes(composeMedia.type);
-    const isSizeValid = composeMedia.size < mediaMaxSizeByte;
-    content = (
+  const content =
+    composeMedia instanceof File ? (
       <>
         <div
-          data-valid={isTypeValid}
+          data-valid={supportedMediaType.includes(composeMedia.type)}
           className="data-[valid=false]:text-state-danger-text truncate"
         >
           {composeMedia.name}
         </div>
         <div
-          data-valid={isSizeValid}
+          data-valid={composeMedia.size < mediaMaxSizeByte}
           className="text-text-secondary data-[valid=false]:text-state-danger-text shrink-0"
         >
           ({showFileSize(composeMedia.size)})
         </div>
       </>
-    );
-  } else {
-    content = (
+    ) : (
       <a href={mediaUrl(composeMedia)} target="_blank" className={classes.link} rel="noreferrer">
         <FormattedMessage defaultMessage="Link" />
       </a>
     );
-  }
 
   return (
     <div className="MediaLine flex gap-2 pb-1 pl-1 text-sm">

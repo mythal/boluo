@@ -6,7 +6,7 @@ const path = '/spaces/settings';
 type Key = readonly [typeof path, string];
 
 const updater: MutationFetcher<SpaceSettings, Key, SpaceSettings> = async (
-  [_, spaceId],
+  [, spaceId],
   { arg: settings },
 ) => {
   const result = await post('/spaces/update_settings', { id: spaceId }, settings);

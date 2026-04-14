@@ -3,7 +3,8 @@
   "compilerOptions": {
     "outDir": "./dist",
     "moduleResolution": "bundler",
-    "module": "Preserve"
+    "module": "Preserve",
+    "types": ["node"]
   },
   "include": ["**/*.ts", "**/*.tsx"],
   "exclude": ["dist", "build", "node_modules"]

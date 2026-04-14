@@ -16,7 +16,7 @@
   },
   "homepage": "https://github.com/mythal/boluo",
   "scripts": {
-    "generate": "svgr --config-file svgr.config.js -- icons"
+    "generate": "svgr --config-file svgr.config.js --silent -- icons"
   },
   "sideEffects": false
 }

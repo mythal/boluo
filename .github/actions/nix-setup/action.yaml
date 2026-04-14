@@ -15,7 +15,7 @@ runs:
       with:
         diagnostic-endpoint:
         extra-conf: |
-          sandbox = false
+          extra-sandbox-paths = /tmp/sccache?
 
 
     # https://github.com/cachix/cachix-action

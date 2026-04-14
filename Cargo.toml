@@ -9,6 +9,19 @@ panic = "abort"
 [profile.dev.package.sqlx-macros]
 opt-level = 3
 
+[workspace.dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+specta = { version = "2.0.0-rc.22", features = [
+  "chrono",
+  "derive",
+  "export",
+  "serde",
+  "serde_json",
+  "uuid",
+] }
+specta-typescript = "0.0.9"
+
 [patch.crates-io]
 specta-macros = { git = "https://github.com/specta-rs/specta.git", rev = "2d2b4d531214a3d130b4265ab259a6de77cf2e2c" }
 specta = { git = "https://github.com/specta-rs/specta.git", rev = "2d2b4d531214a3d130b4265ab259a6de77cf2e2c" }

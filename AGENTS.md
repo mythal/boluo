@@ -25,7 +25,6 @@ While multi-node support is planned, currently only single-node deployment is av
 - Database-related tests:
   - Use `sqlx::test`
   - Test function names must start with `db_test_`
-- When using Cargo commands that don’t require network requests, prefer using `SQLX_OFFLINE=true cargo --offline <command>` to avoid triggering sandbox restrictions. Otherwise, you should request permission from the user for network access.
 
 ---
 

@@ -17,6 +17,7 @@ path = "src/init.rs"
 
 [build-dependencies]
 dotenvy = "0.15"
+url = "2.5"
 
 [dependencies]
 anyhow = "1"

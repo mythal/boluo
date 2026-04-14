@@ -40,7 +40,7 @@ serde_urlencoded = "0.7"
 url = "2.5"
 thiserror = "2.0"
 tokio-stream = "0.1"
-tokio-tungstenite = "0.28"
+tokio-tungstenite = "0.29.0"
 sqlx = { version = "0.8.2", features = [
   "runtime-tokio",
   "tls-rustls",
@@ -68,23 +68,22 @@ specta-typescript = "0.0.9"
 shared-types = { version = "0.1.0", path = "../../packages/shared-types" }
 governor = "0.10.0"
 bc-mimalloc = { version = "0.1.48", features = ["v3"] }
-redis = { version = "0.32.2", features = [
+redis = { version = "1.2.0", features = [
   "streams",
   "ahash",
   "tokio-comp",
-  "tcp_nodelay",
   "connection-manager",
 ] }
 smallvec = "1.15.1"
-tokio-metrics = { version = "0.4.3", features = ["metrics-rs-integration"] }
-metrics-exporter-prometheus = "0.17.2"
+tokio-metrics = { version = "0.5.0", features = ["metrics-rs-integration"] }
+metrics-exporter-prometheus = "0.18.1"
 metrics = "0.24"
 netstat2 = "0.11.1"
 
 [dependencies.reqwest]
-version = "0.12"
+version = "0.13.2"
 default-features = false
-features = ["json", "rustls-tls"]
+features = ["json", "form"]
 
 [dependencies.hyper]
 version = "1.4.1"

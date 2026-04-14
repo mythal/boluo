@@ -743,7 +743,7 @@ impl ChannelPosManager {
     }
 
     fn tick(&self) {
-        let mut actors = self.actors.pin();
+        let actors = self.actors.pin();
         actors.retain(|_, sender| {
             if sender.is_closed() {
                 return false;

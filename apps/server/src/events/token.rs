@@ -57,7 +57,7 @@ impl TokenStore {
                     let Some(tokens) = tokens.upgrade() else {
                         break;
                     };
-                    let mut token_store = tokens.pin();
+                    let token_store = tokens.pin();
                     let now = Instant::now();
                     let before = token_store.len();
                     token_store

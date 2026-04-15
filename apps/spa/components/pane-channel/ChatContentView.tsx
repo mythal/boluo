@@ -233,15 +233,16 @@ const useScrollLock = (
   chatList: ChatItem[],
 ): RefObject<ScrollLockState> => {
   const scrollLockRef = useRef<ScrollLockState>({ end: true, id: null, modified: 0 });
-  const prevChatListLength = useRef(chatList.length);
+  const prevChatListRef = useRef(chatList);
 
   useEffect(() => {
-    if (chatList.length !== prevChatListLength.current) {
+    if (chatList !== prevChatListRef.current) {
       const virtuoso = virtuosoRef.current;
-      if (!virtuoso || !scrollLockRef.current.end) return;
-      virtuoso.scrollToIndex({ index: 'LAST' });
+      if (virtuoso && scrollLockRef.current.end) {
+        virtuoso.scrollToIndex({ index: 'LAST' });
+      }
+      prevChatListRef.current = chatList;
     }
-    prevChatListLength.current = chatList.length;
   });
   return scrollLockRef;
 };
@@ -301,13 +302,10 @@ export const ChatContentView: FC<Props> = ({ setIsScrolling, currentUserId }) =>
             // Update the bottom state
             for (const entry of entries) {
               if (entry.target.getAttribute('data-is-last') === 'true') {
-                if (entry.isIntersecting && entry.intersectionRatio > 0.7) {
-                  scrollLockRef.current.end = true;
-                  goBottomButtonOnBottomChange(true);
-                }
-                if (!entry.isIntersecting && entry.intersectionRatio < 0.1) {
-                  scrollLockRef.current.end = false;
-                  goBottomButtonOnBottomChange(false);
+                const atBottom = entry.intersectionRatio >= 0.5;
+                if (scrollLockRef.current.end !== atBottom) {
+                  scrollLockRef.current.end = atBottom;
+                  goBottomButtonOnBottomChange(atBottom);
                 }
               }
             }
@@ -332,7 +330,7 @@ export const ChatContentView: FC<Props> = ({ setIsScrolling, currentUserId }) =>
               }
             }, 30);
           },
-          { root: scroller, threshold: [0, 0.8] },
+          { root: scroller, threshold: [0, 0.25, 0.5, 0.75, 0.8, 1] },
         );
       }
       positionObserverRef.current.observe(node);

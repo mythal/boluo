@@ -407,7 +407,9 @@ impl ChannelMember {
         CACHE
             .invalidate(CacheType::ChannelMembers, new_member.user_id)
             .await;
-        Member::load_to_cache(space_id, channel_id);
+        if let Some(manager) = crate::events::context::store().get_manager(&space_id) {
+            manager.update_channel_member(new_member.clone()).await.ok();
+        }
         Ok(new_member)
     }
 
@@ -558,18 +560,17 @@ impl ChannelMember {
             return Err(sqlx::Error::RowNotFound);
         }
         let span = tracing::info_span!("remove_user_from_channel", %user_id, %channel_id);
-        tokio::spawn(
-            async move {
-                CACHE.invalidate(CacheType::ChannelMembers, user_id).await;
-                if let Some(manager) = crate::events::context::store().get_manager(&space_id) {
-                    manager
-                        .remove_member_from_channel(channel_id, user_id)
-                        .await
-                        .ok();
-                }
+        async move {
+            CACHE.invalidate(CacheType::ChannelMembers, user_id).await;
+            if let Some(manager) = crate::events::context::store().get_manager(&space_id) {
+                manager
+                    .remove_member_from_channel(channel_id, user_id)
+                    .await
+                    .ok();
             }
-            .instrument(span),
-        );
+        }
+        .instrument(span)
+        .await;
         Ok(())
     }
 
@@ -584,15 +585,14 @@ impl ChannelMember {
                 .await?;
 
         let span = tracing::info_span!("remove_user_by_space", %user_id, %space_id);
-        tokio::spawn(
-            async move {
-                CACHE.invalidate(CacheType::ChannelMembers, user_id).await;
-                if let Some(manager) = crate::events::context::store().get_manager(&space_id) {
-                    manager.remove_member(&user_id).await.ok();
-                }
+        async move {
+            CACHE.invalidate(CacheType::ChannelMembers, user_id).await;
+            if let Some(manager) = crate::events::context::store().get_manager(&space_id) {
+                manager.remove_member(&user_id).await.ok();
             }
-            .instrument(span),
-        );
+        }
+        .instrument(span)
+        .await;
         Ok(ids)
     }
 
@@ -626,15 +626,14 @@ impl ChannelMember {
         .await?;
         CACHE.invalidate(CacheType::ChannelMembers, user_id).await;
         if let Some(channel_member) = channel_member.clone() {
-            let span = tracing::info_span!("set_master", %user_id, %channel_id);
-            tokio::spawn(
-                async move {
-                    if let Some(manager) = crate::events::context::store().get_manager(&space_id) {
-                        manager.update_channel_member(channel_member).await.ok();
-                    }
+            let span = tracing::info_span!("edit_channel_member", %user_id, %channel_id);
+            async move {
+                if let Some(manager) = crate::events::context::store().get_manager(&space_id) {
+                    manager.update_channel_member(channel_member).await.ok();
                 }
-                .instrument(span),
-            );
+            }
+            .instrument(span)
+            .await;
         }
 
         Ok(channel_member)

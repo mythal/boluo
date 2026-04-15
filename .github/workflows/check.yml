@@ -47,6 +47,14 @@ jobs:
       - name: Check server
         run: nix build --print-build-logs ".#checks.x86_64-linux.server"
 
+      - name: Prepare sccache for caching
+        if: ${{ always() && github.ref != 'refs/heads/production' }}
+        run: |
+          if [ -d /tmp/sccache ]; then
+            sudo chown -R "$(id -u):$(id -g)" /tmp/sccache
+            chmod -R u+rwX,go+rX /tmp/sccache
+          fi
+
   nodejs:
     name: Node.js Checks
     runs-on: ubuntu-latest

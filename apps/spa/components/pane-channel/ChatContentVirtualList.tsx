@@ -192,7 +192,6 @@ export const ChatContentVirtualList: FC<Props> = (props) => {
       increaseViewportBy={{ top: 512, bottom: 128 }}
       overscan={{ main: 128, reverse: 512 }}
       itemContent={itemContent}
-      followOutput="auto"
       atBottomStateChange={handleBottomStateChange}
       firstItemIndex={firstItemIndex}
     />

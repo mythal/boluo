@@ -688,14 +688,13 @@ impl ChannelMember {
                 .invalidate(CacheType::ChannelMembers, channel_member.user_id)
                 .await;
             let span = tracing::info_span!("set_master", %user_id, %channel_id);
-            tokio::spawn(
-                async move {
-                    if let Some(manager) = crate::events::context::store().get_manager(&space_id) {
-                        manager.update_channel_member(channel_member).await.ok();
-                    }
+            async move {
+                if let Some(manager) = crate::events::context::store().get_manager(&space_id) {
+                    manager.update_channel_member(channel_member).await.ok();
                 }
-                .instrument(span),
-            );
+            }
+            .instrument(span)
+            .await;
         }
         Ok(channel_member)
     }

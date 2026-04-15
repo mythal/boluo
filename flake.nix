@@ -146,7 +146,14 @@
           # so we can reuse all of that work (e.g. via cachix) when running in CI
           # It is *highly* recommended to use something like cargo-hakari to avoid
           # cache misses when building individual top-level-crates
-          cargoArtifacts = craneLib.buildDepsOnly commonArgs;
+          cargoArtifacts = craneLib.buildDepsOnly (
+            commonArgs
+            // {
+              cargoTestCommand = "cargo nextest run";
+              cargoTestExtraArgs = "--no-run";
+              nativeBuildInputs = commonArgs.nativeBuildInputs ++ [ pkgs.cargo-nextest ];
+            }
+          );
         in
         {
           _module.args.pkgs = import inputs.nixpkgs {
@@ -165,7 +172,12 @@
 
                 inherit cargoArtifacts;
                 cargoExtraArgs = "--package=server";
-                nativeBuildInputs = commonArgs.nativeBuildInputs ++ [ pkgs.postgresql ];
+                cargoTestCommand = "cargo nextest run";
+                cargoTestExtraArgs = "--retries 2";
+                nativeBuildInputs = commonArgs.nativeBuildInputs ++ [
+                  pkgs.cargo-nextest
+                  pkgs.postgresql
+                ];
                 preBuild = ''
                   export PGDATA=$(mktemp -d)
                   initdb --no-locale --encoding=UTF8 --username=postgres

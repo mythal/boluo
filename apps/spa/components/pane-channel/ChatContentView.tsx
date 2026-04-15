@@ -279,13 +279,6 @@ export const ChatContentView: FC<Props> = ({ setIsScrolling, currentUserId }) =>
   const scrollerRef = useRef<HTMLDivElement | null>(null);
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const positionObserverRef = useRef<IntersectionObserver | null>(null);
-  const scrollLockRef = useScrollLock(
-    virtuosoRef,
-    scrollerRef,
-    wrapperRef,
-    renderRangeRef,
-    chatList,
-  );
 
   type UnregisterOberver = () => void;
 
@@ -299,16 +292,6 @@ export const ChatContentView: FC<Props> = ({ setIsScrolling, currentUserId }) =>
         }
         positionObserverRef.current = new IntersectionObserver(
           (entries) => {
-            // Update the bottom state
-            for (const entry of entries) {
-              if (entry.target.getAttribute('data-is-last') === 'true') {
-                const atBottom = entry.intersectionRatio >= 0.5;
-                if (scrollLockRef.current.end !== atBottom) {
-                  scrollLockRef.current.end = atBottom;
-                  goBottomButtonOnBottomChange(atBottom);
-                }
-              }
-            }
             // Update the read position record
             window.setTimeout(() => {
               let maxPos = Number.MIN_SAFE_INTEGER;
@@ -338,7 +321,7 @@ export const ChatContentView: FC<Props> = ({ setIsScrolling, currentUserId }) =>
         positionObserverRef.current?.unobserve(node);
       };
     },
-    [channelId, goBottomButtonOnBottomChange, scrollLockRef, store],
+    [channelId, store],
   );
 
   useEffect(() => {

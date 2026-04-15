@@ -10,6 +10,10 @@ on:
       - master
       - production
 
+concurrency:
+  group: check-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   DO_NOT_TRACK: 1
   TURBO_TELEMETRY_DISABLED: 1
@@ -20,49 +24,36 @@ jobs:
     name: Cargo Checks
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    container: node:20-bookworm
-    env:
-      CARGO_INCREMENTAL: 0
-
-    services:
-      postgres:
-        image: postgres:18-trixie
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: boluo_test
-        # Set health checks to wait until postgres has started
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
     steps:
       - uses: actions/checkout@v5
 
-      # https://github.com/actions-rust-lang/setup-rust-toolchain
-      - name: Setup Rust toolchain
-        uses: actions-rust-lang/setup-rust-toolchain@2fcdc490d667999e01ddbbf0f2823181beef6b39
+      - name: Nix Setup
+        uses: ./.github/actions/nix-setup
         with:
-          cache: ${{ github.ref != 'refs/heads/production' }}
-          components: clippy, rustfmt
+          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
 
-      # https://github.com/marketplace/actions/install-development-tools
-      - name: Install cargo-nextest
-        uses: taiki-e/install-action@nextest
+      - name: Create sccache directory
+        run: mkdir -p /tmp/sccache && chmod 777 /tmp/sccache
 
-      - name: Init database
-        run: cargo run --package server --bin init
-        env:
-          DATABASE_URL: postgres://postgres:postgres@postgres/boluo_test
+      - name: Cache sccache
+        if: github.ref != 'refs/heads/production'
+        uses: actions/cache@v5
+        with:
+          path: /tmp/sccache
+          key: ${{ runner.os }}-sccache-${{ github.run_id }}
+          restore-keys: |
+            ${{ runner.os }}-sccache-
 
-      - name: Check
-        run: cargo clippy --locked
+      - name: Check server
+        run: nix build --print-build-logs ".#checks.x86_64-linux.server"
 
-      - name: Run tests
-        run: cargo nextest run --retries 2
-        env:
-          DATABASE_URL: postgres://postgres:postgres@postgres/boluo_test
+      - name: Prepare sccache for caching
+        if: ${{ always() && github.ref != 'refs/heads/production' }}
+        run: |
+          if [ -d /tmp/sccache ]; then
+            sudo chown -R "$(id -u):$(id -g)" /tmp/sccache
+            chmod -R u+rwX,go+rX /tmp/sccache
+          fi
 
   nodejs:
     name: Node.js Checks
@@ -73,7 +64,7 @@ jobs:
 
       - name: Cache turbo build setup
         if: github.ref != 'refs/heads/production'
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: .turbo
           key: ${{ runner.os }}-turbo-${{ github.sha }}
@@ -90,7 +81,7 @@ jobs:
         run: npm ci
 
       - name: Run build
-        run: npm run build
+        run: npm run build:deploy
 
       - name: Run tests
         run: npm run test

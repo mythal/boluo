@@ -6,7 +6,7 @@ import { identity } from '@boluo/utils/function';
 const path = '/messages/query';
 type Key = readonly [typeof path, string];
 
-const updater: MutationFetcher<Message | null, Key> = async ([_, messageId]) => {
+const updater: MutationFetcher<Message | null, Key> = async ([, messageId]) => {
   const result = await post('/messages/toggle_fold', { id: messageId }, {});
   if (result.isErr && result.err.code === 'NOT_FOUND') {
     return null;

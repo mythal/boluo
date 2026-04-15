@@ -24,19 +24,12 @@
     "jsx": "react-jsx",
     "jsxImportSource": "@emotion/react",
 
-    /* Path mapping */
-    "baseUrl": "./src",
-    "paths": {
-      "@/*": ["./src/*"]
-    },
-
     /* Other */
     "allowJs": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
     "sourceMap": true,
-    "downlevelIteration": true,
     "types": ["node", "@emotion/react/types/css-prop", "vite/client"]
   },
   "include": ["src"],

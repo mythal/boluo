@@ -8,9 +8,9 @@
   },
   "devDependencies": {
     "@boluo/eslint-config": "0.0.0",
-    "eslint": "^9.23.0",
+    "eslint": "^9.39.4",
     "jotai": "^2.12.2",
-    "typescript": "^5.9.3"
+    "typescript": "^6.0.2"
   },
   "exports": {
     ".": "./src/index.ts",

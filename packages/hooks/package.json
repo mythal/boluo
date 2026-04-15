@@ -16,14 +16,14 @@
     "@types/node": "^24.0.12",
     "@types/react": "^19.0.12",
     "@types/react-dom": "^19.0.4",
-    "eslint": "^9.23.0",
+    "eslint": "^9.39.4",
     "jotai": "^2.12.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-intl": "^8.0.6",
+    "react-intl": "^10.1.2",
     "swr": "^2.3.3",
     "ts-node": "^10.9.2",
-    "typescript": "^5.9.3"
+    "typescript": "^6.0.2"
   },
   "exports": {
     "./*": "./*.tsx"
@@ -34,7 +34,7 @@
     "jotai": "^2.12.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-intl": "^8.0.6",
+    "react-intl": "^10.1.2",
     "swr": "^2.3.3"
   },
   "scripts": {

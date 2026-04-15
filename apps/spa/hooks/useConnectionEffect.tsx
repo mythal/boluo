@@ -139,7 +139,7 @@ const connect = async (
       return;
     }
 
-    let update: unknown = null;
+    let update: unknown;
     try {
       update = JSON.parse(raw);
     } catch {

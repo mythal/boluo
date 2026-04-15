@@ -10,8 +10,8 @@
     "@boluo/types": "0.0.0",
     "@boluo/typescript-config": "0.0.0",
     "@formatjs/intl": "^4.0.4",
-    "eslint": "^9.23.0",
-    "typescript": "^5.9.3"
+    "eslint": "^9.39.4",
+    "typescript": "^6.0.2"
   },
   "exports": {
     ".": "./src/index.ts",

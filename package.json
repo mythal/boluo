@@ -3,23 +3,25 @@
   "devDependencies": {
     "prettier": "^3.5.3",
     "prettier-plugin-tailwindcss": "^0.7.1",
-    "turbo": "^2.5.0"
+    "turbo": "^2.5.0",
+    "typescript": "^6.0.2"
   },
   "engines": {
     "node": ">=18"
   },
   "optionalDependencies": {
-    "syncpack": "^13.0.3"
+    "syncpack": "^14.3.0"
   },
   "packageManager": "npm@10.9.2",
   "private": true,
   "scripts": {
     "build": "turbo run build",
+    "build:deploy": "turbo build --filter=legacy --filter=site --filter=spa",
     "build:legacy": "turbo build --filter=legacy",
     "build:site": "turbo build --filter=site",
     "build:spa": "turbo build --filter=spa",
     "build:storybook": "turbo build --filter=boluo-storybook",
-    "check": "turbo run check --ui=stream --log-prefix=none --continue=always",
+    "check": "turbo run check --ui=stream --log-prefix=none --output-logs=new-only --continue=always",
     "dev": "turbo run dev",
     "dev:legacy": "turbo run dev --filter=legacy",
     "dev:site": "turbo run dev --filter=site",
@@ -28,10 +30,9 @@
     "format": "prettier --write '{**/*.{ts,tsx,js,jsx,mjs,cjs,css,md},src/**/*.json}' '!**/next-env.d.ts'",
     "format:versions": "syncpack format",
     "generate": "turbo run generate",
-    "lint": "turbo run lint --ui=stream --log-prefix=none --continue=always",
+    "lint": "turbo run lint --ui=stream --log-prefix=none --output-logs=new-only --continue=always",
     "lint:fix": "turbo run lint -- --fix",
     "lint:versions": "syncpack lint",
-    "preview:site": "turbo run preview --filter=site",
     "storybook": "turbo storybook",
     "test": "turbo run test"
   },

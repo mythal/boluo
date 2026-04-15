@@ -1,7 +1,6 @@
 {
   "extends": "@boluo/typescript-config/base.json",
   "compilerOptions": {
-    "baseUrl": ".",
     "lib": ["ESNext", "DOM"],
     "outDir": "dist/",
     "module": "Preserve",

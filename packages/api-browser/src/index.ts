@@ -5,6 +5,7 @@ import type { Result } from '@boluo/utils/result';
 import { isCrossOrigin } from '@boluo/utils/browser';
 import { type ApiError } from '@boluo/api/errors';
 import type { LoginReturn, Media, User } from '@boluo/types/bindings';
+import type { StringKeyOf } from '@boluo/types';
 import { originMap } from '@boluo/api/origin-map';
 
 export const backendUrlAtom = atom('');
@@ -68,7 +69,7 @@ export function setToken(token: unknown): void {
   localStorage.setItem(TOKEN_KEY, token);
 }
 
-export function get<P extends keyof Get>(
+export function get<P extends StringKeyOf<Get>>(
   path: P,
   query: Get[P]['query'],
   apiUrl?: string,
@@ -84,7 +85,7 @@ const headers = new Headers({
   'Content-Type': 'application/json',
 });
 
-export async function post<P extends keyof Post>(
+export async function post<P extends StringKeyOf<Post>>(
   path: P,
   query: Post[P]['query'],
   payload: Post[P]['payload'],
@@ -113,7 +114,7 @@ export async function login(
   return result;
 }
 
-export function patch<P extends keyof Patch>(
+export function patch<P extends StringKeyOf<Patch>>(
   path: P,
   query: Patch[P]['query'],
   payload: Patch[P]['payload'],

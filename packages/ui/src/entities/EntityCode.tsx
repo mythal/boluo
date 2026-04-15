@@ -57,7 +57,9 @@ export const EntityCode: FC<Props> = ({
         )}
         role="button"
         title={title}
-        onClick={void onCopy}
+        onClick={() => {
+          void onCopy();
+        }}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();

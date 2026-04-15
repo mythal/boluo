@@ -5,7 +5,7 @@ import { type ApiError } from '@boluo/api';
 const path = '/messages/query';
 type Key = readonly [typeof path, string];
 
-const updater: MutationFetcher<string, Key> = async ([_, messageId]) => {
+const updater: MutationFetcher<string, Key> = async ([, messageId]) => {
   const result = await post('/messages/delete', { id: messageId }, {});
   if (result.isErr && result.err.code === 'NOT_FOUND') {
     return messageId;

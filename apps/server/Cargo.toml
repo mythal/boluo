@@ -17,11 +17,11 @@ path = "src/init.rs"
 
 [build-dependencies]
 dotenvy = "0.15"
+sqlx-postgres = "0.8.2"
 
 [dependencies]
 anyhow = "1"
-aws-credential-types = "1"
-aws-sdk-s3 = "1.17.0"
+rusty-s3 = { version = "0.9", default-features = false }
 base64 = "0.22"
 bytes = "1"
 chrono = { version = "0.4", features = ["serde"] }
@@ -35,12 +35,12 @@ tracing = { version = "0.1", features = ["attributes"] }
 percent-encoding = "2.2.0"
 regex = "1"
 ring = "0.17"
-serde_json = "1.0"
+serde_json.workspace = true
 serde_urlencoded = "0.7"
 url = "2.5"
 thiserror = "2.0"
 tokio-stream = "0.1"
-tokio-tungstenite = "0.28"
+tokio-tungstenite = "0.29.0"
 sqlx = { version = "0.8.2", features = [
   "runtime-tokio",
   "tls-rustls",
@@ -56,43 +56,34 @@ quick_cache = "0.6.9"
 papaya = "0.2.1"
 ahash = "0.8.11"
 parking_lot = "0.12.3"
-specta = { version = "2.0.0-rc.22", features = [
-  "chrono",
-  "derive",
-  "export",
-  "serde",
-  "serde_json",
-  "uuid",
-] }
-specta-typescript = "0.0.9"
+specta.workspace = true
+specta-typescript.workspace = true
 shared-types = { version = "0.1.0", path = "../../packages/shared-types" }
 governor = "0.10.0"
-mimalloc = "0.1.46"
-redis = { version = "0.32.2", features = [
+bc-mimalloc = { version = "0.1.48", features = ["v3"] }
+redis = { version = "1.2.0", features = [
   "streams",
   "ahash",
   "tokio-comp",
-  "tcp_nodelay",
   "connection-manager",
 ] }
 smallvec = "1.15.1"
-tokio-metrics = { version = "0.4.3", features = ["metrics-rs-integration"] }
-metrics-exporter-prometheus = "0.17.2"
+tokio-metrics = { version = "0.5.0", features = ["metrics-rs-integration"] }
+metrics-exporter-prometheus = "0.18.1"
 metrics = "0.24"
 netstat2 = "0.11.1"
 
 [dependencies.reqwest]
-version = "0.12"
+version = "0.13.2"
 default-features = false
-features = ["json", "rustls-tls"]
+features = ["json", "form", "rustls"]
 
 [dependencies.hyper]
 version = "1.4.1"
 features = ["full"]
 
 [dependencies.serde]
-version = "1.0"
-features = ["derive", "rc"]
+workspace = true
 
 [dependencies.uuid]
 version = "1"

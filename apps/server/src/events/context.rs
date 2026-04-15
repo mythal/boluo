@@ -2,7 +2,7 @@ use crate::channels::ChannelMember;
 use crate::channels::models::Member;
 use crate::events::models::UserStatus;
 use crate::events::status::StatusAction;
-use crate::events::types::{ChannelUserId, UpdateBody, UpdateLifetime};
+use crate::events::types::{ChannelUserId, Seq, UpdateBody, UpdateLifetime};
 use crate::events::{StatusMap, Update};
 use crate::spaces::SpaceMember;
 use crate::utils::timestamp;
@@ -42,7 +42,12 @@ impl EncodedUpdate {
 }
 
 pub enum Action {
-    Query(tokio::sync::oneshot::Sender<CachedUpdates>),
+    Query {
+        after: Option<i64>,
+        seq: Option<Seq>,
+        node: Option<u16>,
+        respond_to: tokio::sync::oneshot::Sender<CachedUpdates>,
+    },
     Update {
         body: UpdateBody,
         live: UpdateLifetime,
@@ -256,9 +261,17 @@ impl MailboxManager {
 
     pub async fn query_encoded_updates(
         &self,
+        after: Option<i64>,
+        seq: Option<Seq>,
+        node: Option<u16>,
     ) -> Result<tokio::sync::oneshot::Receiver<CachedUpdates>, MailboxManageError> {
         let (tx, rx) = tokio::sync::oneshot::channel();
-        let action = Action::Query(tx);
+        let action = Action::Query {
+            after,
+            seq,
+            node,
+            respond_to: tx,
+        };
         self.send_read_action(action).await?;
         Ok(rx)
     }
@@ -310,7 +323,7 @@ impl MailboxManager {
 }
 
 pub struct CachedUpdates {
-    pub updates: BTreeMap<EventId, Utf8Bytes>,
+    pub updates: Vec<Utf8Bytes>,
     pub start_at: i64,
 }
 
@@ -557,6 +570,55 @@ fn cleanup(
     });
 }
 
+fn should_include_update(
+    event_id: EventId,
+    after: Option<i64>,
+    seq: Option<Seq>,
+    node: u16,
+) -> bool {
+    use std::cmp::Ordering::*;
+
+    let after = after.unwrap_or(i64::MIN);
+    match event_id.timestamp.cmp(&after) {
+        Less => false,
+        Equal if node == event_id.node => seq.is_none_or(|seq| event_id.seq > seq),
+        _ => true,
+    }
+}
+
+fn collect_cached_updates(
+    updates: &BTreeMap<EventId, EncodedUpdate>,
+    preview_map: &PreviewMap,
+    diff_map: &DiffMap,
+    after: Option<i64>,
+    seq: Option<Seq>,
+    node: Option<u16>,
+) -> Vec<Utf8Bytes> {
+    let node = node.unwrap_or(0);
+    let mut response_updates: Vec<(EventId, Utf8Bytes)> =
+        Vec::with_capacity(updates.len() + preview_map.len() + diff_map.len());
+    response_updates.extend(
+        updates
+            .iter()
+            .filter(|&(event_id, _update)| should_include_update(*event_id, after, seq, node))
+            .map(|(event_id, update)| (*event_id, update.encoded.clone())),
+    );
+    response_updates.extend(preview_map.values().filter_map(|preview| {
+        let event_id = preview.update.id;
+        should_include_update(event_id, after, seq, node)
+            .then(|| (event_id, preview.encoded.clone()))
+    }));
+    response_updates.extend(diff_map.values().filter_map(|diff| {
+        let event_id = diff.update.id;
+        should_include_update(event_id, after, seq, node).then(|| (event_id, diff.encoded.clone()))
+    }));
+    response_updates.sort_unstable_by_key(|(event_id, _)| *event_id);
+    response_updates
+        .into_iter()
+        .map(|(_, encoded)| encoded)
+        .collect()
+}
+
 impl MailBoxState {
     pub fn new(id: Uuid) -> Self {
         let (tx, mut rx) = tokio::sync::mpsc::channel::<Action>(1024);
@@ -589,15 +651,16 @@ impl MailBoxState {
                         }
                         let start = std::time::Instant::now();
                         match action {
-                            Action::Query(sender) => {
-                                let mut response_updates: BTreeMap<EventId, Utf8Bytes> = updates.iter().map(|(event_id, value)| (*event_id, value.encoded.clone())).collect();
-                                for preview in preview_map.values() {
-                                    response_updates.insert(preview.update.id, preview.encoded.clone());
-                                }
-                                for diff in diff_map.values() {
-                                    response_updates.insert(diff.update.id, diff.encoded.clone());
-                                }
-                                sender.send(CachedUpdates {
+                            Action::Query { after, seq, node, respond_to } => {
+                                let response_updates = collect_cached_updates(
+                                    &updates,
+                                    &preview_map,
+                                    &diff_map,
+                                    after,
+                                    seq,
+                                    node,
+                                );
+                                respond_to.send(CachedUpdates {
                                     updates: response_updates,
                                     start_at,
                                 }).ok();
@@ -739,4 +802,83 @@ pub fn store() -> &'static Store {
 
 pub fn mailbox_count() -> usize {
     store().mailbox_count()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn event_id(timestamp: i64, node: u16, seq: Seq) -> EventId {
+        EventId {
+            timestamp,
+            node,
+            seq,
+        }
+    }
+
+    fn encoded_update(id: EventId) -> EncodedUpdate {
+        EncodedUpdate::new(Update {
+            mailbox: Uuid::nil(),
+            id,
+            body: UpdateBody::Initialized,
+            live: UpdateLifetime::Persistent,
+        })
+    }
+
+    #[test]
+    fn cached_update_filter_matches_cursor_semantics() {
+        let after = Some(10);
+        let node = 1;
+        let seq = Some(20);
+
+        assert!(!should_include_update(event_id(9, 1, 99), after, seq, node));
+        assert!(!should_include_update(
+            event_id(10, 1, 20),
+            after,
+            seq,
+            node
+        ));
+        assert!(should_include_update(event_id(10, 1, 21), after, seq, node));
+        assert!(should_include_update(event_id(10, 0, 1), after, seq, node));
+        assert!(should_include_update(event_id(11, 1, 0), after, seq, node));
+    }
+
+    #[test]
+    fn collect_cached_updates_sorts_and_filters_all_sources() {
+        let older = event_id(9, 1, 99);
+        let from_updates = event_id(10, 1, 21);
+        let from_preview = event_id(10, 0, 1);
+        let from_diff = event_id(11, 1, 0);
+
+        let older_update = encoded_update(older);
+        let update = encoded_update(from_updates);
+        let preview = encoded_update(from_preview);
+        let diff = encoded_update(from_diff);
+
+        let expected = vec![
+            preview.encoded.clone(),
+            update.encoded.clone(),
+            diff.encoded.clone(),
+        ];
+
+        let mut updates = BTreeMap::new();
+        updates.insert(older, older_update);
+        updates.insert(from_updates, update);
+
+        let mut preview_map = PreviewMap::with_hasher(ahash::RandomState::new());
+        preview_map.insert(ChannelUserId::new(Uuid::nil(), Uuid::nil()), preview);
+
+        let mut diff_map = DiffMap::with_hasher(ahash::RandomState::new());
+        diff_map.insert(ChannelUserId::new(Uuid::nil(), Uuid::from_u128(1)), diff);
+
+        let actual = collect_cached_updates(
+            &updates,
+            &preview_map,
+            &diff_map,
+            Some(10),
+            Some(20),
+            Some(1),
+        );
+        assert_eq!(actual, expected);
+    }
 }

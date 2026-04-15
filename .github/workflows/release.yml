@@ -22,12 +22,31 @@ jobs:
         with:
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
 
+      - name: Create sccache directory
+        run: mkdir -p /tmp/sccache && chmod 777 /tmp/sccache
+
+      - name: Cache sccache
+        uses: actions/cache@v4
+        with:
+          path: /tmp/sccache
+          key: ${{ runner.os }}-sccache-${{ github.run_id }}
+          restore-keys: |
+            ${{ runner.os }}-sccache-
+
       - name: Push images
         run: nix run --print-build-logs ".#push-images"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_ACTOR: ${{ github.actor }}
           BRANCH_NAME: ${{ github.ref_name }}
+
+      - name: Prepare sccache for caching
+        if: ${{ always() }}
+        run: |
+          if [ -d /tmp/sccache ]; then
+            sudo chown -R "$(id -u):$(id -g)" /tmp/sccache
+            chmod -R u+rwX,go+rX /tmp/sccache
+          fi
 
   staging:
     runs-on: ubuntu-latest

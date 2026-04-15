@@ -4,9 +4,9 @@
     "rootDir": "src",
     "outDir": "dist",
     "module": "Preserve",
-    "moduleResolution": "bundler"
+    "moduleResolution": "bundler",
+    "types": ["node"]
   },
   "include": ["src/**/*.ts"],
   "exclude": ["dist", "node_modules"]
 }
-

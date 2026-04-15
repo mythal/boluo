@@ -142,7 +142,7 @@ const useDndHandles = (channelId: string, chatList: ChatItem[]): UseDragHandlesR
       }
       const timestamp = Date.now();
       const item: MessageItem = { ...draggingMessage, optimistic: true };
-      let range: [[number, number] | null, [number, number] | null] | null = null;
+      let range: [[number, number] | null, [number, number] | null];
       if (sourceIndex < targetIndex) {
         range = [[targetItem.posP, targetItem.posQ], null];
         const targetNext = chatList[targetIndex + 1];
@@ -191,23 +191,21 @@ const useDndHandles = (channelId: string, chatList: ChatItem[]): UseDragHandlesR
           payload: { ref: draggingMessage, item: { optimisticPos, timestamp, item } },
         });
       }
-      if (range) {
-        const result = await Promise.race([
-          post('/messages/move_between', null, {
-            channelId,
-            messageId: draggingMessage.id,
-            expectPos: [draggingMessage.posP, draggingMessage.posQ],
-            range,
-          }),
-          timeout(8000),
-        ]);
-        dispatch({ type: 'removeOptimisticMessage', payload: { id: draggingMessage.id } });
-        if (result === 'TIMEOUT' || result.isErr) {
-          dispatch({
-            type: 'fail',
-            payload: { failTo: { type: 'MOVE' }, key: draggingMessage.id },
-          });
-        }
+      const result = await Promise.race([
+        post('/messages/move_between', null, {
+          channelId,
+          messageId: draggingMessage.id,
+          expectPos: [draggingMessage.posP, draggingMessage.posQ],
+          range,
+        }),
+        timeout(8000),
+      ]);
+      dispatch({ type: 'removeOptimisticMessage', payload: { id: draggingMessage.id } });
+      if (result === 'TIMEOUT' || result.isErr) {
+        dispatch({
+          type: 'fail',
+          payload: { failTo: { type: 'MOVE' }, key: draggingMessage.id },
+        });
       }
     },
     [resetDragging, setBanner, dispatch, channelId],
@@ -235,15 +233,16 @@ const useScrollLock = (
   chatList: ChatItem[],
 ): RefObject<ScrollLockState> => {
   const scrollLockRef = useRef<ScrollLockState>({ end: true, id: null, modified: 0 });
-  const prevChatListLength = useRef(chatList.length);
+  const prevChatListRef = useRef(chatList);
 
   useEffect(() => {
-    if (chatList.length !== prevChatListLength.current) {
+    if (chatList !== prevChatListRef.current) {
       const virtuoso = virtuosoRef.current;
-      if (!virtuoso || !scrollLockRef.current.end) return;
-      virtuoso.scrollToIndex({ index: 'LAST' });
+      if (virtuoso && scrollLockRef.current.end) {
+        virtuoso.scrollToIndex({ index: 'LAST' });
+      }
+      prevChatListRef.current = chatList;
     }
-    prevChatListLength.current = chatList.length;
   });
   return scrollLockRef;
 };
@@ -280,13 +279,6 @@ export const ChatContentView: FC<Props> = ({ setIsScrolling, currentUserId }) =>
   const scrollerRef = useRef<HTMLDivElement | null>(null);
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const positionObserverRef = useRef<IntersectionObserver | null>(null);
-  const scrollLockRef = useScrollLock(
-    virtuosoRef,
-    scrollerRef,
-    wrapperRef,
-    renderRangeRef,
-    chatList,
-  );
 
   type UnregisterOberver = () => void;
 
@@ -300,19 +292,6 @@ export const ChatContentView: FC<Props> = ({ setIsScrolling, currentUserId }) =>
         }
         positionObserverRef.current = new IntersectionObserver(
           (entries) => {
-            // Update the bottom state
-            for (const entry of entries) {
-              if (entry.target.getAttribute('data-is-last') === 'true') {
-                if (entry.isIntersecting && entry.intersectionRatio > 0.7) {
-                  scrollLockRef.current.end = true;
-                  goBottomButtonOnBottomChange(true);
-                }
-                if (!entry.isIntersecting && entry.intersectionRatio < 0.1) {
-                  scrollLockRef.current.end = false;
-                  goBottomButtonOnBottomChange(false);
-                }
-              }
-            }
             // Update the read position record
             window.setTimeout(() => {
               let maxPos = Number.MIN_SAFE_INTEGER;
@@ -334,7 +313,7 @@ export const ChatContentView: FC<Props> = ({ setIsScrolling, currentUserId }) =>
               }
             }, 30);
           },
-          { root: scroller, threshold: [0, 0.8] },
+          { root: scroller, threshold: [0, 0.25, 0.5, 0.75, 0.8, 1] },
         );
       }
       positionObserverRef.current.observe(node);
@@ -342,7 +321,7 @@ export const ChatContentView: FC<Props> = ({ setIsScrolling, currentUserId }) =>
         positionObserverRef.current?.unobserve(node);
       };
     },
-    [channelId, goBottomButtonOnBottomChange, scrollLockRef, store],
+    [channelId, store],
   );
 
   useEffect(() => {

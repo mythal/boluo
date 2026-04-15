@@ -47,42 +47,34 @@
         let
           inherit (pkgs) lib stdenv;
           version = "0.0.0";
-          npmApps = [
-            "legacy"
-            "spa"
-            "site"
-          ];
           unfilteredRoot = ./.;
           rev = if (self ? rev) then self.rev else lib.warn "Dirty workspace" "unknown";
-          pruneSource =
-            name:
-            pkgs.stdenvNoCC.mkDerivation {
-              name = "boluo-${name}-source";
-              src = lib.cleanSource unfilteredRoot;
-              __contentAddressed = true;
 
-              outputHashMode = "recursive";
-              outputHashAlgo = "sha256";
-
-              TURBO_TELEMETRY_DISABLED = 1;
-              installPhase = ''
-                ${pkgs.turbo}/bin/turbo prune ${name}
-                mkdir -p $out
-                cp -r out/* $out
-              '';
+          npmWorkspaceSource =
+            let
+              inherit (lib.fileset) unions toSource maybeMissing;
+            in
+            toSource {
+              root = unfilteredRoot;
+              fileset = unions [
+                (maybeMissing (unfilteredRoot + "/package.json"))
+                (maybeMissing (unfilteredRoot + "/package-lock.json"))
+                (maybeMissing (unfilteredRoot + "/turbo.json"))
+                (unfilteredRoot + "/packages")
+                (unfilteredRoot + "/apps/interpreter-cli")
+                (unfilteredRoot + "/apps/legacy")
+                (unfilteredRoot + "/apps/site")
+                (unfilteredRoot + "/apps/spa")
+                (unfilteredRoot + "/apps/storybook")
+              ];
             };
 
-          common = {
-            inherit pkgs;
+          npmDeps = pkgs.importNpmLock {
+            pname = "boluo-npm-deps";
+            npmRoot = npmWorkspaceSource;
+            package = lib.importJSON ./package.json;
+            packageLock = lib.importJSON ./package-lock.json;
             inherit version;
-            inherit pruneSource;
-            mkNpmDeps =
-              src:
-              pkgs.importNpmLock {
-                pname = "${src.name}-deps";
-                npmRoot = src;
-                version = version;
-              };
           };
 
           rustToolchain = pkgs.rust-bin.selectLatestNightlyWith (
@@ -145,13 +137,23 @@
             strictDeps = true;
 
             buildInputs = [ ];
+            nativeBuildInputs = [ pkgs.sccache ];
+            RUSTC_WRAPPER = "${pkgs.sccache}/bin/sccache";
+            SCCACHE_DIR = "/tmp/sccache";
           };
 
           # Build *just* the cargo dependencies (of the entire workspace),
           # so we can reuse all of that work (e.g. via cachix) when running in CI
           # It is *highly* recommended to use something like cargo-hakari to avoid
           # cache misses when building individual top-level-crates
-          cargoArtifacts = craneLib.buildDepsOnly commonArgs;
+          cargoArtifacts = craneLib.buildDepsOnly (
+            commonArgs
+            // {
+              cargoTestCommand = "cargo nextest run";
+              cargoTestExtraArgs = "--no-run";
+              nativeBuildInputs = commonArgs.nativeBuildInputs ++ [ pkgs.cargo-nextest ];
+            }
+          );
         in
         {
           _module.args.pkgs = import inputs.nixpkgs {
@@ -170,7 +172,23 @@
 
                 inherit cargoArtifacts;
                 cargoExtraArgs = "--package=server";
-                cargoTestExtraArgs = "-- --skip db_test_";
+                cargoTestCommand = "cargo nextest run";
+                cargoTestExtraArgs = "--retries 2";
+                nativeBuildInputs = commonArgs.nativeBuildInputs ++ [
+                  pkgs.cargo-nextest
+                  pkgs.postgresql
+                ];
+                preBuild = ''
+                  export PGDATA=$(mktemp -d)
+                  initdb --no-locale --encoding=UTF8 --username=postgres
+                  pg_ctl start -o "-k $PGDATA -h '''"
+                  createdb -h "$PGDATA" -U postgres boluo_test
+                  psql -h "$PGDATA" -U postgres -d boluo_test -v ON_ERROR_STOP=1 -f ${./apps/db/schema.sql}
+                  export DATABASE_URL="postgresql:///boluo_test?host=$PGDATA&user=postgres"
+                '';
+                postInstall = ''
+                  pg_ctl stop -D "$PGDATA"
+                '';
               }
             );
 
@@ -214,23 +232,30 @@
               };
             };
 
-            legacy =
-              let
-                src = pruneSource "legacy";
-              in
-              pkgs.buildNpmPackage {
-                pname = "boluo-legacy";
+            # Build all frontend apps in a single derivation
+            frontendBuild = pkgs.buildNpmPackage {
+              pname = "boluo-frontend";
+              src = npmWorkspaceSource;
+              inherit version npmDeps;
+              npmConfigHook = pkgs.importNpmLock.npmConfigHook;
+              TURBO_TELEMETRY_DISABLED = 1;
+              NEXT_TELEMETRY_DISABLED = 1;
+              npmBuildScript = "build:deploy";
+              installPhase = ''
+                mkdir -p $out/{legacy,spa,site}
 
-                inherit src version;
+                cp -r apps/legacy/dist/* $out/legacy/
 
-                npmDeps = common.mkNpmDeps src;
-                npmConfigHook = pkgs.importNpmLock.npmConfigHook;
+                cp -r apps/spa/out/* $out/spa/
 
-                installPhase = ''
-                  mkdir $out
-                  cp -r apps/legacy/dist/* $out
-                '';
-              };
+                cp -r apps/site/.next/standalone/* $out/site/
+                cp -r apps/site/.next/static $out/site/apps/site/.next/static
+              '';
+            };
+
+            legacy = pkgs.runCommand "boluo-legacy" { } ''
+              cp -r ${self'.packages.frontendBuild}/legacy $out
+            '';
 
             legacy-image =
               let
@@ -291,27 +316,15 @@
 
             site =
               let
-                src = pruneSource "site";
+                raw = self'.packages.frontendBuild;
               in
-              pkgs.buildNpmPackage {
-                inherit version src;
-                pname = "boluo-site";
-
-                npmDeps = common.mkNpmDeps src;
-                npmConfigHook = pkgs.importNpmLock.npmConfigHook;
-
-                TURBO_TELEMETRY_DISABLED = 1;
-                NEXT_TELEMETRY_DISABLED = 1;
-
-                installPhase = ''
-                  mkdir -p $out/bin
-                  cp -r apps/site/.next/standalone/* $out
-                  cp -r apps/site/.next/static $out/apps/site/.next/static
-                  echo '#!/bin/sh' > $out/bin/boluo-site
-                  echo 'exec ${pkgs.nodejs}/bin/node' '"$(dirname $0)"'"/../apps/site/server.js" >> $out/bin/boluo-site
-                  chmod +x $out/bin/boluo-site
-                '';
-              };
+              pkgs.runCommand "boluo-site" { } ''
+                mkdir -p $out/bin
+                cp -r ${raw}/site/* $out/
+                echo '#!/bin/sh' > $out/bin/boluo-site
+                echo 'exec ${pkgs.nodejs}/bin/node "$(dirname "$0")/../apps/site/server.js"' >> $out/bin/boluo-site
+                chmod +x $out/bin/boluo-site
+              '';
 
             site-image = pkgs.dockerTools.buildImage {
               name = "boluo-site";
@@ -343,22 +356,9 @@
               };
             };
 
-            spa =
-              let
-                src = pruneSource "spa";
-              in
-              pkgs.buildNpmPackage {
-                pname = "boluo-spa";
-                inherit src version;
-
-                npmDeps = common.mkNpmDeps src;
-                npmConfigHook = pkgs.importNpmLock.npmConfigHook;
-
-                installPhase = ''
-                  mkdir -p $out/bin
-                  cp -r apps/spa/out/* $out
-                '';
-              };
+            spa = pkgs.runCommand "boluo-spa" { } ''
+              cp -r ${self'.packages.frontendBuild}/spa $out
+            '';
 
             spa-image =
               let

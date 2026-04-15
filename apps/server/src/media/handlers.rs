@@ -7,7 +7,8 @@ use crate::interface::{Response, missing, ok_response, parse_query};
 use crate::media::api::{MediaQuery, PreSign, PreSignResult};
 use crate::media::models::MediaFile;
 use crate::utils::id;
-use aws_sdk_s3::primitives::{ByteStream, SdkBody};
+use http_body_util::BodyExt;
+use rusty_s3::S3Action;
 use hyper::body::{Body, Incoming};
 use hyper::header::{self, HeaderValue};
 use hyper::{Request, Uri};
@@ -71,11 +72,9 @@ pub async fn upload(
 
     check_size(size, max_size)?;
     let body = req.into_body();
-    let client = crate::s3::get_client();
-    let bucket = crate::s3::get_bucket_name();
     put_object(
-        client,
-        bucket,
+        crate::s3::get_bucket(),
+        crate::s3::get_credentials(),
         &id.as_hyphenated().to_string(),
         body,
         &mime_type,
@@ -144,51 +143,52 @@ async fn get(
 }
 
 async fn put_object(
-    client: &aws_sdk_s3::Client,
-    bucket: &str,
-    object: &str,
+    bucket: &rusty_s3::Bucket,
+    credentials: &rusty_s3::Credentials,
+    key: &str,
     body: hyper::body::Incoming,
     content_type: &str,
     content_length: i32,
 ) -> Result<(), AppError> {
-    let sdk_body = SdkBody::from_body_1_x(body);
-    let body = ByteStream::new(sdk_body);
-    client
-        .put_object()
-        .content_type(content_type)
-        .content_length(content_length as i64)
-        .bucket(bucket)
-        .key(object)
-        .body(body)
+    let bytes = body
+        .collect()
+        .await
+        .map_err(error_unexpected!("Failed to read request body"))?
+        .to_bytes();
+
+    let mut action = bucket.put_object(Some(credentials), key);
+    action.headers_mut().insert("content-type", content_type);
+    let url = action.sign(std::time::Duration::from_secs(60));
+
+    let response = crate::s3::get_http_client()
+        .put(url.as_str())
+        .header("content-type", content_type)
+        .header("content-length", content_length)
+        .body(bytes)
         .send()
         .await
         .map_err(error_unexpected!("Failed to upload object"))?;
+    if !response.status().is_success() {
+        return Err(AppError::Unexpected(anyhow::anyhow!(
+            "S3 PUT failed with status {}",
+            response.status()
+        )));
+    }
     Ok(())
 }
 
-async fn put_object_presigned(
-    client: &aws_sdk_s3::Client,
-    bucket: &str,
-    object: &str,
+fn put_object_presigned(
+    bucket: &rusty_s3::Bucket,
+    credentials: &rusty_s3::Credentials,
+    key: &str,
     expires_in: u64,
     content_type: &str,
-    content_length: i32,
-) -> Result<String, AppError> {
-    let expires_in = std::time::Duration::from_secs(expires_in);
-
-    let presigned = aws_sdk_s3::presigning::PresigningConfig::expires_in(expires_in)
-        .map_err(|e| AppError::Unexpected(e.into()))?;
-    let presigned_request = client
-        .put_object()
-        .content_type(content_type)
-        .content_length(content_length as i64)
-        .bucket(bucket)
-        .key(object)
-        .presigned(presigned)
-        .await
-        .map_err(error_unexpected!("Failed to generate presigned url"))?;
-
-    Ok(presigned_request.uri().to_owned())
+) -> String {
+    let mut action = bucket.put_object(Some(credentials), key);
+    action.headers_mut().insert("content-type", content_type);
+    action
+        .sign(std::time::Duration::from_secs(expires_in))
+        .to_string()
 }
 
 const EXPIRES_IN_SEC: u64 = 60 * 10;
@@ -203,7 +203,6 @@ async fn presigned(
         mime_type,
         size,
     } = parse_query(req.uri())?;
-    let client = s3::get_client();
     metrics::counter!("boluo_server_media_presigned_total").increment(1);
     metrics::histogram!("boluo_server_media_upload_size_bytes").record(size as f64);
 
@@ -227,14 +226,12 @@ async fn presigned(
     )
     .await?;
     let uri = put_object_presigned(
-        client,
-        s3::get_bucket_name(),
+        s3::get_bucket(),
+        s3::get_credentials(),
         &media.id.as_hyphenated().to_string(),
         EXPIRES_IN_SEC,
         &mime_type,
-        size,
-    )
-    .await?;
+    );
     Ok(PreSignResult {
         url: uri.to_string(),
         media_id: media.id,

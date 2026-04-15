@@ -1,36 +1,91 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "ui": "tui",
-  "globalEnv": [
-    "NODE_ENV",
-    "ANALYZE",
-    "BACKEND_URL",
-    "SENTRY_URL",
-    "SENTRY_DSN",
-    "SENTRY_ORG",
-    "SENTRY_PROJECT_SITE",
-    "SENTRY_TOKEN",
-    "SENTRY_TUNNEL",
-    "SENTRY_PROJECT"
-  ],
+  "noUpdateNotifier": true,
+  "globalEnv": ["NODE_ENV"],
   "tasks": {
-    "generate": { "dependsOn": ["^generate"], "inputs": ["$TURBO_DEFAULT$", ".env*"] },
+    "generate": { "dependsOn": ["^generate"], "inputs": ["$TURBO_DEFAULT$"] },
     "build": {
-      "dependsOn": ["^generate", "generate", "^build"],
-      "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": ["dist/**", ".next/**", "storybook-static/**", "!.next/cache/**"]
-    },
-    "lint": { "dependsOn": ["@boluo/icons#build", "^lint"] },
-    "test": { "dependsOn": ["^build"] },
-    "check": { "dependsOn": ["@boluo/icons#build", "^check"] },
-    "storybook": { "dependsOn": ["^build"], "cache": false, "persistent": true },
-    "dev": { "dependsOn": ["^generate", "generate", "^build"], "cache": false, "persistent": true },
-    "@boluo/lang#generate": { "cache": false },
-    "@boluo/icons#generate": { "dependsOn": [], "inputs": ["icons/**"], "outputs": ["src/**"] },
-    "@boluo/icons#build": {
-      "dependsOn": ["^build", "generate"],
-      "inputs": ["src/**"],
+      "dependsOn": ["^generate"],
+      "inputs": ["$TURBO_DEFAULT$"],
       "outputs": ["dist/**"]
+    },
+    "lang-sources": {
+      "dependsOn": ["^lang-sources"],
+      "description": "Tracks i18n source changes through the site/spa dependency graph so @boluo/lang#generate follows newly added shared packages without repeating package globs here.",
+      "inputs": ["$TURBO_DEFAULT$"]
+    },
+    "lint": { "dependsOn": ["@boluo/icons#generate"] },
+    "test": { "dependsOn": ["check"] },
+    "check": { "dependsOn": ["@boluo/icons#generate"] },
+    "storybook": {
+      "dependsOn": ["^generate"],
+      "cache": false,
+      "persistent": true,
+      "interruptible": true
+    },
+    "dev": {
+      "dependsOn": ["^generate", "@boluo/lang#build"],
+      "cache": false,
+      "persistent": true,
+      "interruptible": true,
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        ".env",
+        ".env.local",
+        "$TURBO_ROOT$/.env",
+        "$TURBO_ROOT$/.env.local"
+      ],
+      "env": ["ANALYZE", "BACKEND_URL"]
+    },
+    "spa#build": {
+      "dependsOn": ["^generate", "@boluo/backend-proxy#build", "@boluo/lang#build"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        ".env",
+        ".env.local",
+        "$TURBO_ROOT$/.env",
+        "$TURBO_ROOT$/.env.local"
+      ],
+      "env": ["ANALYZE", "BACKEND_URL"],
+      "outputs": ["out/**", ".next/**", "!.next/cache/**"]
+    },
+    "site#build": {
+      "dependsOn": ["^generate", "@boluo/lang#build"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        ".env",
+        ".env.local",
+        "$TURBO_ROOT$/.env",
+        "$TURBO_ROOT$/.env.local"
+      ],
+      "env": ["ANALYZE", "BACKEND_URL"],
+      "outputs": [".next/**", "!.next/cache/**"]
+    },
+    "legacy#build": {
+      "dependsOn": ["@boluo/backend-proxy#build"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        ".env",
+        ".env.local",
+        "$TURBO_ROOT$/.env",
+        "$TURBO_ROOT$/.env.local"
+      ],
+      "outputs": ["dist/**"]
+    },
+    "boluo-storybook#build": {
+      "dependsOn": ["^generate", "@boluo/lang#build"],
+      "inputs": ["$TURBO_DEFAULT$"],
+      "outputs": ["storybook-static/**"]
+    },
+    "@boluo/lang#generate": {
+      "dependsOn": ["site#lang-sources", "spa#lang-sources"],
+      "outputs": ["src/en.json"]
+    },
+    "@boluo/icons#generate": {
+      "dependsOn": [],
+      "inputs": ["icons/**", "svgr.config.js", "package.json"],
+      "outputs": ["src/**"]
     }
   }
 }

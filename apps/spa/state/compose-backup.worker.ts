@@ -118,6 +118,7 @@ const saveDraft = async (channelId: string, text: string): Promise<void> => {
       updatedAt: now,
     });
   }
+  const previousDraftCount = drafts.length;
   drafts = drafts
     .filter((draft) => draft.text.trim().length > 0)
     .sort((a, b) => b.updatedAt - a.updatedAt)
@@ -132,7 +133,7 @@ const saveDraft = async (channelId: string, text: string): Promise<void> => {
   worker.postMessage(response);
 
   // Remove from cache if deleted
-  if (drafts.length < drafts.length) {
+  if (drafts.length < previousDraftCount) {
     draftNormalizedCache.forEach((_, key) => {
       if (!drafts.find((draft) => draft.id === key)) {
         draftNormalizedCache.delete(key);

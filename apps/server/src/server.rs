@@ -21,6 +21,7 @@ use tokio::sync::watch;
 
 use hyper::Request;
 use hyper::service::service_fn;
+use rusty_s3::S3Action;
 
 #[macro_use]
 mod utils;
@@ -63,7 +64,7 @@ use crate::error::AppError;
 use crate::interface::{err_response, missing, ok_response};
 
 #[global_allocator]
-static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
+static GLOBAL: bc_mimalloc::MiMalloc = bc_mimalloc::MiMalloc;
 
 async fn router(
     ctx: &context::AppContext,
@@ -218,12 +219,13 @@ async fn storage_check() {
     if context::ci() {
         return;
     }
-    let s3_client = s3::get_client();
-    let _put_object_output = s3_client
-        .put_object()
-        .bucket(s3::get_bucket_name())
-        .key("check")
-        .body(Vec::<u8>::new().into())
+    let mut action = s3::get_bucket().put_object(Some(s3::get_credentials()), "check");
+    action.headers_mut().insert("content-type", "application/octet-stream");
+    let url = action.sign(std::time::Duration::from_secs(60));
+    s3::get_http_client()
+        .put(url.as_str())
+        .header("content-type", "application/octet-stream")
+        .body(Vec::<u8>::new())
         .send()
         .await
         .expect("Cannot connect to bucket");

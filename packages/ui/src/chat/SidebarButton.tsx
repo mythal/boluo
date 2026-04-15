@@ -13,6 +13,7 @@ import { Kbd } from '../Kbd';
 import { isApple } from '@boluo/utils/browser';
 import Icon from '../Icon';
 import { ButtonInline } from '../ButtonInline';
+import { useIsClient } from '../ClientBox';
 
 interface SidebarButtonError {
   message: ReactNode;
@@ -34,7 +35,10 @@ export const SidebarButton: FC<Props> = ({
   error,
   switchToConnections,
 }) => {
+  const isClient = useIsClient();
   const isTouch = useIsTouch();
+  const showDisconnected = isClient && disconnected;
+  const visibleError = isClient ? error : undefined;
   const placement = isTouch ? 'right-start' : 'bottom-start';
   const offset = isTouch ? 8 : 4;
 
@@ -43,7 +47,7 @@ export const SidebarButton: FC<Props> = ({
     offset,
   );
   let icon = isSidebarExpanded ? <ChevronLeft /> : <ChevronRight />;
-  if (disconnected && !isSidebarExpanded) {
+  if (showDisconnected && !isSidebarExpanded) {
     icon = (
       <span className="text-xs">
         <Icon icon={Unplug} />
@@ -88,7 +92,7 @@ export const SidebarButton: FC<Props> = ({
         </div>
       </button>
 
-      {showTooltip && !disconnected && (
+      {showTooltip && !showDisconnected && (
         <div
           ref={refs.setFloating}
           style={floatingStyles}
@@ -103,24 +107,24 @@ export const SidebarButton: FC<Props> = ({
           </div>
         </div>
       )}
-      {error && (
+      {visibleError && (
         <div
           ref={refs.setFloating}
           style={floatingStyles}
           {...getFloatingProps()}
           className="dark text-text-primary w-max max-w-xs rounded border border-black bg-black px-3 py-2 text-left text-sm shadow-lg"
         >
-          {error.onRetry && (
+          {visibleError.onRetry && (
             <div className="float-right ml-2">
-              <ButtonInline onClick={error.onRetry}>
+              <ButtonInline onClick={visibleError.onRetry}>
                 <FormattedMessage defaultMessage="Retry" />
               </ButtonInline>
             </div>
           )}
-          <Icon icon={AlertTriangle} /> <span>{error.message}</span>
+          <Icon icon={AlertTriangle} /> <span>{visibleError.message}</span>
         </div>
       )}
-      {disconnected && !error && (
+      {showDisconnected && !visibleError && (
         <button
           ref={refs.setFloating}
           style={floatingStyles}

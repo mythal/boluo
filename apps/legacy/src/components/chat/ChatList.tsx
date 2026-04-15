@@ -110,21 +110,21 @@ function useOnDragEnd(
       if (sourceItem?.type !== 'MESSAGE') {
         return;
       }
-      let a: [number, number] | null = null;
-      let b: [number, number] | null = null;
-      if (source.index > destination.index) {
-        if (destination.index > 0) {
-          const above = filteredMessages.get(destination.index - 1, null);
-          a = itemPos(above);
-        }
-        b = itemPos(filteredMessages.get(destination.index, null));
-      } else {
-        a = itemPos(filteredMessages.get(destination.index, null));
-        b = itemPos(filteredMessages.get(destination.index + 1, null));
-      }
+      const [a, b] =
+        source.index > destination.index
+          ? [
+              destination.index > 0
+                ? itemPos(filteredMessages.get(destination.index - 1, null))
+                : null,
+              itemPos(filteredMessages.get(destination.index, null)),
+            ]
+          : [
+              itemPos(filteredMessages.get(destination.index, null)),
+              itemPos(filteredMessages.get(destination.index + 1, null)),
+            ];
       dispatch(finishMove);
 
-      if (a === undefined && b === undefined) {
+      if (a === null && b === null) {
         console.warn('no target item');
         return;
       }

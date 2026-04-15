@@ -1,15 +1,41 @@
 import { getOS } from '@boluo/utils/browser';
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useSyncExternalStore } from 'react';
+
+const isTouchOS = (): boolean => {
+  const os = getOS();
+  return os === 'iOS' || os === 'Android';
+};
+
+let touchDetected = false;
+
+const notifyTouchDetected = (): boolean => {
+  if (touchDetected) {
+    return false;
+  }
+  touchDetected = true;
+  return true;
+};
+
+const getTouchSnapshot = () => touchDetected;
+const getServerTouchSnapshot = () => false;
+
+const subscribeTouch = (onStoreChange: () => void) => {
+  const handleTouchStart = () => {
+    if (notifyTouchDetected()) {
+      onStoreChange();
+    }
+  };
+
+  if (isTouchOS()) {
+    handleTouchStart();
+  }
+
+  window.addEventListener('touchstart', handleTouchStart);
+  return () => window.removeEventListener('touchstart', handleTouchStart);
+};
 
 export const useDetectIsTouch = (): boolean => {
-  const os = getOS();
-  const [isTouch, setIsTouch] = useState(os === 'iOS' || os === 'Android');
-  useEffect(() => {
-    const listener = () => setIsTouch(true);
-    window.addEventListener('touchstart', listener);
-    return () => window.removeEventListener('touchstart', listener);
-  }, []);
-  return isTouch;
+  return useSyncExternalStore(subscribeTouch, getTouchSnapshot, getServerTouchSnapshot);
 };
 
 export const IsTouchContext = createContext<boolean>(false);

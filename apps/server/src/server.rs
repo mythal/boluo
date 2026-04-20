@@ -64,7 +64,7 @@ use crate::error::AppError;
 use crate::interface::{err_response, missing, ok_response};
 
 #[global_allocator]
-static GLOBAL: bc_mimalloc::MiMalloc = bc_mimalloc::MiMalloc;
+static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 async fn router(
     ctx: &context::AppContext,
@@ -220,7 +220,9 @@ async fn storage_check() {
         return;
     }
     let mut action = s3::get_bucket().put_object(Some(s3::get_credentials()), "check");
-    action.headers_mut().insert("content-type", "application/octet-stream");
+    action
+        .headers_mut()
+        .insert("content-type", "application/octet-stream");
     let url = action.sign(std::time::Duration::from_secs(60));
     s3::get_http_client()
         .put(url.as_str())

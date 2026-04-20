@@ -849,7 +849,7 @@ mod tests {
             .await
             .expect("get_by_id_list failed");
         assert_eq!(map.len(), 1);
-        assert!(map.get(&channel.id).is_some());
+        assert!(map.contains_key(&channel.id));
 
         let with_space = Channel::get_with_space(&pool, &channel.id)
             .await
@@ -915,7 +915,7 @@ mod tests {
         assert!(edited.is_archived);
 
         let mut conn = pool.acquire().await.expect("failed to acquire connection");
-        let deleted = Channel::delete(&mut *conn, &channel.id, &space.id)
+        let deleted = Channel::delete(&mut conn, &channel.id, &space.id)
             .await
             .expect("delete failed");
         assert_eq!(deleted, 1);
@@ -1016,7 +1016,7 @@ mod tests {
         assert_eq!(with_space_member.1.user_id, member.id);
         assert_eq!(with_space_member.1.space_id, space.id);
         let mut conn = pool.acquire().await.expect("acquire conn failed");
-        let fetched_member = ChannelMember::get(&mut *conn, member.id, space.id, channel.id)
+        let fetched_member = ChannelMember::get(&mut conn, member.id, space.id, channel.id)
             .await
             .expect("get member failed")
             .expect("member should exist");

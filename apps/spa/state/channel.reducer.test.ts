@@ -579,6 +579,85 @@ describe('channelReducer', () => {
     assert.strictEqual(previewItem.v, 3);
   });
 
+  test('messagePreviewDiff is ignored when sender preview does not exist', () => {
+    const state = makeInitialChannelState(channelId);
+    const diff = makeDiff(previewId1, 1, [{ type: 'A', _: ' world' }], { v: 2 });
+
+    const next = channelReducer(
+      state,
+      { type: 'messagePreviewDiff', payload: { channelId, diff, timestamp: 2 } },
+      context,
+    );
+
+    assert.strictEqual(next, state);
+  });
+
+  test('messagePreviewDiff ignores id/ref mismatch against keyframe', () => {
+    const preview = makePreview(previewId1, 1, { v: 1, text: 'hello', name: 'Alice' });
+    const baseState = channelReducer(
+      makeInitialChannelState(channelId),
+      { type: 'messagePreview', payload: { channelId, preview, timestamp: 1 } },
+      context,
+    );
+    const mismatchedId = makeDiff('another-preview-id', 1, [{ type: 'A', _: ' world' }], { v: 2 });
+    const mismatchedRef = makeDiff(preview.id, 999, [{ type: 'A', _: ' world' }], { v: 2 });
+
+    const nextFromMismatchedId = channelReducer(
+      baseState,
+      { type: 'messagePreviewDiff', payload: { channelId, diff: mismatchedId, timestamp: 2 } },
+      context,
+    );
+    const nextFromMismatchedRef = channelReducer(
+      baseState,
+      { type: 'messagePreviewDiff', payload: { channelId, diff: mismatchedRef, timestamp: 2 } },
+      context,
+    );
+
+    assert.deepStrictEqual(nextFromMismatchedId, baseState);
+    assert.deepStrictEqual(nextFromMismatchedRef, baseState);
+  });
+
+  test('messagePreviewDiff ignores stale version', () => {
+    const preview = makePreview(previewId1, 1, { v: 2, text: 'hello', name: 'Alice' });
+    const baseState = channelReducer(
+      makeInitialChannelState(channelId),
+      { type: 'messagePreview', payload: { channelId, preview, timestamp: 1 } },
+      context,
+    );
+    const staleDiff = makeDiff(preview.id, 2, [{ type: 'A', _: ' world' }], { v: 2 });
+
+    const next = channelReducer(
+      baseState,
+      { type: 'messagePreviewDiff', payload: { channelId, diff: staleDiff, timestamp: 2 } },
+      context,
+    );
+
+    assert.deepStrictEqual(next, baseState);
+  });
+
+  test('messagePreviewDiff ignores invalid ops', () => {
+    const preview = makePreview(previewId1, 1, { v: 1, text: 'hello', name: 'Alice' });
+    const baseState = channelReducer(
+      makeInitialChannelState(channelId),
+      { type: 'messagePreview', payload: { channelId, preview, timestamp: 1 } },
+      context,
+    );
+    const invalidDiff = makeDiff(
+      preview.id,
+      1,
+      [{ type: 'SPLICE', i: 999, len: 1, _: 'x' }],
+      { v: 2 },
+    );
+
+    const next = channelReducer(
+      baseState,
+      { type: 'messagePreviewDiff', payload: { channelId, diff: invalidDiff, timestamp: 2 } },
+      context,
+    );
+
+    assert.deepStrictEqual(next, baseState);
+  });
+
   test('fail on SEND attaches failTo to optimistic message', () => {
     const optimisticMessage: OptimisticMessage = {
       ref: makeMessageItem(makeMessage('ref', 1)),

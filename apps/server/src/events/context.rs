@@ -35,9 +35,128 @@ impl EncodedUpdate {
         let encoded = update.encode();
         EncodedUpdate { encoded, update }
     }
+}
 
-    pub fn refresh_encoded(&mut self) {
-        self.encoded = self.update.encode();
+#[derive(Debug, Clone)]
+enum StoredUpdateMeta {
+    MessageEdited {
+        channel_id: Uuid,
+        message_id: Uuid,
+        modified_us: i64,
+        old_pos: f64,
+    },
+    MessageWithPreview {
+        key: ChannelUserId,
+        preview_id: Option<Uuid>,
+        channel_id: Uuid,
+        message_id: Uuid,
+    },
+    ChannelDeleted {
+        channel_id: Uuid,
+    },
+    ChannelAndMessage {
+        channel_id: Uuid,
+        message_id: Uuid,
+    },
+    Other {
+        channel_id: Option<Uuid>,
+        message_id: Option<Uuid>,
+    },
+}
+
+#[derive(Debug, Clone)]
+struct StoredUpdate {
+    encoded: Utf8Bytes,
+    meta: StoredUpdateMeta,
+}
+
+#[derive(Debug, Clone)]
+struct StoredPreview {
+    id: EventId,
+    encoded: Utf8Bytes,
+    preview_id: Uuid,
+    preview_version: u16,
+}
+
+#[derive(Debug, Clone)]
+struct StoredDiff {
+    id: EventId,
+    encoded: Utf8Bytes,
+    preview_id: Uuid,
+    preview_version: u16,
+    diff_version: u16,
+}
+
+impl StoredUpdateMeta {
+    fn from_persistent_body(body: &UpdateBody) -> StoredUpdateMeta {
+        use UpdateBody::*;
+        match body {
+            NewMessage {
+                channel_id,
+                message,
+                preview_id,
+            } => StoredUpdateMeta::MessageWithPreview {
+                key: ChannelUserId::new(*channel_id, message.sender_id),
+                preview_id: *preview_id,
+                channel_id: *channel_id,
+                message_id: message.id,
+            },
+            MessageDeleted {
+                message_id,
+                channel_id,
+                ..
+            } => StoredUpdateMeta::ChannelAndMessage {
+                channel_id: *channel_id,
+                message_id: *message_id,
+            },
+            MessageEdited {
+                channel_id,
+                message,
+                old_pos,
+            } => StoredUpdateMeta::MessageEdited {
+                channel_id: *channel_id,
+                message_id: message.id,
+                modified_us: message.modified.timestamp_micros(),
+                old_pos: *old_pos,
+            },
+            ChannelDeleted { channel_id } => StoredUpdateMeta::ChannelDeleted {
+                channel_id: *channel_id,
+            },
+            _ => StoredUpdateMeta::Other {
+                channel_id: body.channel_id(),
+                message_id: body.message_id(),
+            },
+        }
+    }
+}
+
+impl StoredUpdate {
+    fn from_encoded_update(encoded_update: EncodedUpdate) -> Self {
+        let meta = StoredUpdateMeta::from_persistent_body(&encoded_update.update.body);
+        StoredUpdate {
+            encoded: encoded_update.encoded,
+            meta,
+        }
+    }
+
+    fn channel_id(&self) -> Option<Uuid> {
+        match &self.meta {
+            StoredUpdateMeta::MessageEdited { channel_id, .. } => Some(*channel_id),
+            StoredUpdateMeta::MessageWithPreview { channel_id, .. } => Some(*channel_id),
+            StoredUpdateMeta::ChannelDeleted { channel_id } => Some(*channel_id),
+            StoredUpdateMeta::ChannelAndMessage { channel_id, .. } => Some(*channel_id),
+            StoredUpdateMeta::Other { channel_id, .. } => *channel_id,
+        }
+    }
+
+    fn message_id(&self) -> Option<Uuid> {
+        match &self.meta {
+            StoredUpdateMeta::MessageEdited { message_id, .. } => Some(*message_id),
+            StoredUpdateMeta::MessageWithPreview { message_id, .. } => Some(*message_id),
+            StoredUpdateMeta::ChannelAndMessage { message_id, .. } => Some(*message_id),
+            StoredUpdateMeta::Other { message_id, .. } => *message_id,
+            StoredUpdateMeta::ChannelDeleted { .. } => None,
+        }
     }
 }
 
@@ -346,175 +465,207 @@ pub struct MailBoxState {
     manager: MailboxManager,
 }
 
-type PreviewMap = std::collections::HashMap<ChannelUserId, EncodedUpdate, ahash::RandomState>;
-type DiffMap = std::collections::HashMap<ChannelUserId, EncodedUpdate, ahash::RandomState>;
+type PreviewMap = std::collections::HashMap<ChannelUserId, StoredPreview, ahash::RandomState>;
+type DiffMap = std::collections::HashMap<ChannelUserId, StoredDiff, ahash::RandomState>;
+
+fn prepare_message_edited_old_pos(
+    persistent_updates: &BTreeMap<EventId, StoredUpdate>,
+    body: &mut UpdateBody,
+) -> Option<EventId> {
+    use UpdateBody::MessageEdited;
+
+    let MessageEdited {
+        channel_id,
+        message,
+        old_pos,
+    } = body
+    else {
+        return None;
+    };
+
+    let channel_id = *channel_id;
+    let message_id = message.id;
+    let modified_us = message.modified.timestamp_micros();
+
+    let mut prev_event_id_and_old_pos: Option<(EventId, f64)> = None;
+    for (stored_update_id, stored_update) in persistent_updates.iter().rev() {
+        let StoredUpdateMeta::MessageEdited {
+            channel_id: old_channel_id,
+            message_id: old_message_id,
+            modified_us: old_modified_us,
+            old_pos: previous_old_pos,
+        } = &stored_update.meta
+        else {
+            continue;
+        };
+        if *old_message_id == message_id
+            && *old_channel_id == channel_id
+            && *old_modified_us < modified_us
+        {
+            prev_event_id_and_old_pos = Some((*stored_update_id, *previous_old_pos));
+            break;
+        }
+    }
+
+    if let Some((prev_event_id, previous_old_pos)) = prev_event_id_and_old_pos {
+        if previous_old_pos != *old_pos {
+            *old_pos = previous_old_pos;
+        }
+        return Some(prev_event_id);
+    }
+    None
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum OnUpdateResult {
+    Broadcast,
+    SkipBroadcast,
+}
+
+impl OnUpdateResult {
+    fn should_broadcast(self) -> bool {
+        matches!(self, OnUpdateResult::Broadcast)
+    }
+}
 
 fn on_update(
-    updates: &mut BTreeMap<EventId, EncodedUpdate>,
+    persistent_updates: &mut BTreeMap<EventId, StoredUpdate>,
     preview_map: &mut PreviewMap,
     diff_map: &mut DiffMap,
-    mut encoded_update: EncodedUpdate,
-) {
-    use super::types::UpdateBody::*;
-    let update = &encoded_update.update;
-    match &update.body {
-        | MessagePreview { preview, .. } => {
+    encoded_update: EncodedUpdate,
+) -> OnUpdateResult {
+    let EncodedUpdate { update, encoded } = encoded_update;
+    let update_id = update.id;
+    match update.body {
+        UpdateBody::MessagePreview { preview, .. } => {
             let key = ChannelUserId::new(preview.channel_id, preview.sender_id);
-            if let Some(existing) = preview_map.get(&key) {
-                if existing.update.id >= update.id {
-                    return;
+            if let Some(existing_preview) = preview_map.get(&key) {
+                if existing_preview.id >= update_id {
+                    return OnUpdateResult::SkipBroadcast;
                 }
             }
-            if let Some(diff) = diff_map.get(&key) {
-                if let UpdateBody::Diff { diff, .. } = &diff.update.body {
-                    if diff.payload.id != preview.id
-                        || diff.payload.keyframe_version != preview.version
-                    {
-                        diff_map.remove(&key);
-                    }
-                };
+            if let Some(existing_diff) = diff_map.get(&key) {
+                if existing_diff.preview_id != preview.id
+                    || existing_diff.preview_version != preview.version
+                {
+                    diff_map.remove(&key);
+                }
             }
-            preview_map.insert(key, encoded_update);
+            preview_map.insert(
+                key,
+                StoredPreview {
+                    id: update_id,
+                    encoded,
+                    preview_id: preview.id,
+                    preview_version: preview.version,
+                },
+            );
+            OnUpdateResult::Broadcast
         }
-        | Diff {
+        UpdateBody::Diff {
             channel_id, diff, ..
         } => {
-            let key = ChannelUserId::new(*channel_id, diff.sender);
-            let Some(reference_preview_update) = preview_map.get(&key) else {
-                return;
+            let key = ChannelUserId::new(channel_id, diff.sender);
+            let Some(reference_preview) = preview_map.get(&key) else {
+                return OnUpdateResult::SkipBroadcast;
             };
-            if reference_preview_update.update.id >= update.id {
-                return;
+            if reference_preview.id >= update_id {
+                return OnUpdateResult::SkipBroadcast;
             }
-            let UpdateBody::MessagePreview {
-                preview: reference_preview,
-                ..
-            } = &reference_preview_update.update.body
-            else {
-                return;
-            };
-            if reference_preview.id != diff.payload.id
-                || reference_preview.version != diff.payload.keyframe_version
+            if reference_preview.preview_id != diff.payload.id
+                || reference_preview.preview_version != diff.payload.keyframe_version
             {
-                return;
+                return OnUpdateResult::SkipBroadcast;
             }
-
-            diff_map.insert(key, encoded_update);
+            if let Some(existing_diff) = diff_map.get(&key) {
+                if existing_diff.preview_id == diff.payload.id
+                    && existing_diff.preview_version == diff.payload.keyframe_version
+                    && existing_diff.diff_version >= diff.payload.version
+                {
+                    return OnUpdateResult::SkipBroadcast;
+                }
+            }
+            diff_map.insert(
+                key,
+                StoredDiff {
+                    id: update_id,
+                    encoded,
+                    preview_id: diff.payload.id,
+                    preview_version: diff.payload.keyframe_version,
+                    diff_version: diff.payload.version,
+                },
+            );
+            OnUpdateResult::Broadcast
         }
-        | NewMessage {
-            channel_id,
-            message,
-            preview_id,
-        } => {
-            let id = encoded_update.update.id;
-            let preview_id = preview_id.unwrap_or_default();
-            let key = ChannelUserId::new(*channel_id, message.sender_id);
-            updates.insert(id, encoded_update);
-            if !preview_id.is_nil() {
-                if let Some(existing) = preview_map.get(&key) {
-                    match &existing.update.body {
-                        MessagePreview { preview, .. } => {
-                            if preview.id == preview_id {
+        body => {
+            let stored = StoredUpdate {
+                encoded,
+                meta: StoredUpdateMeta::from_persistent_body(&body),
+            };
+            match &stored.meta {
+                StoredUpdateMeta::MessageWithPreview {
+                    key, preview_id, ..
+                } => {
+                    let key = *key;
+                    let preview_id = *preview_id;
+                    persistent_updates.insert(update_id, stored);
+                    let preview_id = preview_id.unwrap_or_default();
+                    if !preview_id.is_nil() {
+                        if let Some(existing_preview) = preview_map.get(&key) {
+                            if existing_preview.preview_id == preview_id {
                                 preview_map.remove(&key);
                             }
                         }
-                        _ => tracing::warn!("Expected preview, but got {:?}", existing.update.body),
-                    }
-                }
-                if let Some(existing) = diff_map.get(&key) {
-                    if let UpdateBody::Diff { diff, .. } = &existing.update.body {
-                        if diff.payload.id == preview_id {
-                            diff_map.remove(&key);
+                        if let Some(existing_diff) = diff_map.get(&key) {
+                            if existing_diff.preview_id == preview_id {
+                                diff_map.remove(&key);
+                            }
                         }
                     }
                 }
-            }
-        }
-        | MessageDeleted { message_id, .. } => {
-            updates.retain(|_, encoded| encoded.update.body.message_id() != Some(*message_id));
-            updates.insert(encoded_update.update.id, encoded_update);
-        }
-        | MessageEdited {
-            channel_id,
-            message,
-            old_pos,
-        } => {
-            let channel_id = *channel_id;
-
-            let mut prev_event_id_and_old_pos: Option<(EventId, f64)> = None;
-            for (stored_update_id, stored_update) in updates.iter().rev() {
-                if let MessageEdited {
-                    message: original,
-                    old_pos: original_old_pos,
-                    ..
-                } = &stored_update.update.body
-                {
-                    if original.id == message.id
-                        && original.channel_id == channel_id
-                        && original.modified < message.modified
-                    {
-                        prev_event_id_and_old_pos = Some((*stored_update_id, *original_old_pos));
-                        break;
-                    }
+                StoredUpdateMeta::ChannelAndMessage { message_id, .. } => {
+                    let message_id = *message_id;
+                    persistent_updates.retain(|_, cached| cached.message_id() != Some(message_id));
+                    persistent_updates.insert(update_id, stored);
+                }
+                StoredUpdateMeta::MessageEdited { .. } => {
+                    persistent_updates.insert(update_id, stored);
+                }
+                StoredUpdateMeta::ChannelDeleted { channel_id } => {
+                    let channel_id = *channel_id;
+                    persistent_updates.retain(|_, cached| cached.channel_id() != Some(channel_id));
+                    preview_map.retain(|key, _| key.channel_id != channel_id);
+                    diff_map.retain(|key, _| key.channel_id != channel_id);
+                }
+                StoredUpdateMeta::Other { .. } => {
+                    // Do nothing
                 }
             }
-            if let Some((prev_event_id, prev_old_pos)) = prev_event_id_and_old_pos {
-                updates.remove(&prev_event_id);
-                if prev_old_pos != *old_pos {
-                    match encoded_update.update.body {
-                        MessageEdited {
-                            ref mut old_pos, ..
-                        } => {
-                            *old_pos = prev_old_pos;
-                        }
-                        ref other_body => {
-                            tracing::warn!("Expected MessageEdited, but got {:?}", other_body)
-                        }
-                    }
-                    encoded_update.refresh_encoded();
-                }
-            }
-            updates.insert(encoded_update.update.id, encoded_update);
-        }
-        | ChannelDeleted { channel_id } => {
-            updates.retain(|_, encoded| encoded.update.body.channel_id() != Some(*channel_id));
-            preview_map.retain(|id, _| id.channel_id != *channel_id);
-        }
-        | ChannelEdited { .. }
-        | Members { .. }
-        | Initialized
-        | StatusMap { .. }
-        | SpaceUpdated { .. }
-        | Error { .. }
-        | AppUpdated { .. }
-        | AppInfo { .. } => {
-            // Do nothing
+            OnUpdateResult::Broadcast
         }
     }
 }
 
 fn cleanup(
-    updates: &mut BTreeMap<EventId, EncodedUpdate>,
+    persistent_updates: &mut BTreeMap<EventId, StoredUpdate>,
     preview_map: &mut PreviewMap,
     diff_map: &mut DiffMap,
-) {
-    use super::types::UpdateBody::*;
-
+) -> Option<i64> {
     let now = timestamp();
     let mut has_been_cleaned = false;
     let mut last_removed_timestamp: Option<i64> = None;
-    while updates.len() > 512 {
-        if let Some((event_id, _)) = updates.pop_first() {
+    while persistent_updates.len() > 512 {
+        if let Some((event_id, _)) = persistent_updates.pop_first() {
             last_removed_timestamp = Some(event_id.timestamp);
         }
         has_been_cleaned = true;
     }
-    // Drop all updates with the same timestamp as the last removed one, to avoid partial cleanup
+    // Drop all persistent updates with the same timestamp as the last removed one, to avoid partial cleanup
     if let Some(removed_timestamp) = last_removed_timestamp {
-        updates.retain(|event_id, _| event_id.timestamp != removed_timestamp);
+        persistent_updates.retain(|event_id, _| event_id.timestamp != removed_timestamp);
     }
     let start_at = if has_been_cleaned {
-        updates.first_key_value().map(|(id, _)| *id)
+        oldest_persistent_event_id(persistent_updates)
     } else {
         None
     };
@@ -530,18 +681,14 @@ fn cleanup(
             }
         }
     }
-
-    preview_map.retain(|_, preview_update| match preview_update.update.body {
-        | MessagePreview { .. } => {
-            if let Some(start_at) = start_at {
-                if preview_update.update.id < start_at {
-                    return false;
-                }
-            }
-            let elapsed = now - preview_update.update.id.timestamp;
-            elapsed < 1000 * 60 * 15 // 15 minutes
+    preview_map.retain(|_, preview| {
+        if let Some(start_at) = start_at
+            && preview.id < start_at
+        {
+            return false;
         }
-        _ => false,
+        let elapsed = now - preview.id.timestamp;
+        elapsed < 1000 * 60 * 15 // 15 minutes
     });
     if preview_map.capacity() > 64 {
         let old_capacity = preview_map.capacity();
@@ -552,22 +699,30 @@ fn cleanup(
             preview_map.capacity()
         );
     }
-    diff_map.retain(|_, diff_update| match &diff_update.update.body {
-        | Diff {
-            channel_id, diff, ..
-        } => {
-            let key = ChannelUserId::new(*channel_id, diff.sender);
-            let Some(reference_preview_update) = preview_map.get(&key) else {
-                return false;
-            };
-            let UpdateBody::MessagePreview { preview, .. } = &reference_preview_update.update.body
-            else {
-                return false;
-            };
-            diff.payload.id == preview.id && diff.payload.keyframe_version == preview.version
-        }
-        _ => false,
+    diff_map.retain(|key, diff| {
+        let Some(reference_preview) = preview_map.get(key) else {
+            return false;
+        };
+        diff.preview_id == reference_preview.preview_id
+            && diff.preview_version == reference_preview.preview_version
     });
+
+    last_removed_timestamp.map(|removed_timestamp| removed_timestamp.saturating_add(1))
+}
+
+fn oldest_persistent_event_id(
+    persistent_updates: &BTreeMap<EventId, StoredUpdate>,
+) -> Option<EventId> {
+    persistent_updates
+        .first_key_value()
+        .map(|(event_id, _)| *event_id)
+}
+
+fn cached_updates_start_at(persistent_updates: &BTreeMap<EventId, StoredUpdate>, floor: i64) -> i64 {
+    oldest_persistent_event_id(persistent_updates)
+        .map(|event_id| event_id.timestamp)
+        .unwrap_or(floor)
+        .max(floor)
 }
 
 fn should_include_update(
@@ -587,7 +742,7 @@ fn should_include_update(
 }
 
 fn collect_cached_updates(
-    updates: &BTreeMap<EventId, EncodedUpdate>,
+    persistent_updates: &BTreeMap<EventId, StoredUpdate>,
     preview_map: &PreviewMap,
     diff_map: &DiffMap,
     after: Option<i64>,
@@ -596,22 +751,25 @@ fn collect_cached_updates(
 ) -> Vec<Utf8Bytes> {
     let node = node.unwrap_or(0);
     let mut response_updates: Vec<(EventId, Utf8Bytes)> =
-        Vec::with_capacity(updates.len() + preview_map.len() + diff_map.len());
+        Vec::with_capacity(persistent_updates.len() + preview_map.len() + diff_map.len());
     response_updates.extend(
-        updates
+        persistent_updates
             .iter()
-            .filter(|&(event_id, _update)| should_include_update(*event_id, after, seq, node))
+            .filter(|&(event_id, _)| should_include_update(*event_id, after, seq, node))
             .map(|(event_id, update)| (*event_id, update.encoded.clone())),
     );
-    response_updates.extend(preview_map.values().filter_map(|preview| {
-        let event_id = preview.update.id;
-        should_include_update(event_id, after, seq, node)
-            .then(|| (event_id, preview.encoded.clone()))
-    }));
-    response_updates.extend(diff_map.values().filter_map(|diff| {
-        let event_id = diff.update.id;
-        should_include_update(event_id, after, seq, node).then(|| (event_id, diff.encoded.clone()))
-    }));
+    response_updates.extend(
+        preview_map
+            .values()
+            .filter(|preview| should_include_update(preview.id, after, seq, node))
+            .map(|preview| (preview.id, preview.encoded.clone())),
+    );
+    response_updates.extend(
+        diff_map
+            .values()
+            .filter(|diff| should_include_update(diff.id, after, seq, node))
+            .map(|diff| (diff.id, diff.encoded.clone())),
+    );
     response_updates.sort_unstable_by_key(|(event_id, _)| *event_id);
     response_updates
         .into_iter()
@@ -627,7 +785,7 @@ impl MailBoxState {
         let span = tracing::info_span!("MailboxState", mailbox_id = %id);
         tokio::spawn(async move {
             let members_sender = members_sender;
-            let mut updates: BTreeMap<EventId, EncodedUpdate> = BTreeMap::new();
+            let mut persistent_updates: BTreeMap<EventId, StoredUpdate> = BTreeMap::new();
             let mut preview_map = PreviewMap::with_hasher(ahash::RandomState::new());
             let mut diff_map = DiffMap::with_hasher(ahash::RandomState::new());
             let created_at = Instant::now();
@@ -635,7 +793,7 @@ impl MailBoxState {
             let mut status_state = super::status::StatusState::new(id);
             let mut broadcast_status_interval = crate::utils::cleaner_interval(12);
             let mut cleanup_interval = crate::utils::cleaner_interval(120);
-            let mut start_at = timestamp();
+            let mut cursor_floor = i64::MIN;
             let mut last_pending_actions_warned = 0;
             let labels = vec![metrics::Label::new("mailbox_id", id.to_string())];
             let pending_gauge = metrics::gauge!("boluo_server_events_pending_actions", labels.clone());
@@ -653,7 +811,7 @@ impl MailBoxState {
                         match action {
                             Action::Query { after, seq, node, respond_to } => {
                                 let response_updates = collect_cached_updates(
-                                    &updates,
+                                    &persistent_updates,
                                     &preview_map,
                                     &diff_map,
                                     after,
@@ -662,12 +820,18 @@ impl MailBoxState {
                                 );
                                 respond_to.send(CachedUpdates {
                                     updates: response_updates,
-                                    start_at,
+                                    start_at: cached_updates_start_at(
+                                        &persistent_updates,
+                                        cursor_floor,
+                                    ),
                                 }).ok();
                             }
                             Action::Update { body, live } => {
                                 last_event_at = Some(Instant::now());
                                 let _ = members_sender.try_send(MembersCommand::TouchActivity);
+                                let mut body = body;
+                                let stale_edited_event_id =
+                                    prepare_message_edited_old_pos(&persistent_updates, &mut body);
                                 let mailbox_id = id;
                                 let encoded_update = match tokio::task::spawn_blocking(move || {
                                     EncodedUpdate::new(Update {
@@ -683,10 +847,13 @@ impl MailBoxState {
                                         continue;
                                     }
                                 };
+                                if let Some(stale_edited_event_id) = stale_edited_event_id {
+                                    persistent_updates.remove(&stale_edited_event_id);
+                                }
                                 let update_name = encoded_update.update.name();
                                 let encoded_for_broadcast = encoded_update.encoded.clone();
-                                on_update(
-                                    &mut updates,
+                                let should_broadcast = on_update(
+                                    &mut persistent_updates,
                                     &mut preview_map,
                                     &mut diff_map,
                                     encoded_update,
@@ -696,7 +863,9 @@ impl MailBoxState {
                                 if elapsed > std::time::Duration::from_millis(25) {
                                     tracing::warn!(mailbox_id = %id, update_name, "Update took too long to process: {:?}", elapsed);
                                 }
-                                Update::send(id, encoded_for_broadcast).await;
+                                if should_broadcast.should_broadcast() {
+                                    Update::send(id, encoded_for_broadcast).await;
+                                }
                             }
                             Action::TouchActivity => {
                                 last_event_at = Some(Instant::now());
@@ -721,19 +890,15 @@ impl MailBoxState {
                             tracing::info!(mailbox_id = %id, "Mailbox state is idle, shutting down");
                             break;
                         } else {
-                            let before_size = updates.len();
-                            cleanup(&mut updates, &mut preview_map, &mut diff_map);
-                            let after_size = updates.len();
+                            let before_size = persistent_updates.len() + preview_map.len() + diff_map.len();
+                            if let Some(new_floor) =
+                                cleanup(&mut persistent_updates, &mut preview_map, &mut diff_map)
+                            {
+                                cursor_floor = cursor_floor.max(new_floor);
+                            }
+                            let after_size = persistent_updates.len() + preview_map.len() + diff_map.len();
                             if after_size != before_size {
                                 tracing::info!(mailbox_id = %id, "Cleaned up {} updates", before_size - after_size);
-                            }
-                            match updates.first_key_value() {
-                                Some((event_id, _)) => {
-                                    start_at = event_id.timestamp;
-                                }
-                                None => {
-                                    start_at = timestamp();
-                                }
                             }
                         }
                     }
@@ -825,6 +990,10 @@ mod tests {
         })
     }
 
+    fn persistent_update(id: EventId) -> StoredUpdate {
+        StoredUpdate::from_encoded_update(encoded_update(id))
+    }
+
     #[test]
     fn cached_update_filter_matches_cursor_semantics() {
         let after = Some(10);
@@ -850,10 +1019,21 @@ mod tests {
         let from_preview = event_id(10, 0, 1);
         let from_diff = event_id(11, 1, 0);
 
-        let older_update = encoded_update(older);
-        let update = encoded_update(from_updates);
-        let preview = encoded_update(from_preview);
-        let diff = encoded_update(from_diff);
+        let older_update = persistent_update(older);
+        let update = persistent_update(from_updates);
+        let preview = StoredPreview {
+            id: from_preview,
+            encoded: encoded_update(from_preview).encoded,
+            preview_id: Uuid::from_u128(100),
+            preview_version: 1,
+        };
+        let diff = StoredDiff {
+            id: from_diff,
+            encoded: encoded_update(from_diff).encoded,
+            preview_id: Uuid::from_u128(100),
+            preview_version: 1,
+            diff_version: 1,
+        };
 
         let expected = vec![
             preview.encoded.clone(),
@@ -861,9 +1041,9 @@ mod tests {
             diff.encoded.clone(),
         ];
 
-        let mut updates = BTreeMap::new();
-        updates.insert(older, older_update);
-        updates.insert(from_updates, update);
+        let mut persistent_updates = BTreeMap::new();
+        persistent_updates.insert(older, older_update);
+        persistent_updates.insert(from_updates, update);
 
         let mut preview_map = PreviewMap::with_hasher(ahash::RandomState::new());
         preview_map.insert(ChannelUserId::new(Uuid::nil(), Uuid::nil()), preview);
@@ -872,7 +1052,7 @@ mod tests {
         diff_map.insert(ChannelUserId::new(Uuid::nil(), Uuid::from_u128(1)), diff);
 
         let actual = collect_cached_updates(
-            &updates,
+            &persistent_updates,
             &preview_map,
             &diff_map,
             Some(10),
@@ -880,5 +1060,529 @@ mod tests {
             Some(1),
         );
         assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn on_update_keeps_higher_diff_version_for_same_keyframe() {
+        let channel_id = Uuid::from_u128(200);
+        let sender_id = Uuid::from_u128(201);
+        let key = ChannelUserId::new(channel_id, sender_id);
+        let preview_id = Uuid::from_u128(202);
+        let preview_version = 1;
+        let preview_event_id = event_id(100, 1, 1);
+        let newer_diff_event_id = event_id(101, 1, 1);
+        let older_diff_late_event_id = event_id(102, 1, 1);
+
+        let mut persistent_updates = BTreeMap::new();
+        let mut preview_map = PreviewMap::with_hasher(ahash::RandomState::new());
+        preview_map.insert(
+            key,
+            StoredPreview {
+                id: preview_event_id,
+                encoded: Utf8Bytes::from_static("{\"type\":\"MESSAGE_PREVIEW\"}"),
+                preview_id,
+                preview_version,
+            },
+        );
+        let mut diff_map = DiffMap::with_hasher(ahash::RandomState::new());
+
+        let newer_diff_update = EncodedUpdate::new(Update {
+            mailbox: Uuid::nil(),
+            id: newer_diff_event_id,
+            body: UpdateBody::Diff {
+                channel_id,
+                diff: Box::new(crate::events::preview::PreviewDiff {
+                    sender: sender_id,
+                    payload: crate::events::preview::PreviewDiffPost {
+                        channel_id,
+                        id: preview_id,
+                        keyframe_version: preview_version,
+                        version: 3,
+                        op: vec![],
+                        entities: vec![],
+                    },
+                }),
+            },
+            live: UpdateLifetime::Volatile,
+        });
+        let first_should_broadcast = on_update(
+            &mut persistent_updates,
+            &mut preview_map,
+            &mut diff_map,
+            newer_diff_update,
+        );
+        assert_eq!(first_should_broadcast, OnUpdateResult::Broadcast);
+
+        let older_diff_late_update = EncodedUpdate::new(Update {
+            mailbox: Uuid::nil(),
+            id: older_diff_late_event_id,
+            body: UpdateBody::Diff {
+                channel_id,
+                diff: Box::new(crate::events::preview::PreviewDiff {
+                    sender: sender_id,
+                    payload: crate::events::preview::PreviewDiffPost {
+                        channel_id,
+                        id: preview_id,
+                        keyframe_version: preview_version,
+                        version: 2,
+                        op: vec![],
+                        entities: vec![],
+                    },
+                }),
+            },
+            live: UpdateLifetime::Volatile,
+        });
+        let second_should_broadcast = on_update(
+            &mut persistent_updates,
+            &mut preview_map,
+            &mut diff_map,
+            older_diff_late_update,
+        );
+        assert_eq!(second_should_broadcast, OnUpdateResult::SkipBroadcast);
+
+        let Some(diff) = diff_map.get(&key) else {
+            panic!("diff should be kept for the preview keyframe");
+        };
+        assert_eq!(diff.id, newer_diff_event_id);
+        assert_eq!(diff.diff_version, 3);
+    }
+
+    #[test]
+    fn on_update_rejects_diff_without_reference_preview_for_broadcast() {
+        let channel_id = Uuid::from_u128(210);
+        let sender_id = Uuid::from_u128(211);
+        let preview_id = Uuid::from_u128(212);
+
+        let mut persistent_updates = BTreeMap::new();
+        let mut preview_map = PreviewMap::with_hasher(ahash::RandomState::new());
+        let mut diff_map = DiffMap::with_hasher(ahash::RandomState::new());
+
+        let diff_update = EncodedUpdate::new(Update {
+            mailbox: Uuid::nil(),
+            id: event_id(100, 1, 1),
+            body: UpdateBody::Diff {
+                channel_id,
+                diff: Box::new(crate::events::preview::PreviewDiff {
+                    sender: sender_id,
+                    payload: crate::events::preview::PreviewDiffPost {
+                        channel_id,
+                        id: preview_id,
+                        keyframe_version: 1,
+                        version: 1,
+                        op: vec![],
+                        entities: vec![],
+                    },
+                }),
+            },
+            live: UpdateLifetime::Volatile,
+        });
+        let should_broadcast = on_update(
+            &mut persistent_updates,
+            &mut preview_map,
+            &mut diff_map,
+            diff_update,
+        );
+
+        assert_eq!(should_broadcast, OnUpdateResult::SkipBroadcast);
+        assert!(persistent_updates.is_empty());
+        assert!(preview_map.is_empty());
+        assert!(diff_map.is_empty());
+    }
+
+    #[test]
+    fn cached_updates_start_at_honors_cursor_floor() {
+        let mut persistent_updates = BTreeMap::new();
+        assert_eq!(cached_updates_start_at(&persistent_updates, i64::MIN), i64::MIN);
+        assert_eq!(cached_updates_start_at(&persistent_updates, 123), 123);
+
+        let oldest = event_id(100, 1, 1);
+        persistent_updates.insert(oldest, persistent_update(oldest));
+        persistent_updates.insert(event_id(101, 1, 2), persistent_update(event_id(101, 1, 2)));
+        assert_eq!(cached_updates_start_at(&persistent_updates, i64::MIN), 100);
+        assert_eq!(cached_updates_start_at(&persistent_updates, 150), 150);
+    }
+
+    #[test]
+    fn cleanup_removes_expired_preview() {
+        let stale_preview_id = event_id(timestamp() - (1000 * 60 * 16), 1, 1);
+        let preview_key = ChannelUserId::new(Uuid::nil(), Uuid::from_u128(10));
+
+        let mut persistent_updates = BTreeMap::new();
+        let mut preview_map = PreviewMap::with_hasher(ahash::RandomState::new());
+        preview_map.insert(
+            preview_key,
+            StoredPreview {
+                id: stale_preview_id,
+                encoded: Utf8Bytes::from_static("{}"),
+                preview_id: Uuid::from_u128(11),
+                preview_version: 1,
+            },
+        );
+        let mut diff_map = DiffMap::with_hasher(ahash::RandomState::new());
+
+        let floor = cleanup(&mut persistent_updates, &mut preview_map, &mut diff_map);
+
+        assert_eq!(floor, None);
+        assert!(preview_map.is_empty());
+        assert!(persistent_updates.is_empty());
+    }
+
+    #[test]
+    fn cleanup_removes_orphan_diff() {
+        let orphan_diff_id = event_id(timestamp(), 1, 2);
+        let diff_key = ChannelUserId::new(Uuid::nil(), Uuid::from_u128(20));
+
+        let mut persistent_updates = BTreeMap::new();
+        let mut preview_map = PreviewMap::with_hasher(ahash::RandomState::new());
+        let mut diff_map = DiffMap::with_hasher(ahash::RandomState::new());
+        diff_map.insert(
+            diff_key,
+            StoredDiff {
+                id: orphan_diff_id,
+                encoded: Utf8Bytes::from_static("{}"),
+                preview_id: Uuid::from_u128(21),
+                preview_version: 1,
+                diff_version: 1,
+            },
+        );
+
+        let floor = cleanup(&mut persistent_updates, &mut preview_map, &mut diff_map);
+
+        assert_eq!(floor, None);
+        assert!(diff_map.is_empty());
+        assert!(persistent_updates.is_empty());
+    }
+
+    #[test]
+    fn members_event_does_not_purge_channel_cache() {
+        let channel_id = Uuid::from_u128(30);
+        let sender_id = Uuid::from_u128(31);
+        let message_id = Uuid::from_u128(32);
+        let preview_id = Uuid::from_u128(33);
+        let key = ChannelUserId::new(channel_id, sender_id);
+
+        let message_event_id = event_id(timestamp(), 1, 3);
+        let preview_event_id = event_id(timestamp(), 1, 4);
+        let diff_event_id = event_id(timestamp(), 1, 5);
+        let members_event_id = event_id(timestamp(), 1, 6);
+
+        let mut persistent_updates = BTreeMap::new();
+        persistent_updates.insert(
+            message_event_id,
+            StoredUpdate {
+                encoded: Utf8Bytes::from_static("{\"type\":\"NEW_MESSAGE\"}"),
+                meta: StoredUpdateMeta::MessageWithPreview {
+                    key,
+                    preview_id: Some(preview_id),
+                    channel_id,
+                    message_id,
+                },
+            },
+        );
+        let mut preview_map = PreviewMap::with_hasher(ahash::RandomState::new());
+        preview_map.insert(
+            key,
+            StoredPreview {
+                id: preview_event_id,
+                encoded: Utf8Bytes::from_static("{\"type\":\"MESSAGE_PREVIEW\"}"),
+                preview_id,
+                preview_version: 1,
+            },
+        );
+        let mut diff_map = DiffMap::with_hasher(ahash::RandomState::new());
+        diff_map.insert(
+            key,
+            StoredDiff {
+                id: diff_event_id,
+                encoded: Utf8Bytes::from_static("{\"type\":\"DIFF\"}"),
+                preview_id,
+                preview_version: 1,
+                diff_version: 1,
+            },
+        );
+
+        let members_update = EncodedUpdate::new(Update {
+            mailbox: Uuid::nil(),
+            id: members_event_id,
+            body: UpdateBody::Members {
+                channel_id,
+                members: vec![],
+            },
+            live: UpdateLifetime::Persistent,
+        });
+        on_update(
+            &mut persistent_updates,
+            &mut preview_map,
+            &mut diff_map,
+            members_update,
+        );
+
+        assert!(persistent_updates.contains_key(&message_event_id));
+        assert!(!persistent_updates.contains_key(&members_event_id));
+        assert_eq!(preview_map.get(&key).map(|v| v.id), Some(preview_event_id));
+        assert_eq!(diff_map.get(&key).map(|v| v.id), Some(diff_event_id));
+    }
+
+    #[test]
+    fn cleanup_keeps_persistent_history_when_volatile_overflows_total_cap() {
+        let now = timestamp();
+        let first_persistent_id = event_id(now - 20_000, 1, 1);
+
+        let mut persistent_updates = BTreeMap::new();
+        persistent_updates.insert(
+            first_persistent_id,
+            StoredUpdate {
+                encoded: Utf8Bytes::from_static("{\"type\":\"PERSISTENT\"}"),
+                meta: StoredUpdateMeta::Other {
+                    channel_id: Some(Uuid::nil()),
+                    message_id: None,
+                },
+            },
+        );
+
+        for i in 0..511u32 {
+            let id = event_id(now - 19_000 + i as i64, 1, i + 2);
+            persistent_updates.insert(
+                id,
+                StoredUpdate {
+                    encoded: Utf8Bytes::from_static("{\"type\":\"PERSISTENT\"}"),
+                    meta: StoredUpdateMeta::Other {
+                        channel_id: Some(Uuid::nil()),
+                        message_id: None,
+                    },
+                },
+            );
+        }
+
+        let mut preview_map = PreviewMap::with_hasher(ahash::RandomState::new());
+        let mut diff_map = DiffMap::with_hasher(ahash::RandomState::new());
+        for i in 0..40u32 {
+            let event_id = event_id(now + i as i64, 1, i + 600);
+            let key = ChannelUserId::new(Uuid::nil(), Uuid::from_u128(10_000 + i as u128));
+            preview_map.insert(
+                key,
+                StoredPreview {
+                    id: event_id,
+                    encoded: Utf8Bytes::from_static("{\"type\":\"MESSAGE_PREVIEW\"}"),
+                    preview_id: Uuid::from_u128(20_000 + i as u128),
+                    preview_version: 1,
+                },
+            );
+        }
+
+        let floor = cleanup(&mut persistent_updates, &mut preview_map, &mut diff_map);
+
+        assert_eq!(floor, None);
+        let persistent_count = persistent_updates.len();
+        assert_eq!(persistent_count, 512);
+        assert!(persistent_updates.contains_key(&first_persistent_id));
+    }
+
+    #[test]
+    fn cleanup_removes_volatile_entries_older_than_trimmed_persistent_start() {
+        let now = timestamp();
+        let removed_persistent_id = event_id(now - 10_000, 1, 1);
+        let oldest_kept_persistent_id = event_id(now - 9_999, 1, 2);
+        let volatile_key = ChannelUserId::new(Uuid::from_u128(41), Uuid::from_u128(42));
+        let preview_id = Uuid::from_u128(43);
+
+        let mut persistent_updates = BTreeMap::new();
+        persistent_updates.insert(
+            removed_persistent_id,
+            StoredUpdate {
+                encoded: Utf8Bytes::from_static("{\"type\":\"PERSISTENT_OLD\"}"),
+                meta: StoredUpdateMeta::Other {
+                    channel_id: Some(Uuid::nil()),
+                    message_id: None,
+                },
+            },
+        );
+
+        for i in 0..512u32 {
+            let id = event_id(now - 9_999 + i as i64, 1, i + 2);
+            persistent_updates.insert(
+                id,
+                StoredUpdate {
+                    encoded: Utf8Bytes::from_static("{\"type\":\"PERSISTENT\"}"),
+                    meta: StoredUpdateMeta::Other {
+                        channel_id: Some(Uuid::nil()),
+                        message_id: None,
+                    },
+                },
+            );
+        }
+
+        let mut preview_map = PreviewMap::with_hasher(ahash::RandomState::new());
+        preview_map.insert(
+            volatile_key,
+            StoredPreview {
+                id: removed_persistent_id,
+                encoded: Utf8Bytes::from_static("{\"type\":\"MESSAGE_PREVIEW\"}"),
+                preview_id,
+                preview_version: 1,
+            },
+        );
+        let mut diff_map = DiffMap::with_hasher(ahash::RandomState::new());
+        diff_map.insert(
+            volatile_key,
+            StoredDiff {
+                id: removed_persistent_id,
+                encoded: Utf8Bytes::from_static("{\"type\":\"DIFF\"}"),
+                preview_id,
+                preview_version: 1,
+                diff_version: 1,
+            },
+        );
+
+        let floor = cleanup(&mut persistent_updates, &mut preview_map, &mut diff_map);
+
+        assert_eq!(floor, Some(removed_persistent_id.timestamp.saturating_add(1)));
+        assert_eq!(persistent_updates.len(), 512);
+        assert!(!persistent_updates.contains_key(&removed_persistent_id));
+        assert!(persistent_updates.contains_key(&oldest_kept_persistent_id));
+        assert!(preview_map.is_empty());
+        assert!(diff_map.is_empty());
+    }
+
+    #[test]
+    fn cleanup_keeps_matching_diff_when_preview_is_valid() {
+        let now = timestamp();
+        let key = ChannelUserId::new(Uuid::from_u128(51), Uuid::from_u128(52));
+        let preview_id = Uuid::from_u128(53);
+        let preview_event_id = event_id(now - 1_000, 1, 1);
+        let diff_event_id = event_id(now - 500, 1, 2);
+
+        let mut persistent_updates = BTreeMap::new();
+        let mut preview_map = PreviewMap::with_hasher(ahash::RandomState::new());
+        preview_map.insert(
+            key,
+            StoredPreview {
+                id: preview_event_id,
+                encoded: Utf8Bytes::from_static("{\"type\":\"MESSAGE_PREVIEW\"}"),
+                preview_id,
+                preview_version: 2,
+            },
+        );
+        let mut diff_map = DiffMap::with_hasher(ahash::RandomState::new());
+        diff_map.insert(
+            key,
+            StoredDiff {
+                id: diff_event_id,
+                encoded: Utf8Bytes::from_static("{\"type\":\"DIFF\"}"),
+                preview_id,
+                preview_version: 2,
+                diff_version: 2,
+            },
+        );
+
+        let floor = cleanup(&mut persistent_updates, &mut preview_map, &mut diff_map);
+
+        assert_eq!(floor, None);
+        assert_eq!(preview_map.get(&key).map(|v| v.id), Some(preview_event_id));
+        assert_eq!(diff_map.get(&key).map(|v| v.id), Some(diff_event_id));
+    }
+
+    #[test]
+    fn channel_deleted_purges_only_target_channel_across_stores() {
+        let channel_a = Uuid::from_u128(61);
+        let channel_b = Uuid::from_u128(62);
+        let sender_a = Uuid::from_u128(63);
+        let sender_b = Uuid::from_u128(64);
+        let key_a = ChannelUserId::new(channel_a, sender_a);
+        let key_b = ChannelUserId::new(channel_b, sender_b);
+        let preview_id_a = Uuid::from_u128(65);
+        let preview_id_b = Uuid::from_u128(66);
+
+        let persistent_a = event_id(timestamp(), 1, 1);
+        let persistent_b = event_id(timestamp(), 1, 2);
+        let deleted_event_id = event_id(timestamp(), 1, 3);
+
+        let mut persistent_updates = BTreeMap::new();
+        persistent_updates.insert(
+            persistent_a,
+            StoredUpdate {
+                encoded: Utf8Bytes::from_static("{\"type\":\"PERSISTENT_A\"}"),
+                meta: StoredUpdateMeta::Other {
+                    channel_id: Some(channel_a),
+                    message_id: Some(Uuid::from_u128(67)),
+                },
+            },
+        );
+        persistent_updates.insert(
+            persistent_b,
+            StoredUpdate {
+                encoded: Utf8Bytes::from_static("{\"type\":\"PERSISTENT_B\"}"),
+                meta: StoredUpdateMeta::Other {
+                    channel_id: Some(channel_b),
+                    message_id: Some(Uuid::from_u128(68)),
+                },
+            },
+        );
+
+        let mut preview_map = PreviewMap::with_hasher(ahash::RandomState::new());
+        preview_map.insert(
+            key_a,
+            StoredPreview {
+                id: event_id(timestamp(), 1, 4),
+                encoded: Utf8Bytes::from_static("{\"type\":\"MESSAGE_PREVIEW_A\"}"),
+                preview_id: preview_id_a,
+                preview_version: 1,
+            },
+        );
+        preview_map.insert(
+            key_b,
+            StoredPreview {
+                id: event_id(timestamp(), 1, 5),
+                encoded: Utf8Bytes::from_static("{\"type\":\"MESSAGE_PREVIEW_B\"}"),
+                preview_id: preview_id_b,
+                preview_version: 1,
+            },
+        );
+
+        let mut diff_map = DiffMap::with_hasher(ahash::RandomState::new());
+        diff_map.insert(
+            key_a,
+            StoredDiff {
+                id: event_id(timestamp(), 1, 6),
+                encoded: Utf8Bytes::from_static("{\"type\":\"DIFF_A\"}"),
+                preview_id: preview_id_a,
+                preview_version: 1,
+                diff_version: 1,
+            },
+        );
+        diff_map.insert(
+            key_b,
+            StoredDiff {
+                id: event_id(timestamp(), 1, 7),
+                encoded: Utf8Bytes::from_static("{\"type\":\"DIFF_B\"}"),
+                preview_id: preview_id_b,
+                preview_version: 1,
+                diff_version: 1,
+            },
+        );
+
+        let channel_deleted_update = EncodedUpdate::new(Update {
+            mailbox: Uuid::nil(),
+            id: deleted_event_id,
+            body: UpdateBody::ChannelDeleted {
+                channel_id: channel_a,
+            },
+            live: UpdateLifetime::Persistent,
+        });
+
+        on_update(
+            &mut persistent_updates,
+            &mut preview_map,
+            &mut diff_map,
+            channel_deleted_update,
+        );
+
+        assert!(!persistent_updates.contains_key(&persistent_a));
+        assert!(persistent_updates.contains_key(&persistent_b));
+        assert!(!persistent_updates.contains_key(&deleted_event_id));
+        assert!(!preview_map.contains_key(&key_a));
+        assert!(preview_map.contains_key(&key_b));
+        assert!(!diff_map.contains_key(&key_a));
+        assert!(diff_map.contains_key(&key_b));
     }
 }

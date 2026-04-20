@@ -32,9 +32,6 @@ jobs:
         with:
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
 
-      - name: Create sccache directory
-        run: mkdir -p /tmp/sccache && chmod 777 /tmp/sccache
-
       - name: Cache sccache
         if: github.ref != 'refs/heads/production'
         uses: actions/cache@v5
@@ -43,6 +40,12 @@ jobs:
           key: ${{ runner.os }}-sccache-${{ github.run_id }}
           restore-keys: |
             ${{ runner.os }}-sccache-
+
+      - name: Prepare restored sccache
+        run: |
+          mkdir -p /tmp/sccache
+          sudo chown -R "$(id -u):$(id -g)" /tmp/sccache
+          chmod -R a+rwX /tmp/sccache
 
       - name: Check server
         run: nix build --print-build-logs ".#checks.x86_64-linux.server"

@@ -2,11 +2,11 @@
   "name": "@boluo/locale",
   "version": "0.0.0",
   "dependencies": {
-    "@boluo/api": "0.0.0"
+    "@boluo/api": "0.0.0",
+    "@boluo/lang": "0.0.0"
   },
   "devDependencies": {
     "@boluo/eslint-config": "0.0.0",
-    "@boluo/lang": "0.0.0",
     "@boluo/types": "0.0.0",
     "@boluo/typescript-config": "0.0.0",
     "@formatjs/intl": "^4.0.4",

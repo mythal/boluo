@@ -25,7 +25,7 @@
       "interruptible": true
     },
     "dev": {
-      "dependsOn": ["^generate", "@boluo/lang#build"],
+      "dependsOn": ["^generate"],
       "cache": false,
       "persistent": true,
       "interruptible": true,
@@ -39,7 +39,7 @@
       "env": ["ANALYZE", "BACKEND_URL"]
     },
     "spa#build": {
-      "dependsOn": ["^generate", "@boluo/backend-proxy#build", "@boluo/lang#build"],
+      "dependsOn": ["^generate", "@boluo/backend-proxy#build"],
       "inputs": [
         "$TURBO_DEFAULT$",
         ".env",
@@ -51,7 +51,7 @@
       "outputs": ["out/**", ".next/**", "!.next/cache/**"]
     },
     "site#build": {
-      "dependsOn": ["^generate", "@boluo/lang#build"],
+      "dependsOn": ["^generate"],
       "inputs": [
         "$TURBO_DEFAULT$",
         ".env",
@@ -74,16 +74,15 @@
       "outputs": ["dist/**"]
     },
     "boluo-storybook#build": {
-      "dependsOn": ["^generate", "@boluo/lang#build"],
+      "dependsOn": ["^generate"],
       "inputs": ["$TURBO_DEFAULT$"],
       "outputs": ["storybook-static/**"]
     },
     "@boluo/lang#generate": {
       "dependsOn": ["site#lang-sources", "spa#lang-sources"],
-      "outputs": ["src/en.json"]
+      "outputs": ["src/en.json", "dist/**"]
     },
     "@boluo/icons#generate": {
-      "dependsOn": [],
       "inputs": ["icons/**", "svgr.config.js", "package.json"],
       "outputs": ["src/**"]
     }

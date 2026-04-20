@@ -5,11 +5,27 @@
     "@formatjs/cli": "^6.6.3"
   },
   "exports": {
+    "./en.json": {
+      "types": "./types/messages.d.ts",
+      "default": "./dist/en.json"
+    },
+    "./ja_JP.json": {
+      "types": "./types/messages.d.ts",
+      "default": "./dist/ja_JP.json"
+    },
+    "./zh_CN.json": {
+      "types": "./types/messages.d.ts",
+      "default": "./dist/zh_CN.json"
+    },
+    "./zh_TW.json": {
+      "types": "./types/messages.d.ts",
+      "default": "./dist/zh_TW.json"
+    },
     "./*.json": "./dist/*.json"
   },
   "license": "AGPL-3.0",
   "scripts": {
     "build": "formatjs compile-folder --ast --format crowdin ./src ./dist",
-    "generate": "formatjs extract '../../apps/{site,spa}/**/*.{ts,tsx,js,jsx}' '../../packages/**/*.{ts,tsx,js,jsx}' --ignore '../../**/{node_modules,out,.next,storybook-static,dist,.turbo}/**/*' --ignore '../../**/*.d.ts' --out-file src/en.json --format crowdin"
+    "generate": "formatjs extract '../../apps/{site,spa}/**/*.{ts,tsx,js,jsx}' '../../packages/**/*.{ts,tsx,js,jsx}' --ignore '../../**/{node_modules,out,.next,storybook-static,dist,.turbo}/**/*' --ignore '../../**/*.d.ts' --out-file src/en.json --format crowdin && formatjs compile-folder --ast --format crowdin ./src ./dist"
   }
 }

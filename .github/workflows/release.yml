@@ -22,9 +22,6 @@ jobs:
         with:
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
 
-      - name: Create sccache directory
-        run: mkdir -p /tmp/sccache && chmod 777 /tmp/sccache
-
       - name: Cache sccache
         uses: actions/cache@v4
         with:
@@ -32,6 +29,12 @@ jobs:
           key: ${{ runner.os }}-sccache-${{ github.run_id }}
           restore-keys: |
             ${{ runner.os }}-sccache-
+
+      - name: Prepare restored sccache
+        run: |
+          mkdir -p /tmp/sccache
+          sudo chown -R "$(id -u):$(id -g)" /tmp/sccache
+          chmod -R a+rwX /tmp/sccache
 
       - name: Push images
         run: nix run --print-build-logs ".#push-images"

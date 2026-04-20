@@ -84,6 +84,7 @@ struct StoredDiff {
     encoded: Utf8Bytes,
     preview_id: Uuid,
     preview_version: u16,
+    diff_version: u16,
 }
 
 impl StoredUpdateMeta {
@@ -563,6 +564,14 @@ fn on_update(
             {
                 return;
             }
+            if let Some(existing_diff) = diff_map.get(&key) {
+                if existing_diff.preview_id == diff.payload.id
+                    && existing_diff.preview_version == diff.payload.keyframe_version
+                    && existing_diff.diff_version >= diff.payload.version
+                {
+                    return;
+                }
+            }
             diff_map.insert(
                 key,
                 StoredDiff {
@@ -570,6 +579,7 @@ fn on_update(
                     encoded,
                     preview_id: diff.payload.id,
                     preview_version: diff.payload.keyframe_version,
+                    diff_version: diff.payload.version,
                 },
             );
         }
@@ -1005,6 +1015,7 @@ mod tests {
             encoded: encoded_update(from_diff).encoded,
             preview_id: Uuid::from_u128(100),
             preview_version: 1,
+            diff_version: 1,
         };
 
         let expected = vec![
@@ -1032,6 +1043,89 @@ mod tests {
             Some(1),
         );
         assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn on_update_keeps_higher_diff_version_for_same_keyframe() {
+        let channel_id = Uuid::from_u128(200);
+        let sender_id = Uuid::from_u128(201);
+        let key = ChannelUserId::new(channel_id, sender_id);
+        let preview_id = Uuid::from_u128(202);
+        let preview_version = 1;
+        let preview_event_id = event_id(100, 1, 1);
+        let newer_diff_event_id = event_id(101, 1, 1);
+        let older_diff_late_event_id = event_id(102, 1, 1);
+
+        let mut persistent_updates = BTreeMap::new();
+        let mut preview_map = PreviewMap::with_hasher(ahash::RandomState::new());
+        preview_map.insert(
+            key,
+            StoredPreview {
+                id: preview_event_id,
+                encoded: Utf8Bytes::from_static("{\"type\":\"MESSAGE_PREVIEW\"}"),
+                preview_id,
+                preview_version,
+            },
+        );
+        let mut diff_map = DiffMap::with_hasher(ahash::RandomState::new());
+
+        let newer_diff_update = EncodedUpdate::new(Update {
+            mailbox: Uuid::nil(),
+            id: newer_diff_event_id,
+            body: UpdateBody::Diff {
+                channel_id,
+                diff: Box::new(crate::events::preview::PreviewDiff {
+                    sender: sender_id,
+                    payload: crate::events::preview::PreviewDiffPost {
+                        channel_id,
+                        id: preview_id,
+                        keyframe_version: preview_version,
+                        version: 3,
+                        op: vec![],
+                        entities: vec![],
+                    },
+                }),
+            },
+            live: UpdateLifetime::Volatile,
+        });
+        on_update(
+            &mut persistent_updates,
+            &mut preview_map,
+            &mut diff_map,
+            newer_diff_update,
+        );
+
+        let older_diff_late_update = EncodedUpdate::new(Update {
+            mailbox: Uuid::nil(),
+            id: older_diff_late_event_id,
+            body: UpdateBody::Diff {
+                channel_id,
+                diff: Box::new(crate::events::preview::PreviewDiff {
+                    sender: sender_id,
+                    payload: crate::events::preview::PreviewDiffPost {
+                        channel_id,
+                        id: preview_id,
+                        keyframe_version: preview_version,
+                        version: 2,
+                        op: vec![],
+                        entities: vec![],
+                    },
+                }),
+            },
+            live: UpdateLifetime::Volatile,
+        });
+        on_update(
+            &mut persistent_updates,
+            &mut preview_map,
+            &mut diff_map,
+            older_diff_late_update,
+        );
+
+        let Some(diff) = diff_map.get(&key) else {
+            panic!("diff should be kept for the preview keyframe");
+        };
+        assert_eq!(diff.id, newer_diff_event_id);
+        assert_eq!(diff.diff_version, 3);
     }
 
     #[test]
@@ -1087,6 +1181,7 @@ mod tests {
                 encoded: Utf8Bytes::from_static("{}"),
                 preview_id: Uuid::from_u128(21),
                 preview_version: 1,
+                diff_version: 1,
             },
         );
 
@@ -1141,6 +1236,7 @@ mod tests {
                 encoded: Utf8Bytes::from_static("{\"type\":\"DIFF\"}"),
                 preview_id,
                 preview_version: 1,
+                diff_version: 1,
             },
         );
 
@@ -1273,6 +1369,7 @@ mod tests {
                 encoded: Utf8Bytes::from_static("{\"type\":\"DIFF\"}"),
                 preview_id,
                 preview_version: 1,
+                diff_version: 1,
             },
         );
 
@@ -1313,6 +1410,7 @@ mod tests {
                 encoded: Utf8Bytes::from_static("{\"type\":\"DIFF\"}"),
                 preview_id,
                 preview_version: 2,
+                diff_version: 2,
             },
         );
 
@@ -1388,6 +1486,7 @@ mod tests {
                 encoded: Utf8Bytes::from_static("{\"type\":\"DIFF_A\"}"),
                 preview_id: preview_id_a,
                 preview_version: 1,
+                diff_version: 1,
             },
         );
         diff_map.insert(
@@ -1397,6 +1496,7 @@ mod tests {
                 encoded: Utf8Bytes::from_static("{\"type\":\"DIFF_B\"}"),
                 preview_id: preview_id_b,
                 preview_version: 1,
+                diff_version: 1,
             },
         );
 

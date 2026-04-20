@@ -625,7 +625,7 @@ fn cleanup(
     persistent_updates: &mut BTreeMap<EventId, StoredUpdate>,
     preview_map: &mut PreviewMap,
     diff_map: &mut DiffMap,
-) {
+) -> Option<i64> {
     let now = timestamp();
     let mut has_been_cleaned = false;
     let mut last_removed_timestamp: Option<i64> = None;
@@ -681,6 +681,8 @@ fn cleanup(
         diff.preview_id == reference_preview.preview_id
             && diff.preview_version == reference_preview.preview_version
     });
+
+    last_removed_timestamp.map(|removed_timestamp| removed_timestamp.saturating_add(1))
 }
 
 fn oldest_persistent_event_id(
@@ -689,6 +691,13 @@ fn oldest_persistent_event_id(
     persistent_updates
         .first_key_value()
         .map(|(event_id, _)| *event_id)
+}
+
+fn cached_updates_start_at(persistent_updates: &BTreeMap<EventId, StoredUpdate>, floor: i64) -> i64 {
+    oldest_persistent_event_id(persistent_updates)
+        .map(|event_id| event_id.timestamp)
+        .unwrap_or(floor)
+        .max(floor)
 }
 
 fn should_include_update(
@@ -759,7 +768,7 @@ impl MailBoxState {
             let mut status_state = super::status::StatusState::new(id);
             let mut broadcast_status_interval = crate::utils::cleaner_interval(12);
             let mut cleanup_interval = crate::utils::cleaner_interval(120);
-            let mut start_at = timestamp();
+            let mut cursor_floor = i64::MIN;
             let mut last_pending_actions_warned = 0;
             let labels = vec![metrics::Label::new("mailbox_id", id.to_string())];
             let pending_gauge = metrics::gauge!("boluo_server_events_pending_actions", labels.clone());
@@ -786,7 +795,10 @@ impl MailBoxState {
                                 );
                                 respond_to.send(CachedUpdates {
                                     updates: response_updates,
-                                    start_at,
+                                    start_at: cached_updates_start_at(
+                                        &persistent_updates,
+                                        cursor_floor,
+                                    ),
                                 }).ok();
                             }
                             Action::Update { body, live } => {
@@ -852,14 +864,15 @@ impl MailBoxState {
                             break;
                         } else {
                             let before_size = persistent_updates.len() + preview_map.len() + diff_map.len();
-                            cleanup(&mut persistent_updates, &mut preview_map, &mut diff_map);
+                            if let Some(new_floor) =
+                                cleanup(&mut persistent_updates, &mut preview_map, &mut diff_map)
+                            {
+                                cursor_floor = cursor_floor.max(new_floor);
+                            }
                             let after_size = persistent_updates.len() + preview_map.len() + diff_map.len();
                             if after_size != before_size {
                                 tracing::info!(mailbox_id = %id, "Cleaned up {} updates", before_size - after_size);
                             }
-                            start_at = oldest_persistent_event_id(&persistent_updates)
-                                .map(|event_id| event_id.timestamp)
-                                .unwrap_or_else(timestamp);
                         }
                     }
                     _ = crate::shutdown::SHUTDOWN.notified() => {
@@ -1022,6 +1035,19 @@ mod tests {
     }
 
     #[test]
+    fn cached_updates_start_at_honors_cursor_floor() {
+        let mut persistent_updates = BTreeMap::new();
+        assert_eq!(cached_updates_start_at(&persistent_updates, i64::MIN), i64::MIN);
+        assert_eq!(cached_updates_start_at(&persistent_updates, 123), 123);
+
+        let oldest = event_id(100, 1, 1);
+        persistent_updates.insert(oldest, persistent_update(oldest));
+        persistent_updates.insert(event_id(101, 1, 2), persistent_update(event_id(101, 1, 2)));
+        assert_eq!(cached_updates_start_at(&persistent_updates, i64::MIN), 100);
+        assert_eq!(cached_updates_start_at(&persistent_updates, 150), 150);
+    }
+
+    #[test]
     fn cleanup_removes_expired_preview() {
         let stale_preview_id = event_id(timestamp() - (1000 * 60 * 16), 1, 1);
         let preview_key = ChannelUserId::new(Uuid::nil(), Uuid::from_u128(10));
@@ -1039,8 +1065,9 @@ mod tests {
         );
         let mut diff_map = DiffMap::with_hasher(ahash::RandomState::new());
 
-        cleanup(&mut persistent_updates, &mut preview_map, &mut diff_map);
+        let floor = cleanup(&mut persistent_updates, &mut preview_map, &mut diff_map);
 
+        assert_eq!(floor, None);
         assert!(preview_map.is_empty());
         assert!(persistent_updates.is_empty());
     }
@@ -1063,8 +1090,9 @@ mod tests {
             },
         );
 
-        cleanup(&mut persistent_updates, &mut preview_map, &mut diff_map);
+        let floor = cleanup(&mut persistent_updates, &mut preview_map, &mut diff_map);
 
+        assert_eq!(floor, None);
         assert!(diff_map.is_empty());
         assert!(persistent_updates.is_empty());
     }
@@ -1185,8 +1213,9 @@ mod tests {
             );
         }
 
-        cleanup(&mut persistent_updates, &mut preview_map, &mut diff_map);
+        let floor = cleanup(&mut persistent_updates, &mut preview_map, &mut diff_map);
 
+        assert_eq!(floor, None);
         let persistent_count = persistent_updates.len();
         assert_eq!(persistent_count, 512);
         assert!(persistent_updates.contains_key(&first_persistent_id));
@@ -1247,8 +1276,9 @@ mod tests {
             },
         );
 
-        cleanup(&mut persistent_updates, &mut preview_map, &mut diff_map);
+        let floor = cleanup(&mut persistent_updates, &mut preview_map, &mut diff_map);
 
+        assert_eq!(floor, Some(removed_persistent_id.timestamp.saturating_add(1)));
         assert_eq!(persistent_updates.len(), 512);
         assert!(!persistent_updates.contains_key(&removed_persistent_id));
         assert!(persistent_updates.contains_key(&oldest_kept_persistent_id));
@@ -1286,8 +1316,9 @@ mod tests {
             },
         );
 
-        cleanup(&mut persistent_updates, &mut preview_map, &mut diff_map);
+        let floor = cleanup(&mut persistent_updates, &mut preview_map, &mut diff_map);
 
+        assert_eq!(floor, None);
         assert_eq!(preview_map.get(&key).map(|v| v.id), Some(preview_event_id));
         assert_eq!(diff_map.get(&key).map(|v| v.id), Some(diff_event_id));
     }

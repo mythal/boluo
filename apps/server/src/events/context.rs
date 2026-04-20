@@ -516,12 +516,24 @@ fn prepare_message_edited_old_pos(
     None
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum OnUpdateResult {
+    Broadcast,
+    SkipBroadcast,
+}
+
+impl OnUpdateResult {
+    fn should_broadcast(self) -> bool {
+        matches!(self, OnUpdateResult::Broadcast)
+    }
+}
+
 fn on_update(
     persistent_updates: &mut BTreeMap<EventId, StoredUpdate>,
     preview_map: &mut PreviewMap,
     diff_map: &mut DiffMap,
     encoded_update: EncodedUpdate,
-) {
+) -> OnUpdateResult {
     let EncodedUpdate { update, encoded } = encoded_update;
     let update_id = update.id;
     match update.body {
@@ -529,7 +541,7 @@ fn on_update(
             let key = ChannelUserId::new(preview.channel_id, preview.sender_id);
             if let Some(existing_preview) = preview_map.get(&key) {
                 if existing_preview.id >= update_id {
-                    return;
+                    return OnUpdateResult::SkipBroadcast;
                 }
             }
             if let Some(existing_diff) = diff_map.get(&key) {
@@ -548,28 +560,29 @@ fn on_update(
                     preview_version: preview.version,
                 },
             );
+            OnUpdateResult::Broadcast
         }
         UpdateBody::Diff {
             channel_id, diff, ..
         } => {
             let key = ChannelUserId::new(channel_id, diff.sender);
             let Some(reference_preview) = preview_map.get(&key) else {
-                return;
+                return OnUpdateResult::SkipBroadcast;
             };
             if reference_preview.id >= update_id {
-                return;
+                return OnUpdateResult::SkipBroadcast;
             }
             if reference_preview.preview_id != diff.payload.id
                 || reference_preview.preview_version != diff.payload.keyframe_version
             {
-                return;
+                return OnUpdateResult::SkipBroadcast;
             }
             if let Some(existing_diff) = diff_map.get(&key) {
                 if existing_diff.preview_id == diff.payload.id
                     && existing_diff.preview_version == diff.payload.keyframe_version
                     && existing_diff.diff_version >= diff.payload.version
                 {
-                    return;
+                    return OnUpdateResult::SkipBroadcast;
                 }
             }
             diff_map.insert(
@@ -582,6 +595,7 @@ fn on_update(
                     diff_version: diff.payload.version,
                 },
             );
+            OnUpdateResult::Broadcast
         }
         body => {
             let stored = StoredUpdate {
@@ -627,6 +641,7 @@ fn on_update(
                     // Do nothing
                 }
             }
+            OnUpdateResult::Broadcast
         }
     }
 }
@@ -837,7 +852,7 @@ impl MailBoxState {
                                 }
                                 let update_name = encoded_update.update.name();
                                 let encoded_for_broadcast = encoded_update.encoded.clone();
-                                on_update(
+                                let should_broadcast = on_update(
                                     &mut persistent_updates,
                                     &mut preview_map,
                                     &mut diff_map,
@@ -848,7 +863,9 @@ impl MailBoxState {
                                 if elapsed > std::time::Duration::from_millis(25) {
                                     tracing::warn!(mailbox_id = %id, update_name, "Update took too long to process: {:?}", elapsed);
                                 }
-                                Update::send(id, encoded_for_broadcast).await;
+                                if should_broadcast.should_broadcast() {
+                                    Update::send(id, encoded_for_broadcast).await;
+                                }
                             }
                             Action::TouchActivity => {
                                 last_event_at = Some(Instant::now());
@@ -1088,12 +1105,13 @@ mod tests {
             },
             live: UpdateLifetime::Volatile,
         });
-        on_update(
+        let first_should_broadcast = on_update(
             &mut persistent_updates,
             &mut preview_map,
             &mut diff_map,
             newer_diff_update,
         );
+        assert_eq!(first_should_broadcast, OnUpdateResult::Broadcast);
 
         let older_diff_late_update = EncodedUpdate::new(Update {
             mailbox: Uuid::nil(),
@@ -1114,18 +1132,61 @@ mod tests {
             },
             live: UpdateLifetime::Volatile,
         });
-        on_update(
+        let second_should_broadcast = on_update(
             &mut persistent_updates,
             &mut preview_map,
             &mut diff_map,
             older_diff_late_update,
         );
+        assert_eq!(second_should_broadcast, OnUpdateResult::SkipBroadcast);
 
         let Some(diff) = diff_map.get(&key) else {
             panic!("diff should be kept for the preview keyframe");
         };
         assert_eq!(diff.id, newer_diff_event_id);
         assert_eq!(diff.diff_version, 3);
+    }
+
+    #[test]
+    fn on_update_rejects_diff_without_reference_preview_for_broadcast() {
+        let channel_id = Uuid::from_u128(210);
+        let sender_id = Uuid::from_u128(211);
+        let preview_id = Uuid::from_u128(212);
+
+        let mut persistent_updates = BTreeMap::new();
+        let mut preview_map = PreviewMap::with_hasher(ahash::RandomState::new());
+        let mut diff_map = DiffMap::with_hasher(ahash::RandomState::new());
+
+        let diff_update = EncodedUpdate::new(Update {
+            mailbox: Uuid::nil(),
+            id: event_id(100, 1, 1),
+            body: UpdateBody::Diff {
+                channel_id,
+                diff: Box::new(crate::events::preview::PreviewDiff {
+                    sender: sender_id,
+                    payload: crate::events::preview::PreviewDiffPost {
+                        channel_id,
+                        id: preview_id,
+                        keyframe_version: 1,
+                        version: 1,
+                        op: vec![],
+                        entities: vec![],
+                    },
+                }),
+            },
+            live: UpdateLifetime::Volatile,
+        });
+        let should_broadcast = on_update(
+            &mut persistent_updates,
+            &mut preview_map,
+            &mut diff_map,
+            diff_update,
+        );
+
+        assert_eq!(should_broadcast, OnUpdateResult::SkipBroadcast);
+        assert!(persistent_updates.is_empty());
+        assert!(preview_map.is_empty());
+        assert!(diff_map.is_empty());
     }
 
     #[test]

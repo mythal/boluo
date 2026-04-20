@@ -33,6 +33,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-sccache-
 
+      - name: Prepare restored sccache
+        run: |
+          sudo chown -R "$(id -u):$(id -g)" /tmp/sccache
+          chmod -R a+rwX /tmp/sccache
+
       - name: Push images
         run: nix run --print-build-logs ".#push-images"
         env:

@@ -507,6 +507,8 @@ const handleMessagePreviewDiff = (
   if (payload.id !== keyframe.id || payload.ref !== keyframe.version) {
     return state;
   }
+  // `preview.v` holds the last applied version (keyframe or diff); sender shares a
+  // single counter so diff.v is always > the keyframe.v it was built on.
   const currentVersion = preview.v ?? keyframe.version;
   if (payload.v != null && payload.v <= currentVersion) {
     return state;

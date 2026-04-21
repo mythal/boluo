@@ -795,16 +795,13 @@ impl MailBoxState {
             let mut cleanup_interval = crate::utils::cleaner_interval(120);
             let mut cursor_floor = i64::MIN;
             let mut last_pending_actions_warned = 0;
-            let labels = vec![metrics::Label::new("mailbox_id", id.to_string())];
-            let pending_gauge = metrics::gauge!("boluo_server_events_pending_actions", labels.clone());
-            let action_duration_histogram = metrics::histogram!("boluo_server_events_update_duration_ms", labels.clone());
+            let action_duration_histogram = metrics::histogram!("boluo_server_events_update_duration_ms");
             loop {
                 tokio::select! {
                     Some(action) = rx.recv() => {
                         let pending = rx.len();
-                        pending_gauge.set(pending as f64);
                         if pending > 256 && (pending - last_pending_actions_warned) > 8 {
-                            tracing::info!(pending, "Too many pending actions");
+                            tracing::info!(pending, mailbox_id = %id, "Too many pending actions");
                             last_pending_actions_warned = pending;
                         }
                         let start = std::time::Instant::now();

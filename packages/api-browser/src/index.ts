@@ -3,6 +3,7 @@ import { atom } from 'jotai';
 import { store } from '@boluo/store';
 import type { Result } from '@boluo/utils/result';
 import { isCrossOrigin } from '@boluo/utils/browser';
+import { applyCsrfHeader } from '@boluo/utils/csrf';
 import { type ApiError } from '@boluo/api/errors';
 import type { LoginReturn, Media, User } from '@boluo/types/bindings';
 import type { StringKeyOf } from '@boluo/types';
@@ -40,7 +41,6 @@ export const apiUrlAtom = atom((get) => {
 });
 
 const TOKEN_KEY = 'BOLUO_TOKEN_V1';
-
 export function getToken(): string | null {
   return localStorage.getItem(TOKEN_KEY) || null;
 }
@@ -58,6 +58,7 @@ function addToken(params: RequestInit): RequestInit {
   if (token) {
     headers.set('Authorization', token);
   }
+  applyCsrfHeader(headers, params.method, token != null);
   // headers.set('Authorization', `Bearer ${token}`);
   return { ...params, headers };
 }

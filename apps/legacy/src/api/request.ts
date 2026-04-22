@@ -3,6 +3,7 @@ import { isCrossOrigin } from '../settings';
 import store from '../store';
 import { Err, Ok, type Result } from '../utils/result';
 import { getAuthToken, clearAuthToken } from '../utils/token';
+import { applyCsrfHeader } from '@boluo/utils/csrf';
 import type {
   IdQuery,
   IdWithToken,
@@ -99,6 +100,7 @@ export const request = async <T>(
   if (token) {
     headers.append('Authorization', `Bearer ${token}`);
   }
+  applyCsrfHeader(headers, method, token != null);
 
   let result: Response;
   try {

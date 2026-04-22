@@ -26,6 +26,7 @@ impl AppContext {
 
 static DEBUG: OnceCell<bool> = OnceCell::new();
 static SECRET: OnceCell<String> = OnceCell::new();
+static CSRF_COMPAT_MODE: OnceCell<bool> = OnceCell::new();
 
 fn env_bool<T: AsRef<str>>(s: T) -> bool {
     let s = s.as_ref().trim();
@@ -38,6 +39,14 @@ pub fn ci() -> bool {
 
 pub fn debug() -> bool {
     *DEBUG.get_or_init(|| env::var("BOLUO_DEBUG").map(env_bool).unwrap_or(false))
+}
+
+pub fn csrf_compat_mode() -> bool {
+    *CSRF_COMPAT_MODE.get_or_init(|| {
+        env::var("BOLUO_CSRF_COMPAT_MODE")
+            .map(env_bool)
+            .unwrap_or(true)
+    })
 }
 
 pub fn media_public_url() -> &'static str {

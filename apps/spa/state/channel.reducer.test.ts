@@ -642,12 +642,9 @@ describe('channelReducer', () => {
       { type: 'messagePreview', payload: { channelId, preview, timestamp: 1 } },
       context,
     );
-    const invalidDiff = makeDiff(
-      preview.id,
-      1,
-      [{ type: 'SPLICE', i: 999, len: 1, _: 'x' }],
-      { v: 2 },
-    );
+    const invalidDiff = makeDiff(preview.id, 1, [{ type: 'SPLICE', i: 999, len: 1, _: 'x' }], {
+      v: 2,
+    });
 
     const next = channelReducer(
       baseState,

@@ -212,8 +212,7 @@ export const buildPreviewDiffPlan = ({
   doNotBroadcast,
   resetPreview,
 }: PreviewDiffPlanInput): PreviewDiffPlan => {
-  const shouldForceKeyframe =
-    now - currentSendState.lastKeyframeAt >= SEND_KEYFRAME_INTERVAL_MS;
+  const shouldForceKeyframe = now - currentSendState.lastKeyframeAt >= SEND_KEYFRAME_INTERVAL_MS;
   if (
     shouldForceKeyframe ||
     shouldFallbackToKeyframe(currentSendState.keyframe, nextPreview, doNotBroadcast, resetPreview)

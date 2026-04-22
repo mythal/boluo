@@ -100,8 +100,7 @@ impl ChannelPosActor {
 
     pub async fn run(mut self) {
         let mut changed_at = Instant::now();
-        let action_duration_histogram =
-            metrics::histogram!("boluo_server_pos_action_duration_ms");
+        let action_duration_histogram = metrics::histogram!("boluo_server_pos_action_duration_ms");
         let positions_len_histogram = metrics::histogram!("boluo_server_pos_positions_len");
 
         while let Some(action) = self.receiver.recv().await {

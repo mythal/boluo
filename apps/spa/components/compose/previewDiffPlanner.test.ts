@@ -79,7 +79,10 @@ test('shouldFallbackLargeTextChange requires both ratio and min chars', () => {
 
 test('buildPreviewDiffPlan returns DIFF and bumps latestVersion', () => {
   const state = makeState();
-  const nextPreview = makePreview({ text: 'hello world', entities: [{ type: 'Text', start: 0, len: 11 }] });
+  const nextPreview = makePreview({
+    text: 'hello world',
+    entities: [{ type: 'Text', start: 0, len: 11 }],
+  });
   const plan = buildPreviewDiffPlan({
     channelId,
     currentSendState: state,

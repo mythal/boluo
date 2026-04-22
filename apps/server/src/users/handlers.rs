@@ -33,10 +33,18 @@ const RATE_LIMITER_SHRINK_INTERVAL_S: u64 = 60 * 60;
 
 static LOGIN_LIMITER: LazyLock<DefaultKeyedRateLimiter<String>> =
     LazyLock::new(|| RateLimiter::keyed(Quota::per_minute(NonZeroU32::new(10).unwrap())));
+static REGISTER_IP_LIMITER: LazyLock<DefaultKeyedRateLimiter<IpAddr>> =
+    LazyLock::new(|| RateLimiter::keyed(Quota::per_hour(NonZeroU32::new(32).unwrap())));
+static REGISTER_EMAIL_LIMITER: LazyLock<DefaultKeyedRateLimiter<String>> =
+    LazyLock::new(|| RateLimiter::keyed(Quota::per_hour(NonZeroU32::new(3).unwrap())));
 static RESET_PASSWORD_IP_LIMITER: LazyLock<DefaultKeyedRateLimiter<IpAddr>> =
     LazyLock::new(|| RateLimiter::keyed(Quota::per_hour(NonZeroU32::new(32).unwrap())));
 static RESET_PASSWORD_EMAIL_LIMITER: LazyLock<DefaultKeyedRateLimiter<String>> =
     LazyLock::new(|| RateLimiter::keyed(Quota::per_hour(NonZeroU32::new(16).unwrap())));
+static RESEND_EMAIL_VERIFICATION_IP_LIMITER: LazyLock<DefaultKeyedRateLimiter<IpAddr>> =
+    LazyLock::new(|| RateLimiter::keyed(Quota::per_hour(NonZeroU32::new(32).unwrap())));
+static RESEND_EMAIL_VERIFICATION_USER_LIMITER: LazyLock<DefaultKeyedRateLimiter<Uuid>> =
+    LazyLock::new(|| RateLimiter::keyed(Quota::per_hour(NonZeroU32::new(5).unwrap())));
 static EMAIL_CHANGE_IP_LIMITER: LazyLock<DefaultKeyedRateLimiter<IpAddr>> =
     LazyLock::new(|| RateLimiter::keyed(Quota::per_hour(NonZeroU32::new(10).unwrap())));
 static EMAIL_CHANGE_EMAIL_LIMITER: LazyLock<DefaultKeyedRateLimiter<String>> =
@@ -50,15 +58,23 @@ pub fn start_rate_limiter_cleanup() {
             tokio::select! {
                 _ = interval.tick() => {
                     LOGIN_LIMITER.retain_recent();
+                    REGISTER_IP_LIMITER.retain_recent();
+                    REGISTER_EMAIL_LIMITER.retain_recent();
                     RESET_PASSWORD_IP_LIMITER.retain_recent();
                     RESET_PASSWORD_EMAIL_LIMITER.retain_recent();
+                    RESEND_EMAIL_VERIFICATION_IP_LIMITER.retain_recent();
+                    RESEND_EMAIL_VERIFICATION_USER_LIMITER.retain_recent();
                     EMAIL_CHANGE_IP_LIMITER.retain_recent();
                     EMAIL_CHANGE_EMAIL_LIMITER.retain_recent();
                 }
                 _ = shrink_interval.tick() => {
                     LOGIN_LIMITER.shrink_to_fit();
+                    REGISTER_IP_LIMITER.shrink_to_fit();
+                    REGISTER_EMAIL_LIMITER.shrink_to_fit();
                     RESET_PASSWORD_IP_LIMITER.shrink_to_fit();
                     RESET_PASSWORD_EMAIL_LIMITER.shrink_to_fit();
+                    RESEND_EMAIL_VERIFICATION_IP_LIMITER.shrink_to_fit();
+                    RESEND_EMAIL_VERIFICATION_USER_LIMITER.shrink_to_fit();
                     EMAIL_CHANGE_IP_LIMITER.shrink_to_fit();
                     EMAIL_CHANGE_EMAIL_LIMITER.shrink_to_fit();
                 }
@@ -74,13 +90,25 @@ async fn register(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<User, AppError> {
+    let ip = get_ip(&req)?;
+    REGISTER_IP_LIMITER
+        .check_key(&ip)
+        .map_err(|_| AppError::LimitExceeded("Too many requests, please try again later."))?;
+
     let Register {
         email,
         username,
         nickname,
         password,
     }: Register = interface::parse_body(req).await?;
-    let user = User::register(&ctx.db, &email, &username, &nickname, &password).await?;
+
+    let normalized_email = email.trim().to_ascii_lowercase();
+    crate::validators::EMAIL.run(&normalized_email)?;
+    REGISTER_EMAIL_LIMITER
+        .check_key(&normalized_email)
+        .map_err(|_| AppError::LimitExceeded("This email is requested too many times."))?;
+
+    let user = User::register(&ctx.db, &normalized_email, &username, &nickname, &password).await?;
     metrics::counter!("boluo_server_users_total").increment(1);
 
     // Send email verification
@@ -367,23 +395,27 @@ pub async fn reset_password(
     req: Request<impl Body>,
 ) -> Result<(), AppError> {
     let ip = get_ip(&req)?;
-    RESET_PASSWORD_IP_LIMITER
-        .check_key(&ip)
-        .map_err(|_| AppError::LimitExceeded("Too many requests, please try again later."))?;
 
     let ResetPassword { email, lang } = parse_body(req).await?;
     let email = email.trim().to_lowercase();
     crate::validators::EMAIL.run(&email)?;
 
+    let user = {
+        let mut conn = ctx.db.acquire().await?;
+        User::get_by_email(&mut *conn, &email)
+            .await?
+            .ok_or(AppError::NotFound("email"))?
+    };
+
+    RESET_PASSWORD_IP_LIMITER
+        .check_key(&ip)
+        .map_err(|_| AppError::LimitExceeded("Too many requests, please try again later."))?;
     RESET_PASSWORD_EMAIL_LIMITER
         .check_key(&email)
         .map_err(|_| AppError::LimitExceeded("This email is requested too many times."))?;
 
     let token = {
         let mut conn = ctx.db.acquire().await?;
-        let user = User::get_by_email(&mut *conn, &email)
-            .await?
-            .ok_or(AppError::NotFound("email"))?;
         User::generate_reset_token(&mut *conn, user.id)
             .await?
             .to_string()
@@ -556,6 +588,7 @@ pub async fn resend_email_verification(
     use crate::session::authenticate;
     use crate::users::api::ResendEmailVerification;
 
+    let ip = get_ip(&req)?;
     let session = authenticate(&req).await?;
     let ResendEmailVerification { lang } = parse_body(req).await?;
 
@@ -568,6 +601,13 @@ pub async fn resend_email_verification(
     if is_verified {
         return Ok(ResendEmailVerificationResult::AlreadyVerified);
     }
+
+    RESEND_EMAIL_VERIFICATION_IP_LIMITER
+        .check_key(&ip)
+        .map_err(|_| AppError::LimitExceeded("Too many requests, please try again later."))?;
+    RESEND_EMAIL_VERIFICATION_USER_LIMITER
+        .check_key(&session.user_id)
+        .map_err(|_| AppError::LimitExceeded("This email is requested too many times."))?;
 
     tracing::debug!(
         user_id = %user.id,
@@ -664,19 +704,12 @@ pub async fn request_email_change(
     use crate::session::authenticate;
     use crate::users::api::RequestEmailChange;
     let ip = get_ip(&req)?;
-    EMAIL_CHANGE_IP_LIMITER
-        .check_key(&ip)
-        .map_err(|_| AppError::LimitExceeded("Too many requests, please try again later."))?;
 
     let session = authenticate(&req).await?;
     let RequestEmailChange { new_email, lang } = parse_body(req).await?;
 
     let new_email = new_email.trim().to_lowercase();
     crate::validators::EMAIL.run(&new_email)?;
-
-    EMAIL_CHANGE_EMAIL_LIMITER
-        .check_key(&new_email)
-        .map_err(|_| AppError::LimitExceeded("This email is requested too many times."))?;
 
     let current_email = {
         let mut conn = ctx.db.acquire().await?;
@@ -699,6 +732,13 @@ pub async fn request_email_change(
 
         current_user.email
     };
+
+    EMAIL_CHANGE_IP_LIMITER
+        .check_key(&ip)
+        .map_err(|_| AppError::LimitExceeded("Too many requests, please try again later."))?;
+    EMAIL_CHANGE_EMAIL_LIMITER
+        .check_key(&new_email)
+        .map_err(|_| AppError::LimitExceeded("This email is requested too many times."))?;
 
     send_email_change_verification(&new_email, &session.user_id, lang.as_deref()).await?;
 

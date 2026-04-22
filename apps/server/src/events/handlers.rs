@@ -76,6 +76,21 @@ enum CompressCachedUpdatesError {
 }
 
 const CACHED_UPDATES_CHUNK_SIZE: usize = 32;
+const INITIAL_REPLAY_FLUSH_INTERVAL_FRAMES: usize = 16;
+
+async fn feed_initial_replay_frame(
+    outgoing: &mut Sender,
+    message: WsMessage,
+    frames_since_flush: &mut usize,
+) -> Result<(), tokio_tungstenite::tungstenite::Error> {
+    outgoing.feed(message).await?;
+    *frames_since_flush += 1;
+    if *frames_since_flush >= INITIAL_REPLAY_FLUSH_INTERVAL_FRAMES {
+        outgoing.flush().await?;
+        *frames_since_flush = 0;
+    }
+    Ok(())
+}
 
 fn serialize_cached_updates(cached_updates: &[Utf8Bytes]) -> Vec<u8> {
     let total_len = cached_updates.iter().map(|x| x.len()).sum::<usize>();
@@ -168,10 +183,16 @@ async fn push_updates(
         }
     };
     let cached_updates_count = cached_updates.len();
+    let mut replay_frames_since_flush = 0;
     if !cached_updates.is_empty() {
         if matches!(encoding, UpdateEncoding::Plain) {
             for message in &cached_updates {
-                outgoing.feed(WsMessage::Text(message.clone())).await?;
+                feed_initial_replay_frame(
+                    outgoing,
+                    WsMessage::Text(message.clone()),
+                    &mut replay_frames_since_flush,
+                )
+                .await?;
             }
         } else {
             let total = cached_updates.len();
@@ -193,7 +214,12 @@ async fn push_updates(
                             "Failed to compress cached update chunk, fallback to text frames for remaining updates"
                         );
                         for message in &cached_updates[chunk_start..] {
-                            outgoing.feed(WsMessage::Text(message.clone())).await?;
+                            feed_initial_replay_frame(
+                                outgoing,
+                                WsMessage::Text(message.clone()),
+                                &mut replay_frames_since_flush,
+                            )
+                            .await?;
                         }
                         break;
                     }
@@ -206,7 +232,12 @@ async fn push_updates(
                             "Failed to compress cached update chunk, fallback to text frames for remaining updates"
                         );
                         for message in &cached_updates[chunk_start..] {
-                            outgoing.feed(WsMessage::Text(message.clone())).await?;
+                            feed_initial_replay_frame(
+                                outgoing,
+                                WsMessage::Text(message.clone()),
+                                &mut replay_frames_since_flush,
+                            )
+                            .await?;
                         }
                         break;
                     }
@@ -224,7 +255,12 @@ async fn push_updates(
                     None
                 };
                 // Keep strict wire order; overlap next chunk compression with this send.
-                outgoing.feed(WsMessage::Binary(payload.into())).await?;
+                feed_initial_replay_frame(
+                    outgoing,
+                    WsMessage::Binary(payload.into()),
+                    &mut replay_frames_since_flush,
+                )
+                .await?;
 
                 let Some((next_start, next_end, next_task)) = next_task else {
                     break;

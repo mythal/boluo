@@ -18,6 +18,7 @@ let lastPongTime = Date.now();
 const UNAUTHENTICATED = 'UNAUTHENTICATED';
 const NETWORK_ERROR = 'NETWORK_ERROR';
 const UNEXPECTED = 'UNEXPECTED';
+type UpdateEncoding = 'plain' | 'brotli' | 'gzip';
 
 const TOKEN_VALIDITY_MS = 60_000;
 const TOKEN_EXPIRY_SAFETY_MS = 5_000;
@@ -25,6 +26,95 @@ const MAX_TOKEN_AGE_MS = TOKEN_VALIDITY_MS - TOKEN_EXPIRY_SAFETY_MS;
 
 const SLEEP_MS = [0, 32, 64, 126, 256, 256, 512, 1024, 512];
 const MAX_ATTEMPTS = 11;
+
+const supportsDecompressionFormat = (format: string): boolean => {
+  if (typeof DecompressionStream !== 'function') return false;
+  try {
+    new DecompressionStream(format as ConstructorParameters<typeof DecompressionStream>[0]);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+const detectUpdateEncoding = (): UpdateEncoding => {
+  if (supportsDecompressionFormat('brotli')) return 'brotli';
+  if (supportsDecompressionFormat('gzip')) return 'gzip';
+  return 'plain';
+};
+
+const parseAndDispatchUpdate = (raw: string, mailboxId: string, dispatch: ChatDispatch): void => {
+  let update: unknown;
+  try {
+    update = JSON.parse(raw);
+  } catch {
+    console.warn('Failed to parse incoming message', mailboxId, raw);
+    return;
+  }
+  if (!isServerUpdate(update)) {
+    console.warn('Received invalid update', mailboxId, update);
+    return;
+  }
+  dispatch({ type: 'update', payload: update });
+};
+
+const decompressCachedUpdates = async (
+  compressed: ArrayBuffer,
+  encoding: Exclude<UpdateEncoding, 'plain'>,
+  mailboxId: string,
+): Promise<string[] | null> => {
+  const format = encoding === 'brotli' ? 'brotli' : 'gzip';
+  try {
+    const stream = new DecompressionStream(
+      format as ConstructorParameters<typeof DecompressionStream>[0],
+    );
+    const writer = stream.writable.getWriter();
+    await writer.write(new Uint8Array(compressed));
+    await writer.close();
+    const decompressedText = await new Response(stream.readable).text();
+    if (decompressedText === '') return [];
+    return decompressedText.split('\n').filter((x) => x !== '');
+  } catch (error) {
+    console.warn('Failed to decompress cached websocket updates', mailboxId, format, error);
+    return null;
+  }
+};
+
+const handleIncomingMessage = async (
+  connection: WebSocket,
+  message: MessageEvent<unknown>,
+  mailboxId: string,
+  dispatch: ChatDispatch,
+  encoding: UpdateEncoding,
+): Promise<void> => {
+  const raw = message.data;
+  if (raw === PING) {
+    connection.send(PONG);
+    lastPongTime = Date.now();
+    return;
+  } else if (raw === PONG) {
+    return;
+  }
+  if (typeof raw === 'string') {
+    parseAndDispatchUpdate(raw, mailboxId, dispatch);
+    return;
+  }
+  if (raw instanceof ArrayBuffer || raw instanceof Blob) {
+    if (encoding === 'plain') {
+      console.warn('Received binary websocket message while using plain encoding', mailboxId);
+      return;
+    }
+    const compressed = raw instanceof ArrayBuffer ? raw : await raw.arrayBuffer();
+    const updates = await decompressCachedUpdates(compressed, encoding, mailboxId);
+    if (updates == null) return;
+    for (const update of updates) {
+      parseAndDispatchUpdate(update, mailboxId, dispatch);
+    }
+    return;
+  }
+  console.warn('Invalid message received', mailboxId, raw);
+};
+
 const getToken = async (
   makeToken: MakeToken,
 ): Promise<{ token: string; issuedAt: number } | ClientConnectionError> => {
@@ -62,6 +152,7 @@ const buildWebsocket = (
   id: string,
   userId: string | null,
   token: string,
+  encoding: UpdateEncoding,
   cursor?: EventId,
 ): WebSocket => {
   const paramsObject: Record<string, string> = { mailbox: id };
@@ -71,10 +162,13 @@ const buildWebsocket = (
     paramsObject.node = cursor.node.toString();
     paramsObject.seq = cursor.seq.toString();
   }
+  paramsObject.encoding = encoding;
   if (userId != null) paramsObject.userId = userId;
   const params = new URLSearchParams(paramsObject);
   const url = `${baseUrl}/events/connect?${params.toString()}`;
-  return new WebSocket(url);
+  const socket = new WebSocket(url);
+  socket.binaryType = 'arraybuffer';
+  return socket;
 };
 
 const TOKEN_SPAN = 'CLIENT';
@@ -111,11 +205,13 @@ const connect = async (
     });
     return null;
   }
+  const encoding = detectUpdateEncoding();
   const newConnection = buildWebsocket(
     webSocketEndpoint,
     mailboxId,
     userId,
     tokenResult.token,
+    encoding,
     cursor,
   );
   newConnection.onopen = (_) => {
@@ -126,31 +222,13 @@ const connect = async (
     console.info(`connection closed for ${mailboxId}`, event);
     dispatch({ type: 'connectionClosed', payload: { mailboxId, random: Math.random() } });
   };
+  let messageQueue = Promise.resolve();
   newConnection.onmessage = (message: MessageEvent<unknown>) => {
-    const raw = message.data;
-    if (raw === PING) {
-      newConnection.send(PONG);
-      lastPongTime = Date.now();
-      return;
-    } else if (raw === PONG) {
-      return;
-    } else if (!raw || typeof raw !== 'string') {
-      console.warn('Invalid message received', mailboxId, raw);
-      return;
-    }
-
-    let update: unknown;
-    try {
-      update = JSON.parse(raw);
-    } catch {
-      console.warn('Failed to parse incoming message', mailboxId, raw);
-      return;
-    }
-    if (!isServerUpdate(update)) {
-      console.warn('Received invalid update', mailboxId, update);
-      return;
-    }
-    dispatch({ type: 'update', payload: update });
+    messageQueue = messageQueue
+      .then(() => handleIncomingMessage(newConnection, message, mailboxId, dispatch, encoding))
+      .catch((error) => {
+        console.warn('Failed to handle websocket message', mailboxId, error);
+      });
   };
   return newConnection;
 };

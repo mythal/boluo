@@ -4,7 +4,7 @@ import type { IntlShape } from 'react-intl';
 
 const REMOTE_VALIDATION_DELAY = 400;
 
-const debounceAsyncValidation = <T,>(validate: (value: T) => Promise<true | string>) => {
+const debounceAsyncValidation = <T>(validate: (value: T) => Promise<true | string>) => {
   let timeout: ReturnType<typeof setTimeout> | undefined;
   let resolvePending: ((value: true | string) => void) | undefined;
   let lastValue: T | undefined;

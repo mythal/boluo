@@ -1,6 +1,6 @@
 use super::Update;
 use super::api::Token;
-use super::types::{Seq, UpdateQuery};
+use super::types::{Seq, UpdateEncoding, UpdateQuery};
 use crate::csrf::authenticate_optional;
 use crate::error::{AppError, Find};
 use crate::events::api::MakeToken;
@@ -19,6 +19,7 @@ use hyper::Request;
 use hyper::body::{Body, Incoming};
 use hyper::upgrade::Upgraded;
 use hyper_util::rt::TokioIo;
+use std::io::Write;
 use std::time::Duration;
 use thiserror::Error;
 use tokio_stream::StreamExt as _;
@@ -66,6 +67,61 @@ enum PushUpdatesError {
     RecvError(#[from] tokio::sync::broadcast::error::RecvError),
 }
 
+#[derive(Debug, Error)]
+enum CompressCachedUpdatesError {
+    #[error("Failed to build compressed payload")]
+    Compress(#[from] std::io::Error),
+    #[error("Failed to run compression task")]
+    Join(#[from] tokio::task::JoinError),
+}
+
+fn serialize_cached_updates(cached_updates: &[Utf8Bytes]) -> Vec<u8> {
+    let total_len = cached_updates.iter().map(|x| x.len()).sum::<usize>();
+    let delimiter_count = cached_updates.len().saturating_sub(1);
+    let mut payload = Vec::with_capacity(total_len + delimiter_count);
+    for (index, update) in cached_updates.iter().enumerate() {
+        if index > 0 {
+            payload.push(b'\n');
+        }
+        payload.extend_from_slice(update.as_bytes());
+    }
+    payload
+}
+
+fn compress_cached_updates_payload(
+    payload: &[u8],
+    encoding: UpdateEncoding,
+) -> Result<Vec<u8>, std::io::Error> {
+    match encoding {
+        UpdateEncoding::Plain => Ok(payload.to_vec()),
+        UpdateEncoding::Gzip => {
+            let mut encoder =
+                flate2::write::GzEncoder::new(Vec::new(), flate2::Compression::fast());
+            encoder.write_all(payload)?;
+            encoder.finish()
+        }
+        UpdateEncoding::Brotli => {
+            let mut compressed = Vec::new();
+            {
+                let mut writer = brotli::CompressorWriter::new(&mut compressed, 4096, 5, 22);
+                writer.write_all(payload)?;
+                writer.flush()?;
+            }
+            Ok(compressed)
+        }
+    }
+}
+
+async fn compress_cached_updates(
+    cached_updates: &[Utf8Bytes],
+    encoding: UpdateEncoding,
+) -> Result<Vec<u8>, CompressCachedUpdatesError> {
+    let payload = serialize_cached_updates(cached_updates);
+    tokio::task::spawn_blocking(move || compress_cached_updates_payload(&payload, encoding))
+        .await?
+        .map_err(CompressCachedUpdatesError::from)
+}
+
 // Allow the needless return for keep some visual hints
 async fn push_updates(
     mailbox: Uuid,
@@ -74,6 +130,7 @@ async fn push_updates(
     after: Option<i64>,
     seq: Option<Seq>,
     node: Option<u16>,
+    encoding: UpdateEncoding,
 ) -> Result<(), PushUpdatesError> {
     let mut mailbox_rx = get_mailbox_broadcast_rx(mailbox);
     let start_time = std::time::Instant::now();
@@ -111,8 +168,24 @@ async fn push_updates(
         }
     };
     let cached_updates_count = cached_updates.len();
-    for message in cached_updates {
-        outgoing.feed(WsMessage::Text(message)).await?;
+    if !cached_updates.is_empty() {
+        if matches!(encoding, UpdateEncoding::Plain) {
+            for message in &cached_updates {
+                outgoing.feed(WsMessage::Text(message.clone())).await?;
+            }
+        } else {
+            match compress_cached_updates(&cached_updates, encoding).await {
+                Ok(payload) => {
+                    outgoing.feed(WsMessage::Binary(payload.into())).await?;
+                }
+                Err(err) => {
+                    tracing::warn!(error = %err, mailbox_id = %mailbox, "Failed to compress cached updates, fallback to text frames");
+                    for message in &cached_updates {
+                        outgoing.feed(WsMessage::Text(message.clone())).await?;
+                    }
+                }
+            }
+        }
     }
     let initialized = Update::initialized(mailbox).encode();
     outgoing.feed(WsMessage::Text(initialized)).await?;
@@ -294,6 +367,7 @@ async fn connect(ctx: &crate::context::AppContext, req: hyper::Request<Incoming>
         after,
         seq,
         node,
+        encoding,
         user_id,
     } = query;
 
@@ -391,7 +465,17 @@ async fn connect(ctx: &crate::context::AppContext, req: hyper::Request<Incoming>
         }
         let push_updates_future = async move {
             use tokio_tungstenite::tungstenite::Error::{AlreadyClosed, ConnectionClosed};
-            match push_updates(mailbox, &mut outgoing, error_receiver, after, seq, node).await {
+            match push_updates(
+                mailbox,
+                &mut outgoing,
+                error_receiver,
+                after,
+                seq,
+                node,
+                encoding,
+            )
+            .await
+            {
                 Ok(_) => tracing::debug!("Stop push updates"),
                 Err(PushUpdatesError::FailedToSendMessage(ConnectionClosed | AlreadyClosed)) => {
                     metrics::counter!("boluo_server_events_push_updates_connection_closed_total")
@@ -555,6 +639,7 @@ async fn sse(ctx: &crate::context::AppContext, req: Request<Incoming>) -> Respon
         after,
         seq,
         node,
+        encoding: _,
         user_id,
     } = query;
 

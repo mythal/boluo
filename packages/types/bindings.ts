@@ -967,6 +967,8 @@ export type UpdateBody =
   | { type: 'APP_UPDATED'; version: string }
   | { type: 'APP_INFO'; info: BasicInfo };
 
+export type UpdateEncoding = 'plain' | 'gzip' | 'brotli';
+
 export type UpdateLifetime =
   // Transient updates are not stored in mailbox state and cannot be resumed.
   | 'T'
@@ -988,6 +990,7 @@ export type UpdateQuery = {
   after?: number | null;
   seq?: number | null;
   node?: number | null;
+  encoding?: UpdateEncoding;
   /**
    *  Some clients may keep logged in state but actually failed to authenticate.
    *  On client connecting, we need to check if the user ID matches the authenticated user.

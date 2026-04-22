@@ -21,6 +21,15 @@ use super::status::StatusMap;
 
 pub type Seq = u32;
 
+#[derive(Deserialize, Serialize, Debug, Clone, Copy, PartialEq, Eq, Default, specta::Type)]
+#[serde(rename_all = "lowercase")]
+pub enum UpdateEncoding {
+    #[default]
+    Plain,
+    Gzip,
+    Brotli,
+}
+
 #[derive(Deserialize, Debug, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateQuery {
@@ -34,6 +43,8 @@ pub struct UpdateQuery {
     pub seq: Option<Seq>,
     #[serde(default)]
     pub node: Option<u16>,
+    #[serde(default)]
+    pub encoding: UpdateEncoding,
     /// Some clients may keep logged in state but actually failed to authenticate.
     /// On client connecting, we need to check if the user ID matches the authenticated user.
     ///

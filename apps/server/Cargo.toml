@@ -41,6 +41,8 @@ url = "2.5"
 thiserror = "2.0"
 tokio-stream = "0.1"
 tokio-tungstenite = "0.29.0"
+brotli = "8.0.2"
+flate2 = "1.1.5"
 sqlx = { version = "0.8.2", features = [
   "runtime-tokio",
   "tls-rustls",

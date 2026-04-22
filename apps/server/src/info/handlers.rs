@@ -3,7 +3,7 @@ use std::cell::RefCell;
 use super::models::{BasicInfo, Proxy};
 use crate::info::models::AppSettings;
 use crate::interface::ok_response;
-use crate::{error::AppError, info::models::HealthCheck, interface::Response};
+use crate::{error::AppError, interface::Response};
 use hyper::body::Incoming;
 use hyper::{Method, Request};
 use sqlx::query_as;
@@ -87,29 +87,6 @@ pub fn settings() -> Response {
     SETTINGS.clone()
 }
 
-pub async fn healthcheck(ctx: &crate::context::AppContext) -> Result<Response, AppError> {
-    let health_check: HealthCheck = HealthCheck::new(ctx).await;
-    let result = serde_json::to_vec(&health_check).map_err(|err| {
-        tracing::error!(
-            "Unexpected failture in serialize healthcheck result: {:?}",
-            err
-        );
-        AppError::Unexpected(anyhow::anyhow!("Failed to serialize healthcheck result"))
-    })?;
-    let response = hyper::Response::builder()
-        .header(hyper::header::CONTENT_TYPE, "application/json")
-        .status(hyper::StatusCode::OK)
-        .body(result)
-        .map_err(|err| {
-            tracing::error!(
-                "Unexpected failture in build healthcheck response: {:?}",
-                err
-            );
-            AppError::Unexpected(anyhow::anyhow!("Failed to build healthcheck response"))
-        })?;
-    Ok(response)
-}
-
 pub fn echo(req: Request<Incoming>) -> Response {
     hyper::Response::builder()
         .header(hyper::header::CONTENT_TYPE, "text/plain")
@@ -125,7 +102,6 @@ pub async fn router(
 ) -> Result<Response, AppError> {
     match (path, req.method().clone()) {
         ("/proxies", Method::GET) => proxies(ctx).await,
-        ("/healthcheck", Method::GET) => healthcheck(ctx).await,
         ("/settings", Method::GET) => Ok(settings()),
         ("/echo", Method::GET) => Ok(echo(req)),
         _ => Ok(basic_info()),

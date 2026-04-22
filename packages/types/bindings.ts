@@ -149,8 +149,6 @@ export type CheckEmailExists = {
   email: string;
 };
 
-export type CheckResult<T> = { type: 'Ok'; value: T } | { type: 'Error'; message: string };
-
 export type CheckUsernameExists = {
   username: string;
 };
@@ -194,17 +192,6 @@ export type ConnectionError =
   | 'INVALID_TOKEN'
   | 'UNEXPECTED'
   | 'BAD_REQUEST';
-
-export type ConnectionState = {
-  rtt_ms: number;
-  /**
-   *  Connection count in the pool.
-   *
-   *  Always 1 if the connection is not pooled.
-   */
-  count: number;
-  idle: number;
-};
 
 export type CreateChannel = {
   spaceId: string;
@@ -285,13 +272,6 @@ export type DicePoolResult = {
 export type DiscourseConnect = {
   sso: string;
   sig: string;
-};
-
-export type DiskInfo = {
-  name: string;
-  mount_point: string;
-  available: number;
-  total: number;
 };
 
 export type EditChannel = {
@@ -478,11 +458,6 @@ export type GrantOrRemoveChannelMaster = {
 };
 
 export type GrantOrRevoke = 'GRANT' | 'REVOKE';
-
-export type HealthCheck = {
-  redis: CheckResult<ConnectionState>;
-  database: CheckResult<ConnectionState>;
-};
 
 export type Href = string | Span;
 

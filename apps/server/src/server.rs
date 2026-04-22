@@ -333,7 +333,7 @@ async fn main() {
         tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
             .expect("Failed to create signal stream");
 
-    server_metrics::start_update_metrics(pool.clone());
+    server_metrics::start_update_metrics(pool.clone(), ctx.redis.clone());
     tracing::info!("Startup ID: {}", events::startup_id());
 
     cache::start_expiry_task();

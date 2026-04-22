@@ -10,9 +10,30 @@ use crate::messages::api::{
     GetMessagesByChannel, MoveMessageBetween, SearchDirection, SearchFilter, SearchMessagesParams,
     SearchMessagesResult, SearchNameFilter,
 };
+use crate::rate_limit;
 use crate::spaces::SpaceMember;
+use governor::{DefaultKeyedRateLimiter, RateLimiter};
 use hyper::Request;
 use hyper::body::Body;
+use std::sync::LazyLock;
+use uuid::Uuid;
+
+static SEND_MESSAGE_LIMITER: LazyLock<DefaultKeyedRateLimiter<Uuid>> = LazyLock::new(|| {
+    RateLimiter::keyed(rate_limit::per_minute(
+        rate_limit::SEND_MESSAGE_USER_PER_MINUTE,
+    ))
+});
+
+pub fn start_rate_limiter_cleanup() {
+    rate_limit::start_cleanup_task(
+        || {
+            SEND_MESSAGE_LIMITER.retain_recent();
+        },
+        || {
+            SEND_MESSAGE_LIMITER.shrink_to_fit();
+        },
+    );
+}
 
 async fn send(
     ctx: &crate::context::AppContext,
@@ -20,6 +41,9 @@ async fn send(
 ) -> Result<Message, AppError> {
     let start_time = std::time::Instant::now();
     let session = authenticate(&req).await?;
+    SEND_MESSAGE_LIMITER
+        .check_key(&session.user_id)
+        .map_err(|_| AppError::LimitExceeded("Too many messages, please try again later."))?;
     let new_message = interface::parse_large_body::<NewMessage>(req).await?;
     let NewMessage {
         message_id: _,

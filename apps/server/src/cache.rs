@@ -124,18 +124,19 @@ impl CacheStore {
     }
 }
 
+// Please adjust the cache capacities based on the production metrics.
 define_caches! {
-    (Channel, 8192),
+    (Channel, 5600),
     (Character, 4096),
     (CharacterVariables, 4096),
-    (Session, 4096),
-    (User, 4096),
-    (UserExt, 4096),
-    (Space, 1024),
-    (SpaceSettings, 4096),
-    (ChannelMembers, 8193),
-    (SpacesChannels, 1024),
-    (UserSpaces, 4096),
+    (Session, 512),
+    (User, 256),
+    (UserExt, 256),
+    (Space, 1200),
+    (SpaceSettings, 64),
+    (ChannelMembers, 128),
+    (SpacesChannels, 700),
+    (UserSpaces, 110),
 }
 
 pub static CACHE: LazyLock<CacheStore> = LazyLock::new(CacheStore::new);

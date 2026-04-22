@@ -57,6 +57,7 @@ papaya = "0.2.1"
 ahash = "0.8.11"
 parking_lot = "0.12.3"
 specta.workspace = true
+specta-serde.workspace = true
 specta-typescript.workspace = true
 shared-types = { version = "0.1.0", path = "../../packages/shared-types" }
 governor = "0.10.0"

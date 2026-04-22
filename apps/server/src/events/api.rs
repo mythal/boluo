@@ -5,6 +5,7 @@ use uuid::Uuid;
 #[serde(rename_all = "camelCase")]
 pub struct Token {
     pub token: Uuid,
+    #[specta(type = f64)]
     pub issued_at: i64,
 }
 

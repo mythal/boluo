@@ -91,7 +91,9 @@ pub struct EditChannelMember {
 pub struct ChannelMembers {
     pub members: Vec<MemberWithUser>,
     pub color_list: HashMap<Uuid, String>,
+    #[specta(type = HashMap<Uuid, f64>)]
     pub heartbeat_map: HashMap<Uuid, i64>,
+    #[specta(type = Option<f64>)]
     pub self_index: Option<usize>,
 }
 
@@ -102,6 +104,7 @@ pub struct ChannelWithRelated {
     pub members: Vec<MemberWithUser>,
     pub space: Space,
     pub color_list: HashMap<Uuid, String>,
+    #[specta(type = HashMap<Uuid, f64>)]
     pub heartbeat_map: HashMap<Uuid, i64>,
 }
 

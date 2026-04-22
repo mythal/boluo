@@ -74,7 +74,9 @@ pub enum ExprNode {
     SubExpr {
         node: Box<ExprNode>,
     },
+    #[specta(type = CocRoll)]
     CocRoll(Box<CocRoll>),
+    #[specta(type = DicePool)]
     DicePool(Box<DicePool>),
     FateRoll,
     Repeat(Repeat),

@@ -28,6 +28,7 @@ pub struct UpdateQuery {
     #[serde(default)]
     pub token: Option<Uuid>,
     #[serde(default)]
+    #[specta(type = Option<f64>)]
     pub after: Option<i64>,
     #[serde(default)]
     pub seq: Option<Seq>,
@@ -658,6 +659,7 @@ pub fn startup_id() -> u16 {
 pub struct EventId {
     /// The timestamp in milliseconds
     /// The value will not exceed 2^53 - 1, which is safe for JavaScript
+    #[specta(type = f64)]
     pub timestamp: i64,
     /// Every start up will allocate a new node id. 0 is reserved for single node
     /// environment or client.

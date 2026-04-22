@@ -71,6 +71,7 @@ pub struct MoveMessageBetween {
 pub struct GetMessagesByChannel {
     pub channel_id: Uuid,
     pub before: Option<f64>,
+    #[specta(type = Option<f64>)]
     pub limit: Option<i64>,
 }
 
@@ -132,6 +133,8 @@ pub struct SearchMessagesResult {
     pub messages: Vec<Message>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub next_pos: Option<f64>,
+    #[specta(type = f64)]
     pub scanned: usize,
+    #[specta(type = f64)]
     pub matched: usize,
 }

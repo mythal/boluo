@@ -7,6 +7,7 @@ pub struct Upload {
     pub filename: String,
     pub mime_type: Option<String>,
     #[serde(default)]
+    #[specta(type = f64)]
     pub size: usize,
 }
 

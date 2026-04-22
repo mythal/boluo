@@ -32,6 +32,7 @@ pub enum StatusKind {
 
 #[derive(Serialize, Deserialize, Debug, Clone, specta::Type)]
 pub struct UserStatus {
+    #[specta(type = f64)]
     pub timestamp: i64,
     pub kind: StatusKind,
     pub focus: Vec<Uuid>,

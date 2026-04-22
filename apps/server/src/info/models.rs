@@ -9,14 +9,6 @@ pub struct Proxy {
 }
 
 #[derive(Debug, Serialize, Clone, specta::Type)]
-pub struct DiskInfo {
-    pub name: String,
-    pub mount_point: String,
-    pub available: u64,
-    pub total: u64,
-}
-
-#[derive(Debug, Serialize, Clone, specta::Type)]
 pub struct HealthCheck {
     pub redis: CheckResult<ConnectionState>,
     pub database: CheckResult<ConnectionState>,
@@ -43,11 +35,14 @@ where
 
 #[derive(Debug, Serialize, Clone, specta::Type)]
 pub struct ConnectionState {
+    #[specta(type = f64)]
     rtt_ms: u64,
     /// Connection count in the pool.
     ///
     /// Always 1 if the connection is not pooled.
+    #[specta(type = f64)]
     count: usize,
+    #[specta(type = f64)]
     idle: usize,
 }
 

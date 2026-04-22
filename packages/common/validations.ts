@@ -2,6 +2,48 @@ import { get } from '@boluo/api-browser';
 import type { RegisterOptions } from 'react-hook-form';
 import type { IntlShape } from 'react-intl';
 
+const REMOTE_VALIDATION_DELAY = 400;
+
+const debounceAsyncValidation = <T>(validate: (value: T) => Promise<true | string>) => {
+  let timeout: ReturnType<typeof setTimeout> | undefined;
+  let resolvePending: ((value: true | string) => void) | undefined;
+  let lastValue: T | undefined;
+  let lastResult: true | string | undefined;
+  let run = 0;
+
+  return (value: T): Promise<true | string> => {
+    if (lastResult !== undefined && Object.is(value, lastValue)) {
+      return Promise.resolve(lastResult);
+    }
+
+    run += 1;
+    const currentRun = run;
+
+    if (timeout !== undefined) {
+      clearTimeout(timeout);
+    }
+    resolvePending?.(true);
+
+    return new Promise((resolve) => {
+      resolvePending = resolve;
+      timeout = setTimeout(() => {
+        timeout = undefined;
+        resolvePending = undefined;
+        void (async () => {
+          const result = await validate(value);
+          if (currentRun !== run) {
+            resolve(true);
+            return;
+          }
+          lastValue = value;
+          lastResult = result;
+          resolve(result);
+        })();
+      }, REMOTE_VALIDATION_DELAY);
+    });
+  };
+};
+
 export const required = (intl: IntlShape) => ({
   required: intl.formatMessage({ defaultMessage: "Can't be empty." }),
 });
@@ -42,10 +84,10 @@ export const username = (intl: IntlShape) => ({
       defaultMessage: 'Only letters, numbers, and underscores are allowed.',
     }),
   },
-  ...minLength(3),
-  ...maxLength(32),
+  ...minLength(3)(intl),
+  ...maxLength(32)(intl),
 
-  validate: async (username: string) => {
+  validate: debounceAsyncValidation(async (username: string) => {
     const result = await get('/users/check_username', { username });
     if (!result.isOk) {
       console.warn(result);
@@ -53,7 +95,7 @@ export const username = (intl: IntlShape) => ({
       return intl.formatMessage({ defaultMessage: 'This username is already taken.' });
     }
     return true;
-  },
+  }),
 });
 
 export const email = (intl: IntlShape) => ({
@@ -65,7 +107,7 @@ export const email = (intl: IntlShape) => ({
     value: /^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/,
     message: intl.formatMessage({ defaultMessage: 'Must be a valid email address.' }),
   },
-  validate: async (email: string) => {
+  validate: debounceAsyncValidation(async (email: string) => {
     const result = await get('/users/check_email', { email });
     if (!result.isOk) {
       console.warn(result.err);
@@ -73,7 +115,7 @@ export const email = (intl: IntlShape) => ({
       return intl.formatMessage({ defaultMessage: 'This email is already in use.' });
     }
     return true;
-  },
+  }),
 });
 
 export const password = (intl: IntlShape) => ({

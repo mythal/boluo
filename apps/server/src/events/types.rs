@@ -21,6 +21,15 @@ use super::status::StatusMap;
 
 pub type Seq = u32;
 
+#[derive(Deserialize, Serialize, Debug, Clone, Copy, PartialEq, Eq, Default, specta::Type)]
+#[serde(rename_all = "lowercase")]
+pub enum UpdateEncoding {
+    #[default]
+    Plain,
+    Gzip,
+    Brotli,
+}
+
 #[derive(Deserialize, Debug, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateQuery {
@@ -28,11 +37,14 @@ pub struct UpdateQuery {
     #[serde(default)]
     pub token: Option<Uuid>,
     #[serde(default)]
+    #[specta(type = Option<f64>)]
     pub after: Option<i64>,
     #[serde(default)]
     pub seq: Option<Seq>,
     #[serde(default)]
     pub node: Option<u16>,
+    #[serde(default)]
+    pub encoding: UpdateEncoding,
     /// Some clients may keep logged in state but actually failed to authenticate.
     /// On client connecting, we need to check if the user ID matches the authenticated user.
     ///
@@ -658,6 +670,7 @@ pub fn startup_id() -> u16 {
 pub struct EventId {
     /// The timestamp in milliseconds
     /// The value will not exceed 2^53 - 1, which is safe for JavaScript
+    #[specta(type = f64)]
     pub timestamp: i64,
     /// Every start up will allocate a new node id. 0 is reserved for single node
     /// environment or client.

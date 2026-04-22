@@ -53,7 +53,8 @@ const channelsReducer = (
 ): [ChatSpaceState['channels'], ChatEffect[]] => {
   if ('channelId' in action.payload) {
     const { channelId } = action.payload;
-    const isPreviewAction = action.type === 'messagePreview' || action.type === 'messagePreviewDiff';
+    const isPreviewAction =
+      action.type === 'messagePreview' || action.type === 'messagePreviewDiff';
     if (isPreviewAction && !Object.prototype.hasOwnProperty.call(channels, channelId)) {
       return [channels, []];
     }

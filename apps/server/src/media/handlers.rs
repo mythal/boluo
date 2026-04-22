@@ -6,13 +6,36 @@ use crate::error::{AppError, Find, ValidationFailed};
 use crate::interface::{Response, missing, ok_response, parse_query};
 use crate::media::api::{MediaQuery, PreSign, PreSignResult};
 use crate::media::models::MediaFile;
+use crate::rate_limit;
 use crate::utils::id;
+use governor::{DefaultKeyedRateLimiter, RateLimiter};
 use http_body_util::BodyExt;
 use hyper::body::{Body, Incoming};
 use hyper::header::{self, HeaderValue};
 use hyper::{Request, Uri};
 use rusty_s3::S3Action;
+use std::sync::LazyLock;
 use uuid::Uuid;
+
+static UPLOAD_LIMITER: LazyLock<DefaultKeyedRateLimiter<Uuid>> =
+    LazyLock::new(|| RateLimiter::keyed(rate_limit::per_hour(rate_limit::UPLOAD_USER_PER_HOUR)));
+
+pub fn start_rate_limiter_cleanup() {
+    rate_limit::start_cleanup_task(
+        || {
+            UPLOAD_LIMITER.retain_recent();
+        },
+        || {
+            UPLOAD_LIMITER.shrink_to_fit();
+        },
+    );
+}
+
+pub fn check_upload_rate_limit(user_id: &Uuid) -> Result<(), AppError> {
+    UPLOAD_LIMITER
+        .check_key(user_id)
+        .map_err(|_| AppError::LimitExceeded("Too many uploads, please try again later."))
+}
 
 fn content_disposition(attachment: bool, filename: &str) -> HeaderValue {
     use percent_encoding::{AsciiSet, NON_ALPHANUMERIC, utf8_percent_encode};
@@ -98,6 +121,7 @@ async fn media_upload(
     req: Request<Incoming>,
 ) -> Result<Media, AppError> {
     let session = authenticate(&req).await?;
+    check_upload_rate_limit(&session.user_id)?;
     let params = upload_params(req.uri())?;
     let media_id = id();
     let media_file = upload(req, media_id, params, 1024 * 1024 * 16).await?;
@@ -203,6 +227,7 @@ async fn presigned(
         mime_type,
         size,
     } = parse_query(req.uri())?;
+    check_upload_rate_limit(&session.user_id)?;
     metrics::counter!("boluo_server_media_presigned_total").increment(1);
     metrics::histogram!("boluo_server_media_upload_size_bytes").record(size as f64);
 

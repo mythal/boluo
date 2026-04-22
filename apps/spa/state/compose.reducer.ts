@@ -203,7 +203,9 @@ const modifyModifier = (
   const nextSource = !modifier
     ? (source.startsWith(' ') ? command : `${command} `) + source
     : command +
-      (source.substring(0, modifier.start) + source.substring(modifier.start + modifier.len)).trimStart();
+      (
+        source.substring(0, modifier.start) + source.substring(modifier.start + modifier.len)
+      ).trimStart();
   return { ...state, source: nextSource, range: [nextSource.length, nextSource.length] };
 };
 

@@ -718,7 +718,10 @@ fn oldest_persistent_event_id(
         .map(|(event_id, _)| *event_id)
 }
 
-fn cached_updates_start_at(persistent_updates: &BTreeMap<EventId, StoredUpdate>, floor: i64) -> i64 {
+fn cached_updates_start_at(
+    persistent_updates: &BTreeMap<EventId, StoredUpdate>,
+    floor: i64,
+) -> i64 {
     oldest_persistent_event_id(persistent_updates)
         .map(|event_id| event_id.timestamp)
         .unwrap_or(floor)
@@ -795,16 +798,13 @@ impl MailBoxState {
             let mut cleanup_interval = crate::utils::cleaner_interval(120);
             let mut cursor_floor = i64::MIN;
             let mut last_pending_actions_warned = 0;
-            let labels = vec![metrics::Label::new("mailbox_id", id.to_string())];
-            let pending_gauge = metrics::gauge!("boluo_server_events_pending_actions", labels.clone());
-            let action_duration_histogram = metrics::histogram!("boluo_server_events_update_duration_ms", labels.clone());
+            let action_duration_histogram = metrics::histogram!("boluo_server_events_update_duration_ms");
             loop {
                 tokio::select! {
                     Some(action) = rx.recv() => {
                         let pending = rx.len();
-                        pending_gauge.set(pending as f64);
                         if pending > 256 && (pending - last_pending_actions_warned) > 8 {
-                            tracing::info!(pending, "Too many pending actions");
+                            tracing::info!(pending, mailbox_id = %id, "Too many pending actions");
                             last_pending_actions_warned = pending;
                         }
                         let start = std::time::Instant::now();
@@ -1192,7 +1192,10 @@ mod tests {
     #[test]
     fn cached_updates_start_at_honors_cursor_floor() {
         let mut persistent_updates = BTreeMap::new();
-        assert_eq!(cached_updates_start_at(&persistent_updates, i64::MIN), i64::MIN);
+        assert_eq!(
+            cached_updates_start_at(&persistent_updates, i64::MIN),
+            i64::MIN
+        );
         assert_eq!(cached_updates_start_at(&persistent_updates, 123), 123);
 
         let oldest = event_id(100, 1, 1);
@@ -1436,7 +1439,10 @@ mod tests {
 
         let floor = cleanup(&mut persistent_updates, &mut preview_map, &mut diff_map);
 
-        assert_eq!(floor, Some(removed_persistent_id.timestamp.saturating_add(1)));
+        assert_eq!(
+            floor,
+            Some(removed_persistent_id.timestamp.saturating_add(1))
+        );
         assert_eq!(persistent_updates.len(), 512);
         assert!(!persistent_updates.contains_key(&removed_persistent_id));
         assert!(persistent_updates.contains_key(&oldest_kept_persistent_id));

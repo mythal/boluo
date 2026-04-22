@@ -45,6 +45,7 @@ mod notes;
 mod notify;
 mod pos;
 mod pubsub;
+mod rate_limit;
 mod redis;
 mod s3;
 mod sentry_tunnel;
@@ -333,12 +334,16 @@ async fn main() {
         tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
             .expect("Failed to create signal stream");
 
-    server_metrics::start_update_metrics(pool.clone());
+    server_metrics::start_update_metrics(pool.clone(), ctx.redis.clone());
     tracing::info!("Startup ID: {}", events::startup_id());
 
     cache::start_expiry_task();
     cache::start_log_cache_stats();
     users::start_rate_limiter_cleanup();
+    messages::start_rate_limiter_cleanup();
+    spaces::start_rate_limiter_cleanup();
+    channels::start_rate_limiter_cleanup();
+    media::start_rate_limiter_cleanup();
     let timeout_counter = metrics::counter!("boluo_server_tcp_connections_timeout_total");
     let error_counter = metrics::counter!("boluo_server_tcp_connections_error_total");
 

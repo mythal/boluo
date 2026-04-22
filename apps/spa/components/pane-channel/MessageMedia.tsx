@@ -104,20 +104,20 @@ export const MessageMedia = memo<Props>(({ media, className, children = null }: 
   ) : loadState === 'ERROR' || src === '' ? (
     <LoadError onClick={() => setLoadState('LOADING')} />
   ) : (
-      <button
-        type="button"
-        className="block h-full w-fit cursor-zoom-in overflow-hidden"
-        onClick={handlePreview}
-        onPointerDown={(e) => e.stopPropagation()}
-      >
-        <img
-          src={src}
-          alt="media"
-          className="block h-full rounded-sm"
-          onError={() => setLoadState('ERROR')}
-          onLoad={() => setLoadState('LOADED')}
-        />
-      </button>
+    <button
+      type="button"
+      className="block h-full w-fit cursor-zoom-in overflow-hidden"
+      onClick={handlePreview}
+      onPointerDown={(e) => e.stopPropagation()}
+    >
+      <img
+        src={src}
+        alt="media"
+        className="block h-full rounded-sm"
+        onError={() => setLoadState('ERROR')}
+        onLoad={() => setLoadState('LOADED')}
+      />
+    </button>
   );
   return (
     <div className={className}>

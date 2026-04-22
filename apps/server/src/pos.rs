@@ -100,20 +100,13 @@ impl ChannelPosActor {
 
     pub async fn run(mut self) {
         let mut changed_at = Instant::now();
-        let labels = vec![metrics::Label::new(
-            "channel_id",
-            self.channel_id.to_string(),
-        )];
-        let pending_gauge = metrics::gauge!("boluo_server_pos_pending_actions", labels.clone());
-        let action_duration_histogram =
-            metrics::histogram!("boluo_server_pos_action_duration_ms", labels.clone());
+        let action_duration_histogram = metrics::histogram!("boluo_server_pos_action_duration_ms");
         let positions_len_histogram = metrics::histogram!("boluo_server_pos_positions_len");
 
         while let Some(action) = self.receiver.recv().await {
             let pending = self.receiver.len();
-            pending_gauge.set(pending as f64);
             if pending > 16 {
-                tracing::info!(pending, "Too many pending actions");
+                tracing::info!(pending, channel_id = %self.channel_id, "Too many pending actions");
             }
             let start = Instant::now();
             let action_name = action.name();

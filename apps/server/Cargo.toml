@@ -41,6 +41,8 @@ url = "2.5"
 thiserror = "2.0"
 tokio-stream = "0.1"
 tokio-tungstenite = "0.29.0"
+brotli = "8.0.2"
+flate2 = "1.1.5"
 sqlx = { version = "0.8.2", features = [
   "runtime-tokio",
   "tls-rustls",
@@ -52,11 +54,12 @@ sqlx = { version = "0.8.2", features = [
 http-body-util = "0.1.2"
 hyper-util = { version = "0.1.7", features = ["full"] }
 arc-swap = "1.7.1"
-quick_cache = "0.6.9"
+quick_cache = { version = "0.6.9", features = ["stats"] }
 papaya = "0.2.1"
 ahash = "0.8.11"
 parking_lot = "0.12.3"
 specta.workspace = true
+specta-serde.workspace = true
 specta-typescript.workspace = true
 shared-types = { version = "0.1.0", path = "../../packages/shared-types" }
 governor = "0.10.0"

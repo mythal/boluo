@@ -3,7 +3,7 @@ import { post } from '@boluo/api-browser';
 import { explainError } from '@boluo/locale/errors';
 import * as validators from '@boluo/common/validations';
 import UserPlus from '@boluo/icons/UserPlus';
-import { type FC, type MouseEventHandler, useCallback, useId, useState } from 'react';
+import { type FC, type MouseEventHandler, useCallback, useId, useMemo, useState } from 'react';
 import {
   type FieldError,
   FormProvider,
@@ -44,6 +44,7 @@ const FieldErrorMessage: FC<{ error?: FieldError }> = ({ error }) => {
 const UsernameField = () => {
   const intl = useIntl();
   const id = useId();
+  const usernameValidation = useMemo(() => validators.username(intl), [intl]);
   const {
     register,
     formState: {
@@ -62,7 +63,7 @@ const UsernameField = () => {
         autoCapitalize="off"
         autoCorrect="off"
         variant={error ? 'error' : 'normal'}
-        {...register('username', validators.username(intl))}
+        {...register('username', usernameValidation)}
       />
       <FieldErrorMessage error={error} />
     </div>
@@ -72,6 +73,7 @@ const UsernameField = () => {
 const EmailField = () => {
   const intl = useIntl();
   const id = useId();
+  const emailValidation = useMemo(() => validators.email(intl), [intl]);
   const {
     register,
     formState: {
@@ -91,7 +93,7 @@ const EmailField = () => {
         autoCapitalize="off"
         autoCorrect="off"
         variant={error ? 'error' : 'normal'}
-        {...register('email', validators.email(intl))}
+        {...register('email', emailValidation)}
       />
       <FieldErrorMessage error={error} />
     </div>

@@ -39,6 +39,7 @@ const selector = ({ edit, media }: ComposeState): ComposeDrived => {
 // Keep the self preview fully visible when its own height or the scroller height changes.
 const useSelfPreviewVisibility = (
   virtuosoIndex: number | null | undefined,
+  visibilityKey: string,
   boxRef: RefObject<HTMLDivElement | null>,
 ) => {
   const scrollerRef = useScrollerRef();
@@ -66,6 +67,7 @@ const useSelfPreviewVisibility = (
   useEffect(() => {
     let frame: number | null = null;
     let cleanup: (() => void) | null = null;
+    isVisibleRef.current = false;
 
     const setup = () => {
       const element = boxRef.current;
@@ -131,7 +133,7 @@ const useSelfPreviewVisibility = (
       }
       cleanup?.();
     };
-  }, [boxRef, ensureFullyVisible, scrollerRef]);
+  }, [boxRef, ensureFullyVisible, scrollerRef, visibilityKey]);
 };
 
 interface Props {
@@ -205,7 +207,8 @@ export const SelfPreview: FC<Props> = ({ preview, isLast, virtualListIndex }) =>
   const readObserve = useReadObserve();
   const isInGameChannel = useIsInGameChannel();
   const boxRef = useRef<HTMLDivElement | null>(null);
-  useSelfPreviewVisibility(virtualListIndex, boxRef);
+  const visibilityKey = `${preview.id}:${preview.edit?.time ?? 'preview'}:${preview.posP}/${preview.posQ}`;
+  useSelfPreviewVisibility(virtualListIndex, visibilityKey, boxRef);
   useEffect(() => {
     if (boxRef.current == null) return;
     return readObserve(boxRef.current);

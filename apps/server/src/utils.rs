@@ -1,14 +1,9 @@
 use anyhow::Context;
 use chrono::prelude::*;
-use hyper::Request;
-use hyper::body::Body;
-use hyper::header::HeaderName;
 use ring::hmac;
 use ring::rand::SecureRandom;
 use std::sync::OnceLock as OnceCell;
 use uuid::Uuid;
-
-use crate::error::AppError;
 
 macro_rules! regex {
     ($pattern: expr) => {{
@@ -215,63 +210,6 @@ fn test_verify_invalid_base64() {
             invalid_sig
         );
     }
-}
-
-pub fn get_ip(req: &Request<impl Body>) -> Result<std::net::IpAddr, AppError> {
-    let real_ip = HeaderName::from_lowercase(b"x-real-ip").unwrap();
-    let forwarded_for = HeaderName::from_lowercase(b"x-forwarded-for").unwrap();
-    let headers = req.headers();
-    let invalid = "Invalid IP address in headers";
-    let no_ip = "No IP found in headers";
-    let ip_in_header = if let Some(real_ip) = headers.get(real_ip) {
-        real_ip
-            .to_str()
-            .map_err(|_| AppError::BadRequest(invalid.to_string()))?
-    } else {
-        let header_value = headers
-            .get(forwarded_for)
-            .ok_or_else(|| AppError::BadRequest("No IP found in headers".to_string()))?
-            .to_str()
-            .map_err(|_| AppError::BadRequest(invalid.to_string()))?;
-        header_value
-            .split(',')
-            .next()
-            .ok_or_else(|| AppError::BadRequest(no_ip.to_string()))?
-    };
-
-    ip_in_header
-        .trim()
-        .parse()
-        .map_err(|_| AppError::BadRequest(invalid.to_string()))
-}
-
-#[test]
-fn test_get_ip() {
-    let mut req = Request::builder()
-        .header("x-real-ip", "192.168.1.1")
-        .body(String::new())
-        .unwrap();
-    assert_eq!(
-        get_ip(&req).ok(),
-        "192.168.1.1".parse().ok(),
-        "Should extract IP from x-real-ip header"
-    );
-
-    req = Request::builder()
-        .header("x-forwarded-for", "10.0.0.1, 192.168.1.1")
-        .body(String::new())
-        .unwrap();
-    assert_eq!(
-        get_ip(&req).ok(),
-        "10.0.0.1".parse().ok(),
-        "Should extract IP from x-forwarded-for header"
-    );
-
-    req = Request::builder().body(String::new()).unwrap();
-    assert!(
-        get_ip(&req).is_err(),
-        "Should return error if no IP is found"
-    );
 }
 
 pub struct MessageRng {

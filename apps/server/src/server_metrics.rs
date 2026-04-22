@@ -1,4 +1,5 @@
 use metrics::{counter, gauge};
+use std::time::Instant;
 
 pub fn get_current_file_descriptors() -> u64 {
     #[cfg(target_os = "linux")]
@@ -29,6 +30,72 @@ pub fn update_db_pool_metrics(pool: &sqlx::PgPool) {
     gauge!("boluo_server_db_pool_connections_total").set(pool.size() as f64);
 }
 
+pub async fn update_database_health_metrics(pool: &sqlx::PgPool) {
+    let start = Instant::now();
+    let result = async {
+        let mut conn = pool
+            .acquire()
+            .await
+            .map_err(|err| anyhow::anyhow!("failed to acquire database connection: {err:?}"))?;
+        let record = sqlx::query!("SELECT 42 as x;")
+            .fetch_one(&mut *conn)
+            .await
+            .map_err(|err| anyhow::anyhow!("failed to query database: {err:?}"))?;
+        if record.x != Some(42) {
+            anyhow::bail!("database probe returned an unexpected value");
+        }
+        anyhow::Ok(())
+    }
+    .await;
+
+    match result {
+        Ok(()) => {
+            gauge!("boluo_server_database_up").set(1.0);
+            gauge!("boluo_server_database_probe_rtt_ms").set(start.elapsed().as_millis() as f64);
+        }
+        Err(err) => {
+            tracing::warn!("Database health metrics probe failed: {}", err);
+            gauge!("boluo_server_database_up").set(0.0);
+            gauge!("boluo_server_database_probe_rtt_ms").set(0.0);
+        }
+    }
+}
+
+pub async fn update_redis_health_metrics(conn: Option<redis::aio::ConnectionManager>) {
+    let Some(mut conn) = conn else {
+        gauge!("boluo_server_redis_up").set(0.0);
+        gauge!("boluo_server_redis_probe_rtt_ms").set(0.0);
+        gauge!("boluo_server_redis_connections_total").set(0.0);
+        gauge!("boluo_server_redis_connections_idle").set(0.0);
+        return;
+    };
+
+    let start = Instant::now();
+    let result = redis::cmd("PING").query_async::<String>(&mut conn).await;
+    match result {
+        Ok(response) if response == "PONG" => {
+            gauge!("boluo_server_redis_up").set(1.0);
+            gauge!("boluo_server_redis_probe_rtt_ms").set(start.elapsed().as_millis() as f64);
+            gauge!("boluo_server_redis_connections_total").set(1.0);
+            gauge!("boluo_server_redis_connections_idle").set(0.0);
+        }
+        Ok(response) => {
+            tracing::warn!("Redis health metrics probe returned unexpected response: {response}");
+            gauge!("boluo_server_redis_up").set(0.0);
+            gauge!("boluo_server_redis_probe_rtt_ms").set(0.0);
+            gauge!("boluo_server_redis_connections_total").set(1.0);
+            gauge!("boluo_server_redis_connections_idle").set(0.0);
+        }
+        Err(err) => {
+            tracing::warn!("Redis health metrics probe failed: {}", err);
+            gauge!("boluo_server_redis_up").set(0.0);
+            gauge!("boluo_server_redis_probe_rtt_ms").set(0.0);
+            gauge!("boluo_server_redis_connections_total").set(1.0);
+            gauge!("boluo_server_redis_connections_idle").set(0.0);
+        }
+    }
+}
+
 pub fn update_runtime_metrics() {
     gauge!("boluo_server_events_mailboxes").set(crate::events::context::mailbox_count() as f64);
     gauge!("boluo_server_events_broadcast_mailboxes")
@@ -37,7 +104,7 @@ pub fn update_runtime_metrics() {
     gauge!("boluo_server_pos_actors").set(crate::pos::CHANNEL_POS_MANAGER.actor_count() as f64);
 }
 
-pub fn start_update_metrics(pool: sqlx::PgPool) {
+pub fn start_update_metrics(pool: sqlx::PgPool, redis: Option<redis::aio::ConnectionManager>) {
     tokio::task::spawn(async move {
         let mut interval_4s = crate::utils::cleaner_interval(4);
         let mut interval_8s = crate::utils::cleaner_interval(8);
@@ -47,6 +114,8 @@ pub fn start_update_metrics(pool: sqlx::PgPool) {
                 _ = interval_4s.tick() => {
                     update_file_descriptor_metrics().await;
                     update_db_pool_metrics(&pool);
+                    update_database_health_metrics(&pool).await;
+                    update_redis_health_metrics(redis.clone()).await;
                 }
                 _ = interval_8s.tick() => {
                     if let Ok(Err(e)) = tokio::task::spawn_blocking(update_network_metrics).await {

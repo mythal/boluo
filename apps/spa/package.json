@@ -26,6 +26,7 @@
     "clsx": "^2.1.1",
     "dotenv": "^17.2.1",
     "jotai": "^2.12.2",
+    "jotai-family": "^1.0.1",
     "jotai-location": "^0.6.0",
     "list": "^2.0.19",
     "next": "^16.1.0",

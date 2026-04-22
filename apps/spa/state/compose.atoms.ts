@@ -1,4 +1,5 @@
-import { atomFamily, atomWithReducer, atomWithStorage } from 'jotai/utils';
+import { atomFamily } from 'jotai-family';
+import { atomWithReducer, atomWithStorage } from 'jotai/utils';
 import { composeReducer, makeInitialComposeState } from './compose.reducer';
 
 export type ComposeSize = 'AUTO' | 'LARGE';

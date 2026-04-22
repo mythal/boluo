@@ -114,14 +114,12 @@ fn compress_cached_updates_payload(
     }
 }
 
-async fn compress_cached_updates(
+fn spawn_compress_cached_updates_chunk(
     cached_updates: &[Utf8Bytes],
     encoding: UpdateEncoding,
-) -> Result<Vec<u8>, CompressCachedUpdatesError> {
+) -> tokio::task::JoinHandle<Result<Vec<u8>, std::io::Error>> {
     let payload = serialize_cached_updates(cached_updates);
     tokio::task::spawn_blocking(move || compress_cached_updates_payload(&payload, encoding))
-        .await?
-        .map_err(CompressCachedUpdatesError::from)
 }
 
 // Allow the needless return for keep some visual hints
@@ -176,28 +174,64 @@ async fn push_updates(
                 outgoing.feed(WsMessage::Text(message.clone())).await?;
             }
         } else {
-            let mut offset = 0;
-            while offset < cached_updates.len() {
-                let end = (offset + CACHED_UPDATES_CHUNK_SIZE).min(cached_updates.len());
-                let chunk = &cached_updates[offset..end];
-                match compress_cached_updates(chunk, encoding).await {
-                    Ok(payload) => {
-                        outgoing.feed(WsMessage::Binary(payload.into())).await?;
-                        offset = end;
-                    }
-                    Err(err) => {
+            let total = cached_updates.len();
+            let mut chunk_start = 0;
+            let mut chunk_end = CACHED_UPDATES_CHUNK_SIZE.min(total);
+            let mut compress_task = spawn_compress_cached_updates_chunk(
+                &cached_updates[chunk_start..chunk_end],
+                encoding,
+            );
+            loop {
+                let payload = match compress_task.await {
+                    Ok(Ok(payload)) => payload,
+                    Ok(Err(err)) => {
+                        let err = CompressCachedUpdatesError::from(err);
                         tracing::warn!(
                             error = %err,
                             mailbox_id = %mailbox,
-                            from_index = offset,
+                            from_index = chunk_start,
                             "Failed to compress cached update chunk, fallback to text frames for remaining updates"
                         );
-                        for message in &cached_updates[offset..] {
+                        for message in &cached_updates[chunk_start..] {
                             outgoing.feed(WsMessage::Text(message.clone())).await?;
                         }
                         break;
                     }
-                }
+                    Err(err) => {
+                        let err = CompressCachedUpdatesError::from(err);
+                        tracing::warn!(
+                            error = %err,
+                            mailbox_id = %mailbox,
+                            from_index = chunk_start,
+                            "Failed to compress cached update chunk, fallback to text frames for remaining updates"
+                        );
+                        for message in &cached_updates[chunk_start..] {
+                            outgoing.feed(WsMessage::Text(message.clone())).await?;
+                        }
+                        break;
+                    }
+                };
+
+                let next_task = if chunk_end < total {
+                    let next_start = chunk_end;
+                    let next_end = (next_start + CACHED_UPDATES_CHUNK_SIZE).min(total);
+                    let next_task = spawn_compress_cached_updates_chunk(
+                        &cached_updates[next_start..next_end],
+                        encoding,
+                    );
+                    Some((next_start, next_end, next_task))
+                } else {
+                    None
+                };
+                // Keep strict wire order; overlap next chunk compression with this send.
+                outgoing.feed(WsMessage::Binary(payload.into())).await?;
+
+                let Some((next_start, next_end, next_task)) = next_task else {
+                    break;
+                };
+                chunk_start = next_start;
+                chunk_end = next_end;
+                compress_task = next_task;
             }
         }
     }

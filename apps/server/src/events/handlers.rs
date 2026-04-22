@@ -76,6 +76,21 @@ enum CompressCachedUpdatesError {
 }
 
 const CACHED_UPDATES_CHUNK_SIZE: usize = 32;
+const INITIAL_REPLAY_FLUSH_INTERVAL_FRAMES: usize = 16;
+
+async fn feed_initial_replay_frame(
+    outgoing: &mut Sender,
+    message: WsMessage,
+    frames_since_flush: &mut usize,
+) -> Result<(), tokio_tungstenite::tungstenite::Error> {
+    outgoing.feed(message).await?;
+    *frames_since_flush += 1;
+    if *frames_since_flush >= INITIAL_REPLAY_FLUSH_INTERVAL_FRAMES {
+        outgoing.flush().await?;
+        *frames_since_flush = 0;
+    }
+    Ok(())
+}
 
 fn serialize_cached_updates(cached_updates: &[Utf8Bytes]) -> Vec<u8> {
     let total_len = cached_updates.iter().map(|x| x.len()).sum::<usize>();
@@ -114,14 +129,12 @@ fn compress_cached_updates_payload(
     }
 }
 
-async fn compress_cached_updates(
+fn spawn_compress_cached_updates_chunk(
     cached_updates: &[Utf8Bytes],
     encoding: UpdateEncoding,
-) -> Result<Vec<u8>, CompressCachedUpdatesError> {
+) -> tokio::task::JoinHandle<Result<Vec<u8>, std::io::Error>> {
     let payload = serialize_cached_updates(cached_updates);
     tokio::task::spawn_blocking(move || compress_cached_updates_payload(&payload, encoding))
-        .await?
-        .map_err(CompressCachedUpdatesError::from)
 }
 
 // Allow the needless return for keep some visual hints
@@ -170,34 +183,91 @@ async fn push_updates(
         }
     };
     let cached_updates_count = cached_updates.len();
+    let mut replay_frames_since_flush = 0;
     if !cached_updates.is_empty() {
         if matches!(encoding, UpdateEncoding::Plain) {
             for message in &cached_updates {
-                outgoing.feed(WsMessage::Text(message.clone())).await?;
+                feed_initial_replay_frame(
+                    outgoing,
+                    WsMessage::Text(message.clone()),
+                    &mut replay_frames_since_flush,
+                )
+                .await?;
             }
         } else {
-            let mut offset = 0;
-            while offset < cached_updates.len() {
-                let end = (offset + CACHED_UPDATES_CHUNK_SIZE).min(cached_updates.len());
-                let chunk = &cached_updates[offset..end];
-                match compress_cached_updates(chunk, encoding).await {
-                    Ok(payload) => {
-                        outgoing.feed(WsMessage::Binary(payload.into())).await?;
-                        offset = end;
-                    }
-                    Err(err) => {
+            let total = cached_updates.len();
+            let mut chunk_start = 0;
+            let mut chunk_end = CACHED_UPDATES_CHUNK_SIZE.min(total);
+            let mut compress_task = spawn_compress_cached_updates_chunk(
+                &cached_updates[chunk_start..chunk_end],
+                encoding,
+            );
+            loop {
+                let payload = match compress_task.await {
+                    Ok(Ok(payload)) => payload,
+                    Ok(Err(err)) => {
+                        let err = CompressCachedUpdatesError::from(err);
                         tracing::warn!(
                             error = %err,
                             mailbox_id = %mailbox,
-                            from_index = offset,
+                            from_index = chunk_start,
                             "Failed to compress cached update chunk, fallback to text frames for remaining updates"
                         );
-                        for message in &cached_updates[offset..] {
-                            outgoing.feed(WsMessage::Text(message.clone())).await?;
+                        for message in &cached_updates[chunk_start..] {
+                            feed_initial_replay_frame(
+                                outgoing,
+                                WsMessage::Text(message.clone()),
+                                &mut replay_frames_since_flush,
+                            )
+                            .await?;
                         }
                         break;
                     }
-                }
+                    Err(err) => {
+                        let err = CompressCachedUpdatesError::from(err);
+                        tracing::warn!(
+                            error = %err,
+                            mailbox_id = %mailbox,
+                            from_index = chunk_start,
+                            "Failed to compress cached update chunk, fallback to text frames for remaining updates"
+                        );
+                        for message in &cached_updates[chunk_start..] {
+                            feed_initial_replay_frame(
+                                outgoing,
+                                WsMessage::Text(message.clone()),
+                                &mut replay_frames_since_flush,
+                            )
+                            .await?;
+                        }
+                        break;
+                    }
+                };
+
+                let next_task = if chunk_end < total {
+                    let next_start = chunk_end;
+                    let next_end = (next_start + CACHED_UPDATES_CHUNK_SIZE).min(total);
+                    let next_task = spawn_compress_cached_updates_chunk(
+                        &cached_updates[next_start..next_end],
+                        encoding,
+                    );
+                    Some((next_start, next_end, next_task))
+                } else {
+                    None
+                };
+                // Keep strict wire order; overlap next chunk compression with this send.
+                feed_initial_replay_frame(
+                    outgoing,
+                    WsMessage::Binary(payload.into()),
+                    &mut replay_frames_since_flush,
+                )
+                .await?;
+
+                let Some((next_start, next_end, next_task)) = next_task else {
+                    break;
+                };
+                chunk_start = next_start;
+                chunk_end = next_end;
+                compress_task = next_task;
             }
         }
     }

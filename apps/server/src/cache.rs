@@ -14,6 +14,13 @@ trait GetCacheType {
     fn tag() -> CacheType;
 }
 
+pub struct CacheStats {
+    name: &'static str,
+    items: usize,
+    hits: u64,
+    misses: u64,
+}
+
 macro_rules! define_caches {
     ($(($type:ident, $capacity: expr)),* $(,)?) => {
         #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -103,6 +110,19 @@ macro_rules! define_caches {
                     total_after
                 );
             }
+
+            fn stats(&self) -> Vec<CacheStats> {
+                vec![
+                    $(
+                        CacheStats {
+                            name: stringify!($type),
+                            items: self.$type.len(),
+                            hits: self.$type.hits(),
+                            misses: self.$type.misses(),
+                        },
+                    )*
+                ]
+            }
         }
 
     };
@@ -148,88 +168,21 @@ pub fn start_log_cache_stats() {
     tokio::spawn(async move {
         let mut interval = interval(Duration::from_mins(10));
         interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
-        let channel_gauge = metrics::gauge!(
-            "boluo_server_cache_items",
-            vec![metrics::Label::new("cache", "Channel")]
-        );
-        let character_gauge = metrics::gauge!(
-            "boluo_server_cache_items",
-            vec![metrics::Label::new("cache", "Character")]
-        );
-        let character_variables_gauge = metrics::gauge!(
-            "boluo_server_cache_items",
-            vec![metrics::Label::new("cache", "CharacterVariables")]
-        );
-        let session_gauge = metrics::gauge!(
-            "boluo_server_cache_items",
-            vec![metrics::Label::new("cache", "Session")]
-        );
-        let user_gauge = metrics::gauge!(
-            "boluo_server_cache_items",
-            vec![metrics::Label::new("cache", "User")]
-        );
-        let user_ext_gauge = metrics::gauge!(
-            "boluo_server_cache_items",
-            vec![metrics::Label::new("cache", "UserExt")]
-        );
-        let space_gauge = metrics::gauge!(
-            "boluo_server_cache_items",
-            vec![metrics::Label::new("cache", "Space")]
-        );
-        let space_settings_gauge = metrics::gauge!(
-            "boluo_server_cache_items",
-            vec![metrics::Label::new("cache", "SpaceSettings")]
-        );
-        let channel_members_gauge = metrics::gauge!(
-            "boluo_server_cache_items",
-            vec![metrics::Label::new("cache", "ChannelMembers")]
-        );
-        let spaces_channels_gauge = metrics::gauge!(
-            "boluo_server_cache_items",
-            vec![metrics::Label::new("cache", "SpacesChannels")]
-        );
-        let user_spaces_gauge = metrics::gauge!(
-            "boluo_server_cache_items",
-            vec![metrics::Label::new("cache", "UserSpaces")]
-        );
         let total_gauge = metrics::gauge!("boluo_server_cache_items_total");
         loop {
             tokio::select! {
                 _ = interval.tick() => {
-                    let channel = CACHE.Channel.len();
-                    let character = CACHE.Character.len();
-                    let character_variables = CACHE.CharacterVariables.len();
-                    let session = CACHE.Session.len();
-                    let user = CACHE.User.len();
-                    let user_ext = CACHE.UserExt.len();
-                    let space = CACHE.Space.len();
-                    let space_settings = CACHE.SpaceSettings.len();
-                    let channel_members = CACHE.ChannelMembers.len();
-                    let spaces_channels = CACHE.SpacesChannels.len();
-                    let user_spaces = CACHE.UserSpaces.len();
-                    let total = channel
-                        + character
-                        + character_variables
-                        + session
-                        + user
-                        + user_ext
-                        + space
-                        + space_settings
-                        + channel_members
-                        + spaces_channels
-                        + user_spaces;
-
-                    channel_gauge.set(channel as f64);
-                    character_gauge.set(character as f64);
-                    character_variables_gauge.set(character_variables as f64);
-                    session_gauge.set(session as f64);
-                    user_gauge.set(user as f64);
-                    user_ext_gauge.set(user_ext as f64);
-                    space_gauge.set(space as f64);
-                    space_settings_gauge.set(space_settings as f64);
-                    channel_members_gauge.set(channel_members as f64);
-                    spaces_channels_gauge.set(spaces_channels as f64);
-                    user_spaces_gauge.set(user_spaces as f64);
+                    let mut total = 0;
+                    for stats in CACHE.stats() {
+                        total += stats.items;
+                        let labels = vec![metrics::Label::new("cache", stats.name)];
+                        metrics::gauge!("boluo_server_cache_items", labels.clone())
+                            .set(stats.items as f64);
+                        metrics::counter!("boluo_server_cache_hits_total", labels.clone())
+                            .absolute(stats.hits);
+                        metrics::counter!("boluo_server_cache_misses_total", labels)
+                            .absolute(stats.misses);
+                    }
                     total_gauge.set(total as f64);
                 },
                 _ = crate::shutdown::SHUTDOWN.notified() => {

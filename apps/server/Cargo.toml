@@ -52,7 +52,7 @@ sqlx = { version = "0.8.2", features = [
 http-body-util = "0.1.2"
 hyper-util = { version = "0.1.7", features = ["full"] }
 arc-swap = "1.7.1"
-quick_cache = "0.6.9"
+quick_cache = { version = "0.6.9", features = ["stats"] }
 papaya = "0.2.1"
 ahash = "0.8.11"
 parking_lot = "0.12.3"

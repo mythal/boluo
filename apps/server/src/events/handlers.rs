@@ -231,6 +231,9 @@ async fn handle_client_event(
         ClientEvent::Diff { preview } => {
             let Some(session) = session else {
                 tracing::warn!("An user tried to diff preview without authentication");
+                metrics::counter!("boluo_server_events_preview_diff_without_authentication_total")
+                    .increment(1);
+
                 error_sender
                     .send(ConnectionError::Unauthenticated)
                     .await
@@ -238,6 +241,7 @@ async fn handle_client_event(
 
                 return;
             };
+            metrics::counter!("boluo_server_events_preview_diff_total").increment(1);
             if let Err(err) = preview.broadcast(mailbox, session.user_id).await {
                 tracing::warn!(error = %err, "Failed to broadcast preview diff update");
             }

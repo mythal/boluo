@@ -1,4 +1,4 @@
-import { type MakeToken, type EventId } from '@boluo/api';
+import { type MakeToken, type EventId, type UpdateEncoding } from '@boluo/api';
 import { isServerUpdate } from '@boluo/api/events';
 import { useQueryCurrentUser } from '@boluo/hooks/useQueryCurrentUser';
 import { webSocketUrlAtom } from '@boluo/hooks/useWebSocketUrl';
@@ -18,7 +18,6 @@ let lastPongTime = Date.now();
 const UNAUTHENTICATED = 'UNAUTHENTICATED';
 const NETWORK_ERROR = 'NETWORK_ERROR';
 const UNEXPECTED = 'UNEXPECTED';
-type UpdateEncoding = 'plain' | 'brotli' | 'gzip';
 
 const TOKEN_VALIDITY_MS = 60_000;
 const TOKEN_EXPIRY_SAFETY_MS = 5_000;
@@ -68,10 +67,12 @@ const decompressCachedUpdates = async (
     const stream = new DecompressionStream(
       format as ConstructorParameters<typeof DecompressionStream>[0],
     );
+    // Start consuming readable side first to avoid backpressure deadlock on large chunks.
+    const textPromise = new Response(stream.readable).text();
     const writer = stream.writable.getWriter();
     await writer.write(new Uint8Array(compressed));
     await writer.close();
-    const decompressedText = await new Response(stream.readable).text();
+    const decompressedText = await textPromise;
     if (decompressedText === '') return [];
     return decompressedText.split('\n').filter((x) => x !== '');
   } catch (error) {

@@ -75,6 +75,8 @@ enum CompressCachedUpdatesError {
     Join(#[from] tokio::task::JoinError),
 }
 
+const CACHED_UPDATES_CHUNK_SIZE: usize = 32;
+
 fn serialize_cached_updates(cached_updates: &[Utf8Bytes]) -> Vec<u8> {
     let total_len = cached_updates.iter().map(|x| x.len()).sum::<usize>();
     let delimiter_count = cached_updates.len().saturating_sub(1);
@@ -174,14 +176,26 @@ async fn push_updates(
                 outgoing.feed(WsMessage::Text(message.clone())).await?;
             }
         } else {
-            match compress_cached_updates(&cached_updates, encoding).await {
-                Ok(payload) => {
-                    outgoing.feed(WsMessage::Binary(payload.into())).await?;
-                }
-                Err(err) => {
-                    tracing::warn!(error = %err, mailbox_id = %mailbox, "Failed to compress cached updates, fallback to text frames");
-                    for message in &cached_updates {
-                        outgoing.feed(WsMessage::Text(message.clone())).await?;
+            let mut offset = 0;
+            while offset < cached_updates.len() {
+                let end = (offset + CACHED_UPDATES_CHUNK_SIZE).min(cached_updates.len());
+                let chunk = &cached_updates[offset..end];
+                match compress_cached_updates(chunk, encoding).await {
+                    Ok(payload) => {
+                        outgoing.feed(WsMessage::Binary(payload.into())).await?;
+                        offset = end;
+                    }
+                    Err(err) => {
+                        tracing::warn!(
+                            error = %err,
+                            mailbox_id = %mailbox,
+                            from_index = offset,
+                            "Failed to compress cached update chunk, fallback to text frames for remaining updates"
+                        );
+                        for message in &cached_updates[offset..] {
+                            outgoing.feed(WsMessage::Text(message.clone())).await?;
+                        }
+                        break;
                     }
                 }
             }

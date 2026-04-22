@@ -4,7 +4,7 @@ import { post } from '@boluo/api-browser';
 import { explainError } from '@boluo/locale/errors';
 import { useRouter } from 'next/navigation';
 import type { FC } from 'react';
-import { useId, useState } from 'react';
+import { useId, useMemo, useState } from 'react';
 import { type FieldError, type SubmitHandler, useFormState } from 'react-hook-form';
 import { FormProvider, useForm, useFormContext } from 'react-hook-form';
 import { FormattedMessage, type IntlShape, useIntl } from 'react-intl';
@@ -36,6 +36,7 @@ const FieldErrorDisplay: FC<{ error?: FieldError }> = ({ error }) => {
 const UsernameField = () => {
   const intl = useIntl();
   const id = useId();
+  const usernameValidation = useMemo(() => validations.username(intl), [intl]);
   const {
     register,
     formState: {
@@ -54,7 +55,7 @@ const UsernameField = () => {
           id={id}
           autoComplete="username"
           variant={error ? 'error' : 'normal'}
-          {...register('username', validations.username(intl))}
+          {...register('username', usernameValidation)}
         />
       </div>
       <FieldErrorDisplay error={error} />
@@ -65,6 +66,7 @@ const UsernameField = () => {
 const EmailField = () => {
   const intl = useIntl();
   const id = useId();
+  const emailValidation = useMemo(() => validations.email(intl), [intl]);
   const {
     register,
     formState: {
@@ -84,7 +86,7 @@ const EmailField = () => {
           id={id}
           autoComplete="email"
           variant={error ? 'error' : 'normal'}
-          {...register('email', validations.email(intl))}
+          {...register('email', emailValidation)}
         />
       </div>
       <FieldErrorDisplay error={error} />

@@ -1,5 +1,3 @@
-use std::net::IpAddr;
-use std::num::NonZeroU32;
 use std::sync::LazyLock;
 
 use super::api::{
@@ -12,7 +10,8 @@ use crate::error::{AppError, Find, ValidationFailed};
 use crate::interface::{self, response};
 use crate::interface::{missing, ok_response, parse_body, parse_query};
 use crate::mail;
-use crate::media::{upload, upload_params};
+use crate::media::{check_upload_rate_limit, upload, upload_params};
+use crate::rate_limit;
 use crate::session::{
     add_session_cookie, add_settings_cookie, remove_session_cookie, revoke_session,
 };
@@ -22,79 +21,61 @@ use crate::users::api::{
     ResendEmailVerificationResult,
 };
 use crate::users::models::UserExt;
-use crate::utils::{get_ip, id};
-use governor::{DefaultKeyedRateLimiter, Quota, RateLimiter};
+use crate::utils::id;
+use governor::{DefaultDirectRateLimiter, DefaultKeyedRateLimiter, RateLimiter};
 use hyper::body::{Body, Incoming};
 use hyper::{Method, Request, Response};
 use uuid::Uuid;
 
-const RATE_LIMITER_CLEAN_INTERVAL_S: u64 = 60 * 10;
-const RATE_LIMITER_SHRINK_INTERVAL_S: u64 = 60 * 60;
-
 static LOGIN_LIMITER: LazyLock<DefaultKeyedRateLimiter<String>> =
-    LazyLock::new(|| RateLimiter::keyed(Quota::per_minute(NonZeroU32::new(10).unwrap())));
-static REGISTER_IP_LIMITER: LazyLock<DefaultKeyedRateLimiter<IpAddr>> =
-    LazyLock::new(|| RateLimiter::keyed(Quota::per_hour(NonZeroU32::new(32).unwrap())));
+    LazyLock::new(|| RateLimiter::keyed(rate_limit::per_minute(rate_limit::LOGIN_PER_MINUTE)));
+static MAIL_GLOBAL_LIMITER: LazyLock<DefaultDirectRateLimiter> = LazyLock::new(|| {
+    RateLimiter::direct(rate_limit::per_minute(rate_limit::MAIL_GLOBAL_PER_MINUTE))
+});
 static REGISTER_EMAIL_LIMITER: LazyLock<DefaultKeyedRateLimiter<String>> =
-    LazyLock::new(|| RateLimiter::keyed(Quota::per_hour(NonZeroU32::new(3).unwrap())));
-static RESET_PASSWORD_IP_LIMITER: LazyLock<DefaultKeyedRateLimiter<IpAddr>> =
-    LazyLock::new(|| RateLimiter::keyed(Quota::per_hour(NonZeroU32::new(32).unwrap())));
+    LazyLock::new(|| RateLimiter::keyed(rate_limit::per_hour(rate_limit::REGISTER_EMAIL_PER_HOUR)));
 static RESET_PASSWORD_EMAIL_LIMITER: LazyLock<DefaultKeyedRateLimiter<String>> =
-    LazyLock::new(|| RateLimiter::keyed(Quota::per_hour(NonZeroU32::new(16).unwrap())));
-static RESEND_EMAIL_VERIFICATION_IP_LIMITER: LazyLock<DefaultKeyedRateLimiter<IpAddr>> =
-    LazyLock::new(|| RateLimiter::keyed(Quota::per_hour(NonZeroU32::new(32).unwrap())));
+    LazyLock::new(|| {
+        RateLimiter::keyed(rate_limit::per_hour(
+            rate_limit::RESET_PASSWORD_EMAIL_PER_HOUR,
+        ))
+    });
 static RESEND_EMAIL_VERIFICATION_USER_LIMITER: LazyLock<DefaultKeyedRateLimiter<Uuid>> =
-    LazyLock::new(|| RateLimiter::keyed(Quota::per_hour(NonZeroU32::new(5).unwrap())));
-static EMAIL_CHANGE_IP_LIMITER: LazyLock<DefaultKeyedRateLimiter<IpAddr>> =
-    LazyLock::new(|| RateLimiter::keyed(Quota::per_hour(NonZeroU32::new(10).unwrap())));
+    LazyLock::new(|| {
+        RateLimiter::keyed(rate_limit::per_hour(
+            rate_limit::RESEND_EMAIL_VERIFICATION_USER_PER_HOUR,
+        ))
+    });
 static EMAIL_CHANGE_EMAIL_LIMITER: LazyLock<DefaultKeyedRateLimiter<String>> =
-    LazyLock::new(|| RateLimiter::keyed(Quota::per_hour(NonZeroU32::new(5).unwrap())));
+    LazyLock::new(|| {
+        RateLimiter::keyed(rate_limit::per_hour(
+            rate_limit::EMAIL_CHANGE_EMAIL_PER_HOUR,
+        ))
+    });
 
 pub fn start_rate_limiter_cleanup() {
-    tokio::spawn(async move {
-        let mut interval = crate::utils::cleaner_interval(RATE_LIMITER_CLEAN_INTERVAL_S);
-        let mut shrink_interval = crate::utils::cleaner_interval(RATE_LIMITER_SHRINK_INTERVAL_S);
-        loop {
-            tokio::select! {
-                _ = interval.tick() => {
-                    LOGIN_LIMITER.retain_recent();
-                    REGISTER_IP_LIMITER.retain_recent();
-                    REGISTER_EMAIL_LIMITER.retain_recent();
-                    RESET_PASSWORD_IP_LIMITER.retain_recent();
-                    RESET_PASSWORD_EMAIL_LIMITER.retain_recent();
-                    RESEND_EMAIL_VERIFICATION_IP_LIMITER.retain_recent();
-                    RESEND_EMAIL_VERIFICATION_USER_LIMITER.retain_recent();
-                    EMAIL_CHANGE_IP_LIMITER.retain_recent();
-                    EMAIL_CHANGE_EMAIL_LIMITER.retain_recent();
-                }
-                _ = shrink_interval.tick() => {
-                    LOGIN_LIMITER.shrink_to_fit();
-                    REGISTER_IP_LIMITER.shrink_to_fit();
-                    REGISTER_EMAIL_LIMITER.shrink_to_fit();
-                    RESET_PASSWORD_IP_LIMITER.shrink_to_fit();
-                    RESET_PASSWORD_EMAIL_LIMITER.shrink_to_fit();
-                    RESEND_EMAIL_VERIFICATION_IP_LIMITER.shrink_to_fit();
-                    RESEND_EMAIL_VERIFICATION_USER_LIMITER.shrink_to_fit();
-                    EMAIL_CHANGE_IP_LIMITER.shrink_to_fit();
-                    EMAIL_CHANGE_EMAIL_LIMITER.shrink_to_fit();
-                }
-                _ = crate::shutdown::SHUTDOWN.notified() => {
-                    break;
-                }
-            }
-        }
-    });
+    rate_limit::start_cleanup_task(
+        || {
+            LOGIN_LIMITER.retain_recent();
+            REGISTER_EMAIL_LIMITER.retain_recent();
+            RESET_PASSWORD_EMAIL_LIMITER.retain_recent();
+            RESEND_EMAIL_VERIFICATION_USER_LIMITER.retain_recent();
+            EMAIL_CHANGE_EMAIL_LIMITER.retain_recent();
+        },
+        || {
+            LOGIN_LIMITER.shrink_to_fit();
+            REGISTER_EMAIL_LIMITER.shrink_to_fit();
+            RESET_PASSWORD_EMAIL_LIMITER.shrink_to_fit();
+            RESEND_EMAIL_VERIFICATION_USER_LIMITER.shrink_to_fit();
+            EMAIL_CHANGE_EMAIL_LIMITER.shrink_to_fit();
+        },
+    );
 }
 
 async fn register(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<User, AppError> {
-    let ip = get_ip(&req)?;
-    REGISTER_IP_LIMITER
-        .check_key(&ip)
-        .map_err(|_| AppError::LimitExceeded("Too many requests, please try again later."))?;
-
     let Register {
         email,
         username,
@@ -334,6 +315,7 @@ pub async fn edit_avatar(
 ) -> Result<User, AppError> {
     use crate::csrf::authenticate;
     let session = authenticate(&req).await?;
+    check_upload_rate_limit(&session.user_id)?;
     let params = upload_params(req.uri())?;
     if !is_image(&params.mime_type) {
         return Err(ValidationFailed("Incorrect File Format").into());
@@ -390,12 +372,19 @@ pub fn token_key(token: &str) -> Vec<u8> {
     key
 }
 
+async fn send_limited_mail(to: &str, subject: &str, html: &str) -> Result<(), AppError> {
+    MAIL_GLOBAL_LIMITER
+        .check()
+        .map_err(|_| AppError::LimitExceeded("Too many emails, please try again later."))?;
+    mail::send(to, subject, html)
+        .await
+        .map_err(AppError::Unexpected)
+}
+
 pub async fn reset_password(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<(), AppError> {
-    let ip = get_ip(&req)?;
-
     let ResetPassword { email, lang } = parse_body(req).await?;
     let email = email.trim().to_lowercase();
     crate::validators::EMAIL.run(&email)?;
@@ -407,9 +396,6 @@ pub async fn reset_password(
             .ok_or(AppError::NotFound("email"))?
     };
 
-    RESET_PASSWORD_IP_LIMITER
-        .check_key(&ip)
-        .map_err(|_| AppError::LimitExceeded("Too many requests, please try again later."))?;
     RESET_PASSWORD_EMAIL_LIMITER
         .check_key(&email)
         .map_err(|_| AppError::LimitExceeded("This email is requested too many times."))?;
@@ -426,7 +412,7 @@ pub async fn reset_password(
     let lang = lang.as_deref().unwrap_or("en");
     match lang {
         "zh" | "zh-CN" | "zh_CN" => {
-            mail::send(
+            send_limited_mail(
                 &email,
                 include_str!("../../text/reset-password/title.zh-CN.txt").trim(),
                 &format!(
@@ -437,7 +423,7 @@ pub async fn reset_password(
             .await
         }
         "zh-TW" | "zh_TW" => {
-            mail::send(
+            send_limited_mail(
                 &email,
                 include_str!("../../text/reset-password/title.zh-TW.txt").trim(),
                 &format!(
@@ -448,7 +434,7 @@ pub async fn reset_password(
             .await
         }
         "ja" => {
-            mail::send(
+            send_limited_mail(
                 &email,
                 include_str!("../../text/reset-password/title.ja.txt").trim(),
                 &format!(
@@ -459,7 +445,7 @@ pub async fn reset_password(
             .await
         }
         _ => {
-            mail::send(
+            send_limited_mail(
                 &email,
                 include_str!("../../text/reset-password/title.en.txt").trim(),
                 &format!(
@@ -469,8 +455,7 @@ pub async fn reset_password(
             )
             .await
         }
-    }
-    .map_err(AppError::Unexpected)?;
+    }?;
     Ok(())
 }
 
@@ -512,7 +497,7 @@ async fn send_email_verification(
 
     match lang {
         "zh" | "zh-CN" | "zh_CN" => {
-            mail::send(
+            send_limited_mail(
                 email,
                 include_str!("../../text/email-verification/title.zh-CN.txt").trim(),
                 &format!(
@@ -523,7 +508,7 @@ async fn send_email_verification(
             .await
         }
         "zh-TW" | "zh_TW" => {
-            mail::send(
+            send_limited_mail(
                 email,
                 include_str!("../../text/email-verification/title.zh-TW.txt").trim(),
                 &format!(
@@ -534,7 +519,7 @@ async fn send_email_verification(
             .await
         }
         "ja" => {
-            mail::send(
+            send_limited_mail(
                 email,
                 include_str!("../../text/email-verification/title.ja.txt").trim(),
                 &format!(
@@ -545,7 +530,7 @@ async fn send_email_verification(
             .await
         }
         _ => {
-            mail::send(
+            send_limited_mail(
                 email,
                 include_str!("../../text/email-verification/title.en.txt").trim(),
                 &format!(
@@ -555,8 +540,7 @@ async fn send_email_verification(
             )
             .await
         }
-    }
-    .map_err(AppError::Unexpected)?;
+    }?;
     Ok(())
 }
 
@@ -588,7 +572,6 @@ pub async fn resend_email_verification(
     use crate::session::authenticate;
     use crate::users::api::ResendEmailVerification;
 
-    let ip = get_ip(&req)?;
     let session = authenticate(&req).await?;
     let ResendEmailVerification { lang } = parse_body(req).await?;
 
@@ -602,9 +585,6 @@ pub async fn resend_email_verification(
         return Ok(ResendEmailVerificationResult::AlreadyVerified);
     }
 
-    RESEND_EMAIL_VERIFICATION_IP_LIMITER
-        .check_key(&ip)
-        .map_err(|_| AppError::LimitExceeded("Too many requests, please try again later."))?;
     RESEND_EMAIL_VERIFICATION_USER_LIMITER
         .check_key(&session.user_id)
         .map_err(|_| AppError::LimitExceeded("This email is requested too many times."))?;
@@ -649,7 +629,7 @@ async fn send_email_change_verification(
 
     match lang {
         "zh" | "zh-CN" | "zh_CN" => {
-            mail::send(
+            send_limited_mail(
                 new_email,
                 include_str!("../../text/email-change/title.zh-CN.txt").trim(),
                 &format!(
@@ -660,7 +640,7 @@ async fn send_email_change_verification(
             .await
         }
         "zh-TW" | "zh_TW" => {
-            mail::send(
+            send_limited_mail(
                 new_email,
                 include_str!("../../text/email-change/title.zh-TW.txt").trim(),
                 &format!(
@@ -671,7 +651,7 @@ async fn send_email_change_verification(
             .await
         }
         "ja" => {
-            mail::send(
+            send_limited_mail(
                 new_email,
                 include_str!("../../text/email-change/title.ja.txt").trim(),
                 &format!(
@@ -682,7 +662,7 @@ async fn send_email_change_verification(
             .await
         }
         _ => {
-            mail::send(
+            send_limited_mail(
                 new_email,
                 include_str!("../../text/email-change/title.en.txt").trim(),
                 &format!(
@@ -692,8 +672,7 @@ async fn send_email_change_verification(
             )
             .await
         }
-    }
-    .map_err(AppError::Unexpected)?;
+    }?;
     Ok(())
 }
 
@@ -703,7 +682,6 @@ pub async fn request_email_change(
 ) -> Result<(), AppError> {
     use crate::session::authenticate;
     use crate::users::api::RequestEmailChange;
-    let ip = get_ip(&req)?;
 
     let session = authenticate(&req).await?;
     let RequestEmailChange { new_email, lang } = parse_body(req).await?;
@@ -733,9 +711,6 @@ pub async fn request_email_change(
         current_user.email
     };
 
-    EMAIL_CHANGE_IP_LIMITER
-        .check_key(&ip)
-        .map_err(|_| AppError::LimitExceeded("Too many requests, please try again later."))?;
     EMAIL_CHANGE_EMAIL_LIMITER
         .check_key(&new_email)
         .map_err(|_| AppError::LimitExceeded("This email is requested too many times."))?;

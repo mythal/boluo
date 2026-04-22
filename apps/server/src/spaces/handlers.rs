@@ -9,13 +9,31 @@ use crate::error::{AppError, Find};
 use crate::events::models::space_users_status;
 use crate::events::{StatusMap, Update};
 use crate::interface::{self, IdQuery, Response, missing, ok_response, parse_query, response};
+use crate::rate_limit;
 use crate::spaces::api::{JoinSpace, KickFromSpace, SearchParams, SpaceWithMember};
 use crate::spaces::models::SpaceMemberWithUser;
 use crate::users::User;
 use arc_swap::ArcSwap;
+use governor::{DefaultKeyedRateLimiter, RateLimiter};
 use hyper::Request;
 use hyper::body::Body;
+use std::sync::LazyLock;
 use uuid::Uuid;
+
+static CREATE_SPACE_LIMITER: LazyLock<DefaultKeyedRateLimiter<Uuid>> = LazyLock::new(|| {
+    RateLimiter::keyed(rate_limit::per_hour(rate_limit::CREATE_SPACE_USER_PER_HOUR))
+});
+
+pub fn start_rate_limiter_cleanup() {
+    rate_limit::start_cleanup_task(
+        || {
+            CREATE_SPACE_LIMITER.retain_recent();
+        },
+        || {
+            CREATE_SPACE_LIMITER.shrink_to_fit();
+        },
+    );
+}
 
 async fn list(
     ctx: &crate::context::AppContext,
@@ -190,6 +208,9 @@ async fn create(
     req: Request<impl Body>,
 ) -> Result<SpaceWithMember, AppError> {
     let session = authenticate(&req).await?;
+    CREATE_SPACE_LIMITER
+        .check_key(&session.user_id)
+        .map_err(|_| AppError::LimitExceeded("Too many spaces, please try again later."))?;
     let CreateSpace {
         name,
         password,

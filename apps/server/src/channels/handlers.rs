@@ -14,12 +14,32 @@ use crate::error::{AppError, Find};
 use crate::events::Update;
 use crate::interface::{self, IdQuery, missing, ok_response, parse_body, parse_query, response};
 use crate::messages::Message;
+use crate::rate_limit;
 use crate::session::Session;
 use crate::spaces::{Space, SpaceMember};
+use governor::{DefaultKeyedRateLimiter, RateLimiter};
 use hyper::Request;
 use hyper::body::Body;
 use std::collections::{HashMap, HashSet};
+use std::sync::LazyLock;
 use uuid::Uuid;
+
+static CREATE_CHANNEL_LIMITER: LazyLock<DefaultKeyedRateLimiter<Uuid>> = LazyLock::new(|| {
+    RateLimiter::keyed(rate_limit::per_hour(
+        rate_limit::CREATE_CHANNEL_USER_PER_HOUR,
+    ))
+});
+
+pub fn start_rate_limiter_cleanup() {
+    rate_limit::start_cleanup_task(
+        || {
+            CREATE_CHANNEL_LIMITER.retain_recent();
+        },
+        || {
+            CREATE_CHANNEL_LIMITER.shrink_to_fit();
+        },
+    );
+}
 
 async fn admin_only<'c, T: sqlx::PgExecutor<'c>>(
     db: T,
@@ -176,6 +196,9 @@ async fn create(
     req: Request<impl Body>,
 ) -> Result<ChannelWithMember, AppError> {
     let session = authenticate(&req).await?;
+    CREATE_CHANNEL_LIMITER
+        .check_key(&session.user_id)
+        .map_err(|_| AppError::LimitExceeded("Too many channels, please try again later."))?;
     let CreateChannel {
         space_id,
         name,

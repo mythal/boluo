@@ -62,7 +62,7 @@ mod websocket;
 use crate::cors::allow_origin;
 use crate::db::MIGRATOR;
 use crate::error::AppError;
-use crate::interface::{err_response, missing, ok_response};
+use crate::interface::{err_response, missing};
 
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
@@ -91,7 +91,7 @@ async fn router(
         };
     }
     if path == "/api/csrf-token" {
-        return csrf::get_csrf_token(ctx, req).await.map(ok_response);
+        return csrf::get_csrf_token(ctx, req).await;
     }
     if path.starts_with("/api/tunnel") {
         return Ok(sentry_tunnel::handler(req).await);

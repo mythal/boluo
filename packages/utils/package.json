@@ -19,7 +19,8 @@
   "private": true,
   "scripts": {
     "check": "tsc --noEmit",
-    "lint": "eslint . --ext .ts,.tsx"
+    "lint": "eslint . --ext .ts,.tsx",
+    "test": "node --import tsx --test src/**/*.test.ts"
   },
   "sideEffects": false,
   "type": "module"

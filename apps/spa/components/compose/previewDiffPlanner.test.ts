@@ -22,7 +22,7 @@ const makePreview = (overrides: Partial<PreviewPost> = {}): PreviewPost => ({
   isAction: false,
   text: 'hello',
   clear: false,
-  entities: [],
+  entities: [{ type: 'Text', start: 0, len: 5 }],
   editFor: null,
   edit: null,
   ...overrides,
@@ -34,12 +34,16 @@ const makeState = (overrides: Partial<PreviewSendState> = {}): PreviewSendState 
     keyframe: {
       id: preview.id,
       version: 1,
+      channelId: preview.channelId,
       name: preview.name,
+      mediaId: preview.mediaId,
       text: preview.text,
       entities: preview.entities,
       inGame: preview.inGame ?? false,
       isAction: preview.isAction ?? false,
-      edit: preview.edit,
+      clear: preview.clear ?? false,
+      editFor: preview.editFor ?? null,
+      edit: preview.edit ?? null,
     },
     latestVersion: 1,
     lastKeyframeAt: 1_000,
@@ -127,6 +131,60 @@ test('buildPreviewDiffPlan falls back to keyframe when interval exceeded', () =>
     resetPreview: false,
   });
   assert.strictEqual(plan.type, 'FALLBACK_TO_KEYFRAME');
+});
+
+test('buildPreviewDiffPlan falls back to keyframe after cleared preview', () => {
+  const cases: Array<Pick<PreviewSendState['keyframe'], 'text' | 'entities'>> = [
+    { text: '', entities: [] },
+    { text: '   ', entities: [{ type: 'Text', start: 0, len: 3 }] },
+    { text: 'not parsed', entities: [] },
+  ];
+
+  for (const clearedKeyframe of cases) {
+    const state = makeState({
+      keyframe: { ...makeState().keyframe, ...clearedKeyframe },
+    });
+    const nextPreview = makePreview({
+      text: 'hello again',
+      entities: [{ type: 'Text', start: 0, len: 11 }],
+    });
+    const plan = buildPreviewDiffPlan({
+      channelId,
+      currentSendState: state,
+      nextPreview,
+      now: 1_100,
+      doNotBroadcast: false,
+      resetPreview: false,
+    });
+    assert.strictEqual(plan.type, 'FALLBACK_TO_KEYFRAME', JSON.stringify(clearedKeyframe));
+  }
+});
+
+test('buildPreviewDiffPlan falls back to keyframe when non-diffable fields change', () => {
+  const cases: Array<Partial<PreviewPost>> = [
+    { channelId: 'channel-2' },
+    { mediaId: 'media-1' },
+    { clear: true },
+    { editFor: '2024-01-01T00:00:00.000Z' },
+  ];
+
+  for (const overrides of cases) {
+    const state = makeState();
+    const nextPreview = makePreview({
+      ...overrides,
+      text: 'hello world',
+      entities: [{ type: 'Text', start: 0, len: 11 }],
+    });
+    const plan = buildPreviewDiffPlan({
+      channelId: nextPreview.channelId,
+      currentSendState: state,
+      nextPreview,
+      now: 1_100,
+      doNotBroadcast: false,
+      resetPreview: false,
+    });
+    assert.strictEqual(plan.type, 'FALLBACK_TO_KEYFRAME', JSON.stringify(overrides));
+  }
 });
 
 test('buildPreviewDiffPlan falls back to keyframe for large text replacement', () => {

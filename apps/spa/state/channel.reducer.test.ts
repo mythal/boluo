@@ -46,17 +46,20 @@ const makeMessage = (id: string, pos: number, overrides: Partial<Message> = {}):
   ...overrides,
 });
 
-const makePreview = (id: string, pos: number, overrides: Partial<Preview> = {}): Preview => ({
-  id,
-  senderId: userId,
-  channelId,
-  name: characterName,
-  entities: [],
-  text: `preview-${id}`,
-  pos,
-  inGame: true,
-  ...overrides,
-});
+const makePreview = (id: string, pos: number, overrides: Partial<Preview> = {}): Preview => {
+  const text = `preview-${id}`;
+  return {
+    id,
+    senderId: userId,
+    channelId,
+    name: characterName,
+    entities: [{ type: 'Text', start: 0, len: text.length }],
+    text,
+    pos,
+    inGame: true,
+    ...overrides,
+  };
+};
 
 const toPreviewItem = (preview: Preview, timestamp = 1): PreviewItem => {
   const pos = Math.ceil(preview.pos);
@@ -405,6 +408,33 @@ describe('channelReducer', () => {
     const previewItem = next.previewMap[preview.senderId];
     assert.ok(previewItem);
     assert.strictEqual(previewItem.pos, 2);
+  });
+
+  test('messagePreview removes cleared preview from previewMap', () => {
+    const cases: Array<Partial<Preview>> = [
+      { text: '', entities: [] },
+      { text: '   ', entities: [{ type: 'Text', start: 0, len: 3 }] },
+      { text: 'not parsed', entities: [] },
+    ];
+
+    for (const overrides of cases) {
+      const previousPreview = toPreviewItem(makePreview(previewId1, 12));
+      const state = {
+        ...makeInitialChannelState(channelId),
+        previewMap: { [previousPreview.senderId]: previousPreview },
+        collidedPreviewIdSet: new Set([previewId1]),
+      };
+      const clearPreview = makePreview(previewId1, 0, overrides);
+
+      const next = channelReducer(
+        state,
+        { type: 'messagePreview', payload: { channelId, preview: clearPreview, timestamp: 2 } },
+        context,
+      );
+
+      assert.deepStrictEqual(next.previewMap, {}, JSON.stringify(overrides));
+      assert.strictEqual(next.collidedPreviewIdSet.has(previewId1), false);
+    }
   });
 
   test('messagePreview edit with mismatched metadata is ignored', () => {

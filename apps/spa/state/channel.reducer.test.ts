@@ -459,6 +459,35 @@ describe('channelReducer', () => {
     assert.strictEqual(previewItem.timestamp, 5);
   });
 
+  test('messagePreview edit is retained when target message is not loaded', () => {
+    const preview = makePreview(messageId1, 999, {
+      v: 1,
+      edit: { time: '2024-01-01T00:01:00.000Z', p: 8, q: 2 },
+      senderId: userId,
+      text: 'editing',
+    });
+    const state = {
+      ...makeInitialChannelState(channelId),
+      messages: L.empty<MessageItem>(),
+      previewMap: {},
+      collidedPreviewIdSet: new Set<string>(),
+    };
+
+    const next = channelReducer(
+      state,
+      { type: 'messagePreview', payload: { channelId, preview, timestamp: 5 } },
+      context,
+    );
+
+    const previewItem = next.previewMap[preview.senderId];
+    assert.ok(previewItem);
+    assert.strictEqual(previewItem.id, preview.id);
+    assert.strictEqual(previewItem.pos, 4);
+    assert.strictEqual(previewItem.posP, 8);
+    assert.strictEqual(previewItem.posQ, 2);
+    assert.strictEqual(previewItem.timestamp, 5);
+  });
+
   test('messagePreview rounds fractional pos', () => {
     const preview = makePreview('preview-fraction', 2.4);
     const next = channelReducer(

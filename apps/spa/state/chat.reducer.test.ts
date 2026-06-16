@@ -5,7 +5,7 @@ import { chatReducer, makeChatState } from './chat.reducer';
 
 const ghostChannelId = 'ghost-channel';
 
-test('chatReducer ignores messagePreview for unknown channel', () => {
+test('chatReducer stores messagePreview for unknown channel', () => {
   const state = makeChatState('space-1');
   const preview: Preview = {
     id: 'preview-1',
@@ -21,7 +21,9 @@ test('chatReducer ignores messagePreview for unknown channel', () => {
     payload: { channelId: ghostChannelId, preview, timestamp: 1 },
   });
 
-  assert.deepStrictEqual(next.channels, {});
+  const channel = next.channels[ghostChannelId];
+  assert.ok(channel);
+  assert.strictEqual(channel.previewMap[preview.senderId]?.id, preview.id);
 });
 
 test('chatReducer ignores messagePreviewDiff for unknown channel', () => {

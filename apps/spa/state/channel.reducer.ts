@@ -455,22 +455,35 @@ const handleMessagePreview = (
   let newItem: PreviewItem;
   let { previewMap, collidedPreviewIdSet } = state;
   if (preview.edit != null) {
-    const findResult = findMessage(state.messages, preview.id, preview.pos);
-    if (findResult == null) return state;
-    const [message] = findResult;
-    if (message.modified !== preview.edit.time || message.senderId !== preview.senderId) {
-      return state;
+    const pos = preview.edit.p / preview.edit.q;
+    const findResult = findMessage(state.messages, preview.id, pos);
+    if (findResult == null) {
+      newItem = {
+        ...preview,
+        type: 'PREVIEW',
+        pos,
+        posP: preview.edit.p,
+        posQ: preview.edit.q,
+        key: preview.senderId,
+        timestamp,
+        keyframe: toPreviewKeyframe(preview),
+      };
+    } else {
+      const [message] = findResult;
+      if (message.modified !== preview.edit.time || message.senderId !== preview.senderId) {
+        return state;
+      }
+      newItem = {
+        ...preview,
+        type: 'PREVIEW',
+        pos: message.pos,
+        posP: message.posP,
+        posQ: message.posQ,
+        key: preview.senderId,
+        timestamp,
+        keyframe: toPreviewKeyframe(preview),
+      };
     }
-    newItem = {
-      ...preview,
-      type: 'PREVIEW',
-      pos: message.pos,
-      posP: message.posP,
-      posQ: message.posQ,
-      key: preview.senderId,
-      timestamp,
-      keyframe: toPreviewKeyframe(preview),
-    };
   } else {
     // The `preview.pos` is supposed to be integer, just `ceil` it to be safe.
     const pos = Math.ceil(preview.pos);

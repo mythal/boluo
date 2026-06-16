@@ -426,18 +426,34 @@
                 spaImage = "${tagPrefix}/spa";
               in
               pkgs.writeShellScriptBin "push-images" ''
-                set -e
-                ${pkgs.skopeo}/bin/skopeo login ghcr.io -u $GITHUB_ACTOR -p $GITHUB_TOKEN
+                set -euo pipefail
+
+                TMPDIR="''${TMPDIR:-/tmp}"
+                CONTAINERS_HOME="$(${pkgs.coreutils}/bin/mktemp -d "$TMPDIR/boluo-skopeo.XXXXXX")"
+                trap '${pkgs.coreutils}/bin/rm -rf "$CONTAINERS_HOME"' EXIT
+
+                export HOME="$CONTAINERS_HOME/home"
+                export XDG_CONFIG_HOME="$HOME/.config"
+                export XDG_RUNTIME_DIR="$CONTAINERS_HOME/runtime"
+                ${pkgs.coreutils}/bin/mkdir -p "$XDG_CONFIG_HOME/containers" "$XDG_RUNTIME_DIR"
+                ${pkgs.coreutils}/bin/chmod 700 "$XDG_RUNTIME_DIR"
+                ${pkgs.coreutils}/bin/printf '%s\n' \
+                  'unqualified-search-registries = []' \
+                  'short-name-mode = "disabled"' \
+                  > "$XDG_CONFIG_HOME/containers/registries.conf"
+
+                AUTH_FILE="$XDG_CONFIG_HOME/containers/auth.json"
+                ${pkgs.skopeo}/bin/skopeo login --authfile "$AUTH_FILE" ghcr.io -u "$GITHUB_ACTOR" -p "$GITHUB_TOKEN"
                 IMAGE_TAG="$(${pkgs.python3}/bin/python3 ${./scripts/image-tag.py})"
                 echo "Pushing images with tag: $IMAGE_TAG"
-                ${pkgs.skopeo}/bin/skopeo copy docker-archive:"${self'.packages.server-image}" docker://${serverImage}:$IMAGE_TAG
-                ${pkgs.skopeo}/bin/skopeo copy docker-archive:"${self'.packages.server-image}" docker://${serverImage}:v${self.rev}
-                ${pkgs.skopeo}/bin/skopeo copy docker-archive:"${self'.packages.legacy-image}" docker://${legacyImage}:$IMAGE_TAG
-                ${pkgs.skopeo}/bin/skopeo copy docker-archive:"${self'.packages.legacy-image}" docker://${legacyImage}:v${self.rev}
-                ${pkgs.skopeo}/bin/skopeo copy docker-archive:"${self'.packages.site-image}" docker://${siteImage}:$IMAGE_TAG
-                ${pkgs.skopeo}/bin/skopeo copy docker-archive:"${self'.packages.site-image}" docker://${siteImage}:v${self.rev}
-                ${pkgs.skopeo}/bin/skopeo copy docker-archive:"${self'.packages.spa-image}" docker://${spaImage}:$IMAGE_TAG
-                ${pkgs.skopeo}/bin/skopeo copy docker-archive:"${self'.packages.spa-image}" docker://${spaImage}:v${self.rev}
+                ${pkgs.skopeo}/bin/skopeo copy --dest-authfile "$AUTH_FILE" docker-archive:"${self'.packages.server-image}" "docker://${serverImage}:$IMAGE_TAG"
+                ${pkgs.skopeo}/bin/skopeo copy --dest-authfile "$AUTH_FILE" docker-archive:"${self'.packages.server-image}" "docker://${serverImage}:v${rev}"
+                ${pkgs.skopeo}/bin/skopeo copy --dest-authfile "$AUTH_FILE" docker-archive:"${self'.packages.legacy-image}" "docker://${legacyImage}:$IMAGE_TAG"
+                ${pkgs.skopeo}/bin/skopeo copy --dest-authfile "$AUTH_FILE" docker-archive:"${self'.packages.legacy-image}" "docker://${legacyImage}:v${rev}"
+                ${pkgs.skopeo}/bin/skopeo copy --dest-authfile "$AUTH_FILE" docker-archive:"${self'.packages.site-image}" "docker://${siteImage}:$IMAGE_TAG"
+                ${pkgs.skopeo}/bin/skopeo copy --dest-authfile "$AUTH_FILE" docker-archive:"${self'.packages.site-image}" "docker://${siteImage}:v${rev}"
+                ${pkgs.skopeo}/bin/skopeo copy --dest-authfile "$AUTH_FILE" docker-archive:"${self'.packages.spa-image}" "docker://${spaImage}:$IMAGE_TAG"
+                ${pkgs.skopeo}/bin/skopeo copy --dest-authfile "$AUTH_FILE" docker-archive:"${self'.packages.spa-image}" "docker://${spaImage}:v${rev}"
               '';
 
             deploy-server-staging = pkgs.writeShellScriptBin "deploy-server-staging" ''

@@ -86,6 +86,12 @@ const makeDummyPreview = (
 
 const SAFE_OFFSET = 2;
 
+export const isPreviewInLoadedRange = (
+  previewPos: number,
+  loadedMinPos: number,
+  fullLoaded: boolean,
+): boolean => previewPos > loadedMinPos || (previewPos < loadedMinPos && fullLoaded);
+
 const useFilters = (
   filterAtom: ChannelAtoms['filterAtom'],
   showArchivedAtom: ChannelAtoms['showArchivedAtom'],
@@ -228,7 +234,7 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
       }, messages),
     );
     const itemListLen = itemList.length;
-    const minPos = itemListLen > 0 ? itemList[0]!.pos : Number.MIN_SAFE_INTEGER;
+    const loadedMinPos = L.first(messages)?.pos ?? Number.MIN_SAFE_INTEGER;
     if (myId) {
       const existsPreviewIndex = optimisticPreviewList.findIndex(
         (preview) => preview.senderId === myId,
@@ -331,7 +337,7 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
         itemList.push(preview);
       } else if (preview.text === '' && preview.senderId === myId) {
         itemList.push(preview);
-      } else if (preview.pos > minPos || (preview.pos < minPos && fullLoaded)) {
+      } else if (isPreviewInLoadedRange(preview.pos, loadedMinPos, fullLoaded)) {
         const index = binarySearchPos(itemList, preview.pos);
         const itemInThePosition = itemList[index];
         if (itemInThePosition?.pos === preview.pos && itemInThePosition.type !== 'PREVIEW') {

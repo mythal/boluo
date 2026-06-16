@@ -42,6 +42,19 @@ const toPreviewKeyframe = (preview: Preview): PreviewKeyframe => ({
   entities: preview.entities,
 });
 
+const isClearedPreview = (preview: Preview): boolean =>
+  preview.text != null && (preview.text.trim() === '' || preview.entities.length === 0);
+
+const removePreviewBySender = (
+  previewMap: Record<UserId, PreviewItem>,
+  senderId: UserId,
+): Record<UserId, PreviewItem> => {
+  if (previewMap[senderId] == null) return previewMap;
+  const nextPreviewMap = { ...previewMap };
+  delete nextPreviewMap[senderId];
+  return nextPreviewMap;
+};
+
 const applyPreviewDiffOps = (
   keyframe: PreviewKeyframe,
   ops: PreviewDiffOp[],
@@ -454,23 +467,44 @@ const handleMessagePreview = (
 ): ChannelState => {
   let newItem: PreviewItem;
   let { previewMap, collidedPreviewIdSet } = state;
-  if (preview.edit != null) {
-    const findResult = findMessage(state.messages, preview.id, preview.pos);
-    if (findResult == null) return state;
-    const [message] = findResult;
-    if (message.modified !== preview.edit.time || message.senderId !== preview.senderId) {
-      return state;
+  if (isClearedPreview(preview)) {
+    previewMap = removePreviewBySender(previewMap, preview.senderId);
+    if (collidedPreviewIdSet.has(preview.id)) {
+      collidedPreviewIdSet = new Set(collidedPreviewIdSet);
+      collidedPreviewIdSet.delete(preview.id);
     }
-    newItem = {
-      ...preview,
-      type: 'PREVIEW',
-      pos: message.pos,
-      posP: message.posP,
-      posQ: message.posQ,
-      key: preview.senderId,
-      timestamp,
-      keyframe: toPreviewKeyframe(preview),
-    };
+    return { ...state, previewMap, collidedPreviewIdSet };
+  }
+  if (preview.edit != null) {
+    const pos = preview.edit.p / preview.edit.q;
+    const findResult = findMessage(state.messages, preview.id, pos);
+    if (findResult == null) {
+      newItem = {
+        ...preview,
+        type: 'PREVIEW',
+        pos,
+        posP: preview.edit.p,
+        posQ: preview.edit.q,
+        key: preview.senderId,
+        timestamp,
+        keyframe: toPreviewKeyframe(preview),
+      };
+    } else {
+      const [message] = findResult;
+      if (message.modified !== preview.edit.time || message.senderId !== preview.senderId) {
+        return state;
+      }
+      newItem = {
+        ...preview,
+        type: 'PREVIEW',
+        pos: message.pos,
+        posP: message.posP,
+        posQ: message.posQ,
+        key: preview.senderId,
+        timestamp,
+        keyframe: toPreviewKeyframe(preview),
+      };
+    }
   } else {
     // The `preview.pos` is supposed to be integer, just `ceil` it to be safe.
     const pos = Math.ceil(preview.pos);

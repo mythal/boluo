@@ -9,11 +9,15 @@ const U16_MAX = 65_535;
 export type PreviewKeyframe = {
   id: string;
   version: number;
+  channelId: string;
   name: string;
+  mediaId: PreviewPost['mediaId'];
   text: string | null;
   entities: PreviewPost['entities'];
   inGame: boolean;
   isAction: boolean;
+  clear: boolean;
+  editFor: PreviewPost['editFor'];
   edit: PreviewPost['edit'];
 };
 
@@ -24,6 +28,9 @@ export type PreviewSendState = {
   latestVersion: number;
   lastKeyframeAt: number;
 };
+
+const isClearedKeyframe = (keyframe: PreviewKeyframe): boolean =>
+  keyframe.text != null && (keyframe.text.trim() === '' || keyframe.entities.length === 0);
 
 type TextChangeStats = {
   changedChars: number;
@@ -153,11 +160,18 @@ export const shouldFallbackToKeyframe = (
   resetPreview: boolean,
 ): boolean => {
   if (keyframe.id !== nextPreview.id) return true;
+  if (keyframe.channelId !== nextPreview.channelId) return true;
+  if (keyframe.mediaId !== nextPreview.mediaId) return true;
   if (doNotBroadcast || resetPreview) return true;
-  if (keyframe.inGame !== nextPreview.inGame) return true;
-  if (keyframe.isAction !== nextPreview.isAction) return true;
-  if (!equalPreviewEdit(keyframe.edit, nextPreview.edit)) return true;
+  if (keyframe.inGame !== (nextPreview.inGame ?? false)) return true;
+  if (keyframe.isAction !== (nextPreview.isAction ?? false)) return true;
+  if (keyframe.clear !== (nextPreview.clear ?? false)) return true;
+  if ((keyframe.editFor ?? null) !== (nextPreview.editFor ?? null)) return true;
+  if (!equalPreviewEdit(keyframe.edit ?? null, nextPreview.edit ?? null)) return true;
   if (keyframe.text == null || nextPreview.text == null) return true;
+  // Cleared keyframes clear the server-side preview position, so the next visible
+  // preview must be a keyframe to request a fresh position.
+  if (isClearedKeyframe(keyframe)) return true;
   return false;
 };
 
@@ -176,12 +190,16 @@ export const shouldFallbackLargeTextChange = (
 export const toKeyframe = (preview: PreviewPost, version: number): PreviewKeyframe => ({
   id: preview.id,
   version,
+  channelId: preview.channelId,
   name: preview.name,
+  mediaId: preview.mediaId,
   text: preview.text,
   entities: preview.entities,
   inGame: preview.inGame ?? false,
   isAction: preview.isAction ?? false,
-  edit: preview.edit,
+  clear: preview.clear ?? false,
+  editFor: preview.editFor ?? null,
+  edit: preview.edit ?? null,
 });
 
 export const nextKeyframeVersion = (

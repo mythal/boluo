@@ -6,6 +6,7 @@ use super::api::{
 use super::models::User;
 use crate::channels::Channel;
 use crate::context::get_site_url;
+use crate::csrf::{add_csrf_cookie, remove_csrf_cookie};
 use crate::error::{AppError, Find, ValidationFailed};
 use crate::interface::{self, response};
 use crate::interface::{missing, ok_response, parse_body, parse_query};
@@ -236,6 +237,8 @@ pub async fn login<B: Body>(
     add_settings_cookie(origin.as_deref(), &settings, headers);
     if !form.with_token {
         add_session_cookie(origin.as_deref(), &session.id, is_debug, headers);
+        let csrf_token = crate::csrf::generate_csrf_token(&session.id);
+        add_csrf_cookie(origin.as_deref(), &csrf_token, is_debug, headers);
     }
     Ok(response)
 }
@@ -251,6 +254,7 @@ pub async fn logout(
     }
     let mut response = ok_response(true);
     remove_session_cookie(response.headers_mut());
+    remove_csrf_cookie(response.headers_mut());
     Ok(response)
 }
 
@@ -569,7 +573,7 @@ pub async fn resend_email_verification(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<ResendEmailVerificationResult, AppError> {
-    use crate::session::authenticate;
+    use crate::csrf::authenticate;
     use crate::users::api::ResendEmailVerification;
 
     let session = authenticate(&req).await?;
@@ -680,7 +684,7 @@ pub async fn request_email_change(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<(), AppError> {
-    use crate::session::authenticate;
+    use crate::csrf::authenticate;
     use crate::users::api::RequestEmailChange;
 
     let session = authenticate(&req).await?;

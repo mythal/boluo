@@ -92,6 +92,31 @@ export const isPreviewInLoadedRange = (
   fullLoaded: boolean,
 ): boolean => previewPos > loadedMinPos || (previewPos < loadedMinPos && fullLoaded);
 
+/**
+ * Remove the self preview from the list when it is stale (id mismatch),
+ * the compose is empty, or the self preview is hidden.
+ *
+ * Mutates `optimisticPreviewList`. Returns whether the self preview is kept.
+ */
+export const pruneSelfPreview = (
+  optimisticPreviewList: PreviewItem[],
+  myId: string,
+  currentPreviewId: string,
+  isEmpty: boolean,
+  selfPreviewVisible: boolean,
+): boolean => {
+  const selfPreviewIndex = optimisticPreviewList.findIndex(
+    (preview) => preview.senderId === myId,
+  );
+  if (selfPreviewIndex === -1) return false;
+  const selfPreview = optimisticPreviewList[selfPreviewIndex]!;
+  if (selfPreview.id !== currentPreviewId || isEmpty || !selfPreviewVisible) {
+    optimisticPreviewList.splice(selfPreviewIndex, 1);
+    return false;
+  }
+  return true;
+};
+
 const useFilters = (
   filterAtom: ChannelAtoms['filterAtom'],
   showArchivedAtom: ChannelAtoms['showArchivedAtom'],
@@ -236,21 +261,13 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
     const itemListLen = itemList.length;
     const loadedMinPos = L.first(messages)?.pos ?? Number.MIN_SAFE_INTEGER;
     if (myId) {
-      const existsPreviewIndex = optimisticPreviewList.findIndex(
-        (preview) => preview.senderId === myId,
+      const hasSelfPreview = pruneSelfPreview(
+        optimisticPreviewList,
+        myId,
+        composeSlice.previewId,
+        isEmpty,
+        selfPreviewVisible,
       );
-      let hasSelfPreview = existsPreviewIndex !== -1;
-      if (hasSelfPreview) {
-        const existsPreview = optimisticPreviewList[existsPreviewIndex]!;
-        if (existsPreview.id !== composeSlice.previewId || isEmpty) {
-          optimisticPreviewList.splice(existsPreviewIndex, 1);
-          hasSelfPreview = false;
-        }
-        if (!selfPreviewVisible) {
-          optimisticPreviewList.splice(existsPreviewIndex, 1);
-          hasSelfPreview = false;
-        }
-      }
       if (!hasSelfPreview) {
         const maxPreviewPos = optimisticPreviewList.reduce(
           (max, preview) => Math.max(max, preview.pos),

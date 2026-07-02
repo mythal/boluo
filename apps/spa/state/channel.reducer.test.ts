@@ -238,6 +238,78 @@ describe('channelReducer', () => {
     assert.strictEqual(next.fullLoaded, false);
   });
 
+  test('receiveMessage before initial load keeps the message', () => {
+    const state = makeInitialChannelState(channelId);
+
+    const next = channelReducer(
+      state,
+      {
+        type: 'receiveMessage',
+        payload: {
+          type: 'NEW_MESSAGE',
+          channelId,
+          previewId: null,
+          message: makeMessage('incoming', 5),
+        },
+      },
+      context,
+    );
+
+    assert.deepStrictEqual(positions(next.messages), [5]);
+    assert.strictEqual(next.fullLoaded, false);
+  });
+
+  test('messagesLoaded merges below a message received while the load was in flight', () => {
+    // Regression: the snapshot was read before the raced-in message committed,
+    // so the payload does not contain it. The kept message must survive the
+    // merge with no gap and no duplication.
+    const afterReceive = channelReducer(
+      makeInitialChannelState(channelId),
+      {
+        type: 'receiveMessage',
+        payload: {
+          type: 'NEW_MESSAGE',
+          channelId,
+          previewId: null,
+          message: makeMessage('raced-in', 5),
+        },
+      },
+      context,
+    );
+
+    const staleSnapshot = channelReducer(
+      afterReceive,
+      {
+        type: 'messagesLoaded',
+        payload: {
+          messages: [makeMessage('m-4', 4), makeMessage('m-3', 3)],
+          before: null,
+          channelId,
+          fullLoaded: false,
+        },
+      },
+      context,
+    );
+    assert.deepStrictEqual(positions(staleSnapshot.messages), [3, 4, 5]);
+
+    // The snapshot read after the commit contains the message; it must be
+    // deduplicated by the merge.
+    const freshSnapshot = channelReducer(
+      afterReceive,
+      {
+        type: 'messagesLoaded',
+        payload: {
+          messages: [makeMessage('raced-in', 5), makeMessage('m-4', 4), makeMessage('m-3', 3)],
+          before: null,
+          channelId,
+          fullLoaded: false,
+        },
+      },
+      context,
+    );
+    assert.deepStrictEqual(positions(freshSnapshot.messages), [3, 4, 5]);
+  });
+
   test('messageEdited moves message to new position and removes optimistic placeholder', () => {
     const message1 = makeMessageItem(makeMessage(messageId1, 1));
     const message2 = makeMessageItem(makeMessage(messageId2, 3));

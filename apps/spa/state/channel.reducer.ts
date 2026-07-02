@@ -264,14 +264,15 @@ const handleNewMessage = (
 
   const topMessage = L.first(messages);
   const bottomMessage = L.last(messages);
-  if ((topMessage == null || bottomMessage == null) && state.fullLoaded) {
+  if (topMessage == null || bottomMessage == null) {
+    // Keep the message even when the channel is not loaded yet. A history
+    // load racing with this event may not contain the message (the snapshot
+    // was read before it committed); `handleMessagesLoaded` only merges
+    // payload messages below the top message, so keeping it here fills that
+    // gap and never duplicates.
     return { ...state, previewMap, optimisticMessageMap, messages: L.of(message) };
-  } else if (
-    topMessage == null ||
-    bottomMessage == null ||
-    message.pos === topMessage.pos ||
-    message.pos === bottomMessage.pos
-  ) {
+  }
+  if (message.pos === topMessage.pos || message.pos === bottomMessage.pos) {
     return resetMessagesState(state);
   }
   if (message.pos < topMessage.pos) {

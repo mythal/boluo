@@ -165,7 +165,7 @@ function channelSliceEq(a: ChannelSlice, b: ChannelSlice) {
 
 export const useChatList = (channelId: string, myId?: string): UseChatListReturn => {
   const store = useStore();
-  const { composeAtom, filterAtom, showArchivedAtom, parsedAtom, selfPreviewVisibleAtom } =
+  const { composeAtom, filterAtom, showArchivedAtom, parsedAtom, selfPreviewVisibleAtom, inGameAtom } =
     useChannelAtoms();
 
   const { filterType, showArchived, isFiltersChanged } = useFilters(filterAtom, showArchivedAtom);
@@ -185,6 +185,7 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
   const isEmpty = useAtomValue(
     useMemo(() => selectAtom(parsedAtom, ({ entities }) => entities.length === 0), [parsedAtom]),
   );
+  const selfInGame = useAtomValue(inGameAtom);
 
   const channelSliceAtom = useMemo(
     () =>
@@ -302,7 +303,7 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
               composeSlice.previewId,
               myId,
               channelId,
-              true,
+              selfInGame,
               composeSlice.edit,
               pos,
               posP,
@@ -383,6 +384,7 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
     myId,
     optimisticMessageMap,
     previewMap,
+    selfInGame,
     selfPreviewVisible,
     showArchived,
   ]);

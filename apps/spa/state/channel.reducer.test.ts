@@ -441,6 +441,68 @@ describe('channelReducer', () => {
     assert.deepStrictEqual(next.optimisticMessageMap, {});
   });
 
+  test('messageEdited removes loaded old copy when oldPos is outside the window', () => {
+    const message1 = makeMessageItem(makeMessage(messageId1, 120));
+    const message2 = makeMessageItem(makeMessage(messageId2, 200, { rev: 1 }));
+    const message3 = makeMessageItem(makeMessage(messageId3, 220));
+    const state = {
+      ...makeInitialChannelState(channelId),
+      fullLoaded: false,
+      messages: L.from([message1, message2, message3]),
+    };
+
+    const movedAgain = makeMessage(messageId2, 210, { rev: 2 });
+    const next = channelReducer(
+      state,
+      {
+        type: 'messageEdited',
+        payload: {
+          channelId,
+          message: movedAgain,
+          oldPos: 10,
+        },
+      },
+      context,
+    );
+
+    assert.deepStrictEqual(positions(next.messages), [120, 210, 220]);
+    assert.strictEqual(
+      Array.from(next.messages).filter((message) => message.id === messageId2).length,
+      1,
+    );
+  });
+
+  test('messageEdited updates same-id target collision in place', () => {
+    const message1 = makeMessageItem(makeMessage(messageId1, 1));
+    const message2 = makeMessageItem(makeMessage(messageId2, 3, { rev: 1 }));
+    const message3 = makeMessageItem(makeMessage(messageId3, 7));
+    const state = {
+      ...makeInitialChannelState(channelId),
+      fullLoaded: true,
+      messages: L.from([message1, message2, message3]),
+    };
+
+    const updated = makeMessage(messageId2, 3, { text: 'updated', rev: 2 });
+    const next = channelReducer(
+      state,
+      {
+        type: 'messageEdited',
+        payload: {
+          channelId,
+          message: updated,
+          oldPos: 999,
+        },
+      },
+      context,
+    );
+
+    assert.deepStrictEqual(positions(next.messages), [1, 3, 7]);
+    const stored = L.nth(1, next.messages);
+    assert.strictEqual(stored?.id, messageId2);
+    assert.strictEqual(stored?.text, 'updated');
+    assert.strictEqual(next.fullLoaded, true);
+  });
+
   test('messageEdited move keeps optimistic edit at the new position', () => {
     const message1 = makeMessageItem(makeMessage(messageId1, 1));
     const message2 = makeMessageItem(makeMessage(messageId2, 3));

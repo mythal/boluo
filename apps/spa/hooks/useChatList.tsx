@@ -116,8 +116,8 @@ export const pruneSelfPreview = (
 };
 
 /**
- * The edit preview follows the original message's current position, since the
- * message may have been moved (moving does not update `modified`).
+ * The edit preview follows the original message's current position, since
+ * moving a message should not invalidate a content edit preview.
  *
  * Mutates `itemList`: replaces the original message with the preview in place.
  * Returns the preview when it still needs to be inserted, or null.
@@ -150,6 +150,22 @@ export const applyEditPreview = (
   }
   // The original message may be filtered out; treat it as a normal preview.
   return resolved;
+};
+
+export const isMessageNewerThanOptimisticRef = (
+  item: MessageItem,
+  optimistic: OptimisticItem,
+  ref: ChatItem,
+): boolean => {
+  if (ref.type !== 'MESSAGE' || optimistic.item.type !== 'MESSAGE') {
+    return false;
+  }
+  const itemRev = item.rev ?? 0;
+  const refRev = ref.rev ?? 0;
+  if (itemRev !== refRev) {
+    return itemRev > refRev;
+  }
+  return Date.parse(item.modified) > Date.parse(ref.modified);
 };
 
 const useFilters = (
@@ -282,7 +298,8 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
           filteredMessagesCount++;
           return false;
         }
-        const optimisticItem = optimisticMessageMap[item.id]?.item;
+        const optimisticMessage = optimisticMessageMap[item.id];
+        const optimisticItem = optimisticMessage?.item;
         if (
           !optimisticItem ||
           /* moved */ optimisticItem.item.pos !== item.pos ||
@@ -290,8 +307,7 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
         ) {
           return true;
         }
-        const itemTimestamp = Date.parse(item.modified);
-        if (itemTimestamp >= optimisticItem.timestamp) {
+        if (isMessageNewerThanOptimisticRef(item, optimisticItem, optimisticMessage.ref)) {
           return true;
         } else {
           // Side effect: record the optimistic item that should be rendered.

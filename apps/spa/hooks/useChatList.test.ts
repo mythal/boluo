@@ -1,8 +1,14 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import * as L from 'list';
-import { applyEditPreview, isPreviewInLoadedRange, pruneSelfPreview } from './useChatList';
+import {
+  applyEditPreview,
+  isMessageNewerThanOptimisticRef,
+  isPreviewInLoadedRange,
+  pruneSelfPreview,
+} from './useChatList';
 import { type ChatItem, type MessageItem, type PreviewItem } from '../state/channel.types';
+import { type OptimisticItem } from '../state/channel.reducer';
 
 test('isPreviewInLoadedRange uses loaded range instead of filtered visible range', () => {
   const loadedMinPos = 1;
@@ -82,8 +88,12 @@ test('pruneSelfPreview leaves the list untouched without a self preview', () => 
 
 const modified = '2024-01-01T00:00:00.000Z';
 
-const makeMessageItem = (id: string, pos: number): MessageItem =>
-  ({ id, pos, posP: pos, posQ: 1, modified, type: 'MESSAGE' }) as MessageItem;
+const makeMessageItem = (
+  id: string,
+  pos: number,
+  overrides: Partial<MessageItem> = {},
+): MessageItem =>
+  ({ id, pos, posP: pos, posQ: 1, modified, type: 'MESSAGE', ...overrides }) as MessageItem;
 
 const makeEditPreview = (id: string, pos: number, editTime = modified): PreviewItem =>
   ({
@@ -159,4 +169,43 @@ test('applyEditPreview skips a preview whose message is gone', () => {
 
   assert.strictEqual(resolved, null);
   assert.deepStrictEqual(itemList, [message]);
+});
+
+test('isMessageNewerThanOptimisticRef uses message rev instead of client time', () => {
+  const ref = makeMessageItem('m-edit', 1, { rev: 1 });
+  const optimistic: OptimisticItem = {
+    optimisticPos: 1,
+    timestamp: Date.parse('2099-01-01T00:00:00.000Z'),
+    item: { ...ref, text: 'optimistic' },
+  };
+  const serverItem = makeMessageItem('m-edit', 1, { rev: 2 });
+
+  assert.strictEqual(isMessageNewerThanOptimisticRef(serverItem, optimistic, ref), true);
+});
+
+test('isMessageNewerThanOptimisticRef falls back to server modified timestamps', () => {
+  const ref = makeMessageItem('m-edit', 1, {
+    modified: '2024-01-01T00:00:00.000Z',
+  });
+  const optimistic: OptimisticItem = {
+    optimisticPos: 1,
+    timestamp: Date.parse('2099-01-01T00:00:00.000Z'),
+    item: { ...ref, text: 'optimistic' },
+  };
+  const serverItem = makeMessageItem('m-edit', 1, {
+    modified: '2024-01-01T00:01:00.000Z',
+  });
+
+  assert.strictEqual(isMessageNewerThanOptimisticRef(serverItem, optimistic, ref), true);
+});
+
+test('isMessageNewerThanOptimisticRef keeps optimistic item when version is unchanged', () => {
+  const ref = makeMessageItem('m-edit', 1, { rev: 1 });
+  const optimistic: OptimisticItem = {
+    optimisticPos: 1,
+    timestamp: Date.parse('2024-01-01T00:01:00.000Z'),
+    item: { ...ref, text: 'optimistic' },
+  };
+
+  assert.strictEqual(isMessageNewerThanOptimisticRef(ref, optimistic, ref), false);
 });

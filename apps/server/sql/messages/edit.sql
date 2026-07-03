@@ -8,10 +8,10 @@ SET
     is_action = $6,
     media_id = $7,
     modified = (now() at time zone 'utc'),
-    color = $8
+    color = $8,
+    rev = rev + 1
 WHERE
     id = $1
     AND ($9::timestamptz IS NULL OR modified = $9)
 RETURNING
     messages AS "message!: Message";
-

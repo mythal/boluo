@@ -108,6 +108,12 @@ pub struct Message {
     ///
     /// If the string contains a semicolon, the second part is for the dark mode.
     pub color: String,
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub rev: i32,
+}
+
+fn is_zero(value: &i32) -> bool {
+    *value == 0
 }
 
 impl Message {
@@ -715,6 +721,7 @@ mod tests {
         assert_eq!(message.channel_id, channel.id);
         assert_eq!(message.sender_id, owner.id);
         assert_eq!(message.text, text);
+        assert_eq!(message.rev, 0);
         let pos_one = (message.pos_p, message.pos_q);
         drop(conn);
 
@@ -819,6 +826,8 @@ mod tests {
             .expect("set_folded failed")
             .expect("message should exist");
         assert!(folded.folded);
+        assert_eq!(folded.modified, message.modified);
+        assert_eq!(folded.rev, message.rev + 1);
 
         let edited_entities = sample_entities("Updated text");
         let edited = Message::edit(
@@ -838,6 +847,8 @@ mod tests {
         .expect("edited message missing");
         assert_eq!(edited.text, "Updated text");
         assert!(edited.is_action);
+        assert_eq!(edited.rev, folded.rev + 1);
+        assert!(edited.modified > folded.modified);
 
         let deleted = Message::delete(&pool, &message.id)
             .await
@@ -933,6 +944,7 @@ mod tests {
                 .expect("move_above errored")
                 .expect("move_above returned none");
         assert!(moved_above.pos < msg2.pos);
+        assert_eq!(moved_above.rev, msg3.rev + 1);
 
         let moved_bottom = Message::move_bottom(
             &mut conn,
@@ -944,6 +956,7 @@ mod tests {
         .expect("move_bottom errored")
         .expect("move_bottom returned none");
         assert!(moved_bottom.pos > moved_above.pos);
+        assert_eq!(moved_bottom.rev, msg1.rev + 1);
 
         let between = Message::move_between(
             &mut conn,
@@ -956,6 +969,7 @@ mod tests {
         .expect("move_between errored")
         .expect("move_between returned none");
         assert!(between.pos > moved_above.pos && between.pos < moved_bottom.pos);
+        assert_eq!(between.rev, msg2.rev + 1);
         drop(conn);
 
         let ordered = Message::get_by_channel(&pool, &channel.id, None, 10, Some(&owner.id))

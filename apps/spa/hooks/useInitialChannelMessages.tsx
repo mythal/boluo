@@ -45,8 +45,7 @@ export const useInitialChannelMessages = (spaceId: string) => {
         continue;
       }
 
-      const hasMessages = chatState.channels[channelId]?.messages.length;
-      if (hasMessages && hasMessages > 0) {
+      if (chatState.channels[channelId]?.historyInitialized) {
         requestedRef.current.add(channelId);
         continue;
       }

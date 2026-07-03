@@ -346,6 +346,7 @@ describe('channelReducer', () => {
 
     assert.deepStrictEqual(positions(next.messages), [5]);
     assert.strictEqual(next.fullLoaded, false);
+    assert.strictEqual(next.historyInitialized, false);
   });
 
   test('messagesLoaded merges below a message received while the load was in flight', () => {
@@ -380,6 +381,7 @@ describe('channelReducer', () => {
       context,
     );
     assert.deepStrictEqual(positions(staleSnapshot.messages), [3, 4, 5]);
+    assert.strictEqual(staleSnapshot.historyInitialized, true);
 
     // The snapshot read after the commit contains the message; it must be
     // deduplicated by the merge.
@@ -397,6 +399,7 @@ describe('channelReducer', () => {
       context,
     );
     assert.deepStrictEqual(positions(freshSnapshot.messages), [3, 4, 5]);
+    assert.strictEqual(freshSnapshot.historyInitialized, true);
   });
 
   test('messageEdited moves message to new position and removes optimistic placeholder', () => {
@@ -1396,6 +1399,7 @@ describe('channelReducer', () => {
     assert.strictEqual(L.first(next.messages)?.pos, 9);
     assert.strictEqual(L.last(next.messages)?.pos, 10);
     assert.strictEqual(next.fullLoaded, true);
+    assert.strictEqual(next.historyInitialized, true);
   });
 
   test('messagesLoaded ignores stale load-more response after GC moved the top', () => {
@@ -1452,6 +1456,7 @@ describe('channelReducer', () => {
   test('messagesLoaded with empty payload keeps state unchanged', () => {
     const state = {
       ...makeInitialChannelState(channelId),
+      historyInitialized: true,
       messages: L.from([makeMessageItem(makeMessage('m-existing', 10))]),
       fullLoaded: false,
     };
@@ -1466,5 +1471,22 @@ describe('channelReducer', () => {
     );
 
     assert.strictEqual(next, state);
+  });
+
+  test('messagesLoaded with empty initial payload marks history initialized', () => {
+    const state = makeInitialChannelState(channelId);
+
+    const next = channelReducer(
+      state,
+      {
+        type: 'messagesLoaded',
+        payload: { messages: [], before: null, channelId, fullLoaded: true },
+      },
+      context,
+    );
+
+    assert.strictEqual(next.messages.length, 0);
+    assert.strictEqual(next.fullLoaded, true);
+    assert.strictEqual(next.historyInitialized, true);
   });
 });

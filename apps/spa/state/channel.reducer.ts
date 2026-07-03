@@ -188,6 +188,7 @@ const newMessageOptimisticItem = (
 export interface ChannelState {
   id: string;
   fullLoaded: boolean;
+  historyInitialized: boolean;
   messages: List<MessageItem>;
   previewMap: Record<UserId, PreviewItem>;
   optimisticMessageMap: Record<string, OptimisticMessage>;
@@ -212,6 +213,7 @@ export const makeInitialChannelState = (id: string): ChannelState => {
     id,
     messages: L.empty(),
     fullLoaded: false,
+    historyInitialized: false,
     previewMap: {},
     scheduledGc: null,
     collidedPreviewIdSet: new Set(),
@@ -259,7 +261,14 @@ const handleNewMessage = (
   );
 
   const resetMessagesState = (state: ChannelState): ChannelState => {
-    return { ...state, previewMap, optimisticMessageMap, messages: L.empty(), fullLoaded: false };
+    return {
+      ...state,
+      previewMap,
+      optimisticMessageMap,
+      messages: L.empty(),
+      fullLoaded: false,
+      historyInitialized: false,
+    };
   };
 
   const topMessage = L.first(messages);
@@ -329,6 +338,9 @@ const handleMessagesLoaded = (
   const { fullLoaded } = payload;
   if (fullLoaded !== state.fullLoaded) {
     state = { ...state, fullLoaded };
+  }
+  if (!state.historyInitialized) {
+    state = { ...state, historyInitialized: true };
   }
   if (payloadLen === 0) {
     return state;
@@ -491,7 +503,14 @@ const handleMessageEdited = (
   );
   const previewMap = syncEditPreviewsWithMessage(state.previewMap, message);
   const resetMessagesState = (state: ChannelState): ChannelState => {
-    return { ...state, optimisticMessageMap, previewMap, messages: L.empty(), fullLoaded: false };
+    return {
+      ...state,
+      optimisticMessageMap,
+      previewMap,
+      messages: L.empty(),
+      fullLoaded: false,
+      historyInitialized: false,
+    };
   };
   const originalTopMessage = L.head(state.messages);
   if (!originalTopMessage) {
@@ -888,7 +907,7 @@ const checkOrder = (state: ChannelState, action: ChatActionUnion): ChannelState 
         index: i,
         size: messages.length,
       });
-      return { ...state, messages: L.empty(), fullLoaded: false };
+      return { ...state, messages: L.empty(), fullLoaded: false, historyInitialized: false };
     }
     prevPos = message.pos;
     i += 1;

@@ -203,13 +203,6 @@ async fn move_between(
             "channelId does not match message channel".to_string(),
         ));
     }
-    crate::pos::CHANNEL_POS_MANAGER.submitted(
-        channel_id,
-        message_id,
-        message.pos_p,
-        message.pos_q,
-        Some(message_id),
-    );
     if let Some((expect_p, expect_q)) = expect_pos {
         if message.pos_p != expect_p || message.pos_q != expect_q {
             return Err(AppError::BadRequest(
@@ -233,6 +226,13 @@ async fn move_between(
             "Only the master can move other's messages.".to_string(),
         ));
     }
+    crate::pos::CHANNEL_POS_MANAGER.submitted(
+        channel_id,
+        message_id,
+        message.pos_p,
+        message.pos_q,
+        Some(message_id),
+    );
     let mut moved_message = match range {
         (None, None) => {
             return Err(AppError::BadRequest(

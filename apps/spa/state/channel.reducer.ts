@@ -518,31 +518,29 @@ const handleMessageEdited = (
   }
   // Remove the previous message if it loaded
   let messagesState = state.messages;
-  if (payload.oldPos >= originalTopMessage.pos) {
-    const oldEntry = findMessage(messagesState, message.id, payload.oldPos);
-    if (oldEntry != null) {
-      const [item, index] = oldEntry;
-      const versionDiff = compareMessageVersion(item, message);
-      if (
-        versionDiff > 0 ||
-        (versionDiff === 0 &&
-          item.pos === message.pos &&
-          /* Show a whisper message */
-          message.text === item.text)
-      ) {
-        return state;
-      }
-      if (item.pos === message.pos) {
-        // In-place editing
-        return {
-          ...state,
-          messages: L.update(index, message, state.messages),
-          optimisticMessageMap,
-          previewMap,
-        };
-      }
-      messagesState = L.remove(index, 1, state.messages);
+  const oldEntry = findMessage(messagesState, message.id, payload.oldPos);
+  if (oldEntry != null) {
+    const [item, index] = oldEntry;
+    const versionDiff = compareMessageVersion(item, message);
+    if (
+      versionDiff > 0 ||
+      (versionDiff === 0 &&
+        item.pos === message.pos &&
+        /* Show a whisper message */
+        message.text === item.text)
+    ) {
+      return state;
     }
+    if (item.pos === message.pos) {
+      // In-place editing
+      return {
+        ...state,
+        messages: L.update(index, message, state.messages),
+        optimisticMessageMap,
+        previewMap,
+      };
+    }
+    messagesState = L.remove(index, 1, state.messages);
   }
   const messages = messagesState;
   const topMessage = L.head(messages);
@@ -577,6 +575,16 @@ const handleMessageEdited = (
   }
   const [insertIndex, itemByPos] = binarySearchPosList(messages, message.pos);
   if (itemByPos) {
+    if (itemByPos.id === message.id) {
+      const versionDiff = compareMessageVersion(itemByPos, message);
+      if (versionDiff > 0) return state;
+      return {
+        ...state,
+        optimisticMessageMap,
+        previewMap,
+        messages: L.update(insertIndex, message, messages),
+      };
+    }
     recordWarn('Unexpected message position in editing', { message, itemByPos, insertIndex });
     return resetMessagesState(state);
   }

@@ -368,6 +368,9 @@
   "HSaR2M": {
     "message": "是否为秘密频道？"
   },
+  "HTmh5Q": {
+    "message": "target"
+  },
   "HlQPHQ": {
     "message": "加入位面"
   },
@@ -577,6 +580,9 @@
   },
   "PwaN2o": {
     "message": "欢迎"
+  },
+  "PxOtYI": {
+    "message": "Editing; Show original"
   },
   "Q+Af6H": {
     "message": "游戏外"
@@ -1036,6 +1042,9 @@
   },
   "kMogDE": {
     "message": "请输入合法的邮箱地址。"
+  },
+  "kdRsn5": {
+    "message": "The message you were editing was deleted. Your edits have been saved as a draft."
   },
   "kh4wt0": {
     "message": "切换侧边栏"

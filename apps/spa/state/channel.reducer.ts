@@ -518,7 +518,11 @@ const handleMessageEdited = (
   }
   // Remove the previous message if it loaded
   let messagesState = state.messages;
-  const oldEntry = findMessage(messagesState, message.id, payload.oldPos);
+  // `oldPos` can predate the loaded window when the server coalesces repeated
+  // moves, so a pos miss here is expected rather than an anomaly.
+  const oldEntry = findMessage(messagesState, message.id, payload.oldPos, {
+    warnOnStalePos: false,
+  });
   if (oldEntry != null) {
     const [item, index] = oldEntry;
     const versionDiff = compareMessageVersion(item, message);
@@ -716,6 +720,7 @@ export const findMessage = (
   messages: List<MessageItem>,
   id: string,
   pos?: number,
+  { warnOnStalePos = true }: { warnOnStalePos?: boolean } = {},
 ): [MessageItem, number] | null => {
   let failedFoundByPos: [MessageItem | null, number] | null = null;
   if (pos != null) {
@@ -732,7 +737,7 @@ export const findMessage = (
   }
   const message = L.nth(index, messages);
   if (message?.id === id) {
-    if (failedFoundByPos != null) {
+    if (failedFoundByPos != null && warnOnStalePos) {
       const [foundItem, foundIndex] = failedFoundByPos;
       recordWarn('Found message by id but failed to find by pos', {
         id,

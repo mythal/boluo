@@ -324,7 +324,9 @@ async fn toggle_fold(
     let edited_message = Message::set_folded(&mut *conn, &message.id, !message.folded)
         .await?
         .ok_or_else(|| unexpected!("message not found"))?;
-    Update::message_edited(channel.space_id, edited_message.clone(), message.pos).await;
+    let mut event_message = edited_message.clone();
+    event_message.hide(None);
+    Update::message_edited(channel.space_id, event_message, message.pos).await;
     metrics::counter!("boluo_server_messages_folded_total").increment(1);
     Ok(edited_message)
 }

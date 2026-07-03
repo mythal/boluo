@@ -160,8 +160,33 @@ pub enum UpdateBody {
 pub enum GetFromStateError {
     #[error("Failed to query updates")]
     FailedToQuery,
+    /// Updates after the requested cursor were trimmed from the cache,
+    /// so the client cannot resume and must reset.
     #[error("Requested updates are too early")]
-    RequestedUpdatesAreTooEarly { start_at: Option<i64> },
+    RequestedUpdatesAreTooEarly { start_at: i64 },
+}
+
+/// A cursor is provably unresumable only when updates newer than it were
+/// trimmed from the cache. A cursor merely predating the mailbox instance
+/// (restart or idle eviction) is ambiguous and resumes optimistically.
+fn cursor_is_too_old(after: Option<i64>, cursor_floor: i64) -> bool {
+    match after {
+        Some(after) => after > 0 && after < cursor_floor,
+        None => false,
+    }
+}
+
+#[test]
+fn cursor_is_too_old_only_when_trimmed_past_cursor() {
+    // No trim has happened yet: every cursor can resume.
+    assert!(!cursor_is_too_old(Some(100), i64::MIN));
+    assert!(!cursor_is_too_old(None, 200));
+    // A fresh cursor never resets.
+    assert!(!cursor_is_too_old(Some(0), 200));
+    assert!(!cursor_is_too_old(Some(200), 200));
+    assert!(!cursor_is_too_old(Some(300), 200));
+    // Updates after the cursor were trimmed.
+    assert!(cursor_is_too_old(Some(199), 200));
 }
 
 impl UpdateBody {
@@ -397,11 +422,9 @@ impl Update {
         node: Option<u16>,
     ) -> Result<Vec<tungstenite::Utf8Bytes>, GetFromStateError> {
         let Some(manager) = super::context::store().get_manager(mailbox_id) else {
-            if let Some(after) = after
-                && after > 0
-            {
-                return Err(GetFromStateError::RequestedUpdatesAreTooEarly { start_at: None });
-            }
+            // Mailboxes are created lazily by the first update, so a missing
+            // mailbox (restart or idle eviction) does not prove the cursor
+            // missed anything.
             return Ok(vec![]);
         };
         let updates_receiver = match manager.query_encoded_updates(after, seq, node).await {
@@ -411,7 +434,11 @@ impl Update {
                 return Err(GetFromStateError::FailedToQuery);
             }
         };
-        let CachedUpdates { updates, start_at } = match updates_receiver.await {
+        let CachedUpdates {
+            updates,
+            start_at,
+            cursor_floor,
+        } = match updates_receiver.await {
             Ok(updates) => updates,
             Err(err) => {
                 tracing::error!(error = ?err, "Failed to receive updates for mailbox {}", mailbox_id);
@@ -422,11 +449,27 @@ impl Update {
         let span = tracing::Span::current();
         span.record("start_at", start_at);
 
-        if let Some(after) = after {
-            if after > 0 && after < start_at {
-                return Err(GetFromStateError::RequestedUpdatesAreTooEarly {
-                    start_at: Some(start_at),
-                });
+        if cursor_is_too_old(after, cursor_floor) {
+            return Err(GetFromStateError::RequestedUpdatesAreTooEarly { start_at });
+        }
+        if let Some(after) = after
+            && after > 0
+            && after < start_at
+        {
+            // The cursor predates this mailbox instance; resume optimistically.
+            let elapsed = crate::utils::timestamp() - after;
+            metrics::histogram!("boluo_server_events_optimistic_resume_elapsed_ms")
+                .record(elapsed as f64);
+            if elapsed < 1000 * 60 * 20 {
+                tracing::warn!(
+                    mailbox_id = %mailbox_id,
+                    after,
+                    seq,
+                    node,
+                    start_at,
+                    elapsed,
+                    "The cursor predates the cached updates shortly after the mailbox was created"
+                );
             }
         }
         if updates.is_empty() {

@@ -7,13 +7,28 @@ import { useEffect, useRef } from 'react';
 import { isUuid } from '@boluo/utils/id';
 import { PING, PONG } from '../const';
 import { chatAtom, type ChatDispatch, connectionStateAtom } from '../state/chat.atoms';
+import { zeroEventId } from '../state/chat.reducer';
 import { type ConnectionState } from '../state/connection.reducer';
 import { get } from '@boluo/api-browser';
 import { sleep } from '@boluo/utils/async';
 import { useLogout } from '@boluo/hooks/useLogout';
 import { type ClientConnectionError } from '../state/chat.actions';
 
-let lastPongTime = Date.now();
+/**
+ * The last time the connection showed signs of life (any incoming message;
+ * the server heartbeats every 8 seconds). Used to decide whether resuming
+ * from the cursor is safe after a reconnect.
+ */
+let lastAliveAt = Date.now();
+
+/**
+ * The server evicts a mailbox only after two hours without updates, so a
+ * client alive within that window cannot have missed events to eviction,
+ * and trimmed-cache loss is signaled by CURSOR_TOO_OLD. Beyond the window
+ * resuming is not provably safe; reset instead. (Silent loss across server
+ * restarts is not covered and would need a startup identity signal.)
+ */
+const RESUME_GAP_LIMIT_MS = 90 * 60 * 1000;
 
 const UNAUTHENTICATED = 'UNAUTHENTICATED';
 const NETWORK_ERROR = 'NETWORK_ERROR';
@@ -89,9 +104,9 @@ const handleIncomingMessage = async (
   encoding: UpdateEncoding,
 ): Promise<void> => {
   const raw = message.data;
+  lastAliveAt = Date.now();
   if (raw === PING) {
     connection.send(PONG);
-    lastPongTime = Date.now();
     return;
   } else if (raw === PONG) {
     return;
@@ -188,6 +203,11 @@ const connect = async (
     setTimeout(() => dispatch({ type: 'reconnectCountdownTick', payload: {} }), 1000);
     return null;
   }
+  let resumeCursor = cursor;
+  if (cursor.timestamp > 0 && Date.now() - lastAliveAt > RESUME_GAP_LIMIT_MS) {
+    dispatch({ type: 'resetChatState', payload: {} });
+    resumeCursor = zeroEventId;
+  }
   dispatch({ type: 'connecting', payload: { mailboxId } });
   const tokenResult = await getToken({ spaceId: mailboxId, userId });
   if (typeof tokenResult === 'string') {
@@ -213,10 +233,11 @@ const connect = async (
     userId,
     tokenResult.token,
     encoding,
-    cursor,
+    resumeCursor,
   );
   newConnection.onopen = (_) => {
     console.info(`connection established for ${mailboxId}`);
+    lastAliveAt = Date.now();
     dispatch({ type: 'connected', payload: { connection: newConnection, mailboxId } });
   };
   newConnection.onclose = (event) => {

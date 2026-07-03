@@ -1016,6 +1016,100 @@ mod tests {
     }
 
     #[sqlx::test(migrator = "crate::db::MIGRATOR")]
+    async fn db_test_message_move_between_requires_message_channel(pool: sqlx::PgPool) {
+        let owner = create_test_user(&pool, "owner").await;
+        let space = create_test_space(&pool, &owner, "wrong_channel_move").await;
+        let source_channel = create_test_channel(&pool, &space, &owner, "Source").await;
+        let other_channel = create_test_channel(&pool, &space, &owner, "Other").await;
+
+        let mut conn = pool.acquire().await.expect("failed to acquire connection");
+        let source_message = Message::create(
+            &mut conn,
+            None,
+            source_channel.id,
+            space.id,
+            &owner.id,
+            "GM",
+            "GM",
+            "Source message",
+            sample_entities("Source message"),
+            false,
+            false,
+            true,
+            None,
+            None,
+            None,
+            "#123456".to_string(),
+        )
+        .await
+        .expect("failed to create source message");
+        let other_a = Message::create(
+            &mut conn,
+            None,
+            other_channel.id,
+            space.id,
+            &owner.id,
+            "GM",
+            "GM",
+            "Other A",
+            sample_entities("Other A"),
+            false,
+            false,
+            true,
+            None,
+            None,
+            None,
+            "#123456".to_string(),
+        )
+        .await
+        .expect("failed to create other message A");
+        let other_b = Message::create(
+            &mut conn,
+            None,
+            other_channel.id,
+            space.id,
+            &owner.id,
+            "GM",
+            "GM",
+            "Other B",
+            sample_entities("Other B"),
+            false,
+            false,
+            true,
+            None,
+            None,
+            None,
+            "#123456".to_string(),
+        )
+        .await
+        .expect("failed to create other message B");
+
+        let moved = Message::move_between(
+            &mut conn,
+            &source_message.id,
+            other_channel.id,
+            (other_a.pos_p, other_a.pos_q),
+            (other_b.pos_p, other_b.pos_q),
+        )
+        .await
+        .expect("move_between errored");
+        assert!(moved.is_none());
+        drop(conn);
+
+        let unchanged = Message::get(&pool, &source_message.id, Some(&owner.id))
+            .await
+            .expect("get source message failed")
+            .expect("source message missing");
+        assert_eq!(unchanged.channel_id, source_channel.id);
+        assert_eq!(unchanged.pos_p, source_message.pos_p);
+        assert_eq!(unchanged.pos_q, source_message.pos_q);
+        assert_eq!(unchanged.rev, source_message.rev);
+
+        crate::pos::CHANNEL_POS_MANAGER.shutdown(source_channel.id);
+        crate::pos::CHANNEL_POS_MANAGER.shutdown(other_channel.id);
+    }
+
+    #[sqlx::test(migrator = "crate::db::MIGRATOR")]
     async fn db_test_message_edit_conflict(pool: sqlx::PgPool) {
         let owner = create_test_user(&pool, "owner").await;
         let space = create_test_space(&pool, &owner, "message_edit_conflict").await;

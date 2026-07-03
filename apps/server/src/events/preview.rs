@@ -182,6 +182,11 @@ impl PreviewPost {
         space_id: Uuid,
         user_id: Uuid,
     ) -> Result<(), AppError> {
+        if let Some(PreviewEdit { q, .. }) = self.edit {
+            if q == 0 {
+                return Err(AppError::BadRequest("edit.q must not be zero".to_string()));
+            }
+        }
         let PreviewPost {
             id,
             version,

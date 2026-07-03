@@ -438,6 +438,99 @@ describe('channelReducer', () => {
     assert.deepStrictEqual(next.optimisticMessageMap, {});
   });
 
+  test('messageEdited move keeps optimistic edit at the new position', () => {
+    const message1 = makeMessageItem(makeMessage(messageId1, 1));
+    const message2 = makeMessageItem(makeMessage(messageId2, 3));
+    const message3 = makeMessageItem(makeMessage(messageId3, 7));
+    const optimisticItem = {
+      ...message2,
+      text: 'optimistic edit',
+      optimistic: true,
+    } satisfies MessageItem;
+    const optimisticMessage: OptimisticMessage = {
+      ref: message2,
+      item: {
+        optimisticPos: message2.pos,
+        timestamp: 1,
+        item: optimisticItem,
+      },
+    };
+    const state = {
+      ...makeInitialChannelState(channelId),
+      fullLoaded: true,
+      messages: L.from([message1, message2, message3]),
+      optimisticMessageMap: { [message2.id]: optimisticMessage },
+    };
+
+    const movedMessage = makeMessage(messageId2, 6, { rev: 1 });
+    const next = channelReducer(
+      state,
+      {
+        type: 'messageEdited',
+        payload: {
+          channelId,
+          message: movedMessage,
+          oldPos: message2.pos,
+        },
+      },
+      context,
+    );
+
+    assert.deepStrictEqual(positions(next.messages), [1, 6, 7]);
+    const optimistic = next.optimisticMessageMap[message2.id];
+    assert.ok(optimistic);
+    assert.strictEqual(optimistic.ref.type, 'MESSAGE');
+    assert.strictEqual(optimistic.ref.pos, 6);
+    assert.strictEqual(optimistic.ref.rev, 1);
+    assert.strictEqual(optimistic.item.optimisticPos, 6);
+    assert.strictEqual(optimistic.item.item.type, 'MESSAGE');
+    assert.strictEqual(optimistic.item.item.text, 'optimistic edit');
+    assert.strictEqual(optimistic.item.item.pos, 6);
+    assert.strictEqual(optimistic.item.item.rev, 1);
+  });
+
+  test('messageEdited folded update keeps optimistic edit and merges server state', () => {
+    const message = makeMessageItem(makeMessage(messageId1, 2));
+    const optimisticItem = {
+      ...message,
+      text: 'optimistic edit',
+      optimistic: true,
+    } satisfies MessageItem;
+    const optimisticMessage: OptimisticMessage = {
+      ref: message,
+      item: {
+        optimisticPos: message.pos,
+        timestamp: 1,
+        item: optimisticItem,
+      },
+    };
+    const state = {
+      ...makeInitialChannelState(channelId),
+      fullLoaded: true,
+      messages: L.from([message]),
+      optimisticMessageMap: { [message.id]: optimisticMessage },
+    };
+
+    const folded = makeMessage(messageId1, 2, { folded: true, rev: 1 });
+    const next = channelReducer(
+      state,
+      { type: 'messageEdited', payload: { channelId, message: folded, oldPos: 2 } },
+      context,
+    );
+
+    const stored = L.first(next.messages);
+    assert.strictEqual(stored?.folded, true);
+    const optimistic = next.optimisticMessageMap[message.id];
+    assert.ok(optimistic);
+    assert.strictEqual(optimistic.ref.type, 'MESSAGE');
+    assert.strictEqual(optimistic.ref.folded, true);
+    assert.strictEqual(optimistic.ref.rev, 1);
+    assert.strictEqual(optimistic.item.item.type, 'MESSAGE');
+    assert.strictEqual(optimistic.item.item.text, 'optimistic edit');
+    assert.strictEqual(optimistic.item.item.folded, true);
+    assert.strictEqual(optimistic.item.item.rev, 1);
+  });
+
   test('messageEdited updates in place when position unchanged', () => {
     const message = makeMessageItem(makeMessage(messageId1, 2));
     const optimisticMessage: OptimisticMessage = {

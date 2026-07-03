@@ -401,6 +401,52 @@ const compareMessageVersion = (a: MessageItem, b: MessageItem): number => {
   return compareMessageModified(a, b);
 };
 
+const reconcileOptimisticMessageEdited = (
+  optimisticMessageMap: Record<string, OptimisticMessage>,
+  message: MessageItem,
+): Record<string, OptimisticMessage> => {
+  const optimisticMessage = optimisticMessageMap[message.id];
+  if (
+    !optimisticMessage ||
+    optimisticMessage.ref.type !== 'MESSAGE' ||
+    optimisticMessage.item.item.type !== 'MESSAGE'
+  ) {
+    return filterOptimisticMessages(message.id, optimisticMessageMap);
+  }
+
+  if (compareMessageModified(message, optimisticMessage.ref) > 0) {
+    return filterOptimisticMessages(message.id, optimisticMessageMap);
+  }
+
+  const optimisticItem = optimisticMessage.item.item;
+  const nextOptimisticItem: MessageItem = {
+    ...message,
+    optimistic: optimisticItem.optimistic,
+    optimisticMedia: optimisticItem.optimisticMedia,
+    failTo: optimisticItem.failTo,
+    key: optimisticItem.key,
+    name: optimisticItem.name,
+    text: optimisticItem.text,
+    entities: optimisticItem.entities,
+    inGame: optimisticItem.inGame,
+    isAction: optimisticItem.isAction,
+    mediaId: optimisticItem.mediaId,
+    color: optimisticItem.color,
+  };
+
+  return {
+    ...optimisticMessageMap,
+    [message.id]: {
+      ref: message,
+      item: {
+        ...optimisticMessage.item,
+        optimisticPos: message.pos,
+        item: nextOptimisticItem,
+      },
+    },
+  };
+};
+
 /**
  * Keep edit previews pointing at the original message's current position
  * when the message is moved without changing its content edit timestamp.
@@ -435,11 +481,11 @@ const handleMessageEdited = (
   state: ChannelState,
   { payload }: ChatAction<'messageEdited'>,
 ): ChannelState => {
-  const optimisticMessageMap = filterOptimisticMessages(
-    payload.message.id,
-    state.optimisticMessageMap,
-  );
   const message: MessageItem = makeMessageItem(payload.message);
+  const optimisticMessageMap = reconcileOptimisticMessageEdited(
+    state.optimisticMessageMap,
+    message,
+  );
   const previewMap = syncEditPreviewsWithMessage(state.previewMap, message);
   const resetMessagesState = (state: ChannelState): ChannelState => {
     return { ...state, optimisticMessageMap, previewMap, messages: L.empty(), fullLoaded: false };

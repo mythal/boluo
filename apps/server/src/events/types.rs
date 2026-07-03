@@ -320,7 +320,7 @@ impl Update {
     }
 
     pub fn channel_deleted(mailbox: Uuid, channel_id: Uuid) {
-        Update::transient(mailbox, UpdateBody::ChannelDeleted { channel_id })
+        Update::persistent(UpdateBody::ChannelDeleted { channel_id }, mailbox)
     }
 
     pub fn message_preview(mailbox: Uuid, preview: Box<Preview>) {

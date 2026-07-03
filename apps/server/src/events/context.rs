@@ -667,6 +667,8 @@ fn on_update(
                     persistent_updates.retain(|_, cached| cached.channel_id() != Some(channel_id));
                     preview_map.retain(|key, _| key.channel_id != channel_id);
                     diff_map.retain(|key, _| key.channel_id != channel_id);
+                    // Keep the deletion itself replayable for reconnecting clients.
+                    persistent_updates.insert(update_id, stored);
                 }
                 StoredUpdateMeta::Other { .. } => {
                     // Do nothing
@@ -1792,7 +1794,7 @@ mod tests {
 
         assert!(!persistent_updates.contains_key(&persistent_a));
         assert!(persistent_updates.contains_key(&persistent_b));
-        assert!(!persistent_updates.contains_key(&deleted_event_id));
+        assert!(persistent_updates.contains_key(&deleted_event_id));
         assert!(!preview_map.contains_key(&key_a));
         assert!(preview_map.contains_key(&key_b));
         assert!(!diff_map.contains_key(&key_a));

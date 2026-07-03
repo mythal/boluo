@@ -37,5 +37,6 @@ FROM
 WHERE
     channel_id = $1
     AND id = $2
+    AND deleted = FALSE
 RETURNING
     messages AS "message!: Message";

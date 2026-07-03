@@ -557,6 +557,9 @@ fn on_update(
     let update_id = update.id;
     match update.body {
         UpdateBody::MessagePreview { preview, .. } => {
+            // Volatile updates are fired via `spawn` without ordering guarantees,
+            // so a late keyframe can land after the `NewMessage` that consumed this
+            // preview and re-insert it as a ghost. Tolerated: it expires in cleanup.
             let key = ChannelUserId::new(preview.channel_id, preview.sender_id);
             if let Some(existing_preview) = preview_map.get(&key) {
                 if existing_preview.id >= update_id {

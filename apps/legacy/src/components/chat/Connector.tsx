@@ -71,6 +71,7 @@ const handleEvent = (
   dispatch: Dispatch,
   setState: (state: ConnectState) => void,
   event: Events,
+  resetCursor: () => void,
 ) => {
   const { body } = event;
   if (body.type === 'APP_UPDATED') {
@@ -79,6 +80,11 @@ const handleEvent = (
     if (body.code === 'CURSOR_TOO_OLD') {
       if (confirm('客户端状态已过期，是否刷新页面？')) {
         location.reload();
+      } else {
+        // The server closes the connection after this error; without a
+        // cursor reset every automatic reconnect would hit the same error
+        // and reopen this dialog.
+        resetCursor();
       }
       return;
     }
@@ -248,7 +254,9 @@ export const Connector = ({ spaceId, myId }: Props) => {
           cursor.current = event.id;
         }
 
-        handleEvent(dispatch, setState, event);
+        handleEvent(dispatch, setState, event, () => {
+          cursor.current = { timestamp: 0, node: 0, seq: 0 };
+        });
       };
       dispatch(connectSpace(spaceId, connection));
     };

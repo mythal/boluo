@@ -19,6 +19,7 @@ export type PreviewItem = Preview & {
   key: string;
   timestamp: number;
   keyframe?: PreviewKeyframe;
+  original?: MessageItem;
 };
 
 export type FailTo =

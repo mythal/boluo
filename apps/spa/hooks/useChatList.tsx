@@ -105,9 +105,7 @@ export const pruneSelfPreview = (
   isEmpty: boolean,
   selfPreviewVisible: boolean,
 ): boolean => {
-  const selfPreviewIndex = optimisticPreviewList.findIndex(
-    (preview) => preview.senderId === myId,
-  );
+  const selfPreviewIndex = optimisticPreviewList.findIndex((preview) => preview.senderId === myId);
   if (selfPreviewIndex === -1) return false;
   const selfPreview = optimisticPreviewList[selfPreviewIndex]!;
   if (selfPreview.id !== currentPreviewId || isEmpty || !selfPreviewVisible) {
@@ -165,8 +163,14 @@ function channelSliceEq(a: ChannelSlice, b: ChannelSlice) {
 
 export const useChatList = (channelId: string, myId?: string): UseChatListReturn => {
   const store = useStore();
-  const { composeAtom, filterAtom, showArchivedAtom, parsedAtom, selfPreviewVisibleAtom, inGameAtom } =
-    useChannelAtoms();
+  const {
+    composeAtom,
+    filterAtom,
+    showArchivedAtom,
+    parsedAtom,
+    selfPreviewVisibleAtom,
+    inGameAtom,
+  } = useChannelAtoms();
 
   const { filterType, showArchived, isFiltersChanged } = useFilters(filterAtom, showArchivedAtom);
 
@@ -313,7 +317,7 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
         }
       }
     }
-    for (const preview of optimisticPreviewList) {
+    for (let preview of optimisticPreviewList) {
       if (preview.senderId === myId && !selfPreviewVisible) {
         continue;
       }
@@ -337,6 +341,7 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
         if (preview.edit.time !== message.modified) {
           continue;
         }
+        preview = { ...preview, original: message };
         const index = binarySearchPos(itemList, message.pos);
         if (message.id !== itemList[index]?.id) {
           // Maybe the original message be filtered

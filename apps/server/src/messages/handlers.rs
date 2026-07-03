@@ -166,7 +166,7 @@ async fn edit(
                     "The message was edited elsewhere before this edit was submitted.".to_string(),
                 ));
             }
-            return Err(unexpected!("The message had been delete."));
+            return Err(AppError::NotFound("Message"));
         }
     };
     trans.commit().await?;
@@ -323,7 +323,7 @@ async fn toggle_fold(
     }
     let edited_message = Message::set_folded(&mut *conn, &message.id, !message.folded)
         .await?
-        .ok_or_else(|| unexpected!("message not found"))?;
+        .or_not_found()?;
     let mut event_message = edited_message.clone();
     event_message.hide(None);
     Update::message_edited(channel.space_id, event_message, message.pos).await;

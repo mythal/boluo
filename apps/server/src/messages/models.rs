@@ -860,6 +860,38 @@ mod tests {
             .expect("get after delete failed");
         assert!(after_delete.is_none());
 
+        let folded_after_delete = Message::set_folded(&pool, &message.id, false)
+            .await
+            .expect("set_folded after delete failed");
+        assert!(folded_after_delete.is_none());
+
+        let edited_after_delete = Message::edit(
+            &pool,
+            "Deleted",
+            &message.id,
+            "Deleted text",
+            sample_entities("Deleted text"),
+            false,
+            false,
+            None,
+            String::new(),
+            None,
+        )
+        .await
+        .expect("edit after delete failed");
+        assert!(edited_after_delete.is_none());
+
+        let mut conn = pool.acquire().await.expect("failed to acquire connection");
+        let moved_after_delete = Message::move_bottom(
+            &mut conn,
+            &channel.id,
+            &message.id,
+            (whisper_message.pos_p, whisper_message.pos_q),
+        )
+        .await
+        .expect("move after delete failed");
+        assert!(moved_after_delete.is_none());
+
         crate::pos::CHANNEL_POS_MANAGER.shutdown(channel.id);
     }
 

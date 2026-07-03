@@ -22,7 +22,7 @@ export const ThemeSelect: FC<Props> = ({ id }) => {
   const { data: currentUser } = useQueryCurrentUser();
   const intl = useIntl();
 
-  const key = ['/users/settings'] as const;
+  const key = ['/users/settings', currentUser?.id ?? null] as const;
   const updater: MutationFetcher<Settings, typeof key, Theme> = useCallback(
     async (url, { arg: theme }) => {
       const settings: Settings = { theme };

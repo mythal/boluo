@@ -43,6 +43,7 @@ enum StoredUpdateMeta {
         channel_id: Uuid,
         message_id: Uuid,
         modified_us: i64,
+        rev: i32,
         old_pos: f64,
     },
     MessageWithPreview {
@@ -117,6 +118,7 @@ impl StoredUpdateMeta {
                 channel_id: *channel_id,
                 message_id: message.id,
                 modified_us: message.modified.timestamp_micros(),
+                rev: message.rev,
                 old_pos: *old_pos,
             },
             ChannelDeleted { channel_id } => StoredUpdateMeta::ChannelDeleted {
@@ -486,6 +488,7 @@ fn prepare_message_edited_old_pos(
     let channel_id = *channel_id;
     let message_id = message.id;
     let modified_us = message.modified.timestamp_micros();
+    let rev = message.rev;
 
     let mut prev_event_id_and_old_pos: Option<(EventId, f64)> = None;
     for (stored_update_id, stored_update) in persistent_updates.iter().rev() {
@@ -493,6 +496,7 @@ fn prepare_message_edited_old_pos(
             channel_id: old_channel_id,
             message_id: old_message_id,
             modified_us: old_modified_us,
+            rev: old_rev,
             old_pos: previous_old_pos,
         } = &stored_update.meta
         else {
@@ -500,7 +504,7 @@ fn prepare_message_edited_old_pos(
         };
         if *old_message_id == message_id
             && *old_channel_id == channel_id
-            && *old_modified_us < modified_us
+            && (*old_rev < rev || (*old_rev == rev && *old_modified_us < modified_us))
         {
             prev_event_id_and_old_pos = Some((*stored_update_id, *previous_old_pos));
             break;
@@ -972,6 +976,8 @@ pub fn mailbox_count() -> usize {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::messages::{Entities, Message};
+    use chrono::TimeZone;
 
     fn event_id(timestamp: i64, node: u16, seq: Seq) -> EventId {
         EventId {
@@ -992,6 +998,36 @@ mod tests {
 
     fn persistent_update(id: EventId) -> StoredUpdate {
         StoredUpdate::from_encoded_update(encoded_update(id))
+    }
+
+    fn message(id: Uuid, channel_id: Uuid, pos: f64, rev: i32) -> Message {
+        let time = chrono::Utc.timestamp_micros(1_000_000).unwrap();
+        Message {
+            id,
+            sender_id: Uuid::from_u128(101),
+            channel_id,
+            parent_message_id: None,
+            name: "Alice".to_string(),
+            media_id: None,
+            seed: Vec::new(),
+            deleted: false,
+            in_game: true,
+            is_action: false,
+            is_master: false,
+            pinned: false,
+            tags: Vec::new(),
+            folded: false,
+            text: "hello".to_string(),
+            whisper_to_users: None,
+            entities: Entities::default(),
+            created: time,
+            modified: time,
+            pos_p: pos as i32,
+            pos_q: 1,
+            pos,
+            color: "#000000".to_string(),
+            rev,
+        }
     }
 
     #[test]
@@ -1060,6 +1096,40 @@ mod tests {
             Some(1),
         );
         assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn message_edited_cache_merge_uses_rev_for_move_events() {
+        let channel_id = Uuid::from_u128(201);
+        let message_id = Uuid::from_u128(202);
+        let previous_event_id = event_id(100, 1, 1);
+        let previous_message = message(message_id, channel_id, 20.0, 1);
+        let previous_update = StoredUpdate::from_encoded_update(EncodedUpdate::new(Update {
+            mailbox: Uuid::nil(),
+            id: previous_event_id,
+            body: UpdateBody::MessageEdited {
+                channel_id,
+                message: Box::new(previous_message),
+                old_pos: 10.0,
+            },
+            live: UpdateLifetime::Persistent,
+        }));
+        let mut persistent_updates = BTreeMap::new();
+        persistent_updates.insert(previous_event_id, previous_update);
+
+        let mut body = UpdateBody::MessageEdited {
+            channel_id,
+            message: Box::new(message(message_id, channel_id, 30.0, 2)),
+            old_pos: 20.0,
+        };
+
+        let stale_event_id = prepare_message_edited_old_pos(&persistent_updates, &mut body);
+
+        assert_eq!(stale_event_id, Some(previous_event_id));
+        let UpdateBody::MessageEdited { old_pos, .. } = body else {
+            panic!("body should still be MessageEdited");
+        };
+        assert_eq!(old_pos, 10.0);
     }
 
     #[test]

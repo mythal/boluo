@@ -4,7 +4,6 @@ import { type RefObject, useEffect, useRef } from 'react';
 import type { VirtuosoHandle } from 'react-virtuoso';
 import { type ChannelAtoms, useChannelAtoms } from './useChannelAtoms';
 import { chatAtom } from '../state/chat.atoms';
-import { findMessage } from '../state/channel.reducer';
 import { type ChatItem } from '../state/channel.types';
 import { head } from 'list';
 import { useSetBanner } from './useBanner';

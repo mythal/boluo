@@ -278,6 +278,7 @@ const handleNewMessage = (
   if (message.pos < topMessage.pos) {
     return {
       ...state,
+      previewMap,
       optimisticMessageMap,
       messages: state.fullLoaded ? L.prepend(message, messages) : messages,
     };

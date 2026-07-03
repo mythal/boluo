@@ -210,6 +210,36 @@ describe('channelReducer', () => {
     assert.deepStrictEqual(positions(next.messages), [5, 10, 20]);
   });
 
+  test('receiveMessage above loaded top clears the sender preview', () => {
+    const preview = toPreviewItem(makePreview(previewId1, 5));
+    const state = {
+      ...makeInitialChannelState(channelId),
+      fullLoaded: true,
+      messages: L.from([
+        makeMessageItem(makeMessage(messageId1, 10)),
+        makeMessageItem(makeMessage(messageId2, 20)),
+      ]),
+      previewMap: { [preview.senderId]: preview },
+    };
+
+    const next = channelReducer(
+      state,
+      {
+        type: 'receiveMessage',
+        payload: {
+          type: 'NEW_MESSAGE',
+          channelId,
+          previewId: preview.id,
+          message: makeMessage(messageId3, 5),
+        },
+      },
+      context,
+    );
+
+    assert.deepStrictEqual(positions(next.messages), [5, 10, 20]);
+    assert.deepStrictEqual(next.previewMap, {});
+  });
+
   test('receiveMessage resets when pos equals bottom', () => {
     const state = {
       ...makeInitialChannelState(channelId),

@@ -26,13 +26,12 @@ FROM
 UPDATE
     messages
 SET
-    (pos_p,
-        pos_q) = (
+    (pos_p, pos_q) = (
         SELECT
             p AS pos_p,
             q AS pos_q
-        FROM
-            find_intermediate ($3::int4, $4::int4, bottom.pos_p, bottom.pos_q))
+        FROM find_intermediate ($3::int4, $4::int4, bottom.pos_p, bottom.pos_q)),
+    rev = rev + 1
 FROM
     bottom
 WHERE
@@ -40,4 +39,3 @@ WHERE
     AND id = $2
 RETURNING
     messages AS "message!: Message";
-

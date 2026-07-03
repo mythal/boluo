@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "WITH\n    existing_in_pos AS (\n        SELECT\n            messages\n        FROM\n            messages\n        WHERE\n            channel_id = $2\n            AND pos = ($3::int::float8 / $4::int::float8)\n    ),\n    move_pos AS (\n        UPDATE\n            messages\n        SET\n            pos_p = $3,\n            pos_q = $4\n        WHERE\n            id = $1\n            -- Only update if a message is not already in the target position\n            AND NOT EXISTS (SELECT 1 FROM existing_in_pos)\n        RETURNING\n            messages\n    )\nSELECT\n    messages AS \"message!: Message\"\nFROM\n    move_pos\nUNION ALL\nSELECT\n    messages AS \"message!: Message\"\nFROM\n    existing_in_pos\nLIMIT 1;\n",
+  "query": "WITH nearest AS (\n    SELECT\n        pos_p,\n        pos_q\n    FROM\n        messages\n    WHERE\n        pos < $3::int4::float8 / $4::int4::float8\n        AND channel_id = $1\n    ORDER BY\n        pos DESC\n    LIMIT 1\n),\ninitial AS (\n    SELECT\n        0 AS pos_p,\n        1 AS pos_q\n),\nabove AS (\n    SELECT\n        COALESCE(nearest.pos_p, initial.pos_p) AS pos_p,\n        COALESCE(nearest.pos_q, initial.pos_q) AS pos_q\nFROM\n    nearest\n    RIGHT JOIN initial ON TRUE)\nUPDATE\n    messages\nSET\n    (pos_p, pos_q) = (\n        SELECT\n            p AS pos_p,\n            q AS pos_q\n        FROM find_intermediate (above.pos_p, above.pos_q, $3, $4)),\n    rev = rev + 1\nFROM\n    above\nWHERE\n    channel_id = $1\n    AND id = $2\nRETURNING\n    messages AS \"message!: Message\";\n",
   "describe": {
     "columns": [
       {
@@ -102,6 +102,10 @@
                 [
                   "color",
                   "Text"
+                ],
+                [
+                  "rev",
+                  "Int4"
                 ]
               ]
             }
@@ -121,5 +125,5 @@
       null
     ]
   },
-  "hash": "e2224270bbf403e4a28680f76609506e93a5d372acab9949639d59cc07a1d579"
+  "hash": "f95850d83470051fe30900671240eee6ab7b609e72728617a07769c876105909"
 }

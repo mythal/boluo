@@ -2,9 +2,8 @@ UPDATE
     messages
 SET
     folded = $2,
-    modified = (now() at time zone 'utc')
+    rev = rev + 1
 WHERE
     id = $1
 RETURNING
     messages AS "message!: Message";
-

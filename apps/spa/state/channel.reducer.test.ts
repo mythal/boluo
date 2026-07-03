@@ -39,6 +39,7 @@ const makeMessage = (id: string, pos: number, overrides: Partial<Message> = {}):
   entities: [],
   created: baseTime,
   modified: baseTime,
+  rev: 0,
   posP: pos,
   posQ: 1,
   pos,
@@ -472,7 +473,7 @@ describe('channelReducer', () => {
 
   test('messageEdited ignores older updates', () => {
     const message = makeMessageItem(
-      makeMessage(messageId1, 2, { modified: '2024-01-01T00:02:00.000Z' }),
+      makeMessage(messageId1, 2, { modified: '2024-01-01T00:02:00.000Z', rev: 2 }),
     );
     const state = {
       ...makeInitialChannelState(channelId),
@@ -480,7 +481,10 @@ describe('channelReducer', () => {
       messages: L.from([message]),
     };
 
-    const older = makeMessage(messageId1, 2, { modified: '2024-01-01T00:01:00.000Z' });
+    const older = makeMessage(messageId1, 2, {
+      modified: '2024-01-01T00:01:00.000Z',
+      rev: 1,
+    });
     const next = channelReducer(
       state,
       { type: 'messageEdited', payload: { channelId, message: older, oldPos: 2 } },
@@ -490,9 +494,27 @@ describe('channelReducer', () => {
     assert.strictEqual(next, state);
   });
 
+  test('messageEdited ignores stale move events by rev', () => {
+    const message = makeMessageItem(makeMessage(messageId1, 4, { rev: 2 }));
+    const state = {
+      ...makeInitialChannelState(channelId),
+      fullLoaded: true,
+      messages: L.from([message]),
+    };
+
+    const staleMove = makeMessage(messageId1, 2, { rev: 1 });
+    const next = channelReducer(
+      state,
+      { type: 'messageEdited', payload: { channelId, message: staleMove, oldPos: 4 } },
+      context,
+    );
+
+    assert.strictEqual(next, state);
+  });
+
   test('messageEdited move follows edit previews to the new position', () => {
-    // Regression: moving a message does not update `modified`, and the
-    // edit preview in previewMap kept pointing at the stale position.
+    // Regression: moving a message keeps the content edit timestamp, and the
+    // edit preview in previewMap used to point at the stale position.
     const message1 = makeMessageItem(makeMessage(messageId1, 1));
     const message2 = makeMessageItem(makeMessage(messageId2, 3));
     const editPreview = toPreviewItem(
@@ -514,8 +536,8 @@ describe('channelReducer', () => {
       },
     };
 
-    // A move keeps `modified` unchanged.
-    const moved = makeMessage(messageId2, 6);
+    // A move keeps `modified` unchanged while bumping `rev`.
+    const moved = makeMessage(messageId2, 6, { rev: 1 });
     const next = channelReducer(
       state,
       { type: 'messageEdited', payload: { channelId, message: moved, oldPos: 3 } },
@@ -549,6 +571,7 @@ describe('channelReducer', () => {
     const edited = makeMessage(messageId1, 2, {
       text: 'edited',
       modified: '2024-01-01T00:05:00.000Z',
+      rev: 1,
     });
     const next = channelReducer(
       state,

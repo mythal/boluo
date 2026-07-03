@@ -13,7 +13,8 @@ WITH
             messages
         SET
             pos_p = $3,
-            pos_q = $4
+            pos_q = $4,
+            rev = rev + 1
         WHERE
             id = $1
             -- Only update if a message is not already in the target position

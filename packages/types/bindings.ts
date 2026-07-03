@@ -568,6 +568,7 @@ export type Message = {
    *  If the string contains a semicolon, the second part is for the dark mode.
    */
   color: string;
+  rev?: number;
 };
 
 export type MessageMoveToMode = 'TOP' | 'BOTTOM';

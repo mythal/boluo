@@ -393,9 +393,17 @@ const compareMessageModified = (a: MessageItem, b: MessageItem): number => {
   return aModified - bModified;
 };
 
+const messageRev = (message: MessageItem): number => message.rev ?? 0;
+
+const compareMessageVersion = (a: MessageItem, b: MessageItem): number => {
+  const revDiff = messageRev(a) - messageRev(b);
+  if (revDiff !== 0) return revDiff;
+  return compareMessageModified(a, b);
+};
+
 /**
  * Keep edit previews pointing at the original message's current position
- * when the message is moved (moving does not update `modified`).
+ * when the message is moved without changing its content edit timestamp.
  */
 const syncEditPreviewsWithMessage = (
   previewMap: Record<UserId, PreviewItem>,
@@ -446,11 +454,10 @@ const handleMessageEdited = (
     const oldEntry = findMessage(messagesState, message.id, payload.oldPos);
     if (oldEntry != null) {
       const [item, index] = oldEntry;
-      const modifiedDiff = compareMessageModified(item, message);
+      const versionDiff = compareMessageVersion(item, message);
       if (
-        modifiedDiff > 0 ||
-        (modifiedDiff === 0 &&
-          /* FIXME: move the message will not change the `modified` field */
+        versionDiff > 0 ||
+        (versionDiff === 0 &&
           item.pos === message.pos &&
           /* Show a whisper message */
           message.text === item.text)

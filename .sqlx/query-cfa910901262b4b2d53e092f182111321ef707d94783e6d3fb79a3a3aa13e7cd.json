@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "WITH nearest AS (\n    SELECT\n        pos_p,\n        pos_q\n    FROM\n        messages\n    WHERE\n        pos < $3::int4::float8 / $4::int4::float8\n        AND channel_id = $1\n    ORDER BY\n        pos DESC\n    LIMIT 1\n),\ninitial AS (\n    SELECT\n        0 AS pos_p,\n        1 AS pos_q\n),\nabove AS (\n    SELECT\n        COALESCE(nearest.pos_p, initial.pos_p) AS pos_p,\n        COALESCE(nearest.pos_q, initial.pos_q) AS pos_q\nFROM\n    nearest\n    RIGHT JOIN initial ON TRUE)\nUPDATE\n    messages\nSET\n    (pos_p,\n        pos_q) = (\n        SELECT\n            p AS pos_p,\n            q AS pos_q\n        FROM\n            find_intermediate (above.pos_p, above.pos_q, $3, $4))\nFROM\n    above\nWHERE\n    channel_id = $1\n    AND id = $2\nRETURNING\n    messages AS \"message!: Message\";\n\n",
+  "query": "UPDATE\n    messages\nSET\n    name = $2,\n    text = $3,\n    entities = $4,\n    in_game = $5,\n    is_action = $6,\n    media_id = $7,\n    modified = (now() at time zone 'utc'),\n    color = $8,\n    rev = rev + 1\nWHERE\n    id = $1\n    AND ($9::timestamptz IS NULL OR modified = $9)\nRETURNING\n    messages AS \"message!: Message\";\n",
   "describe": {
     "columns": [
       {
@@ -102,6 +102,10 @@
                 [
                   "color",
                   "Text"
+                ],
+                [
+                  "rev",
+                  "Int4"
                 ]
               ]
             }
@@ -112,14 +116,19 @@
     "parameters": {
       "Left": [
         "Uuid",
+        "Text",
+        "Text",
+        "Jsonb",
+        "Bool",
+        "Bool",
         "Uuid",
-        "Int4",
-        "Int4"
+        "Text",
+        "Timestamptz"
       ]
     },
     "nullable": [
       null
     ]
   },
-  "hash": "7314c4f0e50583db32aad679ebdf9e69c23ec55a58174d89050d98f55a949319"
+  "hash": "cfa910901262b4b2d53e092f182111321ef707d94783e6d3fb79a3a3aa13e7cd"
 }

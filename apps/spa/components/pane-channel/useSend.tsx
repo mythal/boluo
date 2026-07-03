@@ -17,6 +17,8 @@ import { type FailTo } from '../../state/channel.types';
 import { useIntl } from 'react-intl';
 import { useSetBanner } from '../../hooks/useBanner';
 import { useMember } from '../../hooks/useMember';
+import { findMessage } from '../../state/channel.reducer';
+import { saveDraftInWorker } from '../../state/compose-backup.worker-client';
 
 const SEND_TIMEOUT = 8000;
 
@@ -56,6 +58,29 @@ export const useSend = () => {
     if (store.get(checkComposeAtom) != null) return;
     const composeDispatch = (action: ComposeActionUnion) => store.set(composeAtom, action);
     const chatDispatch = (action: ChatActionUnion) => store.set(chatAtom, action);
+
+    if (composeState.edit != null) {
+      const channelState = store.get(chatAtom).channels[channelId];
+      const editPos = composeState.edit.p / composeState.edit.q;
+      const found = channelState
+        ? findMessage(channelState.messages, composeState.previewId, editPos)
+        : null;
+      if (!found) {
+        if (composeState.source.trim() !== '') {
+          saveDraftInWorker(channelId, composeState.source);
+        }
+        composeDispatch({ type: 'sent', payload: { edit: true } });
+        setBanner({
+          level: 'WARNING',
+          content: intl.formatMessage({
+            defaultMessage:
+              'The message you were editing was deleted. Your edits have been saved as a draft.',
+          }),
+        });
+        return;
+      }
+    }
+
     composeDispatch({ type: 'sent', payload: { edit: composeState.edit != null } });
     const parsedForSend = parse(composeState.source, true, {
       defaultDiceFace: defaultDiceFaceRef.current,

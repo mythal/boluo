@@ -11,6 +11,7 @@ SET
     color = $8
 WHERE
     id = $1
+    AND ($9::timestamptz IS NULL OR modified = $9)
 RETURNING
     messages AS "message!: Message";
 

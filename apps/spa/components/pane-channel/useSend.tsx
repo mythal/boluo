@@ -110,8 +110,7 @@ export const useSend = () => {
       }
     }
     let payload:
-      | { type: 'NEW'; newMessage: NewMessage }
-      | { type: 'EDIT'; editMessage: EditMessage };
+      { type: 'NEW'; newMessage: NewMessage } | { type: 'EDIT'; editMessage: EditMessage };
     if (composeState.edit == null) {
       const usernameListToUserIdList = (usernames: string[]): string[] => {
         if (channelMembersMapRef.current.size === 0 || usernames.length === 0) {
@@ -161,6 +160,7 @@ export const useSend = () => {
           isAction: parsedPreview.isAction,
           mediaId: typeof composeState.media === 'string' ? composeState.media : null,
           color: '',
+          expectModified: composeState.edit.time,
         },
       };
       chatDispatch({
@@ -209,7 +209,18 @@ export const useSend = () => {
         patch('/messages/edit', null, payload.editMessage),
         timeout(SEND_TIMEOUT),
       ]);
-      if (result === 'TIMEOUT' || !result.isOk) {
+      if (result !== 'TIMEOUT' && !result.isOk && result.err.code === 'CONFLICT') {
+        if (composeState.source.trim() !== '') {
+          saveDraftInWorker(channelId, composeState.source);
+        }
+        setBanner({
+          level: 'WARNING',
+          content: intl.formatMessage({
+            defaultMessage:
+              'This message was edited elsewhere before your edit was submitted. Your edits have been saved as a draft.',
+          }),
+        });
+      } else if (result === 'TIMEOUT' || !result.isOk) {
         chatDispatch({
           type: 'fail',
           payload: {

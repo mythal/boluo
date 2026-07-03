@@ -1,3 +1,4 @@
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -45,6 +46,9 @@ pub struct EditMessage {
     pub media_id: Option<Uuid>,
     #[serde(default)]
     pub color: String,
+    /// The `modified` timestamp of the message at the time the client started editing it.
+    #[serde(default)]
+    pub expect_modified: Option<DateTime<Utc>>,
 }
 
 #[derive(Deserialize, Debug, specta::Type)]

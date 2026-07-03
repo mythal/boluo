@@ -119,6 +119,7 @@ async fn edit(
         is_action,
         media_id,
         color,
+        expect_modified,
     } = *edit_message;
     let mut trans = ctx.db.begin().await?;
     let message = Message::get(&mut *trans, &message_id, Some(&session.user_id))
@@ -151,9 +152,23 @@ async fn edit(
         is_action,
         media_id,
         color,
+        expect_modified,
     )
-    .await?
-    .ok_or_else(|| unexpected!("The message had been delete."))?;
+    .await?;
+    let edited_message = match edited_message {
+        Some(edited_message) => edited_message,
+        None => {
+            let still_exists = Message::get(&mut *trans, &message_id, Some(&session.user_id))
+                .await?
+                .is_some();
+            if still_exists {
+                return Err(AppError::Conflict(
+                    "The message was edited elsewhere before this edit was submitted.".to_string(),
+                ));
+            }
+            return Err(unexpected!("The message had been delete."));
+        }
+    };
     trans.commit().await?;
     metrics::counter!("boluo_server_messages_edited_total").increment(1);
     Update::message_edited(

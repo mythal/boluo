@@ -368,6 +368,9 @@
   "HSaR2M": {
     "message": "是否為秘密頻道？"
   },
+  "HTmh5Q": {
+    "message": "target"
+  },
   "HlQPHQ": {
     "message": "加入位面"
   },
@@ -577,6 +580,9 @@
   },
   "PwaN2o": {
     "message": "歡迎"
+  },
+  "PxOtYI": {
+    "message": "Editing; Show original"
   },
   "Q+Af6H": {
     "message": "遊戲外"
@@ -1036,6 +1042,9 @@
   },
   "kMogDE": {
     "message": "請輸入有效的郵箱地址。"
+  },
+  "kdRsn5": {
+    "message": "The message you were editing was deleted. Your edits have been saved as a draft."
   },
   "kh4wt0": {
     "message": "切換側邊欄"

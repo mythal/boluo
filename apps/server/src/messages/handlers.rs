@@ -198,6 +198,11 @@ async fn move_between(
     let message = Message::get(&mut *conn, &message_id, Some(&session.user_id))
         .await
         .or_not_found()?;
+    if channel_id != message.channel_id {
+        return Err(AppError::BadRequest(
+            "channelId does not match message channel".to_string(),
+        ));
+    }
     crate::pos::CHANNEL_POS_MANAGER.submitted(
         channel_id,
         message_id,

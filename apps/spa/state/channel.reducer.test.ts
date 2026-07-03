@@ -1385,7 +1385,7 @@ describe('channelReducer', () => {
         type: 'messagesLoaded',
         payload: {
           messages: payloadMessages,
-          before: null,
+          before: existing.pos,
           channelId,
           fullLoaded: true,
         },
@@ -1396,6 +1396,33 @@ describe('channelReducer', () => {
     assert.strictEqual(L.first(next.messages)?.pos, 9);
     assert.strictEqual(L.last(next.messages)?.pos, 10);
     assert.strictEqual(next.fullLoaded, true);
+  });
+
+  test('messagesLoaded ignores stale load-more response after GC moved the top', () => {
+    const state = {
+      ...makeInitialChannelState(channelId),
+      messages: L.from([
+        makeMessageItem(makeMessage('m-current-top', 120)),
+        makeMessageItem(makeMessage('m-bottom', 150)),
+      ]),
+      fullLoaded: false,
+    };
+
+    const next = channelReducer(
+      state,
+      {
+        type: 'messagesLoaded',
+        payload: {
+          messages: [makeMessage('m-old-49', 49), makeMessage('m-old-48', 48)],
+          before: 50,
+          channelId,
+          fullLoaded: true,
+        },
+      },
+      context,
+    );
+
+    assert.strictEqual(next, state);
   });
 
   test('messagesLoaded is no-op when already fullLoaded', () => {

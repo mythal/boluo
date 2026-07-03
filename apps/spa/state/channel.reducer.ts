@@ -317,19 +317,22 @@ const handleMessagesLoaded = (
   // Note:
   // The payload.messages are sorted in descending order
   // But the state.messages are sorted in ascending order
-  const { fullLoaded } = payload;
   if (state.fullLoaded) {
     return state;
   }
+  let payloadMessages = L.from(payload.messages);
+  const payloadLen = payloadMessages.length;
+  const topMessage = L.first(state.messages);
+  if (topMessage && payload.before != null && topMessage.pos > payload.before) {
+    return state;
+  }
+  const { fullLoaded } = payload;
   if (fullLoaded !== state.fullLoaded) {
     state = { ...state, fullLoaded };
   }
-  let payloadMessages = L.from(payload.messages);
-  const payloadLen = payloadMessages.length;
   if (payloadLen === 0) {
     return state;
   }
-  const topMessage = L.first(state.messages);
   if (!topMessage) {
     return { ...state, messages: L.reverse(L.map(makeMessageItem, payloadMessages)) };
   }

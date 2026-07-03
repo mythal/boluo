@@ -268,6 +268,64 @@ describe('channelReducer', () => {
     assert.strictEqual(next.fullLoaded, false);
   });
 
+  test('receiveMessage duplicate at bottom boundary is ignored without resetting', () => {
+    // Regression: HTTP snapshot puts message M at the bottom; the live WS event
+    // for M then arrives with the same pos — must not wipe the whole list.
+    const state = {
+      ...makeInitialChannelState(channelId),
+      fullLoaded: true,
+      messages: L.from([
+        makeMessageItem(makeMessage(messageId1, 10)),
+        makeMessageItem(makeMessage(messageId2, 20)),
+      ]),
+    };
+
+    const next = channelReducer(
+      state,
+      {
+        type: 'receiveMessage',
+        payload: {
+          type: 'NEW_MESSAGE',
+          channelId,
+          previewId: null,
+          message: makeMessage(messageId2, 20),
+        },
+      },
+      context,
+    );
+
+    assert.deepStrictEqual(positions(next.messages), [10, 20]);
+    assert.strictEqual(next.fullLoaded, true);
+  });
+
+  test('receiveMessage different id at bottom boundary still resets', () => {
+    const state = {
+      ...makeInitialChannelState(channelId),
+      fullLoaded: true,
+      messages: L.from([
+        makeMessageItem(makeMessage(messageId1, 10)),
+        makeMessageItem(makeMessage(messageId2, 20)),
+      ]),
+    };
+
+    const next = channelReducer(
+      state,
+      {
+        type: 'receiveMessage',
+        payload: {
+          type: 'NEW_MESSAGE',
+          channelId,
+          previewId: null,
+          message: makeMessage('other', 20),
+        },
+      },
+      context,
+    );
+
+    assert.strictEqual(next.messages.length, 0);
+    assert.strictEqual(next.fullLoaded, false);
+  });
+
   test('receiveMessage before initial load keeps the message', () => {
     const state = makeInitialChannelState(channelId);
 

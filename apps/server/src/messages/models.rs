@@ -108,6 +108,12 @@ pub struct Message {
     ///
     /// If the string contains a semicolon, the second part is for the dark mode.
     pub color: String,
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub rev: i32,
+}
+
+fn is_zero(value: &i32) -> bool {
+    *value == 0
 }
 
 impl Message {
@@ -563,6 +569,7 @@ impl Message {
         is_action: bool,
         media_id: Option<Uuid>,
         color: String,
+        expect_modified: Option<DateTime<Utc>>,
     ) -> Result<Option<Message>, ModelError> {
         let entities = serde_json::to_value(entities).unwrap_or(JsonValue::Array(vec![]));
         let name = merge_blank(name);
@@ -576,7 +583,8 @@ impl Message {
             in_game,
             is_action,
             media_id,
-            color
+            color,
+            expect_modified
         )
         .fetch_optional(db)
         .await?;
@@ -713,6 +721,7 @@ mod tests {
         assert_eq!(message.channel_id, channel.id);
         assert_eq!(message.sender_id, owner.id);
         assert_eq!(message.text, text);
+        assert_eq!(message.rev, 0);
         let pos_one = (message.pos_p, message.pos_q);
         drop(conn);
 
@@ -817,6 +826,8 @@ mod tests {
             .expect("set_folded failed")
             .expect("message should exist");
         assert!(folded.folded);
+        assert_eq!(folded.modified, message.modified);
+        assert_eq!(folded.rev, message.rev + 1);
 
         let edited_entities = sample_entities("Updated text");
         let edited = Message::edit(
@@ -829,12 +840,15 @@ mod tests {
             true,
             None,
             "char:GM".to_string(),
+            None,
         )
         .await
         .expect("edit failed")
         .expect("edited message missing");
         assert_eq!(edited.text, "Updated text");
         assert!(edited.is_action);
+        assert_eq!(edited.rev, folded.rev + 1);
+        assert!(edited.modified > folded.modified);
 
         let deleted = Message::delete(&pool, &message.id)
             .await
@@ -845,6 +859,38 @@ mod tests {
             .await
             .expect("get after delete failed");
         assert!(after_delete.is_none());
+
+        let folded_after_delete = Message::set_folded(&pool, &message.id, false)
+            .await
+            .expect("set_folded after delete failed");
+        assert!(folded_after_delete.is_none());
+
+        let edited_after_delete = Message::edit(
+            &pool,
+            "Deleted",
+            &message.id,
+            "Deleted text",
+            sample_entities("Deleted text"),
+            false,
+            false,
+            None,
+            String::new(),
+            None,
+        )
+        .await
+        .expect("edit after delete failed");
+        assert!(edited_after_delete.is_none());
+
+        let mut conn = pool.acquire().await.expect("failed to acquire connection");
+        let moved_after_delete = Message::move_bottom(
+            &mut conn,
+            &channel.id,
+            &message.id,
+            (whisper_message.pos_p, whisper_message.pos_q),
+        )
+        .await
+        .expect("move after delete failed");
+        assert!(moved_after_delete.is_none());
 
         crate::pos::CHANNEL_POS_MANAGER.shutdown(channel.id);
     }
@@ -930,6 +976,7 @@ mod tests {
                 .expect("move_above errored")
                 .expect("move_above returned none");
         assert!(moved_above.pos < msg2.pos);
+        assert_eq!(moved_above.rev, msg3.rev + 1);
 
         let moved_bottom = Message::move_bottom(
             &mut conn,
@@ -941,6 +988,7 @@ mod tests {
         .expect("move_bottom errored")
         .expect("move_bottom returned none");
         assert!(moved_bottom.pos > moved_above.pos);
+        assert_eq!(moved_bottom.rev, msg1.rev + 1);
 
         let between = Message::move_between(
             &mut conn,
@@ -953,6 +1001,7 @@ mod tests {
         .expect("move_between errored")
         .expect("move_between returned none");
         assert!(between.pos > moved_above.pos && between.pos < moved_bottom.pos);
+        assert_eq!(between.rev, msg2.rev + 1);
         drop(conn);
 
         let ordered = Message::get_by_channel(&pool, &channel.id, None, 10, Some(&owner.id))
@@ -962,6 +1011,200 @@ mod tests {
         assert_eq!(ordered[0].id, moved_bottom.id);
         assert_eq!(ordered[1].id, between.id);
         assert_eq!(ordered[2].id, moved_above.id);
+
+        crate::pos::CHANNEL_POS_MANAGER.shutdown(channel.id);
+    }
+
+    #[sqlx::test(migrator = "crate::db::MIGRATOR")]
+    async fn db_test_message_move_between_requires_message_channel(pool: sqlx::PgPool) {
+        let owner = create_test_user(&pool, "owner").await;
+        let space = create_test_space(&pool, &owner, "wrong_channel_move").await;
+        let source_channel = create_test_channel(&pool, &space, &owner, "Source").await;
+        let other_channel = create_test_channel(&pool, &space, &owner, "Other").await;
+
+        let mut conn = pool.acquire().await.expect("failed to acquire connection");
+        let source_message = Message::create(
+            &mut conn,
+            None,
+            source_channel.id,
+            space.id,
+            &owner.id,
+            "GM",
+            "GM",
+            "Source message",
+            sample_entities("Source message"),
+            false,
+            false,
+            true,
+            None,
+            None,
+            None,
+            "#123456".to_string(),
+        )
+        .await
+        .expect("failed to create source message");
+        let other_a = Message::create(
+            &mut conn,
+            None,
+            other_channel.id,
+            space.id,
+            &owner.id,
+            "GM",
+            "GM",
+            "Other A",
+            sample_entities("Other A"),
+            false,
+            false,
+            true,
+            None,
+            None,
+            None,
+            "#123456".to_string(),
+        )
+        .await
+        .expect("failed to create other message A");
+        let other_b = Message::create(
+            &mut conn,
+            None,
+            other_channel.id,
+            space.id,
+            &owner.id,
+            "GM",
+            "GM",
+            "Other B",
+            sample_entities("Other B"),
+            false,
+            false,
+            true,
+            None,
+            None,
+            None,
+            "#123456".to_string(),
+        )
+        .await
+        .expect("failed to create other message B");
+
+        let moved = Message::move_between(
+            &mut conn,
+            &source_message.id,
+            other_channel.id,
+            (other_a.pos_p, other_a.pos_q),
+            (other_b.pos_p, other_b.pos_q),
+        )
+        .await
+        .expect("move_between errored");
+        assert!(moved.is_none());
+        drop(conn);
+
+        let unchanged = Message::get(&pool, &source_message.id, Some(&owner.id))
+            .await
+            .expect("get source message failed")
+            .expect("source message missing");
+        assert_eq!(unchanged.channel_id, source_channel.id);
+        assert_eq!(unchanged.pos_p, source_message.pos_p);
+        assert_eq!(unchanged.pos_q, source_message.pos_q);
+        assert_eq!(unchanged.rev, source_message.rev);
+
+        crate::pos::CHANNEL_POS_MANAGER.shutdown(source_channel.id);
+        crate::pos::CHANNEL_POS_MANAGER.shutdown(other_channel.id);
+    }
+
+    #[sqlx::test(migrator = "crate::db::MIGRATOR")]
+    async fn db_test_message_edit_conflict(pool: sqlx::PgPool) {
+        let owner = create_test_user(&pool, "owner").await;
+        let space = create_test_space(&pool, &owner, "message_edit_conflict").await;
+        let channel = create_test_channel(&pool, &space, &owner, "Two Tabs").await;
+
+        let mut conn = pool.acquire().await.expect("failed to acquire connection");
+        let text = "Original text";
+        let message = Message::create(
+            &mut conn,
+            None,
+            channel.id,
+            space.id,
+            &owner.id,
+            "GM",
+            "GM",
+            text,
+            sample_entities(text),
+            false,
+            false,
+            true,
+            None,
+            None,
+            None,
+            "#abcdef".to_string(),
+        )
+        .await
+        .expect("failed to create message");
+        drop(conn);
+        let stale_modified = message.modified;
+
+        // Tab A submits first, using the `modified` it observed when it started editing.
+        let edited_by_a = Message::edit(
+            &pool,
+            "GM",
+            &message.id,
+            "Tab A's text",
+            sample_entities("Tab A's text"),
+            false,
+            false,
+            None,
+            "#abcdef".to_string(),
+            Some(stale_modified),
+        )
+        .await
+        .expect("tab A's edit errored")
+        .expect("tab A's edit should apply since expect_modified matched");
+        assert_eq!(edited_by_a.text, "Tab A's text");
+        assert!(edited_by_a.modified > stale_modified);
+
+        // Tab B submits with the same now-stale `modified` it observed before A's edit landed.
+        let edited_by_b = Message::edit(
+            &pool,
+            "GM",
+            &message.id,
+            "Tab B's text",
+            sample_entities("Tab B's text"),
+            false,
+            false,
+            None,
+            "#abcdef".to_string(),
+            Some(stale_modified),
+        )
+        .await
+        .expect("tab B's edit errored");
+        assert!(
+            edited_by_b.is_none(),
+            "tab B's edit must be rejected instead of overwriting tab A's edit"
+        );
+
+        let current = Message::get(&pool, &message.id, Some(&owner.id))
+            .await
+            .expect("get failed")
+            .expect("message should still exist");
+        assert_eq!(
+            current.text, "Tab A's text",
+            "tab A's edit must survive tab B's stale, rejected submission"
+        );
+
+        // A client that doesn't send `expect_modified` (e.g. an older build) keeps working.
+        let edited_without_precondition = Message::edit(
+            &pool,
+            "GM",
+            &message.id,
+            "Tab C's text",
+            sample_entities("Tab C's text"),
+            false,
+            false,
+            None,
+            "#abcdef".to_string(),
+            None,
+        )
+        .await
+        .expect("unconditional edit errored")
+        .expect("unconditional edit should always apply");
+        assert_eq!(edited_without_precondition.text, "Tab C's text");
 
         crate::pos::CHANNEL_POS_MANAGER.shutdown(channel.id);
     }

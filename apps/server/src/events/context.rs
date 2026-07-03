@@ -43,6 +43,7 @@ enum StoredUpdateMeta {
         channel_id: Uuid,
         message_id: Uuid,
         modified_us: i64,
+        rev: i32,
         old_pos: f64,
     },
     MessageWithPreview {
@@ -117,6 +118,7 @@ impl StoredUpdateMeta {
                 channel_id: *channel_id,
                 message_id: message.id,
                 modified_us: message.modified.timestamp_micros(),
+                rev: message.rev,
                 old_pos: *old_pos,
             },
             ChannelDeleted { channel_id } => StoredUpdateMeta::ChannelDeleted {
@@ -158,6 +160,21 @@ impl StoredUpdate {
             StoredUpdateMeta::ChannelDeleted { .. } => None,
         }
     }
+}
+
+fn has_message_deleted_update(
+    persistent_updates: &BTreeMap<EventId, StoredUpdate>,
+    message_id: Uuid,
+) -> bool {
+    persistent_updates.values().any(|stored_update| {
+        matches!(
+            &stored_update.meta,
+            StoredUpdateMeta::ChannelAndMessage {
+                message_id: deleted_message_id,
+                ..
+            } if *deleted_message_id == message_id
+        )
+    })
 }
 
 pub enum Action {
@@ -486,6 +503,7 @@ fn prepare_message_edited_old_pos(
     let channel_id = *channel_id;
     let message_id = message.id;
     let modified_us = message.modified.timestamp_micros();
+    let rev = message.rev;
 
     let mut prev_event_id_and_old_pos: Option<(EventId, f64)> = None;
     for (stored_update_id, stored_update) in persistent_updates.iter().rev() {
@@ -493,6 +511,7 @@ fn prepare_message_edited_old_pos(
             channel_id: old_channel_id,
             message_id: old_message_id,
             modified_us: old_modified_us,
+            rev: old_rev,
             old_pos: previous_old_pos,
         } = &stored_update.meta
         else {
@@ -500,7 +519,7 @@ fn prepare_message_edited_old_pos(
         };
         if *old_message_id == message_id
             && *old_channel_id == channel_id
-            && *old_modified_us < modified_us
+            && (*old_rev < rev || (*old_rev == rev && *old_modified_us < modified_us))
         {
             prev_event_id_and_old_pos = Some((*stored_update_id, *previous_old_pos));
             break;
@@ -604,10 +623,15 @@ fn on_update(
             };
             match &stored.meta {
                 StoredUpdateMeta::MessageWithPreview {
-                    key, preview_id, ..
+                    key,
+                    preview_id,
+                    message_id,
+                    ..
                 } => {
                     let key = *key;
                     let preview_id = *preview_id;
+                    let message_id = *message_id;
+                    let deleted = has_message_deleted_update(persistent_updates, message_id);
                     persistent_updates.insert(update_id, stored);
                     let preview_id = preview_id.unwrap_or_default();
                     if !preview_id.is_nil() {
@@ -622,13 +646,20 @@ fn on_update(
                             }
                         }
                     }
+                    if deleted {
+                        persistent_updates.remove(&update_id);
+                        return OnUpdateResult::SkipBroadcast;
+                    }
                 }
                 StoredUpdateMeta::ChannelAndMessage { message_id, .. } => {
                     let message_id = *message_id;
                     persistent_updates.retain(|_, cached| cached.message_id() != Some(message_id));
                     persistent_updates.insert(update_id, stored);
                 }
-                StoredUpdateMeta::MessageEdited { .. } => {
+                StoredUpdateMeta::MessageEdited { message_id, .. } => {
+                    if has_message_deleted_update(persistent_updates, *message_id) {
+                        return OnUpdateResult::SkipBroadcast;
+                    }
                     persistent_updates.insert(update_id, stored);
                 }
                 StoredUpdateMeta::ChannelDeleted { channel_id } => {
@@ -636,6 +667,8 @@ fn on_update(
                     persistent_updates.retain(|_, cached| cached.channel_id() != Some(channel_id));
                     preview_map.retain(|key, _| key.channel_id != channel_id);
                     diff_map.retain(|key, _| key.channel_id != channel_id);
+                    // Keep the deletion itself replayable for reconnecting clients.
+                    persistent_updates.insert(update_id, stored);
                 }
                 StoredUpdateMeta::Other { .. } => {
                     // Do nothing
@@ -972,6 +1005,8 @@ pub fn mailbox_count() -> usize {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::messages::{Entities, Message};
+    use chrono::TimeZone;
 
     fn event_id(timestamp: i64, node: u16, seq: Seq) -> EventId {
         EventId {
@@ -992,6 +1027,36 @@ mod tests {
 
     fn persistent_update(id: EventId) -> StoredUpdate {
         StoredUpdate::from_encoded_update(encoded_update(id))
+    }
+
+    fn message(id: Uuid, channel_id: Uuid, pos: f64, rev: i32) -> Message {
+        let time = chrono::Utc.timestamp_micros(1_000_000).unwrap();
+        Message {
+            id,
+            sender_id: Uuid::from_u128(101),
+            channel_id,
+            parent_message_id: None,
+            name: "Alice".to_string(),
+            media_id: None,
+            seed: Vec::new(),
+            deleted: false,
+            in_game: true,
+            is_action: false,
+            is_master: false,
+            pinned: false,
+            tags: Vec::new(),
+            folded: false,
+            text: "hello".to_string(),
+            whisper_to_users: None,
+            entities: Entities::default(),
+            created: time,
+            modified: time,
+            pos_p: pos as i32,
+            pos_q: 1,
+            pos,
+            color: "#000000".to_string(),
+            rev,
+        }
     }
 
     #[test]
@@ -1060,6 +1125,150 @@ mod tests {
             Some(1),
         );
         assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn message_edited_cache_merge_uses_rev_for_move_events() {
+        let channel_id = Uuid::from_u128(201);
+        let message_id = Uuid::from_u128(202);
+        let previous_event_id = event_id(100, 1, 1);
+        let previous_message = message(message_id, channel_id, 20.0, 1);
+        let previous_update = StoredUpdate::from_encoded_update(EncodedUpdate::new(Update {
+            mailbox: Uuid::nil(),
+            id: previous_event_id,
+            body: UpdateBody::MessageEdited {
+                channel_id,
+                message: Box::new(previous_message),
+                old_pos: 10.0,
+            },
+            live: UpdateLifetime::Persistent,
+        }));
+        let mut persistent_updates = BTreeMap::new();
+        persistent_updates.insert(previous_event_id, previous_update);
+
+        let mut body = UpdateBody::MessageEdited {
+            channel_id,
+            message: Box::new(message(message_id, channel_id, 30.0, 2)),
+            old_pos: 20.0,
+        };
+
+        let stale_event_id = prepare_message_edited_old_pos(&persistent_updates, &mut body);
+
+        assert_eq!(stale_event_id, Some(previous_event_id));
+        let UpdateBody::MessageEdited { old_pos, .. } = body else {
+            panic!("body should still be MessageEdited");
+        };
+        assert_eq!(old_pos, 10.0);
+    }
+
+    #[test]
+    fn on_update_skips_late_message_edited_after_delete() {
+        let channel_id = Uuid::from_u128(203);
+        let message_id = Uuid::from_u128(204);
+        let delete_event_id = event_id(100, 1, 1);
+        let edit_event_id = event_id(101, 1, 1);
+        let delete_update = StoredUpdate::from_encoded_update(EncodedUpdate::new(Update {
+            mailbox: Uuid::nil(),
+            id: delete_event_id,
+            body: UpdateBody::MessageDeleted {
+                channel_id,
+                message_id,
+                pos: 10.0,
+            },
+            live: UpdateLifetime::Persistent,
+        }));
+        let mut persistent_updates = BTreeMap::new();
+        persistent_updates.insert(delete_event_id, delete_update);
+        let mut preview_map = PreviewMap::with_hasher(ahash::RandomState::new());
+        let mut diff_map = DiffMap::with_hasher(ahash::RandomState::new());
+
+        let result = on_update(
+            &mut persistent_updates,
+            &mut preview_map,
+            &mut diff_map,
+            EncodedUpdate::new(Update {
+                mailbox: Uuid::nil(),
+                id: edit_event_id,
+                body: UpdateBody::MessageEdited {
+                    channel_id,
+                    message: Box::new(message(message_id, channel_id, 20.0, 2)),
+                    old_pos: 10.0,
+                },
+                live: UpdateLifetime::Persistent,
+            }),
+        );
+
+        assert_eq!(result, OnUpdateResult::SkipBroadcast);
+        assert_eq!(persistent_updates.len(), 1);
+        assert!(persistent_updates.contains_key(&delete_event_id));
+    }
+
+    #[test]
+    fn on_update_skips_late_new_message_after_delete_and_clears_preview() {
+        let channel_id = Uuid::from_u128(205);
+        let message_id = Uuid::from_u128(206);
+        let preview_id = Uuid::from_u128(207);
+        let sender_id = Uuid::from_u128(101);
+        let key = ChannelUserId::new(channel_id, sender_id);
+        let delete_event_id = event_id(100, 1, 1);
+        let preview_event_id = event_id(100, 1, 2);
+        let diff_event_id = event_id(100, 1, 3);
+        let new_event_id = event_id(101, 1, 1);
+        let delete_update = StoredUpdate::from_encoded_update(EncodedUpdate::new(Update {
+            mailbox: Uuid::nil(),
+            id: delete_event_id,
+            body: UpdateBody::MessageDeleted {
+                channel_id,
+                message_id,
+                pos: 10.0,
+            },
+            live: UpdateLifetime::Persistent,
+        }));
+        let mut persistent_updates = BTreeMap::new();
+        persistent_updates.insert(delete_event_id, delete_update);
+        let mut preview_map = PreviewMap::with_hasher(ahash::RandomState::new());
+        preview_map.insert(
+            key,
+            StoredPreview {
+                id: preview_event_id,
+                encoded: Utf8Bytes::from_static("{\"type\":\"MESSAGE_PREVIEW\"}"),
+                preview_id,
+                preview_version: 1,
+            },
+        );
+        let mut diff_map = DiffMap::with_hasher(ahash::RandomState::new());
+        diff_map.insert(
+            key,
+            StoredDiff {
+                id: diff_event_id,
+                encoded: Utf8Bytes::from_static("{\"type\":\"DIFF\"}"),
+                preview_id,
+                preview_version: 1,
+                diff_version: 2,
+            },
+        );
+
+        let result = on_update(
+            &mut persistent_updates,
+            &mut preview_map,
+            &mut diff_map,
+            EncodedUpdate::new(Update {
+                mailbox: Uuid::nil(),
+                id: new_event_id,
+                body: UpdateBody::NewMessage {
+                    channel_id,
+                    message: Box::new(message(message_id, channel_id, 10.0, 0)),
+                    preview_id: Some(preview_id),
+                },
+                live: UpdateLifetime::Persistent,
+            }),
+        );
+
+        assert_eq!(result, OnUpdateResult::SkipBroadcast);
+        assert_eq!(persistent_updates.len(), 1);
+        assert!(persistent_updates.contains_key(&delete_event_id));
+        assert!(!preview_map.contains_key(&key));
+        assert!(!diff_map.contains_key(&key));
     }
 
     #[test]
@@ -1585,7 +1794,7 @@ mod tests {
 
         assert!(!persistent_updates.contains_key(&persistent_a));
         assert!(persistent_updates.contains_key(&persistent_b));
-        assert!(!persistent_updates.contains_key(&deleted_event_id));
+        assert!(persistent_updates.contains_key(&deleted_event_id));
         assert!(!preview_map.contains_key(&key_a));
         assert!(preview_map.contains_key(&key_b));
         assert!(!diff_map.contains_key(&key_a));

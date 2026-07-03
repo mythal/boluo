@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "UPDATE\n    messages\nSET\n    folded = $2,\n    modified = (now() at time zone 'utc')\nWHERE\n    id = $1\nRETURNING\n    messages AS \"message!: Message\";\n\n",
+  "query": "UPDATE\n    messages\nSET\n    folded = $2,\n    rev = rev + 1\nWHERE\n    id = $1\n    AND deleted = FALSE\nRETURNING\n    messages AS \"message!: Message\";\n",
   "describe": {
     "columns": [
       {
@@ -102,6 +102,10 @@
                 [
                   "color",
                   "Text"
+                ],
+                [
+                  "rev",
+                  "Int4"
                 ]
               ]
             }
@@ -119,5 +123,5 @@
       null
     ]
   },
-  "hash": "8fe3935343a588a218e3317502a557923676e823c2c70eda8c6166179a135723"
+  "hash": "e5b4c9e974515d88f06da80171997fe2cbf4b06c4d8fbb2dd8f7b9a5d3fe0db8"
 }

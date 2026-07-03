@@ -161,6 +161,20 @@ pub struct PreviewPost {
     pub edit: Option<PreviewEdit>,
 }
 
+fn is_cleared_preview_content(text: &Option<String>, entities: &Entities) -> bool {
+    text.as_ref()
+        .is_some_and(|text| text.trim().is_empty() || entities.0.is_empty())
+}
+
+fn should_cancel_preview_position(
+    text: &Option<String>,
+    entities: &Entities,
+    edit_for: &Option<DateTime<Utc>>,
+    edit: &Option<PreviewEdit>,
+) -> bool {
+    is_cleared_preview_content(text, entities) && edit_for.is_none() && edit.is_none()
+}
+
 impl PreviewPost {
     pub async fn broadcast(
         self,
@@ -168,6 +182,11 @@ impl PreviewPost {
         space_id: Uuid,
         user_id: Uuid,
     ) -> Result<(), AppError> {
+        if let Some(PreviewEdit { q, .. }) = self.edit {
+            if q == 0 {
+                return Err(AppError::BadRequest("edit.q must not be zero".to_string()));
+            }
+        }
         let PreviewPost {
             id,
             version,
@@ -182,18 +201,14 @@ impl PreviewPost {
             clear,
             edit,
         } = self;
-        let mut should_clear = false;
-        if let Some(text) = text.as_ref() {
-            if (text.trim().is_empty() || entities.0.is_empty()) && edit_for.is_none() {
-                should_clear = true;
-            }
-        }
+        let should_cancel_position =
+            should_cancel_preview_position(&text, &entities, &edit_for, &edit);
         let muted = text.is_none();
         let mut pos = 0.0;
-        if let Some(PreviewEdit { p, q, time }) = edit {
-            pos = p as f64 / q as f64;
-            edit_for = Some(time);
-        } else if edit_for.is_none() && !should_clear {
+        if let Some(PreviewEdit { p, q, time }) = edit.as_ref() {
+            pos = *p as f64 / *q as f64;
+            edit_for = Some(*time);
+        } else if edit_for.is_none() && !should_cancel_position {
             use std::time::Duration;
 
             let timeout = if muted {
@@ -277,10 +292,65 @@ impl PreviewPost {
             edit,
         });
 
-        if should_clear {
+        if should_cancel_position {
             crate::pos::CHANNEL_POS_MANAGER.cancel(channel_id, id);
         }
         Update::message_preview(space_id, preview);
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use chrono::TimeZone;
+    use shared_types::entities::{Entity, Span};
+
+    fn text_entities(len: i32) -> Entities {
+        Entities(vec![Entity::Text(Span { start: 0, len })])
+    }
+
+    fn edit() -> PreviewEdit {
+        PreviewEdit {
+            time: Utc.timestamp_opt(1, 0).single().unwrap(),
+            p: 42,
+            q: 1,
+        }
+    }
+
+    #[test]
+    fn cleared_non_edit_preview_cancels_position() {
+        assert!(should_cancel_preview_position(
+            &Some("   ".to_string()),
+            &text_entities(3),
+            &None,
+            &None,
+        ));
+        assert!(should_cancel_preview_position(
+            &Some("hello".to_string()),
+            &Entities(vec![]),
+            &None,
+            &None,
+        ));
+    }
+
+    #[test]
+    fn cleared_edit_preview_does_not_cancel_message_position() {
+        assert!(!should_cancel_preview_position(
+            &Some(String::new()),
+            &Entities(vec![]),
+            &None,
+            &Some(edit()),
+        ));
+    }
+
+    #[test]
+    fn legacy_edit_for_preview_does_not_cancel_position() {
+        assert!(!should_cancel_preview_position(
+            &Some(String::new()),
+            &Entities(vec![]),
+            &Some(Utc.timestamp_opt(1, 0).single().unwrap()),
+            &None,
+        ));
     }
 }

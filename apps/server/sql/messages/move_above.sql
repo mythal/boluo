@@ -26,18 +26,17 @@ FROM
 UPDATE
     messages
 SET
-    (pos_p,
-        pos_q) = (
+    (pos_p, pos_q) = (
         SELECT
             p AS pos_p,
             q AS pos_q
-        FROM
-            find_intermediate (above.pos_p, above.pos_q, $3, $4))
+        FROM find_intermediate (above.pos_p, above.pos_q, $3, $4)),
+    rev = rev + 1
 FROM
     above
 WHERE
     channel_id = $1
     AND id = $2
+    AND deleted = FALSE
 RETURNING
     messages AS "message!: Message";
-

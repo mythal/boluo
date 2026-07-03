@@ -3,7 +3,7 @@ import { selectAtom } from 'jotai/utils';
 import { useEffect, useMemo, useRef } from 'react';
 import { binarySearchPos } from '@boluo/sort';
 import { findMessage, type OptimisticItem, type ChannelState } from '../state/channel.reducer';
-import { type ChatItem, type PreviewItem } from '../state/channel.types';
+import { type ChatItem, type MessageItem, type PreviewItem } from '../state/channel.types';
 import { chatAtom } from '../state/chat.atoms';
 import { type ComposeState } from '../state/compose.reducer';
 import { type ChannelAtoms, type ChannelFilter, useChannelAtoms } from './useChannelAtoms';
@@ -86,6 +86,88 @@ const makeDummyPreview = (
 
 const SAFE_OFFSET = 2;
 
+export const isPreviewInLoadedRange = (
+  previewPos: number,
+  loadedMinPos: number,
+  fullLoaded: boolean,
+): boolean => previewPos > loadedMinPos || (previewPos < loadedMinPos && fullLoaded);
+
+/**
+ * Remove the self preview from the list when it is stale (id mismatch),
+ * the compose is empty, or the self preview is hidden.
+ *
+ * Mutates `optimisticPreviewList`. Returns whether the self preview is kept.
+ */
+export const pruneSelfPreview = (
+  optimisticPreviewList: PreviewItem[],
+  myId: string,
+  currentPreviewId: string,
+  isEmpty: boolean,
+  selfPreviewVisible: boolean,
+): boolean => {
+  const selfPreviewIndex = optimisticPreviewList.findIndex((preview) => preview.senderId === myId);
+  if (selfPreviewIndex === -1) return false;
+  const selfPreview = optimisticPreviewList[selfPreviewIndex]!;
+  if (selfPreview.id !== currentPreviewId || isEmpty || !selfPreviewVisible) {
+    optimisticPreviewList.splice(selfPreviewIndex, 1);
+    return false;
+  }
+  return true;
+};
+
+/**
+ * The edit preview follows the original message's current position, since
+ * moving a message should not invalidate a content edit preview.
+ *
+ * Mutates `itemList`: replaces the original message with the preview in place.
+ * Returns the preview when it still needs to be inserted, or null.
+ */
+export const applyEditPreview = (
+  preview: PreviewItem,
+  messages: L.List<MessageItem>,
+  itemList: ChatItem[],
+): PreviewItem | null => {
+  if (preview.edit == null) return null;
+  const findResult = findMessage(messages, preview.id, preview.pos);
+  if (!findResult) {
+    return null;
+  }
+  const [message] = findResult;
+  if (preview.edit.time !== message.modified) {
+    return null;
+  }
+  const resolved: PreviewItem = {
+    ...preview,
+    original: message,
+    pos: message.pos,
+    posP: message.posP,
+    posQ: message.posQ,
+  };
+  const index = binarySearchPos(itemList, message.pos);
+  if (message.id === itemList[index]?.id) {
+    itemList[index] = resolved;
+    return null;
+  }
+  // The original message may be filtered out; treat it as a normal preview.
+  return resolved;
+};
+
+export const isMessageNewerThanOptimisticRef = (
+  item: MessageItem,
+  optimistic: OptimisticItem,
+  ref: ChatItem,
+): boolean => {
+  if (ref.type !== 'MESSAGE' || optimistic.item.type !== 'MESSAGE') {
+    return false;
+  }
+  const itemRev = item.rev ?? 0;
+  const refRev = ref.rev ?? 0;
+  if (itemRev !== refRev) {
+    return itemRev > refRev;
+  }
+  return Date.parse(item.modified) > Date.parse(ref.modified);
+};
+
 const useFilters = (
   filterAtom: ChannelAtoms['filterAtom'],
   showArchivedAtom: ChannelAtoms['showArchivedAtom'],
@@ -134,8 +216,14 @@ function channelSliceEq(a: ChannelSlice, b: ChannelSlice) {
 
 export const useChatList = (channelId: string, myId?: string): UseChatListReturn => {
   const store = useStore();
-  const { composeAtom, filterAtom, showArchivedAtom, parsedAtom, selfPreviewVisibleAtom } =
-    useChannelAtoms();
+  const {
+    composeAtom,
+    filterAtom,
+    showArchivedAtom,
+    parsedAtom,
+    selfPreviewVisibleAtom,
+    inGameAtom,
+  } = useChannelAtoms();
 
   const { filterType, showArchived, isFiltersChanged } = useFilters(filterAtom, showArchivedAtom);
 
@@ -154,6 +242,7 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
   const isEmpty = useAtomValue(
     useMemo(() => selectAtom(parsedAtom, ({ entities }) => entities.length === 0), [parsedAtom]),
   );
+  const selfInGame = useAtomValue(inGameAtom);
 
   const channelSliceAtom = useMemo(
     () =>
@@ -209,7 +298,8 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
           filteredMessagesCount++;
           return false;
         }
-        const optimisticItem = optimisticMessageMap[item.id]?.item;
+        const optimisticMessage = optimisticMessageMap[item.id];
+        const optimisticItem = optimisticMessage?.item;
         if (
           !optimisticItem ||
           /* moved */ optimisticItem.item.pos !== item.pos ||
@@ -217,8 +307,7 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
         ) {
           return true;
         }
-        const itemTimestamp = Date.parse(item.modified);
-        if (itemTimestamp >= optimisticItem.timestamp) {
+        if (isMessageNewerThanOptimisticRef(item, optimisticItem, optimisticMessage.ref)) {
           return true;
         } else {
           // Side effect: record the optimistic item that should be rendered.
@@ -228,23 +317,15 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
       }, messages),
     );
     const itemListLen = itemList.length;
-    const minPos = itemListLen > 0 ? itemList[0]!.pos : Number.MIN_SAFE_INTEGER;
+    const loadedMinPos = L.first(messages)?.pos ?? Number.MIN_SAFE_INTEGER;
     if (myId) {
-      const existsPreviewIndex = optimisticPreviewList.findIndex(
-        (preview) => preview.senderId === myId,
+      const hasSelfPreview = pruneSelfPreview(
+        optimisticPreviewList,
+        myId,
+        composeSlice.previewId,
+        isEmpty,
+        selfPreviewVisible,
       );
-      let hasSelfPreview = existsPreviewIndex !== -1;
-      if (hasSelfPreview) {
-        const existsPreview = optimisticPreviewList[existsPreviewIndex]!;
-        if (existsPreview.id !== composeSlice.previewId || isEmpty) {
-          optimisticPreviewList.splice(existsPreviewIndex, 1);
-          hasSelfPreview = false;
-        }
-        if (!selfPreviewVisible) {
-          optimisticPreviewList.splice(existsPreviewIndex, 1);
-          hasSelfPreview = false;
-        }
-      }
       if (!hasSelfPreview) {
         const maxPreviewPos = optimisticPreviewList.reduce(
           (max, preview) => Math.max(max, preview.pos),
@@ -279,7 +360,7 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
               composeSlice.previewId,
               myId,
               channelId,
-              true,
+              selfInGame,
               composeSlice.edit,
               pos,
               posP,
@@ -289,7 +370,7 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
         }
       }
     }
-    for (const preview of optimisticPreviewList) {
+    for (let preview of optimisticPreviewList) {
       if (preview.senderId === myId && !selfPreviewVisible) {
         continue;
       }
@@ -304,34 +385,16 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
         continue;
       }
       if (preview.edit) {
-        const findResult = findMessage(messages, preview.id, preview.pos);
-        if (!findResult) {
-          // The original message is not found
-          continue;
-        }
-        const [message] = findResult;
-        if (preview.edit.time !== message.modified) {
-          continue;
-        }
-        const index = binarySearchPos(itemList, message.pos);
-        if (message.id !== itemList[index]?.id) {
-          // Maybe the original message be filtered
-          // Just treat it as a normal preview
-        } else if (message.pos === preview.pos) {
-          // In-place replace
-          itemList[index] = preview;
-          continue;
-        } else {
-          // Remove the original message
-          itemList.splice(index, 1);
-        }
+        const resolved = applyEditPreview(preview, messages, itemList);
+        if (resolved == null) continue;
+        preview = resolved;
       }
       // Insert the preview to item list
       if (isDummySelfPreview(preview)) {
         itemList.push(preview);
       } else if (preview.text === '' && preview.senderId === myId) {
         itemList.push(preview);
-      } else if (preview.pos > minPos || (preview.pos < minPos && fullLoaded)) {
+      } else if (isPreviewInLoadedRange(preview.pos, loadedMinPos, fullLoaded)) {
         const index = binarySearchPos(itemList, preview.pos);
         const itemInThePosition = itemList[index];
         if (itemInThePosition?.pos === preview.pos && itemInThePosition.type !== 'PREVIEW') {
@@ -360,6 +423,7 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
     myId,
     optimisticMessageMap,
     previewMap,
+    selfInGame,
     selfPreviewVisible,
     showArchived,
   ]);

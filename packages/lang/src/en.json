@@ -368,6 +368,9 @@
   "HSaR2M": {
     "message": "Is secret channel?"
   },
+  "HTmh5Q": {
+    "message": "target"
+  },
   "HlQPHQ": {
     "message": "Join Space"
   },
@@ -577,6 +580,9 @@
   },
   "PwaN2o": {
     "message": "Welcome"
+  },
+  "PxOtYI": {
+    "message": "Editing; Show original"
   },
   "Q+Af6H": {
     "message": "Out of Game"
@@ -1036,6 +1042,9 @@
   },
   "kMogDE": {
     "message": "Must be a valid email address."
+  },
+  "kdRsn5": {
+    "message": "The message you were editing was deleted. Your edits have been saved as a draft."
   },
   "kh4wt0": {
     "message": "Toggle Sidebar"

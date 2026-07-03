@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "WITH nearest AS (\n    SELECT\n        pos_p,\n        pos_q\n    FROM\n        messages\n    WHERE\n        pos > $3::int4::float8 / $4::int4::float8\n        AND channel_id = $1\n    ORDER BY\n        pos ASC\n    LIMIT 1\n),\ninitial AS (\n    SELECT\n        1 AS pos_p,\n        0 AS pos_q\n),\nbottom AS (\n    SELECT\n        COALESCE(nearest.pos_p, initial.pos_p) AS pos_p,\n        COALESCE(nearest.pos_q, initial.pos_q) AS pos_q\nFROM\n    nearest\n    RIGHT JOIN initial ON TRUE)\nUPDATE\n    messages\nSET\n    (pos_p,\n        pos_q) = (\n        SELECT\n            p AS pos_p,\n            q AS pos_q\n        FROM\n            find_intermediate ($3::int4, $4::int4, bottom.pos_p, bottom.pos_q))\nFROM\n    bottom\nWHERE\n    channel_id = $1\n    AND id = $2\nRETURNING\n    messages AS \"message!: Message\";\n\n",
+  "query": "WITH nearest AS (\n    SELECT\n        pos_p,\n        pos_q\n    FROM\n        messages\n    WHERE\n        pos > $3::int4::float8 / $4::int4::float8\n        AND channel_id = $1\n    ORDER BY\n        pos ASC\n    LIMIT 1\n),\ninitial AS (\n    SELECT\n        1 AS pos_p,\n        0 AS pos_q\n),\nbottom AS (\n    SELECT\n        COALESCE(nearest.pos_p, initial.pos_p) AS pos_p,\n        COALESCE(nearest.pos_q, initial.pos_q) AS pos_q\nFROM\n    nearest\n    RIGHT JOIN initial ON TRUE)\nUPDATE\n    messages\nSET\n    (pos_p, pos_q) = (\n        SELECT\n            p AS pos_p,\n            q AS pos_q\n        FROM find_intermediate ($3::int4, $4::int4, bottom.pos_p, bottom.pos_q)),\n    rev = rev + 1\nFROM\n    bottom\nWHERE\n    channel_id = $1\n    AND id = $2\n    AND deleted = FALSE\nRETURNING\n    messages AS \"message!: Message\";\n",
   "describe": {
     "columns": [
       {
@@ -102,6 +102,10 @@
                 [
                   "color",
                   "Text"
+                ],
+                [
+                  "rev",
+                  "Int4"
                 ]
               ]
             }
@@ -121,5 +125,5 @@
       null
     ]
   },
-  "hash": "b9ea8a7e1ce1944a73e94f398d8f983f62206af8197d7b233bb1f680d524699d"
+  "hash": "95ec82e78837610b3e7d0c26af3ad712b9ce9793ea9888f07018ec17ee3d7491"
 }

@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE\n    messages\nSET\n    deleted = TRUE\nWHERE\n    id = $1\n    AND deleted = FALSE;\n",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "0bfc139b36d0c2f6e118ac022d69dc4364c019840f4cd2ed081a632b554e175b"
+}

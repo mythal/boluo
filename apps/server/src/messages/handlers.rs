@@ -95,7 +95,7 @@ async fn send(
             metrics::counter!("boluo_server_messages_created_failed_total").increment(1);
         })?
     };
-    Update::new_message(space_member.space_id, message.clone(), preview_id);
+    Update::new_message(space_member.space_id, message.clone(), preview_id).await;
 
     metrics::counter!("boluo_server_messages_created_total").increment(1);
     metrics::histogram!("boluo_server_messages_create_duration_ms")
@@ -119,6 +119,7 @@ async fn edit(
         is_action,
         media_id,
         color,
+        expect_modified,
     } = *edit_message;
     let mut trans = ctx.db.begin().await?;
     let message = Message::get(&mut *trans, &message_id, Some(&session.user_id))
@@ -151,16 +152,31 @@ async fn edit(
         is_action,
         media_id,
         color,
+        expect_modified,
     )
-    .await?
-    .ok_or_else(|| unexpected!("The message had been delete."))?;
+    .await?;
+    let edited_message = match edited_message {
+        Some(edited_message) => edited_message,
+        None => {
+            let still_exists = Message::get(&mut *trans, &message_id, Some(&session.user_id))
+                .await?
+                .is_some();
+            if still_exists {
+                return Err(AppError::Conflict(
+                    "The message was edited elsewhere before this edit was submitted.".to_string(),
+                ));
+            }
+            return Err(AppError::NotFound("Message"));
+        }
+    };
     trans.commit().await?;
     metrics::counter!("boluo_server_messages_edited_total").increment(1);
     Update::message_edited(
         space_member.space_id,
         edited_message.clone(),
         edited_message.pos,
-    );
+    )
+    .await;
     metrics::histogram!("boluo_server_messages_edit_duration_ms")
         .record(start_time.elapsed().as_millis() as f64);
     Ok(edited_message)
@@ -182,13 +198,11 @@ async fn move_between(
     let message = Message::get(&mut *conn, &message_id, Some(&session.user_id))
         .await
         .or_not_found()?;
-    crate::pos::CHANNEL_POS_MANAGER.submitted(
-        channel_id,
-        message_id,
-        message.pos_p,
-        message.pos_q,
-        Some(message_id),
-    );
+    if channel_id != message.channel_id {
+        return Err(AppError::BadRequest(
+            "channelId does not match message channel".to_string(),
+        ));
+    }
     if let Some((expect_p, expect_q)) = expect_pos {
         if message.pos_p != expect_p || message.pos_q != expect_q {
             return Err(AppError::BadRequest(
@@ -212,6 +226,13 @@ async fn move_between(
             "Only the master can move other's messages.".to_string(),
         ));
     }
+    crate::pos::CHANNEL_POS_MANAGER.submitted(
+        channel_id,
+        message_id,
+        message.pos_p,
+        message.pos_q,
+        Some(message_id),
+    );
     let mut moved_message = match range {
         (None, None) => {
             return Err(AppError::BadRequest(
@@ -235,7 +256,7 @@ async fn move_between(
     if moved_message.whisper_to_users.is_some() {
         moved_message.hide(None);
     }
-    Update::message_edited(channel.space_id, moved_message, message.pos);
+    Update::message_edited(channel.space_id, moved_message, message.pos).await;
     metrics::counter!("boluo_server_messages_moved_total").increment(1);
     Ok(true)
 }
@@ -274,7 +295,8 @@ async fn delete(
         message.channel_id,
         message.id,
         message.pos,
-    );
+    )
+    .await;
     crate::pos::CHANNEL_POS_MANAGER.cancel(message.channel_id, message.id);
     metrics::counter!("boluo_server_messages_deleted_total").increment(1);
     Ok(message)
@@ -306,8 +328,10 @@ async fn toggle_fold(
     }
     let edited_message = Message::set_folded(&mut *conn, &message.id, !message.folded)
         .await?
-        .ok_or_else(|| unexpected!("message not found"))?;
-    Update::message_edited(channel.space_id, edited_message.clone(), message.pos);
+        .or_not_found()?;
+    let mut event_message = edited_message.clone();
+    event_message.hide(None);
+    Update::message_edited(channel.space_id, event_message, message.pos).await;
     metrics::counter!("boluo_server_messages_folded_total").increment(1);
     Ok(edited_message)
 }

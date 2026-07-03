@@ -322,7 +322,8 @@ CREATE TABLE public.messages (
     pos_p integer NOT NULL,
     pos_q integer NOT NULL,
     pos double precision GENERATED ALWAYS AS (((pos_p)::double precision / (pos_q)::double precision)) STORED,
-    color text DEFAULT ''::text NOT NULL
+    color text DEFAULT ''::text NOT NULL,
+    rev integer DEFAULT 0 NOT NULL
 );
 
 

@@ -188,6 +188,7 @@ const newMessageOptimisticItem = (
 export interface ChannelState {
   id: string;
   fullLoaded: boolean;
+  historyInitialized: boolean;
   messages: List<MessageItem>;
   previewMap: Record<UserId, PreviewItem>;
   optimisticMessageMap: Record<string, OptimisticMessage>;
@@ -212,6 +213,7 @@ export const makeInitialChannelState = (id: string): ChannelState => {
     id,
     messages: L.empty(),
     fullLoaded: false,
+    historyInitialized: false,
     previewMap: {},
     scheduledGc: null,
     collidedPreviewIdSet: new Set(),
@@ -259,24 +261,40 @@ const handleNewMessage = (
   );
 
   const resetMessagesState = (state: ChannelState): ChannelState => {
-    return { ...state, previewMap, optimisticMessageMap, messages: L.empty(), fullLoaded: false };
+    return {
+      ...state,
+      previewMap,
+      optimisticMessageMap,
+      messages: L.empty(),
+      fullLoaded: false,
+      historyInitialized: false,
+    };
   };
 
   const topMessage = L.first(messages);
   const bottomMessage = L.last(messages);
-  if ((topMessage == null || bottomMessage == null) && state.fullLoaded) {
+  if (topMessage == null || bottomMessage == null) {
+    // Keep the message even when the channel is not loaded yet. A history
+    // load racing with this event may not contain the message (the snapshot
+    // was read before it committed); `handleMessagesLoaded` only merges
+    // payload messages below the top message, so keeping it here fills that
+    // gap and never duplicates.
     return { ...state, previewMap, optimisticMessageMap, messages: L.of(message) };
-  } else if (
-    topMessage == null ||
-    bottomMessage == null ||
-    message.pos === topMessage.pos ||
-    message.pos === bottomMessage.pos
+  }
+  if (
+    (message.pos === topMessage.pos && topMessage.id === message.id) ||
+    (message.pos === bottomMessage.pos && bottomMessage.id === message.id)
   ) {
+    // Same id at the boundary is a harmless duplicate.
+    return { ...state, previewMap, optimisticMessageMap };
+  }
+  if (message.pos === topMessage.pos || message.pos === bottomMessage.pos) {
     return resetMessagesState(state);
   }
   if (message.pos < topMessage.pos) {
     return {
       ...state,
+      previewMap,
       optimisticMessageMap,
       messages: state.fullLoaded ? L.prepend(message, messages) : messages,
     };
@@ -308,19 +326,25 @@ const handleMessagesLoaded = (
   // Note:
   // The payload.messages are sorted in descending order
   // But the state.messages are sorted in ascending order
-  const { fullLoaded } = payload;
   if (state.fullLoaded) {
     return state;
   }
+  let payloadMessages = L.from(payload.messages);
+  const payloadLen = payloadMessages.length;
+  const topMessage = L.first(state.messages);
+  if (topMessage && payload.before != null && topMessage.pos > payload.before) {
+    return state;
+  }
+  const { fullLoaded } = payload;
   if (fullLoaded !== state.fullLoaded) {
     state = { ...state, fullLoaded };
   }
-  let payloadMessages = L.from(payload.messages);
-  const payloadLen = payloadMessages.length;
+  if (!state.historyInitialized) {
+    state = { ...state, historyInitialized: true };
+  }
   if (payloadLen === 0) {
     return state;
   }
-  const topMessage = L.first(state.messages);
   if (!topMessage) {
     return { ...state, messages: L.reverse(L.map(makeMessageItem, payloadMessages)) };
   }
@@ -384,49 +408,143 @@ const compareMessageModified = (a: MessageItem, b: MessageItem): number => {
   return aModified - bModified;
 };
 
+const messageRev = (message: MessageItem): number => message.rev ?? 0;
+
+const compareMessageVersion = (a: MessageItem, b: MessageItem): number => {
+  const revDiff = messageRev(a) - messageRev(b);
+  if (revDiff !== 0) return revDiff;
+  return compareMessageModified(a, b);
+};
+
+const reconcileOptimisticMessageEdited = (
+  optimisticMessageMap: Record<string, OptimisticMessage>,
+  message: MessageItem,
+): Record<string, OptimisticMessage> => {
+  const optimisticMessage = optimisticMessageMap[message.id];
+  if (
+    !optimisticMessage ||
+    optimisticMessage.ref.type !== 'MESSAGE' ||
+    optimisticMessage.item.item.type !== 'MESSAGE'
+  ) {
+    return filterOptimisticMessages(message.id, optimisticMessageMap);
+  }
+
+  if (compareMessageModified(message, optimisticMessage.ref) > 0) {
+    return filterOptimisticMessages(message.id, optimisticMessageMap);
+  }
+
+  const optimisticItem = optimisticMessage.item.item;
+  const nextOptimisticItem: MessageItem = {
+    ...message,
+    optimistic: optimisticItem.optimistic,
+    optimisticMedia: optimisticItem.optimisticMedia,
+    failTo: optimisticItem.failTo,
+    key: optimisticItem.key,
+    name: optimisticItem.name,
+    text: optimisticItem.text,
+    entities: optimisticItem.entities,
+    inGame: optimisticItem.inGame,
+    isAction: optimisticItem.isAction,
+    mediaId: optimisticItem.mediaId,
+    color: optimisticItem.color,
+  };
+
+  return {
+    ...optimisticMessageMap,
+    [message.id]: {
+      ref: message,
+      item: {
+        ...optimisticMessage.item,
+        optimisticPos: message.pos,
+        item: nextOptimisticItem,
+      },
+    },
+  };
+};
+
+/**
+ * Keep edit previews pointing at the original message's current position
+ * when the message is moved without changing its content edit timestamp.
+ */
+const syncEditPreviewsWithMessage = (
+  previewMap: Record<UserId, PreviewItem>,
+  message: MessageItem,
+): Record<UserId, PreviewItem> => {
+  let nextPreviewMap: Record<UserId, PreviewItem> | null = null;
+  for (const senderId in previewMap) {
+    const preview = previewMap[senderId];
+    if (
+      preview?.edit == null ||
+      preview.id !== message.id ||
+      preview.pos === message.pos ||
+      preview.edit.time !== message.modified
+    ) {
+      continue;
+    }
+    nextPreviewMap ??= { ...previewMap };
+    nextPreviewMap[senderId] = {
+      ...preview,
+      pos: message.pos,
+      posP: message.posP,
+      posQ: message.posQ,
+    };
+  }
+  return nextPreviewMap ?? previewMap;
+};
+
 const handleMessageEdited = (
   state: ChannelState,
   { payload }: ChatAction<'messageEdited'>,
 ): ChannelState => {
-  const optimisticMessageMap = filterOptimisticMessages(
-    payload.message.id,
-    state.optimisticMessageMap,
-  );
-  const resetMessagesState = (state: ChannelState): ChannelState => {
-    return { ...state, optimisticMessageMap, messages: L.empty(), fullLoaded: false };
-  };
   const message: MessageItem = makeMessageItem(payload.message);
+  const optimisticMessageMap = reconcileOptimisticMessageEdited(
+    state.optimisticMessageMap,
+    message,
+  );
+  const previewMap = syncEditPreviewsWithMessage(state.previewMap, message);
+  const resetMessagesState = (state: ChannelState): ChannelState => {
+    return {
+      ...state,
+      optimisticMessageMap,
+      previewMap,
+      messages: L.empty(),
+      fullLoaded: false,
+      historyInitialized: false,
+    };
+  };
   const originalTopMessage = L.head(state.messages);
   if (!originalTopMessage) {
     return { ...state, optimisticMessageMap };
   }
   // Remove the previous message if it loaded
   let messagesState = state.messages;
-  if (payload.oldPos >= originalTopMessage.pos) {
-    const oldEntry = findMessage(messagesState, message.id, payload.oldPos);
-    if (oldEntry != null) {
-      const [item, index] = oldEntry;
-      const modifiedDiff = compareMessageModified(item, message);
-      if (
-        modifiedDiff > 0 ||
-        (modifiedDiff === 0 &&
-          /* FIXME: move the message will not change the `modified` field */
-          item.pos === message.pos &&
-          /* Show a whisper message */
-          message.text === item.text)
-      ) {
-        return state;
-      }
-      if (item.pos === message.pos) {
-        // In-place editing
-        return {
-          ...state,
-          messages: L.update(index, message, state.messages),
-          optimisticMessageMap,
-        };
-      }
-      messagesState = L.remove(index, 1, state.messages);
+  // `oldPos` can predate the loaded window when the server coalesces repeated
+  // moves, so a pos miss here is expected rather than an anomaly.
+  const oldEntry = findMessage(messagesState, message.id, payload.oldPos, {
+    warnOnStalePos: false,
+  });
+  if (oldEntry != null) {
+    const [item, index] = oldEntry;
+    const versionDiff = compareMessageVersion(item, message);
+    if (
+      versionDiff > 0 ||
+      (versionDiff === 0 &&
+        item.pos === message.pos &&
+        /* Show a whisper message */
+        message.text === item.text)
+    ) {
+      return state;
     }
+    if (item.pos === message.pos) {
+      // In-place editing
+      return {
+        ...state,
+        messages: L.update(index, message, state.messages),
+        optimisticMessageMap,
+        previewMap,
+      };
+    }
+    messagesState = L.remove(index, 1, state.messages);
   }
   const messages = messagesState;
   const topMessage = L.head(messages);
@@ -435,7 +553,12 @@ const handleMessageEdited = (
     // The only message has been removed in the previous step
     const moveUp = message.pos < originalTopMessage.pos;
     const movedOut = moveUp && !state.fullLoaded;
-    return { ...state, optimisticMessageMap, messages: movedOut ? L.empty() : L.of(message) };
+    return {
+      ...state,
+      optimisticMessageMap,
+      previewMap,
+      messages: movedOut ? L.empty() : L.of(message),
+    };
   }
 
   if (message.pos < topMessage.pos) {
@@ -443,6 +566,7 @@ const handleMessageEdited = (
     return {
       ...state,
       optimisticMessageMap,
+      previewMap,
       messages: state.fullLoaded
         ? L.prepend(message, messages)
         : // The message has been moved out of the loaded range
@@ -451,14 +575,29 @@ const handleMessageEdited = (
   }
   if (message.pos > bottomMessage.pos) {
     // Move down to the bottom
-    return { ...state, optimisticMessageMap, messages: L.append(message, messages) };
+    return { ...state, optimisticMessageMap, previewMap, messages: L.append(message, messages) };
   }
   const [insertIndex, itemByPos] = binarySearchPosList(messages, message.pos);
   if (itemByPos) {
+    if (itemByPos.id === message.id) {
+      const versionDiff = compareMessageVersion(itemByPos, message);
+      if (versionDiff > 0) return state;
+      return {
+        ...state,
+        optimisticMessageMap,
+        previewMap,
+        messages: L.update(insertIndex, message, messages),
+      };
+    }
     recordWarn('Unexpected message position in editing', { message, itemByPos, insertIndex });
     return resetMessagesState(state);
   }
-  return { ...state, optimisticMessageMap, messages: L.insert(insertIndex, message, messages) };
+  return {
+    ...state,
+    optimisticMessageMap,
+    previewMap,
+    messages: L.insert(insertIndex, message, messages),
+  };
 };
 
 const handleMessagePreview = (
@@ -581,6 +720,7 @@ export const findMessage = (
   messages: List<MessageItem>,
   id: string,
   pos?: number,
+  { warnOnStalePos = true }: { warnOnStalePos?: boolean } = {},
 ): [MessageItem, number] | null => {
   let failedFoundByPos: [MessageItem | null, number] | null = null;
   if (pos != null) {
@@ -597,7 +737,7 @@ export const findMessage = (
   }
   const message = L.nth(index, messages);
   if (message?.id === id) {
-    if (failedFoundByPos != null) {
+    if (failedFoundByPos != null && warnOnStalePos) {
       const [foundItem, foundIndex] = failedFoundByPos;
       recordWarn('Found message by id but failed to find by pos', {
         id,
@@ -663,7 +803,7 @@ const handleRemoveOptimisticMessage = (
 };
 
 const handleFail = (state: ChannelState, { payload }: ChatAction<'fail'>): ChannelState => {
-  const { failTo, key } = payload;
+  const { failTo, key, baseRev, basePos } = payload;
   if (failTo.type === 'SEND') {
     const optimisticMessage = state.optimisticMessageMap[key];
     if (!optimisticMessage) return state;
@@ -681,6 +821,19 @@ const handleFail = (state: ChannelState, { payload }: ChatAction<'fail'>): Chann
   let messages = state.messages;
   if (messageIndex !== -1) {
     const message = L.nth(messageIndex, state.messages)!;
+    const [basePosP, basePosQ] = basePos ?? [message.posP, message.posQ];
+    const movedFromBasePos = message.posP !== basePosP || message.posQ !== basePosQ;
+    if (
+      failTo.type === 'MOVE' &&
+      baseRev != null &&
+      messageRev(message) > baseRev &&
+      movedFromBasePos
+    ) {
+      return handleRemoveOptimisticMessage(state, {
+        type: 'removeOptimisticMessage',
+        payload: { id: key },
+      });
+    }
     messages = L.update(messageIndex, { ...message, failTo }, state.messages);
   }
 
@@ -767,7 +920,7 @@ const checkOrder = (state: ChannelState, action: ChatActionUnion): ChannelState 
         index: i,
         size: messages.length,
       });
-      return { ...state, messages: L.empty(), fullLoaded: false };
+      return { ...state, messages: L.empty(), fullLoaded: false, historyInitialized: false };
     }
     prevPos = message.pos;
     i += 1;

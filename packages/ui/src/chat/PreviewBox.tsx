@@ -19,6 +19,10 @@ interface Props {
   isSelf?: boolean;
   onMouseEnter?: React.MouseEventHandler<HTMLDivElement>;
   onMouseLeave?: React.MouseEventHandler<HTMLDivElement>;
+  /** Disables the dotted preview background and inset shadow. */
+  disablePreviewStyle?: boolean;
+  /** Overrides the default handle icon. */
+  handle?: React.ReactNode;
 }
 
 export const PreviewBox: FC<Props> = ({
@@ -37,16 +41,22 @@ export const PreviewBox: FC<Props> = ({
   isSelf = false,
   onMouseEnter,
   onMouseLeave,
+  disablePreviewStyle = false,
+  handle,
 }) => {
   const style: CSSProperties & { '--bg-angle': string } = {
     transform: CSS.Transform.toString(transform),
     transition,
     '--bg-angle': isSelf ? '135deg' : '225deg',
-    backgroundImage: 'radial-gradient(var(--color-message-preview-dot) 1px, transparent 1px)',
-    backgroundSize: '10px 10px',
-    boxShadow: inGame
-      ? 'inset 0 0 12px 10px var(--color-message-in-game-bg)'
-      : 'inset 0 0 12px 10px var(--color-message-out-of-game-bg)',
+    ...(disablePreviewStyle
+      ? {}
+      : {
+          backgroundImage: 'radial-gradient(var(--color-message-preview-dot) 1px, transparent 1px)',
+          backgroundSize: '10px 10px',
+          boxShadow: inGame
+            ? 'inset 0 0 12px 10px var(--color-message-in-game-bg)'
+            : 'inset 0 0 12px 10px var(--color-message-out-of-game-bg)',
+        }),
   };
   const outOfGamePreviewInInGameChannel = !inGame && isInGameChannel;
   return (
@@ -71,7 +81,7 @@ export const PreviewBox: FC<Props> = ({
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
     >
-      <PreviewHandlePlaceHolder editMode={inEditMode} />
+      <PreviewHandlePlaceHolder editMode={inEditMode}>{handle}</PreviewHandlePlaceHolder>
       {children}
     </div>
   );

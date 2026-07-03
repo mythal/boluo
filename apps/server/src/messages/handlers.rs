@@ -95,7 +95,7 @@ async fn send(
             metrics::counter!("boluo_server_messages_created_failed_total").increment(1);
         })?
     };
-    Update::new_message(space_member.space_id, message.clone(), preview_id);
+    Update::new_message(space_member.space_id, message.clone(), preview_id).await;
 
     metrics::counter!("boluo_server_messages_created_total").increment(1);
     metrics::histogram!("boluo_server_messages_create_duration_ms")
@@ -175,7 +175,8 @@ async fn edit(
         space_member.space_id,
         edited_message.clone(),
         edited_message.pos,
-    );
+    )
+    .await;
     metrics::histogram!("boluo_server_messages_edit_duration_ms")
         .record(start_time.elapsed().as_millis() as f64);
     Ok(edited_message)
@@ -250,7 +251,7 @@ async fn move_between(
     if moved_message.whisper_to_users.is_some() {
         moved_message.hide(None);
     }
-    Update::message_edited(channel.space_id, moved_message, message.pos);
+    Update::message_edited(channel.space_id, moved_message, message.pos).await;
     metrics::counter!("boluo_server_messages_moved_total").increment(1);
     Ok(true)
 }
@@ -289,7 +290,8 @@ async fn delete(
         message.channel_id,
         message.id,
         message.pos,
-    );
+    )
+    .await;
     crate::pos::CHANNEL_POS_MANAGER.cancel(message.channel_id, message.id);
     metrics::counter!("boluo_server_messages_deleted_total").increment(1);
     Ok(message)
@@ -322,7 +324,7 @@ async fn toggle_fold(
     let edited_message = Message::set_folded(&mut *conn, &message.id, !message.folded)
         .await?
         .ok_or_else(|| unexpected!("message not found"))?;
-    Update::message_edited(channel.space_id, edited_message.clone(), message.pos);
+    Update::message_edited(channel.space_id, edited_message.clone(), message.pos).await;
     metrics::counter!("boluo_server_messages_folded_total").increment(1);
     Ok(edited_message)
 }

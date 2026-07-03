@@ -563,6 +563,7 @@ impl Message {
         is_action: bool,
         media_id: Option<Uuid>,
         color: String,
+        expect_modified: Option<DateTime<Utc>>,
     ) -> Result<Option<Message>, ModelError> {
         let entities = serde_json::to_value(entities).unwrap_or(JsonValue::Array(vec![]));
         let name = merge_blank(name);
@@ -576,7 +577,8 @@ impl Message {
             in_game,
             is_action,
             media_id,
-            color
+            color,
+            expect_modified
         )
         .fetch_optional(db)
         .await?;
@@ -829,6 +831,7 @@ mod tests {
             true,
             None,
             "char:GM".to_string(),
+            None,
         )
         .await
         .expect("edit failed")
@@ -962,6 +965,106 @@ mod tests {
         assert_eq!(ordered[0].id, moved_bottom.id);
         assert_eq!(ordered[1].id, between.id);
         assert_eq!(ordered[2].id, moved_above.id);
+
+        crate::pos::CHANNEL_POS_MANAGER.shutdown(channel.id);
+    }
+
+    #[sqlx::test(migrator = "crate::db::MIGRATOR")]
+    async fn db_test_message_edit_conflict(pool: sqlx::PgPool) {
+        let owner = create_test_user(&pool, "owner").await;
+        let space = create_test_space(&pool, &owner, "message_edit_conflict").await;
+        let channel = create_test_channel(&pool, &space, &owner, "Two Tabs").await;
+
+        let mut conn = pool.acquire().await.expect("failed to acquire connection");
+        let text = "Original text";
+        let message = Message::create(
+            &mut conn,
+            None,
+            channel.id,
+            space.id,
+            &owner.id,
+            "GM",
+            "GM",
+            text,
+            sample_entities(text),
+            false,
+            false,
+            true,
+            None,
+            None,
+            None,
+            "#abcdef".to_string(),
+        )
+        .await
+        .expect("failed to create message");
+        drop(conn);
+        let stale_modified = message.modified;
+
+        // Tab A submits first, using the `modified` it observed when it started editing.
+        let edited_by_a = Message::edit(
+            &pool,
+            "GM",
+            &message.id,
+            "Tab A's text",
+            sample_entities("Tab A's text"),
+            false,
+            false,
+            None,
+            "#abcdef".to_string(),
+            Some(stale_modified),
+        )
+        .await
+        .expect("tab A's edit errored")
+        .expect("tab A's edit should apply since expect_modified matched");
+        assert_eq!(edited_by_a.text, "Tab A's text");
+        assert!(edited_by_a.modified > stale_modified);
+
+        // Tab B submits with the same now-stale `modified` it observed before A's edit landed.
+        let edited_by_b = Message::edit(
+            &pool,
+            "GM",
+            &message.id,
+            "Tab B's text",
+            sample_entities("Tab B's text"),
+            false,
+            false,
+            None,
+            "#abcdef".to_string(),
+            Some(stale_modified),
+        )
+        .await
+        .expect("tab B's edit errored");
+        assert!(
+            edited_by_b.is_none(),
+            "tab B's edit must be rejected instead of overwriting tab A's edit"
+        );
+
+        let current = Message::get(&pool, &message.id, Some(&owner.id))
+            .await
+            .expect("get failed")
+            .expect("message should still exist");
+        assert_eq!(
+            current.text, "Tab A's text",
+            "tab A's edit must survive tab B's stale, rejected submission"
+        );
+
+        // A client that doesn't send `expect_modified` (e.g. an older build) keeps working.
+        let edited_without_precondition = Message::edit(
+            &pool,
+            "GM",
+            &message.id,
+            "Tab C's text",
+            sample_entities("Tab C's text"),
+            false,
+            false,
+            None,
+            "#abcdef".to_string(),
+            None,
+        )
+        .await
+        .expect("unconditional edit errored")
+        .expect("unconditional edit should always apply");
+        assert_eq!(edited_without_precondition.text, "Tab C's text");
 
         crate::pos::CHANNEL_POS_MANAGER.shutdown(channel.id);
     }

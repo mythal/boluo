@@ -83,8 +83,15 @@ const handleSpaceUpdated = (
     state = { ...initialChatState, context: { initialized: false, spaceId } };
   }
   const channels = { ...state.channels };
+  // The payload lists every channel in the space, so anything else is deleted.
+  const channelIds = new Set(spaceWithRelated.channels.map((channel) => channel.id));
+  for (const channelId of Object.keys(channels)) {
+    if (!channelIds.has(channelId)) {
+      delete channels[channelId];
+    }
+  }
   for (const channel of spaceWithRelated.channels) {
-    if (channel.id in state.channels) {
+    if (channel.id in channels) {
       continue;
     }
     const newChannelState = makeInitialChannelState(channel.id);

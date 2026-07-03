@@ -272,6 +272,13 @@ const handleNewMessage = (
     // gap and never duplicates.
     return { ...state, previewMap, optimisticMessageMap, messages: L.of(message) };
   }
+  if (
+    (message.pos === topMessage.pos && topMessage.id === message.id) ||
+    (message.pos === bottomMessage.pos && bottomMessage.id === message.id)
+  ) {
+    // Same id at the boundary is a harmless duplicate.
+    return { ...state, previewMap, optimisticMessageMap };
+  }
   if (message.pos === topMessage.pos || message.pos === bottomMessage.pos) {
     return resetMessagesState(state);
   }

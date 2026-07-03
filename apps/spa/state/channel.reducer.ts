@@ -188,6 +188,7 @@ const newMessageOptimisticItem = (
 export interface ChannelState {
   id: string;
   fullLoaded: boolean;
+  historyInitialized: boolean;
   messages: List<MessageItem>;
   previewMap: Record<UserId, PreviewItem>;
   optimisticMessageMap: Record<string, OptimisticMessage>;
@@ -212,6 +213,7 @@ export const makeInitialChannelState = (id: string): ChannelState => {
     id,
     messages: L.empty(),
     fullLoaded: false,
+    historyInitialized: false,
     previewMap: {},
     scheduledGc: null,
     collidedPreviewIdSet: new Set(),
@@ -259,7 +261,14 @@ const handleNewMessage = (
   );
 
   const resetMessagesState = (state: ChannelState): ChannelState => {
-    return { ...state, previewMap, optimisticMessageMap, messages: L.empty(), fullLoaded: false };
+    return {
+      ...state,
+      previewMap,
+      optimisticMessageMap,
+      messages: L.empty(),
+      fullLoaded: false,
+      historyInitialized: false,
+    };
   };
 
   const topMessage = L.first(messages);
@@ -329,6 +338,9 @@ const handleMessagesLoaded = (
   const { fullLoaded } = payload;
   if (fullLoaded !== state.fullLoaded) {
     state = { ...state, fullLoaded };
+  }
+  if (!state.historyInitialized) {
+    state = { ...state, historyInitialized: true };
   }
   if (payloadLen === 0) {
     return state;
@@ -491,7 +503,14 @@ const handleMessageEdited = (
   );
   const previewMap = syncEditPreviewsWithMessage(state.previewMap, message);
   const resetMessagesState = (state: ChannelState): ChannelState => {
-    return { ...state, optimisticMessageMap, previewMap, messages: L.empty(), fullLoaded: false };
+    return {
+      ...state,
+      optimisticMessageMap,
+      previewMap,
+      messages: L.empty(),
+      fullLoaded: false,
+      historyInitialized: false,
+    };
   };
   const originalTopMessage = L.head(state.messages);
   if (!originalTopMessage) {
@@ -499,31 +518,33 @@ const handleMessageEdited = (
   }
   // Remove the previous message if it loaded
   let messagesState = state.messages;
-  if (payload.oldPos >= originalTopMessage.pos) {
-    const oldEntry = findMessage(messagesState, message.id, payload.oldPos);
-    if (oldEntry != null) {
-      const [item, index] = oldEntry;
-      const versionDiff = compareMessageVersion(item, message);
-      if (
-        versionDiff > 0 ||
-        (versionDiff === 0 &&
-          item.pos === message.pos &&
-          /* Show a whisper message */
-          message.text === item.text)
-      ) {
-        return state;
-      }
-      if (item.pos === message.pos) {
-        // In-place editing
-        return {
-          ...state,
-          messages: L.update(index, message, state.messages),
-          optimisticMessageMap,
-          previewMap,
-        };
-      }
-      messagesState = L.remove(index, 1, state.messages);
+  // `oldPos` can predate the loaded window when the server coalesces repeated
+  // moves, so a pos miss here is expected rather than an anomaly.
+  const oldEntry = findMessage(messagesState, message.id, payload.oldPos, {
+    warnOnStalePos: false,
+  });
+  if (oldEntry != null) {
+    const [item, index] = oldEntry;
+    const versionDiff = compareMessageVersion(item, message);
+    if (
+      versionDiff > 0 ||
+      (versionDiff === 0 &&
+        item.pos === message.pos &&
+        /* Show a whisper message */
+        message.text === item.text)
+    ) {
+      return state;
     }
+    if (item.pos === message.pos) {
+      // In-place editing
+      return {
+        ...state,
+        messages: L.update(index, message, state.messages),
+        optimisticMessageMap,
+        previewMap,
+      };
+    }
+    messagesState = L.remove(index, 1, state.messages);
   }
   const messages = messagesState;
   const topMessage = L.head(messages);
@@ -558,6 +579,16 @@ const handleMessageEdited = (
   }
   const [insertIndex, itemByPos] = binarySearchPosList(messages, message.pos);
   if (itemByPos) {
+    if (itemByPos.id === message.id) {
+      const versionDiff = compareMessageVersion(itemByPos, message);
+      if (versionDiff > 0) return state;
+      return {
+        ...state,
+        optimisticMessageMap,
+        previewMap,
+        messages: L.update(insertIndex, message, messages),
+      };
+    }
     recordWarn('Unexpected message position in editing', { message, itemByPos, insertIndex });
     return resetMessagesState(state);
   }
@@ -689,6 +720,7 @@ export const findMessage = (
   messages: List<MessageItem>,
   id: string,
   pos?: number,
+  { warnOnStalePos = true }: { warnOnStalePos?: boolean } = {},
 ): [MessageItem, number] | null => {
   let failedFoundByPos: [MessageItem | null, number] | null = null;
   if (pos != null) {
@@ -705,7 +737,7 @@ export const findMessage = (
   }
   const message = L.nth(index, messages);
   if (message?.id === id) {
-    if (failedFoundByPos != null) {
+    if (failedFoundByPos != null && warnOnStalePos) {
       const [foundItem, foundIndex] = failedFoundByPos;
       recordWarn('Found message by id but failed to find by pos', {
         id,
@@ -888,7 +920,7 @@ const checkOrder = (state: ChannelState, action: ChatActionUnion): ChannelState 
         index: i,
         size: messages.length,
       });
-      return { ...state, messages: L.empty(), fullLoaded: false };
+      return { ...state, messages: L.empty(), fullLoaded: false, historyInitialized: false };
     }
     prevPos = message.pos;
     i += 1;

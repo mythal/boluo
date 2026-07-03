@@ -12,6 +12,7 @@ SET
     rev = rev + 1
 WHERE
     id = $1
+    AND deleted = FALSE
     AND ($9::timestamptz IS NULL OR modified = $9)
 RETURNING
     messages AS "message!: Message";

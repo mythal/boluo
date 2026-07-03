@@ -10,6 +10,6 @@ SET
             find_intermediate ($2, $3, $4, $5))
 WHERE
     id = $1
+    AND deleted = FALSE
 RETURNING
     messages AS "message!: Message";
-

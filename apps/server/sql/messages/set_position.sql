@@ -17,6 +17,8 @@ WITH
             rev = rev + 1
         WHERE
             id = $1
+            AND channel_id = $2
+            AND deleted = FALSE
             -- Only update if a message is not already in the target position
             AND NOT EXISTS (SELECT 1 FROM existing_in_pos)
         RETURNING

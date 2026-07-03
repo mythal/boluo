@@ -3,7 +3,7 @@ import { selectAtom } from 'jotai/utils';
 import { useEffect, useMemo, useRef } from 'react';
 import { binarySearchPos } from '@boluo/sort';
 import { findMessage, type OptimisticItem, type ChannelState } from '../state/channel.reducer';
-import { type ChatItem, type PreviewItem } from '../state/channel.types';
+import { type ChatItem, type MessageItem, type PreviewItem } from '../state/channel.types';
 import { chatAtom } from '../state/chat.atoms';
 import { type ComposeState } from '../state/compose.reducer';
 import { type ChannelAtoms, type ChannelFilter, useChannelAtoms } from './useChannelAtoms';
@@ -113,6 +113,43 @@ export const pruneSelfPreview = (
     return false;
   }
   return true;
+};
+
+/**
+ * The edit preview follows the original message's current position, since the
+ * message may have been moved (moving does not update `modified`).
+ *
+ * Mutates `itemList`: replaces the original message with the preview in place.
+ * Returns the preview when it still needs to be inserted, or null.
+ */
+export const applyEditPreview = (
+  preview: PreviewItem,
+  messages: L.List<MessageItem>,
+  itemList: ChatItem[],
+): PreviewItem | null => {
+  if (preview.edit == null) return null;
+  const findResult = findMessage(messages, preview.id, preview.pos);
+  if (!findResult) {
+    return null;
+  }
+  const [message] = findResult;
+  if (preview.edit.time !== message.modified) {
+    return null;
+  }
+  const resolved: PreviewItem = {
+    ...preview,
+    original: message,
+    pos: message.pos,
+    posP: message.posP,
+    posQ: message.posQ,
+  };
+  const index = binarySearchPos(itemList, message.pos);
+  if (message.id === itemList[index]?.id) {
+    itemList[index] = resolved;
+    return null;
+  }
+  // The original message may be filtered out; treat it as a normal preview.
+  return resolved;
 };
 
 const useFilters = (
@@ -332,28 +369,9 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
         continue;
       }
       if (preview.edit) {
-        const findResult = findMessage(messages, preview.id, preview.pos);
-        if (!findResult) {
-          // The original message is not found
-          continue;
-        }
-        const [message] = findResult;
-        if (preview.edit.time !== message.modified) {
-          continue;
-        }
-        preview = { ...preview, original: message };
-        const index = binarySearchPos(itemList, message.pos);
-        if (message.id !== itemList[index]?.id) {
-          // Maybe the original message be filtered
-          // Just treat it as a normal preview
-        } else if (message.pos === preview.pos) {
-          // In-place replace
-          itemList[index] = preview;
-          continue;
-        } else {
-          // Remove the original message
-          itemList.splice(index, 1);
-        }
+        const resolved = applyEditPreview(preview, messages, itemList);
+        if (resolved == null) continue;
+        preview = resolved;
       }
       // Insert the preview to item list
       if (isDummySelfPreview(preview)) {

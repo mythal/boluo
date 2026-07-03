@@ -279,10 +279,10 @@ impl Update {
         }
     }
 
-    pub fn new_message(mailbox: Uuid, message: Message, preview_id: Option<Uuid>) {
+    pub async fn new_message(mailbox: Uuid, message: Message, preview_id: Option<Uuid>) {
         let channel_id = message.channel_id;
         let message = Box::new(message);
-        Update::persistent(
+        Update::persistent_ordered(
             UpdateBody::NewMessage {
                 message,
                 channel_id,
@@ -290,10 +290,11 @@ impl Update {
             },
             mailbox,
         )
+        .await
     }
 
-    pub fn message_deleted(mailbox: Uuid, channel_id: Uuid, message_id: Uuid, pos: f64) {
-        Update::persistent(
+    pub async fn message_deleted(mailbox: Uuid, channel_id: Uuid, message_id: Uuid, pos: f64) {
+        Update::persistent_ordered(
             UpdateBody::MessageDeleted {
                 message_id,
                 channel_id,
@@ -301,12 +302,13 @@ impl Update {
             },
             mailbox,
         )
+        .await
     }
 
-    pub fn message_edited(mailbox: Uuid, message: Message, old_pos: f64) {
+    pub async fn message_edited(mailbox: Uuid, message: Message, old_pos: f64) {
         let channel_id = message.channel_id;
         let message = Box::new(message);
-        Update::persistent(
+        Update::persistent_ordered(
             UpdateBody::MessageEdited {
                 message,
                 channel_id,
@@ -314,6 +316,7 @@ impl Update {
             },
             mailbox,
         )
+        .await
     }
 
     pub fn channel_deleted(mailbox: Uuid, channel_id: Uuid) {
@@ -542,6 +545,16 @@ impl Update {
             }
             .instrument(span),
         );
+    }
+
+    async fn persistent_ordered(body: UpdateBody, mailbox: Uuid) {
+        let mailbox_manager = super::context::store().get_or_create_manager(mailbox);
+        if let Err(e) = mailbox_manager
+            .fire_update(body, UpdateLifetime::Persistent)
+            .await
+        {
+            tracing::error!("Failed to send update to mailbox {}: {}", mailbox, e);
+        }
     }
 
     pub fn volatile(body: UpdateBody, mailbox: Uuid) {

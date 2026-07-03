@@ -490,6 +490,76 @@ describe('channelReducer', () => {
     assert.strictEqual(next, state);
   });
 
+  test('messageEdited move follows edit previews to the new position', () => {
+    // Regression: moving a message does not update `modified`, and the
+    // edit preview in previewMap kept pointing at the stale position.
+    const message1 = makeMessageItem(makeMessage(messageId1, 1));
+    const message2 = makeMessageItem(makeMessage(messageId2, 3));
+    const editPreview = toPreviewItem(
+      makePreview(messageId2, 3, {
+        senderId: 'editing-user',
+        edit: { time: message2.modified, p: 3, q: 1 },
+      }),
+    );
+    const unrelatedPreview = toPreviewItem(
+      makePreview('unrelated-preview', 9, { senderId: 'other-user' }),
+    );
+    const state = {
+      ...makeInitialChannelState(channelId),
+      fullLoaded: true,
+      messages: L.from([message1, message2]),
+      previewMap: {
+        [editPreview.senderId]: editPreview,
+        [unrelatedPreview.senderId]: unrelatedPreview,
+      },
+    };
+
+    // A move keeps `modified` unchanged.
+    const moved = makeMessage(messageId2, 6);
+    const next = channelReducer(
+      state,
+      { type: 'messageEdited', payload: { channelId, message: moved, oldPos: 3 } },
+      context,
+    );
+
+    assert.deepStrictEqual(positions(next.messages), [1, 6]);
+    const syncedPreview = next.previewMap['editing-user'];
+    assert.ok(syncedPreview);
+    assert.strictEqual(syncedPreview.pos, 6);
+    assert.strictEqual(syncedPreview.posP, 6);
+    assert.strictEqual(syncedPreview.posQ, 1);
+    assert.strictEqual(next.previewMap['other-user'], unrelatedPreview);
+  });
+
+  test('messageEdited real edit leaves stale edit previews untouched', () => {
+    const message = makeMessageItem(makeMessage(messageId1, 2));
+    const editPreview = toPreviewItem(
+      makePreview(messageId1, 2, {
+        senderId: 'editing-user',
+        edit: { time: message.modified, p: 2, q: 1 },
+      }),
+    );
+    const state = {
+      ...makeInitialChannelState(channelId),
+      fullLoaded: true,
+      messages: L.from([message]),
+      previewMap: { [editPreview.senderId]: editPreview },
+    };
+
+    const edited = makeMessage(messageId1, 2, {
+      text: 'edited',
+      modified: '2024-01-01T00:05:00.000Z',
+    });
+    const next = channelReducer(
+      state,
+      { type: 'messageEdited', payload: { channelId, message: edited, oldPos: 2 } },
+      context,
+    );
+
+    assert.strictEqual(L.first(next.messages)?.text, 'edited');
+    assert.strictEqual(next.previewMap['editing-user'], editPreview);
+  });
+
   test('messageEdited collision resets messages', () => {
     const message1 = makeMessageItem(makeMessage(messageId1, 1));
     const message2 = makeMessageItem(makeMessage(messageId2, 3));

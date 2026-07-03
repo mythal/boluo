@@ -393,6 +393,36 @@ const compareMessageModified = (a: MessageItem, b: MessageItem): number => {
   return aModified - bModified;
 };
 
+/**
+ * Keep edit previews pointing at the original message's current position
+ * when the message is moved (moving does not update `modified`).
+ */
+const syncEditPreviewsWithMessage = (
+  previewMap: Record<UserId, PreviewItem>,
+  message: MessageItem,
+): Record<UserId, PreviewItem> => {
+  let nextPreviewMap: Record<UserId, PreviewItem> | null = null;
+  for (const senderId in previewMap) {
+    const preview = previewMap[senderId];
+    if (
+      preview?.edit == null ||
+      preview.id !== message.id ||
+      preview.pos === message.pos ||
+      preview.edit.time !== message.modified
+    ) {
+      continue;
+    }
+    nextPreviewMap ??= { ...previewMap };
+    nextPreviewMap[senderId] = {
+      ...preview,
+      pos: message.pos,
+      posP: message.posP,
+      posQ: message.posQ,
+    };
+  }
+  return nextPreviewMap ?? previewMap;
+};
+
 const handleMessageEdited = (
   state: ChannelState,
   { payload }: ChatAction<'messageEdited'>,
@@ -401,10 +431,11 @@ const handleMessageEdited = (
     payload.message.id,
     state.optimisticMessageMap,
   );
-  const resetMessagesState = (state: ChannelState): ChannelState => {
-    return { ...state, optimisticMessageMap, messages: L.empty(), fullLoaded: false };
-  };
   const message: MessageItem = makeMessageItem(payload.message);
+  const previewMap = syncEditPreviewsWithMessage(state.previewMap, message);
+  const resetMessagesState = (state: ChannelState): ChannelState => {
+    return { ...state, optimisticMessageMap, previewMap, messages: L.empty(), fullLoaded: false };
+  };
   const originalTopMessage = L.head(state.messages);
   if (!originalTopMessage) {
     return { ...state, optimisticMessageMap };
@@ -432,6 +463,7 @@ const handleMessageEdited = (
           ...state,
           messages: L.update(index, message, state.messages),
           optimisticMessageMap,
+          previewMap,
         };
       }
       messagesState = L.remove(index, 1, state.messages);
@@ -444,7 +476,12 @@ const handleMessageEdited = (
     // The only message has been removed in the previous step
     const moveUp = message.pos < originalTopMessage.pos;
     const movedOut = moveUp && !state.fullLoaded;
-    return { ...state, optimisticMessageMap, messages: movedOut ? L.empty() : L.of(message) };
+    return {
+      ...state,
+      optimisticMessageMap,
+      previewMap,
+      messages: movedOut ? L.empty() : L.of(message),
+    };
   }
 
   if (message.pos < topMessage.pos) {
@@ -452,6 +489,7 @@ const handleMessageEdited = (
     return {
       ...state,
       optimisticMessageMap,
+      previewMap,
       messages: state.fullLoaded
         ? L.prepend(message, messages)
         : // The message has been moved out of the loaded range
@@ -460,14 +498,19 @@ const handleMessageEdited = (
   }
   if (message.pos > bottomMessage.pos) {
     // Move down to the bottom
-    return { ...state, optimisticMessageMap, messages: L.append(message, messages) };
+    return { ...state, optimisticMessageMap, previewMap, messages: L.append(message, messages) };
   }
   const [insertIndex, itemByPos] = binarySearchPosList(messages, message.pos);
   if (itemByPos) {
     recordWarn('Unexpected message position in editing', { message, itemByPos, insertIndex });
     return resetMessagesState(state);
   }
-  return { ...state, optimisticMessageMap, messages: L.insert(insertIndex, message, messages) };
+  return {
+    ...state,
+    optimisticMessageMap,
+    previewMap,
+    messages: L.insert(insertIndex, message, messages),
+  };
 };
 
 const handleMessagePreview = (

@@ -722,7 +722,7 @@ const handleRemoveOptimisticMessage = (
 };
 
 const handleFail = (state: ChannelState, { payload }: ChatAction<'fail'>): ChannelState => {
-  const { failTo, key } = payload;
+  const { failTo, key, baseRev, basePos } = payload;
   if (failTo.type === 'SEND') {
     const optimisticMessage = state.optimisticMessageMap[key];
     if (!optimisticMessage) return state;
@@ -740,6 +740,19 @@ const handleFail = (state: ChannelState, { payload }: ChatAction<'fail'>): Chann
   let messages = state.messages;
   if (messageIndex !== -1) {
     const message = L.nth(messageIndex, state.messages)!;
+    const [basePosP, basePosQ] = basePos ?? [message.posP, message.posQ];
+    const movedFromBasePos = message.posP !== basePosP || message.posQ !== basePosQ;
+    if (
+      failTo.type === 'MOVE' &&
+      baseRev != null &&
+      messageRev(message) > baseRev &&
+      movedFromBasePos
+    ) {
+      return handleRemoveOptimisticMessage(state, {
+        type: 'removeOptimisticMessage',
+        payload: { id: key },
+      });
+    }
     messages = L.update(messageIndex, { ...message, failTo }, state.messages);
   }
 

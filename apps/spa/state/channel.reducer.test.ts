@@ -1015,6 +1015,72 @@ describe('channelReducer', () => {
     assert.deepStrictEqual(next.optimisticMessageMap, {});
   });
 
+  test('stale MOVE fail is ignored after the message rev advances', () => {
+    const message = makeMessageItem(makeMessage(messageId1, 2, { rev: 1 }));
+    const optimistic: OptimisticMessage = {
+      ref: makeMessageItem(makeMessage(messageId1, 1, { rev: 0 })),
+      item: { optimisticPos: 2, timestamp: 1, item: message },
+    };
+    const state = {
+      ...makeInitialChannelState(channelId),
+      messages: L.from([message]),
+      optimisticMessageMap: { [message.id]: optimistic },
+    };
+
+    const next = channelReducer(
+      state,
+      {
+        type: 'fail',
+        payload: { failTo: { type: 'MOVE' }, key: message.id, baseRev: 0, basePos: [1, 1] },
+      },
+      context,
+    );
+
+    const stored = L.first(next.messages);
+    assert.strictEqual(stored?.failTo, undefined);
+    assert.deepStrictEqual(next.optimisticMessageMap, {});
+  });
+
+  test('MOVE fail still marks the message when rev has not advanced', () => {
+    const message = makeMessageItem(makeMessage(messageId1, 1, { rev: 0 }));
+    const state = {
+      ...makeInitialChannelState(channelId),
+      messages: L.from([message]),
+    };
+
+    const next = channelReducer(
+      state,
+      {
+        type: 'fail',
+        payload: { failTo: { type: 'MOVE' }, key: message.id, baseRev: 0, basePos: [1, 1] },
+      },
+      context,
+    );
+
+    const stored = L.first(next.messages);
+    assert.strictEqual(stored?.failTo?.type, 'MOVE');
+  });
+
+  test('MOVE fail still marks the message when only rev advanced', () => {
+    const message = makeMessageItem(makeMessage(messageId1, 1, { rev: 1 }));
+    const state = {
+      ...makeInitialChannelState(channelId),
+      messages: L.from([message]),
+    };
+
+    const next = channelReducer(
+      state,
+      {
+        type: 'fail',
+        payload: { failTo: { type: 'MOVE' }, key: message.id, baseRev: 0, basePos: [1, 1] },
+      },
+      context,
+    );
+
+    const stored = L.first(next.messages);
+    assert.strictEqual(stored?.failTo?.type, 'MOVE');
+  });
+
   test('unsorted messages trigger order check reset', () => {
     const state = {
       ...makeInitialChannelState(channelId),

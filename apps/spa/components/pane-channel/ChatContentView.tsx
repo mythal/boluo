@@ -204,7 +204,12 @@ const useDndHandles = (channelId: string, chatList: ChatItem[]): UseDragHandlesR
       if (result === 'TIMEOUT' || result.isErr) {
         dispatch({
           type: 'fail',
-          payload: { failTo: { type: 'MOVE' }, key: draggingMessage.id },
+          payload: {
+            failTo: { type: 'MOVE' },
+            key: draggingMessage.id,
+            baseRev: draggingMessage.rev ?? 0,
+            basePos: [draggingMessage.posP, draggingMessage.posQ],
+          },
         });
       }
     },

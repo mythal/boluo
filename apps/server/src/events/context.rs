@@ -461,6 +461,11 @@ impl MailboxManager {
 pub struct CachedUpdates {
     pub updates: Vec<Utf8Bytes>,
     pub start_at: i64,
+    /// Updates at or before this timestamp may have been trimmed from the
+    /// cache since this mailbox started; cursors older than this cannot
+    /// resume safely. Unlike `start_at`, this stays at `i64::MIN` until a
+    /// trim actually happens.
+    pub cursor_floor: i64,
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -557,6 +562,9 @@ fn on_update(
     let update_id = update.id;
     match update.body {
         UpdateBody::MessagePreview { preview, .. } => {
+            // Volatile updates are fired via `spawn` without ordering guarantees,
+            // so a late keyframe can land after the `NewMessage` that consumed this
+            // preview and re-insert it as a ghost. Tolerated: it expires in cleanup.
             let key = ChannelUserId::new(preview.channel_id, preview.sender_id);
             if let Some(existing_preview) = preview_map.get(&key) {
                 if existing_preview.id >= update_id {
@@ -857,6 +865,7 @@ impl MailBoxState {
                                         &persistent_updates,
                                         cursor_floor,
                                     ),
+                                    cursor_floor,
                                 }).ok();
                             }
                             Action::Update { body, live } => {

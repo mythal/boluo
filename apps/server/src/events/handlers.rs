@@ -149,24 +149,18 @@ async fn push_updates(
             return Err(PushUpdatesError::FailedToGetCachedUpdates);
         }
         Err(GetFromStateError::RequestedUpdatesAreTooEarly { start_at }) => {
-            let elapsed = timestamp() - after.unwrap_or(0);
-            metrics::histogram!(
-                "boluo_server_events_push_updates_requested_updates_are_too_early_duration_ms"
-            )
-            .record(elapsed as f64);
-            if elapsed < 1000 * 60 * 20 {
-                tracing::warn!(
-                    mailbox_id = %mailbox,
-                    after,
-                    seq,
-                    node,
-                    start_at,
-                    elapsed,
-                    "The user requested updates with 'after', but the cached updates are too new"
-                );
-            }
-
-            vec![]
+            metrics::counter!("boluo_server_events_cursor_too_old_total").increment(1);
+            tracing::info!(
+                mailbox_id = %mailbox,
+                after,
+                seq,
+                node,
+                start_at,
+                "Cached updates after the cursor were trimmed, asking the client to reset"
+            );
+            let error_update = Update::error(mailbox, ConnectionError::CursorTooOld).encode();
+            outgoing.send(WsMessage::Text(error_update)).await?;
+            return Ok(());
         }
     };
     let cached_updates_count = cached_updates.len();
@@ -685,15 +679,20 @@ async fn sse(ctx: &crate::context::AppContext, req: Request<Incoming>) -> Respon
     messages.push(Update::app_info().encode());
 
     match Update::get_from_state(&mailbox, after, seq, node).await {
-        Ok(mut cached) => messages.append(&mut cached),
+        Ok(mut cached) => {
+            messages.append(&mut cached);
+            messages.push(Update::initialized(mailbox).encode());
+        }
         Err(GetFromStateError::FailedToQuery) => {
             let error_update = Update::error(mailbox, ConnectionError::Unexpected).encode();
             messages.push(error_update);
+            messages.push(Update::initialized(mailbox).encode());
         }
-        Err(GetFromStateError::RequestedUpdatesAreTooEarly { start_at: _ }) => {}
+        Err(GetFromStateError::RequestedUpdatesAreTooEarly { start_at: _ }) => {
+            let error_update = Update::error(mailbox, ConnectionError::CursorTooOld).encode();
+            messages.push(error_update);
+        }
     }
-
-    messages.push(Update::initialized(mailbox).encode());
 
     let mut body: Vec<u8> = Vec::new();
     for msg in messages {

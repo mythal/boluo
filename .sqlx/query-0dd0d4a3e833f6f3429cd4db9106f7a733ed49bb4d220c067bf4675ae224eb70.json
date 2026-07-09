@@ -110,12 +110,14 @@
               ]
             }
           }
-        }
+        },
+        "origin": "Expression"
       },
       {
         "ordinal": 1,
         "name": "should_hide!",
-        "type_info": "Bool"
+        "type_info": "Bool",
+        "origin": "Expression"
       }
     ],
     "parameters": {

@@ -48,9 +48,17 @@ export default defineConfig({
     sourcemap: true,
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom'],
-          redux: ['redux', 'react-redux', 'redux-thunk'],
+        manualChunks(id) {
+          if (id.includes('/node_modules/react/') || id.includes('/node_modules/react-dom/')) {
+            return 'vendor';
+          }
+          if (
+            id.includes('/node_modules/redux/') ||
+            id.includes('/node_modules/react-redux/') ||
+            id.includes('/node_modules/redux-thunk/')
+          ) {
+            return 'redux';
+          }
         },
       },
     },

@@ -3,7 +3,7 @@ import { globalIgnores } from 'eslint/config';
 import eslintConfigPrettier from 'eslint-config-prettier';
 import tseslint from 'typescript-eslint';
 import pluginReactHooks from 'eslint-plugin-react-hooks';
-import pluginReact from 'eslint-plugin-react';
+import eslintReact from '@eslint-react/eslint-plugin';
 import globals from 'globals';
 import pluginNext from '@next/eslint-plugin-next';
 import { config as baseConfig } from './base.js';
@@ -26,10 +26,12 @@ export const nextJsConfig = [
     'build/**',
     'next-env.d.ts',
   ]),
+  eslintReact.configs['recommended-typescript'],
   {
-    ...pluginReact.configs.flat.recommended,
     languageOptions: {
-      ...pluginReact.configs.flat.recommended.languageOptions,
+      parserOptions: {
+        ecmaFeatures: { jsx: true },
+      },
       globals: {
         ...globals.serviceworker,
       },
@@ -48,11 +50,8 @@ export const nextJsConfig = [
     plugins: {
       'react-hooks': pluginReactHooks,
     },
-    settings: { react: { version: '19' } },
     rules: {
       ...pluginReactHooks.configs.recommended.rules,
-      // React scope no longer necessary with new JSX transform.
-      'react/react-in-jsx-scope': 'off',
 
       '@typescript-eslint/no-unused-vars': 'off',
 

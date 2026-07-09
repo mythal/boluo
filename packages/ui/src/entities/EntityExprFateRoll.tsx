@@ -9,7 +9,7 @@ interface Props {
 
 export const EntityExprFateRoll: FC<Props> = ({ node }) => {
   const className = clsx('EntityExprFateRoll inline-flex h-full items-end gap-0.5');
-  if ('value' in node) {
+  if ('values' in node) {
     return (
       <div className={className}>
         {node.values.map((x, i) => (

@@ -40,7 +40,7 @@ async fn main() {
         paths.sort_by_key(|entry| entry.file_name());
         for path in paths {
             let sql = std::fs::read_to_string(path.path()).expect("Cannot read fixture file");
-            sqlx::raw_sql(&sql)
+            sqlx::raw_sql(sqlx::AssertSqlSafe(sql))
                 .execute(&pool)
                 .await
                 .expect("Failed to execute fixture SQL");

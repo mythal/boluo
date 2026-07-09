@@ -99,10 +99,10 @@ Generate new migration files using:
 sqlx migrate add <migration_name> -r --source apps/server/migrations
 ```
 
-Generate type-safe query definitions using:
+Generate TypeScript bindings and type-safe query definitions using:
 
 ```
-cargo sqlx prepare --workspace -- --tests
+cargo run -p server -- --types
 ```
 
 ## Credits

@@ -133,7 +133,7 @@ export type CheckChannelName = {
   name: string;
 };
 
-// Query params for checking name/alias availability.
+/**  Query params for checking name/alias availability. */
 export type CheckCharacterName = {
   spaceId: string;
   name?: string | null;
@@ -148,14 +148,16 @@ export type CheckUsernameExists = {
   username: string;
 };
 
-// Query params for checking variable key/alias availability.
+/**  Query params for checking variable key/alias availability. */
 export type CheckVariableAvailability = {
   characterId: string;
   key?: string | null;
   alias?: string[];
 };
 
-export type ChildText = { type: 'Text' } & Span;
+export type ChildText = {
+  type: 'Text';
+} & Span;
 
 export type ClientEvent =
   | { type: 'PREVIEW'; preview: PreviewPost }
@@ -197,7 +199,7 @@ export type CreateChannel = {
   type: ChannelType | null;
 };
 
-// Payload for creating a character.
+/**  Payload for creating a character. */
 export type CreateCharacter = {
   spaceId: string;
   name: string;
@@ -210,7 +212,7 @@ export type CreateCharacter = {
   metadata: JsonValue | null;
 };
 
-// Payload for creating a note.
+/**  Payload for creating a note. */
 export type CreateNote = {
   spaceId: string;
   type: NoteType;
@@ -232,7 +234,7 @@ export type CreateSpace = {
   firstChannelType: ChannelType | null;
 };
 
-// Payload for creating a character variable.
+/**  Payload for creating a character variable. */
 export type CreateVariable = {
   characterId: string;
   key: string;
@@ -244,7 +246,7 @@ export type CreateVariable = {
   metadata: JsonValue | null;
 };
 
-// Payload for deleting a character variable.
+/**  Payload for deleting a character variable. */
 export type DeleteVariable = {
   characterId: string;
   key: string;
@@ -294,7 +296,7 @@ export type EditChannelTopic = {
   topic: string;
 };
 
-// Payload for editing a character; `alias: Some("")` clears it.
+/**  Payload for editing a character; `alias: Some("")` clears it. */
 export type EditCharacter = {
   characterId: string;
   name: string | null;
@@ -316,11 +318,11 @@ export type EditMessage = {
   isAction?: boolean;
   mediaId?: string | null;
   color?: string;
-  // The `modified` timestamp of the message at the time the client started editing it.
+  /**  The `modified` timestamp of the message at the time the client started editing it. */
   expectModified?: string | null;
 };
 
-// Payload for editing a note.
+/**  Payload for editing a note. */
 export type EditNote = {
   noteId: string;
   type: NoteType | null;
@@ -352,7 +354,7 @@ export type EditUser = {
   defaultColor: string | null;
 };
 
-// Payload for editing a character variable.
+/**  Payload for editing a character variable. */
 export type EditVariable = {
   characterId: string;
   key: string;
@@ -372,27 +374,57 @@ export type EmailVerificationStatus = {
 export type Entities = Entity[];
 
 export type Entity =
-  | ({ type: 'Text' } & Span)
-  | ({ type: 'Link' } & LinkEntity)
-  | ({ type: 'Code' } & SpanWithChild)
-  | ({ type: 'CodeBlock' } & SpanWithChild)
-  | ({ type: 'Strong' } & SpanWithChild)
-  | ({ type: 'Emphasis' } & SpanWithChild)
-  | ({ type: 'StrongEmphasis' } & SpanWithChild)
-  | ({ type: 'Expr' } & ExprEntity);
+  | ({
+      type: 'Text';
+    } & Span)
+  | ({
+      type: 'Link';
+    } & LinkEntity)
+  | ({
+      type: 'Code';
+    } & SpanWithChild)
+  | ({
+      type: 'CodeBlock';
+    } & SpanWithChild)
+  | ({
+      type: 'Strong';
+    } & SpanWithChild)
+  | ({
+      type: 'Emphasis';
+    } & SpanWithChild)
+  | ({
+      type: 'StrongEmphasis';
+    } & SpanWithChild)
+  | ({
+      type: 'Expr';
+    } & ExprEntity);
 
 export type EvaluatedExprNode =
-  | ({ type: 'Roll' } & RollResult)
-  | ({ type: 'Binary' } & BinaryResult)
-  | { type: 'Num'; value: number }
+  | ({
+      type: 'Roll';
+    } & RollResult)
+  | ({
+      type: 'Binary';
+    } & BinaryResult)
+  | ({ type: 'Num'; value: number } & { node?: never })
   | { type: 'Max'; node: RollResultNode; value: number }
   | { type: 'Min'; node: RollResultNode; value: number }
-  | ({ type: 'SubExpr' } & SubExprResult)
-  | ({ type: 'CocRoll' } & CocRollResult)
-  | ({ type: 'FateRoll' } & FateResult)
-  | ({ type: 'DicePool' } & DicePoolResult)
-  | ({ type: 'Repeat' } & RepeatResult)
-  | { type: 'Unknown'; value: number };
+  | ({
+      type: 'SubExpr';
+    } & SubExprResult)
+  | ({
+      type: 'CocRoll';
+    } & CocRollResult)
+  | ({
+      type: 'FateRoll';
+    } & FateResult)
+  | ({
+      type: 'DicePool';
+    } & DicePoolResult)
+  | ({
+      type: 'Repeat';
+    } & RepeatResult)
+  | ({ type: 'Unknown'; value: number } & { node?: never });
 
 export type EventId = {
   /**
@@ -418,17 +450,27 @@ export type ExprEntity = {
 } & Span;
 
 export type ExprNode =
-  | ({ type: 'Roll' } & Roll)
-  | ({ type: 'Binary' } & Binary)
-  | { type: 'Num'; value: number }
-  | { type: 'Max'; node: RollNode }
-  | { type: 'Min'; node: RollNode }
-  | { type: 'SubExpr'; node: ExprNode }
-  | ({ type: 'CocRoll' } & CocRoll)
-  | ({ type: 'DicePool' } & DicePool)
-  | { type: 'FateRoll' }
-  | ({ type: 'Repeat' } & Repeat)
-  | { type: 'Unknown' };
+  | ({
+      type: 'Roll';
+    } & Roll)
+  | ({
+      type: 'Binary';
+    } & Binary)
+  | ({ type: 'Num'; value: number } & { node?: never })
+  | ({ type: 'Max'; node: RollNode } & { value?: never })
+  | ({ type: 'Min'; node: RollNode } & { value?: never })
+  | ({ type: 'SubExpr'; node: ExprNode } & { value?: never })
+  | ({
+      type: 'CocRoll';
+    } & CocRoll)
+  | ({
+      type: 'DicePool';
+    } & DicePool)
+  | ({ type: 'FateRoll' } & { node?: never; value?: never })
+  | ({
+      type: 'Repeat';
+    } & Repeat)
+  | ({ type: 'Unknown' } & { node?: never; value?: never });
 
 export type FateResult = {
   value: number;
@@ -485,7 +527,7 @@ export type LinkEntity = {
   title?: string | null;
 } & Span;
 
-// Query params for listing characters in a space.
+/**  Query params for listing characters in a space. */
 export type ListCharacters = {
   id: string;
   includeArchived?: boolean;
@@ -576,7 +618,7 @@ export type MessageMoveToMode = 'TOP' | 'BOTTOM';
 export type MoveMessageBetween = {
   messageId: string;
   range: [[number, number] | null, [number, number] | null];
-  // The original position of the message, at the time of the client sending the request.
+  /**  The original position of the message, at the time of the client sending the request. */
   expectPos?: [number, number] | null;
   channelId: string;
 };
@@ -689,12 +731,12 @@ export type PreviewDiffOp =
        *  Assumes the text length fits within u16 (no overflow expected).
        */
       len: number;
-      // The text to be inserted
+      /**  The text to be inserted */
       _: string;
     }
   | {
       type: 'A';
-      // The text to be appended
+      /**  The text to be appended */
       _: string;
     }
   | { type: 'NAME'; name: string };
@@ -708,9 +750,9 @@ export type PreviewDiffOp =
  *  edit_for, edit) must be sent as a full Preview keyframe.
  */
 export type PreviewDiffPost = {
-  // Channel ID
+  /**  Channel ID */
   ch: string;
-  // The id of the keyframe preview that is being edited
+  /**  The id of the keyframe preview that is being edited */
   id: string;
   /**
    *  The version of the keyframe preview that this diff is based on.
@@ -726,9 +768,9 @@ export type PreviewDiffPost = {
    *  Assumes the version fits within u16 (no overflow expected).
    */
   v?: number;
-  // The modifications to be applied
+  /**  The modifications to be applied */
   op: PreviewDiffOp[];
-  // Entities. If empty, the client should parse the text to regenerate entities.
+  /**  Entities. If empty, the client should parse the text to regenerate entities. */
   xs?: Entity[];
 };
 
@@ -766,11 +808,15 @@ export type PureBinary = {
 };
 
 export type PureExprNode =
-  | ({ type: 'Binary' } & PureBinary)
-  | { type: 'Num'; value: number }
-  | { type: 'SubExpr'; node: PureExprNode }
-  | ({ type: 'Repeat' } & PureRepeat)
-  | { type: 'Unknown' };
+  | ({
+      type: 'Binary';
+    } & PureBinary)
+  | ({ type: 'Num'; value: number } & { node?: never })
+  | ({ type: 'SubExpr'; node: PureExprNode } & { value?: never })
+  | ({
+      type: 'Repeat';
+    } & PureRepeat)
+  | ({ type: 'Unknown' } & { node?: never; value?: never });
 
 export type PureRepeat = {
   node: PureExprNode;
@@ -836,7 +882,9 @@ export type Roll = {
 
 export type RollFilterType = 'LOW' | 'HIGH';
 
-export type RollNode = { type: 'Roll' } & Roll;
+export type RollNode = {
+  type: 'Roll';
+} & Roll;
 
 export type RollResult = {
   values: number[];
@@ -844,7 +892,9 @@ export type RollResult = {
   value: number;
 } & Roll;
 
-export type RollResultNode = { type: 'Roll' } & RollResult;
+export type RollResultNode = {
+  type: 'Roll';
+} & RollResult;
 
 export type SearchDirection = 'asc' | 'desc';
 
@@ -945,7 +995,7 @@ export type Update = {
   mailbox: string;
   id: EventId;
   body: UpdateBody;
-  // How clients should treat this update for reconnect/cursor purposes.
+  /**  How clients should treat this update for reconnect/cursor purposes. */
   live?: UpdateLifetime;
 };
 
@@ -968,7 +1018,7 @@ export type UpdateBody =
 export type UpdateEncoding = 'plain' | 'gzip' | 'brotli';
 
 export type UpdateLifetime =
-  // Transient updates are not stored in mailbox state and cannot be resumed.
+  /**  Transient updates are not stored in mailbox state and cannot be resumed. */
   | 'T'
   /**
    *  Volatile updates are stored in mailbox state but are best-effort and may be replaced/pruned.
@@ -979,7 +1029,7 @@ export type UpdateLifetime =
    *  Clients should can safely replay them if they receive them again.
    */
   | 'V'
-  // Persistent updates are stored in mailbox state and can be resumed.
+  /**  Persistent updates are stored in mailbox state and can be resumed. */
   | 'P';
 
 export type UpdateQuery = {
@@ -1011,7 +1061,7 @@ export type User = {
   bio: string;
   joined: string;
   avatarId: string | null;
-  // See `Message::color`
+  /**  See `Message::color` */
   defaultColor: string;
 };
 
@@ -1021,7 +1071,7 @@ export type UserStatus = {
   focus: string[];
 };
 
-// Query params for listing variable history by key.
+/**  Query params for listing variable history by key. */
 export type VariableHistoryQuery = {
   characterId: string;
   key: string;

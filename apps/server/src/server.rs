@@ -55,6 +55,7 @@ mod shutdown;
 mod spaces;
 mod ts;
 mod ttl;
+mod typegen;
 mod users;
 mod validators;
 mod websocket;
@@ -245,15 +246,20 @@ struct Args {
 #[tokio::main(worker_threads = 5)]
 async fn main() {
     use tracing_subscriber::filter::{EnvFilter, LevelFilter};
+
+    let args = Args::parse();
+    if args.types {
+        typegen::prepare();
+    }
+
     config::load();
     let filter = EnvFilter::builder()
         .with_default_directive(LevelFilter::INFO.into())
         .from_env_lossy();
     tracing_subscriber::fmt().with_env_filter(filter).init();
 
-    let args = Args::parse();
     if args.types {
-        ts::export();
+        typegen::run();
         return;
     }
 

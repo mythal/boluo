@@ -2,7 +2,7 @@
   "name": "@boluo/lang",
   "version": "0.0.0",
   "devDependencies": {
-    "@formatjs/cli": "^6.6.3"
+    "@formatjs/cli": "^6.16.11"
   },
   "exports": {
     "./en.json": {

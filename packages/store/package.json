@@ -2,11 +2,11 @@
   "name": "@boluo/store",
   "version": "0.0.0",
   "dependencies": {
-    "jotai": "^2.12.2"
+    "jotai": "^2.20.1"
   },
   "devDependencies": {
     "@boluo/typescript-config": "0.0.0",
-    "typescript": "^6.0.2"
+    "typescript": "^6"
   },
   "exports": {
     ".": "./src/index.ts"

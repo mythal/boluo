@@ -1,0 +1,10 @@
+{
+  "$schema": "./node_modules/syncpack/schema.json",
+  "source": [
+    "package.json",
+    "apps/**/package.json",
+    "packages/**/package.json",
+    "!**/.next/**/package.json",
+    "!**/node_modules/**/package.json"
+  ]
+}

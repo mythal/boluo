@@ -17,11 +17,11 @@ path = "src/init.rs"
 
 [build-dependencies]
 dotenvy = "0.15"
-sqlx-postgres = "0.8.2"
+sqlx-postgres = "0.9.0"
 
 [dependencies]
 anyhow = "1"
-rusty-s3 = { version = "0.9", default-features = false }
+rusty-s3 = { version = "0.10", default-features = false, features = ["rustcrypto"] }
 base64 = "0.22"
 bytes = "1"
 chrono = { version = "0.4", features = ["serde"] }
@@ -30,7 +30,7 @@ cookie = "0.18"
 dotenvy = "0.15"
 futures = "0.3"
 hex = "0.4"
-itertools = "0.14"
+itertools = "0.15"
 tracing = { version = "0.1", features = ["attributes"] }
 percent-encoding = "2.2.0"
 regex = "1"
@@ -43,7 +43,7 @@ tokio-stream = "0.1"
 tokio-tungstenite = "0.29.0"
 brotli = "8.0.2"
 flate2 = "1.1.5"
-sqlx = { version = "0.8.2", features = [
+sqlx = { version = "0.9.0", features = [
   "runtime-tokio",
   "tls-rustls",
   "postgres",
@@ -54,7 +54,7 @@ sqlx = { version = "0.8.2", features = [
 http-body-util = "0.1.2"
 hyper-util = { version = "0.1.7", features = ["full"] }
 arc-swap = "1.7.1"
-quick_cache = { version = "0.6.9", features = ["stats"] }
+quick_cache = { version = "0.7.0", features = ["stats"] }
 papaya = "0.2.1"
 ahash = "0.8.11"
 parking_lot = "0.12.3"

@@ -47,7 +47,16 @@
         "$TURBO_ROOT$/.env",
         "$TURBO_ROOT$/.env.local"
       ],
-      "env": ["ANALYZE", "BACKEND_URL"],
+      "env": [
+        "ANALYZE",
+        "BACKEND_URL",
+        "SENTRY_DSN",
+        "SENTRY_TUNNEL",
+        "SENTRY_ORG",
+        "SENTRY_URL",
+        "SENTRY_PROJECT",
+        "SENTRY_TOKEN"
+      ],
       "outputs": ["out/**", ".next/**", "!.next/cache/**"]
     },
     "site#build": {
@@ -59,7 +68,15 @@
         "$TURBO_ROOT$/.env",
         "$TURBO_ROOT$/.env.local"
       ],
-      "env": ["ANALYZE", "BACKEND_URL"],
+      "env": [
+        "ANALYZE",
+        "BACKEND_URL",
+        "SENTRY_DSN",
+        "SENTRY_ORG",
+        "SENTRY_URL",
+        "SENTRY_PROJECT_SITE",
+        "SENTRY_TOKEN"
+      ],
       "outputs": [".next/**", "!.next/cache/**"]
     },
     "legacy#build": {

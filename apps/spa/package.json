@@ -63,7 +63,7 @@
     "build": "next build",
     "check": "tsc --noEmit",
     "dev": "next dev --turbopack --port 3200",
-    "lint": "eslint",
+    "lint": "eslint .",
     "test": "tsx --test **/*.test.ts"
   },
   "type": "module"

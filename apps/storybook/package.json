@@ -32,11 +32,6 @@
     "typescript-eslint": "^8.63.0",
     "vite": "^8.1.4"
   },
-  "eslintConfig": {
-    "extends": [
-      "plugin:storybook/recommended"
-    ]
-  },
   "private": true,
   "scripts": {
     "build": "storybook build --disable-telemetry",

@@ -1,38 +1,33 @@
-import js from '@eslint/js';
-import eslintConfigPrettier from 'eslint-config-prettier';
-import tseslint from 'typescript-eslint';
-import pluginReactHooks from 'eslint-plugin-react-hooks';
-import eslintReact from '@eslint-react/eslint-plugin';
 import globals from 'globals';
-import { config as baseConfig } from './base.js';
+import { createConfig as createBaseConfig } from './base.js';
+import { reactConfig } from './react.js';
 
 /**
- * A custom ESLint configuration for libraries that use React.
+ * Create the ESLint configuration for libraries that use React.
  *
- * @type {import("eslint").Linter.Config} */
-export const config = [
-  ...baseConfig,
-  js.configs.recommended,
-  eslintConfigPrettier,
-  ...tseslint.configs.recommended,
-  eslintReact.configs['recommended-typescript'],
-  {
-    languageOptions: {
-      parserOptions: {
-        ecmaFeatures: { jsx: true },
+ * @param {string} tsconfigRootDir The package directory, i.e. `import.meta.dirname`
+ *   of the package's `eslint.config.js`.
+ * @returns {import("eslint").Linter.Config[]}
+ */
+export function createConfig(tsconfigRootDir) {
+  return [
+    ...createBaseConfig(tsconfigRootDir),
+    ...reactConfig,
+    {
+      languageOptions: {
+        globals: {
+          ...globals.serviceworker,
+          ...globals.browser,
+        },
       },
-      globals: {
-        ...globals.serviceworker,
-        ...globals.browser,
+    },
+    {
+      rules: {
+        // Keep the react-hooks rules eslint-react's recommended set doesn't cover.
+        'react-hooks/refs': 'error',
+        'react-hooks/globals': 'error',
+        'react-hooks/immutability': 'error',
       },
     },
-  },
-  {
-    plugins: {
-      'react-hooks': pluginReactHooks,
-    },
-    rules: {
-      ...pluginReactHooks.configs.recommended.rules,
-    },
-  },
-];
+  ];
+}

@@ -47,11 +47,11 @@ export const BaseUrlSelector: FC = () => {
         </span>
       </label>
       <div className="text-text-primary flex flex-col">
-        {proxies.map((proxy, index) => {
+        {proxies.map((proxy) => {
           const result = testReuslt.find((item) => item.proxy.name === proxy.name);
           return (
             <BaseUrlSelectorItem
-              key={index}
+              key={proxy.url}
               proxy={proxy}
               result={result?.rtt}
               score={getRouteScore(proxy.url)}

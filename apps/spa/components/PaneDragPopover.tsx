@@ -1,4 +1,4 @@
-import { useContext, useMemo } from 'react';
+import { use, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { SizeLevelContext } from '../state/pane-size';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
@@ -17,9 +17,9 @@ interface Props {
 const CHILD_RATIOS: ChildPaneRatio[] = ['1/3', '1/2', '2/3'];
 
 export const PaneDragPopover = ({ isChild }: Props) => {
-  const sizeLevelAtom = useContext(SizeLevelContext);
+  const sizeLevelAtom = use(SizeLevelContext);
   const [sizeLevel, setSizeLevel] = useAtom(sizeLevelAtom);
-  const { key: paneKey } = useContext(PaneContext);
+  const { key: paneKey } = use(PaneContext);
   const setPanes = useSetAtom(panesAtom);
   const childRatioAtom = useMemo(
     () =>

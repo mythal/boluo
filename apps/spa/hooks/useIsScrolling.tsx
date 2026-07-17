@@ -1,5 +1,5 @@
-import { createContext, useContext } from 'react';
+import { createContext, use } from 'react';
 
 export const IsScrollingContext = createContext(false);
 
-export const useIsScrolling = (): boolean => useContext(IsScrollingContext);
+export const useIsScrolling = (): boolean => use(IsScrollingContext);

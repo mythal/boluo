@@ -1,11 +1,11 @@
 import { useSetAtom } from 'jotai';
-import { useCallback, useContext } from 'react';
+import { useCallback, use } from 'react';
 import { findNextPaneKey, panesAtom } from '../state/view.atoms';
 import { PaneContext } from '../state/view.context';
 import { usePaneLimit } from './useMaxPane';
 
 export const usePaneSplit = () => {
-  const { key } = useContext(PaneContext);
+  const { key } = use(PaneContext);
 
   const paneLimit = usePaneLimit();
   const setPanes = useSetAtom(panesAtom);

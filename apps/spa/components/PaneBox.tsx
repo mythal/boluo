@@ -3,7 +3,7 @@ import {
   type FC,
   type ReactNode,
   Suspense,
-  useContext,
+  use,
   useEffect,
   useMemo,
   useRef,
@@ -51,7 +51,7 @@ const getChildGridStyle = (ratio: ChildPaneRatio): CSSProperties => {
 };
 
 export const PaneBox: FC<Props> = ({ header, children, initSizeLevel = 0 }) => {
-  const { key: paneKey, focused } = useContext(PaneContext);
+  const { key: paneKey, focused } = use(PaneContext);
   const paneBoxRef = useRef<HTMLDivElement | null>(null);
   const bannerRef = useRef<HTMLDivElement | null>(null);
   const sizeLevelAtom = useMemo(() => atom(initSizeLevel), [initSizeLevel]);
@@ -149,7 +149,7 @@ export const PaneBox: FC<Props> = ({ header, children, initSizeLevel = 0 }) => {
   };
   return (
     <BannerContext value={bannerRef}>
-      <SizeLevelContext.Provider value={sizeLevelAtom}>
+      <SizeLevelContext value={sizeLevelAtom}>
         <div
           ref={paneBoxRef}
           style={growStyle}
@@ -182,7 +182,7 @@ export const PaneBox: FC<Props> = ({ header, children, initSizeLevel = 0 }) => {
             )}
           </div>
         </div>
-      </SizeLevelContext.Provider>
+      </SizeLevelContext>
     </BannerContext>
   );
 };

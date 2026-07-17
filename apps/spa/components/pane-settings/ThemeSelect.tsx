@@ -60,8 +60,8 @@ export const ThemeSelect: FC<Props> = ({ id }) => {
   );
   return (
     <Select value={theme} onChange={handleChange} id={id}>
-      {items.map((item, key) => (
-        <option key={key} value={item.value}>
+      {items.map((item) => (
+        <option key={item.value} value={item.value}>
           {item.label}
         </option>
       ))}

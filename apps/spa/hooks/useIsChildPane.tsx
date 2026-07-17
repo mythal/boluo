@@ -1,7 +1,7 @@
-import { createContext, useContext } from 'react';
+import { createContext, use } from 'react';
 
 export const IsChildPaneContext = createContext(false);
 
 export const useIsChildPane = () => {
-  return useContext(IsChildPaneContext);
+  return use(IsChildPaneContext);
 };

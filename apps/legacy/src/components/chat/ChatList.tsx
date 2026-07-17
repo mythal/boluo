@@ -89,6 +89,9 @@ const useAutoScroll = (chatListRef: React.RefObject<HTMLDivElement | null>) => {
       scrollEnd.current = chatList.scrollHeight - chatList.scrollTop - chatList.clientHeight;
     };
     chatList.addEventListener('scroll', compute, { capture: false, passive: true });
+    return () => {
+      chatList.removeEventListener('scroll', compute, { capture: false });
+    };
   }, [chatListRef]);
 };
 

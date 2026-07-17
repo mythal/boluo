@@ -19,21 +19,27 @@ export const SendButton: FC<Props> = ({ isEditing = false, send }) => {
   const intl = useIntl();
 
   const { enterSend } = useSettings();
-  const { showTooltip, refs, getFloatingProps, getReferenceProps, floatingStyles } =
-    useTooltip('top-end');
+  const {
+    showTooltip,
+    setReference,
+    setFloating,
+    getFloatingProps,
+    getReferenceProps,
+    floatingStyles,
+  } = useTooltip('top-end');
   const composeError = useComposeError();
   const title = isEditing
     ? intl.formatMessage({ defaultMessage: 'Edit' })
     : intl.formatMessage({ defaultMessage: 'Send' });
   return (
-    <div className="shrink-0 self-end py-1 pr-1" ref={refs.setReference} {...getReferenceProps()}>
+    <div className="shrink-0 self-end py-1 pr-1" ref={setReference} {...getReferenceProps()}>
       <InComposeButton onClick={() => void send()} disabled={composeError != null} label={title}>
         {isEditing ? <Edit /> : <PaperPlane />}
       </InComposeButton>
       <TooltipBox
         show={showTooltip}
         style={floatingStyles}
-        ref={refs.setFloating}
+        ref={setFloating}
         {...getFloatingProps()}
         defaultStyle
       >

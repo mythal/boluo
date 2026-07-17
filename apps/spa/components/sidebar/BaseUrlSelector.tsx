@@ -51,7 +51,7 @@ export const BaseUrlSelector: FC = () => {
           const result = testReuslt.find((item) => item.proxy.name === proxy.name);
           return (
             <BaseUrlSelectorItem
-              key={proxy.url}
+              key={`${proxy.name}:${proxy.url}`}
               proxy={proxy}
               result={result?.rtt}
               score={getRouteScore(proxy.url)}

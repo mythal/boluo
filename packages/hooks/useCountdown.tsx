@@ -2,10 +2,13 @@ import { useEffect, useState } from 'react';
 
 export const useCountdown = (seconds: number) => {
   const [countdown, setCountdown] = useState(seconds);
+  const [prevSeconds, setPrevSeconds] = useState(seconds);
+  if (prevSeconds !== seconds) {
+    setPrevSeconds(seconds);
+    setCountdown(seconds);
+  }
 
   useEffect(() => {
-    setCountdown(seconds);
-
     const interval = window.setInterval(() => {
       setCountdown((prev) => {
         const next = prev - 1;

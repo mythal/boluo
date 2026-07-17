@@ -51,8 +51,8 @@ export const DiceSelect: FC<Props> = ({ id, value, onChange }) => {
   return (
     <div className="flex gap-1">
       <Select id={id} value={selectValue} onChange={handleSelectChange}>
-        {items.map((item, key) => (
-          <option key={key} value={item.value}>
+        {items.map((item) => (
+          <option key={item.value} value={item.value}>
             {item.label}
           </option>
         ))}

@@ -13,15 +13,21 @@ export const InGameSwitchButton: FC = () => {
   const defaultInGame = useDefaultInGame();
   const { inGameAtom, composeAtom } = useChannelAtoms();
 
-  const { showTooltip, refs, getFloatingProps, getReferenceProps, floatingStyles } =
-    useTooltip('top-start');
+  const {
+    showTooltip,
+    setReference,
+    setFloating,
+    getFloatingProps,
+    getReferenceProps,
+    floatingStyles,
+  } = useTooltip('top-start');
   const intl = useIntl();
   const inGame = useAtomValue(inGameAtom);
   const dispatch = useSetAtom(composeAtom);
   const title = intl.formatMessage({ defaultMessage: 'Toggle In Game' });
   const tooltipLabel = intl.formatMessage({ defaultMessage: 'Toggle In Game' });
   return (
-    <div className="shrink-0 py-1" ref={refs.setReference} {...getReferenceProps()}>
+    <div className="shrink-0 py-1" ref={setReference} {...getReferenceProps()}>
       <InComposeButton
         pressed={inGame}
         onClick={() =>
@@ -39,7 +45,7 @@ export const InGameSwitchButton: FC = () => {
       <TooltipBox
         show={showTooltip}
         style={floatingStyles}
-        ref={refs.setFloating}
+        ref={setFloating}
         {...getFloatingProps()}
         defaultStyle
       >

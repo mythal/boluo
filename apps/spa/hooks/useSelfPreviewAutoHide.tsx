@@ -16,6 +16,9 @@ export const useSelfPreviewAutoHide = () => {
   const [hideToolbox, setHideToolbox] = useState(false);
   const [hidePlaceholder, setHidePlaceholder] = useState(false);
 
+  // The synchronous update() on mount computes the initial hide state and
+  // schedules the next timer tick; later calls come from subscriptions.
+  /* eslint-disable @eslint-react/set-state-in-effect */
   useEffect(() => {
     let timer: number | null = null;
     const update = () => {
@@ -79,6 +82,7 @@ export const useSelfPreviewAutoHide = () => {
     selfPreviewHideAtAtom,
     selfPreviewShouldHoldAtom,
   ]);
+  /* eslint-enable @eslint-react/set-state-in-effect */
 
   return { hidePlaceholder, hideToolbox };
 };

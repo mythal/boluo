@@ -3,7 +3,7 @@ import React, {
   Activity,
   type FC,
   type RefObject,
-  useContext,
+  use,
   useEffect,
   useMemo,
   useRef,
@@ -38,6 +38,7 @@ import Icon from '@boluo/ui/Icon';
 import { MessageToolbarBox } from '@boluo/ui/chat/MessageToolbarBox';
 import { MessageToolbarButton } from '@boluo/ui/chat/MessageToolbarButton';
 import { CircleIndicator } from '@boluo/ui/CircleIndicator';
+import { useFloatingSetters } from '@boluo/ui/hooks/useFloatingSetters';
 import { messageToParsed, toSimpleText } from '@boluo/interpreter';
 import { useMutateMessageDelete } from '@boluo/hooks/useMutateMessageDelete';
 import { empty, identity } from '@boluo/utils/function';
@@ -73,7 +74,7 @@ export const MessageToolbar: FC<{
   const optimistic = useIsOptimistic();
   const [, startTransition] = useTransition();
   const permsEdit = sendBySelf && !optimistic;
-  const [display, setDisplay] = useAtom(useContext(DisplayContext));
+  const [display, setDisplay] = useAtom(use(DisplayContext));
   const toolbarRef = useRef<HTMLDivElement | null>(null);
   const store = useStore();
   const isDragging = useIsDragging();
@@ -151,7 +152,7 @@ const MessageArchive: FC<{ messageId: string; archived: boolean; variant: 'toolb
   archived,
   variant,
 }) => {
-  const setDisplay = useSetAtom(useContext(DisplayContext));
+  const setDisplay = useSetAtom(use(DisplayContext));
   const optimistic = useIsOptimistic();
   const intl = useIntl();
   const { trigger: toggle, isMutating: isToggling } = useMutateMessageArchive(messageId, {
@@ -238,7 +239,7 @@ const MessageToolbarMoreButton: FC<{
   longPressStart: number | null;
   longPressDuration: number;
 }> = ({ message, longPressStart, longPressDuration }) => {
-  const displayAtom = useContext(DisplayContext);
+  const displayAtom = use(DisplayContext);
   const [display, setDisplay] = useAtom(displayAtom);
   const open = shoudShowMore(display.type);
   const { refs, floatingStyles, context, update } = useFloating<HTMLButtonElement>({
@@ -257,6 +258,7 @@ const MessageToolbarMoreButton: FC<{
     placement: 'top-end',
     middleware: [flip()],
   });
+  const { setReference, setFloating } = useFloatingSetters(refs);
   useEffect(() => {
     if (shoudShowMore(display.type)) {
       update();
@@ -283,7 +285,7 @@ const MessageToolbarMoreButton: FC<{
       <MessageToolbarButton
         pressed={open}
         loading={showLongPressProgress}
-        ref={refs.setReference}
+        ref={setReference}
         {...getReferenceProps()}
       >
         {showLongPressProgress ? (
@@ -295,7 +297,7 @@ const MessageToolbarMoreButton: FC<{
       <Activity mode={open ? 'visible' : 'hidden'}>
         <div
           style={floatingStyles}
-          ref={refs.setFloating}
+          ref={setFloating}
           {...getFloatingProps()}
           className="bg-surface-default border-border-default z-20 flex w-56 flex-col gap-1 rounded-md border p-2 shadow-md transition-colors"
         >
@@ -307,7 +309,7 @@ const MessageToolbarMoreButton: FC<{
 };
 
 const MessageToolbarMore: FC<{ message: Message }> = ({ message }) => {
-  const display = useAtomValue(useContext(DisplayContext));
+  const display = useAtomValue(use(DisplayContext));
   const detailDate = useMemo(
     () => <MessageDetailDate created={message.created} edited={message.modified} />,
     [message.created, message.modified],
@@ -337,7 +339,7 @@ const MessageToolbarMore: FC<{ message: Message }> = ({ message }) => {
 };
 
 const MessageDeleteButton: FC<{ messageId: string }> = ({ messageId }) => {
-  const setDisplay = useSetAtom(useContext(DisplayContext));
+  const setDisplay = useSetAtom(use(DisplayContext));
   const intl = useIntl();
   const { trigger: deleteMessage, isMutating: deleting } = useMutateMessageDelete(messageId, {
     revalidate: false,
@@ -362,7 +364,7 @@ const MessageDeleteConfirm: FC<{ message: Message }> = ({ message }) => {
   const intl = useIntl();
   const parsed = messageToParsed(message.text, message.entities);
   const simpleText = toSimpleText(parsed.text, parsed.entities);
-  const setDisplay = useSetAtom(useContext(DisplayContext));
+  const setDisplay = useSetAtom(use(DisplayContext));
   return (
     <div className="MessageDeleteConfirm px-1.5">
       <div className="text-text-muted py-1 text-xs">
@@ -388,7 +390,7 @@ const MessageArchiveOrDelete: FC<{ message: Message }> = ({ message }) => {
   const sendBySelf = message.senderId === member?.user.id;
   const premsDelete = member?.space.isAdmin || sendBySelf;
   const premsArchive = member?.channel.isMaster || sendBySelf;
-  const setDisplay = useSetAtom(useContext(DisplayContext));
+  const setDisplay = useSetAtom(use(DisplayContext));
   const archived = message.folded;
   const archiveButton = useMemo(
     () => <MessageArchive variant="more" messageId={message.id} archived={archived ?? false} />,
@@ -419,7 +421,7 @@ const MessageArchiveOrDelete: FC<{ message: Message }> = ({ message }) => {
 };
 
 const CopyMessageSource: FC<{ source: string }> = ({ source }) => {
-  const setDisplay = useSetAtom(useContext(DisplayContext));
+  const setDisplay = useSetAtom(use(DisplayContext));
   const copy = () => {
     void navigator.clipboard.writeText(source);
     setDisplay(SHOW);

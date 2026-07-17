@@ -9,8 +9,14 @@ import { useTooltip } from '@boluo/ui/hooks/useTooltip';
 import { TooltipBox } from '@boluo/ui/TooltipBox';
 
 export const AddDiceButton: FC = () => {
-  const { showTooltip, refs, getFloatingProps, getReferenceProps, floatingStyles } =
-    useTooltip('top-end');
+  const {
+    showTooltip,
+    setReference,
+    setFloating,
+    getFloatingProps,
+    getReferenceProps,
+    floatingStyles,
+  } = useTooltip('top-end');
   const defaultRollCommand = useDefaultRollCommand();
   const composeAtom = useComposeAtom();
   const dispatch = useSetAtom(composeAtom);
@@ -26,7 +32,7 @@ export const AddDiceButton: FC = () => {
   return (
     <div
       className="AddDiceButton shrink-0 self-end py-1"
-      ref={refs.setReference}
+      ref={setReference}
       {...getReferenceProps()}
     >
       <InComposeButton onClick={handleAddDice} label={title}>
@@ -35,7 +41,7 @@ export const AddDiceButton: FC = () => {
       <TooltipBox
         show={showTooltip}
         style={floatingStyles}
-        ref={refs.setFloating}
+        ref={setFloating}
         {...getFloatingProps()}
         defaultStyle
       >

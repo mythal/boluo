@@ -1,5 +1,3 @@
-// False positive with useTooltip refs
-/* eslint-disable react-hooks/refs */
 import { type FC, type ReactNode } from 'react';
 import ChevronLeft from '@boluo/icons/ChevronLeft';
 import ChevronRight from '@boluo/icons/ChevronRight';
@@ -42,10 +40,14 @@ export const SidebarButton: FC<Props> = ({
   const placement = isTouch ? 'right-start' : 'bottom-start';
   const offset = isTouch ? 8 : 4;
 
-  const { showTooltip, refs, getFloatingProps, getReferenceProps, floatingStyles } = useTooltip(
-    placement,
-    offset,
-  );
+  const {
+    showTooltip,
+    setReference,
+    setFloating,
+    getFloatingProps,
+    getReferenceProps,
+    floatingStyles,
+  } = useTooltip(placement, offset);
   let icon = isSidebarExpanded ? <ChevronLeft /> : <ChevronRight />;
   if (showDisconnected && !isSidebarExpanded) {
     icon = (
@@ -66,7 +68,7 @@ export const SidebarButton: FC<Props> = ({
               'top-[20%]',
             ],
       )}
-      ref={refs.setReference}
+      ref={setReference}
       {...getReferenceProps()}
     >
       <button
@@ -94,7 +96,7 @@ export const SidebarButton: FC<Props> = ({
 
       {showTooltip && !showDisconnected && (
         <div
-          ref={refs.setFloating}
+          ref={setFloating}
           style={floatingStyles}
           {...getFloatingProps()}
           className="dark w-max rounded bg-black px-3 py-2 text-left text-sm text-white shadow-lg"
@@ -109,7 +111,7 @@ export const SidebarButton: FC<Props> = ({
       )}
       {visibleError && (
         <div
-          ref={refs.setFloating}
+          ref={setFloating}
           style={floatingStyles}
           {...getFloatingProps()}
           className="dark text-text-primary w-max max-w-xs rounded border border-black bg-black px-3 py-2 text-left text-sm shadow-lg"
@@ -126,7 +128,7 @@ export const SidebarButton: FC<Props> = ({
       )}
       {showDisconnected && !visibleError && (
         <button
-          ref={refs.setFloating}
+          ref={setFloating}
           style={floatingStyles}
           {...getFloatingProps()}
           onClick={switchToConnections}

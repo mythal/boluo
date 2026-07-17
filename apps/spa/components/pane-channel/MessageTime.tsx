@@ -1,5 +1,5 @@
 import { type Message } from '@boluo/api';
-import { type FC, useContext } from 'react';
+import { type FC, use } from 'react';
 import { useSetAtom } from 'jotai';
 import { DisplayContext as ToolbarDisplayContext } from './MessageToolbar';
 import { type FailTo } from '../../state/channel.types';
@@ -12,7 +12,7 @@ interface Props {
 
 export const MessageTime: FC<Props> = ({ message, failTo }) => {
   const date = new Date(message.created);
-  const setToolbarDisplay = useSetAtom(useContext(ToolbarDisplayContext));
+  const setToolbarDisplay = useSetAtom(use(ToolbarDisplayContext));
   const edited = message.modified !== message.created;
   return (
     <MessageTimeDisplay

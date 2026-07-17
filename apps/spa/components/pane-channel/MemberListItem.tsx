@@ -15,6 +15,7 @@ import Mask from '@boluo/icons/Mask';
 import React, { type FC } from 'react';
 import Icon from '@boluo/ui/Icon';
 import { Avatar } from '@boluo/ui/users/Avatar';
+import { useFloatingSetters } from '@boluo/ui/hooks/useFloatingSetters';
 import { GameMasterBadge } from './GameMasterBadge';
 import { MemberCard } from './MemberCard';
 import { useQueryAppSettings } from '@boluo/hooks/useQueryAppSettings';
@@ -57,6 +58,7 @@ export const MemberListItem: FC<Props> = ({
     placement: 'left-start',
     whileElementsMounted: autoUpdate,
   });
+  const { setReference, setFloating } = useFloatingSetters(refs);
   const click = useClick(context, {});
   const hover = useHover(context, {
     enabled: mini,
@@ -79,7 +81,7 @@ export const MemberListItem: FC<Props> = ({
           'hover:bg-surface-muted pressed:bg-surface-interactive-active group relative w-full cursor-pointer py-1 text-sm',
           mini ? 'grid-cols-1 px-2' : 'grid-cols-[auto_minmax(0,1fr)_auto] px-3',
         )}
-        ref={refs.setReference}
+        ref={setReference}
         {...getReferenceProps()}
       >
         <div className="relative row-span-full h-8 w-8 flex-none">
@@ -121,7 +123,7 @@ export const MemberListItem: FC<Props> = ({
       {isMemberCardOpen && (
         <FloatingPortal>
           <MemberCard
-            ref={refs.setFloating}
+            ref={setFloating}
             channel={channel}
             user={member.user}
             channelMember={member.channel}

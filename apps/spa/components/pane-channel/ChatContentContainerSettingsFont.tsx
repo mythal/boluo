@@ -15,8 +15,14 @@ interface Props {
 }
 
 export const ChatContentContainerSettingsFont: FC<Props> = ({ inGameFont, updateSettings }) => {
-  const { showTooltip, refs, getFloatingProps, getReferenceProps, floatingStyles } =
-    useTooltip('bottom-start');
+  const {
+    showTooltip,
+    setReference,
+    setFloating,
+    getFloatingProps,
+    getReferenceProps,
+    floatingStyles,
+  } = useTooltip('bottom-start');
   const enabled = inGameFont === 'in-game-serif';
 
   const toggleSerifFont = () => {
@@ -39,7 +45,7 @@ export const ChatContentContainerSettingsFont: FC<Props> = ({ inGameFont, update
         small
         aria-pressed={enabled}
         className="relative"
-        ref={refs.setReference}
+        ref={setReference}
         onClick={toggleSerifFont}
         {...getReferenceProps()}
       >
@@ -51,7 +57,7 @@ export const ChatContentContainerSettingsFont: FC<Props> = ({ inGameFont, update
       <TooltipBox
         show={showTooltip}
         style={floatingStyles}
-        ref={refs.setFloating}
+        ref={setFloating}
         {...getFloatingProps()}
         defaultStyle
       >

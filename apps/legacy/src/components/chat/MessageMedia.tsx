@@ -73,15 +73,18 @@ function MessageMedia({ className, mediaId, file }: Props) {
   useEffect(() => {
     if (file) {
       const reader = new FileReader();
-      reader.addEventListener(
-        'load',
-        function () {
-          setDataUrl(reader.result as string);
-        },
-        false,
-      );
+      const handleLoad = () => {
+        setDataUrl(reader.result as string);
+      };
+      reader.addEventListener('load', handleLoad, false);
       reader.readAsDataURL(file);
+      return () => {
+        reader.removeEventListener('load', handleLoad, false);
+        reader.abort();
+      };
     } else {
+      // Without the reset a removed file would keep serving its stale data URL.
+      // eslint-disable-next-line @eslint-react/set-state-in-effect
       setDataUrl(null);
     }
   }, [file]);

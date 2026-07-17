@@ -47,7 +47,7 @@ function ExportDialog({ dismiss, channel }: Props) {
   const [simple, setSimple] = useState(false);
   const [headerAfterWrap, setHeaderAfterWrap] = useState(false);
   const dispatch = useDispatch();
-  const now = new Date();
+  const [now] = useState(() => new Date());
   let filename = `${fileNameDateTimeFormat(now)}_${channel.name}`;
   if (format.value === 'JSON') {
     filename += '.json';

@@ -43,8 +43,9 @@ function LoadMore() {
 
   useEffect(() => {
     if (initialized) {
+      let timer: number | undefined;
       const observer = new IntersectionObserver(() => {
-        window.setTimeout(() => {
+        timer = window.setTimeout(() => {
           if (!button.current) {
             return;
           }
@@ -60,6 +61,7 @@ function LoadMore() {
       return () => {
         mounted.current = false;
         observer.disconnect();
+        if (timer !== undefined) window.clearTimeout(timer);
       };
     }
   }, [initialized]);

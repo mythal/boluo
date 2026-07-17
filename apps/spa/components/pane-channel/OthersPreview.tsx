@@ -24,11 +24,17 @@ const ShowOriginalButton: FC<{ showOriginal: boolean; onToggle: () => void }> = 
 }) => {
   const intl = useIntl();
   const label = intl.formatMessage({ defaultMessage: 'Editing; Show original' });
-  const { showTooltip, refs, getFloatingProps, getReferenceProps, floatingStyles } =
-    useTooltip('top-start');
+  const {
+    showTooltip,
+    setReference,
+    setFloating,
+    getFloatingProps,
+    getReferenceProps,
+    floatingStyles,
+  } = useTooltip('top-start');
   return (
     <>
-      <span ref={refs.setReference} {...getReferenceProps()}>
+      <span ref={setReference} {...getReferenceProps()}>
         <ButtonInline aria-pressed={showOriginal} aria-label={label} onClick={onToggle}>
           <span className="p-0.5">{showOriginal ? <View /> : <Edit />}</span>
         </ButtonInline>
@@ -36,7 +42,7 @@ const ShowOriginalButton: FC<{ showOriginal: boolean; onToggle: () => void }> = 
       <TooltipBox
         show={showTooltip}
         style={floatingStyles}
-        ref={refs.setFloating}
+        ref={setFloating}
         {...getFloatingProps()}
         defaultStyle
       >

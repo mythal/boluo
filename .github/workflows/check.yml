@@ -95,5 +95,9 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Check formatting
+        run: npm run format:check
+        continue-on-error: true
+
       - name: Check version consistency
         run: npm run lint:versions

@@ -4,10 +4,10 @@ inputs:
   authToken:
     description: Cachix auth token
     required: false
-    default: ""
+    default: ''
 
 runs:
-  using: "composite"
+  using: 'composite'
   steps:
     # https://github.com/DeterminateSystems/nix-installer-action
     - name: Install Nix
@@ -16,7 +16,6 @@ runs:
         diagnostic-endpoint:
         extra-conf: |
           extra-sandbox-paths = /tmp/sccache?
-
 
     # https://github.com/cachix/cachix-action
     - name: Set up Cachix

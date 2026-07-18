@@ -1,0 +1,41 @@
+{
+  "name": "react-virtuoso",
+  "version": "4.18.10",
+  "description": "Vendored react-virtuoso source",
+  "license": "MIT",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/petyosi/react-virtuoso.git",
+    "directory": "packages/react-virtuoso"
+  },
+  "source": "src/index.tsx",
+  "files": [
+    "src"
+  ],
+  "sideEffects": false,
+  "type": "module",
+  "main": "./src/index.tsx",
+  "module": "./src/index.tsx",
+  "types": "./src/index.tsx",
+  "exports": {
+    ".": {
+      "types": "./src/index.tsx",
+      "import": "./src/index.tsx",
+      "default": "./src/index.tsx"
+    }
+  },
+  "devDependencies": {
+    "@boluo/typescript-config": "0.0.0",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "typescript": "^6"
+  },
+  "peerDependencies": {
+    "react": ">=16 || >=17 || >=18 || >=19",
+    "react-dom": ">=16 || >=17 || >=18 || >=19"
+  },
+  "scripts": {
+    "check": "tsc --noEmit"
+  }
+}

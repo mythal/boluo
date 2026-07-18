@@ -279,7 +279,12 @@ const handleNewMessage = (
     // was read before it committed); `handleMessagesLoaded` only merges
     // payload messages below the top message, so keeping it here fills that
     // gap and never duplicates.
-    return { ...state, previewMap, optimisticMessageMap, messages: L.of(message) };
+    return {
+      ...state,
+      previewMap,
+      optimisticMessageMap,
+      messages: L.of(message),
+    };
   }
   if (
     (message.pos === topMessage.pos && topMessage.id === message.id) ||
@@ -292,11 +297,14 @@ const handleNewMessage = (
     return resetMessagesState(state);
   }
   if (message.pos < topMessage.pos) {
+    if (!state.fullLoaded) {
+      return { ...state, previewMap, optimisticMessageMap };
+    }
     return {
       ...state,
       previewMap,
       optimisticMessageMap,
-      messages: state.fullLoaded ? L.prepend(message, messages) : messages,
+      messages: L.prepend(message, messages),
     };
   }
   if (message.pos > bottomMessage.pos) {
@@ -346,15 +354,20 @@ const handleMessagesLoaded = (
     return state;
   }
   if (!topMessage) {
-    return { ...state, messages: L.reverse(L.map(makeMessageItem, payloadMessages)) };
+    const messages = L.reverse(L.map(makeMessageItem, payloadMessages));
+    return {
+      ...state,
+      messages,
+    };
   }
   payloadMessages = L.dropWhile((message) => message.pos >= topMessage.pos, payloadMessages);
   if (payloadMessages.length === 0) {
     return state;
   }
+  const prependedMessages = L.reverse(L.map(makeMessageItem, payloadMessages));
   return {
     ...state,
-    messages: L.concat(L.reverse(L.map(makeMessageItem, payloadMessages)), state.messages),
+    messages: L.concat(prependedMessages, state.messages),
   };
 };
 
@@ -575,7 +588,12 @@ const handleMessageEdited = (
   }
   if (message.pos > bottomMessage.pos) {
     // Move down to the bottom
-    return { ...state, optimisticMessageMap, previewMap, messages: L.append(message, messages) };
+    return {
+      ...state,
+      optimisticMessageMap,
+      previewMap,
+      messages: L.append(message, messages),
+    };
   }
   const [insertIndex, itemByPos] = binarySearchPosList(messages, message.pos);
   if (itemByPos) {
@@ -770,7 +788,12 @@ const handleMessageDeleted = (
     return { ...state, optimisticMessageMap };
   }
   const [, index] = findResult;
-  return { ...state, optimisticMessageMap, messages: L.remove(index, 1, state.messages) };
+  const messages = L.remove(index, 1, state.messages);
+  return {
+    ...state,
+    optimisticMessageMap,
+    messages,
+  };
 };
 
 const handleResetGc = (
@@ -920,7 +943,12 @@ const checkOrder = (state: ChannelState, action: ChatActionUnion): ChannelState 
         index: i,
         size: messages.length,
       });
-      return { ...state, messages: L.empty(), fullLoaded: false, historyInitialized: false };
+      return {
+        ...state,
+        messages: L.empty(),
+        fullLoaded: false,
+        historyInitialized: false,
+      };
     }
     prevPos = message.pos;
     i += 1;

@@ -1,11 +1,18 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { atom, createStore } from 'jotai';
+import { selectAtom } from 'jotai/utils';
 import * as L from 'list';
 import {
   applyEditPreview,
+  areChatListsReferentiallyEqual,
   isMessageNewerThanOptimisticRef,
   isPreviewInLoadedRange,
   pruneSelfPreview,
+  reconcileVirtualChatList,
+  selectParsedIsEmpty,
+  START_INDEX,
+  virtualChatItemKey,
 } from './useChatList';
 import { type ChatItem, type MessageItem, type PreviewItem } from '../state/channel.types';
 import { type OptimisticItem } from '../state/channel.reducer';
@@ -88,12 +95,196 @@ test('pruneSelfPreview leaves the list untouched without a self preview', () => 
 
 const modified = '2024-01-01T00:00:00.000Z';
 
+test('parsed empty selection ignores changes between non-empty parse results', () => {
+  const parsedAtom = atom<{ entities: unknown[] }>({ entities: [] });
+  const parsedIsEmptyAtom = selectAtom(parsedAtom, selectParsedIsEmpty);
+  const store = createStore();
+  let notifications = 0;
+  const unsubscribe = store.sub(parsedIsEmptyAtom, () => {
+    notifications++;
+  });
+
+  assert.strictEqual(store.get(parsedIsEmptyAtom), true);
+  store.set(parsedAtom, { entities: [{}] });
+  assert.strictEqual(store.get(parsedIsEmptyAtom), false);
+  assert.strictEqual(notifications, 1);
+
+  store.set(parsedAtom, { entities: [{ changed: true }] });
+  assert.strictEqual(store.get(parsedIsEmptyAtom), false);
+  assert.strictEqual(notifications, 1);
+
+  store.set(parsedAtom, { entities: [] });
+  assert.strictEqual(store.get(parsedIsEmptyAtom), true);
+  assert.strictEqual(notifications, 2);
+  unsubscribe();
+});
+
 const makeMessageItem = (
   id: string,
   pos: number,
   overrides: Partial<MessageItem> = {},
 ): MessageItem =>
-  ({ id, pos, posP: pos, posQ: 1, modified, type: 'MESSAGE', ...overrides }) as MessageItem;
+  ({
+    id,
+    key: id,
+    pos,
+    posP: pos,
+    posQ: 1,
+    modified,
+    type: 'MESSAGE',
+    ...overrides,
+  }) as MessageItem;
+
+test('areChatListsReferentiallyEqual accepts different arrays with identical item references', () => {
+  const a = makeMessageItem('m-a', 1);
+  const b = makeMessageItem('m-b', 2);
+
+  assert.strictEqual(areChatListsReferentiallyEqual([a, b], [a, b]), true);
+});
+
+test('areChatListsReferentiallyEqual rejects changed item references and lengths', () => {
+  const a = makeMessageItem('m-a', 1);
+  const b = makeMessageItem('m-b', 2);
+
+  assert.strictEqual(areChatListsReferentiallyEqual([a, b], [{ ...a }, b]), false);
+  assert.strictEqual(areChatListsReferentiallyEqual([a, b], [a]), false);
+});
+
+test('reconcileVirtualChatList tracks a rendered preview prepended before the previous head', () => {
+  const originalHead = makeMessageItem('m-head', 10);
+  const previous = reconcileVirtualChatList(undefined, [originalHead], 'ALL:VISIBLE');
+  const editPreview = {
+    ...makeEditPreview('m-archived', 5),
+    key: 'editor',
+  };
+
+  const next = reconcileVirtualChatList(previous, [editPreview, originalHead], 'ALL:VISIBLE');
+
+  assert.strictEqual(next.firstItemIndex, START_INDEX - 1);
+  assert.strictEqual(next.epoch, previous.epoch);
+});
+
+test('reconcileVirtualChatList restores the index when a head preview is removed', () => {
+  const originalHead = makeMessageItem('m-head', 10);
+  const preview = {
+    ...makeEditPreview('m-archived', 5),
+    key: 'editor',
+  };
+  const initial = reconcileVirtualChatList(undefined, [originalHead], 'ALL:VISIBLE');
+  const withPreview = reconcileVirtualChatList(initial, [preview, originalHead], 'ALL:VISIBLE');
+
+  const withoutPreview = reconcileVirtualChatList(withPreview, [originalHead], 'ALL:VISIBLE');
+
+  assert.strictEqual(withoutPreview.firstItemIndex, START_INDEX);
+  assert.strictEqual(withoutPreview.epoch, initial.epoch);
+});
+
+test('reconcileVirtualChatList tracks deletion at a filtered list head', () => {
+  const filteredHead = makeMessageItem('m-filtered-head', 5);
+  const originalHead = makeMessageItem('m-original-head', 10);
+  const previous = reconcileVirtualChatList(
+    undefined,
+    [filteredHead, originalHead],
+    'IN_GAME:VISIBLE',
+  );
+
+  const next = reconcileVirtualChatList(previous, [originalHead], 'IN_GAME:VISIBLE');
+
+  assert.strictEqual(next.firstItemIndex, START_INDEX + 1);
+  assert.strictEqual(next.epoch, previous.epoch);
+});
+
+test('reconcileVirtualChatList preserves firstItemIndex for in-place reordering', () => {
+  const a = makeMessageItem('m-a', 1);
+  const b = makeMessageItem('m-b', 2);
+  const c = makeMessageItem('m-c', 3);
+  const previous = reconcileVirtualChatList(undefined, [a, b, c], 'ALL:VISIBLE');
+
+  const next = reconcileVirtualChatList(previous, [b, c, a], 'ALL:VISIBLE');
+
+  assert.strictEqual(next.firstItemIndex, previous.firstItemIndex);
+  assert.strictEqual(next.epoch, previous.epoch);
+});
+
+test('reconcileVirtualChatList ignores insertions after a stable rendered head', () => {
+  const a = makeMessageItem('m-a', 1);
+  const b = makeMessageItem('m-b', 3);
+  const previous = reconcileVirtualChatList(undefined, [a, b], 'ALL:VISIBLE');
+
+  const next = reconcileVirtualChatList(
+    previous,
+    [a, makeMessageItem('m-middle', 2), b],
+    'ALL:VISIBLE',
+  );
+
+  assert.strictEqual(next.firstItemIndex, previous.firstItemIndex);
+  assert.strictEqual(next.epoch, previous.epoch);
+});
+
+test('reconcileVirtualChatList counts only rendered head items removed by GC', () => {
+  const movedRawHead = makeMessageItem('m-raw-head', 1);
+  const renderedHead = makeMessageItem('m-rendered-head', 2);
+  const retained = makeMessageItem('m-retained', 49);
+  const bottom = makeMessageItem('m-bottom', 50);
+  const previous = reconcileVirtualChatList(
+    undefined,
+    [renderedHead, retained, movedRawHead, bottom],
+    'ALL:VISIBLE',
+  );
+
+  const next = reconcileVirtualChatList(previous, [retained, bottom], 'ALL:VISIBLE');
+
+  assert.strictEqual(next.firstItemIndex, START_INDEX + 1);
+  assert.strictEqual(next.epoch, previous.epoch);
+});
+
+test('reconcileVirtualChatList does not rebuild for an unrelated item content update', () => {
+  const message = makeMessageItem('m-a', 1, { text: 'before' });
+  const previous = reconcileVirtualChatList(undefined, [message], 'IN_GAME:VISIBLE');
+
+  const next = reconcileVirtualChatList(
+    previous,
+    [{ ...message, text: 'after' }],
+    'IN_GAME:VISIBLE',
+  );
+
+  assert.strictEqual(next.firstItemIndex, previous.firstItemIndex);
+  assert.strictEqual(next.epoch, previous.epoch);
+});
+
+test('reconcileVirtualChatList rebuilds when structural changes and reordering are ambiguous', () => {
+  const a = makeMessageItem('m-a', 1);
+  const b = makeMessageItem('m-b', 2);
+  const c = makeMessageItem('m-c', 3);
+  const previous = reconcileVirtualChatList(undefined, [a, b, c], 'ALL:VISIBLE');
+
+  const next = reconcileVirtualChatList(
+    previous,
+    [makeMessageItem('m-new', 0), b, a, c],
+    'ALL:VISIBLE',
+  );
+
+  assert.strictEqual(next.firstItemIndex, START_INDEX);
+  assert.strictEqual(next.epoch, previous.epoch + 1);
+});
+
+test('reconcileVirtualChatList rebuilds when the pane filter changes', () => {
+  const message = makeMessageItem('m-a', 1);
+  const previous = reconcileVirtualChatList(undefined, [message], 'ALL:VISIBLE');
+
+  const next = reconcileVirtualChatList(previous, [message], 'IN_GAME:VISIBLE');
+
+  assert.strictEqual(next.firstItemIndex, START_INDEX);
+  assert.strictEqual(next.epoch, previous.epoch + 1);
+});
+
+test('virtualChatItemKey namespaces message and preview keys', () => {
+  const message = makeMessageItem('same', 1, { key: 'same' });
+  const preview = { ...makePreview('preview', 'same'), type: 'PREVIEW' as const, key: 'same' };
+
+  assert.strictEqual(virtualChatItemKey(message), 'MESSAGE:same');
+  assert.strictEqual(virtualChatItemKey(preview), 'PREVIEW:same');
+});
 
 const makeEditPreview = (id: string, pos: number, editTime = modified): PreviewItem =>
   ({

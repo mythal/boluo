@@ -1,4 +1,4 @@
-import { type FC, type RefObject, useCallback, useLayoutEffect, useMemo, useRef } from 'react';
+import { type FC, type RefObject, useCallback, useMemo } from 'react';
 import {
   type ListRange,
   type ScrollSeekPlaceholderProps,
@@ -7,7 +7,6 @@ import {
 } from 'react-virtuoso';
 import { type ChatItem } from '../../state/channel.types';
 import { ChatContentHeader } from './ChatContentHeader';
-import { getOS } from '@boluo/utils/browser';
 import {
   type OnVirtualKeybroadChange,
   useVirtualKeybroadChange,
@@ -18,6 +17,7 @@ import { IsOptimisticContext } from '../../hooks/useIsOptimistic';
 import { ChatItemMessage } from './ChatItemMessage';
 import { SelfPreview } from './SelfPreview';
 import { OthersPreview } from './OthersPreview';
+import { virtualChatItemKey } from '../../hooks/useChatList';
 
 interface Props {
   firstItemIndex: number;
@@ -40,42 +40,17 @@ export interface VirtualListContext {
 
 const isContinuous = (a: ChatItem | null | undefined, b: ChatItem | null | undefined): boolean => {
   return !(
-    (
-      a == null ||
-      b == null ||
-      a.type !== 'MESSAGE' ||
-      b.type !== 'MESSAGE' || // type
-      a.senderId !== b.senderId ||
-      a.name !== b.name || // sender
-      a.folded ||
-      b.folded ||
-      a.whisperToUsers ||
-      b.whisperToUsers
-    ) // other
+    a == null ||
+    b == null ||
+    a.type !== 'MESSAGE' ||
+    b.type !== 'MESSAGE' || // type
+    a.senderId !== b.senderId ||
+    a.name !== b.name || // sender
+    a.folded ||
+    b.folded ||
+    a.whisperToUsers ||
+    b.whisperToUsers // other
   );
-};
-
-const useWorkaroundFirstItemIndex = (
-  virtuosoRef: RefObject<VirtuosoHandle | null>,
-  originalFirstItemIndex: number,
-) => {
-  const os = getOS();
-  // In iOS/iPadOS, the behavior of `firstItemIndex` is weird, use a fallback method to fix it
-  const workaroundOnLoad = os === 'iOS';
-
-  const firstItemIndex = workaroundOnLoad ? 0 : originalFirstItemIndex;
-
-  const prevFirstItemIndex = useRef(originalFirstItemIndex);
-  useLayoutEffect(() => {
-    if (!workaroundOnLoad || virtuosoRef.current == null) return;
-    const virtuoso = virtuosoRef.current;
-    if (prevFirstItemIndex.current > originalFirstItemIndex) {
-      const diff = prevFirstItemIndex.current - originalFirstItemIndex;
-      virtuoso.scrollToIndex({ index: Math.max(0, diff - 1), align: 'start' });
-    }
-    prevFirstItemIndex.current = originalFirstItemIndex;
-  }, [originalFirstItemIndex, virtuosoRef, workaroundOnLoad]);
-  return firstItemIndex;
 };
 
 export const ChatContentVirtualList: FC<Props> = (props) => {
@@ -114,20 +89,11 @@ export const ChatContentVirtualList: FC<Props> = (props) => {
   );
   useVirtualKeybroadChange(onVirtualKeybroadChange);
 
-  let prevOffsetIndex = Number.MIN_SAFE_INTEGER;
-  let prevItem: ChatItem | null = null;
-  const firstItemIndex = useWorkaroundFirstItemIndex(virtuosoRef, props.firstItemIndex);
+  const firstItemIndex = props.firstItemIndex;
   const itemContent = (offsetIndex: number, item: ChatItem) => {
-    const isLast = totalCount - 1 === offsetIndex - firstItemIndex;
-
-    let continuous = false;
-    if (offsetIndex - 1 === prevOffsetIndex) {
-      continuous = isContinuous(prevItem, item);
-    }
-
-    // eslint-disable-next-line react-hooks/immutability
-    prevOffsetIndex = offsetIndex;
-    prevItem = item;
+    const arrayIndex = offsetIndex - firstItemIndex;
+    const isLast = totalCount - 1 === arrayIndex;
+    const continuous = isContinuous(chatList[arrayIndex - 1], item);
 
     switch (item.type) {
       case 'MESSAGE':
@@ -187,6 +153,7 @@ export const ChatContentVirtualList: FC<Props> = (props) => {
         exit: (velocity) => Math.abs(velocity) < 100,
       }}
       data={chatList}
+      computeItemKey={(_index, item) => virtualChatItemKey(item)}
       initialTopMostItemIndex={{ index: totalCount - 1, align: 'end' }}
       atBottomThreshold={64}
       increaseViewportBy={{ top: 512, bottom: 128 }}

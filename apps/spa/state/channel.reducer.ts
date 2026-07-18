@@ -634,7 +634,11 @@ const handleMessagePreview = (
   }
   if (preview.edit != null) {
     const pos = preview.edit.p / preview.edit.q;
-    const findResult = findMessage(state.messages, preview.id, pos);
+    // An edit preview can arrive after its target message has moved. The id
+    // fallback below deliberately reconciles that stale position.
+    const findResult = findMessage(state.messages, preview.id, pos, {
+      warnOnStalePos: false,
+    });
     if (findResult == null) {
       newItem = {
         ...preview,

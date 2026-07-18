@@ -217,7 +217,11 @@ export const applyEditPreview = (
   itemList: ChatItem[],
 ): PreviewItem | null => {
   if (preview.edit == null) return null;
-  const findResult = findMessage(messages, preview.id, preview.pos);
+  // The message may have moved since this preview was created. Falling back
+  // to its id is expected here because the resolved preview follows the move.
+  const findResult = findMessage(messages, preview.id, preview.pos, {
+    warnOnStalePos: false,
+  });
   if (!findResult) {
     return null;
   }

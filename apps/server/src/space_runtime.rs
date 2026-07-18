@@ -36,6 +36,27 @@ pub(crate) struct SpaceSnapshot {
     pub(crate) channel_members: PersistentMap<Uuid, PersistentMap<Uuid, ChannelMember>>,
 }
 
+#[derive(Debug, Default, PartialEq, Eq)]
+struct SnapshotPayloadMismatch {
+    space: bool,
+    settings: bool,
+    channels: bool,
+    characters: bool,
+    space_members: bool,
+    channel_members: bool,
+}
+
+impl SnapshotPayloadMismatch {
+    fn any(&self) -> bool {
+        self.space
+            || self.settings
+            || self.channels
+            || self.characters
+            || self.space_members
+            || self.channel_members
+    }
+}
+
 #[derive(Debug, Clone)]
 pub(crate) enum SpaceDelta {
     SpaceUpdated(Space),
@@ -91,6 +112,23 @@ impl SpaceSnapshot {
                     })
             })
             .collect()
+    }
+
+    fn payload_mismatch(&self, reloaded: &Self) -> SnapshotPayloadMismatch {
+        let mut current_space = self.space.clone();
+        let reloaded_space = reloaded.space.clone();
+        // Activity is updated eagerly in memory and persisted asynchronously. It is
+        // intentionally excluded from structural cache-consistency reporting.
+        current_space.latest_activity = reloaded_space.latest_activity;
+
+        SnapshotPayloadMismatch {
+            space: current_space != reloaded_space,
+            settings: self.settings != reloaded.settings,
+            channels: self.channels != reloaded.channels,
+            characters: self.characters != reloaded.characters,
+            space_members: self.space_members != reloaded.space_members,
+            channel_members: self.channel_members != reloaded.channel_members,
+        }
     }
 
     fn apply_deltas(&self, revision: u64, deltas: Vec<SpaceDelta>) -> Self {
@@ -564,9 +602,12 @@ impl SpaceRuntime {
                     if let Some(active) = state.active_mutation.as_mut() {
                         active.base_revision = None;
                     }
-                    let result = Self::reload_snapshot(&runtime, &state, command.ticket).await;
+                    let is_reconciliation = command.reconciliation_permit.is_some();
+                    let result =
+                        Self::reload_snapshot(&runtime, &state, command.ticket, is_reconciliation)
+                            .await;
                     let _ = command.ack.send(result);
-                    if command.reconciliation_permit.is_some() {
+                    if is_reconciliation {
                         runtime
                             .reconciliation_pending
                             .store(false, Ordering::Release);
@@ -608,7 +649,7 @@ impl SpaceRuntime {
             runtime.active_mutations.fetch_sub(1, Ordering::AcqRel);
             state.active_mutation = None;
             let ticket = runtime.reserve_generation();
-            let _ = Self::reload_snapshot(runtime, state, ticket).await;
+            let _ = Self::reload_snapshot(runtime, state, ticket, false).await;
         }
     }
 
@@ -637,7 +678,7 @@ impl SpaceRuntime {
             .record(started_at.elapsed().as_secs_f64());
         if needs_repair {
             let ticket = runtime.reserve_generation();
-            if let Err(error) = Self::reload_snapshot(runtime, state, ticket).await {
+            if let Err(error) = Self::reload_snapshot(runtime, state, ticket, false).await {
                 tracing::error!(
                     %error,
                     space_id = %runtime.space_id,
@@ -686,7 +727,7 @@ impl SpaceRuntime {
         )
         .increment(1);
         let ticket = runtime.reserve_generation();
-        let result = Self::reload_snapshot(runtime, state, ticket).await;
+        let result = Self::reload_snapshot(runtime, state, ticket, false).await;
         if result.is_ok()
             && owns_mutation
             && let Some(active) = state.active_mutation.as_mut()
@@ -701,6 +742,7 @@ impl SpaceRuntime {
         runtime: &Arc<Self>,
         state: &ControlState,
         ticket: u64,
+        is_reconciliation: bool,
     ) -> Result<u64, SpaceRuntimeError> {
         let started = Instant::now();
         metrics::counter!("boluo_server_space_runtime_refresh_total").increment(1);
@@ -745,13 +787,33 @@ impl SpaceRuntime {
                         .map(PersistentMap::size)
                         .sum::<usize>() as f64,
                 );
-                let current_activity_us = runtime.snapshot().latest_activity_us.clone();
+                let current = runtime.snapshot();
+                if is_reconciliation && current.revision <= ticket {
+                    let mismatch = current.payload_mismatch(&snapshot);
+                    if mismatch.any() {
+                        metrics::counter!(
+                            "boluo_server_space_runtime_reconciliation_mismatch_total"
+                        )
+                        .increment(1);
+                        tracing::warn!(
+                            space_id = %runtime.space_id,
+                            space_mismatch = mismatch.space,
+                            settings_mismatch = mismatch.settings,
+                            channels_mismatch = mismatch.channels,
+                            characters_mismatch = mismatch.characters,
+                            space_members_mismatch = mismatch.space_members,
+                            channel_members_mismatch = mismatch.channel_members,
+                            "Space runtime reconciliation detected a snapshot mismatch"
+                        );
+                    }
+                }
+                let current_activity_us = current.latest_activity_us.clone();
                 current_activity_us.fetch_max(
                     snapshot.space.latest_activity.timestamp_micros(),
                     Ordering::Relaxed,
                 );
                 snapshot.latest_activity_us = current_activity_us;
-                if runtime.snapshot().revision <= ticket {
+                if current.revision <= ticket {
                     runtime.snapshot.store(Arc::new(snapshot));
                 }
                 runtime.update_dirty(state);
@@ -1599,7 +1661,9 @@ mod tests {
     }
 
     #[sqlx::test(migrator = "crate::db::MIGRATOR")]
-    async fn db_test_stale_snapshot_reconciliation_respects_pool_pressure(pool: sqlx::PgPool) {
+    async fn db_test_reconciliation_detects_mismatch_and_respects_pool_pressure(
+        pool: sqlx::PgPool,
+    ) {
         let (_owner, space, _) = create_space(&pool).await;
         Space::put_settings(&pool, space.id, &serde_json::json!({"version": "cached"}))
             .await
@@ -1620,6 +1684,16 @@ mod tests {
                 .settings,
             serde_json::json!({"version": "cached"}),
             "the test write unexpectedly updated process-local state"
+        );
+        let reloaded = SpaceRuntime::load_snapshot(&pool, space.id, 0)
+            .await
+            .expect("failed to reload Space snapshot");
+        assert_eq!(
+            runtime.snapshot().payload_mismatch(&reloaded),
+            SnapshotPayloadMismatch {
+                settings: true,
+                ..SnapshotPayloadMismatch::default()
+            }
         );
 
         let max_connections = pool.options().get_max_connections() as usize;

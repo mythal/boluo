@@ -48,7 +48,7 @@ impl ChannelType {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, specta::Type, sqlx::Type)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, specta::Type, sqlx::Type)]
 #[sqlx(type_name = "channels")]
 #[serde(rename_all = "camelCase")]
 pub struct Channel {
@@ -257,7 +257,7 @@ impl Channel {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, specta::Type, sqlx::Type)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, specta::Type, sqlx::Type)]
 #[sqlx(type_name = "channel_members")]
 #[serde(rename_all = "camelCase")]
 pub struct ChannelMember {

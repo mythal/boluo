@@ -64,7 +64,7 @@ impl CharacterVisibility {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, specta::Type, sqlx::Type)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, specta::Type, sqlx::Type)]
 #[sqlx(type_name = "characters")]
 #[serde(rename_all = "camelCase")]
 pub struct Character {

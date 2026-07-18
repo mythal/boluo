@@ -24,7 +24,7 @@ impl Lifespan for UserSpaces {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, specta::Type, sqlx::Type)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, specta::Type, sqlx::Type)]
 #[sqlx(type_name = "spaces")]
 #[serde(rename_all = "camelCase")]
 pub struct Space {
@@ -586,7 +586,7 @@ mod tests {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, specta::Type, sqlx::Type)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, specta::Type, sqlx::Type)]
 #[sqlx(type_name = "space_members")]
 #[serde(rename_all = "camelCase")]
 pub struct SpaceMember {

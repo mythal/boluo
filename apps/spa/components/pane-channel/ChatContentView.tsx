@@ -276,6 +276,12 @@ export const ChatContentView: FC<Props> = ({ setIsScrolling, currentUserId }) =>
   const scrollerRef = useRef<HTMLDivElement | null>(null);
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const positionObserverRef = useRef<IntersectionObserver | null>(null);
+  const setScroller = useCallback((scroller: HTMLDivElement | null) => {
+    if (scrollerRef.current === scroller) return;
+    positionObserverRef.current?.disconnect();
+    positionObserverRef.current = null;
+    scrollerRef.current = scroller;
+  }, []);
 
   type UnregisterOberver = () => void;
 
@@ -313,9 +319,10 @@ export const ChatContentView: FC<Props> = ({ setIsScrolling, currentUserId }) =>
           { root: scroller, threshold: [0, 0.25, 0.5, 0.75, 0.8, 1] },
         );
       }
-      positionObserverRef.current.observe(node);
+      const observer = positionObserverRef.current;
+      observer.observe(node);
       return () => {
-        positionObserverRef.current?.unobserve(node);
+        observer.unobserve(node);
       };
     },
     [channelId, store],
@@ -354,7 +361,7 @@ export const ChatContentView: FC<Props> = ({ setIsScrolling, currentUserId }) =>
                     filteredMessagesCount={filteredMessagesCount}
                     handleBottomStateChange={goBottomButtonOnBottomChange}
                     virtuosoRef={virtuosoRef}
-                    scrollerRef={scrollerRef}
+                    setScroller={setScroller}
                     chatList={chatList}
                     currentUserId={currentUserId}
                   />

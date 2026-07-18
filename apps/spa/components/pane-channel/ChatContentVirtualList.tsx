@@ -23,7 +23,7 @@ interface Props {
   firstItemIndex: number;
   renderRangeRef: RefObject<[number, number]>;
   virtuosoRef: RefObject<VirtuosoHandle | null>;
-  scrollerRef: RefObject<HTMLDivElement | null>;
+  setScroller: (scroller: HTMLDivElement | null) => void;
   chatList: ChatItem[];
   filteredMessagesCount: number;
   handleBottomStateChange?: (bottom: boolean) => void;
@@ -73,7 +73,7 @@ export const ChatContentVirtualList: FC<Props> = (props) => {
     renderRangeRef,
     virtuosoRef,
     chatList,
-    scrollerRef,
+    setScroller,
     filteredMessagesCount,
     handleBottomStateChange,
     setIsScrolling,
@@ -135,7 +135,7 @@ export const ChatContentVirtualList: FC<Props> = (props) => {
       style={{ overflowY: 'scroll', overscrollBehavior: 'none' }}
       ref={virtuosoRef}
       scrollerRef={(ref) => {
-        if (ref instanceof HTMLDivElement || ref == null) scrollerRef.current = ref;
+        if (ref instanceof HTMLDivElement || ref == null) setScroller(ref);
       }}
       isScrolling={setIsScrolling}
       rangeChanged={handleRangeChange}

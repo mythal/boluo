@@ -90,10 +90,10 @@ export const ChatContentVirtualList: FC<Props> = (props) => {
   useVirtualKeybroadChange(onVirtualKeybroadChange);
 
   const firstItemIndex = props.firstItemIndex;
-  const itemContent = (offsetIndex: number, item: ChatItem) => {
-    const arrayIndex = offsetIndex - firstItemIndex;
-    const isLast = totalCount - 1 === arrayIndex;
-    const continuous = isContinuous(chatList[arrayIndex - 1], item);
+  const itemContent = (logicalIndex: number, item: ChatItem) => {
+    const displayIndex = logicalIndex - firstItemIndex;
+    const isLast = totalCount - 1 === displayIndex;
+    const continuous = isContinuous(chatList[displayIndex - 1], item);
 
     switch (item.type) {
       case 'MESSAGE':
@@ -106,7 +106,7 @@ export const ChatContentVirtualList: FC<Props> = (props) => {
         return (
           <IsOptimisticContext value={item.optimistic || false}>
             {currentUserId && item.senderId === currentUserId ? (
-              <SelfPreview isLast={isLast} preview={item} virtualListIndex={offsetIndex} />
+              <SelfPreview isLast={isLast} preview={item} displayIndex={displayIndex} />
             ) : (
               <OthersPreview isLast={isLast} preview={item} />
             )}

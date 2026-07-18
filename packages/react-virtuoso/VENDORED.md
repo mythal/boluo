@@ -8,9 +8,6 @@ This directory contains the source code from
 - Upstream commit: `2c68507b98504bd65a48af6f7a4c84675a349b84`
 - License: MIT; see [`LICENSE`](./LICENSE)
 
-The package manifest is adapted so that the private workspace exports TypeScript
-source directly. Build output is not committed.
-
 ## Local patches
 
 - `src/upwardScrollFixSystem.ts` and `src/Virtuoso.tsx` contain an independent
@@ -22,9 +19,7 @@ source directly. Build output is not committed.
   recovery behavior.
 
 The workaround follows the behavior described in
-[`react-virtuoso#945`](https://github.com/petyosi/react-virtuoso/issues/945);
-it does not vendor source from the commercially licensed
-`@virtuoso.dev/message-list` package.
+[`react-virtuoso#945`](https://github.com/petyosi/react-virtuoso/issues/945).
 
 When updating, replace `LICENSE` and `README.md`, update the version, tag, and
 commit recorded here, and reapply the local patches after replacing `src`.

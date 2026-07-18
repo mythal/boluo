@@ -60,7 +60,7 @@ const useScrollToBottom = (virtuosoRef: RefObject<VirtuosoHandle | null>): UseSc
   const goBottom = useCallback(() => {
     const virtuoso = virtuosoRef.current;
     if (!virtuoso) return;
-    virtuoso.scrollToIndex({ index: 'LAST' });
+    virtuoso.scrollToIndex({ index: 'LAST', align: 'end' });
     setShowButton(false);
   }, [virtuosoRef]);
   return { showButton, onBottomStateChange, goBottom };
@@ -352,6 +352,7 @@ export const ChatContentView: FC<Props> = ({ setIsScrolling, currentUserId }) =>
                     setIsScrolling={setIsScrolling}
                     renderRangeRef={renderRangeRef}
                     filteredMessagesCount={filteredMessagesCount}
+                    handleBottomStateChange={goBottomButtonOnBottomChange}
                     virtuosoRef={virtuosoRef}
                     scrollerRef={scrollerRef}
                     chatList={chatList}

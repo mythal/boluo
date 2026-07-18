@@ -501,6 +501,36 @@ impl Member {
             .fetch_all(db)
             .await
     }
+
+    pub async fn get_by_channels<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
+        space_id: Uuid,
+        channel_ids: &[Uuid],
+    ) -> Result<HashMap<Uuid, Vec<Member>>, sqlx::Error> {
+        if channel_ids.is_empty() {
+            return Ok(HashMap::new());
+        }
+        let members = sqlx::query_file_as!(
+            Member,
+            "sql/channels/get_members_by_channels.sql",
+            space_id,
+            channel_ids
+        )
+        .fetch_all(db)
+        .await?;
+        let mut members_by_channel: HashMap<_, Vec<_>> = channel_ids
+            .iter()
+            .copied()
+            .map(|channel_id| (channel_id, Vec::new()))
+            .collect();
+        for member in members {
+            members_by_channel
+                .entry(member.channel.channel_id)
+                .or_default()
+                .push(member);
+        }
+        Ok(members_by_channel)
+    }
 }
 
 pub async fn members_attach_user<'c, T: sqlx::PgExecutor<'c>>(

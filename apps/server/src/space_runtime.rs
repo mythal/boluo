@@ -1743,7 +1743,7 @@ mod tests {
     #[sqlx::test]
     async fn db_test_committed_changes_update_only_loaded_runtimes(pool: sqlx::PgPool) {
         let (_, loaded_space, initial_channel) = create_space(&pool).await;
-        let (_, cold_space, _) = create_space(&pool).await;
+        let (cold_owner, cold_space, _) = create_space(&pool).await;
         let ctx = AppContext::new(pool.clone(), None);
         let runtime = ctx
             .space_store
@@ -1788,23 +1788,69 @@ mod tests {
         assert!(snapshot.channels.contains_key(&first.id));
         assert!(snapshot.channels.contains_key(&second.id));
 
-        let cold_channel = Channel::create(
+        let joined_cold_channel = Channel::create(
             &pool,
             &cold_space.id,
-            "Cold runtime",
+            "Joined cold runtime channel",
             true,
             Some("d20"),
             ChannelType::OutOfGame,
         )
         .await
         .expect("failed to create channel");
+        let joined_cold_member = ChannelMember::add_user(
+            &pool,
+            cold_owner.id,
+            joined_cold_channel.id,
+            "Cold member",
+            false,
+        )
+        .await
+        .expect("failed to add cold Channel member");
+        let empty_cold_channel = Channel::create(
+            &pool,
+            &cold_space.id,
+            "Empty cold runtime channel",
+            true,
+            Some("d20"),
+            ChannelType::OutOfGame,
+        )
+        .await
+        .expect("failed to create empty channel");
+        ChannelMember::add_user(
+            &pool,
+            cold_owner.id,
+            empty_cold_channel.id,
+            "Former cold member",
+            false,
+        )
+        .await
+        .expect("failed to add former cold Channel member");
+        ChannelMember::remove_user(&pool, cold_owner.id, empty_cold_channel.id)
+            .await
+            .expect("failed to remove former cold Channel member");
+
         let mut changes = CommittedChanges::default();
-        changes.channel_created(&cold_channel);
-        changes.apply_with_context(&ctx).await;
+        changes.channel_created(&joined_cold_channel);
+        changes.channel_created(&empty_cold_channel);
+        changes.channel_member_changed(cold_space.id, &joined_cold_member);
+        changes.channel_member_removed(cold_space.id, empty_cold_channel.id, cold_owner.id);
+        let mut applied = changes.apply_with_context(&ctx).await;
 
         assert!(
             ctx.space_store.get(&cold_space.id).is_none(),
             "a committed write unexpectedly loaded a cold runtime"
+        );
+        let joined_members = applied
+            .take_channel_members(cold_space.id, joined_cold_channel.id)
+            .expect("joined cold Channel refresh was missing");
+        assert_eq!(joined_members.len(), 1);
+        assert_eq!(joined_members[0].channel.user_id, cold_owner.id);
+        assert!(
+            applied
+                .take_channel_members(cold_space.id, empty_cold_channel.id)
+                .expect("empty cold Channel refresh was missing")
+                .is_empty()
         );
     }
 

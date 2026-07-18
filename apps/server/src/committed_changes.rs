@@ -285,21 +285,34 @@ impl CommittedChanges {
                 }
             }
         }
+        let mut member_refreshes_by_space: HashMap<Uuid, Vec<Uuid>> = HashMap::new();
         for (space_id, channel_id) in channel_member_refreshes {
-            let members = if let Some(snapshot) = ctx
+            member_refreshes_by_space
+                .entry(space_id)
+                .or_default()
+                .push(channel_id);
+        }
+        for (space_id, channel_ids) in member_refreshes_by_space {
+            if let Some(snapshot) = ctx
                 .space_store
                 .get(&space_id)
                 .and_then(|runtime| runtime.authoritative_snapshot())
             {
-                Ok(snapshot.members_in_channel(channel_id))
-            } else {
-                Member::get_by_channel(&ctx.db, space_id, channel_id).await
-            };
-            match members {
-                Ok(members) => {
-                    applied
-                        .channel_members
-                        .insert((space_id, channel_id), members);
+                for channel_id in channel_ids {
+                    applied.channel_members.insert(
+                        (space_id, channel_id),
+                        snapshot.members_in_channel(channel_id),
+                    );
+                }
+                continue;
+            }
+            match Member::get_by_channels(&ctx.db, space_id, &channel_ids).await {
+                Ok(members_by_channel) => {
+                    applied.channel_members.extend(
+                        members_by_channel
+                            .into_iter()
+                            .map(|(channel_id, members)| ((space_id, channel_id), members)),
+                    );
                 }
                 Err(error) => {
                     metrics::counter!(
@@ -310,8 +323,8 @@ impl CommittedChanges {
                     tracing::error!(
                         %error,
                         %space_id,
-                        %channel_id,
-                        "Failed to refresh channel members after database commit"
+                        channel_count = channel_ids.len(),
+                        "Failed to refresh Channel members after database commit"
                     );
                 }
             }

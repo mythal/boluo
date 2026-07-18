@@ -260,7 +260,7 @@ async fn refresh_token(
         ));
     }
     let token = Space::refresh_token(&mut *trans, &id).await?;
-    trans.commit().await?;
+    let mutation = mutation.commit(trans).await?;
     let mut changes = CommittedChanges::default();
     changes.space_invite_token_updated(id, token);
     changes.apply_with_mutation(ctx, &mutation).await;
@@ -458,7 +458,7 @@ async fn edit(
             }
         }
     }
-    trans.commit().await?;
+    let mutation = mutation.commit(trans).await?;
     let mut changes = CommittedChanges::default();
     changes.space_updated(&space);
     for member in &changed_members {
@@ -482,9 +482,9 @@ async fn join(
         .ok_or_else(|| unexpected!("No such user found."))?;
 
     let mutation = ctx.space_store.acquire_mutation(space_id).await?;
-    let mut conn = ctx.db.acquire().await?;
+    let mut trans = ctx.db.begin().await?;
 
-    let space = Space::get_by_id(&mut *conn, &space_id)
+    let space = Space::get_by_id(&mut *trans, &space_id)
         .await?
         .or_not_found()?;
     if !space.is_public && token != Some(space.invite_token) && space.owner_id != session.user_id {
@@ -498,13 +498,13 @@ async fn join(
         ));
     }
     let member = if &space.owner_id == user_id {
-        SpaceMember::add_admin(&mut *conn, user_id, &space_id).await?
+        SpaceMember::add_admin(&mut *trans, user_id, &space_id).await?
     } else {
-        SpaceMember::add_user(&mut *conn, user_id, &space_id).await?
+        SpaceMember::add_user(&mut *trans, user_id, &space_id).await?
     };
+    let mutation = mutation.commit(trans).await?;
     let mut changes = CommittedChanges::default();
     changes.space_member_added(&member);
-    drop(conn);
     changes.apply_with_mutation(ctx, &mutation).await;
     Update::space_updated(ctx, space_id);
     Ok(SpaceWithMember {
@@ -524,7 +524,7 @@ async fn leave(
     let mutation = ctx.space_store.acquire_mutation(id).await?;
     let mut trans = ctx.db.begin().await?;
     let channel_ids = SpaceMember::remove_user(&mut trans, session.user_id, id).await?;
-    trans.commit().await?;
+    let mutation = mutation.commit(trans).await?;
     let mut changes = CommittedChanges::default();
     changes.space_member_removed(id, session.user_id, channel_ids);
     changes.apply_with_mutation(ctx, &mutation).await;
@@ -564,7 +564,7 @@ async fn kick(
         ));
     }
     let channel_ids = SpaceMember::remove_user(&mut trans, user_id, space_id).await?;
-    trans.commit().await?;
+    let mutation = mutation.commit(trans).await?;
     let mut changes = CommittedChanges::default();
     changes.space_member_removed(space_id, user_id, channel_ids);
     changes.apply_with_mutation(ctx, &mutation).await;
@@ -641,7 +641,7 @@ async fn delete(
         let member_user_ids = Space::delete(&mut trans, id)
             .await?
             .ok_or(AppError::NotFound("space"))?;
-        trans.commit().await?;
+        let mutation = mutation.commit(trans).await?;
         let mut changes = CommittedChanges::default();
         changes.space_deleted(id, member_user_ids);
         changes.apply_with_mutation(ctx, &mutation).await;
@@ -703,7 +703,7 @@ async fn update_settings(
         ));
     }
     Space::put_settings(&mut *trans, id, &settings).await?;
-    trans.commit().await?;
+    let mutation = mutation.commit(trans).await?;
     let mut changes = CommittedChanges::default();
     changes.space_settings_updated(id, settings.clone());
     changes.apply_with_mutation(ctx, &mutation).await;

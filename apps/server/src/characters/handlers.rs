@@ -175,7 +175,7 @@ async fn create(
         metadata,
     )
     .await?;
-    trans.commit().await?;
+    let mutation = mutation.commit(trans).await?;
     let mut changes = CommittedChanges::default();
     changes.character_updated(&character);
     changes.apply_with_mutation(ctx, &mutation).await;
@@ -223,7 +223,7 @@ async fn edit(
     )
     .await?
     .ok_or(AppError::NotFound("Character"))?;
-    trans.commit().await?;
+    let mutation = mutation.commit(trans).await?;
     let mut changes = CommittedChanges::default();
     changes.character_updated(&updated);
     changes.apply_with_mutation(ctx, &mutation).await;
@@ -250,7 +250,7 @@ async fn delete(
         ));
     }
     Character::delete(&mut *trans, &character_id).await?;
-    trans.commit().await?;
+    let mutation = mutation.commit(trans).await?;
     let mut changes = CommittedChanges::default();
     changes.character_deleted(space_id, character_id);
     changes.apply_with_mutation(ctx, &mutation).await;

@@ -6,7 +6,9 @@ use crate::cache::{CACHE, CacheType};
 use crate::channels::models::Member;
 use crate::channels::{Channel, ChannelMember};
 use crate::characters::Character;
-use crate::space_runtime::{SpaceDelta, SpaceMutationGuard, SpaceMutationProof, SpaceRuntimeError};
+use crate::space_runtime::{
+    CommittedSpaceMutation, SpaceDelta, SpaceMutationProof, SpaceRuntimeError,
+};
 use crate::spaces::{Space, SpaceMember};
 
 /// Domain changes that are safe to apply to process-wide state after a successful database commit.
@@ -206,7 +208,7 @@ impl CommittedChanges {
     pub(crate) async fn apply_with_mutation(
         self,
         ctx: &crate::context::AppContext,
-        mutation: &SpaceMutationGuard,
+        mutation: &CommittedSpaceMutation,
     ) -> AppliedChanges {
         self.apply_with_context_inner(ctx, Some(mutation.proof()))
             .await

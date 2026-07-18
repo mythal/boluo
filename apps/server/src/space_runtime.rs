@@ -225,6 +225,10 @@ pub(crate) enum SpaceRuntimeError {
     Closed,
     #[error("space runtime mutation queue is full")]
     Busy,
+    #[error("space runtime mutation is no longer active")]
+    InvalidMutation,
+    #[error("space runtime snapshot refresh failed")]
+    RefreshFailed,
 }
 
 pub(crate) struct SpaceRuntime {
@@ -396,7 +400,7 @@ impl SpaceRuntime {
     }
 
     async fn refresh_committed(&self) -> Result<u64, SpaceRuntimeError> {
-        let (ticket, ack_rx) = self.enqueue_refresh(None)?;
+        let (ticket, ack_rx) = self.enqueue_refresh(SnapshotReloadReason::Unguarded, None)?;
         ack_rx.await.unwrap_or(Err(SpaceRuntimeError::Closed))?;
         Ok(ticket)
     }
@@ -423,11 +427,12 @@ impl SpaceRuntime {
 
     fn enqueue_refresh(
         &self,
+        reason: SnapshotReloadReason,
         reconciliation_permit: Option<tokio::sync::OwnedSemaphorePermit>,
     ) -> Result<(u64, oneshot::Receiver<Result<u64, SpaceRuntimeError>>), SpaceRuntimeError> {
         let ticket = self.next_ticket.fetch_add(1, Ordering::AcqRel) + 1;
         self.dirty.store(true, Ordering::Release);
-        self.enqueue_refresh_command(ticket, reconciliation_permit)
+        self.enqueue_refresh_command(ticket, reason, reconciliation_permit)
     }
 
     fn enqueue_reconciliation(
@@ -437,17 +442,23 @@ impl SpaceRuntime {
         // Reconciliation is a best-effort verification, not evidence of a committed
         // change. Keep serving the current snapshot while the actor reloads it.
         let ticket = self.next_ticket.load(Ordering::Acquire);
-        self.enqueue_refresh_command(ticket, Some(reconciliation_permit))
+        self.enqueue_refresh_command(
+            ticket,
+            SnapshotReloadReason::Reconciliation,
+            Some(reconciliation_permit),
+        )
     }
 
     fn enqueue_refresh_command(
         &self,
         ticket: u64,
+        reason: SnapshotReloadReason,
         reconciliation_permit: Option<tokio::sync::OwnedSemaphorePermit>,
     ) -> Result<(u64, oneshot::Receiver<Result<u64, SpaceRuntimeError>>), SpaceRuntimeError> {
         let (ack_tx, ack_rx) = oneshot::channel();
         let command = RefreshCommand {
             ticket,
+            reason,
             ack: ack_tx,
             reconciliation_permit,
         };
@@ -461,7 +472,11 @@ impl SpaceRuntime {
                 });
             }
             Err(mpsc::error::TrySendError::Closed(_)) => {
-                metrics::counter!("boluo_server_space_runtime_refresh_failed_total").increment(1);
+                metrics::counter!(
+                    "boluo_server_space_runtime_refresh_failed_total",
+                    "reason" => reason.as_str()
+                )
+                .increment(1);
                 return Err(SpaceRuntimeError::Closed);
             }
         }
@@ -553,6 +568,18 @@ impl SpaceRuntime {
         })
     }
 
+    async fn prepare_mutation(&self, mutation_token: u64) -> Result<(), SpaceRuntimeError> {
+        let (prepared_tx, prepared_rx) = oneshot::channel();
+        self.control_tx
+            .send(ControlCommand::PrepareMutation {
+                mutation_token,
+                prepared: prepared_tx,
+            })
+            .await
+            .map_err(|_| SpaceRuntimeError::Closed)?;
+        prepared_rx.await.unwrap_or(Err(SpaceRuntimeError::Closed))
+    }
+
     fn finish_mutation(&self, mutation_token: u64) {
         let command = ControlCommand::FinishMutation { mutation_token };
         match self.control_tx.try_send(command) {
@@ -584,8 +611,17 @@ impl SpaceRuntime {
                         .push_back(PendingMutation { queued_at, granted });
                     Self::grant_next_mutation(&runtime, &mut state).await;
                 }
+                ControlCommand::PrepareMutation {
+                    mutation_token,
+                    prepared,
+                } => {
+                    let result =
+                        Self::prepare_active_mutation(&runtime, &mut state, mutation_token);
+                    let _ = prepared.send(result);
+                }
                 ControlCommand::FinishMutation { mutation_token } => {
                     Self::finish_active_mutation(&runtime, &mut state, mutation_token).await;
+                    Self::flush_deferred_refreshes(&runtime, &mut state).await;
                     Self::grant_next_mutation(&runtime, &mut state).await;
                 }
                 ControlCommand::ApplyCommitted {
@@ -599,12 +635,18 @@ impl SpaceRuntime {
                     let _ = ack.send(result);
                 }
                 ControlCommand::Refresh(command) => {
-                    if let Some(active) = state.active_mutation.as_mut() {
-                        active.base_revision = None;
+                    if state.active_mutation.is_some() {
+                        metrics::counter!(
+                            "boluo_server_space_runtime_refresh_deferred_total",
+                            "reason" => command.reason.as_str()
+                        )
+                        .increment(1);
+                        state.deferred_refreshes.push(command);
+                        continue;
                     }
                     let is_reconciliation = command.reconciliation_permit.is_some();
                     let result =
-                        Self::reload_snapshot(&runtime, &state, command.ticket, is_reconciliation)
+                        Self::reload_snapshot(&runtime, &state, command.ticket, command.reason)
                             .await;
                     let _ = command.ack.send(result);
                     if is_reconciliation {
@@ -614,6 +656,70 @@ impl SpaceRuntime {
                     }
                 }
             }
+        }
+    }
+
+    async fn flush_deferred_refreshes(runtime: &Arc<Self>, state: &mut ControlState) {
+        if state.active_mutation.is_some() || state.deferred_refreshes.is_empty() {
+            return;
+        }
+
+        let commands = std::mem::take(&mut state.deferred_refreshes);
+        let has_reconciliation = commands
+            .iter()
+            .any(|command| command.reconciliation_permit.is_some());
+        let has_committed_refresh = commands
+            .iter()
+            .any(|command| matches!(command.reason, SnapshotReloadReason::Unguarded));
+        let requested_ticket = commands
+            .iter()
+            .map(|command| command.ticket)
+            .max()
+            .unwrap_or_else(|| runtime.next_ticket.load(Ordering::Acquire));
+        let current = runtime.snapshot();
+        let committed_refresh_is_covered =
+            !runtime.dirty.load(Ordering::Acquire) && current.revision >= requested_ticket;
+        let ticket = requested_ticket
+            .max(current.revision)
+            .max(runtime.next_ticket.load(Ordering::Acquire));
+
+        let result = if has_reconciliation {
+            let reason = if has_committed_refresh && !committed_refresh_is_covered {
+                // A pending committed refresh makes a payload mismatch expected.
+                SnapshotReloadReason::Unguarded
+            } else {
+                SnapshotReloadReason::Reconciliation
+            };
+            Self::reload_snapshot(runtime, state, ticket, reason).await
+        } else if committed_refresh_is_covered {
+            Ok(ticket)
+        } else {
+            Self::reload_snapshot(runtime, state, ticket, SnapshotReloadReason::Unguarded).await
+        };
+
+        let reload_count = usize::from(has_reconciliation || !committed_refresh_is_covered);
+        let coalesced_count = commands.len().saturating_sub(reload_count);
+        if coalesced_count > 0 {
+            metrics::counter!("boluo_server_space_runtime_refresh_coalesced_total")
+                .increment(coalesced_count as u64);
+        }
+
+        match result {
+            Ok(ticket) => {
+                for command in commands {
+                    let _ = command.ack.send(Ok(ticket));
+                }
+            }
+            Err(_) => {
+                for command in commands {
+                    let _ = command.ack.send(Err(SpaceRuntimeError::RefreshFailed));
+                }
+            }
+        }
+        if has_reconciliation {
+            runtime
+                .reconciliation_pending
+                .store(false, Ordering::Release);
         }
     }
 
@@ -628,17 +734,9 @@ impl SpaceRuntime {
                 .set(state.pending_mutations.len() as f64);
             state.next_mutation_token += 1;
             let mutation_token = state.next_mutation_token;
-            let current_revision = runtime.snapshot().revision;
-            let generation = runtime.next_ticket.load(Ordering::Acquire);
-            let was_authoritative =
-                !runtime.dirty.load(Ordering::Acquire) && generation == current_revision;
-            let reserved_ticket = runtime.reserve_generation();
-            let base_revision = (was_authoritative && reserved_ticket == generation + 1)
-                .then_some(current_revision);
             state.active_mutation = Some(ActiveMutation {
                 mutation_token,
-                base_revision,
-                reserved_ticket,
+                prepared: None,
                 published: false,
                 started_at: Instant::now(),
             });
@@ -648,9 +746,44 @@ impl SpaceRuntime {
 
             runtime.active_mutations.fetch_sub(1, Ordering::AcqRel);
             state.active_mutation = None;
-            let ticket = runtime.reserve_generation();
-            let _ = Self::reload_snapshot(runtime, state, ticket, false).await;
         }
+    }
+
+    fn prepare_active_mutation(
+        runtime: &Arc<Self>,
+        state: &mut ControlState,
+        mutation_token: u64,
+    ) -> Result<(), SpaceRuntimeError> {
+        let Some(active) = state.active_mutation.as_mut() else {
+            return Err(SpaceRuntimeError::InvalidMutation);
+        };
+        if active.mutation_token != mutation_token {
+            tracing::warn!(
+                space_id = %runtime.space_id,
+                mutation_token,
+                active_mutation_token = active.mutation_token,
+                "Rejected preparation for a non-active Space mutation"
+            );
+            return Err(SpaceRuntimeError::InvalidMutation);
+        }
+        if active.prepared.is_some() {
+            return Ok(());
+        }
+
+        let current_revision = runtime.snapshot().revision;
+        let generation = runtime.next_ticket.load(Ordering::Acquire);
+        let was_authoritative =
+            !runtime.dirty.load(Ordering::Acquire) && generation == current_revision;
+        let reserved_ticket = runtime.reserve_generation();
+        let base_revision =
+            (was_authoritative && reserved_ticket == generation + 1).then_some(current_revision);
+        active.prepared = Some(PreparedMutation {
+            base_revision,
+            reserved_ticket,
+            started_at: Instant::now(),
+        });
+        metrics::counter!("boluo_server_space_runtime_mutation_prepared_total").increment(1);
+        Ok(())
     }
 
     async fn finish_active_mutation(
@@ -671,20 +804,51 @@ impl SpaceRuntime {
             return;
         }
         let started_at = active.started_at;
-        let needs_repair = !active.published || runtime.dirty.load(Ordering::Acquire);
+        let prepared_at = active.prepared.as_ref().map(|prepared| prepared.started_at);
+        let was_prepared = active.prepared.is_some();
+        let repair_reason = if was_prepared && !active.published {
+            Some("unpublished")
+        } else if was_prepared && runtime.dirty.load(Ordering::Acquire) {
+            Some("dirty")
+        } else {
+            None
+        };
         state.active_mutation = None;
         runtime.active_mutations.fetch_sub(1, Ordering::AcqRel);
         metrics::histogram!("boluo_server_space_runtime_mutation_duration_seconds")
             .record(started_at.elapsed().as_secs_f64());
-        if needs_repair {
+        if let Some(reason) = repair_reason {
+            metrics::counter!(
+                "boluo_server_space_runtime_mutation_repair_total",
+                "reason" => reason
+            )
+            .increment(1);
             let ticket = runtime.reserve_generation();
-            if let Err(error) = Self::reload_snapshot(runtime, state, ticket, false).await {
-                tracing::error!(
-                    %error,
-                    space_id = %runtime.space_id,
-                    mutation_token,
-                    "Space runtime remains dirty after mutation recovery failure"
-                );
+            match Self::reload_snapshot(
+                runtime,
+                state,
+                ticket,
+                SnapshotReloadReason::MutationRepair,
+            )
+            .await
+            {
+                Ok(_) => {
+                    if let Some(prepared_at) = prepared_at {
+                        metrics::histogram!(
+                            "boluo_server_space_runtime_mutation_dirty_duration_seconds",
+                            "outcome" => "repaired"
+                        )
+                        .record(prepared_at.elapsed().as_secs_f64());
+                    }
+                }
+                Err(error) => {
+                    tracing::error!(
+                        %error,
+                        space_id = %runtime.space_id,
+                        mutation_token,
+                        "Space runtime remains dirty after mutation recovery failure"
+                    );
+                }
             }
         }
     }
@@ -698,24 +862,41 @@ impl SpaceRuntime {
         let current = runtime.snapshot();
         let can_apply_delta = state.active_mutation.as_ref().is_some_and(|active| {
             active.mutation_token == mutation_token
-                && active.base_revision == Some(current.revision)
-                && runtime.next_ticket.load(Ordering::Acquire) == active.reserved_ticket
+                && active.prepared.as_ref().is_some_and(|prepared| {
+                    prepared.base_revision == Some(current.revision)
+                        && runtime.next_ticket.load(Ordering::Acquire) == prepared.reserved_ticket
+                })
         });
         if can_apply_delta {
             let ticket = runtime.reserve_generation();
             let next = current.apply_deltas(ticket, deltas);
             runtime.snapshot.store(Arc::new(next));
+            let mut prepared_at = None;
             if let Some(active) = state.active_mutation.as_mut() {
-                active.base_revision = None;
+                if let Some(prepared) = active.prepared.as_mut() {
+                    prepared_at = Some(prepared.started_at);
+                    prepared.base_revision = None;
+                }
                 active.published = true;
             }
             runtime.update_dirty(state);
+            if let Some(prepared_at) = prepared_at {
+                metrics::histogram!(
+                    "boluo_server_space_runtime_mutation_dirty_duration_seconds",
+                    "outcome" => "delta"
+                )
+                .record(prepared_at.elapsed().as_secs_f64());
+            }
             metrics::counter!("boluo_server_space_runtime_delta_applied_total").increment(1);
             return Ok(ticket);
         }
 
-        if let Some(active) = state.active_mutation.as_mut() {
-            active.base_revision = None;
+        if let Some(prepared) = state
+            .active_mutation
+            .as_mut()
+            .and_then(|active| active.prepared.as_mut())
+        {
+            prepared.base_revision = None;
         }
         let owns_mutation = state
             .active_mutation
@@ -727,13 +908,23 @@ impl SpaceRuntime {
         )
         .increment(1);
         let ticket = runtime.reserve_generation();
-        let result = Self::reload_snapshot(runtime, state, ticket, false).await;
+        let result =
+            Self::reload_snapshot(runtime, state, ticket, SnapshotReloadReason::DeltaFallback)
+                .await;
         if result.is_ok()
             && owns_mutation
             && let Some(active) = state.active_mutation.as_mut()
         {
+            let prepared_at = active.prepared.as_ref().map(|prepared| prepared.started_at);
             active.published = true;
             runtime.update_dirty(state);
+            if let Some(prepared_at) = prepared_at {
+                metrics::histogram!(
+                    "boluo_server_space_runtime_mutation_dirty_duration_seconds",
+                    "outcome" => "fallback"
+                )
+                .record(prepared_at.elapsed().as_secs_f64());
+            }
         }
         result
     }
@@ -742,10 +933,14 @@ impl SpaceRuntime {
         runtime: &Arc<Self>,
         state: &ControlState,
         ticket: u64,
-        is_reconciliation: bool,
+        reason: SnapshotReloadReason,
     ) -> Result<u64, SpaceRuntimeError> {
         let started = Instant::now();
-        metrics::counter!("boluo_server_space_runtime_refresh_total").increment(1);
+        metrics::counter!(
+            "boluo_server_space_runtime_refresh_total",
+            "reason" => reason.as_str()
+        )
+        .increment(1);
         let mut result = Err(SpaceRuntimeError::Closed);
         for (attempt, delay) in [
             Duration::ZERO,
@@ -769,8 +964,11 @@ impl SpaceRuntime {
                 "Failed to refresh Space runtime snapshot"
             );
         }
-        metrics::histogram!("boluo_server_space_runtime_refresh_duration_seconds")
-            .record(started.elapsed().as_secs_f64());
+        metrics::histogram!(
+            "boluo_server_space_runtime_refresh_duration_seconds",
+            "reason" => reason.as_str()
+        )
+        .record(started.elapsed().as_secs_f64());
 
         match result {
             Ok(mut snapshot) => {
@@ -788,7 +986,9 @@ impl SpaceRuntime {
                         .sum::<usize>() as f64,
                 );
                 let current = runtime.snapshot();
-                if is_reconciliation && current.revision <= ticket {
+                if matches!(reason, SnapshotReloadReason::Reconciliation)
+                    && current.revision <= ticket
+                {
                     let mismatch = current.payload_mismatch(&snapshot);
                     if mismatch.any() {
                         metrics::counter!(
@@ -820,7 +1020,11 @@ impl SpaceRuntime {
                 Ok(ticket)
             }
             Err(error) => {
-                metrics::counter!("boluo_server_space_runtime_refresh_failed_total").increment(1);
+                metrics::counter!(
+                    "boluo_server_space_runtime_refresh_failed_total",
+                    "reason" => reason.as_str()
+                )
+                .increment(1);
                 tracing::error!(
                     %error,
                     space_id = %runtime.space_id,
@@ -837,7 +1041,7 @@ impl SpaceRuntime {
         let mutation_unpublished = state
             .active_mutation
             .as_ref()
-            .is_some_and(|active| !active.published);
+            .is_some_and(|active| active.prepared.is_some() && !active.published);
         let dirty =
             self.next_ticket.load(Ordering::Acquire) != snapshot_revision || mutation_unpublished;
         let was_dirty = self.dirty.swap(dirty, Ordering::AcqRel);
@@ -849,14 +1053,38 @@ impl SpaceRuntime {
 
 struct RefreshCommand {
     ticket: u64,
+    reason: SnapshotReloadReason,
     ack: oneshot::Sender<Result<u64, SpaceRuntimeError>>,
     reconciliation_permit: Option<tokio::sync::OwnedSemaphorePermit>,
+}
+
+#[derive(Clone, Copy)]
+enum SnapshotReloadReason {
+    Reconciliation,
+    MutationRepair,
+    DeltaFallback,
+    Unguarded,
+}
+
+impl SnapshotReloadReason {
+    fn as_str(self) -> &'static str {
+        match self {
+            Self::Reconciliation => "reconciliation",
+            Self::MutationRepair => "mutation_repair",
+            Self::DeltaFallback => "delta_fallback",
+            Self::Unguarded => "unguarded",
+        }
+    }
 }
 
 enum ControlCommand {
     BeginMutation {
         queued_at: Instant,
         granted: oneshot::Sender<u64>,
+    },
+    PrepareMutation {
+        mutation_token: u64,
+        prepared: oneshot::Sender<Result<(), SpaceRuntimeError>>,
     },
     FinishMutation {
         mutation_token: u64,
@@ -876,9 +1104,14 @@ struct PendingMutation {
 
 struct ActiveMutation {
     mutation_token: u64,
+    prepared: Option<PreparedMutation>,
+    published: bool,
+    started_at: Instant,
+}
+
+struct PreparedMutation {
     base_revision: Option<u64>,
     reserved_ticket: u64,
-    published: bool,
     started_at: Instant,
 }
 
@@ -887,12 +1120,17 @@ struct ControlState {
     next_mutation_token: u64,
     active_mutation: Option<ActiveMutation>,
     pending_mutations: VecDeque<PendingMutation>,
+    deferred_refreshes: Vec<RefreshCommand>,
 }
 
 pub(crate) struct SpaceMutationGuard {
     runtime: Weak<SpaceRuntime>,
     space_id: Uuid,
     mutation_token: u64,
+}
+
+pub(crate) struct CommittedSpaceMutation {
+    guard: SpaceMutationGuard,
 }
 
 #[derive(Clone, Copy)]
@@ -902,10 +1140,29 @@ pub(crate) struct SpaceMutationProof {
 }
 
 impl SpaceMutationGuard {
+    async fn prepare(self) -> Result<CommittedSpaceMutation, SpaceRuntimeError> {
+        let Some(runtime) = self.runtime.upgrade() else {
+            return Err(SpaceRuntimeError::Closed);
+        };
+        runtime.prepare_mutation(self.mutation_token).await?;
+        Ok(CommittedSpaceMutation { guard: self })
+    }
+
+    pub(crate) async fn commit(
+        self,
+        transaction: sqlx::Transaction<'_, sqlx::Postgres>,
+    ) -> Result<CommittedSpaceMutation, SpaceRuntimeError> {
+        let committed = self.prepare().await?;
+        transaction.commit().await?;
+        Ok(committed)
+    }
+}
+
+impl CommittedSpaceMutation {
     pub(crate) fn proof(&self) -> SpaceMutationProof {
         SpaceMutationProof {
-            space_id: self.space_id,
-            mutation_token: self.mutation_token,
+            space_id: self.guard.space_id,
+            mutation_token: self.guard.mutation_token,
         }
     }
 }
@@ -1566,9 +1823,14 @@ mod tests {
             .acquire_mutation(space.id)
             .await
             .expect("failed to acquire Space mutation");
-        ChannelMember::remove_user(&pool, owner.id, channel.id)
+        let mut transaction = pool.begin().await.expect("failed to begin transaction");
+        ChannelMember::remove_user(&mut *transaction, owner.id, channel.id)
             .await
             .expect("failed to remove channel member");
+        let mutation = mutation
+            .commit(transaction)
+            .await
+            .expect("failed to commit Space mutation");
         assert!(
             ctx.space_store
                 .resolve_channel_member(space.id, channel.id, owner.id)
@@ -1645,9 +1907,18 @@ mod tests {
             .acquire_mutation(space.id)
             .await
             .expect("failed to acquire settings mutation");
-        Space::put_settings(&pool, space.id, &serde_json::json!({"theme": "light"}))
+        let mut transaction = pool.begin().await.expect("failed to begin transaction");
+        Space::put_settings(
+            &mut *transaction,
+            space.id,
+            &serde_json::json!({"theme": "light"}),
+        )
+        .await
+        .expect("failed to update Space settings");
+        let mutation = mutation
+            .commit(transaction)
             .await
-            .expect("failed to update Space settings");
+            .expect("failed to commit settings mutation");
         let mut changes = CommittedChanges::default();
         changes.space_settings_updated(space.id, serde_json::json!({"theme": "light"}));
         changes.apply_with_mutation(&ctx, &mutation).await;
@@ -1868,8 +2139,9 @@ mod tests {
             .acquire_mutation(space.id)
             .await
             .expect("failed to acquire Character creation mutation");
+        let mut transaction = pool.begin().await.expect("failed to begin transaction");
         let character = Character::create(
-            &pool,
+            &mut *transaction,
             space.id,
             owner.id,
             "Runtime Character",
@@ -1883,6 +2155,10 @@ mod tests {
         )
         .await
         .expect("failed to create Character");
+        let mutation = mutation
+            .commit(transaction)
+            .await
+            .expect("failed to commit Character creation");
         let mut changes = CommittedChanges::default();
         changes.character_updated(&character);
         changes.apply_with_mutation(&ctx, &mutation).await;
@@ -1908,9 +2184,14 @@ mod tests {
             .acquire_mutation(space.id)
             .await
             .expect("failed to acquire Character deletion mutation");
-        Character::delete(&pool, &character.id)
+        let mut transaction = pool.begin().await.expect("failed to begin transaction");
+        Character::delete(&mut *transaction, &character.id)
             .await
             .expect("failed to delete Character");
+        let mutation = mutation
+            .commit(transaction)
+            .await
+            .expect("failed to commit Character deletion");
         let mut changes = CommittedChanges::default();
         changes.character_deleted(space.id, character.id);
         changes.apply_with_mutation(&ctx, &mutation).await;
@@ -2101,9 +2382,11 @@ mod tests {
     }
 
     #[sqlx::test]
-    async fn db_test_mutation_blocks_strict_reads_until_snapshot_is_published(pool: sqlx::PgPool) {
+    async fn db_test_mutation_only_blocks_strict_reads_after_commit_is_prepared(
+        pool: sqlx::PgPool,
+    ) {
         let (_, space, _) = create_space(&pool).await;
-        let store = SpaceStore::new(pool);
+        let store = SpaceStore::new(pool.clone());
         let runtime = store
             .get_or_load(space.id)
             .await
@@ -2118,8 +2401,25 @@ mod tests {
             .await
             .expect("failed to acquire mutation");
         assert!(
+            runtime.authoritative_snapshot().is_some(),
+            "opening a mutation made the snapshot non-authoritative before commit"
+        );
+
+        let mut transaction = pool.begin().await.expect("failed to begin transaction");
+        Space::put_settings(
+            &mut *transaction,
+            space.id,
+            &serde_json::json!({"version": "published"}),
+        )
+        .await
+        .expect("failed to update Space settings");
+        let mutation = mutation
+            .commit(transaction)
+            .await
+            .expect("failed to commit mutation");
+        assert!(
             runtime.authoritative_snapshot().is_none(),
-            "snapshot remained authoritative while a mutation was active"
+            "snapshot remained authoritative after the mutation committed"
         );
         assert!(
             store.loaded_snapshot_maybe_stale(space.id).is_some(),
@@ -2154,6 +2454,64 @@ mod tests {
             serde_json::json!({"version": "published"})
         );
         drop(mutation);
+    }
+
+    #[sqlx::test]
+    async fn db_test_refresh_does_not_deadlock_mutation_commit_with_single_connection(
+        pool: sqlx::PgPool,
+    ) {
+        let (_, space, _) = create_space(&pool).await;
+        let single_connection_pool = sqlx::postgres::PgPoolOptions::new()
+            .max_connections(1)
+            .acquire_timeout(Duration::from_secs(5))
+            .connect_with(pool.connect_options().as_ref().clone())
+            .await
+            .expect("failed to create single-connection pool");
+        let store = SpaceStore::new(single_connection_pool.clone());
+        let runtime = store
+            .get_or_load(space.id)
+            .await
+            .expect("failed to load Space runtime");
+        let mutation = runtime
+            .acquire_mutation()
+            .await
+            .expect("failed to acquire mutation");
+        let mut transaction = single_connection_pool
+            .begin()
+            .await
+            .expect("failed to begin transaction");
+        Space::put_settings(
+            &mut *transaction,
+            space.id,
+            &serde_json::json!({"version": "committed"}),
+        )
+        .await
+        .expect("failed to update Space settings");
+
+        let (_ticket, refresh_ack) = runtime
+            .enqueue_refresh(SnapshotReloadReason::Unguarded, None)
+            .expect("failed to enqueue refresh");
+        tokio::task::yield_now().await;
+
+        let mutation = tokio::time::timeout(Duration::from_secs(2), mutation.commit(transaction))
+            .await
+            .expect("mutation commit deadlocked behind a refresh waiting for its DB connection")
+            .expect("failed to commit mutation");
+        runtime
+            .apply_committed_deltas(
+                mutation.proof().mutation_token,
+                vec![SpaceDelta::SettingsUpdated(
+                    serde_json::json!({"version": "committed"}),
+                )],
+            )
+            .await
+            .expect("failed to publish mutation delta");
+        drop(mutation);
+        tokio::time::timeout(Duration::from_secs(2), refresh_ack)
+            .await
+            .expect("deferred refresh did not finish")
+            .expect("refresh actor dropped its acknowledgement")
+            .expect("deferred refresh failed");
     }
 
     #[sqlx::test]
@@ -2207,8 +2565,9 @@ mod tests {
             .acquire_mutation(space.id)
             .await
             .expect("failed to acquire mutation");
+        let mut transaction = pool.begin().await.expect("failed to begin transaction");
         let channel = Channel::create(
-            &pool,
+            &mut *transaction,
             &space.id,
             "Committed before cancellation",
             true,
@@ -2217,9 +2576,13 @@ mod tests {
         )
         .await
         .expect("failed to commit channel");
+        let mutation = guard
+            .commit(transaction)
+            .await
+            .expect("failed to commit mutation");
 
         // Simulate cancellation after commit but before CommittedChanges::apply.
-        drop(guard);
+        drop(mutation);
         assert!(
             runtime.authoritative_snapshot().is_none(),
             "the pre-commit snapshot stayed authoritative after a cancelled mutation"
@@ -2265,10 +2628,18 @@ mod tests {
         .expect("failed to commit unguarded channel");
         let mut unguarded_changes = CommittedChanges::default();
         unguarded_changes.channel_created(&unguarded_channel);
-        unguarded_changes.apply_with_context(&ctx).await;
+        let unguarded_apply = {
+            let ctx = ctx.clone();
+            tokio::spawn(async move { unguarded_changes.apply_with_context(&ctx).await })
+        };
+        tokio::task::yield_now().await;
 
+        let mut transaction = pool
+            .begin()
+            .await
+            .expect("failed to begin guarded transaction");
         let cancelled_channel = Channel::create(
-            &pool,
+            &mut *transaction,
             &space.id,
             "Committed before cancellation",
             true,
@@ -2277,9 +2648,17 @@ mod tests {
         )
         .await
         .expect("failed to commit guarded channel");
+        let mutation = mutation
+            .commit(transaction)
+            .await
+            .expect("failed to commit guarded mutation");
 
         // The unguarded publication must not count as this mutation's publication.
         drop(mutation);
+        tokio::time::timeout(Duration::from_secs(1), unguarded_apply)
+            .await
+            .expect("unguarded refresh remained deferred after mutation completion")
+            .expect("unguarded refresh task failed");
         tokio::time::timeout(Duration::from_secs(1), async {
             loop {
                 if let Some(snapshot) = runtime.authoritative_snapshot()

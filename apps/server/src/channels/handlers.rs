@@ -335,7 +335,7 @@ where
     let channel_member =
         ChannelMember::add_user(&mut *trans, user_id, channel.id, &character_name, true).await?;
     before_commit.await;
-    trans.commit().await?;
+    let mutation = mutation.commit(trans).await?;
     let mut changes = CommittedChanges::default();
     changes.channel_created(&channel);
     changes.channel_member_added(channel.space_id, &channel_member);
@@ -436,7 +436,7 @@ async fn edit(
             changed_members.push(member);
         }
     }
-    trans.commit().await?;
+    let mutation = mutation.commit(trans).await?;
     let mut changes = CommittedChanges::default();
     changes.channel_updated(&channel);
     for member in &changed_members {
@@ -504,7 +504,7 @@ async fn edit_topic(
     )
     .await?;
 
-    trans.commit().await?;
+    let mutation = mutation.commit(trans).await?;
     let mut changes = CommittedChanges::default();
     changes.channel_updated(&updated);
     changes.apply_with_mutation(ctx, &mutation).await;
@@ -550,7 +550,7 @@ async fn edit_masters(
     )
     .await
     .ok();
-    trans.commit().await?;
+    let mutation = mutation.commit(trans).await?;
     let mut changes = CommittedChanges::default();
     if let Some(Some(member)) = changed_member {
         changes.channel_member_changed(space_id, &member);
@@ -589,7 +589,7 @@ async fn add_member(
         .or_no_permission()?;
     let member =
         ChannelMember::add_user(&mut *trans, user_id, channel_id, &character_name, false).await?;
-    trans.commit().await?;
+    let mutation = mutation.commit(trans).await?;
     let mut changes = CommittedChanges::default();
     changes.channel_member_added(channel.space_id, &member);
     let mut applied = changes.apply_with_mutation(ctx, &mutation).await;
@@ -633,7 +633,7 @@ async fn edit_member(
     )
     .await?
     .or_not_found();
-    trans.commit().await?;
+    let mutation = mutation.commit(trans).await?;
     let channel_member = channel_member?;
     let mut changes = CommittedChanges::default();
     changes.channel_member_changed(space_id, &channel_member);
@@ -705,7 +705,7 @@ async fn join(
         false,
     )
     .await?;
-    trans.commit().await?;
+    let mutation = mutation.commit(trans).await?;
     let mut changes = CommittedChanges::default();
     changes.channel_member_added(channel.space_id, &member);
     let mut applied = changes.apply_with_mutation(ctx, &mutation).await;
@@ -727,7 +727,7 @@ async fn leave(
     let mut trans = ctx.db.begin().await?;
     Channel::get_by_id(&mut *trans, &id).await.or_not_found()?;
     ChannelMember::remove_user(&mut *trans, session.user_id, id).await?;
-    trans.commit().await?;
+    let mutation = mutation.commit(trans).await?;
     let mut changes = CommittedChanges::default();
     changes.channel_member_removed(space_id, id, session.user_id);
     let mut applied = changes.apply_with_mutation(ctx, &mutation).await;
@@ -762,7 +762,7 @@ async fn kick(ctx: &crate::context::AppContext, req: Request<impl Body>) -> Resu
         }
     }
     ChannelMember::remove_user(&mut *trans, user_to_be_kicked, channel_id).await?;
-    trans.commit().await?;
+    let mutation = mutation.commit(trans).await?;
     let mut changes = CommittedChanges::default();
     changes.channel_member_removed(owning_space_id, channel_id, user_to_be_kicked);
     let mut applied = changes.apply_with_mutation(ctx, &mutation).await;
@@ -807,7 +807,7 @@ async fn delete(
     if !Channel::delete(&mut trans, &id).await? {
         return Err(AppError::NotFound("channel"));
     }
-    trans.commit().await?;
+    let mutation = mutation.commit(trans).await?;
     let mut changes = CommittedChanges::default();
     changes.channel_deleted(channel.space_id, id);
     changes.apply_with_mutation(ctx, &mutation).await;

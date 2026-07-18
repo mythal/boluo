@@ -123,6 +123,12 @@ impl From<crate::space_runtime::SpaceRuntimeError> for AppError {
             crate::space_runtime::SpaceRuntimeError::Busy => {
                 AppError::LimitExceeded("Too many pending Space mutations")
             }
+            crate::space_runtime::SpaceRuntimeError::InvalidMutation => AppError::Unexpected(
+                anyhow::anyhow!("Space runtime mutation is no longer active"),
+            ),
+            crate::space_runtime::SpaceRuntimeError::RefreshFailed => {
+                AppError::Unexpected(anyhow::anyhow!("Space runtime snapshot refresh failed"))
+            }
         }
     }
 }

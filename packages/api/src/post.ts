@@ -30,6 +30,7 @@ import type {
   Message,
   NewMessage,
   Note,
+  QueryCharacter,
   Register as RegisterData,
   ResendEmailVerification,
   ResendEmailVerificationResult,
@@ -94,7 +95,7 @@ export interface Post {
   // characters
   '/characters/create': { payload: CreateCharacter; query: null; result: Character };
   '/characters/edit': { payload: EditCharacter; query: null; result: Character };
-  '/characters/delete': { payload: Empty; query: { id: string }; result: true };
+  '/characters/delete': { payload: Empty; query: QueryCharacter; result: true };
   '/characters/create_variable': {
     payload: CreateVariable;
     query: null;

@@ -263,6 +263,7 @@ export const ChatContentView: FC<Props> = ({ setIsScrolling, currentUserId }) =>
 
   useScrollToMessage({
     channelId,
+    spaceId: myMember?.space.spaceId,
     virtuosoRef,
     chatList,
   });

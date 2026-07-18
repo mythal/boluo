@@ -12,6 +12,8 @@ pub struct AppContext {
     pub db: sqlx::Pool<sqlx::Postgres>,
     /// Redis connection (optional)
     pub redis: Option<redis::aio::ConnectionManager>,
+    /// Lazily loaded, node-local Space runtimes.
+    pub(crate) space_store: crate::space_runtime::SpaceStore,
 }
 
 impl AppContext {
@@ -20,7 +22,12 @@ impl AppContext {
         db: sqlx::Pool<sqlx::Postgres>,
         redis: Option<redis::aio::ConnectionManager>,
     ) -> Self {
-        Self { db, redis }
+        let space_store = crate::space_runtime::SpaceStore::new(db.clone());
+        Self {
+            db,
+            redis,
+            space_store,
+        }
     }
 }
 

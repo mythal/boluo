@@ -5,11 +5,11 @@ use serde::{Deserialize, Serialize};
 use sqlx::query_file_scalar;
 use uuid::Uuid;
 
-use crate::cache::{CACHE, CacheType};
+use crate::cache::CACHE;
 use crate::channels::ChannelMember;
 use crate::error::ModelError;
 use crate::spaces::api::SpaceWithMember;
-use crate::ttl::{self, Lifespan, Mortal, fetch_entry, fetch_entry_optional};
+use crate::ttl::{self, Lifespan, fetch_entry};
 use crate::users::User;
 use crate::utils::merge_blank;
 
@@ -48,12 +48,6 @@ pub struct Space {
     pub latest_activity: DateTime<Utc>,
 }
 
-impl Lifespan for Space {
-    fn ttl_sec() -> u64 {
-        ttl::day::HALF
-    }
-}
-
 impl Space {
     pub async fn create<'c, T: sqlx::PgExecutor<'c>>(
         db: T,
@@ -70,7 +64,7 @@ impl Space {
             DICE.run(default_dice_type)?;
         }
         DESCRIPTION.run(description.as_str())?;
-        let space = query_file_scalar!(
+        query_file_scalar!(
             "sql/spaces/create.sql",
             name,
             owner_id,
@@ -79,9 +73,8 @@ impl Space {
             description
         )
         .fetch_one(db)
-        .await?;
-        CACHE.Space.insert(space.id, space.clone().into());
-        Ok(space)
+        .await
+        .map_err(Into::into)
     }
 
     pub async fn is_admin<'c, T: sqlx::PgExecutor<'c>>(&self, db: T, user_id: &Uuid) -> bool {
@@ -94,24 +87,16 @@ impl Space {
         space_member.map(|member| member.is_admin).unwrap_or(false)
     }
 
-    pub async fn delete(db: &mut sqlx::PgConnection, id: Uuid) -> Result<(), sqlx::Error> {
+    pub async fn delete(
+        db: &mut sqlx::PgConnection,
+        id: Uuid,
+    ) -> Result<Option<Vec<Uuid>>, sqlx::Error> {
         let space_members = SpaceMemberWithUser::get_by_space(&mut *db, &id).await?;
-        sqlx::query_file!("sql/spaces/delete.sql", &id)
+        let affected = sqlx::query_file!("sql/spaces/delete.sql", &id)
             .execute(db)
-            .await?;
-        let mut invalidate_tasks = vec![
-            CACHE.invalidate(CacheType::Space, id),
-            CACHE.invalidate(CacheType::SpaceSettings, id),
-            CACHE.invalidate(CacheType::SpacesChannels, id),
-        ];
-
-        for (_, space_member_with_user) in space_members {
-            invalidate_tasks
-                .push(CACHE.invalidate(CacheType::UserSpaces, space_member_with_user.user.id));
-        }
-
-        futures::future::join_all(invalidate_tasks).await;
-        Ok(())
+            .await?
+            .rows_affected();
+        Ok((affected > 0).then(|| space_members.into_keys().collect()))
     }
 
     pub async fn recent<'c, T: sqlx::PgExecutor<'c>>(db: T) -> Result<Vec<Uuid>, sqlx::Error> {
@@ -130,57 +115,29 @@ impl Space {
         db: T,
         id: &Uuid,
     ) -> Result<Option<Space>, sqlx::Error> {
-        let id = *id;
-        fetch_entry_optional(&CACHE.Space, id, async move {
-            sqlx::query_file_scalar!("sql/spaces/get_by_id.sql", id)
-                .fetch_one(db)
-                .await
-        })
-        .await
+        sqlx::query_file_scalar!("sql/spaces/get_by_id.sql", id)
+            .fetch_optional(db)
+            .await
     }
 
     pub async fn get_by_id_list<'c, T: sqlx::PgExecutor<'c>, I: Iterator<Item = Uuid>>(
         db: T,
         id_list: I,
     ) -> Result<HashMap<Uuid, Space>, sqlx::Error> {
-        let mut query_ids: Vec<Uuid> = Vec::new();
-        let mut result_map: HashMap<Uuid, Space> = HashMap::new();
-        for id in id_list {
-            if let Some(space_item) = CACHE.Space.get(&id).and_then(Mortal::fresh_only) {
-                result_map.insert(space_item.id, space_item);
-            } else {
-                query_ids.push(id);
-            }
-        }
+        let query_ids: Vec<Uuid> = id_list.collect();
         let spaces = sqlx::query_file_scalar!("sql/spaces/get_by_id_list.sql", &*query_ids)
             .fetch_all(db)
             .await?;
-        for space in spaces {
-            CACHE.Space.insert(space.id, space.clone().into());
-            result_map.insert(space.id, space);
-        }
-        Ok(result_map)
+        Ok(spaces.into_iter().map(|space| (space.id, space)).collect())
     }
 
     pub async fn get_by_channel<'c, T: sqlx::PgExecutor<'c>>(
         db: T,
         channel_id: &Uuid,
     ) -> Result<Option<Space>, sqlx::Error> {
-        if let Some(channel) = CACHE.Channel.get(channel_id).and_then(Mortal::fresh_only) {
-            if let Some(space) = CACHE
-                .Space
-                .get(&channel.space_id)
-                .and_then(Mortal::fresh_only)
-            {
-                return Ok(Some(space));
-            }
-        }
         let space = sqlx::query_file_scalar!("sql/spaces/get_by_channel.sql", channel_id)
             .fetch_optional(db)
             .await?;
-        if let Some(space) = &space {
-            CACHE.Space.insert(space.id, space.clone().into());
-        }
         Ok(space)
     }
 
@@ -191,7 +148,6 @@ impl Space {
         let token = sqlx::query_file_scalar!("sql/spaces/refresh_token.sql", id)
             .fetch_one(db)
             .await?;
-        CACHE.invalidate(CacheType::Space, *id).await;
         Ok(token)
     }
 
@@ -236,7 +192,7 @@ impl Space {
         if let Some(dice) = default_dice_type.as_ref() {
             validators::DICE.run(dice)?;
         }
-        let space = sqlx::query_file_scalar!(
+        sqlx::query_file_scalar!(
             "sql/spaces/edit.sql",
             space_id,
             name,
@@ -247,11 +203,8 @@ impl Space {
             allow_spectator
         )
         .fetch_optional(db)
-        .await?;
-        if let Some(space) = &space {
-            CACHE.Space.insert(space.id, space.clone().into());
-        }
-        Ok(space)
+        .await
+        .map_err(Into::into)
     }
 
     pub async fn search<'c, T: sqlx::PgExecutor<'c>>(
@@ -313,15 +266,10 @@ impl Space {
         space_id: Uuid,
     ) -> Result<serde_json::Value, sqlx::Error> {
         use serde_json::json;
-        fetch_entry(&CACHE.SpaceSettings, space_id, async move {
-            sqlx::query_file_scalar!("sql/spaces/get_settings.sql", space_id)
-                .fetch_optional(db)
-                .await
-                .map(|settings| settings.unwrap_or(json!({})))
-                .map(SpaceSettings)
-        })
-        .await
-        .map(|settings| settings.0)
+        sqlx::query_file_scalar!("sql/spaces/get_settings.sql", space_id)
+            .fetch_optional(db)
+            .await
+            .map(|settings| settings.unwrap_or(json!({})))
     }
     pub async fn put_settings<'c, T: sqlx::PgExecutor<'c>>(
         db: T,
@@ -331,9 +279,6 @@ impl Space {
         sqlx::query_file_scalar!("sql/spaces/put_settings.sql", space_id, settings)
             .execute(db)
             .await?;
-        CACHE
-            .SpaceSettings
-            .insert(space_id, settings.clone().into());
         Ok(())
     }
 }
@@ -341,6 +286,7 @@ impl Space {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::committed_changes::CommittedChanges;
     use crate::users::User;
     use serde_json::json;
 
@@ -364,6 +310,80 @@ mod tests {
         Space::create(pool, name, &owner.id, description, None, Some("d20"))
             .await
             .expect("failed to create space")
+    }
+
+    #[sqlx::test(migrator = "crate::db::MIGRATOR")]
+    async fn db_test_rolled_back_space_auxiliary_writes_do_not_change_cache(pool: sqlx::PgPool) {
+        let owner = create_test_user(&pool, "rollback_aux_owner").await;
+        let space = create_test_space(&pool, &owner, "rollback_aux_space").await;
+        SpaceMember::add_admin(&pool, &owner.id, &space.id)
+            .await
+            .expect("failed to add owner as member");
+        Space::put_settings(&pool, space.id, &json!({"version": "old"}))
+            .await
+            .expect("failed to prime settings");
+        Space::get_settings(&pool, space.id)
+            .await
+            .expect("failed to fill settings cache");
+        SpaceMember::get_by_user(&pool, owner.id)
+            .await
+            .expect("failed to prime user spaces");
+
+        let mut transaction = pool.begin().await.expect("failed to begin transaction");
+        Space::refresh_token(&mut *transaction, &space.id)
+            .await
+            .expect("failed to refresh token in transaction");
+        Space::put_settings(
+            &mut *transaction,
+            space.id,
+            &json!({"version": "uncommitted"}),
+        )
+        .await
+        .expect("failed to update settings in transaction");
+        Space::delete(&mut transaction, space.id)
+            .await
+            .expect("failed to delete space in transaction");
+
+        assert_eq!(
+            Space::get_settings(&pool, space.id)
+                .await
+                .expect("failed to read committed settings"),
+            json!({"version": "old"}),
+            "another connection observed uncommitted settings"
+        );
+        assert!(
+            CACHE.UserSpaces.get(&owner.id).is_some(),
+            "an uncommitted space deletion invalidated UserSpaces"
+        );
+        transaction
+            .rollback()
+            .await
+            .expect("failed to roll back auxiliary space writes");
+    }
+
+    #[sqlx::test(migrator = "crate::db::MIGRATOR")]
+    async fn db_test_transactional_space_member_write_has_no_cache_side_effect(pool: sqlx::PgPool) {
+        let owner = create_test_user(&pool, "member_tx_owner").await;
+        let space = create_test_space(&pool, &owner, "member_tx_space").await;
+        let cached_spaces = SpaceMember::get_by_user(&pool, owner.id)
+            .await
+            .expect("failed to prime user spaces cache");
+        assert!(cached_spaces.is_empty());
+        assert!(CACHE.UserSpaces.get(&owner.id).is_some());
+
+        let mut transaction = pool.begin().await.expect("failed to begin transaction");
+        SpaceMember::add_admin(&mut *transaction, &owner.id, &space.id)
+            .await
+            .expect("failed to add space admin in transaction");
+
+        assert!(
+            CACHE.UserSpaces.get(&owner.id).is_some(),
+            "an uncommitted space member write invalidated shared cache state"
+        );
+        transaction
+            .rollback()
+            .await
+            .expect("failed to roll back transaction");
     }
 
     #[sqlx::test(migrator = "crate::db::MIGRATOR")]
@@ -403,6 +423,9 @@ mod tests {
         .await
         .expect("edit failed")
         .expect("space should exist");
+        let mut changes = CommittedChanges::default();
+        changes.space_updated(&updated);
+        changes.apply().await;
 
         assert_eq!(updated.name, "Updated Space");
         assert_eq!(updated.default_dice_type, "d12");
@@ -455,6 +478,9 @@ mod tests {
             .await
             .expect("set_admin failed")
             .expect("expected updated member");
+        let mut changes = CommittedChanges::default();
+        changes.space_member_changed(&assigned_admin);
+        changes.apply().await;
         assert!(assigned_admin.is_admin);
 
         let members = SpaceMember::get_by_user(&pool, member.id)
@@ -476,6 +502,9 @@ mod tests {
             .expect("remove_user failed");
         assert!(channels_removed.is_empty());
         drop(conn);
+        let mut changes = CommittedChanges::default();
+        changes.space_member_removed(space.id, member.id, channels_removed);
+        changes.apply().await;
 
         let after_remove = SpaceMember::get(&pool, &member.id, &space.id)
             .await
@@ -486,6 +515,38 @@ mod tests {
             .await
             .expect("get_by_user after removal failed");
         assert!(members_after.is_empty());
+    }
+
+    #[sqlx::test(migrator = "crate::db::MIGRATOR")]
+    async fn db_test_rolled_back_admin_change_does_not_invalidate_user_spaces(pool: sqlx::PgPool) {
+        let owner = create_test_user(&pool, "admin_tx_owner").await;
+        let member = create_test_user(&pool, "admin_tx_member").await;
+        let space = create_test_space(&pool, &owner, "admin_tx_space").await;
+        SpaceMember::add_user(&pool, &member.id, &space.id)
+            .await
+            .expect("failed to add member");
+        let cached_spaces = SpaceMember::get_by_user(&pool, member.id)
+            .await
+            .expect("failed to prime user spaces cache");
+        assert_eq!(cached_spaces.len(), 1);
+
+        let mut transaction = pool.begin().await.expect("failed to begin transaction");
+        SpaceMember::set_admin(&mut *transaction, &member.id, &space.id, true)
+            .await
+            .expect("failed to update admin in transaction");
+        SpaceMember::remove_user(&mut transaction, member.id, space.id)
+            .await
+            .expect("failed to remove member in transaction");
+
+        assert!(
+            CACHE.UserSpaces.get(&member.id).is_some(),
+            "an uncommitted space member change invalidated shared cache state"
+        );
+
+        transaction
+            .rollback()
+            .await
+            .expect("failed to roll back transaction");
     }
 
     #[sqlx::test(migrator = "crate::db::MIGRATOR")]
@@ -500,7 +561,6 @@ mod tests {
         Space::put_settings(&pool, space.id, &initial_settings)
             .await
             .expect("put_settings failed");
-
         let stored_settings = Space::get_settings(&pool, space.id)
             .await
             .expect("get_settings failed");
@@ -514,7 +574,6 @@ mod tests {
         Space::put_settings(&pool, space.id, &updated_settings)
             .await
             .expect("second put_settings failed");
-
         let stored_again = Space::get_settings(&pool, space.id)
             .await
             .expect("get_settings after update failed");
@@ -549,7 +608,14 @@ impl SpaceMember {
         space_id: &Uuid,
         is_admin: bool,
     ) -> Result<Option<SpaceMember>, sqlx::Error> {
-        SpaceMember::set(db, user_id, space_id, Some(is_admin)).await
+        sqlx::query_file_scalar!(
+            "sql/spaces/set_space_member.sql",
+            Some(is_admin),
+            user_id,
+            space_id,
+        )
+        .fetch_optional(db)
+        .await
     }
 
     pub async fn get_by_user<'c, T: sqlx::PgExecutor<'c>>(
@@ -566,24 +632,6 @@ impl SpaceMember {
         Ok(user_spaces.space_members)
     }
 
-    async fn set<'c, T: sqlx::PgExecutor<'c>>(
-        db: T,
-        user_id: &Uuid,
-        space_id: &Uuid,
-        is_admin: Option<bool>,
-    ) -> Result<Option<SpaceMember>, sqlx::Error> {
-        let result = sqlx::query_file_scalar!(
-            "sql/spaces/set_space_member.sql",
-            is_admin,
-            user_id,
-            space_id,
-        )
-        .fetch_optional(db)
-        .await?;
-        CACHE.invalidate(CacheType::UserSpaces, *user_id).await;
-        Ok(result)
-    }
-
     pub async fn remove_user(
         db: &mut sqlx::PgConnection,
         user_id: Uuid,
@@ -598,7 +646,6 @@ impl SpaceMember {
         if (affected as usize) == 0 {
             return Ok(vec![]);
         }
-        CACHE.invalidate(CacheType::UserSpaces, user_id).await;
         ChannelMember::remove_user_by_space(&mut *db, user_id, space_id).await
     }
 
@@ -616,7 +663,6 @@ impl SpaceMember {
         )
         .fetch_one(db)
         .await?;
-        CACHE.invalidate(CacheType::UserSpaces, *user_id).await;
         Ok(result.member)
     }
 
@@ -634,7 +680,6 @@ impl SpaceMember {
         )
         .fetch_one(db)
         .await?;
-        CACHE.invalidate(CacheType::UserSpaces, *user_id).await;
         Ok(result.member)
     }
 
@@ -682,27 +727,6 @@ impl SpaceMemberWithUser {
             .into_iter()
             .map(|member| (member.user.id, member))
             .collect())
-    }
-}
-
-#[derive(Debug, Serialize, Clone)]
-pub struct SpaceSettings(pub serde_json::Value);
-
-impl Lifespan for SpaceSettings {
-    fn ttl_sec() -> u64 {
-        ttl::day::HALF
-    }
-}
-
-impl From<serde_json::Value> for SpaceSettings {
-    fn from(settings: serde_json::Value) -> Self {
-        Self(settings)
-    }
-}
-
-impl From<serde_json::Value> for Mortal<SpaceSettings> {
-    fn from(settings: serde_json::Value) -> Self {
-        Mortal::new(SpaceSettings(settings))
     }
 }
 

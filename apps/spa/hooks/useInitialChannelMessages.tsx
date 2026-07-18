@@ -53,6 +53,7 @@ export const useInitialChannelMessages = (spaceId: string) => {
       requestedRef.current.add(channelId);
       void get('/messages/by_channel', {
         channelId,
+        spaceId,
         before: null,
         limit: INITIAL_LOAD_LIMIT,
       }).then((result) => {
@@ -69,7 +70,7 @@ export const useInitialChannelMessages = (spaceId: string) => {
         });
       });
     }
-  }, [channelWithMemberList, dispatch, initialized, openChannelIds, store]);
+  }, [channelWithMemberList, dispatch, initialized, openChannelIds, spaceId, store]);
 
   useEffect(() => {
     if (initialized) return;

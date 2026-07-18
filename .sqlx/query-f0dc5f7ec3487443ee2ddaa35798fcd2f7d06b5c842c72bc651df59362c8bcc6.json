@@ -1,16 +1,16 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT DISTINCT\n    user_id\nFROM\n    channel_members\nWHERE\n    channel_id = $1\n    AND is_joined;\n",
+  "query": "SELECT\n    space_id\nFROM\n    channels\nWHERE\n    id = $1\nLIMIT 1;\n",
   "describe": {
     "columns": [
       {
         "ordinal": 0,
-        "name": "user_id",
+        "name": "space_id",
         "type_info": "Uuid",
         "origin": {
           "Table": {
-            "table": "channel_members",
-            "name": "user_id"
+            "table": "channels",
+            "name": "space_id"
           }
         }
       }
@@ -24,5 +24,5 @@
       false
     ]
   },
-  "hash": "99b364882c56756b05aec1e9813ddf3ef03fe49e43195866b6a3191d92ac1852"
+  "hash": "f0dc5f7ec3487443ee2ddaa35798fcd2f7d06b5c842c72bc651df59362c8bcc6"
 }

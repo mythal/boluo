@@ -25,6 +25,7 @@ import { useMember } from '../../hooks/useMember';
 
 interface Props {
   channelId: string;
+  spaceId?: string;
   onSuccess?: () => void;
 }
 
@@ -32,8 +33,8 @@ const leave: MutationFetcher<void, [string, string], Empty> = async ([_, channel
   await post('/channels/leave', { id: channelId }, {});
 };
 
-export const MemberLeaveButton: FC<Props> = ({ channelId, onSuccess }) => {
-  const { data: channel, isLoading } = useQueryChannel(channelId);
+export const MemberLeaveButton: FC<Props> = ({ channelId, spaceId, onSuccess }) => {
+  const { data: channel, isLoading } = useQueryChannel(channelId, spaceId);
   const { trigger, isMutating } = useSWRMutation(['/channels/members', channelId], leave, {
     onSuccess,
   });

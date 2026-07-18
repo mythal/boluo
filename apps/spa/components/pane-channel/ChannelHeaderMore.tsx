@@ -17,6 +17,7 @@ import { useMember } from '../../hooks/useMember';
 
 interface Props {
   channelId: string;
+  spaceId?: string;
   setHeaderState: (state: ChannelHeaderState) => void;
 }
 
@@ -50,8 +51,8 @@ export const CharacterName: FC<{ member: ChannelMember; edit?: () => void }> = (
   );
 };
 
-export const ChannelHeaderMore: FC<Props> = ({ channelId, setHeaderState }) => {
-  const { data: channel } = useQueryChannel(channelId);
+export const ChannelHeaderMore: FC<Props> = ({ channelId, spaceId, setHeaderState }) => {
+  const { data: channel } = useQueryChannel(channelId, spaceId);
   const { data: currentUser } = useQueryCurrentUser();
   const member = useMember();
 
@@ -60,7 +61,11 @@ export const ChannelHeaderMore: FC<Props> = ({ channelId, setHeaderState }) => {
     // Keep the button hidden
   } else if (member) {
     memberButton = (
-      <MemberLeaveButton channelId={channelId} onSuccess={() => setHeaderState('DEFAULT')} />
+      <MemberLeaveButton
+        channelId={channelId}
+        spaceId={spaceId}
+        onSuccess={() => setHeaderState('DEFAULT')}
+      />
     );
   } else if (channel != null) {
     memberButton = <MemberJoinButton channel={channel} />;

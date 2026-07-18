@@ -13,12 +13,14 @@ const HIGHLIGHT_DURATION = 3000;
 
 interface UseScrollToMessageParams {
   channelId: string;
+  spaceId?: string;
   virtuosoRef: RefObject<VirtuosoHandle | null>;
   chatList: ChatItem[];
 }
 
 export const useScrollToMessage = ({
   channelId,
+  spaceId,
   virtuosoRef,
   chatList,
 }: UseScrollToMessageParams): void => {
@@ -173,6 +175,7 @@ export const useScrollToMessage = ({
       try {
         const result = await get('/messages/by_channel', {
           channelId,
+          spaceId: spaceId ?? null,
           before,
           limit: LOAD_MESSAGE_LIMIT,
         });
@@ -223,6 +226,7 @@ export const useScrollToMessage = ({
     setBanner,
     setHighlightMessage,
     setScrollToMessage,
+    spaceId,
     store,
     virtuosoRef,
   ]);

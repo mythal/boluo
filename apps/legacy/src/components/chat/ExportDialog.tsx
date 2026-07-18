@@ -61,13 +61,20 @@ function ExportDialog({ dismiss, channel }: Props) {
 
   const exportData = async () => {
     setLoading(true);
-    const membersResult = await get('/channels/all_members', { id: channel.id });
+    const membersResult = await get('/channels/all_members', {
+      id: channel.id,
+      spaceId: channel.spaceId,
+    });
     if (membersResult.isErr) {
       throwErr(dispatch)(membersResult.value);
       return;
     }
     const members = membersResult.value;
-    const exportGet: Export = { channelId: channel.id };
+    const exportGet: Export = {
+      channelId: channel.id,
+      spaceId: channel.spaceId,
+      after: null,
+    };
     if (afterDays.value) {
       const now = new Date();
       now.setHours(0, 0, 0, 0);

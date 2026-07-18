@@ -10,8 +10,6 @@ use crate::pos::{CHANNEL_POS_MANAGER, FailToFindIntermediate, check_pos, find_in
 use crate::utils::{is_false, merge_blank};
 use crate::validators::CHARACTER_NAME;
 
-use crate::notify;
-
 #[derive(Debug, Serialize, Deserialize, Clone, Default, specta::Type)]
 pub struct Entities(pub Vec<shared_types::entities::Entity>);
 
@@ -349,9 +347,6 @@ impl Message {
         );
         message.hide(None);
 
-        let created = message.created;
-
-        notify::space_activity(channel_id, Some(created));
         Ok(message)
     }
 
@@ -661,7 +656,7 @@ mod tests {
         )
         .await
         .expect("failed to create channel");
-        ChannelMember::add_user(pool, owner.id, channel.id, space.id, "GM", true)
+        ChannelMember::add_user(pool, owner.id, channel.id, "GM", true)
             .await
             .expect("failed to add owner to channel");
         channel
@@ -688,10 +683,10 @@ mod tests {
             .await
             .expect("failed to add bystander to space");
         let channel = create_test_channel(&pool, &space, &owner, "Story Time").await;
-        ChannelMember::add_user(&pool, other.id, channel.id, space.id, "Player", false)
+        ChannelMember::add_user(&pool, other.id, channel.id, "Player", false)
             .await
             .expect("failed to add member to channel");
-        ChannelMember::add_user(&pool, bystander.id, channel.id, space.id, "Watcher", false)
+        ChannelMember::add_user(&pool, bystander.id, channel.id, "Watcher", false)
             .await
             .expect("failed to add bystander to channel");
 

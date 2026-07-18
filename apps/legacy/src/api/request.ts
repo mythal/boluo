@@ -287,10 +287,13 @@ export function get(
   path: '/spaces/members',
   query: IdQuery,
 ): Promise<AppResult<Record<string, SpaceMemberWithUser>>>;
-export function get(path: '/channels/query', query: IdQuery): Promise<AppResult<Channel>>;
+export function get(
+  path: '/channels/query',
+  query: IdQuery & { spaceId?: string },
+): Promise<AppResult<Channel>>;
 export function get(
   path: '/channels/query_with_related',
-  query: IdQuery,
+  query: IdQuery & { spaceId?: string },
 ): Promise<AppResult<ChannelWithRelated>>;
 export function get(
   path: '/channels/by_space',
@@ -298,7 +301,7 @@ export function get(
 ): Promise<AppResult<ChannelWithMaybeMember[]>>;
 export function get(
   path: '/channels/all_members',
-  query: IdQuery,
+  query: IdQuery & { spaceId?: string },
 ): Promise<AppResult<ChannelMemberWithUser[]>>;
 export function get(
   path: '/channels/check_name',

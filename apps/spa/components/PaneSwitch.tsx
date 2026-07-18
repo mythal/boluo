@@ -14,6 +14,7 @@ import { PaneWelcome } from './PaneWelcome';
 import { PaneSpaceGreeting } from './PaneSpaceGreeting';
 import { PaneChannelExport } from './pane-channel-export/PaneChannelExport';
 import { PaneChannelTopic } from './pane-channel-topic/PaneChannelTopic';
+import { useSpace } from '../hooks/useSpace';
 
 const PaneSpaceSettings = React.lazy(() => import('./pane-space-settings/PaneSpaceSettings'));
 const PaneSpaceMembers = React.lazy(() => import('./pane-space-members/PaneSpaceMembers'));
@@ -52,25 +53,26 @@ const PANE_MAP = {
 } satisfies Record<Pane['type'], unknown>;
 
 const Switch: FC<Props> = ({ pane }) => {
+  const spaceId = useSpace()?.id;
   switch (pane.type) {
     case 'SPACE':
       return <PaneSpace spaceId={pane.spaceId} />;
     case 'CHANNEL':
       return (
         <ChannelIdContext value={pane.channelId}>
-          <ChatPaneChannel channelId={pane.channelId} key={pane.channelId} />
+          <ChatPaneChannel channelId={pane.channelId} spaceId={spaceId} key={pane.channelId} />
         </ChannelIdContext>
       );
     case 'CHANNEL_SETTINGS':
       return (
         <ChannelIdContext value={pane.channelId}>
-          <PaneChannelSettings channelId={pane.channelId} key={pane.channelId} />
+          <PaneChannelSettings channelId={pane.channelId} spaceId={spaceId} key={pane.channelId} />
         </ChannelIdContext>
       );
     case 'CHANNEL_TOPIC':
       return (
         <ChannelIdContext value={pane.channelId}>
-          <PaneChannelTopic channelId={pane.channelId} key={pane.channelId} />
+          <PaneChannelTopic channelId={pane.channelId} spaceId={spaceId} key={pane.channelId} />
         </ChannelIdContext>
       );
     case 'SPACE_SETTINGS':
@@ -84,7 +86,7 @@ const Switch: FC<Props> = ({ pane }) => {
     case 'SPACE_GREETING':
       return <PaneSpaceGreeting spaceId={pane.spaceId} />;
     case 'CHANNEL_EXPORT':
-      return <PaneChannelExport channelId={pane.channelId} />;
+      return <PaneChannelExport channelId={pane.channelId} spaceId={spaceId} />;
     default: {
       const Component = PANE_MAP[pane.type] ?? PaneEmpty;
       return <Component />;

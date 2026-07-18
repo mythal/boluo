@@ -20,6 +20,7 @@ import { useQueryAppSettings } from '@boluo/hooks/useQueryAppSettings';
 import { ButtonInline } from '@boluo/ui/ButtonInline';
 import { FloatingBox } from '@boluo/ui/FloatingBox';
 import { useFloatingSetters } from '@boluo/ui/hooks/useFloatingSetters';
+import { useMember } from '../../hooks/useMember';
 
 interface Props {
   inGame: boolean;
@@ -30,7 +31,11 @@ interface Props {
 
 export const ContentWhisperTo: FC<Props> = ({ channelId, whisperToUsernames, inGame, myId }) => {
   const { data: appSettings } = useQueryAppSettings();
-  const { data: channelMembers, isLoading } = useQueryChannelMembers(channelId);
+  const member = useMember();
+  const { data: channelMembers, isLoading } = useQueryChannelMembers(
+    channelId,
+    member?.space.spaceId,
+  );
   const { composeAtom } = useChannelAtoms();
   const dispatch = useSetAtom(composeAtom);
   const removeUsername = useCallback(

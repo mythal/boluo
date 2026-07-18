@@ -11,6 +11,7 @@ import { useChannelId } from '../../hooks/useChannelId';
 import { useMountedRef } from '@boluo/hooks/useMounted';
 import { chatAtom } from '../../state/chat.atoms';
 import { head } from 'list';
+import { useMember } from '../../hooks/useMember';
 
 const LOAD_MESSAGE_LIMIT = 51;
 const AUTO_LOAD = true;
@@ -26,6 +27,7 @@ const shouldTriggerLoad = (start: Point, end: Point) => {
 
 export const ChatContentHeaderLoadMore: FC = () => {
   const channelId = useChannelId();
+  const member = useMember();
   const mountedRef = useMountedRef();
   const loadMoreRef = useRef<HTMLButtonElement>(null);
   const store = useStore();
@@ -45,6 +47,7 @@ export const ChatContentHeaderLoadMore: FC = () => {
     try {
       const result = await get('/messages/by_channel', {
         channelId,
+        spaceId: member?.space.spaceId ?? null,
         before,
         limit: LOAD_MESSAGE_LIMIT,
       });

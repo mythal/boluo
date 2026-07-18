@@ -87,8 +87,11 @@ const PaneChannelTopicForm: FC<{ channel: Channel }> = ({ channel }) => {
   );
 };
 
-export const PaneChannelTopic: FC<{ channelId: string }> = ({ channelId }) => {
-  const { data: channel, error } = useQueryChannel(channelId);
+export const PaneChannelTopic: FC<{ channelId: string; spaceId?: string }> = ({
+  channelId,
+  spaceId,
+}) => {
+  const { data: channel, error } = useQueryChannel(channelId, spaceId);
   if (error && channel == null) {
     return (
       <Failed

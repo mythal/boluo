@@ -113,6 +113,7 @@ export const useOnSend = () => {
     const newMessage: NewMessage = {
       previewId: messageId,
       channelId,
+      spaceId: channel.channel.spaceId,
       mediaId,
       name,
       inGame,

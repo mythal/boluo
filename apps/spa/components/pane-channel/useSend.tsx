@@ -29,8 +29,11 @@ export const useSend = () => {
   const { composeAtom, parsedAtom, checkComposeAtom, defaultDiceFaceRef } = useChannelAtoms();
   const store = useStore();
 
-  const { data: queryChannelMembers } = useQueryChannelMembers(channelId);
   const myMember = useMember();
+  const { data: queryChannelMembers } = useQueryChannelMembers(
+    channelId,
+    myMember?.space.spaceId,
+  );
   const channelMembersMap: Map<string, MemberWithUser> = useMemo(() => {
     if (queryChannelMembers == null) return new Map<string, MemberWithUser>();
     return new Map(queryChannelMembers.members.map((member) => [member.user.username, member]));
@@ -130,6 +133,7 @@ export const useSend = () => {
           messageId: null,
           previewId: composeState.previewId,
           channelId,
+          spaceId: myMember.space.spaceId,
           name,
           text,
           entities,

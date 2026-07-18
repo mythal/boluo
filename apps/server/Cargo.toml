@@ -58,6 +58,7 @@ quick_cache = { version = "0.7.0", features = ["stats"] }
 papaya = "0.2.1"
 ahash = "0.8.11"
 parking_lot = "0.12.3"
+rpds = "1.2.1"
 specta.workspace = true
 specta-serde.workspace = true
 specta-typescript.workspace = true

@@ -1,17 +1,21 @@
 use chrono::prelude::*;
 use serde::{Deserialize, Serialize};
-use tracing::Instrument as _;
 use uuid::Uuid;
 
-use crate::cache::{CACHE, CacheType};
 use crate::channels::api::{ChannelMemberWithUser, ChannelWithMaybeMember, ChannelWithMember};
-use crate::db;
 use crate::error::ModelError;
 use crate::spaces::{Space, SpaceMember};
-use crate::ttl::{Lifespan, Mortal, fetch_entry, fetch_entry_optional, hour};
 use crate::users::User;
 use crate::utils::{is_false, merge_blank};
+use quick_cache::sync::Cache;
 use std::collections::HashMap;
+use std::sync::LazyLock;
+
+const CHANNEL_SPACE_ID_CACHE_CAPACITY: usize = 1024 * 8;
+
+/// Immutable channel ownership. A soft-deleted channel still belongs to its original Space.
+static CHANNEL_SPACE_ID_CACHE: LazyLock<Cache<Uuid, Uuid>> =
+    LazyLock::new(|| Cache::new(CHANNEL_SPACE_ID_CACHE_CAPACITY));
 
 #[derive(
     Debug,
@@ -66,40 +70,6 @@ pub struct Channel {
     pub is_archived: bool,
 }
 
-impl Lifespan for Channel {
-    fn ttl_sec() -> u64 {
-        hour::TWO
-    }
-}
-
-#[derive(Default, Debug, Clone)]
-pub struct SpacesChannels {
-    pub channel_ids: Vec<Uuid>,
-}
-
-impl Lifespan for SpacesChannels {
-    fn ttl_sec() -> u64 {
-        hour::TWO
-    }
-}
-
-fn insert_cache(channel: &Channel) {
-    CACHE.Channel.insert(channel.id, channel.clone().into());
-}
-
-fn maybe_insert_cache(channel: &Option<Channel>) {
-    if let Some(channel) = channel {
-        insert_cache(channel);
-    }
-}
-
-fn insert_spaces_channels_cache(space_id: Uuid, channels: &[Channel]) {
-    let channel_ids = channels.iter().map(|channel| channel.id).collect();
-    CACHE
-        .SpacesChannels
-        .insert(space_id, SpacesChannels { channel_ids }.into());
-}
-
 impl Channel {
     pub async fn create<'c, T: sqlx::PgExecutor<'c>>(
         db: T,
@@ -116,7 +86,7 @@ impl Channel {
         if let Some(default_dice_type) = default_dice_type {
             validators::DICE.run(default_dice_type)?;
         }
-        let channel = sqlx::query_file_scalar!(
+        sqlx::query_file_scalar!(
             "sql/channels/create_channel.sql",
             space_id,
             name,
@@ -125,47 +95,51 @@ impl Channel {
             _type.as_str(),
         )
         .fetch_one(db)
-        .await?;
-        insert_cache(&channel);
-        CACHE
-            .invalidate(CacheType::SpacesChannels, channel.space_id)
-            .await;
-        Ok(channel)
+        .await
+        .map_err(Into::into)
     }
 
     pub async fn get_by_id<'c, T: sqlx::PgExecutor<'c>>(
         db: T,
         id: &Uuid,
     ) -> Result<Option<Channel>, sqlx::Error> {
-        fetch_entry_optional(&CACHE.Channel, *id, async move {
-            sqlx::query_file_scalar!("sql/channels/fetch_channel.sql", id)
-                .fetch_one(db)
-                .await
-        })
-        .await
+        sqlx::query_file_scalar!("sql/channels/fetch_channel.sql", id)
+            .fetch_optional(db)
+            .await
+    }
+
+    /// Returns the immutable owning Space, including for a soft-deleted channel.
+    ///
+    /// This does not prove that the channel is still active. Callers that perform
+    /// business operations must validate the Channel inside their transaction.
+    pub async fn resolve_owning_space_id<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
+        id: &Uuid,
+    ) -> Result<Option<Uuid>, sqlx::Error> {
+        if let Some(space_id) = CHANNEL_SPACE_ID_CACHE.get(id) {
+            return Ok(Some(space_id));
+        }
+        let space_id = sqlx::query_file_scalar!("sql/channels/get_owning_space_id.sql", id)
+            .fetch_optional(db)
+            .await?;
+        if let Some(space_id) = space_id {
+            CHANNEL_SPACE_ID_CACHE.insert(*id, space_id);
+        }
+        Ok(space_id)
     }
 
     pub async fn get_by_id_list<'c, T: sqlx::PgExecutor<'c>, I: Iterator<Item = Uuid>>(
         db: T,
         id_list: I,
     ) -> Result<HashMap<Uuid, Channel>, sqlx::Error> {
-        let mut query_ids: Vec<Uuid> = Vec::new();
-        let mut result_map: HashMap<Uuid, Channel> = HashMap::new();
-        for id in id_list {
-            if let Some(channel) = CACHE.Channel.get(&id).and_then(Mortal::fresh_only) {
-                result_map.insert(channel.id, channel);
-            } else {
-                query_ids.push(id);
-            }
-        }
+        let query_ids: Vec<Uuid> = id_list.collect();
         let channels = sqlx::query_file_scalar!("sql/channels/get_by_id_list.sql", &*query_ids)
             .fetch_all(db)
             .await?;
-        for channel in channels {
-            CACHE.Channel.insert(channel.id, channel.clone().into());
-            result_map.insert(channel.id, channel);
-        }
-        Ok(result_map)
+        Ok(channels
+            .into_iter()
+            .map(|channel| (channel.id, channel))
+            .collect())
     }
 
     pub async fn get_by_name<'c, T: sqlx::PgExecutor<'c>>(
@@ -176,30 +150,16 @@ impl Channel {
         sqlx::query_file_scalar!("sql/channels/get_channel_by_name.sql", space_id, name)
             .fetch_optional(db)
             .await
-            .inspect(maybe_insert_cache)
     }
 
     pub async fn get_with_space<'c, T: sqlx::PgExecutor<'c>>(
         db: T,
         id: &Uuid,
     ) -> Result<Option<(Channel, Space)>, sqlx::Error> {
-        if let Some(channel) = CACHE.Channel.get(id).and_then(Mortal::fresh_only) {
-            if let Some(space) = CACHE
-                .Space
-                .get(&channel.space_id)
-                .and_then(Mortal::fresh_only)
-            {
-                return Ok(Some((channel, space)));
-            }
-        }
         let channel_and_space = sqlx::query_file!("sql/channels/fetch_channel_with_space.sql", id)
             .fetch_optional(db)
             .await?
             .map(|record| (record.channel, record.space));
-        if let Some((channel, space)) = &channel_and_space {
-            insert_cache(channel);
-            CACHE.Space.insert(space.id, space.clone().into());
-        }
         Ok(channel_and_space)
     }
 
@@ -207,35 +167,9 @@ impl Channel {
         db: T,
         space_id: &Uuid,
     ) -> Result<Vec<Channel>, sqlx::Error> {
-        let space_id = *space_id;
-        if let Some(space_channels) = CACHE
-            .SpacesChannels
-            .get(&space_id)
-            .and_then(Mortal::fresh_only)
-        {
-            let mut cached_channels = Vec::with_capacity(space_channels.channel_ids.len());
-            let mut all_channels_hit = true;
-            for channel_id in space_channels.channel_ids {
-                if let Some(channel) = CACHE.Channel.get(&channel_id).and_then(Mortal::fresh_only) {
-                    cached_channels.push(channel);
-                } else {
-                    all_channels_hit = false;
-                    break;
-                }
-            }
-            if all_channels_hit {
-                return Ok(cached_channels);
-            }
-        }
-
-        let channels = sqlx::query_file_scalar!("sql/channels/get_by_space.sql", &space_id)
+        sqlx::query_file_scalar!("sql/channels/get_by_space.sql", space_id)
             .fetch_all(db)
-            .await?;
-        for channel in &channels {
-            insert_cache(channel);
-        }
-        insert_spaces_channels_cache(space_id, &channels);
-        Ok(channels)
+            .await
     }
 
     pub async fn get_by_space_and_user<'c, T: sqlx::PgExecutor<'c>>(
@@ -251,46 +185,15 @@ impl Channel {
         )
         .fetch_all(db)
         .await?;
-        for ChannelWithMaybeMember { channel, .. } in &channel_list {
-            insert_cache(channel);
-        }
         Ok(channel_list)
     }
 
-    pub async fn delete(
-        db: &mut sqlx::PgConnection,
-        id: &Uuid,
-        space_id: &Uuid,
-    ) -> Result<u64, sqlx::Error> {
+    pub async fn delete(db: &mut sqlx::PgConnection, id: &Uuid) -> Result<bool, sqlx::Error> {
         let affected = sqlx::query_file_scalar!("sql/channels/delete_channel.sql", id)
             .execute(&mut *db)
             .await
             .map(|r| r.rows_affected())?;
-        if affected > 0 {
-            let member_user_ids =
-                sqlx::query_file_scalar!("sql/channels/get_joined_member_user_ids.sql", id)
-                    .fetch_all(&mut *db)
-                    .await?;
-
-            let mut invalidate_tasks = Vec::with_capacity(member_user_ids.len() + 2);
-            invalidate_tasks.push(CACHE.invalidate(CacheType::Channel, *id));
-            invalidate_tasks.push(CACHE.invalidate(CacheType::SpacesChannels, *space_id));
-            for user_id in member_user_ids {
-                invalidate_tasks.push(CACHE.invalidate(CacheType::ChannelMembers, user_id));
-            }
-            futures::future::join_all(invalidate_tasks).await;
-
-            if let Some(manager) = crate::events::context::store().get_manager(space_id) {
-                if let Err(e) = manager.remove_channel(*id).await {
-                    tracing::warn!(
-                        error = ?e,
-                        "Failed to remove channel from mailbox state"
-                    );
-                }
-            }
-        }
-
-        Ok(affected)
+        Ok(affected > 0)
     }
 
     pub async fn edit<'c, T: sqlx::PgExecutor<'c>>(
@@ -331,7 +234,6 @@ impl Channel {
         )
         .fetch_one(db)
         .await
-        .inspect(insert_cache)
         .map_err(Into::into)
     }
 
@@ -369,21 +271,11 @@ pub struct ChannelMember {
     pub is_master: bool,
 }
 
-#[derive(Default, Debug, Clone)]
-pub struct ChannelMembers(pub Vec<ChannelMember>);
-
-impl Lifespan for ChannelMembers {
-    fn ttl_sec() -> u64 {
-        hour::ONE
-    }
-}
-
 impl ChannelMember {
     pub async fn add_user<'c, T: sqlx::PgExecutor<'c>>(
         db: T,
         user_id: Uuid,
         channel_id: Uuid,
-        space_id: Uuid,
         character_name: &str,
         is_master: bool,
     ) -> Result<ChannelMember, ModelError> {
@@ -393,7 +285,7 @@ impl ChannelMember {
         if !character_name.is_empty() {
             validators::CHARACTER_NAME.run(character_name)?;
         }
-        let new_member = sqlx::query_file!(
+        sqlx::query_file!(
             "sql/channels/add_user_to_channel.sql",
             user_id,
             &channel_id,
@@ -402,13 +294,8 @@ impl ChannelMember {
         )
         .fetch_one(db)
         .await
-        .map(|record| record.member)?;
-
-        CACHE
-            .invalidate(CacheType::ChannelMembers, new_member.user_id)
-            .await;
-        Member::load_to_cache(space_id, channel_id);
-        Ok(new_member)
+        .map(|record| record.member)
+        .map_err(Into::into)
     }
 
     pub async fn get_color_list<'c, T: sqlx::PgExecutor<'c>>(
@@ -429,14 +316,9 @@ impl ChannelMember {
         db: T,
         user_id: Uuid,
     ) -> Result<Vec<ChannelMember>, sqlx::Error> {
-        fetch_entry(&CACHE.ChannelMembers, user_id, async {
-            sqlx::query_file_scalar!("sql/channels/get_channel_member_list_by_user.sql", user_id)
-                .fetch_all(db)
-                .await
-                .map(ChannelMembers)
-        })
-        .await
-        .map(|members| members.0)
+        sqlx::query_file_scalar!("sql/channels/get_channel_member_list_by_user.sql", user_id)
+            .fetch_all(db)
+            .await
     }
 
     pub async fn get_by_channel<'c, T: sqlx::PgExecutor<'c>>(
@@ -459,13 +341,8 @@ impl ChannelMember {
         db: T,
         user_id: Uuid,
         channel_id: Uuid,
-        space_id: Uuid,
+        _space_id: Uuid,
     ) -> Result<bool, sqlx::Error> {
-        if let Some(manager) = crate::events::context::store().get_manager(&space_id) {
-            if let Ok(Ok(is_master)) = manager.is_master(channel_id, user_id).await {
-                return Ok(is_master);
-            }
-        }
         sqlx::query_file_scalar!("sql/channels/is_master.sql", user_id, channel_id)
             .fetch_one(db)
             .await
@@ -475,15 +352,8 @@ impl ChannelMember {
         db: T,
         user_id: Uuid,
         channel_id: Uuid,
-        space_id: &Uuid,
+        _space_id: &Uuid,
     ) -> Result<Option<(ChannelMember, SpaceMember)>, sqlx::Error> {
-        {
-            if let Some(manager) = crate::events::context::store().get_manager(space_id) {
-                if let Ok(Ok(Some(member))) = manager.get_member(channel_id, user_id).await {
-                    return Ok(Some((member.channel.clone(), member.space.clone())));
-                }
-            }
-        }
         sqlx::query_file!(
             "sql/channels/get_with_space_member.sql",
             user_id,
@@ -497,32 +367,9 @@ impl ChannelMember {
     pub async fn get(
         db: &mut sqlx::PgConnection,
         user_id: Uuid,
-        space_id: Uuid,
+        _space_id: Uuid,
         channel_id: Uuid,
     ) -> Result<Option<ChannelMember>, sqlx::Error> {
-        {
-            if let Some(manager) = crate::events::context::store().get_manager(&space_id) {
-                match manager.get_member(channel_id, user_id).await {
-                    Ok(Ok(Some(member))) => return Ok(Some(member.channel)),
-                    Ok(Ok(None)) | Ok(Err(_)) => {
-                        manager.refresh_members_if_needed(channel_id).await.ok();
-                    }
-                    Err(_) => {}
-                }
-            }
-        }
-
-        if let Ok(Some(member)) = Member::get_by_channel(&mut *db, space_id, channel_id)
-            .await
-            .map(|members| {
-                members
-                    .into_iter()
-                    .map(|member| member.channel)
-                    .find(|member| member.user_id == user_id)
-            })
-        {
-            return Ok(Some(member));
-        }
         let record = sqlx::query_file!(
             "sql/channels/get_with_space_member.sql",
             user_id,
@@ -545,7 +392,6 @@ impl ChannelMember {
         db: T,
         user_id: Uuid,
         channel_id: Uuid,
-        space_id: Uuid,
     ) -> Result<(), sqlx::Error> {
         let query_result = sqlx::query_file!(
             "sql/channels/remove_user_from_channel.sql",
@@ -557,19 +403,6 @@ impl ChannelMember {
         if query_result.rows_affected() == 0 {
             return Err(sqlx::Error::RowNotFound);
         }
-        let span = tracing::info_span!("remove_user_from_channel", %user_id, %channel_id);
-        tokio::spawn(
-            async move {
-                CACHE.invalidate(CacheType::ChannelMembers, user_id).await;
-                if let Some(manager) = crate::events::context::store().get_manager(&space_id) {
-                    manager
-                        .remove_member_from_channel(channel_id, user_id)
-                        .await
-                        .ok();
-                }
-            }
-            .instrument(span),
-        );
         Ok(())
     }
 
@@ -582,17 +415,6 @@ impl ChannelMember {
             sqlx::query_file_scalar!("sql/channels/remove_user_by_space.sql", user_id, space_id)
                 .fetch_all(db)
                 .await?;
-
-        let span = tracing::info_span!("remove_user_by_space", %user_id, %space_id);
-        tokio::spawn(
-            async move {
-                CACHE.invalidate(CacheType::ChannelMembers, user_id).await;
-                if let Some(manager) = crate::events::context::store().get_manager(&space_id) {
-                    manager.remove_member(&user_id).await.ok();
-                }
-            }
-            .instrument(span),
-        );
         Ok(ids)
     }
 
@@ -600,7 +422,6 @@ impl ChannelMember {
         db: T,
         user_id: Uuid,
         channel_id: Uuid,
-        space_id: Uuid,
         character_name: Option<&str>,
         text_color: Option<&str>,
     ) -> Result<Option<ChannelMember>, ModelError> {
@@ -624,19 +445,6 @@ impl ChannelMember {
         )
         .fetch_optional(db)
         .await?;
-        CACHE.invalidate(CacheType::ChannelMembers, user_id).await;
-        if let Some(channel_member) = channel_member.clone() {
-            let span = tracing::info_span!("set_master", %user_id, %channel_id);
-            tokio::spawn(
-                async move {
-                    if let Some(manager) = crate::events::context::store().get_manager(&space_id) {
-                        manager.update_channel_member(channel_member).await.ok();
-                    }
-                }
-                .instrument(span),
-            );
-        }
-
         Ok(channel_member)
     }
 
@@ -645,34 +453,23 @@ impl ChannelMember {
         user_id: &Uuid,
         channel_id: &Uuid,
         character_name: &str,
-        space_id: Uuid,
     ) -> Result<Option<ChannelMember>, ModelError> {
-        ChannelMember::edit(
-            db,
-            *user_id,
-            *channel_id,
-            space_id,
-            Some(character_name),
-            None,
-        )
-        .await
+        ChannelMember::edit(db, *user_id, *channel_id, Some(character_name), None).await
     }
 
     pub async fn set_color<'c, T: sqlx::PgExecutor<'c>>(
         db: T,
         user_id: &Uuid,
         channel_id: &Uuid,
-        space_id: Uuid,
         color: &str,
     ) -> Result<Option<ChannelMember>, ModelError> {
-        ChannelMember::edit(db, *user_id, *channel_id, space_id, None, Some(color)).await
+        ChannelMember::edit(db, *user_id, *channel_id, None, Some(color)).await
     }
 
     pub async fn set_master<'c, T: sqlx::PgExecutor<'c>>(
         db: T,
         user_id: &Uuid,
         channel_id: &Uuid,
-        space_id: Uuid,
         is_master: bool,
     ) -> Result<Option<ChannelMember>, sqlx::Error> {
         let channel_member = sqlx::query_file_scalar!(
@@ -683,19 +480,6 @@ impl ChannelMember {
         )
         .fetch_optional(db)
         .await?;
-        if let Some(channel_member) = channel_member.clone() {
-            CACHE
-                .invalidate(CacheType::ChannelMembers, channel_member.user_id)
-                .await;
-            let span = tracing::info_span!("set_master", %user_id, %channel_id);
-            async move {
-                if let Some(manager) = crate::events::context::store().get_manager(&space_id) {
-                    manager.update_channel_member(channel_member).await.ok();
-                }
-            }
-            .instrument(span)
-            .await;
-        }
         Ok(channel_member)
     }
 }
@@ -710,51 +494,12 @@ pub struct Member {
 impl Member {
     pub async fn get_by_channel<'c, T: sqlx::PgExecutor<'c>>(
         db: T,
-        space_id: Uuid,
+        _space_id: Uuid,
         channel_id: Uuid,
     ) -> Result<Vec<Member>, sqlx::Error> {
-        let store = crate::events::context::store();
-        {
-            let manager = store.get_manager(&space_id);
-            if let Some(manager) = manager {
-                if let Ok(Ok(members)) = manager.get_members_in_channel(channel_id).await {
-                    if !members.is_empty() {
-                        return Ok(members);
-                    }
-                }
-            }
-        }
-        Member::get_by_channel_from_db(db, space_id, channel_id).await
-    }
-
-    pub fn load_to_cache(space_id: Uuid, channel_id: Uuid) {
-        let span = tracing::info_span!("load_to_cache", %space_id, %channel_id);
-        tokio::spawn(
-            async move {
-                let db = db::get().await;
-                let _ = Member::get_by_channel_from_db(&db, space_id, channel_id).await;
-            }
-            .instrument(span),
-        );
-    }
-
-    pub async fn get_by_channel_from_db<'c, T: sqlx::PgExecutor<'c>>(
-        db: T,
-        space_id: Uuid,
-        channel_id: Uuid,
-    ) -> Result<Vec<Member>, sqlx::Error> {
-        let members =
-            sqlx::query_file_as!(Member, "sql/channels/get_member_by_channel.sql", channel_id)
-                .fetch_all(db)
-                .await?;
-        {
-            crate::events::context::store()
-                .get_or_create_manager(space_id)
-                .set_members(channel_id, members.clone())
-                .await
-                .ok();
-        }
-        Ok(members)
+        sqlx::query_file_as!(Member, "sql/channels/get_member_by_channel.sql", channel_id)
+            .fetch_all(db)
+            .await
     }
 }
 
@@ -780,7 +525,8 @@ pub async fn members_attach_user<'c, T: sqlx::PgExecutor<'c>>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::cache::{CACHE, CacheType};
+    use crate::committed_changes::CommittedChanges;
+    use crate::context::AppContext;
     use crate::spaces::{Space, SpaceMember};
     use crate::users::User;
     use uuid::Uuid;
@@ -812,6 +558,93 @@ mod tests {
     }
 
     #[sqlx::test(migrator = "crate::db::MIGRATOR")]
+    async fn db_test_rolled_back_channel_member_changes_have_no_shared_state_side_effect(
+        pool: sqlx::PgPool,
+    ) {
+        let owner = create_test_user(&pool, "master_tx_owner").await;
+        let member = create_test_user(&pool, "master_tx_member").await;
+        let space = create_test_space(&pool, &owner, "master_tx_space").await;
+        SpaceMember::add_user(&pool, &member.id, &space.id)
+            .await
+            .expect("failed to add space member");
+        let channel = Channel::create(
+            &pool,
+            &space.id,
+            "Master Transaction",
+            true,
+            Some("d20"),
+            ChannelType::InGame,
+        )
+        .await
+        .expect("failed to create channel");
+        ChannelMember::add_user(&pool, member.id, channel.id, "Player", false)
+            .await
+            .expect("failed to add channel member");
+
+        let ctx = AppContext::new(pool.clone(), None);
+        let member_before_transaction = ctx
+            .space_store
+            .resolve_channel_member(space.id, channel.id, member.id)
+            .await
+            .expect("failed to load runtime member")
+            .expect("member is missing from runtime");
+        assert!(!member_before_transaction.channel.is_master);
+
+        let mut transaction = pool.begin().await.expect("failed to begin transaction");
+        ChannelMember::set_master(&mut *transaction, &member.id, &channel.id, true)
+            .await
+            .expect("failed to update master in transaction");
+        ChannelMember::edit(
+            &mut *transaction,
+            member.id,
+            channel.id,
+            Some("Changed Before Rollback"),
+            Some("#123456"),
+        )
+        .await
+        .expect("failed to edit member in transaction");
+        ChannelMember::remove_user(&mut *transaction, member.id, channel.id)
+            .await
+            .expect("failed to remove member in transaction");
+
+        let member_before_rollback = ctx
+            .space_store
+            .resolve_channel_member(space.id, channel.id, member.id)
+            .await
+            .expect("failed to query runtime")
+            .expect("member disappeared from runtime");
+        assert!(
+            !member_before_rollback.channel.is_master,
+            "an uncommitted channel member change mutated runtime state"
+        );
+        assert_eq!(member_before_rollback.channel.character_name, "Player");
+
+        transaction
+            .rollback()
+            .await
+            .expect("failed to roll back transaction");
+
+        let mut transaction = pool.begin().await.expect("failed to begin transaction");
+        let removed = ChannelMember::remove_user_by_space(&mut *transaction, member.id, space.id)
+            .await
+            .expect("failed to remove space channel members in transaction");
+        assert_eq!(removed, vec![channel.id]);
+        let member_before_rollback = ctx
+            .space_store
+            .resolve_channel_member(space.id, channel.id, member.id)
+            .await
+            .expect("failed to query runtime");
+        assert!(
+            member_before_rollback.is_some(),
+            "an uncommitted space-wide member removal mutated runtime state"
+        );
+        transaction
+            .rollback()
+            .await
+            .expect("failed to roll back transaction");
+    }
+
+    #[sqlx::test(migrator = "crate::db::MIGRATOR")]
     async fn db_test_channel_create_and_query_flow(pool: sqlx::PgPool) {
         let owner = create_test_user(&pool, "owner").await;
         let space = create_test_space(&pool, &owner, "channel_space").await;
@@ -838,6 +671,11 @@ mod tests {
             .expect("get_by_id failed")
             .expect("channel not found by id");
         assert_eq!(fetched.id, channel.id);
+        let fetched_space_id = Channel::resolve_owning_space_id(&pool, &channel.id)
+            .await
+            .expect("resolve_owning_space_id failed")
+            .expect("channel Space ID not found");
+        assert_eq!(fetched_space_id, space.id);
 
         let fetched_by_name = Channel::get_by_name(&pool, space.id, &channel.name)
             .await
@@ -863,10 +701,9 @@ mod tests {
             .expect("get_by_space failed");
         assert!(channels_in_space.iter().any(|item| item.id == channel.id));
 
-        let owner_member =
-            ChannelMember::add_user(&pool, owner.id, channel.id, space.id, "GM", true)
-                .await
-                .expect("failed to add owner to channel");
+        let owner_member = ChannelMember::add_user(&pool, owner.id, channel.id, "GM", true)
+            .await
+            .expect("failed to add owner to channel");
         assert!(owner_member.is_master);
 
         let channels_for_owner = Channel::get_by_space_and_user(&pool, &space.id, &owner.id)
@@ -915,16 +752,26 @@ mod tests {
         assert!(edited.is_archived);
 
         let mut conn = pool.acquire().await.expect("failed to acquire connection");
-        let deleted = Channel::delete(&mut conn, &channel.id, &space.id)
-            .await
-            .expect("delete failed");
-        assert_eq!(deleted, 1);
+        assert!(
+            Channel::delete(&mut conn, &channel.id)
+                .await
+                .expect("delete failed"),
+            "channel should have been deleted"
+        );
         drop(conn);
+        let mut changes = CommittedChanges::default();
+        changes.channel_deleted(space.id, channel.id);
+        changes.apply().await;
 
         let after_delete = Channel::get_by_id(&pool, &channel.id)
             .await
             .expect("get after delete failed");
         assert!(after_delete.is_none());
+        let space_id_after_delete = Channel::resolve_owning_space_id(&pool, &channel.id)
+            .await
+            .expect("resolve_owning_space_id after delete failed")
+            .expect("deleted channel ownership was lost");
+        assert_eq!(space_id_after_delete, space.id);
     }
 
     #[sqlx::test(migrator = "crate::db::MIGRATOR")]
@@ -947,16 +794,14 @@ mod tests {
         .await
         .expect("failed to create member test channel");
 
-        let owner_member =
-            ChannelMember::add_user(&pool, owner.id, channel.id, space.id, "GM", true)
-                .await
-                .expect("failed to add owner to channel");
+        let owner_member = ChannelMember::add_user(&pool, owner.id, channel.id, "GM", true)
+            .await
+            .expect("failed to add owner to channel");
         assert!(owner_member.is_master);
 
-        let member_record =
-            ChannelMember::add_user(&pool, member.id, channel.id, space.id, "Player", false)
-                .await
-                .expect("failed to add member to channel");
+        let member_record = ChannelMember::add_user(&pool, member.id, channel.id, "Player", false)
+            .await
+            .expect("failed to add member to channel");
         assert!(!member_record.is_master);
 
         let members_with_user = ChannelMember::get_by_channel(&pool, &channel.id, false)
@@ -968,6 +813,11 @@ mod tests {
             .await
             .expect("get_by_user failed for owner");
         assert_eq!(owner_channels.len(), 1);
+        let ctx = AppContext::new(pool.clone(), None);
+        ctx.space_store
+            .get_or_load(space.id)
+            .await
+            .expect("failed to load Space runtime");
 
         let color_list_before = ChannelMember::get_color_list(&pool, &channel.id)
             .await
@@ -978,13 +828,15 @@ mod tests {
             &pool,
             member.id,
             channel.id,
-            space.id,
             Some("Player One"),
             Some("#112233"),
         )
         .await
         .expect("failed to edit member")
         .expect("member should exist after edit");
+        let mut changes = CommittedChanges::default();
+        changes.channel_member_changed(space.id, &updated_member);
+        changes.apply_with_context(&ctx).await;
         assert_eq!(updated_member.character_name, "Player One");
         assert_eq!(updated_member.text_color.as_deref(), Some("#112233"));
 
@@ -996,11 +848,21 @@ mod tests {
             Some("#112233")
         );
 
-        let promoted = ChannelMember::set_master(&pool, &member.id, &channel.id, space.id, true)
+        let promoted = ChannelMember::set_master(&pool, &member.id, &channel.id, true)
             .await
             .expect("set_master failed")
             .expect("expected updated member");
+        let mut changes = CommittedChanges::default();
+        changes.channel_member_changed(space.id, &promoted);
+        changes.apply_with_context(&ctx).await;
         assert!(promoted.is_master);
+        let runtime_member = ctx
+            .space_store
+            .resolve_channel_member(space.id, channel.id, member.id)
+            .await
+            .expect("failed to query runtime")
+            .expect("member was not applied to runtime");
+        assert!(runtime_member.channel.is_master);
 
         let is_master_flag = ChannelMember::is_master(&pool, member.id, channel.id, space.id)
             .await
@@ -1022,9 +884,9 @@ mod tests {
             .expect("member should exist");
         assert_eq!(fetched_member.user_id, member.id);
 
-        let members_state = Member::get_by_channel_from_db(&mut *conn, space.id, channel.id)
+        let members_state = Member::get_by_channel(&mut *conn, space.id, channel.id)
             .await
-            .expect("get_by_channel_from_db failed");
+            .expect("get_by_channel failed");
         assert_eq!(members_state.len(), 2);
 
         let attached = members_attach_user(&mut *conn, members_state.clone())
@@ -1033,9 +895,21 @@ mod tests {
         assert_eq!(attached.len(), 2);
         assert!(attached.iter().any(|item| item.user.id == member.id));
 
-        ChannelMember::remove_user(&mut *conn, member.id, channel.id, space.id)
+        ChannelMember::remove_user(&mut *conn, member.id, channel.id)
             .await
             .expect("remove_user failed");
+        let mut changes = CommittedChanges::default();
+        changes.channel_member_removed(space.id, channel.id, member.id);
+        changes.apply_with_context(&ctx).await;
+        let runtime_member = ctx
+            .space_store
+            .resolve_channel_member(space.id, channel.id, member.id)
+            .await
+            .expect("failed to query runtime");
+        assert!(
+            runtime_member.is_none(),
+            "removed channel member remained in runtime"
+        );
 
         let member_channels_after_remove = ChannelMember::get_by_user(&mut *conn, member.id)
             .await
@@ -1048,12 +922,21 @@ mod tests {
         assert_eq!(remaining_members.len(), 1);
         assert_eq!(remaining_members[0].member.user_id, owner.id);
 
+        let historical_members = ChannelMember::get_by_channel(&mut *conn, &channel.id, true)
+            .await
+            .expect("get_by_channel with history failed after remove");
+        assert_eq!(historical_members.len(), 2);
+        assert!(
+            historical_members
+                .iter()
+                .any(|entry| entry.member.user_id == member.id && !entry.member.is_joined)
+        );
+
         let removed_channels = ChannelMember::remove_user_by_space(&mut *conn, owner.id, space.id)
             .await
             .expect("remove_user_by_space failed");
         assert_eq!(removed_channels, vec![channel.id]);
 
-        CACHE.invalidate(CacheType::ChannelMembers, owner.id).await;
         let owner_channels_after = ChannelMember::get_by_user(&mut *conn, owner.id)
             .await
             .expect("owner channels after space removal failed");

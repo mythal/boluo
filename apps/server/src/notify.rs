@@ -5,6 +5,29 @@ use tracing::Instrument as _;
 use uuid::Uuid;
 
 use crate::db;
+use crate::space_runtime::SpaceStore;
+
+async fn persist_space_activity(
+    pool: &sqlx::PgPool,
+    space_id: Uuid,
+    update_time: DateTime<Utc>,
+) -> Result<(), sqlx::Error> {
+    sqlx::query_file!("sql/spaces/set_latest_activity.sql", space_id, update_time)
+        .execute(pool)
+        .await?;
+    Ok(())
+}
+
+#[cfg(test)]
+async fn apply_space_activity(
+    pool: &sqlx::PgPool,
+    space_store: &SpaceStore,
+    space_id: Uuid,
+    update_time: DateTime<Utc>,
+) -> Result<(), sqlx::Error> {
+    space_store.record_latest_activity_if_loaded(space_id, update_time);
+    persist_space_activity(pool, space_id, update_time).await
+}
 
 static NOTIFY_SPACE_ACTIVITY: LazyLock<tokio::sync::mpsc::Sender<(Uuid, DateTime<Utc>)>> =
     LazyLock::new(|| {
@@ -18,8 +41,10 @@ static NOTIFY_SPACE_ACTIVITY: LazyLock<tokio::sync::mpsc::Sender<(Uuid, DateTime
             let mut interval = crate::utils::cleaner_interval(6);
             loop {
                 tokio::select! {
-                    Some((channel_id, update_time)) = rx.recv() => {
-                        map.insert(channel_id, update_time);
+                    Some((space_id, update_time)) = rx.recv() => {
+                        map.entry(space_id)
+                            .and_modify(|current| *current = (*current).max(update_time))
+                            .or_insert(update_time);
                     }
                     _ = crate::shutdown::SHUTDOWN.notified() => {
                         break;
@@ -29,24 +54,11 @@ static NOTIFY_SPACE_ACTIVITY: LazyLock<tokio::sync::mpsc::Sender<(Uuid, DateTime
                             let mut taken_map = HashMap::with_capacity_and_hasher(map.len(), ahash::RandomState::new());
                             std::mem::swap(&mut map, &mut taken_map);
                             // Update the database with the latest activity.
-                            // Intentionally do NOT invalidate `CACHE.Space` here:
-                            // latest_activity is a high-frequency field and we accept
-                            // short-lived staleness to avoid cache-churn and extra fan-out.
-
-                            let Ok(mut conn) = pool.acquire().await else {
-                                tracing::warn!("Failed to acquire connection from pool, skipping.");
-                                continue;
-                            };
-                            for (channel_id, update_time) in taken_map.into_iter() {
-                                if let Err(err) = sqlx::query_file!(
-                                    "sql/messages/update_space_latest_activity.sql",
-                                    channel_id,
-                                    update_time
-                                )
-                                .execute(&mut *conn)
-                                .await
+                            for (space_id, update_time) in taken_map {
+                                if let Err(err) =
+                                    persist_space_activity(&pool, space_id, update_time).await
                                 {
-                                    tracing::error!(error = %err, "Failed to update activity for channel {}", channel_id);
+                                    tracing::error!(error = %err, %space_id, "Failed to update Space activity");
                                 };
                             }
                         }
@@ -62,12 +74,94 @@ static NOTIFY_SPACE_ACTIVITY: LazyLock<tokio::sync::mpsc::Sender<(Uuid, DateTime
         tx
     });
 
-pub fn space_activity(channel_id: Uuid, update_time: Option<DateTime<Utc>>) {
+pub(crate) fn space_activity(
+    space_store: &SpaceStore,
+    space_id: Uuid,
+    update_time: Option<DateTime<Utc>>,
+) {
+    let update_time = update_time.unwrap_or_else(Utc::now);
+    space_store.record_latest_activity_if_loaded(space_id, update_time);
     let tx = NOTIFY_SPACE_ACTIVITY.clone();
-    if let Err(_err) = tx.try_send((channel_id, update_time.unwrap_or_else(Utc::now))) {
+    if let Err(_err) = tx.try_send((space_id, update_time)) {
         tracing::info!(
             "Failed to send space activity notification: {}, tokio channel is full",
-            channel_id
+            space_id
+        );
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::context::AppContext;
+    use crate::spaces::Space;
+    use crate::users::User;
+
+    #[sqlx::test(migrator = "crate::db::MIGRATOR")]
+    async fn db_test_space_activity_updates_loaded_runtime(pool: sqlx::PgPool) {
+        let suffix = Uuid::new_v4().simple().to_string();
+        let owner = User::register(
+            &pool,
+            &format!("activity_{}@example.com", &suffix[..8]),
+            &format!("activity_{}", &suffix[..8]),
+            "Activity Tester",
+            "ActivityPass123!",
+        )
+        .await
+        .expect("failed to create activity test user");
+        let space = Space::create(
+            &pool,
+            format!("activity_{}", &suffix[..8]),
+            &owner.id,
+            "Activity test Space".to_string(),
+            None,
+            Some("d20"),
+        )
+        .await
+        .expect("failed to create activity test Space");
+        let ctx = AppContext::new(pool.clone(), None);
+        let runtime = ctx
+            .space_store
+            .get_or_load(space.id)
+            .await
+            .expect("failed to load Space runtime");
+        let update_time = space.latest_activity + chrono::Duration::seconds(30);
+
+        apply_space_activity(&pool, &ctx.space_store, space.id, update_time)
+            .await
+            .expect("failed to apply Space activity");
+
+        let from_database = Space::get_by_id(&pool, &space.id)
+            .await
+            .expect("failed to query updated Space")
+            .expect("updated Space disappeared");
+        assert_eq!(from_database.latest_activity, update_time);
+        assert_eq!(
+            runtime
+                .authoritative_snapshot()
+                .expect("Space runtime became dirty")
+                .space()
+                .latest_activity,
+            update_time,
+            "the loaded Space runtime remained authoritative with stale activity"
+        );
+
+        let pending_write_time = update_time + chrono::Duration::seconds(30);
+        ctx.space_store
+            .record_latest_activity_if_loaded(space.id, pending_write_time);
+        ctx.space_store
+            .refresh_if_loaded(space.id)
+            .await
+            .expect("failed to refresh loaded Space runtime")
+            .expect("loaded Space runtime disappeared");
+        assert_eq!(
+            runtime
+                .authoritative_snapshot()
+                .expect("Space runtime remained dirty")
+                .space()
+                .latest_activity,
+            pending_write_time,
+            "a structural refresh regressed activity before its batched database write"
         );
     }
 }

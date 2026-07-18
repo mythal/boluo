@@ -150,6 +150,7 @@ export type CheckUsernameExists = {
 
 /**  Query params for checking variable key/alias availability. */
 export type CheckVariableAvailability = {
+  spaceId: string;
   characterId: string;
   key?: string | null;
   alias?: string[];
@@ -236,6 +237,7 @@ export type CreateSpace = {
 
 /**  Payload for creating a character variable. */
 export type CreateVariable = {
+  spaceId: string;
   characterId: string;
   key: string;
   displayName?: string;
@@ -248,6 +250,7 @@ export type CreateVariable = {
 
 /**  Payload for deleting a character variable. */
 export type DeleteVariable = {
+  spaceId: string;
   characterId: string;
   key: string;
 };
@@ -298,6 +301,7 @@ export type EditChannelTopic = {
 
 /**  Payload for editing a character; `alias: Some("")` clears it. */
 export type EditCharacter = {
+  spaceId: string;
   characterId: string;
   name: string | null;
   description: string | null;
@@ -356,6 +360,7 @@ export type EditUser = {
 
 /**  Payload for editing a character variable. */
 export type EditVariable = {
+  spaceId: string;
   characterId: string;
   key: string;
   displayName: string | null;
@@ -442,6 +447,7 @@ export type EventId = {
 
 export type Export = {
   channelId: string;
+  spaceId?: string | null;
   after?: string | null;
 };
 
@@ -486,6 +492,7 @@ export type GetMe = {
 
 export type GetMessagesByChannel = {
   channelId: string;
+  spaceId?: string | null;
   before: number | null;
   limit: number | null;
 };
@@ -529,7 +536,7 @@ export type LinkEntity = {
 
 /**  Query params for listing characters in a space. */
 export type ListCharacters = {
-  id: string;
+  spaceId: string;
   includeArchived?: boolean;
 };
 
@@ -627,6 +634,7 @@ export type NewMessage = {
   messageId?: string | null;
   previewId?: string | null;
   channelId: string;
+  spaceId?: string | null;
   name: string;
   text: string;
   entities?: Entities;
@@ -823,6 +831,17 @@ export type PureRepeat = {
   count: number;
 };
 
+export type QueryChannel = {
+  id: string;
+  /**  Optional hint used to read an already-loaded Space runtime. */
+  spaceId?: string | null;
+};
+
+export type QueryCharacter = {
+  spaceId: string;
+  characterId: string;
+};
+
 export type QuerySpace = {
   id: string;
   token: string | null;
@@ -902,6 +921,7 @@ export type SearchFilter = 'ALL' | 'IN_GAME' | 'OUT_OF_GAME';
 
 export type SearchMessagesParams = {
   channelId: string;
+  spaceId?: string | null;
   keyword: string;
   pos?: number | null;
   direction?: SearchDirection;
@@ -1073,6 +1093,7 @@ export type UserStatus = {
 
 /**  Query params for listing variable history by key. */
 export type VariableHistoryQuery = {
+  spaceId: string;
   characterId: string;
   key: string;
 };

@@ -112,6 +112,21 @@ impl From<sqlx::Error> for AppError {
     }
 }
 
+impl From<crate::space_runtime::SpaceRuntimeError> for AppError {
+    fn from(error: crate::space_runtime::SpaceRuntimeError) -> Self {
+        match error {
+            crate::space_runtime::SpaceRuntimeError::NotFound => AppError::NotFound("space"),
+            crate::space_runtime::SpaceRuntimeError::Database(error) => error.into(),
+            crate::space_runtime::SpaceRuntimeError::Closed => AppError::Unexpected(
+                anyhow::anyhow!("Space runtime mutation queue is unavailable"),
+            ),
+            crate::space_runtime::SpaceRuntimeError::Busy => {
+                AppError::LimitExceeded("Too many pending Space mutations")
+            }
+        }
+    }
+}
+
 macro_rules! unexpected {
     ($msg: expr) => {{
         let msg = $msg.to_string();

@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE\n    spaces\nSET\n    latest_activity = GREATEST(latest_activity, $2)\nWHERE\n    id = $1;\n",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "e08b10a65bc8adeb7fc15f43c307ffdac522306d30933ea68691732aaf619ebb"
+}

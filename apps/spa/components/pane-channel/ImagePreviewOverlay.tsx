@@ -12,7 +12,7 @@ import {
   type MouseEvent as ReactMouseEvent,
   type ReactNode,
   useCallback,
-  useContext,
+  use,
   useEffect,
   useMemo,
   useRef,
@@ -20,15 +20,18 @@ import {
 } from 'react';
 import { createPortal } from 'react-dom';
 import { FormattedMessage } from 'react-intl';
+import { useObjectUrl } from '../../hooks/useObjectUrl';
+
+export type ImagePreviewSource = { type: 'URL'; url: string } | { type: 'BLOB'; blob: Blob };
 
 type ContextValue = {
-  open: (src: string) => void;
+  open: (source: ImagePreviewSource) => void;
 };
 
 const ImagePreviewContext = createContext<ContextValue | null>(null);
 
 export const useImagePreview = (): ContextValue => {
-  const ctx = useContext(ImagePreviewContext);
+  const ctx = use(ImagePreviewContext);
   if (ctx == null) {
     throw new Error('useImagePreview must be used within ImagePreviewProvider');
   }
@@ -47,12 +50,6 @@ const ImagePreviewOverlay: FC<{ src: string; onClose: () => void }> = ({ src, on
     baseY: number;
   } | null>(null);
   const wheelTargetRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    setMode('fit');
-    setOffset({ x: 0, y: 0 });
-    setScale(1);
-  }, [src]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -267,21 +264,39 @@ const ImagePreviewOverlay: FC<{ src: string; onClose: () => void }> = ({ src, on
   return typeof document === 'undefined' ? null : createPortal(container, document.body);
 };
 
-export const ImagePreviewProvider: FC<{ children: ReactNode }> = ({ children }) => {
-  const [previewSrc, setPreviewSrc] = useState<string | null>(null);
+const ImagePreviewSession: FC<{ source: ImagePreviewSource; onClose: () => void }> = ({
+  source,
+  onClose,
+}) => {
+  const objectUrl = useObjectUrl(source.type === 'BLOB' ? source.blob : null);
+  const src = source.type === 'URL' ? source.url : objectUrl;
+  if (src == null) return null;
+  return <ImagePreviewOverlay src={src} onClose={onClose} />;
+};
 
-  const open = useCallback((src: string) => {
-    setPreviewSrc(src);
+export const ImagePreviewProvider: FC<{ children: ReactNode }> = ({ children }) => {
+  const nextPreviewIdRef = useRef(0);
+  const [preview, setPreview] = useState<{
+    id: number;
+    source: ImagePreviewSource;
+  } | null>(null);
+
+  const open = useCallback((source: ImagePreviewSource) => {
+    const id = nextPreviewIdRef.current;
+    nextPreviewIdRef.current += 1;
+    setPreview({ id, source });
   }, []);
 
-  const close = useCallback(() => setPreviewSrc(null), []);
+  const close = useCallback(() => setPreview(null), []);
 
   const value = useMemo(() => ({ open }), [open]);
 
   return (
-    <ImagePreviewContext.Provider value={value}>
+    <ImagePreviewContext value={value}>
       {children}
-      {previewSrc ? <ImagePreviewOverlay src={previewSrc} onClose={close} /> : null}
-    </ImagePreviewContext.Provider>
+      {preview ? (
+        <ImagePreviewSession key={preview.id} source={preview.source} onClose={close} />
+      ) : null}
+    </ImagePreviewContext>
   );
 };

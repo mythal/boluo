@@ -7,13 +7,15 @@ import {
   type MouseEvent as ReactMouseEvent,
   memo,
   useCallback,
+  useMemo,
   useState,
 } from 'react';
 import Icon from '@boluo/ui/Icon';
 import { showFileSize } from '@boluo/utils/files';
 import { getMediaUrl, supportedMediaType } from '../../media';
 import { useQueryAppSettings } from '@boluo/hooks/useQueryAppSettings';
-import { useImagePreview } from './ImagePreviewOverlay';
+import { type ImagePreviewSource, useImagePreview } from './ImagePreviewOverlay';
+import { useObjectUrl } from '../../hooks/useObjectUrl';
 
 type Props = {
   className?: string;
@@ -46,7 +48,14 @@ const Attachment = ({
   );
 };
 
-const LoadError = ({ onClick }: { onClick: () => void }) => {
+const LoadError = ({ onClick }: { onClick?: () => void }) => {
+  if (onClick == null) {
+    return (
+      <div className="flex h-full w-full items-center justify-center">
+        <Icon icon={Refresh} />
+      </div>
+    );
+  }
   return (
     <button
       className="flex h-full w-full items-center justify-center"
@@ -66,73 +75,125 @@ const Loading = () => {
   );
 };
 
-export const MessageMedia = memo<Props>(({ media, className, children = null }: Props) => {
-  const { data: appSettings, isLoading: isLoadingAppSettings } = useQueryAppSettings();
+type LoadState = 'LOADING' | 'LOADED' | 'ERROR';
+
+const MediaContainer = ({
+  className,
+  loadState,
+  mediaContent,
+  children,
+}: {
+  className?: string;
+  loadState: LoadState;
+  mediaContent: ReactNode;
+  children: ReactNode;
+}) => (
+  <div className={className}>
+    <div
+      className={clsx(
+        'h-24 rounded-sm',
+        loadState === 'LOADING' ? 'bg-surface-interactive-active w-24 animate-pulse' : '',
+        loadState === 'ERROR' ? 'bg-state-danger-bg w-24' : '',
+      )}
+    >
+      {mediaContent}
+    </div>
+    {children}
+  </div>
+);
+
+const ResolvedImageMedia = ({
+  src,
+  previewSource,
+  className,
+  children,
+}: {
+  src: string;
+  previewSource: ImagePreviewSource;
+  className?: string;
+  children: ReactNode;
+}) => {
   const { open } = useImagePreview();
-  const mediaUrl = appSettings?.mediaUrl;
-  const [loadState, setLoadState] = useState<'LOADING' | 'LOADED' | 'ERROR'>('LOADING');
-  let src: string | null = null;
-  if (media instanceof File) {
-    src = URL.createObjectURL(media);
-  } else if (mediaUrl) {
-    src = getMediaUrl(mediaUrl, media);
-  } else if (isLoadingAppSettings) {
-    src = '';
-  } else {
-    console.error('MEDIA_URL is not set.');
-    src = '';
-  }
-  const isLoading = loadState === 'LOADING' || isLoadingAppSettings;
+  const [loadState, setLoadState] = useState<LoadState>('LOADING');
   const handlePreview = useCallback(
     (event: ReactMouseEvent<HTMLButtonElement>) => {
       event.preventDefault();
       event.stopPropagation();
-      if (!src || isLoadingAppSettings) return;
-      open(src);
+      open(previewSource);
     },
-    [isLoadingAppSettings, open, src],
+    [open, previewSource],
   );
-  if (
-    media instanceof File &&
-    (!media.type.startsWith('image/') || !supportedMediaType.includes(media.type))
-  ) {
-    return <Attachment name={media.name} size={media.size} className={className} />;
-  }
-  const isError = !isLoading && (loadState === 'ERROR' || src === '');
-  const content = isLoadingAppSettings ? (
-    <Loading />
-  ) : loadState === 'ERROR' || src === '' ? (
-    <LoadError onClick={() => setLoadState('LOADING')} />
-  ) : (
-    <button
-      type="button"
-      className="block h-full w-fit cursor-zoom-in overflow-hidden"
-      onClick={handlePreview}
-      onPointerDown={(e) => e.stopPropagation()}
-    >
-      <img
-        src={src}
-        alt="media"
-        className="block h-full rounded-sm"
-        onError={() => setLoadState('ERROR')}
-        onLoad={() => setLoadState('LOADED')}
-      />
-    </button>
-  );
-  return (
-    <div className={className}>
-      <div
-        className={clsx(
-          'h-24 rounded-sm',
-          isLoading ? 'bg-surface-interactive-active w-24 animate-pulse' : '',
-          isError ? 'bg-state-danger-bg w-24' : '',
-        )}
+  const content =
+    loadState === 'ERROR' ? (
+      <LoadError onClick={() => setLoadState('LOADING')} />
+    ) : (
+      <button
+        type="button"
+        className="block h-full w-fit cursor-zoom-in overflow-hidden"
+        onClick={handlePreview}
+        onPointerDown={(e) => e.stopPropagation()}
       >
-        {content}
-      </div>
-
+        <img
+          src={src}
+          alt="media"
+          className="block h-full rounded-sm"
+          onError={() => setLoadState('ERROR')}
+          onLoad={() => setLoadState('LOADED')}
+        />
+      </button>
+    );
+  return (
+    <MediaContainer className={className} loadState={loadState} mediaContent={content}>
       {children}
-    </div>
+    </MediaContainer>
+  );
+};
+
+export const MessageMedia = memo<Props>(({ media, className, children = null }: Props) => {
+  const { data: appSettings, isLoading: isLoadingAppSettings } = useQueryAppSettings();
+  const isLocalImage =
+    media instanceof File &&
+    media.type.startsWith('image/') &&
+    supportedMediaType.includes(media.type);
+  const objectUrl = useObjectUrl(isLocalImage ? media : null);
+  const src =
+    media instanceof File
+      ? objectUrl
+      : appSettings?.mediaUrl
+        ? getMediaUrl(appSettings.mediaUrl, media)
+        : null;
+  const previewSource = useMemo<ImagePreviewSource | null>(() => {
+    if (media instanceof File) return { type: 'BLOB', blob: media };
+    if (src != null) return { type: 'URL', url: src };
+    return null;
+  }, [media, src]);
+
+  if (media instanceof File && !isLocalImage) {
+    return (
+      <Attachment name={media.name} size={media.size} className={className}>
+        {children}
+      </Attachment>
+    );
+  }
+  if (src == null || previewSource == null) {
+    if (!isLoadingAppSettings && !(media instanceof File)) {
+      console.error('MEDIA_URL is not set.');
+    }
+    const loadState = isLoadingAppSettings || media instanceof File ? 'LOADING' : 'ERROR';
+    return (
+      <MediaContainer
+        className={className}
+        loadState={loadState}
+        mediaContent={loadState === 'LOADING' ? <Loading /> : <LoadError />}
+      >
+        {children}
+      </MediaContainer>
+    );
+  }
+  return (
+    <ResolvedImageMedia key={src} src={src} previewSource={previewSource} className={className}>
+      {children}
+    </ResolvedImageMedia>
   );
 });
 

@@ -19,6 +19,7 @@ import { Avatar } from '@boluo/ui/users/Avatar';
 import { useQueryAppSettings } from '@boluo/hooks/useQueryAppSettings';
 import { ButtonInline } from '@boluo/ui/ButtonInline';
 import { FloatingBox } from '@boluo/ui/FloatingBox';
+import { useFloatingSetters } from '@boluo/ui/hooks/useFloatingSetters';
 
 interface Props {
   inGame: boolean;
@@ -149,6 +150,7 @@ export const WhisperToItemAdd: FC<{
     onOpenChange: setOpen,
     middleware: [offset({ mainAxis: -4 })],
   });
+  const { setReference, setFloating } = useFloatingSetters(refs);
   const click = useClick(context, {});
   const dismiss = useDismiss(context, {});
   const { getReferenceProps, getFloatingProps } = useInteractions([click, dismiss]);
@@ -162,14 +164,14 @@ export const WhisperToItemAdd: FC<{
 
   return (
     <>
-      <ButtonInline aria-pressed={open} ref={refs.setReference} {...getReferenceProps()}>
+      <ButtonInline aria-pressed={open} ref={setReference} {...getReferenceProps()}>
         <Icon icon={Plus} />
       </ButtonInline>
       {open && (
         <FloatingPortal>
           <FloatingBox
             className=""
-            ref={refs.setFloating}
+            ref={setFloating}
             style={floatingStyles}
             {...getFloatingProps()}
           >

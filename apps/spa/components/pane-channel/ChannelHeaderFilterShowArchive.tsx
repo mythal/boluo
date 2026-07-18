@@ -11,14 +11,17 @@ import { TooltipBox } from '@boluo/ui/TooltipBox';
 export const ChannelHeaderFilterShowArchive: FC = () => {
   const { showArchivedAtom } = useChannelAtoms();
   const [show, setShow] = useAtom(showArchivedAtom);
-  const { showTooltip, refs, getFloatingProps, getReferenceProps, floatingStyles } = useTooltip();
+  const {
+    showTooltip,
+    setReference,
+    setFloating,
+    getFloatingProps,
+    getReferenceProps,
+    floatingStyles,
+  } = useTooltip();
   return (
     <>
-      <div
-        className="ChannelHeaderFilterShowArchive"
-        ref={refs.setReference}
-        {...getReferenceProps()}
-      >
+      <div className="ChannelHeaderFilterShowArchive" ref={setReference} {...getReferenceProps()}>
         <PaneHeaderButton active={show} onClick={() => setShow((x) => !x)}>
           <span>
             <Icon icon={Archive} />
@@ -32,7 +35,7 @@ export const ChannelHeaderFilterShowArchive: FC = () => {
         show={showTooltip}
         style={floatingStyles}
         {...getFloatingProps()}
-        ref={refs.setFloating}
+        ref={setFloating}
         defaultStyle
       >
         <FormattedMessage defaultMessage="Show archived messages" />

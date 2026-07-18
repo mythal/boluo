@@ -9,6 +9,7 @@ import {
 import { type Channel, type SpaceMember, type User, type UserStatus } from '@boluo/api';
 import { type FC, useState } from 'react';
 import { Avatar } from '@boluo/ui/users/Avatar';
+import { useFloatingSetters } from '@boluo/ui/hooks/useFloatingSetters';
 import { MemberCard } from './MemberCard';
 import { useQueryAppSettings } from '@boluo/hooks/useQueryAppSettings';
 import { LampOnline } from '@boluo/ui/LampOneline';
@@ -30,6 +31,7 @@ export const MemberInvitationItem: FC<Props> = ({ user, spaceMember, channel, st
     placement: 'left-start',
     whileElementsMounted: autoUpdate,
   });
+  const { setReference, setFloating } = useFloatingSetters(refs);
 
   const click = useClick(context, {});
   const dismiss = useDismiss(context, {});
@@ -38,7 +40,7 @@ export const MemberInvitationItem: FC<Props> = ({ user, spaceMember, channel, st
   return (
     <>
       <button
-        ref={refs.setReference}
+        ref={setReference}
         {...getReferenceProps()}
         className="MemberInvitationItem hover:bg-surface-muted active:bg-surface-interactive-active group relative flex w-full cursor-pointer items-center gap-1 rounded-sm p-1 text-left text-sm"
       >
@@ -66,7 +68,7 @@ export const MemberInvitationItem: FC<Props> = ({ user, spaceMember, channel, st
             style={floatingStyles}
             spaceMember={spaceMember}
             canIInvite
-            ref={refs.setFloating}
+            ref={setFloating}
             {...getFloatingProps()}
           />
         </FloatingPortal>

@@ -19,12 +19,19 @@ const Dot: FC = () => (
 export const ChannelHeaderMoreButton: FC<Props> = ({ on, toggle }) => {
   const { filterAtom } = useChannelAtoms();
   const filter = useAtomValue(filterAtom);
-  const { showTooltip, refs, getFloatingProps, getReferenceProps, floatingStyles } = useTooltip();
+  const {
+    showTooltip,
+    setReference,
+    setFloating,
+    getFloatingProps,
+    getReferenceProps,
+    floatingStyles,
+  } = useTooltip();
 
   return (
     <div
       className="ChannelHeaderMoreButton inline-flex"
-      ref={refs.setReference}
+      ref={setReference}
       {...getReferenceProps()}
     >
       <PaneHeaderButton onClick={toggle} active={on} className="relative">
@@ -35,7 +42,7 @@ export const ChannelHeaderMoreButton: FC<Props> = ({ on, toggle }) => {
       </PaneHeaderButton>
       <TooltipBox
         show={showTooltip}
-        ref={refs.setFloating}
+        ref={setFloating}
         style={floatingStyles}
         {...getFloatingProps()}
         defaultStyle

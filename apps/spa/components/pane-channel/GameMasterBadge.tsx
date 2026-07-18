@@ -7,19 +7,22 @@ import { useTooltip } from '@boluo/ui/hooks/useTooltip';
 import { TooltipBox } from '@boluo/ui/TooltipBox';
 
 export const GameMasterBadge: FC = React.memo(() => {
-  const { showTooltip, refs, getFloatingProps, getReferenceProps, floatingStyles } = useTooltip();
+  const {
+    showTooltip,
+    setReference,
+    setFloating,
+    getFloatingProps,
+    getReferenceProps,
+    floatingStyles,
+  } = useTooltip();
   return (
-    <div
-      className="GameMasterBadge inline-block h-6"
-      ref={refs.setReference}
-      {...getReferenceProps()}
-    >
+    <div className="GameMasterBadge inline-block h-6" ref={setReference} {...getReferenceProps()}>
       <span className="text-text-muted bg-surface-muted/50 rounded px-1">
         <Icon icon={Gamemaster} className="" />
       </span>
       <TooltipBox
         show={showTooltip}
-        ref={refs.setFloating}
+        ref={setFloating}
         style={floatingStyles}
         {...getFloatingProps()}
         defaultStyle

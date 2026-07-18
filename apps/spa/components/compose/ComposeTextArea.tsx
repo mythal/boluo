@@ -16,7 +16,6 @@ import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { RichTextarea, type RichTextareaHandle } from 'rich-textarea';
 import { composeRender } from './render';
 import { type ParseResult } from '@boluo/interpreter';
-import { type ComposeAtom } from '../../hooks/useComposeAtom';
 import { chatAtom } from '../../state/chat.atoms';
 import * as L from 'list';
 import { useDefaultInGame } from '../../hooks/useDefaultInGame';
@@ -49,7 +48,8 @@ const useReflectRangeChange = (
   const store = useStore();
 
   return useEffect(() => {
-    return store.sub(rangeAtom, () => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const unsub = store.sub(rangeAtom, () => {
       const range = store.get(rangeAtom);
       const textArea = ref.current;
       if (!textArea) {
@@ -60,11 +60,15 @@ const useReflectRangeChange = (
         return;
       }
       lock.current = true;
-      setTimeout(() => {
+      timer = setTimeout(() => {
         textArea.setSelectionRange(a, b);
         lock.current = false;
       });
     });
+    return () => {
+      unsub();
+      if (timer !== undefined) clearTimeout(timer);
+    };
   }, [lock, rangeAtom, ref, store]);
 };
 
@@ -138,10 +142,11 @@ export const ComposeTextArea: FC<Props> = ({ parsed, enterSend, send, myId }) =>
     const [start, end] = compose.range;
     lock.current = true;
     textArea.focus();
-    setTimeout(() => {
+    const timer = setTimeout(() => {
       textArea.setSelectionRange(start, end);
       lock.current = false;
     });
+    return () => clearTimeout(timer);
   }, [composeAtom, focused, store]);
 
   const updateRange = () => {

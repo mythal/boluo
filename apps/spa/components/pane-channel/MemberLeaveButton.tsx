@@ -18,6 +18,7 @@ import { useQueryChannel } from '@boluo/hooks/useQueryChannel';
 import { FloatingBox } from '@boluo/ui/FloatingBox';
 import { PaneHeaderButton } from '@boluo/ui/PaneHeaderButton';
 import Icon from '@boluo/ui/Icon';
+import { useFloatingSetters } from '@boluo/ui/hooks/useFloatingSetters';
 import { useQueryChannelMembers } from '@boluo/hooks/useQueryChannelMembers';
 import { type MemberWithUser } from '@boluo/api';
 import { useMember } from '../../hooks/useMember';
@@ -45,6 +46,7 @@ export const MemberLeaveButton: FC<Props> = ({ channelId, onSuccess }) => {
     onOpenChange: setComfirmOpen,
     whileElementsMounted: autoUpdate,
   });
+  const { setReference, setFloating } = useFloatingSetters(refs);
 
   const click = useClick(context, {});
   const dismiss = useDismiss(context);
@@ -57,7 +59,7 @@ export const MemberLeaveButton: FC<Props> = ({ channelId, onSuccess }) => {
     <>
       <PaneHeaderButton
         active={isConfirmOpen}
-        ref={refs.setReference}
+        ref={setReference}
         disabled={myMember == null || isMutating || isLoading}
         {...getReferenceProps()}
       >
@@ -67,7 +69,7 @@ export const MemberLeaveButton: FC<Props> = ({ channelId, onSuccess }) => {
       {isConfirmOpen && (
         <FloatingPortal>
           <div
-            ref={refs.setFloating}
+            ref={setFloating}
             style={{ position: strategy, top: y ?? 0, left: x ?? 0, zIndex: 30 }}
             {...getFloatingProps()}
           >

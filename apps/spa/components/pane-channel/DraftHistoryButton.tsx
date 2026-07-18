@@ -16,6 +16,7 @@ import { dateTimeFormat } from '../../date';
 import type { ComposeDraftEntry } from '../../state/compose-backup.worker.types';
 import { FloatingBox } from '@boluo/ui/FloatingBox';
 import Icon from '@boluo/ui/Icon';
+import { useFloatingSetters } from '@boluo/ui/hooks/useFloatingSetters';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { useAtom } from 'jotai';
 import { usePaneIsFocus } from '../../hooks/usePaneIsFocus';
@@ -37,6 +38,7 @@ export const DraftHistoryButton: FC<DraftHistoryButtonProps> = ({ drafts, onRest
     middleware: [offset(8), flip({ fallbackAxisSideDirection: 'start' }), shift()],
     whileElementsMounted: autoUpdate,
   });
+  const { setReference, setFloating } = useFloatingSetters(refs);
   const dismiss = useDismiss(context);
   const { getFloatingProps } = useInteractions([dismiss]);
 
@@ -51,7 +53,7 @@ export const DraftHistoryButton: FC<DraftHistoryButtonProps> = ({ drafts, onRest
   }
 
   return (
-    <span ref={refs.setReference} className={isFocused ? 'opacity-100' : 'opacity-0'}>
+    <span ref={setReference} className={isFocused ? 'opacity-100' : 'opacity-0'}>
       <ButtonInline aria-pressed={open} onClick={() => setOpen((value) => !value)}>
         <Icon icon={BookCopy} className="mr-1" />
         <FormattedMessage
@@ -63,7 +65,7 @@ export const DraftHistoryButton: FC<DraftHistoryButtonProps> = ({ drafts, onRest
         <FloatingPortal>
           <FloatingBox
             className="max-h-96 max-w-sm overflow-y-auto p-2"
-            ref={refs.setFloating}
+            ref={setFloating}
             style={floatingStyles}
             {...getFloatingProps()}
           >

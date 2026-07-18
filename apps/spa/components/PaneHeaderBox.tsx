@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { type FC, type ReactNode, useCallback, useContext, useMemo } from 'react';
+import { type FC, type ReactNode, useCallback, use, useMemo } from 'react';
 import { stopPropagation } from '@boluo/utils/browser';
 import { usePaneBanner, useSetBanner } from '../hooks/useBanner';
 import { PaneContext } from '../state/view.context';
@@ -23,7 +23,7 @@ export const PaneHeaderBox: FC<Props> = ({
   extra,
   withoutDefaultOperators = false,
 }) => {
-  const { focused: isFocused, canClose } = useContext(PaneContext);
+  const { focused: isFocused, canClose } = use(PaneContext);
   const paneBanner = usePaneBanner();
   const setBanner = useSetBanner();
   const dismissBanner = useCallback(() => setBanner(null), [setBanner]);

@@ -76,6 +76,7 @@ export const EntityExprDicePoolRoll: FC<Props> = React.memo(({ node }: Props) =>
       {'values' in node ? (
         <span className="text-text-muted">
           [
+          {/* eslint-disable @eslint-react/no-array-index-key -- Roll results are immutable and rendered in order. */}
           {node.values.map((value, index) => (
             <SingleDice
               key={index}
@@ -86,7 +87,7 @@ export const EntityExprDicePoolRoll: FC<Props> = React.memo(({ node }: Props) =>
               fumble={node.fumble}
             />
           ))}
-          ]
+          {/* eslint-enable @eslint-react/no-array-index-key */}]
         </span>
       ) : (
         <span className="italic">???</span>

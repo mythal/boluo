@@ -317,20 +317,10 @@ const Node: React.FC<{ node: EvaluatedExprNode }> = ({ node }) => {
 };
 
 export const ExprEntity = React.memo<Props>(({ node, rng }) => {
+  const showEvaluated = node.type === 'SubExpr' || node.type === 'Binary';
+  let evaluated: EvaluatedExprNode;
   try {
-    const showEvaluated = node.type === 'SubExpr' || node.type === 'Binary';
-    const evaluated = evaluate(node, rng ?? fakeRng);
-    return (
-      <React.Fragment>
-        <Node node={evaluated} />
-        {showEvaluated && (
-          <span>
-            {' '}
-            = <Num>{evaluated.value}</Num>
-          </span>
-        )}
-      </React.Fragment>
-    );
+    evaluated = evaluate(node, rng ?? fakeRng);
   } catch (e) {
     if (e === TOO_MUCH_LAYER) {
       return <span css={error}>表达式嵌套太深</span>;
@@ -338,4 +328,15 @@ export const ExprEntity = React.memo<Props>(({ node, rng }) => {
       throw e;
     }
   }
+  return (
+    <React.Fragment>
+      <Node node={evaluated} />
+      {showEvaluated && (
+        <span>
+          {' '}
+          = <Num>{evaluated.value}</Num>
+        </span>
+      )}
+    </React.Fragment>
+  );
 });

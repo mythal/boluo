@@ -1,6 +1,6 @@
 import { get } from '@boluo/api-browser';
 import { useAtomValue, useSetAtom, useStore } from 'jotai';
-import { type RefObject, useEffect, useRef } from 'react';
+import { type RefObject, useEffect, useEffectEvent, useRef } from 'react';
 import type { VirtuosoHandle } from 'react-virtuoso';
 import { type ChannelAtoms, useChannelAtoms } from './useChannelAtoms';
 import { chatAtom } from '../state/chat.atoms';
@@ -17,15 +17,11 @@ interface UseScrollToMessageParams {
   chatList: ChatItem[];
 }
 
-interface UseScrollToMessageReturn {
-  isLoadingForScroll: boolean;
-}
-
 export const useScrollToMessage = ({
   channelId,
   virtuosoRef,
   chatList,
-}: UseScrollToMessageParams): UseScrollToMessageReturn => {
+}: UseScrollToMessageParams): void => {
   const store = useStore();
   const setBanner = useSetBanner();
   const { scrollToMessageAtom, highlightMessageAtom, filterAtom, showArchivedAtom }: ChannelAtoms =
@@ -61,9 +57,7 @@ export const useScrollToMessage = ({
     if (archived) setShowArchived(true);
   }, [scrollToMessage, setFilter, setShowArchived]);
 
-  // Use ref to avoid stale closure in the effect
-  const chatListRef = useRef(chatList);
-  chatListRef.current = chatList;
+  const getLatestChatList = useEffectEvent(() => chatList);
 
   // Handle scrolling to message
   useEffect(() => {
@@ -91,8 +85,7 @@ export const useScrollToMessage = ({
     };
 
     const tryScrollToMessage = () => {
-      // Find message in current chat list (use ref to get latest value)
-      const currentChatList = chatListRef.current;
+      const currentChatList = getLatestChatList();
 
       if (currentChatList.length === 0) {
         return;
@@ -240,8 +233,4 @@ export const useScrollToMessage = ({
       window.clearTimeout(highlightTimeoutRef.current);
     };
   }, []);
-
-  return {
-    isLoadingForScroll: isLoadingRef.current,
-  };
 };

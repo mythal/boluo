@@ -1,4 +1,3 @@
-import { config } from '@boluo/eslint-config/base';
+import { createConfig } from '@boluo/eslint-config/base';
 
-/** @type {import("eslint").Linter.Config} */
-export default config;
+export default createConfig(import.meta.dirname);

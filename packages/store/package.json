@@ -5,7 +5,9 @@
     "jotai": "^2.20.1"
   },
   "devDependencies": {
+    "@boluo/eslint-config": "0.0.0",
     "@boluo/typescript-config": "0.0.0",
+    "eslint": "^10.6.0",
     "typescript": "^6"
   },
   "exports": {
@@ -15,7 +17,8 @@
   "private": true,
   "scripts": {
     "build": "tsc --project tsconfig.json",
-    "check": "tsc --noEmit"
+    "check": "tsc --noEmit",
+    "lint": "eslint ."
   },
   "sideEffects": false,
   "type": "module"

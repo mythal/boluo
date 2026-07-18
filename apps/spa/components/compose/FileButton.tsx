@@ -18,8 +18,14 @@ export const FileButton: FC<Props> = () => {
   const { composeAtom, hasMediaAtom } = useChannelAtoms();
   const dispatch = useSetAtom(composeAtom);
   const hasMedia = useAtomValue(hasMediaAtom);
-  const { showTooltip, refs, getFloatingProps, getReferenceProps, floatingStyles } =
-    useTooltip('top-start');
+  const {
+    showTooltip,
+    setReference,
+    setFloating,
+    getFloatingProps,
+    getReferenceProps,
+    floatingStyles,
+  } = useTooltip('top-start');
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files || files.length === 0) {
@@ -42,7 +48,7 @@ export const FileButton: FC<Props> = () => {
     : intl.formatMessage({ defaultMessage: 'Add File' });
   return (
     <div
-      ref={refs.setReference}
+      ref={setReference}
       {...getReferenceProps()}
       className="FileButton relative shrink-0 py-1 pl-1"
     >
@@ -60,7 +66,7 @@ export const FileButton: FC<Props> = () => {
       <TooltipBox
         show={showTooltip}
         style={floatingStyles}
-        ref={refs.setFloating}
+        ref={setFloating}
         {...getFloatingProps()}
         defaultStyle
       >

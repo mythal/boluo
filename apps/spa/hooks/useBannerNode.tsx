@@ -4,4 +4,4 @@ export const BannerContext = React.createContext<RefObject<HTMLDivElement | null
   current: null,
 });
 
-export const useBannerNode = (): HTMLDivElement | null => React.useContext(BannerContext).current;
+export const useBannerNode = (): HTMLDivElement | null => React.use(BannerContext).current;

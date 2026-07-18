@@ -158,7 +158,7 @@ export const exportMessage = (
     if (message.whisperToUsers) {
       whisperTo = message.whisperToUsers
         .map((id) => memberMap[id])
-        .filter((member) => member !== undefined) as ExportMessage['whisperTo'];
+        .filter((member) => member !== undefined);
     }
     const sender = memberMap[senderId] || makeDefaultMember(intl);
     let media: string | null = null;

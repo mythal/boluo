@@ -111,6 +111,8 @@ function Chat() {
   const [paneList, setPaneList] = useState<Id[]>(channelId ? [channelId] : []);
   useLoadSpace(spaceId);
   useHeartbeat();
+  // Panes follow the URL but can't be derived from it: splits are local state.
+  /* eslint-disable @eslint-react/set-state-in-effect */
   useEffect(() => {
     if (!channelId || channelId === prevChannelId.current) {
       return;
@@ -128,6 +130,7 @@ function Chat() {
       });
     }
   }, [channelId, focused, paneList]);
+  /* eslint-enable @eslint-react/set-state-in-effect */
   const result: AppResult<SpaceWithRelated> = useSelector((state) =>
     state.ui.spaceSet.get(spaceId, errLoading()),
   );
@@ -177,6 +180,8 @@ function Chat() {
                   });
           return (
             <PaneContext
+              // Panes may share a channel id (split duplicates it), so position is the key.
+              // eslint-disable-next-line @eslint-react/no-array-index-key
               key={index}
               value={{
                 id: paneId,

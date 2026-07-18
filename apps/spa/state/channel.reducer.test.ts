@@ -142,6 +142,34 @@ describe('channelReducer', () => {
     assert.deepStrictEqual(next.optimisticMessageMap, {});
   });
 
+  test('messageEdited reorders messages without adding reducer-level virtual list state', () => {
+    const message1 = makeMessageItem(makeMessage(messageId1, 10));
+    const message2 = makeMessageItem(makeMessage(messageId2, 12));
+    const initial = makeInitialChannelState(channelId);
+    const state = {
+      ...initial,
+      fullLoaded: true,
+      messages: L.from([message1, message2]),
+    };
+
+    const next = channelReducer(
+      state,
+      {
+        type: 'messageEdited',
+        payload: {
+          channelId,
+          message: makeMessage(messageId2, 9, {
+            modified: '2024-01-01T00:01:00.000Z',
+          }),
+          oldPos: message2.pos,
+        },
+      },
+      context,
+    );
+
+    assert.deepStrictEqual(positions(next.messages), [9, 10]);
+  });
+
   test('receiveMessage with duplicated pos resets messages and loading state', () => {
     const preview = toPreviewItem(makePreview('preview-dup', 1));
     const state = {
@@ -741,7 +769,8 @@ describe('channelReducer', () => {
     assert.strictEqual(next.previewMap['editing-user'], editPreview);
   });
 
-  test('messageEdited collision resets messages', () => {
+  test('messageEdited collision resets messages', (t) => {
+    const warn = t.mock.method(console, 'warn', () => {});
     const message1 = makeMessageItem(makeMessage(messageId1, 1));
     const message2 = makeMessageItem(makeMessage(messageId2, 3));
     const state = {
@@ -759,9 +788,12 @@ describe('channelReducer', () => {
 
     assert.strictEqual(next.messages.length, 0);
     assert.strictEqual(next.fullLoaded, false);
+    assert.strictEqual(warn.mock.callCount(), 1);
+    assert.strictEqual(warn.mock.calls[0]?.arguments[0], 'Unexpected message position in editing');
   });
 
-  test('schedules and performs GC when message count exceeds threshold', () => {
+  test('schedules and performs GC when message count exceeds threshold', (t) => {
+    const debug = t.mock.method(console, 'debug', () => {});
     const longMessages = L.from(
       Array.from({ length: 130 }, (_, index) =>
         makeMessageItem(makeMessage(`m-${index + 1}`, index + 1)),
@@ -799,6 +831,43 @@ describe('channelReducer', () => {
     assert.strictEqual(readyForGc.fullLoaded, false);
     assert.strictEqual(readyForGc.messages.length, 82);
     assert.strictEqual(L.first(readyForGc.messages)?.pos, 49);
+    assert.strictEqual(debug.mock.callCount(), 1);
+    assert.strictEqual(
+      debug.mock.calls[0]?.arguments[0],
+      '[Messages GC] Start GC. Lower index: 48 Power Pos: 50',
+    );
+  });
+
+  test('GC removes only the messages before its retained boundary', (t) => {
+    const debug = t.mock.method(console, 'debug', () => {});
+    const messages = L.from(
+      Array.from({ length: 130 }, (_, index) =>
+        makeMessageItem(makeMessage(`m-${index + 1}`, index + 1)),
+      ),
+    );
+    const state = {
+      ...makeInitialChannelState(channelId),
+      fullLoaded: true,
+      historyInitialized: true,
+      messages,
+      scheduledGc: { countdown: 0, lowerPos: 50 },
+    };
+
+    const next = channelReducer(
+      state,
+      {
+        type: 'messageDeleted',
+        payload: { channelId, messageId: 'missing', pos: 0 },
+      },
+      context,
+    );
+    assert.strictEqual(next.messages.length, 82);
+    assert.strictEqual(L.first(next.messages)?.pos, 49);
+    assert.strictEqual(debug.mock.callCount(), 1);
+    assert.strictEqual(
+      debug.mock.calls[0]?.arguments[0],
+      '[Messages GC] Start GC. Lower index: 48 Power Pos: 50',
+    );
   });
 
   test('messagePreview marks collision when position overlaps existing message', () => {
@@ -1239,7 +1308,8 @@ describe('channelReducer', () => {
     assert.strictEqual(stored?.failTo?.type, 'MOVE');
   });
 
-  test('unsorted messages trigger order check reset', () => {
+  test('unsorted messages trigger order check reset', (t) => {
+    const warn = t.mock.method(console, 'warn', () => {});
     const state = {
       ...makeInitialChannelState(channelId),
       fullLoaded: true,
@@ -1258,6 +1328,8 @@ describe('channelReducer', () => {
 
     assert.strictEqual(next.messages.length, 0);
     assert.strictEqual(next.fullLoaded, false);
+    assert.strictEqual(warn.mock.callCount(), 1);
+    assert.strictEqual(warn.mock.calls[0]?.arguments[0], 'Messages are not sorted by pos');
   });
 
   test('resetGc lowers threshold when new lower pos provided', () => {
@@ -1516,10 +1588,11 @@ describe('channelReducer', () => {
   });
 
   test('messagesLoaded with empty payload keeps state unchanged', () => {
+    const existing = makeMessageItem(makeMessage('m-existing', 10));
     const state = {
       ...makeInitialChannelState(channelId),
       historyInitialized: true,
-      messages: L.from([makeMessageItem(makeMessage('m-existing', 10))]),
+      messages: L.from([existing]),
       fullLoaded: false,
     };
 

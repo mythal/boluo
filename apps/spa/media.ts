@@ -96,11 +96,7 @@ const PRESIGN_TIMEOUT = 2000;
 const UPLOAD_TIMEOUT = 10000;
 
 export type UploadError =
-  | PreSignFail
-  | MediaValidationError
-  | FetchFailError
-  | S3Error
-  | TimeoutError;
+  PreSignFail | MediaValidationError | FetchFailError | S3Error | TimeoutError;
 
 const TIMEOUT = 'TIMEOUT';
 

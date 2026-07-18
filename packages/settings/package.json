@@ -16,7 +16,7 @@
   "license": "AGPL-3.0",
   "scripts": {
     "check": "tsc --noEmit",
-    "lint": "eslint . --ext .ts"
+    "lint": "eslint ."
   },
   "sideEffects": false,
   "type": "module"

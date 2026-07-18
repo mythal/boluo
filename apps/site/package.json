@@ -60,7 +60,7 @@
     "build": "next build",
     "check": "tsc --noEmit",
     "dev": "next dev --hostname 0.0.0.0 --port 3100 --turbopack",
-    "lint": "eslint",
+    "lint": "eslint .",
     "start": "next start"
   },
   "type": "module"

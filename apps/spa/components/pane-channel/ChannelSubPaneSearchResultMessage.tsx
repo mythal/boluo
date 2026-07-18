@@ -23,15 +23,18 @@ const highlightKeyword = (text: string, keyword: string): ReactNode => {
 
   if (parts.length === 1) return text;
 
-  return parts.map((part, index) =>
-    index % 2 === 1 ? (
-      <mark key={index} className="bg-brand-strong/20 text-text-primary rounded px-0.5">
+  let offset = 0;
+  return parts.map((part, index) => {
+    const key = offset;
+    offset += part.length;
+    return index % 2 === 1 ? (
+      <mark key={key} className="bg-brand-strong/20 text-text-primary rounded px-0.5">
         {part}
       </mark>
     ) : (
       part
-    ),
-  );
+    );
+  });
 };
 
 export const ChannelSubPaneSearchResultMessage: FC<Props> = ({

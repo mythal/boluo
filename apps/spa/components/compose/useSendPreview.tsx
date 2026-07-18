@@ -1,6 +1,6 @@
 import { type ClientEvent, type PreviewPost } from '@boluo/api';
 import { atom, type Atom, useAtomValue, useStore } from 'jotai';
-import { type RefObject, useEffect, useMemo, useRef } from 'react';
+import { type RefObject, useEffect, useEffectEvent, useMemo, useRef } from 'react';
 import { makeId } from '@boluo/utils/id';
 import { type ComposeAtom } from '../../hooks/useComposeAtom';
 import { usePaneIsFocus } from '../../hooks/usePaneIsFocus';
@@ -107,8 +107,6 @@ export const useSendPreview = (
   const sendStateRef = useRef<PreviewSendState | null>(null);
   const previousConnectionRef = useRef<WebSocket | null>(null);
   const isFocused = usePaneIsFocus();
-  const isFocusedRef = useRef(isFocused);
-  isFocusedRef.current = isFocused;
   const connectionState = useAtomValue(connectionStateAtom);
   const hasCollidedAtom = useMemo(
     () =>
@@ -122,7 +120,7 @@ export const useSendPreview = (
     [channelId, composeAtom],
   );
   useEffect(() => {
-    store.sub(hasCollidedAtom, () => {
+    return store.sub(hasCollidedAtom, () => {
       const hasCollided = store.get(hasCollidedAtom);
       const previewId = store.get(composeAtom).previewId;
       if (hasCollided) {
@@ -144,36 +142,32 @@ export const useSendPreview = (
       sendStateRef.current = null;
     }
   }, [connectionState]);
+  const onParsedChange = useEffectEvent(() => {
+    const chatState = store.get(chatAtom);
+    if (!chatState.context.initialized) return;
+    if (nickname === undefined || connectionState.type !== 'CONNECTED') return;
+    if (!isFocused) return;
+    if (!document.hasFocus()) return;
+    const composeState = store.get(composeAtom);
+    const parsed = store.get(parsedAtom);
+    sendPreview(
+      channelId,
+      nickname,
+      defaultCharacterName,
+      composeState,
+      parsed,
+      connectionState.connection,
+      sendTimoutRef,
+      defaultInGame,
+      sendStateRef,
+    );
+  });
   useEffect(() => {
-    return store.sub(parsedAtom, () => {
-      const chatState = store.get(chatAtom);
-      if (!chatState.context.initialized) return;
-      if (nickname === undefined || connectionState.type !== 'CONNECTED') return;
-      if (!isFocusedRef.current) return;
-      if (!document.hasFocus()) return;
-      const composeState = store.get(composeAtom);
-      const parsed = store.get(parsedAtom);
-      sendPreview(
-        channelId,
-        nickname,
-        defaultCharacterName,
-        composeState,
-        parsed,
-        connectionState.connection,
-        sendTimoutRef,
-        defaultInGame,
-        sendStateRef,
-      );
-    });
-  }, [
-    channelId,
-    defaultCharacterName,
-    composeAtom,
-    connectionState,
-    defaultInGame,
-    nickname,
-    parsedAtom,
-    sendStateRef,
-    store,
-  ]);
+    const unsubscribe = store.sub(parsedAtom, onParsedChange);
+    return () => {
+      unsubscribe();
+      window.clearTimeout(sendTimoutRef.current);
+      sendTimoutRef.current = undefined;
+    };
+  }, [parsedAtom, store]);
 };

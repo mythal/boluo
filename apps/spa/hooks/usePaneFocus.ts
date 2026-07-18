@@ -1,5 +1,5 @@
 import { useStore } from 'jotai';
-import { type RefObject, useCallback, useContext } from 'react';
+import { type RefObject, useCallback, use } from 'react';
 import { focusPaneAtom } from '../state/view.atoms';
 import { PaneContext } from '../state/view.context';
 import { useIsChildPane } from './useIsChildPane';
@@ -29,7 +29,7 @@ export const scrollPaneIntoView = (paneBox: HTMLElement | null) => {
 
 export const usePaneFocus = (ref: RefObject<HTMLDivElement | null>) => {
   const store = useStore();
-  const { key } = useContext(PaneContext);
+  const { key } = use(PaneContext);
   const isChild = useIsChildPane();
   return useCallback(() => {
     if (key == null) {

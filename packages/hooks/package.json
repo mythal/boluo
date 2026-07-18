@@ -39,7 +39,7 @@
   },
   "scripts": {
     "check": "tsc --project tsconfig.json --noEmit",
-    "lint": "eslint . --ext .ts,.tsx"
+    "lint": "eslint ."
   },
   "sideEffects": false,
   "type": "module"

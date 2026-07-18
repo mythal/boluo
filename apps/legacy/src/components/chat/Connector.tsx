@@ -155,6 +155,8 @@ export const Connector = ({ spaceId, myId }: Props) => {
       connectionRef.current = null;
     }
     retryCount.current = 0;
+    // Part of the reconnect state machine: a new base URL restarts backoff.
+    // eslint-disable-next-line @eslint-react/set-state-in-effect
     setRetrySec(0);
     setState('CLOSED');
   }, [baseUrl, setState]);

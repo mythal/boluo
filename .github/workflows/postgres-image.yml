@@ -2,14 +2,14 @@ name: Postgres Image
 
 on:
   schedule:
-    - cron: "0 2 1 * *"
+    - cron: '0 2 1 * *'
   workflow_dispatch:
   push:
     branches:
       - production
     paths:
-      - "apps/db/**"
-      - ".github/workflows/boluo-postgres.yml"
+      - 'apps/db/**'
+      - '.github/workflows/boluo-postgres.yml'
 
 permissions:
   contents: read

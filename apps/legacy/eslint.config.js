@@ -1,8 +1,7 @@
-import { config } from '@boluo/eslint-config/react-internal';
+import { createConfig } from '@boluo/eslint-config/react-internal';
 
-/** @type {import("eslint").Linter.Config} */
 export default [
-  ...config,
+  ...createConfig(import.meta.dirname),
   {
     files: ['vite.config.ts'],
     rules: {

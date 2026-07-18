@@ -20,7 +20,7 @@
   "homepage": "https://github.com/mythal/boluo",
   "license": "AGPL-3.0",
   "scripts": {
-    "lint": "eslint . --ext .ts,.tsx"
+    "lint": "eslint ."
   },
   "sideEffects": false,
   "type": "module"

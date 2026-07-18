@@ -1,5 +1,5 @@
 import { useAtomValue, useSetAtom } from 'jotai';
-import { type FC, useEffect, useState } from 'react';
+import { type FC, useState } from 'react';
 import { TextInput } from '@boluo/ui/TextInput';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { Button } from '@boluo/ui/Button';
@@ -38,10 +38,12 @@ export const NameEditInput: FC<{
   const { composeAtom, characterNameAtom } = useChannelAtoms();
   const characterName = useAtomValue(characterNameAtom);
   const [localName, setLocalName] = useState(characterName);
+  const [prevCharacterName, setPrevCharacterName] = useState(characterName);
   const dispatch = useSetAtom(composeAtom);
-  useEffect(() => {
+  if (prevCharacterName !== characterName) {
+    setPrevCharacterName(characterName);
     setLocalName(characterName);
-  }, [characterName]);
+  }
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const next = e.target.value;
     setLocalName(next);

@@ -3,7 +3,7 @@ import clsx from 'clsx';
 import ChevronDown from '@boluo/icons/ChevronDown';
 import CircleNotch from '@boluo/icons/CircleNotch';
 import { useSetAtom, useStore } from 'jotai';
-import { type FC, useCallback, useEffect, useRef, useState } from 'react';
+import { type FC, useEffect, useEffectEvent, useRef, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Button } from '@boluo/ui/Button';
 import { useSetBanner } from '../../hooks/useBanner';
@@ -26,67 +26,74 @@ const shouldTriggerLoad = (start: Point, end: Point) => {
 
 export const ChatContentHeaderLoadMore: FC = () => {
   const channelId = useChannelId();
-  const isTouchDeviceRef = useRef(false);
   const mountedRef = useMountedRef();
   const loadMoreRef = useRef<HTMLButtonElement>(null);
   const store = useStore();
   const dispatch = useSetAtom(chatAtom);
   const [isLoading, setIsLoading] = useState(false);
   const isLoadingRef = useRef(false);
-  isLoadingRef.current = isLoading;
   const [touchState, setTouchState] = useState<'NONE' | 'START' | 'WILL_LOAD'>('NONE');
-  const isVisibleRef = useRef(false);
-  const touchStartPoint = useRef<{ x: number; y: number } | null>(null);
   const setBanner = useSetBanner();
 
-  const loadMore = useCallback(async () => {
+  const loadMore = async () => {
     if (isLoadingRef.current || !mountedRef.current) return;
+    isLoadingRef.current = true;
+    setIsLoading(true);
     const chatState = store.get(chatAtom);
     const channelState = chatState.channels[channelId];
-    setIsLoading(true);
     const before: number | null = channelState ? (head(channelState.messages)?.pos ?? null) : null;
-    const fetchPromise = get('/messages/by_channel', {
-      channelId,
-      before,
-      limit: LOAD_MESSAGE_LIMIT,
-    });
-    const result = await fetchPromise;
-    if (result.isErr) {
-      setBanner({
-        level: 'ERROR',
-        content: (
-          <FormattedMessage
-            defaultMessage="Failed to load messages ({errorCode})"
-            values={{ errorCode: result.err.code }}
-          />
-        ),
-      });
-      setIsLoading(false);
-      return;
-    }
-    const newMessages = result.some;
-    dispatch({
-      type: 'messagesLoaded',
-      payload: {
-        before,
+    try {
+      const result = await get('/messages/by_channel', {
         channelId,
-        messages: newMessages,
-        fullLoaded: newMessages.length < LOAD_MESSAGE_LIMIT,
-      },
-    });
-    setIsLoading(false);
-  }, [channelId, dispatch, mountedRef, setBanner, store]);
+        before,
+        limit: LOAD_MESSAGE_LIMIT,
+      });
+      if (result.isErr) {
+        setBanner({
+          level: 'ERROR',
+          content: (
+            <FormattedMessage
+              defaultMessage="Failed to load messages ({errorCode})"
+              values={{ errorCode: result.err.code }}
+            />
+          ),
+        });
+        return;
+      }
+      const newMessages = result.some;
+      dispatch({
+        type: 'messagesLoaded',
+        payload: {
+          before,
+          channelId,
+          messages: newMessages,
+          fullLoaded: newMessages.length < LOAD_MESSAGE_LIMIT,
+        },
+      });
+    } finally {
+      isLoadingRef.current = false;
+      if (mountedRef.current) {
+        setIsLoading(false);
+      }
+    }
+  };
 
-  const autoLoadTimeoutRef = useRef<number | undefined>(undefined);
+  const loadMoreFromEffect = useEffectEvent(() => {
+    void loadMore();
+  });
   useEffect(() => {
+    let autoLoadTimeout: number | undefined;
+    let isTouchDevice = false;
+    let isVisible = false;
+    let touchStartPoint: Point | null = null;
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries.length === 0) return;
         const entry = entries[0]!;
-        isVisibleRef.current = entry.isIntersecting;
-        window.clearTimeout(autoLoadTimeoutRef.current);
-        if (AUTO_LOAD && entry.isIntersecting && !isTouchDeviceRef.current) {
-          autoLoadTimeoutRef.current = window.setTimeout(loadMore, 100);
+        isVisible = entry.isIntersecting;
+        window.clearTimeout(autoLoadTimeout);
+        if (AUTO_LOAD && entry.isIntersecting && !isTouchDevice) {
+          autoLoadTimeout = window.setTimeout(loadMoreFromEffect, 100);
         }
       },
       { threshold: [0.75] },
@@ -94,25 +101,19 @@ export const ChatContentHeaderLoadMore: FC = () => {
     if (loadMoreRef.current) {
       observer.observe(loadMoreRef.current);
     }
-    return () => {
-      observer.disconnect();
-    };
-  }, [loadMore]);
-
-  useEffect(() => {
     const handleTouchStart = (e: TouchEvent) => {
-      isTouchDeviceRef.current = true;
-      if (!isVisibleRef.current) return;
+      isTouchDevice = true;
+      if (!isVisible) return;
       const { touches } = e;
       if (touches.length !== 1) return;
       setTouchState('START');
       const touch = touches[0]!;
-      touchStartPoint.current = { x: touch.screenX, y: touch.screenY };
+      touchStartPoint = { x: touch.screenX, y: touch.screenY };
     };
     const handleTouchMove = (e: TouchEvent) => {
-      if (!isVisibleRef.current) return;
+      if (!isVisible) return;
       if (e.changedTouches.length !== 1) return;
-      const start = touchStartPoint.current;
+      const start = touchStartPoint;
       if (start == null) return;
       const touch = e.changedTouches[0]!;
       if (shouldTriggerLoad(start, { x: touch.screenX, y: touch.screenY })) {
@@ -122,16 +123,17 @@ export const ChatContentHeaderLoadMore: FC = () => {
       }
     };
 
+    let loadTimer: ReturnType<typeof setTimeout> | undefined;
     const handleTouchEnd = (e: TouchEvent) => {
       setTouchState('NONE');
-      if (!isVisibleRef.current) return;
+      if (!isVisible) return;
       if (e.changedTouches.length !== 1) return;
-      const start = touchStartPoint.current;
+      const start = touchStartPoint;
       if (start == null) return;
       const touch = e.changedTouches[0]!;
       if (shouldTriggerLoad(start, { x: touch.screenX, y: touch.screenY })) {
-        setTimeout(() => {
-          void loadMore();
+        loadTimer = setTimeout(() => {
+          loadMoreFromEffect();
         }, 100);
       }
     };
@@ -140,11 +142,14 @@ export const ChatContentHeaderLoadMore: FC = () => {
     window.addEventListener('touchmove', handleTouchMove);
 
     return () => {
+      observer.disconnect();
+      window.clearTimeout(autoLoadTimeout);
       window.removeEventListener('touchstart', handleTouchStart);
       window.removeEventListener('touchmove', handleTouchMove);
       window.removeEventListener('touchend', handleTouchEnd);
+      if (loadTimer !== undefined) clearTimeout(loadTimer);
     };
-  }, [loadMore]);
+  }, []);
 
   const willLoad = touchState === 'WILL_LOAD';
   return (

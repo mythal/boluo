@@ -23,7 +23,7 @@
   "private": true,
   "scripts": {
     "check": "tsc --noEmit",
-    "lint": "eslint . --ext .ts",
+    "lint": "eslint .",
     "test": "tsx --test src/**/*.test.ts"
   },
   "sideEffects": false,

@@ -1,4 +1,4 @@
-import { createContext, type ReactNode, useContext } from 'react';
+import { createContext, type ReactNode, use } from 'react';
 
 export interface Banner {
   level?: 'ERROR' | 'WARNING' | 'INFO';
@@ -14,9 +14,9 @@ export const PaneBannerContext = createContext<Banner>(emptyBanner);
 export const ThrowBanner = createContext<(banner: Banner | null) => void>(() => emptyBanner);
 
 export function usePaneBanner(): Banner {
-  return useContext(PaneBannerContext);
+  return use(PaneBannerContext);
 }
 
 export function useSetBanner(): (banner: Banner | null) => void {
-  return useContext(ThrowBanner);
+  return use(ThrowBanner);
 }

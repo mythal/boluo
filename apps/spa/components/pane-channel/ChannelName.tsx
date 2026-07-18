@@ -4,6 +4,7 @@ import { FormattedMessage } from 'react-intl';
 import Icon from '@boluo/ui/Icon';
 import { offset, shift, useFloating, useHover, useInteractions } from '@floating-ui/react';
 import { TooltipBox } from '@boluo/ui/TooltipBox';
+import { useFloatingSetters } from '@boluo/ui/hooks/useFloatingSetters';
 import { type ChannelHeaderState } from './ChannelHeader';
 import { type PrimitiveAtom, useAtom } from 'jotai';
 import clsx from 'clsx';
@@ -28,6 +29,7 @@ export const ChannelName: FC<Props> = ({ stateAtom, name, topic, isPublic = true
     middleware: [shift({ padding: 4 }), offset({ mainAxis: 4 })],
     placement: 'bottom-start',
   });
+  const { setReference, setFloating } = useFloatingSetters(refs);
 
   const checkTruncated = useCallback(() => {
     const element = topicRef.current;
@@ -36,9 +38,11 @@ export const ChannelName: FC<Props> = ({ stateAtom, name, topic, isPublic = true
     }
   }, []);
 
-  useEffect(() => {
+  const [prevHeaderState, setPrevHeaderState] = useState(headerState);
+  if (prevHeaderState !== headerState) {
+    setPrevHeaderState(headerState);
     setShowTopic(false);
-  }, [headerState]);
+  }
 
   useEffect(() => {
     checkTruncated();
@@ -79,7 +83,7 @@ export const ChannelName: FC<Props> = ({ stateAtom, name, topic, isPublic = true
     <div className="flex min-w-0 items-center" ref={containerRef}>
       <button
         className="shrink-0 cursor-pointer"
-        ref={refs.setReference}
+        ref={setReference}
         {...getReferenceProps()}
         onClick={handleClick}
       >
@@ -106,7 +110,7 @@ export const ChannelName: FC<Props> = ({ stateAtom, name, topic, isPublic = true
         defaultStyle
         show={showTopic && headerState !== 'TOPIC'}
         style={floatingStyles}
-        ref={refs.setFloating}
+        ref={setFloating}
         {...getFloatingProps()}
       >
         <div className="max-w-sm whitespace-pre-line">{topic}</div>

@@ -29,7 +29,16 @@ import { ColorPickerInput } from '@boluo/ui/ColorPickerInput';
 
 export const EditDefaultColor: FC<{ currentUser: User }> = ({ currentUser }) => {
   const lightOrDark = classifyLightOrDark(useResolvedTheme());
-  const [customColor, setCustomColor] = useState<string>('');
+  const parsedColors = useMemo(
+    () => parseGameColor(currentUser.defaultColor),
+    [currentUser.defaultColor],
+  );
+  const computedColors = useMemo(
+    () => computeColors(currentUser.id, parsedColors),
+    [currentUser.id, parsedColors],
+  );
+  const computedColor = computedColors[lightOrDark];
+  const [customColor, setCustomColor] = useState<string>(computedColor);
   const debounceTimer = useRef<number | null>(null);
   const key = ['/users/query', null] as const;
   const { trigger, isMutating } = useSWRMutation<User, ApiError, typeof key, string>(
@@ -80,19 +89,13 @@ export const EditDefaultColor: FC<{ currentUser: User }> = ({ currentUser }) => 
     [handleEditDefaultColor],
   );
 
-  const parsedColors = useMemo(
-    () => parseGameColor(currentUser.defaultColor),
-    [currentUser.defaultColor],
-  );
-  const computedColors = useMemo(
-    () => computeColors(currentUser.id, parsedColors),
-    [currentUser.id, parsedColors],
-  );
-  const colorPickerValue = parseHexColor(customColor)?.toUpperCase() ?? computedColors[lightOrDark];
+  const colorPickerValue = parseHexColor(customColor)?.toUpperCase() ?? computedColor;
 
-  useEffect(() => {
-    setCustomColor(computedColors[lightOrDark]);
-  }, [computedColors, lightOrDark]);
+  const [prevComputedColor, setPrevComputedColor] = useState(computedColor);
+  if (prevComputedColor !== computedColor) {
+    setPrevComputedColor(computedColor);
+    setCustomColor(computedColor);
+  }
 
   useEffect(() => {
     return () => {

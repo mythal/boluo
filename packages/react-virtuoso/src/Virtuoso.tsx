@@ -309,6 +309,7 @@ export function buildScroller({ useEmitter, useEmitterValue, usePublisher }: Hoo
     const smoothScrollTargetReached = usePublisher('smoothScrollTargetReached')
     const scrollerRefCallback = useEmitterValue('scrollerRef')
     const horizontalDirection = useEmitterValue('horizontalDirection') || false
+    const iosScrollFixInProgress = useEmitterValue('iosScrollFixInProgress')
 
     const { scrollByCallback, scrollerRef, scrollToCallback } = useScrollTop(
       scrollContainerStateCallback,
@@ -322,12 +323,17 @@ export function buildScroller({ useEmitter, useEmitterValue, usePublisher }: Hoo
     useEmitter('scrollTo', scrollToCallback)
     useEmitter('scrollBy', scrollByCallback)
     const defaultStyle = horizontalDirection ? horizontalScrollerStyle : scrollerStyle
+    const overflowStyle: React.CSSProperties | undefined = iosScrollFixInProgress
+      ? horizontalDirection
+        ? { overflowX: 'hidden' }
+        : { overflowY: 'hidden' }
+      : undefined
     return (
       <ScrollerComponent
         data-testid="virtuoso-scroller"
         data-virtuoso-scroller={true}
         ref={scrollerRef as React.RefObject<HTMLDivElement | null>}
-        style={{ ...defaultStyle, ...style }}
+        style={{ ...defaultStyle, ...style, ...overflowStyle }}
         tabIndex={0}
         {...props}
         {...contextPropIfNotDomElement(ScrollerComponent, context)}

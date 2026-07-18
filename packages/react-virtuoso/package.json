@@ -27,8 +27,10 @@
   },
   "devDependencies": {
     "@boluo/typescript-config": "0.0.0",
+    "@types/node": "^26.1.1",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
+    "tsx": "^4.23.0",
     "typescript": "^6"
   },
   "peerDependencies": {
@@ -36,6 +38,7 @@
     "react-dom": ">=16 || >=17 || >=18 || >=19"
   },
   "scripts": {
-    "check": "tsc --noEmit"
+    "check": "tsc --noEmit",
+    "test": "tsx --test src/**/*.test.ts"
   }
 }

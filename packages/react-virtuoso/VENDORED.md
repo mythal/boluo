@@ -11,5 +11,20 @@ This directory contains the source code from
 The package manifest is adapted so that the private workspace exports TypeScript
 source directly. Build output is not committed.
 
-When updating, replace `src`, `LICENSE`, and `README.md` with the files from the
-new upstream tag, then update the version, tag, and commit recorded here.
+## Local patches
+
+- `src/upwardScrollFixSystem.ts` and `src/Virtuoso.tsx` contain an independent
+  iOS/iPadOS WebKit workaround for upward scrolling through items whose measured
+  heights differ from their estimates. It defers scroll correction while
+  momentum scrolling is active, handles corrections that reach the top edge,
+  and restores the position while briefly locking the scroller.
+- `src/upwardScrollFixSystem.test.ts` covers the deferred correction and edge
+  recovery behavior.
+
+The workaround follows the behavior described in
+[`react-virtuoso#945`](https://github.com/petyosi/react-virtuoso/issues/945);
+it does not vendor source from the commercially licensed
+`@virtuoso.dev/message-list` package.
+
+When updating, replace `LICENSE` and `README.md`, update the version, tag, and
+commit recorded here, and reapply the local patches after replacing `src`.

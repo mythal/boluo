@@ -88,7 +88,7 @@ export const listSystem = u.system(
     followOutput,
     listStateSystemOutput,
     { scrollToIndex },
-    _,
+    { iosScrollFixInProgress },
     { topItemCount },
     { groupCounts },
     featureGroup1,
@@ -124,6 +124,7 @@ export const listSystem = u.system(
 
       groupIndices,
       itemSize,
+      iosScrollFixInProgress,
       listState,
       minOverscanItemCount,
       scrollToIndex,

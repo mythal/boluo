@@ -6,13 +6,18 @@ import { recalcSystem } from './recalcSystem'
 import { sizeSystem } from './sizeSystem'
 import { stateFlagsSystem, UP } from './stateFlagsSystem'
 import * as u from './urx'
-import { simpleMemoize } from './utils/simpleMemoize'
 
 import type { ListItem } from './interfaces'
 
-const isMobileSafari = simpleMemoize(() => {
-  return /iP(ad|od|hone)/i.test(navigator.userAgent) && /WebKit/i.test(navigator.userAgent)
-})
+export function isIOSWebKit() {
+  if (typeof navigator === 'undefined') {
+    return false
+  }
+
+  const iPadOS = /Macintosh/i.test(navigator.userAgent) && navigator.maxTouchPoints > 1
+  const iOS = /iP(ad|od|hone)/i.test(navigator.userAgent)
+  return (iPadOS || iOS) && /WebKit/i.test(navigator.userAgent)
+}
 
 type UpwardFixState = [number, ListItem<any>[], number, number]
 /**
@@ -20,13 +25,14 @@ type UpwardFixState = [number, ListItem<any>[], number, number]
  */
 export const upwardScrollFixSystem = u.system(
   ([
-    { deviation, scrollBy, scrollingInProgress, scrollTop },
+    { deviation, scrollBy, scrollingInProgress, scrollTo, scrollTop },
     { isAtBottom, isScrolling, lastJumpDueToItemResize, scrollDirection },
     { listState },
     { beforeUnshiftWith, gap, shiftWithOffset, sizes },
     { log },
     { recalcInProgress },
   ]) => {
+    const iosScrollFixInProgress = u.statefulStream(false)
     const deviationOffset = u.streamFromEmitter(
       u.pipe(
         listState,
@@ -64,6 +70,8 @@ export const upwardScrollFixSystem = u.system(
       )
     )
 
+    const mobileSafari = isIOSWebKit()
+
     function scrollByWith(offset: number) {
       if (offset > 0) {
         u.publish(scrollBy, { behavior: 'auto', top: -offset })
@@ -75,24 +83,70 @@ export const upwardScrollFixSystem = u.system(
     }
 
     u.subscribe(u.pipe(deviationOffset, u.withLatestFrom(deviation, isScrolling)), ([offset, deviationAmount, isScrolling]) => {
-      if (isScrolling && isMobileSafari()) {
+      if (isScrolling && mobileSafari) {
         u.publish(deviation, deviationAmount - offset)
       } else {
         scrollByWith(-offset)
       }
     })
 
-    // this hack is only necessary for mobile safari which does not support scrollBy while scrolling is in progress.
-    // when the browser stops scrolling, restore the position and reset the glitching
-    u.subscribe(
-      u.pipe(
-        u.combineLatest(u.statefulStreamFromEmitter(isScrolling, false), deviation, recalcInProgress),
-        u.filter(([is, deviation, recalc]) => !is && !recalc && deviation !== 0),
-        u.map(([_, deviation]) => deviation),
-        u.throttleTime(1)
-      ),
-      scrollByWith
-    )
+    if (mobileSafari) {
+      // Mobile Safari ignores or partially applies scroll corrections during momentum scrolling.
+      // At either edge, temporarily lock the scroller and normalize the pending deviation.
+      u.subscribe(
+        u.combineLatest(scrollTop, deviation, scrollingInProgress, recalcInProgress, iosScrollFixInProgress),
+        ([scrollTopValue, deviationValue, scrollingInProgressValue, recalcInProgressValue, iosScrollFixInProgressValue]) => {
+          if (scrollingInProgressValue || recalcInProgressValue || iosScrollFixInProgressValue) {
+            return
+          }
+
+          if (deviationValue > 0 && scrollTopValue < deviationValue) {
+            u.publish(iosScrollFixInProgress, true)
+            u.publish(scrollTo, { behavior: 'auto', top: 0 })
+            setTimeout(() => {
+              u.publish(deviation, 0)
+              u.publish(iosScrollFixInProgress, false)
+            })
+          } else if (deviationValue < 0 && scrollTopValue <= 0) {
+            u.publish(iosScrollFixInProgress, true)
+            u.publish(deviation, 0)
+            setTimeout(() => {
+              u.publish(scrollTo, { behavior: 'auto', top: 0 })
+              u.publish(iosScrollFixInProgress, false)
+            })
+          }
+        }
+      )
+
+      // Once momentum scrolling ends, apply the deferred correction and remove the
+      // visual deviation in the same frame. A second frame keeps Safari from
+      // resuming its stale kinetic-scroll state while the scroller is unlocked.
+      u.subscribe(
+        u.pipe(
+          u.combineLatest(
+            u.statefulStreamFromEmitter(isScrolling, false),
+            deviation,
+            recalcInProgress,
+            iosScrollFixInProgress
+          ),
+          u.filter(([isScrolling, deviation, recalcInProgress, iosScrollFixInProgress]) => {
+            return !isScrolling && deviation !== 0 && !recalcInProgress && !iosScrollFixInProgress
+          }),
+          u.map(([, deviation]) => deviation),
+          u.throttleTime(1)
+        ),
+        (deviationValue) => {
+          u.publish(iosScrollFixInProgress, true)
+          requestAnimationFrame(() => {
+            u.publish(scrollBy, { behavior: 'auto', top: -deviationValue })
+            u.publish(deviation, 0)
+            requestAnimationFrame(() => {
+              u.publish(iosScrollFixInProgress, false)
+            })
+          })
+        }
+      )
+    }
 
     u.connect(
       u.pipe(
@@ -155,7 +209,7 @@ export const upwardScrollFixSystem = u.system(
       }
     )
 
-    return { deviation }
+    return { deviation, iosScrollFixInProgress }
   },
   u.tup(domIOSystem, stateFlagsSystem, listStateSystem, sizeSystem, loggerSystem, recalcSystem)
 )

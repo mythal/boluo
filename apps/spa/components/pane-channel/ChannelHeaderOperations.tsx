@@ -24,7 +24,9 @@ export const ChannelHeaderOperations: FC<Props> = ({ stateAtom, channel }) => {
   const paneLimit = usePaneLimit();
   return (
     <>
-      {paneLimit > 1 && !isChildPane && <ChannelHeaderSplitPaneButton />}
+      {paneLimit > 1 && !isChildPane && (
+        <ChannelHeaderSplitPaneButton />
+      )}
       <ChannelSearchButton />
       <ChannelMembersButton spaceId={channel.spaceId} channelId={channel.id} />
       <ChannelHeaderMoreButton on={state === 'MORE'} toggle={toggleMore} />

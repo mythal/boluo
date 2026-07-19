@@ -23,6 +23,7 @@ export const LoadMoreContainer = styled.div`
 function LoadMore() {
   const pane = useChannelId();
   const channelId = useSelector((state) => state.chatStates.get(pane)!.channel.id);
+  const spaceId = useSelector((state) => state.chatStates.get(pane)!.channel.spaceId);
   const before = useSelector((state) => {
     const messages = state.chatStates.get(pane)?.itemSet.messages;
     if (!messages) {
@@ -76,6 +77,7 @@ function LoadMore() {
     }
     const result = await get('/messages/by_channel', {
       channelId,
+      spaceId,
       before: before ?? null,
       limit,
     });

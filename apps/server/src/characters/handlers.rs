@@ -1,13 +1,14 @@
 use super::api::{
     CheckCharacterName, CheckVariableAvailability, CreateCharacter, CreateVariable, DeleteVariable,
-    EditCharacter, EditVariable, ListCharacters, VariableHistoryQuery,
+    EditCharacter, EditVariable, ListCharacters, QueryCharacter, VariableHistoryQuery,
 };
 use super::models::{
     Character, CharacterVariable, CharacterVariableHistory, CharacterVisibility, normalize_aliases,
 };
+use crate::committed_changes::CommittedChanges;
 use crate::csrf::{authenticate, authenticate_optional};
 use crate::error::{AppError, Find};
-use crate::interface::{IdQuery, missing, parse_body, parse_query, response};
+use crate::interface::{missing, parse_body, parse_query, response};
 use crate::spaces::SpaceMember;
 use hyper::Request;
 use hyper::body::Body;
@@ -28,11 +29,22 @@ async fn query(
     req: Request<impl Body>,
 ) -> Result<Character, AppError> {
     let session = authenticate_optional(&req).await?;
-    let IdQuery { id } = parse_query(req.uri())?;
-    let mut conn = ctx.db.acquire().await?;
-    let character = Character::get_by_id(&mut *conn, &id)
-        .await?
-        .or_not_found()?;
+    let QueryCharacter {
+        space_id,
+        character_id,
+    } = parse_query(req.uri())?;
+    // This may extend access to old visible data, but cannot expose newer protected data.
+    let character = if let Some(snapshot) = ctx.space_store.loaded_snapshot_maybe_stale(space_id)
+        && let Some(character) = snapshot.characters.get(&character_id)
+    {
+        metrics::counter!("boluo_server_space_runtime_read_total", "result" => "hit").increment(1);
+        character.clone()
+    } else {
+        ctx.space_store
+            .resolve_character(space_id, character_id)
+            .await?
+            .or_not_found()?
+    };
     let user_id = session.map(|session| session.user_id);
     if !can_view_character(&character, user_id) {
         return Err(AppError::NoPermission(
@@ -48,11 +60,21 @@ async fn by_space(
 ) -> Result<Vec<Character>, AppError> {
     let session = authenticate_optional(&req).await?;
     let ListCharacters {
-        id: space_id,
+        space_id,
         include_archived,
     } = parse_query(req.uri())?;
-    let mut conn = ctx.db.acquire().await?;
-    let mut characters = Character::list_by_space(&mut *conn, &space_id).await?;
+    // This may extend access to old visible data, but cannot expose newer protected data.
+    let mut characters = if let Some(snapshot) =
+        ctx.space_store.loaded_snapshot_maybe_stale(space_id)
+    {
+        metrics::counter!("boluo_server_space_runtime_read_total", "result" => "hit").increment(1);
+        snapshot.characters.values().cloned().collect()
+    } else {
+        metrics::counter!("boluo_server_space_runtime_read_total", "result" => "fallback")
+            .increment(1);
+        Character::list_by_space(&ctx.db, &space_id).await?
+    };
+    characters.sort_unstable_by_key(|character| std::cmp::Reverse(character.modified));
     if !include_archived {
         characters.retain(|character| !character.is_archived);
     }
@@ -75,10 +97,17 @@ async fn check_name(
         name,
         alias,
     } = parse_query(req.uri())?;
+    let is_space_member = ctx
+        .space_store
+        .loaded_authoritative_snapshot_after_wait(space_id)
+        .await
+        .is_some_and(|snapshot| snapshot.space_members.contains_key(&session.user_id));
     let mut conn = ctx.db.acquire().await?;
-    SpaceMember::get(&mut *conn, &session.user_id, &space_id)
-        .await?
-        .or_no_permission()?;
+    if !is_space_member {
+        SpaceMember::get(&mut *conn, &session.user_id, &space_id)
+            .await?
+            .or_no_permission()?;
+    }
     let name = name
         .map(|name| name.trim().to_string())
         .filter(|name| !name.is_empty());
@@ -120,13 +149,20 @@ async fn create(
         is_archived,
         metadata,
     } = parse_body(req).await?;
-    let mut conn = ctx.db.acquire().await?;
-    SpaceMember::get(&mut *conn, &session.user_id, &space_id)
-        .await?
-        .or_no_permission()?;
+    let mutation = ctx.space_store.acquire_mutation(space_id).await?;
+    let mut trans = ctx.db.begin().await?;
+    if !ctx
+        .space_store
+        .loaded_authoritative_snapshot(space_id)
+        .is_some_and(|snapshot| snapshot.space_members.contains_key(&session.user_id))
+    {
+        SpaceMember::get(&mut *trans, &session.user_id, &space_id)
+            .await?
+            .or_no_permission()?;
+    }
     let metadata = metadata.unwrap_or_else(|| serde_json::json!({}));
-    Character::create(
-        &mut *conn,
+    let character = Character::create(
+        &mut *trans,
         space_id,
         session.user_id,
         &name,
@@ -138,8 +174,12 @@ async fn create(
         is_archived,
         metadata,
     )
-    .await
-    .map_err(Into::into)
+    .await?;
+    let mutation = mutation.commit(trans).await?;
+    let mut changes = CommittedChanges::default();
+    changes.character_updated(&character);
+    changes.apply_with_mutation(ctx, &mutation).await;
+    Ok(character)
 }
 
 async fn edit(
@@ -148,6 +188,7 @@ async fn edit(
 ) -> Result<Character, AppError> {
     let session = authenticate(&req).await?;
     let EditCharacter {
+        space_id,
         character_id,
         name,
         description,
@@ -158,8 +199,9 @@ async fn edit(
         is_archived,
         metadata,
     } = parse_body(req).await?;
-    let mut conn = ctx.db.acquire().await?;
-    let character = Character::get_by_id(&mut *conn, &character_id)
+    let mutation = ctx.space_store.acquire_mutation(space_id).await?;
+    let mut trans = ctx.db.begin().await?;
+    let character = Character::get_by_id_in_space(&mut *trans, space_id, &character_id)
         .await?
         .or_not_found()?;
     if character.owner_id != session.user_id {
@@ -168,7 +210,7 @@ async fn edit(
         ));
     }
     let updated = Character::update(
-        &mut *conn,
+        &mut *trans,
         &character_id,
         name,
         description,
@@ -181,6 +223,10 @@ async fn edit(
     )
     .await?
     .ok_or(AppError::NotFound("Character"))?;
+    let mutation = mutation.commit(trans).await?;
+    let mut changes = CommittedChanges::default();
+    changes.character_updated(&updated);
+    changes.apply_with_mutation(ctx, &mutation).await;
     Ok(updated)
 }
 
@@ -189,9 +235,13 @@ async fn delete(
     req: Request<impl Body>,
 ) -> Result<bool, AppError> {
     let session = authenticate(&req).await?;
-    let IdQuery { id } = parse_query(req.uri())?;
-    let mut conn = ctx.db.acquire().await?;
-    let character = Character::get_by_id(&mut *conn, &id)
+    let QueryCharacter {
+        space_id,
+        character_id,
+    } = parse_query(req.uri())?;
+    let mutation = ctx.space_store.acquire_mutation(space_id).await?;
+    let mut trans = ctx.db.begin().await?;
+    let character = Character::get_by_id_in_space(&mut *trans, space_id, &character_id)
         .await?
         .or_not_found()?;
     if character.owner_id != session.user_id {
@@ -199,7 +249,11 @@ async fn delete(
             "You don't have permission to delete this character".to_string(),
         ));
     }
-    Character::delete(&mut *conn, &id).await?;
+    Character::delete(&mut *trans, &character_id).await?;
+    let mutation = mutation.commit(trans).await?;
+    let mut changes = CommittedChanges::default();
+    changes.character_deleted(space_id, character_id);
+    changes.apply_with_mutation(ctx, &mutation).await;
     Ok(true)
 }
 
@@ -208,9 +262,13 @@ async fn variables(
     req: Request<impl Body>,
 ) -> Result<Vec<CharacterVariable>, AppError> {
     let session = authenticate_optional(&req).await?;
-    let IdQuery { id } = parse_query(req.uri())?;
-    let mut conn = ctx.db.acquire().await?;
-    let character = Character::get_by_id(&mut *conn, &id)
+    let QueryCharacter {
+        space_id,
+        character_id,
+    } = parse_query(req.uri())?;
+    let character = ctx
+        .space_store
+        .resolve_character(space_id, character_id)
         .await?
         .or_not_found()?;
     let user_id = session.map(|session| session.user_id);
@@ -219,7 +277,8 @@ async fn variables(
             "You don't have permission to view this character".to_string(),
         ));
     }
-    CharacterVariable::list_by_character(&mut *conn, &id)
+    let mut conn = ctx.db.acquire().await?;
+    CharacterVariable::list_by_character(&mut *conn, &character_id)
         .await
         .map_err(Into::into)
 }
@@ -230,6 +289,7 @@ async fn create_variable(
 ) -> Result<CharacterVariable, AppError> {
     let session = authenticate(&req).await?;
     let CreateVariable {
+        space_id,
         character_id,
         key,
         display_name,
@@ -239,8 +299,8 @@ async fn create_variable(
         value,
         metadata,
     } = parse_body(req).await?;
-    let mut conn = ctx.db.acquire().await?;
-    let character = Character::get_by_id(&mut *conn, &character_id)
+    let mut trans = ctx.db.begin().await?;
+    let character = Character::get_by_id_in_space(&mut *trans, space_id, &character_id)
         .await?
         .or_not_found()?;
     if character.owner_id != session.user_id {
@@ -251,7 +311,7 @@ async fn create_variable(
     let key = crate::characters::models::normalize_ident(&key)?;
     let metadata = metadata.unwrap_or_else(|| serde_json::json!({}));
     let variable = CharacterVariable::create(
-        &mut *conn,
+        &mut *trans,
         character_id,
         &key,
         &display_name,
@@ -264,7 +324,7 @@ async fn create_variable(
     .await?;
     if track_history {
         CharacterVariableHistory::create(
-            &mut *conn,
+            &mut *trans,
             Some(session.user_id),
             character_id,
             Some(json!({ "type": "creation" })),
@@ -273,6 +333,10 @@ async fn create_variable(
         )
         .await?;
     }
+    trans.commit().await?;
+    let mut changes = CommittedChanges::default();
+    changes.character_variables_changed(character_id);
+    changes.apply_with_context(ctx).await;
     Ok(variable)
 }
 
@@ -282,6 +346,7 @@ async fn edit_variable(
 ) -> Result<CharacterVariable, AppError> {
     let session = authenticate(&req).await?;
     let EditVariable {
+        space_id,
         character_id,
         key,
         display_name,
@@ -293,7 +358,7 @@ async fn edit_variable(
         reason,
     } = parse_body(req).await?;
     let mut trans = ctx.db.begin().await?;
-    let character = Character::get_by_id(&mut *trans, &character_id)
+    let character = Character::get_by_id_in_space(&mut *trans, space_id, &character_id)
         .await?
         .or_not_found()?;
     if character.owner_id != session.user_id {
@@ -334,6 +399,9 @@ async fn edit_variable(
     .await?
     .ok_or(AppError::NotFound("CharacterVariable"))?;
     trans.commit().await?;
+    let mut changes = CommittedChanges::default();
+    changes.character_variables_changed(character_id);
+    changes.apply_with_context(ctx).await;
     Ok(updated)
 }
 
@@ -342,9 +410,13 @@ async fn delete_variable(
     req: Request<impl Body>,
 ) -> Result<bool, AppError> {
     let session = authenticate(&req).await?;
-    let DeleteVariable { character_id, key } = parse_body(req).await?;
-    let mut conn = ctx.db.acquire().await?;
-    let character = Character::get_by_id(&mut *conn, &character_id)
+    let DeleteVariable {
+        space_id,
+        character_id,
+        key,
+    } = parse_body(req).await?;
+    let mut trans = ctx.db.begin().await?;
+    let character = Character::get_by_id_in_space(&mut *trans, space_id, &character_id)
         .await?
         .or_not_found()?;
     if character.owner_id != session.user_id {
@@ -352,13 +424,13 @@ async fn delete_variable(
             "You don't have permission to edit this character".to_string(),
         ));
     }
-    let variable = CharacterVariable::get_by_key(&mut *conn, &character_id, &key)
+    let variable = CharacterVariable::get_by_key(&mut *trans, &character_id, &key)
         .await?
         .or_not_found()?;
-    CharacterVariable::delete(&mut *conn, &character_id, &key).await?;
+    CharacterVariable::delete(&mut *trans, &character_id, &key).await?;
     if variable.track_history {
         CharacterVariableHistory::create(
-            &mut *conn,
+            &mut *trans,
             Some(session.user_id),
             character_id,
             Some(json!({ "type": "deletion" })),
@@ -367,6 +439,10 @@ async fn delete_variable(
         )
         .await?
     };
+    trans.commit().await?;
+    let mut changes = CommittedChanges::default();
+    changes.character_variables_changed(character_id);
+    changes.apply_with_context(ctx).await;
     Ok(true)
 }
 
@@ -375,9 +451,14 @@ async fn variable_history(
     req: Request<impl Body>,
 ) -> Result<Vec<CharacterVariableHistory>, AppError> {
     let session = authenticate_optional(&req).await?;
-    let VariableHistoryQuery { character_id, key } = parse_query(req.uri())?;
-    let mut conn = ctx.db.acquire().await?;
-    let character = Character::get_by_id(&mut *conn, &character_id)
+    let VariableHistoryQuery {
+        space_id,
+        character_id,
+        key,
+    } = parse_query(req.uri())?;
+    let character = ctx
+        .space_store
+        .resolve_character(space_id, character_id)
         .await?
         .or_not_found()?;
     let user_id = session.map(|session| session.user_id);
@@ -386,6 +467,7 @@ async fn variable_history(
             "You don't have permission to view this character".to_string(),
         ));
     }
+    let mut conn = ctx.db.acquire().await?;
     CharacterVariableHistory::list_by_key(&mut *conn, &character_id, &key)
         .await
         .map_err(Into::into)
@@ -397,12 +479,14 @@ async fn check_variable(
 ) -> Result<bool, AppError> {
     let session = authenticate_optional(&req).await?;
     let CheckVariableAvailability {
+        space_id,
         character_id,
         key,
         alias,
     } = parse_query(req.uri())?;
-    let mut conn = ctx.db.acquire().await?;
-    let character = Character::get_by_id(&mut *conn, &character_id)
+    let character = ctx
+        .space_store
+        .resolve_character(space_id, character_id)
         .await?
         .or_not_found()?;
     let user_id = session.map(|session| session.user_id);
@@ -412,6 +496,7 @@ async fn check_variable(
         ));
     }
 
+    let mut conn = ctx.db.acquire().await?;
     let key = key
         .map(|key| key.trim().to_string())
         .filter(|key| !key.is_empty());

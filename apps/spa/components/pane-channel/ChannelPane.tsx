@@ -35,6 +35,7 @@ import { useQueryCurrentUser } from '@boluo/hooks/useQueryCurrentUser';
 
 interface Props {
   channelId: string;
+  spaceId?: string;
 }
 
 const SecretChannelInfo: FC<{ className?: string }> = ({ className }) => {
@@ -125,6 +126,7 @@ const ChatPaneChannelView: FC<{
             {showSearchPane && (
               <ChannelSubPaneSearch
                 channelId={channel.id}
+                spaceId={channel.spaceId}
                 onClose={() => setSubPaneState('NONE')}
               />
             )}
@@ -140,7 +142,7 @@ const ChatPaneChannelView: FC<{
   );
 };
 
-export const ChatPaneChannel = memo(({ channelId }: Props) => {
+export const ChatPaneChannel = memo(({ channelId, spaceId }: Props) => {
   const {
     data: currentUser,
     isLoading: isCurrentUserLoading,
@@ -150,12 +152,12 @@ export const ChatPaneChannel = memo(({ channelId }: Props) => {
     data: members,
     isLoading: isMembersLoading,
     error: queryMembersError,
-  } = useQueryChannelMembers(channelId);
+  } = useQueryChannelMembers(channelId, spaceId);
   const {
     data: channel,
     isLoading: isChannelLoading,
     error: queryChannelError,
-  } = useQueryChannel(channelId);
+  } = useQueryChannel(channelId, spaceId);
   const banner = useBannerNode();
   const myMember = useMemo((): MemberWithUser | null => {
     if (members == null || members.members.length === 0 || currentUser == null) {

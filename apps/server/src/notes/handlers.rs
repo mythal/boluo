@@ -11,11 +11,26 @@ use std::collections::HashSet;
 use uuid::Uuid;
 
 async fn filter_visible_to(
+    ctx: &crate::context::AppContext,
     conn: &mut sqlx::PgConnection,
     space_id: Uuid,
     visibility: NoteVisibility,
     visible_to: Vec<Uuid>,
 ) -> Result<Vec<Uuid>, AppError> {
+    // Both callers already perform the bounded authoritative wait before filtering.
+    if let Some(snapshot) = ctx.space_store.loaded_authoritative_snapshot(space_id) {
+        return Ok(match visibility {
+            NoteVisibility::Users => visible_to
+                .into_iter()
+                .filter(|user_id| snapshot.space_members.contains_key(user_id))
+                .collect(),
+            NoteVisibility::Channels => visible_to
+                .into_iter()
+                .filter(|channel_id| snapshot.channels.contains_key(channel_id))
+                .collect(),
+            NoteVisibility::Private | NoteVisibility::Public => Vec::new(),
+        });
+    }
     match visibility {
         NoteVisibility::Users => {
             let mut filtered = Vec::new();
@@ -46,6 +61,7 @@ async fn filter_visible_to(
 }
 
 async fn can_view_note(
+    ctx: &crate::context::AppContext,
     conn: &mut sqlx::PgConnection,
     note: &Note,
     user_id: Option<Uuid>,
@@ -55,6 +71,25 @@ async fn can_view_note(
     };
     if note.owner_id == user_id {
         return Ok(true);
+    }
+    if let Some(snapshot) = ctx
+        .space_store
+        .loaded_authoritative_snapshot_after_wait(note.space_id)
+        .await
+    {
+        return Ok(match note.visibility {
+            NoteVisibility::Public => true,
+            NoteVisibility::Private => false,
+            NoteVisibility::Users => {
+                note.visible_to.contains(&user_id) && snapshot.space_members.contains_key(&user_id)
+            }
+            NoteVisibility::Channels => note.visible_to.iter().any(|channel_id| {
+                snapshot
+                    .channel_members
+                    .get(channel_id)
+                    .is_some_and(|members| members.contains_key(&user_id))
+            }),
+        });
     }
     match note.visibility {
         NoteVisibility::Public => Ok(true),
@@ -122,11 +157,18 @@ async fn create(
         everyone_can_edit,
         track_history,
     } = parse_body(req).await?;
+    let is_space_member = ctx
+        .space_store
+        .loaded_authoritative_snapshot_after_wait(space_id)
+        .await
+        .is_some_and(|snapshot| snapshot.space_members.contains_key(&session.user_id));
     let mut conn = ctx.db.acquire().await?;
-    SpaceMember::get(&mut *conn, &session.user_id, &space_id)
-        .await?
-        .or_no_permission()?;
-    let visible_to = filter_visible_to(&mut conn, space_id, visibility, visible_to).await?;
+    if !is_space_member {
+        SpaceMember::get(&mut *conn, &session.user_id, &space_id)
+            .await?
+            .or_no_permission()?;
+    }
+    let visible_to = filter_visible_to(ctx, &mut conn, space_id, visibility, visible_to).await?;
     Note::create(
         &mut *conn,
         note_type,
@@ -164,7 +206,7 @@ async fn edit(ctx: &crate::context::AppContext, req: Request<impl Body>) -> Resu
         .or_not_found()?;
 
     let is_owner = note.owner_id == user_id;
-    let can_view = can_view_note(&mut trans, &note, Some(user_id)).await?;
+    let can_view = can_view_note(ctx, &mut trans, &note, Some(user_id)).await?;
     let can_edit = is_owner || (note.everyone_can_edit && can_view);
     if !can_edit {
         return Err(AppError::NoPermission(
@@ -188,7 +230,7 @@ async fn edit(ctx: &crate::context::AppContext, req: Request<impl Body>) -> Resu
 
     let filtered_visible_to = if let Some(visible_to) = update_visible_to.take() {
         let visibility = update_visibility.unwrap_or(note.visibility);
-        Some(filter_visible_to(&mut trans, note.space_id, visibility, visible_to).await?)
+        Some(filter_visible_to(ctx, &mut trans, note.space_id, visibility, visible_to).await?)
     } else {
         None
     };
@@ -247,7 +289,7 @@ async fn query(
     let mut conn = ctx.db.acquire().await?;
     let note = Note::get_by_id(&mut *conn, &id).await?.or_not_found()?;
     let user_id = session.map(|session| session.user_id);
-    if !can_view_note(&mut conn, &note, user_id).await? {
+    if !can_view_note(ctx, &mut conn, &note, user_id).await? {
         return Err(AppError::NoPermission(
             "You don't have permission to view this note".to_string(),
         ));
@@ -270,25 +312,41 @@ async fn by_space(
     };
 
     let user_id = session.user_id;
-    let is_space_member = SpaceMember::get(&mut *conn, &user_id, &space_id)
-        .await?
-        .is_some();
-    let mut member_channel_ids = HashSet::new();
-    if is_space_member {
-        let channel_members = ChannelMember::get_by_user(&mut *conn, user_id).await?;
-        if !channel_members.is_empty() {
-            let channels = Channel::get_by_id_list(
-                &mut *conn,
-                channel_members.iter().map(|member| member.channel_id),
-            )
-            .await?;
-            for channel in channels.values() {
-                if channel.space_id == space_id {
-                    member_channel_ids.insert(channel.id);
+    let (is_space_member, member_channel_ids) = if let Some(snapshot) = ctx
+        .space_store
+        .loaded_authoritative_snapshot_after_wait(space_id)
+        .await
+    {
+        let channel_ids = snapshot
+            .channel_members
+            .iter()
+            .filter_map(|(channel_id, members)| {
+                members.contains_key(&user_id).then_some(*channel_id)
+            })
+            .collect();
+        (snapshot.space_members.contains_key(&user_id), channel_ids)
+    } else {
+        let is_space_member = SpaceMember::get(&mut *conn, &user_id, &space_id)
+            .await?
+            .is_some();
+        let mut member_channel_ids = HashSet::new();
+        if is_space_member {
+            let channel_members = ChannelMember::get_by_user(&mut *conn, user_id).await?;
+            if !channel_members.is_empty() {
+                let channels = Channel::get_by_id_list(
+                    &mut *conn,
+                    channel_members.iter().map(|member| member.channel_id),
+                )
+                .await?;
+                for channel in channels.values() {
+                    if channel.space_id == space_id {
+                        member_channel_ids.insert(channel.id);
+                    }
                 }
             }
         }
-    }
+        (is_space_member, member_channel_ids)
+    };
 
     notes.retain(|note| {
         can_view_note_with_context(note, user_id, is_space_member, &member_channel_ids)
@@ -305,7 +363,7 @@ async fn history(
     let mut conn = ctx.db.acquire().await?;
     let note = Note::get_by_id(&mut *conn, &id).await?.or_not_found()?;
     let user_id = session.map(|session| session.user_id);
-    if !can_view_note(&mut conn, &note, user_id).await? {
+    if !can_view_note(ctx, &mut conn, &note, user_id).await? {
         return Err(AppError::NoPermission(
             "You don't have permission to view this note".to_string(),
         ));

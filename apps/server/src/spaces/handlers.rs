@@ -4,6 +4,7 @@ use super::api::{CreateSpace, EditSpace, QuerySpace, SpaceWithRelated};
 use super::{Space, SpaceMember};
 use crate::channels::models::Member;
 use crate::channels::{Channel, ChannelMember, ChannelType};
+use crate::committed_changes::CommittedChanges;
 use crate::csrf::authenticate;
 use crate::error::{AppError, Find};
 use crate::events::models::space_users_status;
@@ -77,7 +78,20 @@ async fn query(
     req: Request<impl Body>,
 ) -> Result<Space, AppError> {
     let QuerySpace { id, token } = parse_query(req.uri())?;
-    let space = Space::get_by_id(&ctx.db, &id).await?.or_not_found()?;
+    let snapshot = ctx
+        .space_store
+        .authoritative_snapshot(id)
+        .await
+        .ok()
+        .flatten();
+    let space = if let Some(snapshot) = &snapshot {
+        metrics::counter!("boluo_server_space_runtime_read_total", "result" => "hit").increment(1);
+        snapshot.space()
+    } else {
+        metrics::counter!("boluo_server_space_runtime_read_total", "result" => "fallback")
+            .increment(1);
+        Space::get_by_id(&ctx.db, &id).await?.or_not_found()?
+    };
     if space.is_public || space.allow_spectator {
         return Ok(space);
     }
@@ -87,7 +101,14 @@ async fn query(
         }
     }
     let session = authenticate(&req).await?;
-    let Some(_) = SpaceMember::get(&ctx.db, &session.user_id, &id).await? else {
+    let is_member = if let Some(snapshot) = snapshot {
+        snapshot.space_members.contains_key(&session.user_id)
+    } else {
+        SpaceMember::get(&ctx.db, &session.user_id, &id)
+            .await?
+            .is_some()
+    };
+    if !is_member {
         tracing::warn!(
             space_id = %id,
             user_id = %session.user_id,
@@ -104,6 +125,48 @@ pub async fn space_related(
     ctx: &crate::context::AppContext,
     id: &Uuid,
 ) -> Result<SpaceWithRelated, AppError> {
+    if let Ok(Some(snapshot)) = ctx.space_store.authoritative_snapshot(*id).await {
+        metrics::counter!("boluo_server_space_runtime_read_total", "result" => "hit").increment(1);
+        let mut users =
+            User::get_by_id_list(&ctx.db, snapshot.space_members.keys().copied()).await?;
+        let members = snapshot
+            .space_members
+            .values()
+            .filter_map(|member| {
+                users.remove(&member.user_id).map(|user| {
+                    (
+                        member.user_id,
+                        SpaceMemberWithUser {
+                            space: member.clone(),
+                            user,
+                        },
+                    )
+                })
+            })
+            .collect();
+        let mut channels: Vec<_> = snapshot.channels.values().cloned().collect();
+        channels.sort_unstable_by_key(|channel| channel.created);
+        let channel_members = snapshot
+            .channel_members
+            .iter()
+            .map(|(channel_id, members)| {
+                let mut members: Vec<_> = members.values().cloned().collect();
+                members.sort_unstable_by_key(|member| member.join_date);
+                (*channel_id, members)
+            })
+            .collect();
+        let users_status = space_users_status(snapshot.space().id)
+            .await
+            .unwrap_or_default();
+        return Ok(SpaceWithRelated {
+            space: snapshot.space(),
+            members,
+            channels,
+            users_status,
+            channel_members,
+        });
+    }
+    metrics::counter!("boluo_server_space_runtime_read_total", "result" => "fallback").increment(1);
     let mut conn = ctx.db.acquire().await?;
     let space = Space::get_by_id(&mut *conn, id).await?.or_not_found()?;
     let members = SpaceMemberWithUser::get_by_space(&mut *conn, id).await?;
@@ -140,6 +203,22 @@ async fn token(
 ) -> Result<Uuid, AppError> {
     let session = authenticate(&req).await?;
     let IdQuery { id } = parse_query(req.uri())?;
+    if let Some(snapshot) = ctx
+        .space_store
+        .loaded_authoritative_snapshot_after_wait(id)
+        .await
+    {
+        let is_admin = snapshot
+            .space_members
+            .get(&session.user_id)
+            .is_some_and(|member| member.is_admin);
+        if !is_admin {
+            return Err(AppError::NoPermission(
+                "Only admins can get space invitation token".to_string(),
+            ));
+        }
+        return Ok(snapshot.space().invite_token.clone());
+    }
     let mut conn = ctx.db.acquire().await?;
     let is_admin = SpaceMember::get(&mut *conn, &session.user_id, &id)
         .await?
@@ -164,8 +243,9 @@ async fn refresh_token(
 ) -> Result<Uuid, AppError> {
     let session = authenticate(&req).await?;
     let IdQuery { id } = parse_query(req.uri())?;
-    let mut conn = ctx.db.acquire().await?;
-    let is_admin = SpaceMember::get(&mut *conn, &session.user_id, &id)
+    let mutation = ctx.space_store.acquire_mutation(id).await?;
+    let mut trans = ctx.db.begin().await?;
+    let is_admin = SpaceMember::get(&mut *trans, &session.user_id, &id)
         .await?
         .map(|space_member| space_member.is_admin)
         .unwrap_or(false);
@@ -179,9 +259,12 @@ async fn refresh_token(
             "Only admins can refresh space invitation token".to_string(),
         ));
     }
-    Space::refresh_token(&mut *conn, &id)
-        .await
-        .map_err(Into::into)
+    let token = Space::refresh_token(&mut *trans, &id).await?;
+    let mutation = mutation.commit(trans).await?;
+    let mut changes = CommittedChanges::default();
+    changes.space_invite_token_updated(id, token);
+    changes.apply_with_mutation(ctx, &mutation).await;
+    Ok(token)
 }
 
 async fn my_spaces(
@@ -189,10 +272,39 @@ async fn my_spaces(
     req: Request<impl Body>,
 ) -> Result<Vec<SpaceWithMember>, AppError> {
     let session = authenticate(&req).await?;
-    let mut conn = ctx.db.acquire().await?;
-    Space::get_by_user(&mut conn, session.user_id)
-        .await
-        .map_err(Into::into)
+    let members = SpaceMember::get_by_user(&ctx.db, session.user_id).await?;
+    let Some(user) = User::get_by_id(&ctx.db, &session.user_id).await? else {
+        return Ok(Vec::new());
+    };
+    let mut loaded = HashMap::new();
+    let mut missing = Vec::new();
+    for member in &members {
+        if let Some(snapshot) = ctx.space_store.loaded_snapshot_maybe_stale(member.space_id)
+            && let Some(snapshot_member) = snapshot.space_members.get(&session.user_id)
+        {
+            loaded.insert(member.space_id, (snapshot.space(), snapshot_member.clone()));
+        } else {
+            missing.push(member.space_id);
+        }
+    }
+    let mut spaces = if missing.is_empty() {
+        HashMap::new()
+    } else {
+        Space::get_by_id_list(&ctx.db, missing.into_iter()).await?
+    };
+    Ok(members
+        .into_iter()
+        .filter_map(|member| {
+            let (space, member) = loaded
+                .remove(&member.space_id)
+                .or_else(|| spaces.remove(&member.space_id).map(|space| (space, member)))?;
+            Some(SpaceWithMember {
+                space,
+                member,
+                user: user.clone(),
+            })
+        })
+        .collect())
 }
 
 async fn search(
@@ -203,14 +315,15 @@ async fn search(
     Space::search(&ctx.db, search).await.map_err(Into::into)
 }
 
-async fn create(
+async fn create_transactional<F>(
     ctx: &crate::context::AppContext,
-    req: Request<impl Body>,
-) -> Result<SpaceWithMember, AppError> {
-    let session = authenticate(&req).await?;
-    CREATE_SPACE_LIMITER
-        .check_key(&session.user_id)
-        .map_err(|_| AppError::LimitExceeded("Too many spaces, please try again later."))?;
+    user_id: Uuid,
+    payload: CreateSpace,
+    before_commit: F,
+) -> Result<SpaceWithMember, AppError>
+where
+    F: std::future::Future<Output = ()>,
+{
     let CreateSpace {
         name,
         password,
@@ -218,11 +331,11 @@ async fn create(
         default_dice_type,
         first_channel_name,
         first_channel_type,
-    }: CreateSpace = interface::parse_body(req).await?;
+    } = payload;
 
     let mut trans = ctx.db.begin().await?;
     let default_dice_type = default_dice_type.as_deref();
-    let user = User::get_by_id(&mut *trans, &session.user_id)
+    let user = User::get_by_id(&mut *trans, &user_id)
         .await?
         .ok_or(AppError::NotFound("user"))?;
     let space = Space::create(
@@ -246,14 +359,34 @@ async fn create(
     )
     .await?;
     assert_eq!(channel.r#type, _type);
-    ChannelMember::add_user(&mut *trans, user.id, channel.id, channel.space_id, "", true).await?;
+    let channel_member =
+        ChannelMember::add_user(&mut *trans, user.id, channel.id, "", true).await?;
+    before_commit.await;
     trans.commit().await?;
+    let mut changes = CommittedChanges::default();
+    changes.space_created(&space);
+    changes.space_member_added(&member);
+    changes.channel_created(&channel);
+    changes.channel_member_added(space.id, &channel_member);
+    changes.apply_with_context(ctx).await;
     tracing::info!(space_id = %space.id, creator = %user.id, "A space ({}) was just created", space.name);
     Ok(SpaceWithMember {
         space,
         member,
         user,
     })
+}
+
+async fn create(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<SpaceWithMember, AppError> {
+    let session = authenticate(&req).await?;
+    CREATE_SPACE_LIMITER
+        .check_key(&session.user_id)
+        .map_err(|_| AppError::LimitExceeded("Too many spaces, please try again later."))?;
+    let payload = interface::parse_body::<CreateSpace>(req).await?;
+    create_transactional(ctx, session.user_id, payload, std::future::ready(())).await
 }
 
 async fn edit(
@@ -273,6 +406,7 @@ async fn edit(
         remove_admins,
     }: EditSpace = interface::parse_body(req).await?;
 
+    let mutation = ctx.space_store.acquire_mutation(space_id).await?;
     let mut trans = ctx.db.begin().await?;
 
     let Some(space) = Space::get_by_id(&mut *trans, &space_id).await? else {
@@ -305,17 +439,32 @@ async fn edit(
     .await?
     .ok_or_else(|| unexpected!("No such space found."))?;
 
+    let mut changed_members = Vec::new();
     if space.owner_id == session.user_id {
         for user_id in grant_admins.iter() {
-            SpaceMember::set_admin(&mut *trans, user_id, &space_id, true).await?;
+            if let Some(member) =
+                SpaceMember::set_admin(&mut *trans, user_id, &space_id, true).await?
+            {
+                changed_members.push(member);
+            }
         }
         for user_id in remove_admins.iter() {
             if user_id != &space.owner_id {
-                SpaceMember::set_admin(&mut *trans, user_id, &space_id, false).await?;
+                if let Some(member) =
+                    SpaceMember::set_admin(&mut *trans, user_id, &space_id, false).await?
+                {
+                    changed_members.push(member);
+                }
             }
         }
     }
-    trans.commit().await?;
+    let mutation = mutation.commit(trans).await?;
+    let mut changes = CommittedChanges::default();
+    changes.space_updated(&space);
+    for member in &changed_members {
+        changes.space_member_changed(member);
+    }
+    changes.apply_with_mutation(ctx, &mutation).await;
 
     Update::space_updated(ctx, space_id);
     Ok(space)
@@ -327,10 +476,15 @@ async fn join(
 ) -> Result<SpaceWithMember, AppError> {
     let session = authenticate(&req).await?;
     let JoinSpace { space_id, token } = parse_query(req.uri())?;
+    let user_id = &session.user_id;
+    let user = User::get_by_id(&ctx.db, user_id)
+        .await?
+        .ok_or_else(|| unexpected!("No such user found."))?;
 
-    let mut conn = ctx.db.acquire().await?;
+    let mutation = ctx.space_store.acquire_mutation(space_id).await?;
+    let mut trans = ctx.db.begin().await?;
 
-    let space = Space::get_by_id(&mut *conn, &space_id)
+    let space = Space::get_by_id(&mut *trans, &space_id)
         .await?
         .or_not_found()?;
     if !space.is_public && token != Some(space.invite_token) && space.owner_id != session.user_id {
@@ -343,15 +497,15 @@ async fn join(
             "You have no permission to join this space".to_string(),
         ));
     }
-    let user_id = &session.user_id;
-    let user = User::get_by_id(&mut *conn, user_id)
-        .await?
-        .ok_or_else(|| unexpected!("No such user found."))?;
     let member = if &space.owner_id == user_id {
-        SpaceMember::add_admin(&mut *conn, user_id, &space_id).await?
+        SpaceMember::add_admin(&mut *trans, user_id, &space_id).await?
     } else {
-        SpaceMember::add_user(&mut *conn, user_id, &space_id).await?
+        SpaceMember::add_user(&mut *trans, user_id, &space_id).await?
     };
+    let mutation = mutation.commit(trans).await?;
+    let mut changes = CommittedChanges::default();
+    changes.space_member_added(&member);
+    changes.apply_with_mutation(ctx, &mutation).await;
     Update::space_updated(ctx, space_id);
     Ok(SpaceWithMember {
         space,
@@ -367,9 +521,13 @@ async fn leave(
     let session = authenticate(&req).await?;
     let IdQuery { id } = parse_query(req.uri())?;
 
+    let mutation = ctx.space_store.acquire_mutation(id).await?;
     let mut trans = ctx.db.begin().await?;
-    SpaceMember::remove_user(&mut trans, session.user_id, id).await?;
-    trans.commit().await?;
+    let channel_ids = SpaceMember::remove_user(&mut trans, session.user_id, id).await?;
+    let mutation = mutation.commit(trans).await?;
+    let mut changes = CommittedChanges::default();
+    changes.space_member_removed(id, session.user_id, channel_ids);
+    changes.apply_with_mutation(ctx, &mutation).await;
     Update::space_updated(ctx, id);
     Ok(true)
 }
@@ -381,6 +539,7 @@ async fn kick(
     let session = authenticate(&req).await?;
     let KickFromSpace { space_id, user_id } = parse_query(req.uri())?;
 
+    let mutation = ctx.space_store.acquire_mutation(space_id).await?;
     let mut trans = ctx.db.begin().await?;
     let Some(space) = Space::get_by_id(&mut *trans, &space_id).await? else {
         return Err(AppError::NotFound("space"));
@@ -404,8 +563,11 @@ async fn kick(
             "Only admins can kick members".to_string(),
         ));
     }
-    SpaceMember::remove_user(&mut trans, user_id, space_id).await?;
-    trans.commit().await?;
+    let channel_ids = SpaceMember::remove_user(&mut trans, user_id, space_id).await?;
+    let mutation = mutation.commit(trans).await?;
+    let mut changes = CommittedChanges::default();
+    changes.space_member_removed(space_id, user_id, channel_ids);
+    changes.apply_with_mutation(ctx, &mutation).await;
     Update::space_updated(ctx, space_id);
     Ok(SpaceMemberWithUser::get_by_space(&ctx.db, &space_id).await?)
 }
@@ -420,6 +582,9 @@ async fn my_space_member(
         return Ok(None);
     };
     let IdQuery { id } = parse_query(req.uri())?;
+    if let Some(snapshot) = ctx.space_store.loaded_snapshot_maybe_stale(id) {
+        return Ok(snapshot.space_members.get(&session.user_id).cloned());
+    }
     let my_space_members = SpaceMember::get_by_user(&ctx.db, session.user_id).await?;
     Ok(my_space_members
         .into_iter()
@@ -431,6 +596,25 @@ async fn members(
     req: Request<impl Body>,
 ) -> Result<HashMap<Uuid, SpaceMemberWithUser>, AppError> {
     let IdQuery { id } = parse_query(req.uri())?;
+    if let Some(snapshot) = ctx.space_store.loaded_snapshot_maybe_stale(id) {
+        let mut users =
+            User::get_by_id_list(&ctx.db, snapshot.space_members.keys().copied()).await?;
+        return Ok(snapshot
+            .space_members
+            .values()
+            .filter_map(|member| {
+                users.remove(&member.user_id).map(|user| {
+                    (
+                        member.user_id,
+                        SpaceMemberWithUser {
+                            space: member.clone(),
+                            user,
+                        },
+                    )
+                })
+            })
+            .collect());
+    }
     let mut conn = ctx.db.acquire().await?;
     SpaceMemberWithUser::get_by_space(&mut *conn, &id)
         .await
@@ -450,10 +634,17 @@ async fn delete(
 ) -> Result<Space, AppError> {
     let IdQuery { id } = parse_query(req.uri())?;
     let session = authenticate(&req).await?;
-    let mut conn = ctx.db.acquire().await?;
-    let space = Space::get_by_id(&mut *conn, &id).await.or_not_found()?;
+    let mutation = ctx.space_store.acquire_mutation(id).await?;
+    let mut trans = ctx.db.begin().await?;
+    let space = Space::get_by_id(&mut *trans, &id).await.or_not_found()?;
     if space.owner_id == session.user_id {
-        Space::delete(&mut conn, id).await?;
+        let member_user_ids = Space::delete(&mut trans, id)
+            .await?
+            .ok_or(AppError::NotFound("space"))?;
+        let mutation = mutation.commit(trans).await?;
+        let mut changes = CommittedChanges::default();
+        changes.space_deleted(id, member_user_ids);
+        changes.apply_with_mutation(ctx, &mutation).await;
         tracing::info!("A space ({}) was deleted", space.id);
         return Ok(space);
     }
@@ -473,6 +664,9 @@ async fn space_settings(
 ) -> Result<serde_json::Value, AppError> {
     let IdQuery { id } = parse_query(req.uri())?;
     // TODO: check whether the user is a member of the space
+    if let Some(snapshot) = ctx.space_store.loaded_snapshot_maybe_stale(id) {
+        return Ok(snapshot.settings.clone());
+    }
     let extension = Space::get_settings(&ctx.db, id).await?;
     Ok(extension)
 }
@@ -487,13 +681,14 @@ async fn update_settings(
     if !settings.is_object() {
         return Err(AppError::BadRequest("Invalid settings".to_string()));
     }
-    let mut conn = ctx.db.acquire().await?;
+    let mutation = ctx.space_store.acquire_mutation(id).await?;
+    let mut trans = ctx.db.begin().await?;
 
-    let Some(space) = Space::get_by_id(&mut *conn, &id).await? else {
+    let Some(space) = Space::get_by_id(&mut *trans, &id).await? else {
         return Err(AppError::NotFound("space"));
     };
 
-    let is_admin = SpaceMember::get(&mut *conn, &session.user_id, &id)
+    let is_admin = SpaceMember::get(&mut *trans, &session.user_id, &id)
         .await?
         .map(|space_member| space_member.is_admin)
         .unwrap_or(false);
@@ -507,7 +702,11 @@ async fn update_settings(
             "Only admins can update space settings".to_string(),
         ));
     }
-    Space::put_settings(&mut *conn, id, &settings).await?;
+    Space::put_settings(&mut *trans, id, &settings).await?;
+    let mutation = mutation.commit(trans).await?;
+    let mut changes = CommittedChanges::default();
+    changes.space_settings_updated(id, settings.clone());
+    changes.apply_with_mutation(ctx, &mutation).await;
     Ok(settings)
 }
 
@@ -539,5 +738,120 @@ pub async fn router(
         ("/members", Method::GET) => response(members(ctx, req).await).await,
         ("/delete", Method::POST) => response(delete(ctx, req).await).await,
         _ => missing(),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::context::AppContext;
+
+    async fn create_test_user(pool: &sqlx::PgPool) -> User {
+        let raw = Uuid::new_v4().simple().to_string();
+        let username = format!("space_handler_{}", &raw[..8]);
+        let email = format!("space_handler_{raw}@example.com");
+        User::register(
+            pool,
+            &email,
+            &username,
+            "Space Handler Tester",
+            "SpaceHandlerPass123!",
+        )
+        .await
+        .expect("failed to create test user")
+    }
+
+    async fn create_test_space(pool: &sqlx::PgPool, owner: &User) -> Space {
+        let raw = Uuid::new_v4().simple().to_string();
+        let space = Space::create(
+            pool,
+            format!("space_handler_{}", &raw[..8]),
+            &owner.id,
+            "Space handler test space".to_string(),
+            None,
+            Some("d20"),
+        )
+        .await
+        .expect("failed to create test space");
+        SpaceMember::add_admin(pool, &owner.id, &space.id)
+            .await
+            .expect("failed to grant owner admin");
+        space
+    }
+
+    #[sqlx::test(migrator = "crate::db::MIGRATOR")]
+    async fn db_test_created_space_is_visible_after_transaction_commit(pool: sqlx::PgPool) {
+        let owner = create_test_user(&pool).await;
+        let initial_spaces = SpaceMember::get_by_user(&pool, owner.id)
+            .await
+            .expect("failed to prime user spaces cache");
+        assert!(initial_spaces.is_empty());
+
+        let (reached_before_commit_tx, reached_before_commit_rx) = tokio::sync::oneshot::channel();
+        let (continue_commit_tx, continue_commit_rx) = tokio::sync::oneshot::channel();
+        let ctx = AppContext::new(pool.clone(), None);
+        let payload = CreateSpace {
+            name: format!(
+                "space_handler_{}",
+                &Uuid::new_v4().simple().to_string()[..8]
+            ),
+            password: None,
+            description: "Space handler transaction test".to_string(),
+            default_dice_type: Some("d20".to_string()),
+            first_channel_name: "First Channel".to_string(),
+            first_channel_type: Some(ChannelType::OutOfGame),
+        };
+        let create_task = tokio::spawn(async move {
+            create_transactional(&ctx, owner.id, payload, async move {
+                reached_before_commit_tx
+                    .send(())
+                    .expect("test receiver was dropped");
+                continue_commit_rx
+                    .await
+                    .expect("commit release sender was dropped");
+            })
+            .await
+        });
+
+        reached_before_commit_rx
+            .await
+            .expect("space creation did not reach the commit barrier");
+        let before_commit = SpaceMember::get_by_user(&pool, owner.id)
+            .await
+            .expect("failed to reload user spaces before commit");
+        assert!(
+            before_commit.is_empty(),
+            "another connection observed an uncommitted space membership"
+        );
+
+        continue_commit_tx
+            .send(())
+            .expect("space creation task was dropped");
+        let created = create_task
+            .await
+            .expect("space creation task panicked")
+            .expect("space creation failed");
+        let after_commit = SpaceMember::get_by_user(&pool, owner.id)
+            .await
+            .expect("failed to load user spaces after commit");
+        assert!(
+            after_commit
+                .iter()
+                .any(|member| member.space_id == created.space.id),
+            "the committed space was hidden by a stale user spaces cache"
+        );
+        let channels = Channel::get_by_space(&pool, &created.space.id)
+            .await
+            .expect("failed to load the first channel");
+        assert_eq!(channels.len(), 1);
+        let members = Member::get_by_channel(&pool, created.space.id, channels[0].id)
+            .await
+            .expect("failed to load first channel members");
+        assert!(
+            members
+                .iter()
+                .any(|member| member.channel.user_id == owner.id),
+            "the committed channel membership was not applied to mailbox state"
+        );
     }
 }

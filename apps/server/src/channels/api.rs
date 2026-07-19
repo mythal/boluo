@@ -115,6 +115,15 @@ pub struct ChannelWithMember {
     pub member: ChannelMember,
 }
 
+#[derive(Deserialize, Debug, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct QueryChannel {
+    pub id: Uuid,
+    /// Optional hint used to read an already-loaded Space runtime.
+    #[serde(default)]
+    pub space_id: Option<Uuid>,
+}
+
 #[derive(Serialize, Debug, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct ChannelWithMaybeMember {
@@ -158,6 +167,8 @@ pub struct AddChannelMember {
 #[serde(rename_all = "camelCase")]
 pub struct Export {
     pub channel_id: Uuid,
+    #[serde(default)]
+    pub space_id: Option<Uuid>,
     #[serde(default)]
     pub after: Option<DateTime<Utc>>,
 }

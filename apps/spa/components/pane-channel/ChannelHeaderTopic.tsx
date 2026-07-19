@@ -17,6 +17,7 @@ import { useMember } from '../../hooks/useMember';
 
 interface Props {
   channelId: string;
+  spaceId?: string;
   dismiss: () => void;
 }
 
@@ -24,8 +25,8 @@ const classes = {
   box: 'bg-pane-header-bg pl-pane py-2 text-sm pr-1.5',
 };
 
-export const ChannelHeaderTopic: FC<Props> = ({ channelId, dismiss }) => {
-  const { data: channel, isLoading } = useQueryChannel(channelId);
+export const ChannelHeaderTopic: FC<Props> = ({ channelId, spaceId, dismiss }) => {
+  const { data: channel, isLoading } = useQueryChannel(channelId, spaceId);
   const member = useMember();
   const toggleChildPane = usePaneToggle({ child: '1/3' });
   const paneKey = usePaneKey();

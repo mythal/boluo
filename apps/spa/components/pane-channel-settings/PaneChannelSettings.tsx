@@ -128,8 +128,11 @@ const PaneChannelSettingsForm: FC<{ channel: Channel }> = ({ channel }) => {
   );
 };
 
-export const PaneChannelSettings: FC<{ channelId: string }> = ({ channelId }) => {
-  const { data: channel, error } = useQueryChannel(channelId);
+export const PaneChannelSettings: FC<{ channelId: string; spaceId?: string }> = ({
+  channelId,
+  spaceId,
+}) => {
+  const { data: channel, error } = useQueryChannel(channelId, spaceId);
   if (error && channel == null) {
     return (
       <Failed

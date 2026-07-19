@@ -119,6 +119,9 @@ impl User {
                 query_ids.push(id);
             }
         }
+        if query_ids.is_empty() {
+            return Ok(result_map);
+        }
         let users = query_file_scalar!("sql/users/get_by_id_list.sql", &*query_ids)
             .fetch_all(db)
             .await?;

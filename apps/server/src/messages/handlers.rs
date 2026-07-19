@@ -10,6 +10,7 @@ use crate::messages::api::{
     GetMessagesByChannel, MoveMessageBetween, SearchDirection, SearchFilter, SearchMessagesParams,
     SearchMessagesResult, SearchNameFilter,
 };
+use crate::notify;
 use crate::rate_limit;
 use crate::spaces::SpaceMember;
 use governor::{DefaultKeyedRateLimiter, RateLimiter};
@@ -49,6 +50,7 @@ async fn send(
         message_id: _,
         preview_id,
         channel_id,
+        space_id,
         name,
         text,
         entities,
@@ -59,17 +61,36 @@ async fn send(
         pos: request_pos,
         color,
     } = *new_message;
-    let channel = Channel::get_by_id(&ctx.db, &channel_id)
-        .await
+    let resolved = ctx
+        .space_store
+        .resolve_channel(channel_id, space_id)
+        .await?
         .or_not_found()?;
-    let (channel_member, space_member) = ChannelMember::get_with_space_member(
-        &ctx.db,
-        session.user_id,
-        channel_id,
-        &channel.space_id,
-    )
-    .await
-    .or_no_permission()?;
+    let (channel, channel_member, space_member) = if let Some(snapshot) = resolved.snapshot {
+        let channel_member = snapshot
+            .channel_members
+            .get(&channel_id)
+            .and_then(|members| members.get(&session.user_id))
+            .cloned()
+            .or_no_permission()?;
+        let space_member = snapshot
+            .space_members
+            .get(&session.user_id)
+            .cloned()
+            .or_no_permission()?;
+        (resolved.channel, channel_member, space_member)
+    } else {
+        let channel = resolved.channel;
+        let (channel_member, space_member) = ChannelMember::get_with_space_member(
+            &ctx.db,
+            session.user_id,
+            channel_id,
+            &channel.space_id,
+        )
+        .await
+        .or_no_permission()?;
+        (channel, channel_member, space_member)
+    };
     let message = {
         let mut conn = ctx.db.acquire().await?;
         Message::create(
@@ -95,6 +116,7 @@ async fn send(
             metrics::counter!("boluo_server_messages_created_failed_total").increment(1);
         })?
     };
+    notify::space_activity(&ctx.space_store, channel.space_id, Some(message.created));
     Update::new_message(space_member.space_id, message.clone(), preview_id).await;
 
     metrics::counter!("boluo_server_messages_created_total").increment(1);
@@ -342,20 +364,34 @@ async fn by_channel(
 ) -> Result<Vec<Message>, AppError> {
     let GetMessagesByChannel {
         channel_id,
+        space_id,
         limit,
         before,
     } = parse_query(req.uri())?;
 
-    let channel = Channel::get_by_id(&ctx.db, &channel_id)
-        .await
-        .or_not_found()?;
     let session = authenticate(&req).await;
     let current_user_id = session.as_ref().ok().map(|session| session.user_id);
+    let resolved = ctx
+        .space_store
+        .resolve_channel(channel_id, space_id)
+        .await?
+        .or_not_found()?;
+    let channel = resolved.channel;
+    let used_snapshot = resolved.snapshot;
     let mut conn = ctx.db.acquire().await?;
     if !channel.is_public {
-        ChannelMember::get(&mut conn, session?.user_id, channel.space_id, channel_id)
-            .await
-            .or_no_permission()?;
+        let user_id = session?.user_id;
+        if let Some(snapshot) = used_snapshot {
+            snapshot
+                .channel_members
+                .get(&channel_id)
+                .and_then(|members| members.get(&user_id))
+                .or_no_permission()?;
+        } else {
+            ChannelMember::get(&mut conn, user_id, channel.space_id, channel_id)
+                .await
+                .or_no_permission()?;
+        }
     }
     let limit = limit.unwrap_or(128);
     Message::get_by_channel(
@@ -375,6 +411,7 @@ async fn search(
 ) -> Result<SearchMessagesResult, AppError> {
     let SearchMessagesParams {
         channel_id,
+        space_id,
         keyword,
         pos,
         direction,
@@ -403,16 +440,29 @@ async fn search(
     }
     const WINDOW_SIZE: i64 = 200;
 
-    let channel = Channel::get_by_id(&ctx.db, &channel_id)
-        .await
-        .or_not_found()?;
     let session = authenticate(&req).await;
     let current_user_id = session.as_ref().ok().map(|session| session.user_id);
+    let resolved = ctx
+        .space_store
+        .resolve_channel(channel_id, space_id)
+        .await?
+        .or_not_found()?;
+    let channel = resolved.channel;
+    let used_snapshot = resolved.snapshot;
     let mut conn = ctx.db.acquire().await?;
     if !channel.is_public {
-        ChannelMember::get(&mut conn, session?.user_id, channel.space_id, channel_id)
-            .await
-            .or_no_permission()?;
+        let user_id = session?.user_id;
+        if let Some(snapshot) = used_snapshot {
+            snapshot
+                .channel_members
+                .get(&channel_id)
+                .and_then(|members| members.get(&user_id))
+                .or_no_permission()?;
+        } else {
+            ChannelMember::get(&mut conn, user_id, channel.space_id, channel_id)
+                .await
+                .or_no_permission()?;
+        }
     }
 
     let window_messages = match direction {

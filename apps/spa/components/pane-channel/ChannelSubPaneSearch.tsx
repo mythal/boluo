@@ -27,6 +27,7 @@ import { ChannelSubPaneSearchResultMessage } from './ChannelSubPaneSearchResultM
 
 interface Props {
   channelId: string;
+  spaceId: string;
   onClose: () => void;
 }
 
@@ -38,7 +39,7 @@ interface SearchMeta {
 
 const emptyPages: SearchMessagesResult[] = [];
 
-export const ChannelSubPaneSearch: FC<Props> = ({ channelId, onClose }) => {
+export const ChannelSubPaneSearch: FC<Props> = ({ channelId, spaceId, onClose }) => {
   const intl = useIntl();
   const { scrollToMessageAtom } = useChannelAtoms();
   const setScrollToMessage = useSetAtom(scrollToMessageAtom);
@@ -68,7 +69,7 @@ export const ChannelSubPaneSearch: FC<Props> = ({ channelId, onClose }) => {
     isValidating,
     mutate,
     setSize,
-  } = useSearchChannelMessages(channelId, activeKeyword, searchOptions);
+  } = useSearchChannelMessages(channelId, spaceId, activeKeyword, searchOptions);
 
   const pages = data ?? emptyPages;
 

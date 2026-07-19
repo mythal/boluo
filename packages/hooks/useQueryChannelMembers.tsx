@@ -6,17 +6,18 @@ import { unwrap } from '@boluo/utils/result';
 
 export const useQueryChannelMembers = (
   channelId: string,
+  spaceId?: string,
   config?: SWRConfiguration<ChannelMembers, ApiError>,
 ): SWRResponse<ChannelMembers, ApiError> => {
   const key = ['/channels/members' as const, channelId] as const;
   return useSWR<ChannelMembers, ApiError, typeof key>(
     key,
     async ([path, id]) => {
-      const result = await get(path, { id });
+      const result = await get(path, { id, spaceId });
       if (result.isErr) {
         if (result.err.code === 'FETCH_FAIL') {
           await sleep(20);
-          return await get(path, { id }).then(unwrap);
+          return await get(path, { id, spaceId }).then(unwrap);
         }
         throw result.err;
       }

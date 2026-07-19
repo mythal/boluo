@@ -181,7 +181,7 @@ const buildWebsocket = (
   paramsObject.encoding = encoding;
   if (userId != null) paramsObject.userId = userId;
   const params = new URLSearchParams(paramsObject);
-  const url = `${baseUrl}/events/connect?${params.toString()}`;
+  const url = `${baseUrl}/ev/connect?${params.toString()}`;
   const socket = new WebSocket(url);
   socket.binaryType = 'arraybuffer';
   return socket;

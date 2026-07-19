@@ -216,8 +216,8 @@ impl PreviewPost {
             } else {
                 Duration::from_secs(60 * 3)
             };
-            let pos_ratio = crate::pos::CHANNEL_POS_MANAGER
-                .preview_pos(channel_id, id, timeout)
+            let pos_ratio = crate::messages::MESSAGE_POSITIONS
+                .preview_pos(&ctx.db, channel_id, id, timeout)
                 .await?;
             pos = (*pos_ratio.numer() as f64 / *pos_ratio.denom() as f64).ceil();
         }
@@ -287,7 +287,7 @@ impl PreviewPost {
         });
 
         if should_cancel_position {
-            crate::pos::CHANNEL_POS_MANAGER.cancel(channel_id, id);
+            crate::messages::MESSAGE_POSITIONS.cancel(channel_id, id);
         }
         Update::message_preview(space_id, preview);
         Ok(())

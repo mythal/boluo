@@ -6,7 +6,7 @@ use shared_types::legacy::LegacyEntity;
 use uuid::Uuid;
 
 use crate::error::{AppError, ModelError, ValidationFailed};
-use crate::pos::{CHANNEL_POS_MANAGER, FailToFindIntermediate, check_pos, find_intermediate};
+use crate::pos::{FailToFindIntermediate, check_pos, find_intermediate};
 use crate::utils::{is_false, merge_blank};
 use crate::validators::CHARACTER_NAME;
 
@@ -243,8 +243,8 @@ impl Message {
         let whisper_to = whisper_to.as_deref();
         let entities = serde_json::to_value(entities).unwrap_or(JsonValue::Array(vec![]));
 
-        let pos = crate::pos::CHANNEL_POS_MANAGER
-            .sending_new_message(channel_id, id, request_pos, preview_id)
+        let pos = crate::messages::MESSAGE_POSITIONS
+            .sending_new_message(pool, channel_id, id, request_pos, preview_id)
             .await?;
         let mut row: Result<Message, sqlx::Error> = sqlx::query_file_scalar!(
             "sql/messages/create.sql",
@@ -276,8 +276,8 @@ impl Message {
 
         if is_unique_violation {
             metrics::counter!("boluo_server_messages_pos_conflict_total").increment(1);
-            let new_pos = crate::pos::CHANNEL_POS_MANAGER
-                .on_conflict(channel_id, id)
+            let new_pos = crate::messages::MESSAGE_POSITIONS
+                .on_conflict(pool, channel_id, id)
                 .await?;
             tracing::warn!(
                 channel_id = channel_id.to_string(),
@@ -319,7 +319,7 @@ impl Message {
                     pos = ?(new_pos.numer(), new_pos.denom()),
                     "This should never happen, but a unique violation occurred again while creating a message at channel"
                 );
-                CHANNEL_POS_MANAGER.shutdown(channel_id);
+                crate::messages::MESSAGE_POSITIONS.shutdown(channel_id);
                 return Err(AppError::Unexpected(anyhow::anyhow!(
                     "Failed to send new message, conflict occurred",
                 )));
@@ -334,11 +334,11 @@ impl Message {
                     err = %err,
                     "Failed to send message at channel"
                 );
-                crate::pos::CHANNEL_POS_MANAGER.cancel(channel_id, id);
+                crate::messages::MESSAGE_POSITIONS.cancel(channel_id, id);
                 return Err(err.into());
             }
         };
-        crate::pos::CHANNEL_POS_MANAGER.submitted(
+        crate::messages::MESSAGE_POSITIONS.submitted(
             channel_id,
             message.id,
             message.pos_p,
@@ -382,7 +382,7 @@ impl Message {
         .fetch_optional(db)
         .await?;
         if let Some(moved_message) = moved_message {
-            crate::pos::CHANNEL_POS_MANAGER.submitted(
+            crate::messages::MESSAGE_POSITIONS.submitted(
                 moved_message.channel_id,
                 moved_message.id,
                 moved_message.pos_p,
@@ -412,7 +412,7 @@ impl Message {
         .fetch_optional(db)
         .await?;
         if let Some(moved_message) = moved_message {
-            crate::pos::CHANNEL_POS_MANAGER.submitted(
+            crate::messages::MESSAGE_POSITIONS.submitted(
                 moved_message.channel_id,
                 moved_message.id,
                 moved_message.pos_p,
@@ -477,7 +477,7 @@ impl Message {
             return Ok(None);
         };
         if message_in_pos.id == *id {
-            crate::pos::CHANNEL_POS_MANAGER.submitted(
+            crate::messages::MESSAGE_POSITIONS.submitted(
                 message_in_pos.channel_id,
                 message_in_pos.id,
                 message_in_pos.pos_p,
@@ -491,9 +491,9 @@ impl Message {
                 .fetch_one(&mut *db)
                 .await
                 .ok();
-            crate::pos::CHANNEL_POS_MANAGER.cancel(channel_id, *id);
+            crate::messages::MESSAGE_POSITIONS.cancel(channel_id, *id);
             let message_in_pos_id = message_in_pos.id;
-            crate::pos::CHANNEL_POS_MANAGER.submitted(
+            crate::messages::MESSAGE_POSITIONS.submitted(
                 channel_id,
                 message_in_pos_id,
                 message_in_pos.pos_p,
@@ -523,7 +523,7 @@ impl Message {
             )
             .await?;
             if let Some(moved_message) = moved_message {
-                crate::pos::CHANNEL_POS_MANAGER.submitted(
+                crate::messages::MESSAGE_POSITIONS.submitted(
                     channel_id,
                     moved_message.id,
                     moved_message.pos_p,
@@ -536,7 +536,7 @@ impl Message {
             }
         }
     }
-    pub async fn max_pos<'c, T: sqlx::PgExecutor<'c>>(
+    pub(super) async fn max_pos<'c, T: sqlx::PgExecutor<'c>>(
         db: T,
         channel_id: &Uuid,
     ) -> Result<MaxPos, sqlx::Error> {
@@ -600,10 +600,10 @@ impl Message {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct MaxPos {
-    pub pos_p: i32,
-    pub pos_q: i32,
-    pub id: Uuid,
+pub(super) struct MaxPos {
+    pub(super) pos_p: i32,
+    pub(super) pos_q: i32,
+    pub(super) id: Uuid,
 }
 
 #[cfg(test)]
@@ -613,6 +613,7 @@ mod tests {
     use crate::spaces::{Space, SpaceMember};
     use crate::users::User;
     use shared_types::entities::{Entity as RichEntity, Span};
+    use std::time::Duration;
 
     fn unique_name(prefix: &str) -> String {
         let raw = Uuid::new_v4().simple().to_string();
@@ -668,6 +669,36 @@ mod tests {
             len: text.chars().count() as i32,
         };
         Entities(vec![RichEntity::Text(span)])
+    }
+
+    async fn create_position_test_message(
+        pool: &sqlx::PgPool,
+        channel_id: Uuid,
+        space_id: Uuid,
+        owner_id: &Uuid,
+        text: &str,
+        request_pos: Option<(i32, i32)>,
+    ) -> Message {
+        Message::create(
+            pool,
+            None,
+            channel_id,
+            space_id,
+            owner_id,
+            "GM",
+            "GM",
+            text,
+            sample_entities(text),
+            false,
+            false,
+            true,
+            None,
+            None,
+            request_pos,
+            "#123456".to_string(),
+        )
+        .await
+        .expect("failed to create position test message")
     }
 
     #[sqlx::test(migrator = "crate::db::MIGRATOR")]
@@ -883,7 +914,133 @@ mod tests {
         .expect("move after delete failed");
         assert!(moved_after_delete.is_none());
 
-        crate::pos::CHANNEL_POS_MANAGER.shutdown(channel.id);
+        crate::messages::MESSAGE_POSITIONS.shutdown(channel.id);
+    }
+
+    #[sqlx::test(migrator = "crate::db::MIGRATOR")]
+    async fn db_test_message_create_with_cold_pos_state_and_single_connection(pool: sqlx::PgPool) {
+        let owner = create_test_user(&pool, "single_conn_owner").await;
+        let space = create_test_space(&pool, &owner, "single_conn_space").await;
+        let channel = create_test_channel(&pool, &space, &owner, "Single Connection").await;
+        crate::messages::MESSAGE_POSITIONS.shutdown(channel.id);
+
+        let single_connection_pool = sqlx::postgres::PgPoolOptions::new()
+            .max_connections(1)
+            .acquire_timeout(Duration::from_secs(2))
+            .connect_with(pool.connect_options().as_ref().clone())
+            .await
+            .expect("failed to create single-connection pool");
+
+        let message = tokio::time::timeout(
+            Duration::from_secs(5),
+            Message::create(
+                &single_connection_pool,
+                None,
+                channel.id,
+                space.id,
+                &owner.id,
+                "GM",
+                "GM",
+                "Cold position message",
+                sample_entities("Cold position message"),
+                false,
+                false,
+                true,
+                None,
+                None,
+                None,
+                "#123456".to_string(),
+            ),
+        )
+        .await
+        .expect("message creation deadlocked with a single database connection")
+        .expect("failed to create message through cold position state");
+
+        assert_eq!(message.channel_id, channel.id);
+        crate::messages::MESSAGE_POSITIONS.shutdown(channel.id);
+    }
+
+    #[sqlx::test(migrator = "crate::db::MIGRATOR")]
+    async fn db_test_message_moves_accept_server_allocated_position_bounds(pool: sqlx::PgPool) {
+        let owner = create_test_user(&pool, "high_pos_owner").await;
+        let space = create_test_space(&pool, &owner, "high_pos_space").await;
+        let channel = create_test_channel(&pool, &space, &owner, "High Positions").await;
+        let request_limit = crate::pos::MAX_REQUEST_POSITION;
+
+        let at_limit = create_position_test_message(
+            &pool,
+            channel.id,
+            space.id,
+            &owner.id,
+            "At request limit",
+            Some((request_limit, 1)),
+        )
+        .await;
+        let above_limit = create_position_test_message(
+            &pool,
+            channel.id,
+            space.id,
+            &owner.id,
+            "Server allocated above limit",
+            None,
+        )
+        .await;
+        let movable = create_position_test_message(
+            &pool,
+            channel.id,
+            space.id,
+            &owner.id,
+            "Movable",
+            Some((request_limit - 1, 1)),
+        )
+        .await;
+
+        assert_eq!((at_limit.pos_p, at_limit.pos_q), (request_limit, 1));
+        assert_eq!(
+            (above_limit.pos_p, above_limit.pos_q),
+            (request_limit + 1, 1)
+        );
+
+        let mut conn = pool.acquire().await.expect("failed to acquire connection");
+        let moved_above = Message::move_above(
+            &mut conn,
+            &channel.id,
+            &movable.id,
+            (above_limit.pos_p, above_limit.pos_q),
+        )
+        .await
+        .expect("move_above rejected a server-allocated position bound")
+        .expect("move_above returned no message");
+        assert!(moved_above.pos > at_limit.pos && moved_above.pos < above_limit.pos);
+
+        let moved_bottom = Message::move_bottom(
+            &mut conn,
+            &channel.id,
+            &at_limit.id,
+            (above_limit.pos_p, above_limit.pos_q),
+        )
+        .await
+        .expect("move_bottom rejected a server-allocated position bound")
+        .expect("move_bottom returned no message");
+        assert!(moved_bottom.pos > above_limit.pos);
+
+        let moved_between = Message::move_between(
+            &mut conn,
+            &moved_above.id,
+            channel.id,
+            (above_limit.pos_p, above_limit.pos_q),
+            (moved_bottom.pos_p, moved_bottom.pos_q),
+        )
+        .await
+        .expect("move_between rejected server-allocated position bounds")
+        .expect("move_between returned no message");
+        assert!(
+            moved_between.pos > above_limit.pos && moved_between.pos < moved_bottom.pos,
+            "moved message was not placed between its server-allocated bounds"
+        );
+        drop(conn);
+
+        crate::messages::MESSAGE_POSITIONS.shutdown(channel.id);
     }
 
     #[sqlx::test(migrator = "crate::db::MIGRATOR")]
@@ -1001,7 +1158,7 @@ mod tests {
         assert_eq!(ordered[1].id, between.id);
         assert_eq!(ordered[2].id, moved_above.id);
 
-        crate::pos::CHANNEL_POS_MANAGER.shutdown(channel.id);
+        crate::messages::MESSAGE_POSITIONS.shutdown(channel.id);
     }
 
     #[sqlx::test(migrator = "crate::db::MIGRATOR")]
@@ -1094,8 +1251,8 @@ mod tests {
         assert_eq!(unchanged.pos_q, source_message.pos_q);
         assert_eq!(unchanged.rev, source_message.rev);
 
-        crate::pos::CHANNEL_POS_MANAGER.shutdown(source_channel.id);
-        crate::pos::CHANNEL_POS_MANAGER.shutdown(other_channel.id);
+        crate::messages::MESSAGE_POSITIONS.shutdown(source_channel.id);
+        crate::messages::MESSAGE_POSITIONS.shutdown(other_channel.id);
     }
 
     #[sqlx::test(migrator = "crate::db::MIGRATOR")]
@@ -1193,6 +1350,6 @@ mod tests {
         .expect("unconditional edit should always apply");
         assert_eq!(edited_without_precondition.text, "Tab C's text");
 
-        crate::pos::CHANNEL_POS_MANAGER.shutdown(channel.id);
+        crate::messages::MESSAGE_POSITIONS.shutdown(channel.id);
     }
 }

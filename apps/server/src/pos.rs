@@ -2,23 +2,25 @@ use ahash::RandomState;
 use papaya::HashMap as PapayaHashMap;
 use std::{
     collections::BTreeMap,
-    sync::LazyLock,
+    sync::{Arc, LazyLock},
     time::{Duration, Instant},
 };
 use tokio::sync::{
+    Mutex, MutexGuard,
     mpsc::{self, error::TrySendError},
     oneshot,
 };
 use tracing::Instrument as _;
 
-use crate::{
-    error::{AppError, ValidationFailed},
-    messages::MaxPos,
-};
+use crate::error::{AppError, ValidationFailed};
 use num_rational::Rational32;
 use uuid::Uuid;
 
-pub fn check_pos((p, q): (i32, i32)) -> Result<(), ValidationFailed> {
+// Limit the numeric value rather than the numerator. Keeping it far below
+// i32::MAX leaves more than two billion integer positions for server appends.
+pub(crate) const MAX_REQUEST_POSITION: i32 = 1_000_000;
+
+pub(crate) fn check_pos((p, q): (i32, i32)) -> Result<(), ValidationFailed> {
     if q == 0 {
         return Err(ValidationFailed(r#""pos_q" cannot be 0"#));
     }
@@ -30,7 +32,14 @@ pub fn check_pos((p, q): (i32, i32)) -> Result<(), ValidationFailed> {
     Ok(())
 }
 
-const PLACEHOLDER_POS_TIMEOUT: Duration = Duration::from_secs(60 * 60);
+fn check_request_pos((p, q): (i32, i32)) -> Result<(), ValidationFailed> {
+    check_pos((p, q))?;
+    if i64::from(p) > i64::from(MAX_REQUEST_POSITION) * i64::from(q) {
+        return Err(ValidationFailed(r#""pos" is too large"#));
+    }
+    Ok(())
+}
+
 const INACTIVE_TIMEOUT: Duration = Duration::from_secs(60 * 60 * 12);
 const TICK_INTERVAL: Duration = Duration::from_secs(60);
 const SUBMITTED_RETENTION: Duration = Duration::from_secs(60 * 60 * 6);
@@ -38,17 +47,17 @@ const ACTION_SEND_TIMEOUT: Duration = Duration::from_secs(2);
 const ACTION_RESPONSE_TIMEOUT: Duration = Duration::from_secs(2);
 
 #[derive(Debug)]
-pub enum PosAction {
+enum PosAction {
     PreviewPos {
         item_id: Uuid,
         timeout: Duration,
-        respond_to: oneshot::Sender<Result<Rational32, sqlx::Error>>,
+        respond_to: oneshot::Sender<PositionAllocation>,
     },
     SendingNewMessage {
         message_id: Uuid,
         request_pos: Option<(i32, i32)>,
         preview_id: Option<Uuid>,
-        respond_to: oneshot::Sender<Result<Rational32, sqlx::Error>>,
+        respond_to: oneshot::Sender<PositionAllocation>,
     },
     Submitted {
         item_id: Uuid,
@@ -61,7 +70,15 @@ pub enum PosAction {
     },
     OnConflict {
         message_id: Uuid,
-        respond_to: oneshot::Sender<Result<Rational32, sqlx::Error>>,
+        tail: Option<TailPosition>,
+        respond_to: oneshot::Sender<PositionAllocation>,
+    },
+    ApplyPersistedTail {
+        tail: Option<TailPosition>,
+        respond_to: oneshot::Sender<()>,
+    },
+    IsInitialized {
+        respond_to: oneshot::Sender<bool>,
     },
     Tick,
     Shutdown,
@@ -75,30 +92,251 @@ impl PosAction {
             PosAction::Submitted { .. } => "Submitted",
             PosAction::Cancel { .. } => "Cancel",
             PosAction::OnConflict { .. } => "OnConflict",
+            PosAction::ApplyPersistedTail { .. } => "ApplyPersistedTail",
+            PosAction::IsInitialized { .. } => "IsInitialized",
             PosAction::Tick => "Tick",
             PosAction::Shutdown => "Shutdown",
         }
     }
 }
 
-pub struct ChannelPosActor {
-    created: Instant,
-    channel_id: Uuid,
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) struct TailPosition {
+    pub(crate) id: Uuid,
+    pub(crate) pos_p: i32,
+    pub(crate) pos_q: i32,
+}
+
+impl TailPosition {
+    fn ratio(self) -> Rational32 {
+        Rational32::new(self.pos_p, self.pos_q)
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum PositionAllocation {
+    Reserved(Rational32),
+    NeedsPersistedTail,
+    Exhausted,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum TailState {
+    Uninitialized,
+    Initialized(Rational32),
+}
+
+struct PositionExhausted;
+
+struct ChannelPosState {
+    tail: TailState,
     positions: BTreeMap<Rational32, PosItem>,
+}
+
+impl ChannelPosState {
+    fn new() -> Self {
+        Self {
+            tail: TailState::Uninitialized,
+            positions: BTreeMap::new(),
+        }
+    }
+
+    fn is_initialized(&self) -> bool {
+        matches!(self.tail, TailState::Initialized(_))
+    }
+
+    fn apply_persisted_tail(&mut self, tail: Option<TailPosition>) {
+        // An empty channel uses 42 as its compatibility baseline, making 43
+        // the first allocated integer position. Initialization only advances
+        // the high-water mark: persisted and locally observed positions are
+        // merged so a late database read can never move allocation backwards.
+        let baseline = tail
+            .map(TailPosition::ratio)
+            .unwrap_or_else(|| Rational32::new(42, 1));
+        let known_tail = match self.tail {
+            TailState::Uninitialized => baseline,
+            TailState::Initialized(current) => current.max(baseline),
+        };
+        let observed_tail = self.positions.iter().next_back().map(|(pos, _)| *pos);
+        self.tail =
+            TailState::Initialized(observed_tail.map_or(known_tail, |pos| known_tail.max(pos)));
+        if let Some(tail) = tail {
+            self.positions
+                .insert(tail.ratio(), PosItem::submitted(tail.id));
+        }
+    }
+
+    fn advance_tail(&mut self, pos: Rational32) {
+        if let TailState::Initialized(tail) = &mut self.tail {
+            *tail = (*tail).max(pos);
+        }
+    }
+
+    fn next_available_p(&self) -> Result<Option<i32>, PositionExhausted> {
+        let TailState::Initialized(tail) = self.tail else {
+            return Ok(None);
+        };
+        let last = self
+            .positions
+            .last_key_value()
+            .map_or(tail, |(pos, _)| tail.max(*pos));
+        let numerator = i64::from(*last.numer());
+        let denominator = i64::from(*last.denom());
+        let ceil = numerator / denominator + i64::from(numerator % denominator > 0);
+        let next = ceil.checked_add(1).ok_or(PositionExhausted)?;
+        i32::try_from(next).map(Some).map_err(|_| PositionExhausted)
+    }
+
+    fn delete_by_id(&mut self, item_id: Uuid) {
+        let Some(pos) = self
+            .positions
+            .iter()
+            .rev()
+            .find(|(_, item)| item.id == item_id)
+            .map(|(pos, _)| *pos)
+        else {
+            return;
+        };
+        self.positions.remove(&pos);
+    }
+
+    fn is_pos_available(&self, pos: Rational32, item_id: Option<Uuid>) -> bool {
+        let now = Instant::now();
+        if let Some(pos_item) = self.positions.get(&pos) {
+            if let Some(item_id) = item_id
+                && pos_item.id == item_id
+            {
+                return pos_item.state != PosItemState::Submitting;
+            }
+            pos_item.pos_available(now)
+        } else {
+            true
+        }
+    }
+
+    fn restore_active_position(&self, item_id: Uuid) -> Option<Rational32> {
+        let now = Instant::now();
+        self.positions
+            .iter()
+            .rev()
+            .find(|(_, pos_item)| pos_item.id == item_id)
+            .and_then(|(pos, pos_item)| match pos_item.state {
+                PosItemState::LiveIn(timeout) if (now - pos_item.created) < timeout => Some(*pos),
+                _ => None,
+            })
+    }
+
+    fn preview_pos(&mut self, item_id: Uuid, timeout: Duration) -> PositionAllocation {
+        if let Some(pos) = self.restore_active_position(item_id) {
+            return PositionAllocation::Reserved(pos);
+        }
+        let next_pos = match self.next_available_p() {
+            Ok(Some(next_pos)) => next_pos,
+            Ok(None) => return PositionAllocation::NeedsPersistedTail,
+            Err(PositionExhausted) => return PositionAllocation::Exhausted,
+        };
+        let pos = Rational32::new(next_pos, 1);
+        self.positions.insert(pos, PosItem::new(item_id, timeout));
+        self.advance_tail(pos);
+        PositionAllocation::Reserved(pos)
+    }
+
+    fn sending_new_message(
+        &mut self,
+        message_id: Uuid,
+        request_pos: Option<(i32, i32)>,
+        preview_id: Option<Uuid>,
+    ) -> PositionAllocation {
+        let maybe_pos = match (request_pos, preview_id) {
+            (Some(request_pos), preview_id) => {
+                if check_request_pos(request_pos).is_ok()
+                    && self.is_pos_available(request_pos.into(), preview_id)
+                {
+                    Some(request_pos)
+                } else {
+                    None
+                }
+            }
+            (None, Some(preview_id)) => self.restore_active_position(preview_id).map(Into::into),
+            (None, None) => None,
+        };
+        let pos = if let Some(pos) = maybe_pos {
+            pos.into()
+        } else {
+            let next_pos = match self.next_available_p() {
+                Ok(Some(next_pos)) => next_pos,
+                Ok(None) => return PositionAllocation::NeedsPersistedTail,
+                Err(PositionExhausted) => return PositionAllocation::Exhausted,
+            };
+            Rational32::new(next_pos, 1)
+        };
+        if let Some(old_item) = self.positions.insert(pos, PosItem::submitting(message_id))
+            && Some(old_item.id) != preview_id
+            && !old_item.pos_available(Instant::now())
+            && old_item.id != message_id
+        {
+            tracing::warn!(
+                pos = ?pos,
+                old_item = ?old_item,
+                message_id = %message_id,
+                preview_id = ?preview_id,
+                "Pos item overwritten by new message"
+            );
+        }
+        if let Some(preview_id) = preview_id {
+            self.delete_by_id(preview_id);
+        }
+        self.advance_tail(pos);
+        PositionAllocation::Reserved(pos)
+    }
+
+    fn submitted(&mut self, item_id: Uuid, pos_p: i32, pos_q: i32, old_item_id: Option<Uuid>) {
+        let pos = Rational32::new(pos_p, pos_q);
+        if let Some(old_item_id) = old_item_id {
+            self.delete_by_id(old_item_id);
+        }
+        self.positions.insert(pos, PosItem::submitted(item_id));
+        self.advance_tail(pos);
+    }
+
+    fn on_conflict(&mut self, message_id: Uuid, tail: Option<TailPosition>) -> PositionAllocation {
+        self.delete_by_id(message_id);
+        self.apply_persisted_tail(tail);
+        let next_pos = match self.next_available_p() {
+            Ok(Some(next_pos)) => next_pos,
+            Ok(None) => unreachable!("applying the persisted tail must initialize position state"),
+            Err(PositionExhausted) => return PositionAllocation::Exhausted,
+        };
+        let pos = Rational32::new(next_pos, 1);
+        self.positions.insert(pos, PosItem::submitting(message_id));
+        self.advance_tail(pos);
+        PositionAllocation::Reserved(pos)
+    }
+
+    fn trim_submitted_positions(&mut self, now: Instant) {
+        self.positions.retain(|_, pos_item| {
+            pos_item.state != PosItemState::Submitted
+                || now.saturating_duration_since(pos_item.created) <= SUBMITTED_RETENTION
+        });
+    }
+}
+
+struct ChannelPosActor {
+    channel_id: Uuid,
+    state: ChannelPosState,
     receiver: mpsc::Receiver<PosAction>,
 }
 
 impl ChannelPosActor {
     fn new(channel_id: Uuid, receiver: mpsc::Receiver<PosAction>) -> Self {
         Self {
-            created: Instant::now(),
             channel_id,
-            positions: BTreeMap::new(),
+            state: ChannelPosState::new(),
             receiver,
         }
     }
 
-    pub async fn run(mut self) {
+    async fn run(mut self) {
         let mut changed_at = Instant::now();
         let action_duration_histogram = metrics::histogram!("boluo_server_pos_action_duration_ms");
         let positions_len_histogram = metrics::histogram!("boluo_server_pos_positions_len");
@@ -110,7 +348,6 @@ impl ChannelPosActor {
             }
             let start = Instant::now();
             let action_name = action.name();
-            let last_key = self.positions.last_key_value().map(|(key, _)| *key);
             match action {
                 PosAction::PreviewPos {
                     item_id,
@@ -118,7 +355,7 @@ impl ChannelPosActor {
                     respond_to,
                 } => {
                     changed_at = Instant::now();
-                    let result = self.handle_preview_pos(item_id, timeout).await;
+                    let result = self.state.preview_pos(item_id, timeout);
                     let _ = respond_to.send(result);
                 }
                 PosAction::SendingNewMessage {
@@ -128,18 +365,27 @@ impl ChannelPosActor {
                     respond_to,
                 } => {
                     changed_at = Instant::now();
-                    let result = self
-                        .handle_sending_new_message(message_id, request_pos, preview_id)
-                        .await;
+                    let result =
+                        self.state
+                            .sending_new_message(message_id, request_pos, preview_id);
                     let _ = respond_to.send(result);
                 }
                 PosAction::OnConflict {
                     message_id,
+                    tail,
                     respond_to,
                 } => {
                     changed_at = Instant::now();
-                    let result = self.handle_on_conflict(message_id).await;
+                    let result = self.state.on_conflict(message_id, tail);
                     let _ = respond_to.send(result);
+                }
+                PosAction::ApplyPersistedTail { tail, respond_to } => {
+                    changed_at = Instant::now();
+                    self.state.apply_persisted_tail(tail);
+                    let _ = respond_to.send(());
+                }
+                PosAction::IsInitialized { respond_to } => {
+                    let _ = respond_to.send(self.state.is_initialized());
                 }
                 PosAction::Submitted {
                     item_id,
@@ -148,11 +394,11 @@ impl ChannelPosActor {
                     old_item_id,
                 } => {
                     changed_at = Instant::now();
-                    self.handle_submitted(item_id, pos_p, pos_q, old_item_id);
+                    self.state.submitted(item_id, pos_p, pos_q, old_item_id);
                 }
                 PosAction::Cancel { item_id } => {
                     changed_at = Instant::now();
-                    self.delete_by_id(item_id);
+                    self.state.delete_by_id(item_id);
                 }
                 PosAction::Shutdown => {
                     tracing::info!("Shutting down signal received");
@@ -161,27 +407,21 @@ impl ChannelPosActor {
                 PosAction::Tick => {
                     if !self.receiver.is_empty() {
                         tracing::info!("Clean up skipped because of pending actions");
-                        positions_len_histogram.record(self.positions.len() as f64);
+                        positions_len_histogram.record(self.state.positions.len() as f64);
                         continue;
                     }
                     let now = Instant::now();
                     let idle = now - changed_at;
-                    let Some((last_key, _last_pos_item)) = self.positions.last_key_value() else {
-                        if idle > INACTIVE_TIMEOUT {
-                            tracing::info!("Inactivity timeout reached");
-                            break;
-                        }
-                        continue;
-                    };
-                    let last_key = *last_key;
                     if idle > INACTIVE_TIMEOUT {
                         tracing::info!("Inactivity timeout reached");
                         break;
                     }
-                    let before_count = self.positions.len();
-                    self.positions
+                    let before_count = self.state.positions.len();
+                    self.state
+                        .positions
                         .retain(|_, pos_item| !pos_item.pos_available(now));
-                    let after_count = self.positions.len();
+                    self.state.trim_submitted_positions(now);
+                    let after_count = self.state.positions.len();
                     if before_count != after_count {
                         tracing::info!(
                             before = before_count,
@@ -189,25 +429,7 @@ impl ChannelPosActor {
                             "Cleaned up pos items"
                         );
                     }
-                    self.trim_submitted_positions(now);
-                    positions_len_histogram.record(self.positions.len() as f64);
-                    if let Some((last_key_after, _)) = self.positions.last_key_value() {
-                        if *last_key_after >= last_key {
-                            continue;
-                        }
-                    }
-                    self.positions
-                        .insert(last_key, PosItem::new(Uuid::nil(), PLACEHOLDER_POS_TIMEOUT));
-                }
-            }
-            let current_last_key = self.positions.last_key_value().map(|(key, _)| *key);
-            if let (Some(last_key), Some(current_last_key)) = (last_key, current_last_key) {
-                if current_last_key < last_key {
-                    tracing::warn!(
-                        current_last_key = ?current_last_key,
-                        last_key = ?last_key,
-                        "Last key decreased"
-                    );
+                    positions_len_histogram.record(self.state.positions.len() as f64);
                 }
             }
             let elapsed = start.elapsed();
@@ -223,248 +445,12 @@ impl ChannelPosActor {
 
         tracing::info!("Channel pos actor shutdown");
     }
-
-    fn delete_by_id(&mut self, item_id: Uuid) {
-        let Some((last_key, last_pos_item)) = self.positions.last_key_value() else {
-            return;
-        };
-        let last_pos_item_id = last_pos_item.id;
-        let last_key = *last_key;
-        if last_pos_item_id == item_id {
-            self.positions
-                .insert(last_key, PosItem::new(Uuid::nil(), PLACEHOLDER_POS_TIMEOUT));
-            return;
-        }
-        if self.positions.len() == 1 {
-            return;
-        }
-
-        let mut iter = self.positions.iter().rev();
-        iter.next();
-        if let Some((pos, _)) = iter.find(|(_, pos_item)| pos_item.id == item_id) {
-            let pos = *pos;
-            self.positions.remove(&pos);
-        }
-    }
-
-    fn is_pos_available(&self, pos: Rational32, item_id: Option<Uuid>) -> bool {
-        let now = Instant::now();
-        if let Some(pos_item) = self.positions.get(&pos) {
-            if let Some(item_id) = item_id {
-                if pos_item.id == item_id {
-                    return pos_item.state != PosItemState::Submitting;
-                }
-            }
-            pos_item.pos_available(now)
-        } else {
-            true
-        }
-    }
-
-    fn restore_active_position(&self, item_id: Uuid) -> Option<Rational32> {
-        let now = Instant::now();
-        // TODO: optimize this
-        self.positions
-            .iter()
-            .rev()
-            .find(|(_, pos_item)| pos_item.id == item_id)
-            .and_then(|(pos, pos_item)| match pos_item.state {
-                PosItemState::LiveIn(timeout) if (now - pos_item.created) < timeout => Some(*pos),
-                _ => None,
-            })
-    }
-
-    async fn get_next_available_p(&mut self) -> Result<i32, sqlx::Error> {
-        if let Some((last_key, _last_pos_item)) = self.positions.last_key_value() {
-            let next_p = last_key.ceil().numer() + 1;
-            return Ok(next_p);
-        }
-
-        let max_pos_result = {
-            let mut db = crate::db::get().await.acquire().await?;
-            crate::messages::Message::max_pos(&mut *db, &self.channel_id).await
-        };
-
-        match max_pos_result {
-            Ok(MaxPos { pos_p, pos_q, id }) => {
-                let pos = Rational32::new(pos_p, pos_q);
-                self.positions.insert(pos, PosItem::submitted(id));
-                Ok(pos.ceil().numer() + 1)
-            }
-            // If the channel has no messages, insert a placeholder pos item and return 43
-            Err(sqlx::Error::RowNotFound) => {
-                let pos = Rational32::new(42, 1);
-                self.positions
-                    .insert(pos, PosItem::new(Uuid::nil(), PLACEHOLDER_POS_TIMEOUT));
-                Ok(43)
-            }
-            Err(e) => {
-                tracing::error!(error = %e, "Failed to get max pos from database");
-                Err(e)
-            }
-        }
-    }
-
-    fn try_remove_last_placeholder(&mut self, new_pos: Rational32) {
-        if let Some(last_key) = self
-            .positions
-            .last_key_value()
-            .and_then(|(last_key, pos_item)| {
-                if pos_item.id.is_nil() && *last_key < new_pos {
-                    Some(*last_key)
-                } else {
-                    None
-                }
-            })
-        {
-            self.positions.remove(&last_key);
-        }
-    }
-
-    async fn handle_preview_pos(
-        &mut self,
-        item_id: Uuid,
-        timeout: Duration,
-    ) -> Result<Rational32, sqlx::Error> {
-        if let Some(pos) = self.restore_active_position(item_id) {
-            return Ok(pos);
-        }
-
-        let next_pos = self.get_next_available_p().await?;
-        let pos_item = PosItem::new(item_id, timeout);
-        let pos = Rational32::new(next_pos, 1);
-        self.try_remove_last_placeholder(pos);
-        self.positions.insert(pos, pos_item);
-        Ok(pos)
-    }
-
-    async fn handle_sending_new_message(
-        &mut self,
-        message_id: Uuid,
-        request_pos: Option<(i32, i32)>,
-        preview_id: Option<Uuid>,
-    ) -> Result<Rational32, sqlx::Error> {
-        let maybe_pos: Option<(i32, i32)> = {
-            match (request_pos, preview_id) {
-                (Some(request_pos), preview_id) => {
-                    if check_pos(request_pos).is_err() {
-                        None
-                    } else if self.is_pos_available(request_pos.into(), preview_id) {
-                        Some(request_pos)
-                    } else {
-                        None
-                    }
-                }
-                (None, Some(preview_id)) => self
-                    .restore_active_position(preview_id)
-                    .map(|ratio| ratio.into()),
-                (None, None) => None,
-            }
-        };
-        let pos: Rational32 = if let Some(pos) = maybe_pos {
-            pos.into()
-        } else {
-            (self.get_next_available_p().await?, 1).into()
-        };
-        self.try_remove_last_placeholder(pos);
-        if let Some(old_item) = self.positions.insert(pos, PosItem::submitting(message_id)) {
-            if Some(old_item.id) == preview_id {
-                return Ok(pos);
-            } else if !old_item.pos_available(Instant::now()) && old_item.id != message_id {
-                tracing::warn!(
-                    pos = ?pos,
-                    old_item = ?old_item,
-                    message_id = %message_id,
-                    preview_id = ?preview_id,
-                    "Pos item overwritten by new message"
-                );
-            }
-        }
-        if let Some(preview_id) = preview_id {
-            self.delete_by_id(preview_id);
-        }
-        Ok(pos)
-    }
-
-    fn handle_submitted(
-        &mut self,
-        item_id: Uuid,
-        pos_p: i32,
-        pos_q: i32,
-        old_item_id: Option<Uuid>,
-    ) {
-        let pos = Rational32::new(pos_p, pos_q);
-        if let Some(old_item_id) = old_item_id {
-            self.delete_by_id(old_item_id);
-        }
-        self.try_remove_last_placeholder(pos);
-        self.positions.insert(pos, PosItem::submitted(item_id));
-    }
-
-    async fn handle_on_conflict(&mut self, message_id: Uuid) -> Result<Rational32, sqlx::Error> {
-        self.delete_by_id(message_id);
-        let max_pos = {
-            let mut db = crate::db::get().await.acquire().await?;
-            match crate::messages::Message::max_pos(&mut *db, &self.channel_id).await {
-                Ok(max_pos) => max_pos,
-                Err(sqlx::Error::RowNotFound) => {
-                    tracing::error!("Conflict occurred but no messages in channel");
-                    MaxPos {
-                        pos_p: 42,
-                        pos_q: 1,
-                        id: Uuid::nil(),
-                    }
-                }
-                Err(e) => {
-                    tracing::error!(error = %e, "Failed to get max pos from database");
-                    return Err(e);
-                }
-            }
-        };
-        self.handle_submitted(max_pos.id, max_pos.pos_p, max_pos.pos_q, None);
-        let (last_key, _) = self.positions.last_key_value().unwrap();
-        let pos = Rational32::new(last_key.ceil().numer() + 1, 1);
-        self.positions.insert(pos, PosItem::submitting(message_id));
-        Ok(pos)
-    }
-
-    fn trim_submitted_positions(&mut self, now: Instant) {
-        let Some((last_key, _)) = self.positions.last_key_value() else {
-            return;
-        };
-        let mut remove_keys = Vec::new();
-        for (key, pos_item) in self.positions.iter() {
-            if *key == *last_key {
-                continue;
-            }
-            if pos_item.state == PosItemState::Submitted
-                && now.saturating_duration_since(pos_item.created) > SUBMITTED_RETENTION
-            {
-                remove_keys.push(*key);
-            }
-        }
-        if remove_keys.is_empty() {
-            return;
-        }
-        let removed = remove_keys.len();
-        for key in remove_keys {
-            self.positions.remove(&key);
-        }
-        tracing::info!(
-            removed,
-            remaining = self.positions.len(),
-            retention_s = SUBMITTED_RETENTION.as_secs(),
-            "Trimmed submitted pos items"
-        );
-    }
 }
 
 #[derive(Debug, thiserror::Error)]
-pub enum ChannelPosError {
+pub(crate) enum ChannelPosError {
     #[error("Actor shutdown")]
     ActorShutdown,
-    #[error("Database error: {0}")]
-    DatabaseError(#[from] sqlx::Error),
     #[error("Timeout")]
     Timeout,
 }
@@ -476,16 +462,21 @@ impl From<ChannelPosError> for AppError {
                 AppError::Unexpected(anyhow::anyhow!("Actor shutdown"))
             }
             ChannelPosError::Timeout => AppError::Timeout,
-            ChannelPosError::DatabaseError(err) => AppError::Db { source: err },
         }
     }
 }
 
-struct PosActionSender {
+#[derive(Clone)]
+pub(crate) struct ChannelPosHandle {
+    channel_id: Uuid,
     sender: mpsc::Sender<PosAction>,
+    // The synchronization gate belongs to this exact actor generation. Keeping
+    // it beside the sender ensures an in-flight load cannot target a replacement
+    // actor created for the same channel after shutdown.
+    tail_sync: Arc<Mutex<()>>,
 }
 
-impl PosActionSender {
+impl ChannelPosHandle {
     async fn send(&self, action: PosAction) -> Result<(), ChannelPosError> {
         let action = match self.sender.try_send(action) {
             Ok(_) => return Ok(()),
@@ -493,7 +484,11 @@ impl PosActionSender {
                 return Err(ChannelPosError::ActorShutdown);
             }
             Err(TrySendError::Full(action)) => {
-                tracing::info!(action = action.name(), "PosActionSender::send: full");
+                tracing::info!(
+                    channel_id = %self.channel_id,
+                    action = action.name(),
+                    "ChannelPosHandle::send: full"
+                );
                 action
             }
         };
@@ -502,9 +497,10 @@ impl PosActionSender {
             .await
             .map_err(|_| {
                 tracing::warn!(
+                    channel_id = %self.channel_id,
                     action = action_name,
                     timeout_ms = ACTION_SEND_TIMEOUT.as_millis(),
-                    "PosActionSender::send: timeout"
+                    "ChannelPosHandle::send: timeout"
                 );
                 ChannelPosError::Timeout
             })?
@@ -516,27 +512,31 @@ impl PosActionSender {
             Ok(_) => {}
             Err(TrySendError::Closed(action)) => {
                 tracing::warn!(
+                    channel_id = %self.channel_id,
                     action = action.name(),
-                    "PosActionSender::send_nonblocking: actor closed"
+                    "ChannelPosHandle::send_nonblocking: actor closed"
                 );
             }
             Err(TrySendError::Full(action)) => {
                 let action_name = action.name();
                 let sender = self.sender.clone();
+                let channel_id = self.channel_id;
                 tokio::spawn(async move {
                     match tokio::time::timeout(ACTION_SEND_TIMEOUT, sender.send(action)).await {
                         Ok(Ok(())) => {}
                         Ok(Err(_)) => {
                             tracing::warn!(
+                                %channel_id,
                                 action = action_name,
-                                "PosActionSender::send_nonblocking: actor closed while waiting"
+                                "ChannelPosHandle::send_nonblocking: actor closed while waiting"
                             );
                         }
                         Err(_) => {
                             tracing::warn!(
+                                %channel_id,
                                 action = action_name,
                                 timeout_ms = ACTION_SEND_TIMEOUT.as_millis(),
-                                "PosActionSender::send_nonblocking: timeout"
+                                "ChannelPosHandle::send_nonblocking: timeout"
                             );
                         }
                     }
@@ -544,14 +544,177 @@ impl PosActionSender {
             }
         }
     }
+
+    pub(crate) async fn lock_tail_sync(&self) -> MutexGuard<'_, ()> {
+        self.tail_sync.lock().await
+    }
+
+    pub(crate) async fn preview_pos(
+        &self,
+        item_id: Uuid,
+        timeout: Duration,
+    ) -> Result<PositionAllocation, ChannelPosError> {
+        let (tx, rx) = oneshot::channel();
+
+        self.send(PosAction::PreviewPos {
+            item_id,
+            timeout,
+            respond_to: tx,
+        })
+        .await?;
+
+        tokio::time::timeout(ACTION_RESPONSE_TIMEOUT, rx)
+            .await
+            .map_err(|_| {
+                tracing::warn!(
+                    channel_id = %self.channel_id,
+                    item_id = %item_id,
+                    timeout_ms = ACTION_RESPONSE_TIMEOUT.as_millis(),
+                    "ChannelPosHandle::preview_pos: timeout waiting actor response"
+                );
+                ChannelPosError::Timeout
+            })?
+            .map_err(|_| ChannelPosError::ActorShutdown)
+    }
+
+    pub(crate) async fn sending_new_message(
+        &self,
+        message_id: Uuid,
+        request_pos: Option<(i32, i32)>,
+        preview_id: Option<Uuid>,
+    ) -> Result<PositionAllocation, ChannelPosError> {
+        let (tx, rx) = oneshot::channel();
+        self.send(PosAction::SendingNewMessage {
+            message_id,
+            request_pos,
+            preview_id,
+            respond_to: tx,
+        })
+        .await?;
+
+        tokio::time::timeout(ACTION_RESPONSE_TIMEOUT, rx)
+            .await
+            .map_err(|_| {
+                tracing::warn!(
+                    channel_id = %self.channel_id,
+                    message_id = %message_id,
+                    request_pos = ?request_pos,
+                    preview_id = ?preview_id,
+                    timeout_ms = ACTION_RESPONSE_TIMEOUT.as_millis(),
+                    "ChannelPosHandle::sending_new_message: timeout waiting actor response"
+                );
+                ChannelPosError::Timeout
+            })?
+            .map_err(|_| ChannelPosError::ActorShutdown)
+    }
+
+    pub(crate) async fn on_conflict(
+        &self,
+        message_id: Uuid,
+        tail: Option<TailPosition>,
+    ) -> Result<PositionAllocation, ChannelPosError> {
+        let (tx, rx) = oneshot::channel();
+        self.send(PosAction::OnConflict {
+            message_id,
+            tail,
+            respond_to: tx,
+        })
+        .await?;
+
+        tokio::time::timeout(ACTION_RESPONSE_TIMEOUT, rx)
+            .await
+            .map_err(|_| {
+                tracing::warn!(
+                    channel_id = %self.channel_id,
+                    message_id = %message_id,
+                    timeout_ms = ACTION_RESPONSE_TIMEOUT.as_millis(),
+                    "ChannelPosHandle::on_conflict: timeout waiting actor response"
+                );
+                ChannelPosError::Timeout
+            })?
+            .map_err(|_| ChannelPosError::ActorShutdown)
+    }
+
+    pub(crate) async fn apply_persisted_tail(
+        &self,
+        tail: Option<TailPosition>,
+    ) -> Result<(), ChannelPosError> {
+        let (tx, rx) = oneshot::channel();
+        self.send(PosAction::ApplyPersistedTail {
+            tail,
+            respond_to: tx,
+        })
+        .await?;
+        tokio::time::timeout(ACTION_RESPONSE_TIMEOUT, rx)
+            .await
+            .map_err(|_| {
+                tracing::warn!(
+                    channel_id = %self.channel_id,
+                    timeout_ms = ACTION_RESPONSE_TIMEOUT.as_millis(),
+                    "ChannelPosHandle::apply_persisted_tail: timeout waiting actor response"
+                );
+                ChannelPosError::Timeout
+            })?
+            .map_err(|_| ChannelPosError::ActorShutdown)
+    }
+
+    pub(crate) async fn is_initialized(&self) -> Result<bool, ChannelPosError> {
+        let (tx, rx) = oneshot::channel();
+        self.send(PosAction::IsInitialized { respond_to: tx })
+            .await?;
+        tokio::time::timeout(ACTION_RESPONSE_TIMEOUT, rx)
+            .await
+            .map_err(|_| {
+                tracing::warn!(
+                    channel_id = %self.channel_id,
+                    timeout_ms = ACTION_RESPONSE_TIMEOUT.as_millis(),
+                    "ChannelPosHandle::is_initialized: timeout waiting actor response"
+                );
+                ChannelPosError::Timeout
+            })?
+            .map_err(|_| ChannelPosError::ActorShutdown)
+    }
+
+    pub(crate) fn submitted(
+        &self,
+        item_id: Uuid,
+        pos_p: i32,
+        pos_q: i32,
+        old_item_id: Option<Uuid>,
+    ) {
+        self.send_nonblocking(PosAction::Submitted {
+            item_id,
+            pos_p,
+            pos_q,
+            old_item_id,
+        });
+    }
+
+    pub(crate) fn cancel(&self, item_id: Uuid) {
+        self.send_nonblocking(PosAction::Cancel { item_id });
+    }
+
+    fn shutdown(&self) {
+        self.send_nonblocking(PosAction::Shutdown);
+    }
+
+    fn tick(&self) -> bool {
+        if self.sender.is_closed() {
+            return false;
+        }
+        !matches!(
+            self.sender.try_send(PosAction::Tick),
+            Err(tokio::sync::mpsc::error::TrySendError::Closed(_))
+        )
+    }
 }
 
-pub struct ChannelPosManager {
-    actors: PapayaHashMap<Uuid, mpsc::Sender<PosAction>, RandomState>,
+pub(crate) struct ChannelPosManager {
+    actors: PapayaHashMap<Uuid, ChannelPosHandle, RandomState>,
 }
 
 impl ChannelPosManager {
-    pub fn new() -> Self {
+    fn new() -> Self {
         let manager = Self {
             actors: PapayaHashMap::builder()
                 .capacity(1024)
@@ -571,12 +734,13 @@ impl ChannelPosManager {
         );
         manager
     }
-    fn get_or_create_actor(&self, channel_id: Uuid) -> PosActionSender {
+
+    pub(crate) fn get_or_create_handle(&self, channel_id: Uuid) -> ChannelPosHandle {
         let actors = self.actors.pin();
         let result = actors.compute(channel_id, |entry| {
-            if let Some((_, sender)) = entry {
-                if !sender.is_closed() {
-                    return papaya::Operation::Abort(sender.clone());
+            if let Some((_, handle)) = entry {
+                if !handle.sender.is_closed() {
+                    return papaya::Operation::Abort(handle.clone());
                 }
             }
             let (sender, receiver) = mpsc::channel(256);
@@ -589,119 +753,23 @@ impl ChannelPosManager {
                 }
                 .instrument(span),
             );
-            papaya::Operation::Insert(sender)
+            papaya::Operation::Insert(ChannelPosHandle {
+                channel_id,
+                sender,
+                tail_sync: Arc::new(Mutex::new(())),
+            })
         });
-        let sender = match result {
-            papaya::Compute::Aborted(sender) => sender,
+        match result {
+            papaya::Compute::Aborted(handle) => handle,
             papaya::Compute::Updated {
-                new: (_, sender), ..
-            } => sender.clone(),
-            papaya::Compute::Inserted(_, sender) => sender.clone(),
+                new: (_, handle), ..
+            } => handle.clone(),
+            papaya::Compute::Inserted(_, handle) => handle.clone(),
             papaya::Compute::Removed(_, _) => unreachable!(),
-        };
-        PosActionSender { sender }
+        }
     }
 
-    pub async fn preview_pos(
-        &self,
-        channel_id: Uuid,
-        item_id: Uuid,
-        timeout: Duration,
-    ) -> Result<Rational32, ChannelPosError> {
-        let sender = self.get_or_create_actor(channel_id);
-        let (tx, rx) = oneshot::channel();
-
-        sender
-            .send(PosAction::PreviewPos {
-                item_id,
-                timeout,
-                respond_to: tx,
-            })
-            .await
-            .map_err(|_| ChannelPosError::ActorShutdown)?;
-
-        tokio::time::timeout(ACTION_RESPONSE_TIMEOUT, rx)
-            .await
-            .map_err(|_| {
-                tracing::warn!(
-                    channel_id = %channel_id,
-                    item_id = %item_id,
-                    timeout_ms = ACTION_RESPONSE_TIMEOUT.as_millis(),
-                    "ChannelPosManager::preview_pos: timeout waiting actor response"
-                );
-                ChannelPosError::Timeout
-            })?
-            .map_err(|_| ChannelPosError::ActorShutdown)?
-            .map_err(ChannelPosError::DatabaseError)
-    }
-
-    pub async fn sending_new_message(
-        &self,
-        channel_id: Uuid,
-        message_id: Uuid,
-        request_pos: Option<(i32, i32)>,
-        preview_id: Option<Uuid>,
-    ) -> Result<Rational32, ChannelPosError> {
-        let sender = self.get_or_create_actor(channel_id);
-        let (tx, rx) = oneshot::channel();
-        sender
-            .send(PosAction::SendingNewMessage {
-                message_id,
-                request_pos,
-                preview_id,
-                respond_to: tx,
-            })
-            .await
-            .map_err(|_| ChannelPosError::ActorShutdown)?;
-
-        tokio::time::timeout(ACTION_RESPONSE_TIMEOUT, rx)
-            .await
-            .map_err(|_| {
-                tracing::warn!(
-                    channel_id = %channel_id,
-                    message_id = %message_id,
-                    request_pos = ?request_pos,
-                    preview_id = ?preview_id,
-                    timeout_ms = ACTION_RESPONSE_TIMEOUT.as_millis(),
-                    "ChannelPosManager::sending_new_message: timeout waiting actor response"
-                );
-                ChannelPosError::Timeout
-            })?
-            .map_err(|_| ChannelPosError::ActorShutdown)?
-            .map_err(ChannelPosError::DatabaseError)
-    }
-
-    pub async fn on_conflict(
-        &self,
-        channel_id: Uuid,
-        message_id: Uuid,
-    ) -> Result<Rational32, ChannelPosError> {
-        let sender = self.get_or_create_actor(channel_id);
-        let (tx, rx) = oneshot::channel();
-        sender
-            .send(PosAction::OnConflict {
-                message_id,
-                respond_to: tx,
-            })
-            .await
-            .map_err(|_| ChannelPosError::ActorShutdown)?;
-
-        tokio::time::timeout(ACTION_RESPONSE_TIMEOUT, rx)
-            .await
-            .map_err(|_| {
-                tracing::warn!(
-                    channel_id = %channel_id,
-                    message_id = %message_id,
-                    timeout_ms = ACTION_RESPONSE_TIMEOUT.as_millis(),
-                    "ChannelPosManager::on_conflict: timeout waiting actor response"
-                );
-                ChannelPosError::Timeout
-            })?
-            .map_err(|_| ChannelPosError::ActorShutdown)?
-            .map_err(ChannelPosError::DatabaseError)
-    }
-
-    pub fn submitted(
+    pub(crate) fn submitted(
         &self,
         channel_id: Uuid,
         item_id: Uuid,
@@ -709,45 +777,28 @@ impl ChannelPosManager {
         pos_q: i32,
         old_item_id: Option<Uuid>,
     ) {
-        let sender = self.get_or_create_actor(channel_id);
-        sender.send_nonblocking(PosAction::Submitted {
-            item_id,
-            pos_p,
-            pos_q,
-            old_item_id,
-        });
+        self.get_or_create_handle(channel_id)
+            .submitted(item_id, pos_p, pos_q, old_item_id);
     }
 
-    pub fn cancel(&self, channel_id: Uuid, item_id: Uuid) {
-        let sender = self.get_or_create_actor(channel_id);
-        sender.send_nonblocking(PosAction::Cancel { item_id });
+    pub(crate) fn cancel(&self, channel_id: Uuid, item_id: Uuid) {
+        self.get_or_create_handle(channel_id).cancel(item_id);
     }
 
-    pub fn shutdown(&self, channel_id: Uuid) {
-        let sender = {
+    pub(crate) fn shutdown(&self, channel_id: Uuid) {
+        let handle = {
             let actors = self.actors.pin();
             actors.remove(&channel_id).cloned()
         };
 
-        if let Some(sender) = sender {
-            let sender = PosActionSender { sender };
-            sender.send_nonblocking(PosAction::Shutdown);
+        if let Some(handle) = handle {
+            handle.shutdown();
         }
     }
 
     fn tick(&self) {
         let actors = self.actors.pin();
-        actors.retain(|_, sender| {
-            if sender.is_closed() {
-                return false;
-            }
-            if let Err(tokio::sync::mpsc::error::TrySendError::Closed(_)) =
-                sender.try_send(PosAction::Tick)
-            {
-                return false;
-            }
-            true
-        });
+        actors.retain(|_, handle| handle.tick());
     }
 
     pub(crate) fn actor_count(&self) -> usize {
@@ -755,19 +806,20 @@ impl ChannelPosManager {
     }
 }
 
-pub static CHANNEL_POS_MANAGER: LazyLock<ChannelPosManager> = LazyLock::new(ChannelPosManager::new);
+pub(crate) static CHANNEL_POS_MANAGER: LazyLock<ChannelPosManager> =
+    LazyLock::new(ChannelPosManager::new);
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum PosItemState {
+enum PosItemState {
     LiveIn(std::time::Duration),
     Submitting,
     Submitted,
 }
 
 #[derive(Debug, Clone)]
-pub struct PosItem {
-    pub id: Uuid,
-    pub state: PosItemState,
+struct PosItem {
+    id: Uuid,
+    state: PosItemState,
     created: std::time::Instant,
 }
 
@@ -798,7 +850,7 @@ impl PosItem {
             state: PosItemState::Submitted,
         }
     }
-    pub fn pos_available(&self, now: Instant) -> bool {
+    fn pos_available(&self, now: Instant) -> bool {
         if self.id.is_nil() {
             return true;
         }
@@ -1064,19 +1116,176 @@ mod tests {
         }
     }
 
+    #[test]
+    fn submitted_observation_does_not_initialize_position_state() {
+        let mut state = ChannelPosState::new();
+        state.submitted(Uuid::new_v4(), 100, 1, None);
+
+        assert!(!state.is_initialized());
+        assert_eq!(
+            state.sending_new_message(Uuid::new_v4(), None, None),
+            PositionAllocation::NeedsPersistedTail
+        );
+    }
+
+    #[test]
+    fn client_requested_position_must_leave_allocation_headroom() {
+        assert!(check_request_pos((MAX_REQUEST_POSITION, 1)).is_ok());
+        assert!(check_request_pos((MAX_REQUEST_POSITION + 1, 1)).is_err());
+        assert!(check_request_pos((MAX_REQUEST_POSITION * 2, 2)).is_ok());
+        assert!(check_request_pos((MAX_REQUEST_POSITION * 2 + 1, 2)).is_err());
+        assert!(check_request_pos((i32::MAX, i32::MAX)).is_ok());
+        assert!(check_request_pos((i32::MAX, 1)).is_err());
+
+        assert!(check_pos((MAX_REQUEST_POSITION + 1, 1)).is_ok());
+        assert!(check_pos((i32::MAX, 1)).is_ok());
+    }
+
+    #[test]
+    fn next_position_uses_wide_arithmetic() {
+        let mut state = ChannelPosState::new();
+        state.apply_persisted_tail(Some(TailPosition {
+            id: Uuid::new_v4(),
+            pos_p: i32::MAX,
+            pos_q: 2,
+        }));
+
+        assert_eq!(
+            state.sending_new_message(Uuid::new_v4(), None, None),
+            PositionAllocation::Reserved(Rational32::new(1_073_741_825, 1))
+        );
+    }
+
+    #[test]
+    fn exhausted_position_range_does_not_wrap() {
+        let mut state = ChannelPosState::new();
+        state.apply_persisted_tail(Some(TailPosition {
+            id: Uuid::new_v4(),
+            pos_p: i32::MAX,
+            pos_q: 1,
+        }));
+
+        assert_eq!(
+            state.preview_pos(Uuid::new_v4(), Duration::from_secs(30)),
+            PositionAllocation::Exhausted
+        );
+    }
+
+    #[test]
+    fn persisted_tail_merges_with_observed_positions() {
+        let mut state = ChannelPosState::new();
+        let observed_id = Uuid::new_v4();
+        let reservation_id = Uuid::new_v4();
+        state.submitted(observed_id, 100, 1, None);
+        assert_eq!(
+            state.sending_new_message(reservation_id, Some((110, 1)), None),
+            PositionAllocation::Reserved(Rational32::new(110, 1))
+        );
+        state.apply_persisted_tail(Some(TailPosition {
+            id: Uuid::new_v4(),
+            pos_p: 80,
+            pos_q: 1,
+        }));
+        state.delete_by_id(observed_id);
+        state.delete_by_id(reservation_id);
+
+        assert!(state.is_initialized());
+        assert_eq!(
+            state.sending_new_message(Uuid::new_v4(), None, None),
+            PositionAllocation::Reserved(Rational32::new(111, 1))
+        );
+    }
+
+    #[test]
+    fn empty_channel_tail_remains_monotonic_after_cancel() {
+        let mut state = ChannelPosState::new();
+        state.apply_persisted_tail(None);
+        let message_id = Uuid::new_v4();
+        assert_eq!(
+            state.sending_new_message(message_id, None, None),
+            PositionAllocation::Reserved(Rational32::new(43, 1))
+        );
+        state.delete_by_id(message_id);
+
+        assert_eq!(
+            state.preview_pos(Uuid::new_v4(), Duration::from_secs(30)),
+            PositionAllocation::Reserved(Rational32::new(44, 1))
+        );
+    }
+
+    #[test]
+    fn submitting_timeout_does_not_reuse_position() {
+        let mut state = ChannelPosState::new();
+        state.apply_persisted_tail(None);
+        assert_eq!(
+            state.sending_new_message(Uuid::new_v4(), None, None),
+            PositionAllocation::Reserved(Rational32::new(43, 1))
+        );
+
+        let after_timeout = Instant::now() + SUBMITTING_TIMEOUT + Duration::from_secs(1);
+        state
+            .positions
+            .retain(|_, pos_item| !pos_item.pos_available(after_timeout));
+
+        assert_eq!(
+            state.sending_new_message(Uuid::new_v4(), None, None),
+            PositionAllocation::Reserved(Rational32::new(44, 1))
+        );
+    }
+
+    #[test]
+    fn conflict_reconciliation_advances_from_database_tail() {
+        let mut state = ChannelPosState::new();
+        state.apply_persisted_tail(None);
+        let message_id = Uuid::new_v4();
+        assert_eq!(
+            state.sending_new_message(message_id, None, None),
+            PositionAllocation::Reserved(Rational32::new(43, 1))
+        );
+
+        let reconciled = state.on_conflict(
+            message_id,
+            Some(TailPosition {
+                id: Uuid::new_v4(),
+                pos_p: 75,
+                pos_q: 1,
+            }),
+        );
+        assert_eq!(
+            reconciled,
+            PositionAllocation::Reserved(Rational32::new(76, 1))
+        );
+    }
+
     #[tokio::test]
-    async fn test_actor_basic_operations() {
-        let manager = ChannelPosManager::new();
+    async fn shutdown_isolates_actor_generation() {
         let channel_id = Uuid::new_v4();
-        let item_id = Uuid::new_v4();
+        let old_handle = CHANNEL_POS_MANAGER.get_or_create_handle(channel_id);
+        old_handle
+            .apply_persisted_tail(None)
+            .await
+            .expect("failed to initialize old actor");
 
-        // Test cancel operation
-        manager.cancel(channel_id, item_id);
+        CHANNEL_POS_MANAGER.shutdown(channel_id);
+        let new_handle = CHANNEL_POS_MANAGER.get_or_create_handle(channel_id);
 
-        // Test submitted operation
-        manager.submitted(channel_id, item_id, 42, 1, None);
+        assert!(
+            old_handle
+                .apply_persisted_tail(Some(TailPosition {
+                    id: Uuid::new_v4(),
+                    pos_p: 100,
+                    pos_q: 1,
+                }))
+                .await
+                .is_err()
+        );
+        assert!(
+            !new_handle
+                .is_initialized()
+                .await
+                .expect("new actor shut down")
+        );
 
-        // Test reset operation
-        manager.shutdown(channel_id);
+        CHANNEL_POS_MANAGER.shutdown(channel_id);
     }
 }

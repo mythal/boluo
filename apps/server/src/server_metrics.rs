@@ -101,7 +101,7 @@ pub fn update_runtime_metrics() {
     gauge!("boluo_server_events_broadcast_mailboxes")
         .set(crate::events::broadcast_table_len() as f64);
     gauge!("boluo_server_events_token_store_entries").set(crate::events::token_store_len() as f64);
-    gauge!("boluo_server_pos_actors").set(crate::pos::CHANNEL_POS_MANAGER.actor_count() as f64);
+    gauge!("boluo_server_pos_actors").set(crate::messages::MESSAGE_POSITIONS.actor_count() as f64);
 }
 
 pub fn start_update_metrics(pool: sqlx::PgPool, redis: Option<redis::aio::ConnectionManager>) {

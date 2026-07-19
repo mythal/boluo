@@ -245,7 +245,7 @@ async fn move_between(
             "Only the master can move other's messages.".to_string(),
         ));
     }
-    crate::pos::CHANNEL_POS_MANAGER.submitted(
+    crate::messages::MESSAGE_POSITIONS.submitted(
         channel_id,
         message_id,
         message.pos_p,
@@ -316,7 +316,7 @@ async fn delete(
         message.pos,
     )
     .await;
-    crate::pos::CHANNEL_POS_MANAGER.cancel(message.channel_id, message.id);
+    crate::messages::MESSAGE_POSITIONS.cancel(message.channel_id, message.id);
     metrics::counter!("boluo_server_messages_deleted_total").increment(1);
     Ok(message)
 }

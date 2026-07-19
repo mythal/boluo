@@ -107,8 +107,9 @@ async fn router(
     table!("/api/characters", characters::router);
     table!("/api/spaces", spaces::router);
     table!("/api/notes", notes::router);
-    table!("/api/ev", events::router);
+    // Keep the longer prefix first because "/api/events" also starts with "/api/ev".
     table!("/api/events", events::router);
+    table!("/api/ev", events::router);
     missing()
 }
 

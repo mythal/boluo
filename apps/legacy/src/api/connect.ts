@@ -25,5 +25,5 @@ export const connect = (
   }
   if (userId != null) paramsObject.userId = userId;
   const params = new URLSearchParams(paramsObject);
-  return new WebSocket(`${baseUrl}/api/ev/connect?${params.toString()}`);
+  return new WebSocket(`${baseUrl}/api/updates/connect?${params.toString()}`);
 };

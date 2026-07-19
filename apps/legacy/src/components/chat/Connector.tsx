@@ -46,7 +46,7 @@ async function getConnectionToken(
 ): Promise<
   { token: string; issuedAt: number } | 'NETWORK_ERROR' | 'UNAUTHENTICATED' | 'UNEXPECTED'
 > {
-  const tokenResult = await get('/events/token', { spaceId, userId });
+  const tokenResult = await get('/updates/token', { spaceId, userId });
   if (tokenResult.isOk) {
     return { token: tokenResult.value.token, issuedAt: tokenResult.value.issuedAt };
   }

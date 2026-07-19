@@ -140,7 +140,7 @@ const getToken = async (
     if (sleepMs > 0) {
       await sleep(sleepMs);
     }
-    const tokenResult = await get('/events/token', makeToken);
+    const tokenResult = await get('/updates/token', makeToken);
     if (tokenResult.isOk) {
       return { token: tokenResult.some.token, issuedAt: tokenResult.some.issuedAt };
     }
@@ -181,7 +181,7 @@ const buildWebsocket = (
   paramsObject.encoding = encoding;
   if (userId != null) paramsObject.userId = userId;
   const params = new URLSearchParams(paramsObject);
-  const url = `${baseUrl}/ev/connect?${params.toString()}`;
+  const url = `${baseUrl}/updates/connect?${params.toString()}`;
   const socket = new WebSocket(url);
   socket.binaryType = 'arraybuffer';
   return socket;

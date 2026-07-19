@@ -311,7 +311,7 @@ export function get(path: '/channels/export', query: Export): Promise<AppResult<
 export function get(path: '/messages/query', query: IdQuery): Promise<AppResult<Message | null>>;
 export function get(path: '/messages/by_channel', query: ByChannel): Promise<AppResult<Message[]>>;
 export function get(
-  path: '/events/token',
+  path: '/updates/token',
   query: MakeToken,
 ): Promise<AppResult<{ token: string; issuedAt: number }>>;
 

@@ -30,7 +30,7 @@ pub async fn get() -> sqlx::Pool<sqlx::Postgres> {
                 })
             })
             .max_connections(32)
-            .min_connections(4)
+            .min_connections(16)
             .acquire_slow_threshold(ACQUIRE_SLOW_THRESHOLD)
             .acquire_timeout(ACQUIRE_TIMEOUT)
             .max_lifetime(Some(LIFETIME))

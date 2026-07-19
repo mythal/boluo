@@ -91,31 +91,28 @@ async fn send(
         .or_no_permission()?;
         (channel, channel_member, space_member)
     };
-    let message = {
-        let mut conn = ctx.db.acquire().await?;
-        Message::create(
-            &mut conn,
-            preview_id,
-            channel_id,
-            channel.space_id,
-            &session.user_id,
-            &channel_member.character_name,
-            &name,
-            &text,
-            entities,
-            in_game,
-            is_action,
-            channel_member.is_master,
-            whisper_to_users,
-            media_id,
-            request_pos,
-            color,
-        )
-        .await
-        .inspect_err(|_| {
-            metrics::counter!("boluo_server_messages_created_failed_total").increment(1);
-        })?
-    };
+    let message = Message::create(
+        &ctx.db,
+        preview_id,
+        channel_id,
+        channel.space_id,
+        &session.user_id,
+        &channel_member.character_name,
+        &name,
+        &text,
+        entities,
+        in_game,
+        is_action,
+        channel_member.is_master,
+        whisper_to_users,
+        media_id,
+        request_pos,
+        color,
+    )
+    .await
+    .inspect_err(|_| {
+        metrics::counter!("boluo_server_messages_created_failed_total").increment(1);
+    })?;
     notify::space_activity(&ctx.space_store, channel.space_id, Some(message.created));
     Update::new_message(space_member.space_id, message.clone(), preview_id).await;
 

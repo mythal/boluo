@@ -214,7 +214,7 @@ impl Message {
     }
 
     pub async fn create(
-        conn: &mut sqlx::PgConnection,
+        pool: &sqlx::PgPool,
         preview_id: Option<Uuid>,
         channel_id: Uuid,
         _space_id: Uuid,
@@ -263,7 +263,7 @@ impl Message {
             pos.denom(),
             color
         )
-        .fetch_one(&mut *conn)
+        .fetch_one(pool)
         .await;
 
         let is_unique_violation = if let Err(err) = &row {
@@ -304,7 +304,7 @@ impl Message {
                 new_pos.denom(),
                 color
             )
-            .fetch_one(&mut *conn)
+            .fetch_one(pool)
             .await;
             let is_unique_violation = if let Err(err) = &row {
                 err.as_database_error()
@@ -690,11 +690,10 @@ mod tests {
             .await
             .expect("failed to add bystander to channel");
 
-        let mut conn = pool.acquire().await.expect("failed to acquire connection");
         let text = "Hello world";
         let entities = sample_entities(text);
         let message = Message::create(
-            &mut conn,
+            &pool,
             None,
             channel.id,
             space.id,
@@ -718,12 +717,10 @@ mod tests {
         assert_eq!(message.text, text);
         assert_eq!(message.rev, 0);
         let pos_one = (message.pos_p, message.pos_q);
-        drop(conn);
 
-        let mut conn = pool.acquire().await.expect("failed to acquire connection");
         let whisper_text = "Secret";
         let whisper_message = Message::create(
-            &mut conn,
+            &pool,
             None,
             channel.id,
             space.id,
@@ -743,7 +740,6 @@ mod tests {
         .await
         .expect("failed to create whisper message");
         assert!(whisper_message.text.is_empty());
-        drop(conn);
 
         let fetched = Message::get(&pool, &message.id, Some(&owner.id))
             .await
@@ -896,9 +892,8 @@ mod tests {
         let space = create_test_space(&pool, &owner, "message_pos").await;
         let channel = create_test_channel(&pool, &space, &owner, "Moves").await;
 
-        let mut conn = pool.acquire().await.expect("failed to acquire connection");
         let msg1 = Message::create(
-            &mut conn,
+            &pool,
             None,
             channel.id,
             space.id,
@@ -918,7 +913,7 @@ mod tests {
         .await
         .expect("failed to create message 1");
         let msg2 = Message::create(
-            &mut conn,
+            &pool,
             None,
             channel.id,
             space.id,
@@ -938,7 +933,7 @@ mod tests {
         .await
         .expect("failed to create message 2");
         let msg3 = Message::create(
-            &mut conn,
+            &pool,
             None,
             channel.id,
             space.id,
@@ -957,7 +952,6 @@ mod tests {
         )
         .await
         .expect("failed to create message 3");
-        drop(conn);
 
         let max_pos = Message::max_pos(&pool, &channel.id)
             .await
@@ -1017,9 +1011,8 @@ mod tests {
         let source_channel = create_test_channel(&pool, &space, &owner, "Source").await;
         let other_channel = create_test_channel(&pool, &space, &owner, "Other").await;
 
-        let mut conn = pool.acquire().await.expect("failed to acquire connection");
         let source_message = Message::create(
-            &mut conn,
+            &pool,
             None,
             source_channel.id,
             space.id,
@@ -1039,7 +1032,7 @@ mod tests {
         .await
         .expect("failed to create source message");
         let other_a = Message::create(
-            &mut conn,
+            &pool,
             None,
             other_channel.id,
             space.id,
@@ -1059,7 +1052,7 @@ mod tests {
         .await
         .expect("failed to create other message A");
         let other_b = Message::create(
-            &mut conn,
+            &pool,
             None,
             other_channel.id,
             space.id,
@@ -1079,6 +1072,7 @@ mod tests {
         .await
         .expect("failed to create other message B");
 
+        let mut conn = pool.acquire().await.expect("failed to acquire connection");
         let moved = Message::move_between(
             &mut conn,
             &source_message.id,
@@ -1110,10 +1104,9 @@ mod tests {
         let space = create_test_space(&pool, &owner, "message_edit_conflict").await;
         let channel = create_test_channel(&pool, &space, &owner, "Two Tabs").await;
 
-        let mut conn = pool.acquire().await.expect("failed to acquire connection");
         let text = "Original text";
         let message = Message::create(
-            &mut conn,
+            &pool,
             None,
             channel.id,
             space.id,
@@ -1132,7 +1125,6 @@ mod tests {
         )
         .await
         .expect("failed to create message");
-        drop(conn);
         let stale_modified = message.modified;
 
         // Tab A submits first, using the `modified` it observed when it started editing.

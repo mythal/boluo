@@ -1,6 +1,6 @@
 import { css } from '@emotion/react';
 import React from 'react';
-import Cancel from '../../../assets/icons/cancel.svg';
+import Cancel from '@boluo/icons/legacy/Cancel';
 import { useChannelId } from '../../../hooks/useChannelId';
 import { useDispatch } from '../../../store';
 import ChatItemToolbarButton from '../ChatItemToolbarButton';

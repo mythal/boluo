@@ -1,9 +1,9 @@
 import styled from '@emotion/styled';
 import * as React from 'react';
 import { useCallback } from 'react';
-import BroadcastTower from '../../../assets/icons/broadcast-tower.svg';
-import Running from '../../../assets/icons/running.svg';
-import TheaterMasks from '../../../assets/icons/theater-masks.svg';
+import BroadcastTower from '@boluo/icons/legacy/BroadcastTower';
+import Running from '@boluo/icons/legacy/Running';
+import TheaterMasks from '@boluo/icons/legacy/TheaterMasks';
 import { useChannelId } from '../../../hooks/useChannelId';
 import { useDispatch, useSelector } from '../../../store';
 import { flexRowReverse, mR } from '../../../styles/atoms';

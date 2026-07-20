@@ -7,6 +7,7 @@
   "dependencies": {
     "@boluo/api": "0.0.0",
     "@boluo/backend-proxy": "0.0.0",
+    "@boluo/icons": "0.0.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@hello-pangea/dnd": "^18.0.1",
@@ -44,8 +45,7 @@
     "@vitejs/plugin-react": "^6.0.3",
     "eslint": "^10.6.0",
     "typescript": "^6",
-    "vite": "^8.1.4",
-    "vite-plugin-svgr": "^5.2.0"
+    "vite": "^8.1.4"
   },
   "private": true,
   "scripts": {

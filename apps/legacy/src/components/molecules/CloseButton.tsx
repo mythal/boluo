@@ -1,6 +1,6 @@
 import { css } from '@emotion/react';
 import * as React from 'react';
-import X from '../../assets/icons/x.svg';
+import X from '@boluo/icons/legacy/X';
 import { closeButtonActiveColor, closeButtonHoverColor, textColor } from '../../styles/colors';
 import Icon from '../atoms/Icon';
 

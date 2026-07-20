@@ -1,11 +1,11 @@
 import * as React from 'react';
 import { useRef, useState } from 'react';
 import { chatInGameFilter, chatNoneFilter, chatOutGameFilter } from '../../actions';
-import Check from '../../assets/icons/check.svg';
-import Circle from '../../assets/icons/circle.svg';
-import DotCircle from '../../assets/icons/dot-circle.svg';
-import FilterIcon from '../../assets/icons/filter.svg';
-import Uncheck from '../../assets/icons/uncheck.svg';
+import Check from '@boluo/icons/legacy/Check';
+import Circle from '@boluo/icons/legacy/Circle';
+import DotCircle from '@boluo/icons/legacy/DotCircle';
+import FilterIcon from '@boluo/icons/legacy/Filter';
+import Uncheck from '@boluo/icons/legacy/Uncheck';
 import { useChannelId } from '../../hooks/useChannelId';
 import { useDispatch, useSelector } from '../../store';
 import Icon from '../atoms/Icon';

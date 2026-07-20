@@ -11,7 +11,7 @@ import {
   type SpaceMember,
   type SpaceMemberWithUser,
 } from '../../api/spaces';
-import EarthCrack from '../../assets/icons/earth-crack.svg';
+import EarthCrack from '@boluo/icons/legacy/EarthCrack';
 import { useDispatch } from '../../store';
 import {
   alignRight,

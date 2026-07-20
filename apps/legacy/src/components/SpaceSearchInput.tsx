@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useEffect, useRef, useState } from 'react';
-import SearchSpaces from '../assets/icons/search-spaces.svg';
+import SearchSpaces from '@boluo/icons/legacy/SearchSpaces';
 import { flex, mR } from '../styles/atoms';
 import Icon from './atoms/Icon';
 import Input from './atoms/Input';

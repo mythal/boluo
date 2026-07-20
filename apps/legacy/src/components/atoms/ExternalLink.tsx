@@ -1,5 +1,5 @@
 import * as React from 'react';
-import ExternalLinkIcon from '../../assets/icons/external-link.svg';
+import ExternalLinkIcon from '@boluo/icons/legacy/ExternalLink';
 import Icon from '../../components/atoms/Icon';
 import { p } from '../../styles/atoms';
 

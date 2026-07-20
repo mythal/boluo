@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { type AppError, errorText } from '../../api/error';
 import { post } from '../../api/request';
 import { type RegisterData } from '../../api/users';
-import SignUpIcon from '../../assets/icons/sign-up.svg';
+import SignUpIcon from '@boluo/icons/legacy/SignUp';
 import Icon from '../../components/atoms/Icon';
 import { useTitle } from '../../hooks/useTitle';
 import {

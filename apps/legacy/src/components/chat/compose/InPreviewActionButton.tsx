@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useCallback } from 'react';
-import CommentSolid from '../../../assets/icons/comment-solid.svg';
-import Running from '../../../assets/icons/running.svg';
+import CommentSolid from '@boluo/icons/legacy/CommentSolid';
+import Running from '@boluo/icons/legacy/Running';
 import { useChannelId } from '../../../hooks/useChannelId';
 import { useDispatch, useSelector } from '../../../store';
 import ChatItemToolbarButton from '../ChatItemToolbarButton';

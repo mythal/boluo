@@ -4,7 +4,7 @@ import Prando from 'prando';
 import * as React from 'react';
 import { useRef } from 'react';
 import { Link } from 'react-router-dom';
-import Gamemaster from '../../assets/icons/gamemaster.svg';
+import Gamemaster from '@boluo/icons/legacy/Gamemaster';
 import { useChannelId } from '../../hooks/useChannelId';
 import { useSelector } from '../../store';
 import { fontBold, inline, mL, mR, relative, textSm } from '../../styles/atoms';

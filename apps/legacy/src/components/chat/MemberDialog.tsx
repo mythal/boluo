@@ -4,7 +4,7 @@ import * as React from 'react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { post } from '../../api/request';
-import UserMinus from '../../assets/icons/user-minus.svg';
+import UserMinus from '@boluo/icons/legacy/UserMinus';
 import { userDialogAtom } from '../../states/userDialog';
 import { useDispatch, useSelector } from '../../store';
 import { color, flex, fontBold, mB, mR, mT, pX, roundedSm, textXl } from '../../styles/atoms';

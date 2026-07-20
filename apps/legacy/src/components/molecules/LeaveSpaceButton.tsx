@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useState } from 'react';
 import { post } from '../../api/request';
-import DoorOpen from '../../assets/icons/door-open.svg';
+import DoorOpen from '@boluo/icons/legacy/DoorOpen';
 import Dialog from '../../components/molecules/Dialog';
 import { useDispatch, useSelector } from '../../store';
 import { type Id } from '../../utils/id';

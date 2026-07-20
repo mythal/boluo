@@ -80,7 +80,7 @@
       "outputs": [".next/**", "!.next/cache/**"]
     },
     "legacy#build": {
-      "dependsOn": ["@boluo/backend-proxy#build"],
+      "dependsOn": ["@boluo/backend-proxy#build", "@boluo/icons#generate"],
       "inputs": [
         "$TURBO_DEFAULT$",
         ".env",

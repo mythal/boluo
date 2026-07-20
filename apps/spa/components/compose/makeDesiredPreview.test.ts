@@ -81,6 +81,26 @@ test('makes a preview when the parse result matches the current source', () => {
   assert.equal(desired?.preview.text, 'current source');
 });
 
+test('makes a cleared preview for the initial empty parse result', () => {
+  const compose = makeInitialComposeState();
+  const parsed = {
+    ...composeInitialParseResult,
+    source: compose.source,
+  };
+
+  const desired = makeDesiredPreview({
+    channelId: 'channel',
+    nickname: 'Alice',
+    defaultCharacterName: '',
+    defaultInGame: false,
+    compose,
+    parsed,
+  });
+
+  assert.equal(desired?.preview.text, '');
+  assert.deepEqual(desired?.preview.entities, []);
+});
+
 test('hides non-broadcast content in the preview payload', () => {
   const compose = {
     ...makeInitialComposeState(),

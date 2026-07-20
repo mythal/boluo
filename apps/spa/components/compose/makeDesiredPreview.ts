@@ -46,9 +46,9 @@ export const makeDesiredPreview = ({
   const inGame = parsedCharacterName ? true : (parsedInGame ?? defaultInGame);
   const inGameName = parsedCharacterName || defaultCharacterName;
   const shouldHideContent = !broadcast || whisperToUsernames != null;
-  const text: string | null = shouldHideContent ? null : parsed.text;
-  const entities = shouldHideContent ? [] : parsed.entities;
-  const clearedPreview = isClearedPreviewContent({ text, entities });
+  const clearedPreview = isClearedPreviewContent(parsed);
+  const text: string | null = clearedPreview ? '' : shouldHideContent ? null : parsed.text;
+  const entities = clearedPreview || shouldHideContent ? [] : parsed.entities;
   const preview: PreviewPost = {
     id: previewId,
     channelId,
@@ -56,9 +56,9 @@ export const makeDesiredPreview = ({
     mediaId: null,
     inGame,
     isAction,
-    text: clearedPreview ? '' : text,
+    text,
     clear: false,
-    entities: clearedPreview ? [] : entities,
+    entities,
     editFor: null,
     edit,
   };

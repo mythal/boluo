@@ -5,6 +5,7 @@ postgrestools.jsonc
 storybook-static/
 docker-compose.override.yml
 *.dump
+*.tsbuildinfo
 .tmp/
 docs/memory/
 

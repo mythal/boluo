@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE\n    users\nSET\n    PASSWORD = crypt($2, gen_salt('bf'))\nWHERE\n    id = $1\n    AND deactivated = FALSE\nRETURNING id;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "3ffa7e8a67a81a6d8d12d348b8b6e8e31ccadba6f26ad47830e020830c4ce322"
+}

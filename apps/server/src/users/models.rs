@@ -9,6 +9,8 @@ use crate::error::ModelError;
 use crate::ttl::{Lifespan, Mortal, fetch_entry, fetch_entry_optional, hour};
 use crate::utils::merge_blank;
 
+const RESET_TOKEN_TTL_SECONDS: i64 = 60 * 60;
+
 #[derive(Debug, Serialize, Clone, sqlx::Type, specta::Type)]
 #[sqlx(type_name = "users")]
 #[serde(rename_all = "camelCase")]
@@ -198,31 +200,58 @@ impl User {
         db: T,
         token: Uuid,
     ) -> Result<User, sqlx::Error> {
-        let user: User = query_file_scalar!("sql/users/get_by_reset_token.sql", token)
-            .fetch_one(db)
-            .await?;
+        let user: User = query_file_scalar!(
+            "sql/users/get_by_reset_token.sql",
+            token,
+            RESET_TOKEN_TTL_SECONDS
+        )
+        .fetch_one(db)
+        .await?;
         CACHE.User.insert(user.id, user.clone().into());
         Ok(user)
     }
 
     pub async fn reset_password(
-        db: &mut sqlx::PgConnection,
-        id: Uuid,
+        db: &sqlx::PgPool,
         token: Uuid,
         password: &str,
     ) -> Result<(), ModelError> {
         use crate::validators::PASSWORD;
 
         PASSWORD.run(password)?;
-        sqlx::query_file!("sql/users/reset_password.sql", id, password)
-            .execute(&mut *db)
+
+        let mut transaction = db.begin().await?;
+        let id = sqlx::query_file_scalar!("sql/users/lock_reset_token_user.sql", token)
+            .fetch_optional(&mut *transaction)
             .await?;
-        sqlx::query_file!("sql/users/reset_token_use.sql", id, token)
-            .execute(&mut *db)
+        let Some(id) = id else {
+            return Err(ModelError::NotFound("password reset token"));
+        };
+
+        let consumed = sqlx::query_file_scalar!(
+            "sql/users/reset_token_use.sql",
+            token,
+            id,
+            RESET_TOKEN_TTL_SECONDS
+        )
+        .fetch_optional(&mut *transaction)
+        .await?;
+        if consumed.is_none() {
+            return Err(ModelError::NotFound("password reset token"));
+        }
+
+        let updated = sqlx::query_file_scalar!("sql/users/reset_password.sql", id, password)
+            .fetch_optional(&mut *transaction)
             .await?;
+        if updated.is_none() {
+            return Err(ModelError::NotFound("password reset token"));
+        }
+
         sqlx::query_file!("sql/users/reset_token_invalidate.sql", id)
-            .execute(&mut *db)
+            .execute(&mut *transaction)
             .await?;
+        transaction.commit().await?;
+
         CACHE.invalidate(CacheType::User, id).await;
         Ok(())
     }
@@ -675,12 +704,9 @@ mod tests {
             .expect("fetch by reset token failed");
         assert_eq!(token_user.id, user.id);
 
-        {
-            let mut conn = pool.acquire().await.expect("failed to acquire connection");
-            User::reset_password(&mut conn, user.id, token, new_password)
-                .await
-                .expect("reset password failed");
-        }
+        User::reset_password(&pool, token, new_password)
+            .await
+            .expect("reset password failed");
 
         let login_new_password = User::login(&pool, &username, new_password)
             .await
@@ -694,6 +720,123 @@ mod tests {
         assert!(
             login_old_password.is_none(),
             "old password should no longer authenticate"
+        );
+
+        assert!(
+            User::get_by_reset_token(&pool, token).await.is_err(),
+            "used token must no longer be valid"
+        );
+        let reused_token_error = User::reset_password(&pool, token, "ResetPass789!")
+            .await
+            .expect_err("used token must not be reusable");
+        assert!(
+            matches!(
+                reused_token_error,
+                ModelError::NotFound("password reset token")
+            ),
+            "used token must return the invalid-token API error"
+        );
+    }
+
+    #[sqlx::test(migrator = "crate::db::MIGRATOR")]
+    async fn db_test_user_reset_password_rejects_expired_token(pool: sqlx::PgPool) {
+        let (email, username) = unique_identity("expired_reset_", "expiredreset_");
+        let user = User::register(
+            &pool,
+            &email,
+            &username,
+            "Expired Reset User",
+            "ResetPass123!",
+        )
+        .await
+        .expect("user registration failed");
+        let token = User::generate_reset_token(&pool, user.id)
+            .await
+            .expect("generate reset token failed");
+
+        sqlx::query!(
+            "UPDATE reset_tokens SET created = now() - interval '1 hour 1 second' WHERE token = $1",
+            token
+        )
+        .execute(&pool)
+        .await
+        .expect("expire reset token failed");
+
+        assert!(
+            User::get_by_reset_token(&pool, token).await.is_err(),
+            "expired token must fail validation"
+        );
+        let expired_token_error = User::reset_password(&pool, token, "ResetPass456!")
+            .await
+            .expect_err("expired token must not reset the password");
+        assert!(
+            matches!(
+                expired_token_error,
+                ModelError::NotFound("password reset token")
+            ),
+            "expired token must return the invalid-token API error"
+        );
+        assert!(
+            User::login(&pool, &username, "ResetPass123!")
+                .await
+                .expect("login query failed")
+                .is_some(),
+            "failed reset must leave the original password unchanged"
+        );
+    }
+
+    #[sqlx::test(migrator = "crate::db::MIGRATOR")]
+    async fn db_test_user_reset_password_consumes_token_once_concurrently(pool: sqlx::PgPool) {
+        let (email, username) = unique_identity("concurrent_reset_", "concurrentreset_");
+        let user = User::register(
+            &pool,
+            &email,
+            &username,
+            "Concurrent Reset User",
+            "ResetPass123!",
+        )
+        .await
+        .expect("user registration failed");
+        let token = User::generate_reset_token(&pool, user.id)
+            .await
+            .expect("generate reset token failed");
+
+        let first_pool = pool.clone();
+        let second_pool = pool.clone();
+        let (first, second) = tokio::join!(
+            User::reset_password(&first_pool, token, "ResetPass456!"),
+            User::reset_password(&second_pool, token, "ResetPass789!")
+        );
+
+        assert_eq!(
+            usize::from(first.is_ok()) + usize::from(second.is_ok()),
+            1,
+            "exactly one concurrent reset must consume the token"
+        );
+
+        let successful_password = if first.is_ok() {
+            "ResetPass456!"
+        } else {
+            "ResetPass789!"
+        };
+        let rejected_password = if first.is_ok() {
+            "ResetPass789!"
+        } else {
+            "ResetPass456!"
+        };
+        assert!(
+            User::login(&pool, &username, successful_password)
+                .await
+                .expect("login query failed")
+                .is_some(),
+            "the successful reset must set its password"
+        );
+        assert!(
+            User::login(&pool, &username, rejected_password)
+                .await
+                .expect("login query failed")
+                .is_none(),
+            "the rejected reset must not overwrite the password"
         );
     }
 

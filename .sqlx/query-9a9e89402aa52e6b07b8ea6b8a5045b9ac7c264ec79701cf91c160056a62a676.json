@@ -1,0 +1,30 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE reset_tokens\nSET\n    used_at = now()\nWHERE\n    token = $1\n    AND user_id = $2\n    AND used_at IS NULL\n    AND invalidated_at IS NULL\n    AND created > now() - ($3::bigint * interval '1 second')\nRETURNING user_id;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "reset_tokens",
+            "name": "user_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "9a9e89402aa52e6b07b8ea6b8a5045b9ac7c264ec79701cf91c160056a62a676"
+}

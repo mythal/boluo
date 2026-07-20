@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE reset_tokens SET created = now() - interval '1 hour 1 second' WHERE token = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "09785326b681cad9035262d73f1c15d48c71117053a25d7c6d5637096fc86343"
+}

@@ -164,6 +164,8 @@ pub struct ValidationFailed(pub &'static str);
 pub enum ModelError {
     #[error("{0}")]
     Validation(#[from] ValidationFailed),
+    #[error("{0} not found")]
+    NotFound(&'static str),
     #[error("{0}")]
     Db(sqlx::Error),
     #[error("{0} already exists")]
@@ -176,6 +178,7 @@ impl From<ModelError> for AppError {
     fn from(e: ModelError) -> Self {
         match e {
             ModelError::Validation(e) => AppError::Validation(e),
+            ModelError::NotFound(resource) => AppError::NotFound(resource),
             ModelError::Db(source) => AppError::Db { source },
             ModelError::Conflict(type_) => AppError::Conflict(type_),
             ModelError::Unexpected(e) => AppError::Unexpected(e),
@@ -352,5 +355,18 @@ pub fn row_not_found<T>(e: sqlx::Error) -> Result<Option<T>, sqlx::Error> {
         Ok(None)
     } else {
         Err(e)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn model_not_found_maps_to_not_found_api_error() {
+        let error = AppError::from(ModelError::NotFound("password reset token"));
+
+        assert_eq!(error.status_code(), StatusCode::NOT_FOUND);
+        assert_eq!(error.error_code(), "NOT_FOUND");
     }
 }

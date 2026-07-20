@@ -35,16 +35,16 @@ export default meta;
 type Story = StoryObj<typeof MessageBox>;
 
 interface DemoChildrenOptions {
-  continued?: boolean;
+  shouldConcealNameOnLeft?: boolean;
   body?: ReactNode;
 }
 
-const getChildren = ({ continued = false, body }: DemoChildrenOptions = {}) => (
+const getChildren = ({ shouldConcealNameOnLeft = false, body }: DemoChildrenOptions = {}) => (
   <>
     <MessageHandleBox>
       <MoveVertical className="inline text-xs" />
     </MessageHandleBox>
-    <MessageNamePlate continued={continued}>
+    <MessageNamePlate shouldConcealNameOnLeft={shouldConcealNameOnLeft}>
       <NameBox color="#3b82f6">ほむら</NameBox>
     </MessageNamePlate>
     <MessageContentBox>
@@ -101,7 +101,7 @@ export const Continued: Story = {
   args: {
     continued: true,
     children: getChildren({
-      continued: true,
+      shouldConcealNameOnLeft: true,
     }),
   },
 };

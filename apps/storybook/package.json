@@ -12,6 +12,7 @@
   "devDependencies": {
     "@boluo/tailwind-config": "0.0.0",
     "@eslint/js": "^10.0.1",
+    "@formatjs/unplugin": "^1.2.3",
     "@storybook/addon-docs": "^10.4.6",
     "@storybook/addon-themes": "^10.4.6",
     "@storybook/react-vite": "^10.4.6",
@@ -19,7 +20,6 @@
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.3",
-    "babel-plugin-formatjs": "^11.3.14",
     "eslint": "^10.6.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.3",
@@ -35,6 +35,7 @@
   "private": true,
   "scripts": {
     "build": "storybook build --disable-telemetry",
+    "check": "tsc --build",
     "dev": "vite",
     "lint": "eslint .",
     "storybook": "storybook dev -p 6006 --disable-telemetry --no-version-updates --no-open"

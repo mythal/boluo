@@ -364,74 +364,96 @@ impl Message {
         self.entities = Default::default();
     }
 
-    pub async fn move_above(
-        db: &mut sqlx::PgConnection,
-        channel_id: &Uuid,
+    pub(super) async fn move_between(
+        db: &sqlx::PgPool,
+        user_id: Uuid,
+        id: &Uuid,
+        channel_id: Uuid,
+        range: (Option<(i32, i32)>, Option<(i32, i32)>),
+        expect_pos: Option<(i32, i32)>,
+    ) -> Result<MessageMoveOutcome, ModelError> {
+        let moved = match range {
+            (Some(a), Some((0, _) | (1, 0)) | None) => {
+                Self::move_bottom(db, user_id, channel_id, id, a, expect_pos).await?
+            }
+            (Some((_, 0) | (0, 1)) | None, Some(b)) => {
+                Self::move_above(db, user_id, channel_id, id, b, expect_pos).await?
+            }
+            (Some(a), Some(b)) => {
+                return Self::move_to_intermediate(db, user_id, id, channel_id, a, b, expect_pos)
+                    .await;
+            }
+            (None, None) => {
+                return Err(ValidationFailed("a and b cannot both be null").into());
+            }
+        };
+        match moved {
+            Some(moved) => Ok(finish_move(moved)),
+            None => Self::diagnose_move(db, user_id, id, channel_id, expect_pos).await,
+        }
+    }
+
+    async fn move_above(
+        db: &sqlx::PgPool,
+        user_id: Uuid,
+        channel_id: Uuid,
         message_id: &Uuid,
         pos: (i32, i32),
-    ) -> Result<Option<Message>, ModelError> {
+        expect_pos: Option<(i32, i32)>,
+    ) -> Result<Option<MoveRecord>, ModelError> {
         check_pos(pos)?;
-
-        let moved_message = sqlx::query_file_scalar!(
+        let (expect_p, expect_q) = optional_position_parts(expect_pos);
+        sqlx::query_file_as!(
+            MoveRecord,
             "sql/messages/move_above.sql",
             channel_id,
             message_id,
             pos.0,
-            pos.1
+            pos.1,
+            user_id,
+            expect_p,
+            expect_q
         )
         .fetch_optional(db)
-        .await?;
-        if let Some(moved_message) = moved_message {
-            crate::messages::MESSAGE_POSITIONS.submitted(
-                moved_message.channel_id,
-                moved_message.id,
-                moved_message.pos_p,
-                moved_message.pos_q,
-                Some(moved_message.id),
-            );
-            Ok(Some(moved_message))
-        } else {
-            Ok(None)
-        }
+        .await
+        .map_err(Into::into)
     }
 
-    pub async fn move_bottom(
-        db: &mut sqlx::PgConnection,
-        channel_id: &Uuid,
+    async fn move_bottom(
+        db: &sqlx::PgPool,
+        user_id: Uuid,
+        channel_id: Uuid,
         message_id: &Uuid,
         pos: (i32, i32),
-    ) -> Result<Option<Message>, ModelError> {
+        expect_pos: Option<(i32, i32)>,
+    ) -> Result<Option<MoveRecord>, ModelError> {
         check_pos(pos)?;
-        let moved_message = sqlx::query_file_scalar!(
+        let (expect_p, expect_q) = optional_position_parts(expect_pos);
+        sqlx::query_file_as!(
+            MoveRecord,
             "sql/messages/move_bottom.sql",
             channel_id,
             message_id,
             pos.0,
-            pos.1
+            pos.1,
+            user_id,
+            expect_p,
+            expect_q
         )
         .fetch_optional(db)
-        .await?;
-        if let Some(moved_message) = moved_message {
-            crate::messages::MESSAGE_POSITIONS.submitted(
-                moved_message.channel_id,
-                moved_message.id,
-                moved_message.pos_p,
-                moved_message.pos_q,
-                Some(moved_message.id),
-            );
-            Ok(Some(moved_message))
-        } else {
-            Ok(None)
-        }
+        .await
+        .map_err(Into::into)
     }
 
-    pub async fn move_between(
-        db: &mut sqlx::PgConnection,
+    async fn move_to_intermediate(
+        db: &sqlx::PgPool,
+        user_id: Uuid,
         id: &Uuid,
         channel_id: Uuid,
         a: (i32, i32),
         b: (i32, i32),
-    ) -> Result<Option<Message>, ModelError> {
+        expect_pos: Option<(i32, i32)>,
+    ) -> Result<MessageMoveOutcome, ModelError> {
         check_pos(a)?;
         check_pos(b)?;
         let find_intermediate_task =
@@ -463,79 +485,114 @@ impl Message {
             }
         };
 
-        let message_in_pos = sqlx::query_file_scalar!(
+        let (expect_p, expect_q) = optional_position_parts(expect_pos);
+        let result = sqlx::query_file_as!(
+            MoveRecord,
             "sql/messages/set_position.sql",
             id,
             channel_id,
             pos.0,
-            pos.1
+            pos.1,
+            user_id,
+            expect_p,
+            expect_q
         )
-        .fetch_optional(&mut *db)
+        .fetch_optional(db)
         .await?;
-        let Some(message_in_pos) = message_in_pos else {
-            tracing::warn!("Message {} not found in channel {}", id, channel_id);
-            return Ok(None);
+        let Some(result) = result else {
+            return Self::diagnose_move(db, user_id, id, channel_id, expect_pos).await;
         };
-        if message_in_pos.id == *id {
-            crate::messages::MESSAGE_POSITIONS.submitted(
-                message_in_pos.channel_id,
-                message_in_pos.id,
-                message_in_pos.pos_p,
-                message_in_pos.pos_q,
-                Some(message_in_pos.id),
-            );
-            Ok(Some(message_in_pos))
-        } else {
-            // Capture current Postgres transaction id to correlate conflicts across logs.
-            let txid_current = sqlx::query_scalar::<sqlx::Postgres, i64>("select txid_current()")
-                .fetch_one(&mut *db)
-                .await
-                .ok();
-            crate::messages::MESSAGE_POSITIONS.cancel(channel_id, *id);
-            let message_in_pos_id = message_in_pos.id;
-            crate::messages::MESSAGE_POSITIONS.submitted(
-                channel_id,
-                message_in_pos_id,
-                message_in_pos.pos_p,
-                message_in_pos.pos_q,
-                Some(message_in_pos.id),
-            );
-            tracing::warn!(
-                conflict_txid = txid_current,
-                attempted_pos_p = pos.0,
-                attempted_pos_q = pos.1,
-                lower_bound_pos_p = a.0,
-                lower_bound_pos_q = a.1,
-                upper_bound_pos_p = b.0,
-                upper_bound_pos_q = b.1,
-                conflicting_pos_p = message_in_pos.pos_p,
-                conflicting_pos_q = message_in_pos.pos_q,
-                conflicting_message_id = %message_in_pos_id,
-                attempted_message_id = %id,
-                channel_id = %channel_id,
-                "Conflict occurred while moving message; falling back to move_bottom"
-            );
-            let moved_message = Message::move_bottom(
-                db,
-                &channel_id,
-                id,
-                (message_in_pos.pos_p, message_in_pos.pos_q),
-            )
-            .await?;
-            if let Some(moved_message) = moved_message {
-                crate::messages::MESSAGE_POSITIONS.submitted(
-                    channel_id,
-                    moved_message.id,
-                    moved_message.pos_p,
-                    moved_message.pos_q,
-                    Some(moved_message.id),
-                );
-                Ok(Some(moved_message))
-            } else {
-                Ok(None)
-            }
+        if result.message.id == *id {
+            return Ok(finish_move(result));
+        }
+
+        // Capture current Postgres transaction id to correlate conflicts across logs.
+        let txid_current = sqlx::query_scalar::<sqlx::Postgres, i64>("select txid_current()")
+            .fetch_one(db)
+            .await
+            .ok();
+        let conflicting_message = result.message;
+        crate::messages::MESSAGE_POSITIONS.submitted(
+            channel_id,
+            conflicting_message.id,
+            conflicting_message.pos_p,
+            conflicting_message.pos_q,
+            Some(conflicting_message.id),
+        );
+        tracing::warn!(
+            conflict_txid = txid_current,
+            attempted_pos_p = pos.0,
+            attempted_pos_q = pos.1,
+            lower_bound_pos_p = a.0,
+            lower_bound_pos_q = a.1,
+            upper_bound_pos_p = b.0,
+            upper_bound_pos_q = b.1,
+            conflicting_pos_p = conflicting_message.pos_p,
+            conflicting_pos_q = conflicting_message.pos_q,
+            conflicting_message_id = %conflicting_message.id,
+            attempted_message_id = %id,
+            channel_id = %channel_id,
+            "Conflict occurred while moving message; falling back to move_bottom"
+        );
+        let moved = Self::move_bottom(
+            db,
+            user_id,
+            channel_id,
+            id,
+            (conflicting_message.pos_p, conflicting_message.pos_q),
+            expect_pos,
+        )
+        .await?;
+        match moved {
+            Some(moved) => Ok(finish_move(moved)),
+            None => Self::diagnose_move(db, user_id, id, channel_id, expect_pos).await,
         }
     }
+
+    async fn diagnose_move(
+        db: &sqlx::PgPool,
+        user_id: Uuid,
+        id: &Uuid,
+        channel_id: Uuid,
+        expect_pos: Option<(i32, i32)>,
+    ) -> Result<MessageMoveOutcome, ModelError> {
+        let (expect_p, expect_q) = optional_position_parts(expect_pos);
+        // UPDATE ... RETURNING cannot explain why no row matched. Keep successful moves to one
+        // query, and only diagnose the zero-row case to classify the failure.
+        let status = sqlx::query_file!(
+            "sql/messages/get_move_status.sql",
+            id,
+            channel_id,
+            user_id,
+            expect_p,
+            expect_q
+        )
+        .fetch_one(db)
+        .await?;
+        if !status.message_exists {
+            return Ok(MessageMoveOutcome::MessageNotFound);
+        }
+        if !status.channel_matches {
+            return Ok(MessageMoveOutcome::ChannelMismatch);
+        }
+        if !status.position_matches {
+            return Ok(MessageMoveOutcome::PositionChanged);
+        }
+        if !status.channel_exists {
+            return Ok(MessageMoveOutcome::ChannelNotFound);
+        }
+        if !status.can_move {
+            return Ok(MessageMoveOutcome::NoPermission);
+        }
+        tracing::warn!(
+            %id,
+            %user_id,
+            %channel_id,
+            "Authorized message move did not update a matching row"
+        );
+        Ok(MessageMoveOutcome::PositionChanged)
+    }
+
     pub(super) async fn max_pos<'c, T: sqlx::PgExecutor<'c>>(
         db: T,
         channel_id: &Uuid,
@@ -641,6 +698,46 @@ pub(super) enum MessageEditOutcome {
     Conflict,
 }
 
+#[derive(Debug)]
+pub(super) enum MessageMoveOutcome {
+    Moved {
+        message: Message,
+        space_id: Uuid,
+        old_pos: f64,
+    },
+    MessageNotFound,
+    ChannelMismatch,
+    ChannelNotFound,
+    NoPermission,
+    PositionChanged,
+}
+
+#[derive(Debug)]
+struct MoveRecord {
+    message: Message,
+    space_id: Uuid,
+    old_pos: f64,
+}
+
+fn optional_position_parts(pos: Option<(i32, i32)>) -> (Option<i32>, Option<i32>) {
+    pos.map_or((None, None), |(p, q)| (Some(p), Some(q)))
+}
+
+fn finish_move(record: MoveRecord) -> MessageMoveOutcome {
+    crate::messages::MESSAGE_POSITIONS.submitted(
+        record.message.channel_id,
+        record.message.id,
+        record.message.pos_p,
+        record.message.pos_q,
+        Some(record.message.id),
+    );
+    MessageMoveOutcome::Moved {
+        message: record.message,
+        space_id: record.space_id,
+        old_pos: record.old_pos,
+    }
+}
+
 #[derive(Debug, Clone, Copy)]
 pub(super) struct MaxPos {
     pub(super) pos_p: i32,
@@ -741,6 +838,13 @@ mod tests {
         )
         .await
         .expect("failed to create position test message")
+    }
+
+    fn expect_moved(outcome: MessageMoveOutcome, context: &str) -> Message {
+        match outcome {
+            MessageMoveOutcome::Moved { message, .. } => message,
+            outcome => panic!("{context}: {outcome:?}"),
+        }
     }
 
     #[sqlx::test(migrator = "crate::db::MIGRATOR")]
@@ -957,16 +1061,20 @@ mod tests {
             MessageEditOutcome::MessageNotFound
         ));
 
-        let mut conn = pool.acquire().await.expect("failed to acquire connection");
-        let moved_after_delete = Message::move_bottom(
-            &mut conn,
-            &channel.id,
+        let moved_after_delete = Message::move_between(
+            &pool,
+            owner.id,
             &message.id,
-            (whisper_message.pos_p, whisper_message.pos_q),
+            channel.id,
+            (Some((whisper_message.pos_p, whisper_message.pos_q)), None),
+            None,
         )
         .await
         .expect("move after delete failed");
-        assert!(moved_after_delete.is_none());
+        assert!(matches!(
+            moved_after_delete,
+            MessageMoveOutcome::MessageNotFound
+        ));
 
         crate::messages::MESSAGE_POSITIONS.shutdown(channel.id);
     }
@@ -1055,44 +1163,56 @@ mod tests {
             (request_limit + 1, 1)
         );
 
-        let mut conn = pool.acquire().await.expect("failed to acquire connection");
-        let moved_above = Message::move_above(
-            &mut conn,
-            &channel.id,
-            &movable.id,
-            (above_limit.pos_p, above_limit.pos_q),
-        )
-        .await
-        .expect("move_above rejected a server-allocated position bound")
-        .expect("move_above returned no message");
+        let moved_above = expect_moved(
+            Message::move_between(
+                &pool,
+                owner.id,
+                &movable.id,
+                channel.id,
+                (None, Some((above_limit.pos_p, above_limit.pos_q))),
+                None,
+            )
+            .await
+            .expect("move_above rejected a server-allocated position bound"),
+            "move_above returned no message",
+        );
         assert!(moved_above.pos > at_limit.pos && moved_above.pos < above_limit.pos);
 
-        let moved_bottom = Message::move_bottom(
-            &mut conn,
-            &channel.id,
-            &at_limit.id,
-            (above_limit.pos_p, above_limit.pos_q),
-        )
-        .await
-        .expect("move_bottom rejected a server-allocated position bound")
-        .expect("move_bottom returned no message");
+        let moved_bottom = expect_moved(
+            Message::move_between(
+                &pool,
+                owner.id,
+                &at_limit.id,
+                channel.id,
+                (Some((above_limit.pos_p, above_limit.pos_q)), None),
+                None,
+            )
+            .await
+            .expect("move_bottom rejected a server-allocated position bound"),
+            "move_bottom returned no message",
+        );
         assert!(moved_bottom.pos > above_limit.pos);
 
-        let moved_between = Message::move_between(
-            &mut conn,
-            &moved_above.id,
-            channel.id,
-            (above_limit.pos_p, above_limit.pos_q),
-            (moved_bottom.pos_p, moved_bottom.pos_q),
-        )
-        .await
-        .expect("move_between rejected server-allocated position bounds")
-        .expect("move_between returned no message");
+        let moved_between = expect_moved(
+            Message::move_between(
+                &pool,
+                owner.id,
+                &moved_above.id,
+                channel.id,
+                (
+                    Some((above_limit.pos_p, above_limit.pos_q)),
+                    Some((moved_bottom.pos_p, moved_bottom.pos_q)),
+                ),
+                None,
+            )
+            .await
+            .expect("move_between rejected server-allocated position bounds"),
+            "move_between returned no message",
+        );
         assert!(
             moved_between.pos > above_limit.pos && moved_between.pos < moved_bottom.pos,
             "moved message was not placed between its server-allocated bounds"
         );
-        drop(conn);
 
         crate::messages::MESSAGE_POSITIONS.shutdown(channel.id);
     }
@@ -1169,40 +1289,56 @@ mod tests {
             .expect("max_pos failed");
         assert_eq!(max_pos.id, msg3.id);
 
-        let mut conn = pool.acquire().await.expect("failed to acquire connection");
-        let moved_above =
-            Message::move_above(&mut conn, &channel.id, &msg3.id, (msg2.pos_p, msg2.pos_q))
-                .await
-                .expect("move_above errored")
-                .expect("move_above returned none");
+        let moved_above = expect_moved(
+            Message::move_between(
+                &pool,
+                owner.id,
+                &msg3.id,
+                channel.id,
+                (None, Some((msg2.pos_p, msg2.pos_q))),
+                None,
+            )
+            .await
+            .expect("move_above errored"),
+            "move_above returned none",
+        );
         assert!(moved_above.pos < msg2.pos);
         assert_eq!(moved_above.rev, msg3.rev + 1);
 
-        let moved_bottom = Message::move_bottom(
-            &mut conn,
-            &channel.id,
-            &msg1.id,
-            (moved_above.pos_p, moved_above.pos_q),
-        )
-        .await
-        .expect("move_bottom errored")
-        .expect("move_bottom returned none");
+        let moved_bottom = expect_moved(
+            Message::move_between(
+                &pool,
+                owner.id,
+                &msg1.id,
+                channel.id,
+                (Some((moved_above.pos_p, moved_above.pos_q)), None),
+                None,
+            )
+            .await
+            .expect("move_bottom errored"),
+            "move_bottom returned none",
+        );
         assert!(moved_bottom.pos > moved_above.pos);
         assert_eq!(moved_bottom.rev, msg1.rev + 1);
 
-        let between = Message::move_between(
-            &mut conn,
-            &msg2.id,
-            channel.id,
-            (moved_above.pos_p, moved_above.pos_q),
-            (moved_bottom.pos_p, moved_bottom.pos_q),
-        )
-        .await
-        .expect("move_between errored")
-        .expect("move_between returned none");
+        let between = expect_moved(
+            Message::move_between(
+                &pool,
+                owner.id,
+                &msg2.id,
+                channel.id,
+                (
+                    Some((moved_above.pos_p, moved_above.pos_q)),
+                    Some((moved_bottom.pos_p, moved_bottom.pos_q)),
+                ),
+                None,
+            )
+            .await
+            .expect("move_between errored"),
+            "move_between returned none",
+        );
         assert!(between.pos > moved_above.pos && between.pos < moved_bottom.pos);
         assert_eq!(between.rev, msg2.rev + 1);
-        drop(conn);
 
         let ordered = Message::get_by_channel(&pool, &channel.id, None, 10, Some(&owner.id))
             .await
@@ -1283,18 +1419,20 @@ mod tests {
         .await
         .expect("failed to create other message B");
 
-        let mut conn = pool.acquire().await.expect("failed to acquire connection");
         let moved = Message::move_between(
-            &mut conn,
+            &pool,
+            owner.id,
             &source_message.id,
             other_channel.id,
-            (other_a.pos_p, other_a.pos_q),
-            (other_b.pos_p, other_b.pos_q),
+            (
+                Some((other_a.pos_p, other_a.pos_q)),
+                Some((other_b.pos_p, other_b.pos_q)),
+            ),
+            None,
         )
         .await
         .expect("move_between errored");
-        assert!(moved.is_none());
-        drop(conn);
+        assert!(matches!(moved, MessageMoveOutcome::ChannelMismatch));
 
         let unchanged = Message::get(&pool, &source_message.id, Some(&owner.id))
             .await
@@ -1307,6 +1445,395 @@ mod tests {
 
         crate::messages::MESSAGE_POSITIONS.shutdown(source_channel.id);
         crate::messages::MESSAGE_POSITIONS.shutdown(other_channel.id);
+    }
+
+    #[sqlx::test(migrator = "crate::db::MIGRATOR")]
+    async fn db_test_message_move_authorization(pool: sqlx::PgPool) {
+        let owner = create_test_user(&pool, "move_owner").await;
+        let member = create_test_user(&pool, "move_member").await;
+        let outsider = create_test_user(&pool, "move_outsider").await;
+        let space = create_test_space(&pool, &owner, "move_auth").await;
+        SpaceMember::add_user(&pool, &member.id, &space.id)
+            .await
+            .expect("failed to add member to space");
+        let channel = create_test_channel(&pool, &space, &owner, "Restricted Moves").await;
+        ChannelMember::add_user(&pool, member.id, channel.id, "Player", false)
+            .await
+            .expect("failed to add member to channel");
+
+        let bound = create_position_test_message(
+            &pool,
+            channel.id,
+            space.id,
+            &owner.id,
+            "Move bound",
+            None,
+        )
+        .await;
+        let owner_message = create_position_test_message(
+            &pool,
+            channel.id,
+            space.id,
+            &owner.id,
+            "Owner message",
+            None,
+        )
+        .await;
+        let original_owner_pos = (owner_message.pos_p, owner_message.pos_q);
+        let move_above_range = (None, Some((bound.pos_p, bound.pos_q)));
+
+        let member_outcome = Message::move_between(
+            &pool,
+            member.id,
+            &owner_message.id,
+            channel.id,
+            move_above_range,
+            Some(original_owner_pos),
+        )
+        .await
+        .expect("member move attempt errored");
+        assert!(matches!(member_outcome, MessageMoveOutcome::NoPermission));
+        let outsider_outcome = Message::move_between(
+            &pool,
+            outsider.id,
+            &owner_message.id,
+            channel.id,
+            move_above_range,
+            Some(original_owner_pos),
+        )
+        .await
+        .expect("outsider move attempt errored");
+        assert!(matches!(outsider_outcome, MessageMoveOutcome::NoPermission));
+
+        let owner_outcome = Message::move_between(
+            &pool,
+            owner.id,
+            &owner_message.id,
+            channel.id,
+            move_above_range,
+            Some(original_owner_pos),
+        )
+        .await
+        .expect("sender move errored");
+        let MessageMoveOutcome::Moved {
+            message: moved_owner_message,
+            space_id,
+            old_pos,
+        } = owner_outcome
+        else {
+            panic!("sender should be allowed to move their message");
+        };
+        assert_eq!(space_id, space.id);
+        assert_eq!(old_pos, owner_message.pos);
+        assert!(moved_owner_message.pos < bound.pos);
+
+        let stale_outcome = Message::move_between(
+            &pool,
+            owner.id,
+            &owner_message.id,
+            channel.id,
+            (Some((bound.pos_p, bound.pos_q)), None),
+            Some(original_owner_pos),
+        )
+        .await
+        .expect("stale move attempt errored");
+        assert!(matches!(stale_outcome, MessageMoveOutcome::PositionChanged));
+
+        let other_channel = create_test_channel(&pool, &space, &owner, "Other Moves").await;
+        let mismatch_outcome = Message::move_between(
+            &pool,
+            owner.id,
+            &owner_message.id,
+            other_channel.id,
+            move_above_range,
+            None,
+        )
+        .await
+        .expect("wrong-channel move attempt errored");
+        assert!(matches!(
+            mismatch_outcome,
+            MessageMoveOutcome::ChannelMismatch
+        ));
+
+        let member_message = create_position_test_message(
+            &pool,
+            channel.id,
+            space.id,
+            &member.id,
+            "Member message",
+            None,
+        )
+        .await;
+        let master_outcome = Message::move_between(
+            &pool,
+            owner.id,
+            &member_message.id,
+            channel.id,
+            (Some((bound.pos_p, bound.pos_q)), None),
+            Some((member_message.pos_p, member_message.pos_q)),
+        )
+        .await
+        .expect("master move errored");
+        assert!(matches!(master_outcome, MessageMoveOutcome::Moved { .. }));
+
+        let document_channel = Channel::create(
+            &pool,
+            &space.id,
+            "Document Moves",
+            true,
+            Some("d20"),
+            ChannelType::Document,
+        )
+        .await
+        .expect("failed to create document channel");
+        let document_channel = Channel::edit(
+            &pool,
+            &document_channel.id,
+            None,
+            None,
+            None,
+            None,
+            None,
+            Some(true),
+            None,
+            None,
+        )
+        .await
+        .expect("failed to enable document editing");
+        ChannelMember::add_user(&pool, owner.id, document_channel.id, "GM", true)
+            .await
+            .expect("failed to add owner to document channel");
+        ChannelMember::add_user(&pool, member.id, document_channel.id, "Player", false)
+            .await
+            .expect("failed to add member to document channel");
+        let document_a = create_position_test_message(
+            &pool,
+            document_channel.id,
+            space.id,
+            &owner.id,
+            "Document A",
+            None,
+        )
+        .await;
+        let document_b = create_position_test_message(
+            &pool,
+            document_channel.id,
+            space.id,
+            &owner.id,
+            "Document B",
+            None,
+        )
+        .await;
+        let document_target = create_position_test_message(
+            &pool,
+            document_channel.id,
+            space.id,
+            &owner.id,
+            "Document target",
+            None,
+        )
+        .await;
+        let document_outcome = Message::move_between(
+            &pool,
+            member.id,
+            &document_target.id,
+            document_channel.id,
+            (
+                Some((document_a.pos_p, document_a.pos_q)),
+                Some((document_b.pos_p, document_b.pos_q)),
+            ),
+            Some((document_target.pos_p, document_target.pos_q)),
+        )
+        .await
+        .expect("document member move errored");
+        assert!(matches!(document_outcome, MessageMoveOutcome::Moved { .. }));
+
+        let missing_outcome = Message::move_between(
+            &pool,
+            owner.id,
+            &Uuid::new_v4(),
+            channel.id,
+            move_above_range,
+            None,
+        )
+        .await
+        .expect("missing message move attempt errored");
+        assert!(matches!(
+            missing_outcome,
+            MessageMoveOutcome::MessageNotFound
+        ));
+
+        let unchanged = Message::get(&pool, &owner_message.id, Some(&owner.id))
+            .await
+            .expect("failed to reload owner message")
+            .expect("owner message disappeared");
+        assert_eq!(unchanged.pos, moved_owner_message.pos);
+
+        crate::messages::MESSAGE_POSITIONS.shutdown(channel.id);
+        crate::messages::MESSAGE_POSITIONS.shutdown(other_channel.id);
+        crate::messages::MESSAGE_POSITIONS.shutdown(document_channel.id);
+    }
+
+    #[sqlx::test(migrator = "crate::db::MIGRATOR")]
+    async fn db_test_concurrent_message_moves_recheck_expected_position(pool: sqlx::PgPool) {
+        let owner = create_test_user(&pool, "move_race_owner").await;
+        let space = create_test_space(&pool, &owner, "move_race").await;
+        let channel = create_test_channel(&pool, &space, &owner, "Concurrent Moves").await;
+        let lower_a = create_position_test_message(
+            &pool,
+            channel.id,
+            space.id,
+            &owner.id,
+            "Lower bound A",
+            None,
+        )
+        .await;
+        let lower_b = create_position_test_message(
+            &pool,
+            channel.id,
+            space.id,
+            &owner.id,
+            "Lower bound B",
+            None,
+        )
+        .await;
+        let target = create_position_test_message(
+            &pool,
+            channel.id,
+            space.id,
+            &owner.id,
+            "Move target",
+            None,
+        )
+        .await;
+        let upper = create_position_test_message(
+            &pool,
+            channel.id,
+            space.id,
+            &owner.id,
+            "Upper bound",
+            None,
+        )
+        .await;
+        let expect_pos = Some((target.pos_p, target.pos_q));
+        let race_pool = sqlx::postgres::PgPoolOptions::new()
+            .max_connections(6)
+            .acquire_timeout(Duration::from_secs(5))
+            .connect_with(pool.connect_options().as_ref().clone())
+            .await
+            .expect("failed to create concurrency test pool");
+
+        // Hold the target row so both move statements overlap while acquiring it.
+        let mut blocker = race_pool.begin().await.expect("failed to begin blocker");
+        let blocker_pid = sqlx::query_scalar::<_, i32>("SELECT pg_backend_pid()")
+            .fetch_one(&mut *blocker)
+            .await
+            .expect("failed to read blocker pid");
+        sqlx::query("SELECT id FROM messages WHERE id = $1 FOR UPDATE")
+            .bind(target.id)
+            .fetch_one(&mut *blocker)
+            .await
+            .expect("failed to lock target message");
+
+        let first_pool = race_pool.clone();
+        let first = tokio::spawn(async move {
+            Message::move_between(
+                &first_pool,
+                owner.id,
+                &target.id,
+                channel.id,
+                (None, Some((lower_a.pos_p, lower_a.pos_q))),
+                expect_pos,
+            )
+            .await
+        });
+        let second_pool = race_pool.clone();
+        let second = tokio::spawn(async move {
+            Message::move_between(
+                &second_pool,
+                owner.id,
+                &target.id,
+                channel.id,
+                (Some((upper.pos_p, upper.pos_q)), None),
+                expect_pos,
+            )
+            .await
+        });
+        let third_pool = race_pool.clone();
+        let third = tokio::spawn(async move {
+            Message::move_between(
+                &third_pool,
+                owner.id,
+                &target.id,
+                channel.id,
+                (
+                    Some((lower_a.pos_p, lower_a.pos_q)),
+                    Some((lower_b.pos_p, lower_b.pos_q)),
+                ),
+                expect_pos,
+            )
+            .await
+        });
+
+        let mut blocked_moves = 0;
+        for _ in 0..500 {
+            blocked_moves = sqlx::query_scalar::<_, i64>(
+                "SELECT count(*) FROM pg_stat_activity \
+                 WHERE datname = current_database() \
+                 AND pid <> $1 \
+                 AND cardinality(pg_blocking_pids(pid)) > 0 \
+                 AND query LIKE 'WITH %UPDATE%messages msg%'",
+            )
+            .bind(blocker_pid)
+            .fetch_one(&race_pool)
+            .await
+            .expect("failed to inspect blocked moves");
+            if blocked_moves >= 2 {
+                break;
+            }
+            tokio::time::sleep(Duration::from_millis(10)).await;
+        }
+        blocker
+            .commit()
+            .await
+            .expect("failed to release target message");
+        assert!(
+            blocked_moves >= 2,
+            "at least two moves should reach the locked target row"
+        );
+
+        let first_outcome = tokio::time::timeout(Duration::from_secs(5), first)
+            .await
+            .expect("first move timed out")
+            .expect("first move task panicked")
+            .expect("first move errored");
+        let second_outcome = tokio::time::timeout(Duration::from_secs(5), second)
+            .await
+            .expect("second move timed out")
+            .expect("second move task panicked")
+            .expect("second move errored");
+        let third_outcome = tokio::time::timeout(Duration::from_secs(5), third)
+            .await
+            .expect("third move timed out")
+            .expect("third move task panicked")
+            .expect("third move errored");
+        let outcomes = [first_outcome, second_outcome, third_outcome];
+        let moved_count = outcomes
+            .iter()
+            .filter(|outcome| matches!(outcome, MessageMoveOutcome::Moved { .. }))
+            .count();
+        let stale_count = outcomes
+            .iter()
+            .filter(|outcome| matches!(outcome, MessageMoveOutcome::PositionChanged))
+            .count();
+        assert_eq!(
+            (moved_count, stale_count),
+            (1, 2),
+            "only one move may consume the expected position: {outcomes:?}"
+        );
+
+        crate::messages::MESSAGE_POSITIONS.shutdown(channel.id);
+        race_pool.close().await;
     }
 
     #[sqlx::test(migrator = "crate::db::MIGRATOR")]

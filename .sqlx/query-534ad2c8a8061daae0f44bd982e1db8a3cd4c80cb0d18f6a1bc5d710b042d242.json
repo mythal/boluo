@@ -1,0 +1,55 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n    (msg.id IS NOT NULL) AS \"message_exists!\",\n    COALESCE(msg.channel_id = $2, FALSE) AS \"channel_matches!\",\n    (ch.id IS NOT NULL) AS \"channel_exists!\",\n    COALESCE(\n        cm.user_id IS NOT NULL\n        AND sm.user_id IS NOT NULL\n        AND (ch.is_document OR cm.is_master OR msg.sender_id = $3),\n        FALSE\n    ) AS \"can_move!\",\n    COALESCE(\n        $4::int4 IS NULL OR (msg.pos_p = $4 AND msg.pos_q = $5),\n        FALSE\n    ) AS \"position_matches!\"\nFROM\n    (SELECT 1) singleton\n    LEFT JOIN messages msg ON msg.id = $1\n        AND msg.deleted = FALSE\n    LEFT JOIN channels ch ON ch.id = msg.channel_id\n        AND ch.deleted = FALSE\n    LEFT JOIN channel_members cm ON cm.channel_id = msg.channel_id\n        AND cm.user_id = $3\n        AND cm.is_joined\n    LEFT JOIN space_members sm ON sm.space_id = ch.space_id\n        AND sm.user_id = $3\nLIMIT 1;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "message_exists!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "channel_matches!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "channel_exists!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "can_move!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "position_matches!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Uuid",
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "534ad2c8a8061daae0f44bd982e1db8a3cd4c80cb0d18f6a1bc5d710b042d242"
+}

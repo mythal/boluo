@@ -20,7 +20,6 @@
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.3",
-    "babel-plugin-formatjs": "^11.3.14",
     "eslint": "^10.6.0",
     "postcss": "^8.5.16",
     "react": "^19.2.7",

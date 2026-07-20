@@ -3,7 +3,6 @@
   "version": "0.0.0",
   "dependencies": {},
   "devDependencies": {
-    "@babel/core": "^8.0.1",
     "@boluo/typescript-config": "0.0.0",
     "@svgr/cli": "^8.1.0",
     "@types/react": "^19.2.17",

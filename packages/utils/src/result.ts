@@ -58,7 +58,7 @@ export class Ok<T> {
     return this.some;
   }
 
-  unwrapOr(other: T): T {
+  unwrapOr(_other: T): T {
     return this.some;
   }
 
@@ -70,7 +70,7 @@ export class Ok<T> {
     return new Ok(mapper(this.some));
   }
 
-  mapErr<E2>(): Ok<T> {
+  mapErr<_E2>(): Ok<T> {
     return this;
   }
 

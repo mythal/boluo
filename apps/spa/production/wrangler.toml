@@ -1,5 +1,5 @@
 name = "boluo-app"
-compatibility_date = "2025-10-19"
+compatibility_date = "2026-07-18"
 main = "../../../packages/backend-proxy/dist/worker.js"
 
 [assets]

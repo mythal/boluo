@@ -2,7 +2,7 @@ import { css } from '@emotion/react';
 import styled from '@emotion/styled';
 import * as React from 'react';
 import { type Channel } from '../../api/channels';
-import Lock from '../../assets/icons/lock.svg';
+import Lock from '@boluo/icons/legacy/Lock';
 import { useSelector } from '../../store';
 import { fontMono, mR, pY, textSm } from '../../styles/atoms';
 import { gray } from '../../styles/colors';

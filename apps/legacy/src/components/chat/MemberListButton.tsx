@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import Members from '../../assets/icons/members.svg';
+import Members from '@boluo/icons/legacy/Members';
 import { useChannelId } from '../../hooks/useChannelId';
 import { useSelector } from '../../store';
 import { type Id } from '../../utils/id';

@@ -16,12 +16,21 @@ interface GeneratedIcon {
   readonly symbol: string;
 }
 
+interface IconSet {
+  readonly icons: GeneratedIcon[];
+  readonly declarationReferencePath: string;
+  readonly sourceDirectory: string;
+  readonly spriteFilename: string;
+  readonly spriteImportPath: string;
+}
+
 type DescribedCustomPlugin = CustomPlugin & {
   readonly description: string;
 };
 
 const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const iconsDirectory = path.join(packageRoot, 'icons');
+const legacyIconsDirectory = path.join(iconsDirectory, 'legacy');
 const generatedDirectory = path.join(packageRoot, 'generated');
 const sourceDirectory = path.join(packageRoot, 'src');
 
@@ -46,6 +55,7 @@ const rootPresentationAttributes = new Map([
 ]);
 
 const ignoredRootAttributes = new Set([
+  'aria-hidden',
   'class',
   'data-icon',
   'data-prefix',
@@ -210,10 +220,14 @@ export default ${name};
 `;
 }
 
-const createIconSource = `/// <reference path="./svg.d.ts" />
+function generateCreateIconSource(
+  declarationReferencePath: string,
+  spriteImportPath: string,
+): string {
+  return `/// <reference path=${JSON.stringify(declarationReferencePath)} />
 
 import type { SVGProps } from 'react';
-import spriteAsset from '../generated/sprite.svg';
+import spriteAsset from ${JSON.stringify(spriteImportPath)};
 
 type ImportedAsset = string | { readonly src: string };
 
@@ -253,6 +267,7 @@ export function createIcon({
   return Icon;
 }
 `;
+}
 
 const svgDeclarationSource = `declare module '*.svg' {
   const asset: string | { readonly src: string };
@@ -260,20 +275,20 @@ const svgDeclarationSource = `declare module '*.svg' {
 }
 `;
 
-async function main(): Promise<void> {
-  const filenames = (await readdir(iconsDirectory))
+async function readIcons(directory: string, idPrefix: string): Promise<GeneratedIcon[]> {
+  const filenames = (await readdir(directory))
     .filter((filename) => filename.endsWith('.svg'))
     .sort((left, right) => left.localeCompare(right));
 
   if (filenames.length === 0) {
-    throw new Error('No SVG icons were found');
+    throw new Error(`${directory}: no SVG icons were found`);
   }
 
   const icons: GeneratedIcon[] = [];
   const componentNames = new Set<string>();
   for (const filename of filenames) {
-    const filePath = path.join(iconsDirectory, filename);
-    const iconId = filename.replace(/\.svg$/, '');
+    const filePath = path.join(directory, filename);
+    const iconId = `${idPrefix}${filename.replace(/\.svg$/, '')}`;
     const name = componentName(filename);
     if (componentNames.has(name)) {
       throw new Error(`${filename}: generated component name "${name}" is not unique`);
@@ -312,17 +327,27 @@ async function main(): Promise<void> {
     });
   }
 
-  await rm(sourceDirectory, { recursive: true, force: true });
-  await rm(generatedDirectory, { recursive: true, force: true });
+  return icons;
+}
+
+async function writeIconSet({
+  icons,
+  declarationReferencePath,
+  sourceDirectory,
+  spriteFilename,
+  spriteImportPath,
+}: IconSet): Promise<void> {
   await mkdir(sourceDirectory, { recursive: true });
   await mkdir(generatedDirectory, { recursive: true });
 
   const sprite = `<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1" viewBox="0 0 1 1">${icons
     .map(({ symbol }) => symbol)
     .join('')}</svg>`;
-  await writeFile(path.join(generatedDirectory, 'sprite.svg'), sprite);
-  await writeFile(path.join(sourceDirectory, 'createIcon.tsx'), createIconSource);
-  await writeFile(path.join(sourceDirectory, 'svg.d.ts'), svgDeclarationSource);
+  await writeFile(path.join(generatedDirectory, spriteFilename), sprite);
+  await writeFile(
+    path.join(sourceDirectory, 'createIcon.tsx'),
+    generateCreateIconSource(declarationReferencePath, spriteImportPath),
+  );
 
   for (const icon of icons) {
     await writeFile(path.join(sourceDirectory, `${icon.name}.tsx`), icon.componentSource);
@@ -332,6 +357,34 @@ async function main(): Promise<void> {
     .map(({ name }) => `export { default as ${name} } from './${name}';`)
     .join('\n');
   await writeFile(path.join(sourceDirectory, 'index.ts'), `${indexSource}\n`);
+}
+
+async function main(): Promise<void> {
+  const iconSets: IconSet[] = [
+    {
+      icons: await readIcons(iconsDirectory, ''),
+      declarationReferencePath: './svg.d.ts',
+      sourceDirectory,
+      spriteFilename: 'sprite.svg',
+      spriteImportPath: '../generated/sprite.svg',
+    },
+    {
+      icons: await readIcons(legacyIconsDirectory, 'legacy-'),
+      declarationReferencePath: '../svg.d.ts',
+      sourceDirectory: path.join(sourceDirectory, 'legacy'),
+      spriteFilename: 'legacy-sprite.svg',
+      spriteImportPath: '../../generated/legacy-sprite.svg',
+    },
+  ];
+
+  await rm(sourceDirectory, { recursive: true, force: true });
+  await rm(generatedDirectory, { recursive: true, force: true });
+  await mkdir(sourceDirectory, { recursive: true });
+  await writeFile(path.join(sourceDirectory, 'svg.d.ts'), svgDeclarationSource);
+
+  for (const iconSet of iconSets) {
+    await writeIconSet(iconSet);
+  }
 }
 
 await main();

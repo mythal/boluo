@@ -1,7 +1,7 @@
 import { css, keyframes } from '@emotion/react';
 import styled from '@emotion/styled';
 import React from 'react';
-import RotateCw from '../../assets/icons/rotate-cw.svg';
+import RotateCw from '@boluo/icons/legacy/RotateCw';
 import { fontMono, pY, spacingN, textSm, textXl } from '../../styles/atoms';
 import TextIcon from '../atoms/Icon';
 

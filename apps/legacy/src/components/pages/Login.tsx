@@ -5,7 +5,7 @@ import { type LoggedIn } from '../../actions';
 import { type AppError, NO_PERMISSION } from '../../api/error';
 import { get, post } from '../../api/request';
 import { type LoginData, type Settings } from '../../api/users';
-import SignIn from '../../assets/icons/sign-in.svg';
+import SignIn from '@boluo/icons/legacy/SignIn';
 import Icon from '../../components/atoms/Icon';
 import { useTitle } from '../../hooks/useTitle';
 import { useDispatch } from '../../store';

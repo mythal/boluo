@@ -2,7 +2,6 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import babel from '@rolldown/plugin-babel';
 import emotionBabelPlugin from '@boluo/emotion-babel-plugin';
-import svgr from 'vite-plugin-svgr';
 import path from 'path';
 import dotenv from 'dotenv';
 
@@ -20,12 +19,6 @@ export default defineConfig({
     }),
     babel({
       plugins: [emotionBabelPlugin],
-    }),
-    svgr({
-      include: '**/*.svg',
-      svgrOptions: {
-        icon: true,
-      },
     }),
   ],
 

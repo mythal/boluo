@@ -1,6 +1,6 @@
 import styled from '@emotion/styled';
 import React from 'react';
-import RotateCw from '../../assets/icons/rotate-cw.svg';
+import RotateCw from '@boluo/icons/legacy/RotateCw';
 import { spacingN, spin as spinStyle } from '../../styles/atoms';
 
 export type SvgIcon = React.FunctionComponent<React.SVGProps<SVGSVGElement>>;

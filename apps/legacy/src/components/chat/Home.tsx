@@ -4,7 +4,7 @@ import * as React from 'react';
 import { useState } from 'react';
 import { type Channel } from '../../api/channels';
 import { type Space, type SpaceMemberWithUser } from '../../api/spaces';
-import UserCog from '../../assets/icons/user-cog.svg';
+import UserCog from '@boluo/icons/legacy/UserCog';
 import { useTitle } from '../../hooks/useTitle';
 import { useSelector } from '../../store';
 import { breakpoint, flex, fontBold, mediaQuery, mL, p, pX, pY, textLg } from '../../styles/atoms';

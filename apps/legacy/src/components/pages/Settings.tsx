@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { type AppError } from '../../api/error';
 import { editAvatar, post } from '../../api/request';
 import { type EditUser, type Settings as SettingsData } from '../../api/users';
-import Save from '../../assets/icons/save.svg';
+import Save from '@boluo/icons/legacy/Save';
 import { useDispatch, useSelector } from '../../store';
 import { alignRight, flex, largeInput, mR, mT, spacingN, textLg } from '../../styles/atoms';
 import { bioValidation, nicknameValidation } from '../../validators';

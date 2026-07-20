@@ -3,7 +3,7 @@ import * as React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { type LoadMessages } from '../../actions';
 import { get } from '../../api/request';
-import RotateCw from '../../assets/icons/rotate-cw.svg';
+import RotateCw from '@boluo/icons/legacy/RotateCw';
 import { useChannelId } from '../../hooks/useChannelId';
 import { useDispatch, useSelector } from '../../store';
 import { bgColor } from '../../styles/colors';

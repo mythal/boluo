@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Fragment, useMemo } from 'react';
 import { type UserStatus } from '../../api/spaces';
-import Members from '../../assets/icons/members.svg';
+import Members from '@boluo/icons/legacy/Members';
 import { useSelector } from '../../store';
 import { type Id } from '../../utils/id';
 import Icon from '../atoms/Icon';

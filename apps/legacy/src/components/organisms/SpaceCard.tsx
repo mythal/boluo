@@ -4,7 +4,7 @@ import { lighten } from 'polished';
 import * as React from 'react';
 import { Link } from 'react-router-dom';
 import { type Space } from '../../api/spaces';
-import Lock from '../../assets/icons/lock.svg';
+import Lock from '@boluo/icons/legacy/Lock';
 import { fontNormal, m, mR, mT, p, pX, pY, roundedPx, textXl, uiShadow } from '../../styles/atoms';
 import { bgColor, textColor } from '../../styles/colors';
 import { encodeUuid } from '../../utils/id';

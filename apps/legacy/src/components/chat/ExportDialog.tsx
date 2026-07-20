@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import Select from 'react-select';
 import { type Channel, type Export } from '../../api/channels';
 import { get } from '../../api/request';
-import FileExport from '../../assets/icons/file-export.svg';
+import FileExport from '@boluo/icons/legacy/FileExport';
 import { bbCodeTextBlob, csvBlob, exportMessage, jsonBlob, txtBlob } from '../../export';
 import { useDispatch } from '../../store';
 import { mB, mT, selectTheme, uiShadow, widthFull } from '../../styles/atoms';

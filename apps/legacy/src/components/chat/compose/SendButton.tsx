@@ -1,6 +1,6 @@
 import React from 'react';
-import PaperPlane from '../../../assets/icons/paper-plane.svg';
-import Save from '../../../assets/icons/save.svg';
+import PaperPlane from '@boluo/icons/legacy/PaperPlane';
+import Save from '@boluo/icons/legacy/Save';
 import { useChannelId } from '../../../hooks/useChannelId';
 import { useSelector } from '../../../store';
 import { isMac } from '../../../utils/browser';

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { mediaUrl } from '../../api/request';
-import Cultist from '../../assets/cultist.svg';
+import Cultist from '@boluo/icons/legacy/Cultist';
 
 interface Props {
   size?: string;

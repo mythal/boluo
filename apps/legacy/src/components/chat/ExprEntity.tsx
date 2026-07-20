@@ -3,11 +3,11 @@ import styled from '@emotion/styled';
 import { darken } from 'polished';
 import Prando from 'prando';
 import React, { type MouseEventHandler, type ReactNode, useState } from 'react';
-import Cubes from '../../assets/icons/cubes.svg';
-import D20 from '../../assets/icons/d20.svg';
-import ElderSign from '../../assets/icons/elder-sign.svg';
-import ThumbDown from '../../assets/icons/thumb-down.svg';
-import ThumbUp from '../../assets/icons/thumb-up.svg';
+import Cubes from '@boluo/icons/legacy/Cubes';
+import D20 from '@boluo/icons/legacy/D20';
+import ElderSign from '@boluo/icons/legacy/ElderSign';
+import ThumbDown from '@boluo/icons/legacy/ThumbDown';
+import ThumbUp from '@boluo/icons/legacy/ThumbUp';
 import {
   type CocRollResult,
   type DicePoolResult,

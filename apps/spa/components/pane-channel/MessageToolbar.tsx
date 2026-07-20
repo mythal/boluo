@@ -46,6 +46,7 @@ import { ErrorBoundary } from '@sentry/nextjs';
 import { useIsOptimistic } from '../../hooks/useIsOptimistic';
 import { useIsDragging } from '../../hooks/useIsDragging';
 import { useLongPressProgress } from '../../hooks/useLongPressProgress';
+import { useChannel } from '../../hooks/useChannel';
 
 type ToolbarDisplay =
   | { type: 'HIDDEN' }
@@ -155,7 +156,8 @@ const MessageArchive: FC<{ messageId: string; archived: boolean; variant: 'toolb
   const setDisplay = useSetAtom(use(DisplayContext));
   const optimistic = useIsOptimistic();
   const intl = useIntl();
-  const { trigger: toggle, isMutating: isToggling } = useMutateMessageArchive(messageId, {
+  const spaceId = useChannel()?.spaceId;
+  const { trigger: toggle, isMutating: isToggling } = useMutateMessageArchive(messageId, spaceId, {
     revalidate: false,
     populateCache: identity,
     onError: () => {
@@ -341,15 +343,20 @@ const MessageToolbarMore: FC<{ message: Message }> = ({ message }) => {
 const MessageDeleteButton: FC<{ messageId: string }> = ({ messageId }) => {
   const setDisplay = useSetAtom(use(DisplayContext));
   const intl = useIntl();
-  const { trigger: deleteMessage, isMutating: deleting } = useMutateMessageDelete(messageId, {
-    revalidate: false,
-    onError: () => {
-      setDisplay({
-        type: 'ERROR',
-        message: intl.formatMessage({ defaultMessage: 'Failed to delete the message' }),
-      });
+  const spaceId = useChannel()?.spaceId;
+  const { trigger: deleteMessage, isMutating: deleting } = useMutateMessageDelete(
+    messageId,
+    spaceId,
+    {
+      revalidate: false,
+      onError: () => {
+        setDisplay({
+          type: 'ERROR',
+          message: intl.formatMessage({ defaultMessage: 'Failed to delete the message' }),
+        });
+      },
     },
-  });
+  );
   return (
     <MoreMenuItem
       icon={Trash}

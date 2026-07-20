@@ -620,6 +620,11 @@ export type Message = {
   rev?: number;
 };
 
+export type MessageIdQuery = {
+  id: string;
+  spaceId?: string | null;
+};
+
 export type MessageMoveToMode = 'TOP' | 'BOTTOM';
 
 export type MoveMessageBetween = {

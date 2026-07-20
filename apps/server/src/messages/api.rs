@@ -83,6 +83,14 @@ pub struct GetMessagesByChannel {
     pub limit: Option<i64>,
 }
 
+#[derive(Deserialize, Debug, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct MessageIdQuery {
+    pub id: Uuid,
+    #[serde(default)]
+    pub space_id: Option<Uuid>,
+}
+
 #[derive(Deserialize, Debug, Clone, Copy, specta::Type)]
 #[serde(rename_all = "lowercase")]
 pub enum SearchDirection {

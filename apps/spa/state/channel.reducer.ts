@@ -1,14 +1,12 @@
-import type {
-  EditMessage,
-  Message,
-  NewMessage,
-  Preview,
-  PreviewDiffOp,
-  PreviewDiffPost,
-} from '@boluo/api';
+import type { EditMessage, Message, NewMessage, Preview } from '@boluo/api';
+import {
+  isClearedPreviewContent,
+  resolvePreviewDiff,
+  toPreviewDiffBase,
+} from '@boluo/api/preview/diff';
 import { binarySearchPosList } from '@boluo/sort';
 import { parse } from '@boluo/interpreter';
-import { type MessageItem, type PreviewItem, type PreviewKeyframe } from './channel.types';
+import { type MessageItem, type PreviewItem } from './channel.types';
 import { type ChatAction, type ChatActionUnion } from './chat.actions';
 import type { ChatReducerContext } from './chat.reducer';
 import { recordWarn } from '../error';
@@ -34,17 +32,6 @@ export interface OptimisticMessage {
   item: OptimisticItem;
 }
 
-const toPreviewKeyframe = (preview: Preview): PreviewKeyframe => ({
-  id: preview.id,
-  version: preview.v ?? 0,
-  name: preview.name,
-  text: preview.text ?? null,
-  entities: preview.entities,
-});
-
-const isClearedPreview = (preview: Preview): boolean =>
-  preview.text != null && (preview.text.trim() === '' || preview.entities.length === 0);
-
 const removePreviewBySender = (
   previewMap: Record<UserId, PreviewItem>,
   senderId: UserId,
@@ -53,62 +40,6 @@ const removePreviewBySender = (
   const nextPreviewMap = { ...previewMap };
   delete nextPreviewMap[senderId];
   return nextPreviewMap;
-};
-
-const applyPreviewDiffOps = (
-  keyframe: PreviewKeyframe,
-  ops: PreviewDiffOp[],
-): { text: string | null; name: string; textChanged: boolean } | null => {
-  const baseText = keyframe.text;
-  let nextText = baseText ?? '';
-  let textChanged = false;
-  let name = keyframe.name;
-  for (const op of ops) {
-    switch (op.type) {
-      case 'SPLICE': {
-        const start = op.i;
-        const deleteCount = op.len;
-        if (
-          !Number.isFinite(start) ||
-          !Number.isFinite(deleteCount) ||
-          start < 0 ||
-          deleteCount < 0
-        ) {
-          return null;
-        }
-        const deleteEnd = start + deleteCount;
-        if (start > nextText.length || deleteEnd > nextText.length) {
-          return null;
-        }
-        nextText = nextText.slice(0, start) + op._ + nextText.slice(deleteEnd);
-        textChanged = true;
-        break;
-      }
-      case 'A':
-        nextText += op._;
-        textChanged = true;
-        break;
-      case 'NAME':
-        name = op.name;
-        break;
-    }
-  }
-  if (textChanged && baseText == null) {
-    return null;
-  }
-  return { text: textChanged ? nextText : baseText, name, textChanged };
-};
-
-const parsePreviewDiffEntities = (
-  text: string,
-  fallback: PreviewItem['entities'],
-): PreviewItem['entities'] => {
-  try {
-    return parse(text).entities;
-  } catch (error) {
-    recordWarn('Failed to parse preview diff text', { text, error });
-    return fallback;
-  }
 };
 
 const editMessageOptimisticItem = (
@@ -624,7 +555,7 @@ const handleMessagePreview = (
 ): ChannelState => {
   let newItem: PreviewItem;
   let { previewMap, collidedPreviewIdSet } = state;
-  if (isClearedPreview(preview)) {
+  if (isClearedPreviewContent(preview)) {
     previewMap = removePreviewBySender(previewMap, preview.senderId);
     if (collidedPreviewIdSet.has(preview.id)) {
       collidedPreviewIdSet = new Set(collidedPreviewIdSet);
@@ -648,7 +579,7 @@ const handleMessagePreview = (
         posQ: preview.edit.q,
         key: preview.senderId,
         timestamp,
-        keyframe: toPreviewKeyframe(preview),
+        keyframe: toPreviewDiffBase(preview),
       };
     } else {
       const [message] = findResult;
@@ -663,7 +594,7 @@ const handleMessagePreview = (
         posQ: message.posQ,
         key: preview.senderId,
         timestamp,
-        keyframe: toPreviewKeyframe(preview),
+        keyframe: toPreviewDiffBase(preview),
       };
     }
   } else {
@@ -683,7 +614,7 @@ const handleMessagePreview = (
       pos,
       key: preview.senderId,
       timestamp,
-      keyframe: toPreviewKeyframe(preview),
+      keyframe: toPreviewDiffBase(preview),
     };
   }
 
@@ -697,34 +628,28 @@ const handleMessagePreviewDiff = (
 ): ChannelState => {
   const preview = state.previewMap[diff.sender];
   if (!preview) return state;
-  const keyframe = preview.keyframe ?? toPreviewKeyframe(preview);
-  const payload: PreviewDiffPost = diff._;
-  if (payload.id !== keyframe.id || payload.ref !== keyframe.version) {
+  const keyframe = preview.keyframe ?? toPreviewDiffBase(preview);
+  const result = resolvePreviewDiff({
+    keyframe,
+    // `preview.v` holds the last applied version (keyframe or diff); sender shares a
+    // single counter so diff.v is always > the keyframe.v it was built on.
+    currentVersion: preview.v ?? keyframe.version,
+    diff: diff._,
+    parseEntities: (text) => parse(text).entities,
+    onParseError: (error, text) => {
+      recordWarn('Failed to parse preview diff text', { text, error });
+    },
+  });
+  if (result == null) {
     return state;
   }
-  // `preview.v` holds the last applied version (keyframe or diff); sender shares a
-  // single counter so diff.v is always > the keyframe.v it was built on.
-  const currentVersion = preview.v ?? keyframe.version;
-  if (payload.v != null && payload.v <= currentVersion) {
-    return state;
-  }
-  const result = applyPreviewDiffOps(keyframe, payload.op);
-  if (!result) {
-    return state;
-  }
-  const { text, name } = result;
-  let entities: PreviewItem['entities'] = keyframe.entities;
-  if (payload.xs != null && payload.xs.length > 0) {
-    entities = payload.xs;
-  } else if (text != null) {
-    entities = parsePreviewDiffEntities(text, keyframe.entities);
-  }
+  const { text, name, entities, version } = result;
   const nextPreview: PreviewItem = {
     ...preview,
     name,
     text,
     entities,
-    v: payload.v ?? preview.v ?? keyframe.version,
+    v: version,
     timestamp,
     keyframe,
   };

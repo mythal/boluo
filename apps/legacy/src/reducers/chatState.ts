@@ -31,9 +31,9 @@ import {
   type Events,
   type PreviewDiff,
   type Preview,
-  type PreviewDiffOp,
   shouldAdvanceCursor,
 } from '../api/events';
+import { resolvePreviewDiff, toPreviewDiffBase } from '@boluo/api/preview/diff';
 import { type Message } from '../api/messages';
 import { type SpaceWithRelated } from '../api/spaces';
 import { type Entity } from '../interpreter/entities';
@@ -44,7 +44,6 @@ import {
   type ChatItem,
   type ChatItemSet,
   type PreviewItem,
-  type PreviewKeyframe,
   deleteMessage,
   editMessage,
   makeMessageItem,
@@ -153,94 +152,27 @@ const handleMessageDelete = (itemSet: ChatItemSet, messageId: Id): ChatItemSet =
   return deleteMessage(itemSet, messageId);
 };
 
-const toPreviewKeyframe = (preview: Preview): PreviewKeyframe => ({
-  id: preview.id,
-  version: preview.v ?? 0,
-  name: preview.name,
-  text: preview.text ?? null,
-  entities: preview.entities,
-});
-
-const applyPreviewDiffOps = (
-  keyframe: PreviewKeyframe,
-  ops: PreviewDiffOp[],
-): { text: string | null; name: string; textChanged: boolean } | null => {
-  const baseText = keyframe.text;
-  let nextText = baseText ?? '';
-  let textChanged = false;
-  let name = keyframe.name;
-  for (const op of ops) {
-    switch (op.type) {
-      case 'SPLICE': {
-        const start = op.i;
-        const deleteCount = op.len;
-        if (
-          !Number.isFinite(start) ||
-          !Number.isFinite(deleteCount) ||
-          start < 0 ||
-          deleteCount < 0
-        ) {
-          return null;
-        }
-        const deleteEnd = start + deleteCount;
-        if (start > nextText.length || deleteEnd > nextText.length) {
-          return null;
-        }
-        nextText = nextText.slice(0, start) + op._ + nextText.slice(deleteEnd);
-        textChanged = true;
-        break;
-      }
-      case 'A':
-        nextText += op._;
-        textChanged = true;
-        break;
-      case 'NAME':
-        name = op.name;
-        break;
-    }
-  }
-  if (textChanged && baseText == null) {
-    return null;
-  }
-  return { text: textChanged ? nextText : baseText, name, textChanged };
-};
-
-const parsePreviewDiffEntities = (text: string, fallback: Entity[]): Entity[] => {
-  try {
-    return parse(text).entities;
-  } catch (error) {
-    console.warn('Failed to parse preview diff text', { text, error });
-    return fallback;
-  }
-};
-
 const applyPreviewDiff = (itemSet: ChatItemSet, diff: PreviewDiff): ChatItemSet => {
   const previewItem = itemSet.previews.get(diff.sender);
   if (!previewItem) return itemSet;
-  const keyframe = previewItem.keyframe ?? toPreviewKeyframe(previewItem.preview);
-  const payload = diff._;
-  if (payload.id !== keyframe.id || payload.ref !== keyframe.version) {
-    return itemSet;
-  }
-  const currentVersion = previewItem.preview.v ?? keyframe.version;
-  if (payload.v != null && payload.v <= currentVersion) {
-    return itemSet;
-  }
-  const result = applyPreviewDiffOps(keyframe, payload.op);
-  if (!result) return itemSet;
-  const { text, name } = result;
-  let entities = keyframe.entities;
-  if (payload.xs != null && payload.xs.length > 0) {
-    entities = payload.xs;
-  } else if (text != null) {
-    entities = parsePreviewDiffEntities(text, keyframe.entities);
-  }
+  const keyframe = previewItem.keyframe ?? toPreviewDiffBase(previewItem.preview);
+  const result = resolvePreviewDiff({
+    keyframe,
+    currentVersion: previewItem.preview.v ?? keyframe.version,
+    diff: diff._,
+    parseEntities: (text) => parse(text).entities,
+    onParseError: (error, text) => {
+      console.warn('Failed to parse preview diff text', { text, error });
+    },
+  });
+  if (result == null) return itemSet;
+  const { text, name, entities, version } = result;
   const preview: Preview = {
     ...previewItem.preview,
     name,
     text,
     entities,
-    v: payload.v ?? previewItem.preview.v ?? keyframe.version,
+    v: version,
   };
   const nextPreviewItem: PreviewItem = {
     ...previewItem,
@@ -257,7 +189,7 @@ const newPreview = (itemSet: ChatItemSet, preview: Preview, myId: Id | undefined
     mine: preview.senderId === myId,
     pos: preview.pos,
     preview,
-    keyframe: toPreviewKeyframe(preview),
+    keyframe: toPreviewDiffBase(preview),
   };
   return addItem(itemSet, item);
 };

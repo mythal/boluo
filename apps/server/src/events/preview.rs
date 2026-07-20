@@ -80,7 +80,8 @@ impl PreviewDiffPost {
                 sender: user_id,
                 payload: self,
             },
-        );
+        )
+        .await;
         Ok(())
     }
 }
@@ -289,7 +290,7 @@ impl PreviewPost {
         if should_cancel_position {
             crate::messages::MESSAGE_POSITIONS.cancel(channel_id, id);
         }
-        Update::message_preview(space_id, preview);
+        Update::message_preview(space_id, preview).await;
         Ok(())
     }
 }

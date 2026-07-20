@@ -1,5 +1,6 @@
 import { type MakeToken, type EventId, type UpdateEncoding } from '@boluo/api';
 import { isServerUpdate } from '@boluo/api/events';
+import { publishOwnPreviewAcknowledgement } from '@boluo/api/preview/ack';
 import { useQueryCurrentUser } from '@boluo/hooks/useQueryCurrentUser';
 import { webSocketUrlAtom } from '@boluo/hooks/useWebSocketUrl';
 import { useAtomValue, useSetAtom, useStore } from 'jotai';
@@ -57,7 +58,13 @@ const detectUpdateEncoding = (): UpdateEncoding => {
   return 'plain';
 };
 
-const parseAndDispatchUpdate = (raw: string, mailboxId: string, dispatch: ChatDispatch): void => {
+const parseAndDispatchUpdate = (
+  raw: string,
+  connection: WebSocket,
+  mailboxId: string,
+  userId: string | null,
+  dispatch: ChatDispatch,
+): void => {
   let update: unknown;
   try {
     update = JSON.parse(raw);
@@ -69,6 +76,7 @@ const parseAndDispatchUpdate = (raw: string, mailboxId: string, dispatch: ChatDi
     console.warn('Received invalid update', mailboxId, update);
     return;
   }
+  publishOwnPreviewAcknowledgement(update, userId, connection);
   dispatch({ type: 'update', payload: update });
 };
 
@@ -100,6 +108,7 @@ const handleIncomingMessage = async (
   connection: WebSocket,
   message: MessageEvent<unknown>,
   mailboxId: string,
+  userId: string | null,
   dispatch: ChatDispatch,
   encoding: UpdateEncoding,
 ): Promise<void> => {
@@ -112,7 +121,7 @@ const handleIncomingMessage = async (
     return;
   }
   if (typeof raw === 'string') {
-    parseAndDispatchUpdate(raw, mailboxId, dispatch);
+    parseAndDispatchUpdate(raw, connection, mailboxId, userId, dispatch);
     return;
   }
   if (raw instanceof ArrayBuffer || raw instanceof Blob) {
@@ -124,7 +133,7 @@ const handleIncomingMessage = async (
     const updates = await decompressCachedUpdates(compressed, encoding, mailboxId);
     if (updates == null) return;
     for (const update of updates) {
-      parseAndDispatchUpdate(update, mailboxId, dispatch);
+      parseAndDispatchUpdate(update, connection, mailboxId, userId, dispatch);
     }
     return;
   }
@@ -247,7 +256,9 @@ const connect = async (
   let messageQueue = Promise.resolve();
   newConnection.onmessage = (message: MessageEvent<unknown>) => {
     messageQueue = messageQueue
-      .then(() => handleIncomingMessage(newConnection, message, mailboxId, dispatch, encoding))
+      .then(() =>
+        handleIncomingMessage(newConnection, message, mailboxId, userId, dispatch, encoding),
+      )
       .catch((error) => {
         console.warn('Failed to handle websocket message', mailboxId, error);
       });

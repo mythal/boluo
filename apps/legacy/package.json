@@ -44,6 +44,7 @@
     "@types/react-transition-group": "^4.4.12",
     "@vitejs/plugin-react": "^6.0.3",
     "eslint": "^10.6.0",
+    "tsx": "^4.23.0",
     "typescript": "^6",
     "vite": "^8.1.4"
   },
@@ -54,7 +55,8 @@
     "dev": "vite",
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "tsx --test \"src/**/*.test.ts\""
   },
   "type": "module"
 }

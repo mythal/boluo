@@ -1,7 +1,7 @@
 import { css } from '@emotion/react';
 import * as React from 'react';
 import { useCallback, useEffect } from 'react';
-import RotateCw from '../../assets/icons/rotate-cw.svg';
+import RotateCw from '@boluo/icons/legacy/RotateCw';
 import { breakpoint, mediaQuery, pX, pY, roundedMd, spacingN, textXl } from '../../styles/atoms';
 import { dialogBgColor, dialogShadowColor, dialogTitleColor } from '../../styles/colors';
 import Button, { type ButtonVariant } from '../atoms/Button';

@@ -2,11 +2,15 @@
   "name": "@boluo/backend-proxy",
   "version": "0.0.0",
   "devDependencies": {
-    "@cloudflare/workers-types": "4",
-    "typescript": "^6.0.2"
+    "@boluo/eslint-config": "0.0.0",
+    "@cloudflare/workers-types": "5",
+    "eslint": "^10.6.0",
+    "typescript": "^6"
   },
   "license": "AGPL-3.0",
   "scripts": {
-    "build": "tsc"
-  }
+    "build": "tsc",
+    "lint": "eslint ."
+  },
+  "type": "module"
 }

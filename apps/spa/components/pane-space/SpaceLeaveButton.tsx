@@ -17,6 +17,7 @@ import { Button } from '@boluo/ui/Button';
 import { unwrap } from '@boluo/utils/result';
 import { FloatingBox } from '@boluo/ui/FloatingBox';
 import { PaneHeaderButton } from '@boluo/ui/PaneHeaderButton';
+import { useFloatingSetters } from '@boluo/ui/hooks/useFloatingSetters';
 import { useSWRConfig } from 'swr';
 
 interface Props {
@@ -44,6 +45,7 @@ export const SpaceLeaveButton: FC<Props> = ({ space, mySpaceMember }) => {
     onOpenChange: setComfirmOpen,
     whileElementsMounted: autoUpdate,
   });
+  const { setReference, setFloating } = useFloatingSetters(refs);
 
   const click = useClick(context, {
     enabled: mySpaceMember != null,
@@ -56,7 +58,7 @@ export const SpaceLeaveButton: FC<Props> = ({ space, mySpaceMember }) => {
       <PaneHeaderButton
         icon={mySpaceMember == null ? <UserPlus /> : <UserX />}
         isLoading={isLeaving}
-        ref={refs.setReference}
+        ref={setReference}
         {...getReferenceProps()}
       >
         <span className="text-xs">
@@ -69,12 +71,7 @@ export const SpaceLeaveButton: FC<Props> = ({ space, mySpaceMember }) => {
       </PaneHeaderButton>
       {isConfirmOpen && (
         <FloatingPortal>
-          <div
-            style={floatingStyles}
-            ref={refs.setFloating}
-            {...getFloatingProps()}
-            className="w-54"
-          >
+          <div style={floatingStyles} ref={setFloating} {...getFloatingProps()} className="w-54">
             <FloatingBox className="p-3">
               <FormattedMessage
                 defaultMessage='Are you sure to leave the "{spaceName}" space?'

@@ -6,14 +6,12 @@ import { focusPaneAtom, panesAtom } from '../../state/view.atoms';
 import { usePaneLimit } from '../../hooks/useMaxPane';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { clamp } from '@boluo/utils/number';
-import { type Pane, type PaneData } from '../../state/view.types';
+import { type Pane } from '../../state/view.types';
 import { type PaneDragContextValue } from '../../hooks/usePaneDrag';
 import { findNextPaneKey, type FocusPane } from '../../state/view.atoms';
 
 type DropTarget =
-  | { kind: 'insert'; index: number }
-  | { kind: 'child'; targetKey: number }
-  | { kind: 'none' };
+  { kind: 'insert'; index: number } | { kind: 'child'; targetKey: number } | { kind: 'none' };
 
 interface DragState {
   key: number;
@@ -271,7 +269,7 @@ export const usePaneDragController = ({
         const targetPane = nextVisible[nextTargetIndex]!;
         if (targetPane.child) return prev;
         const { key, child, ...paneData } = draggedPane;
-        const childPane = paneData as PaneData;
+        const childPane = paneData;
         nextVisible[nextTargetIndex] = {
           ...targetPane,
           child: { pane: childPane, ratio: '1/2' },
@@ -403,7 +401,7 @@ export const PaneDragController: FC<Props> = ({ children, visiblePanes }) => {
     setFocusPane,
   });
   return (
-    <PaneDragContext.Provider value={dragContextValue}>
+    <PaneDragContext value={dragContextValue}>
       {children}
       {indicator
         ? createPortal(
@@ -419,6 +417,6 @@ export const PaneDragController: FC<Props> = ({ children, visiblePanes }) => {
             document.body,
           )
         : null}
-    </PaneDragContext.Provider>
+    </PaneDragContext>
   );
 };

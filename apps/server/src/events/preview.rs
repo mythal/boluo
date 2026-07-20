@@ -1,4 +1,4 @@
-use crate::channels::{Channel, ChannelMember};
+use crate::channels::Channel;
 use crate::error::AppError;
 use crate::error::Find;
 use crate::events::Update;
@@ -80,7 +80,8 @@ impl PreviewDiffPost {
                 sender: user_id,
                 payload: self,
             },
-        );
+        )
+        .await;
         Ok(())
     }
 }
@@ -178,7 +179,7 @@ fn should_cancel_preview_position(
 impl PreviewPost {
     pub async fn broadcast(
         self,
-        pool: &sqlx::PgPool,
+        ctx: &crate::context::AppContext,
         space_id: Uuid,
         user_id: Uuid,
     ) -> Result<(), AppError> {
@@ -216,60 +217,54 @@ impl PreviewPost {
             } else {
                 Duration::from_secs(60 * 3)
             };
-            let pos_ratio = crate::pos::CHANNEL_POS_MANAGER
-                .preview_pos(channel_id, id, timeout)
+            let pos_ratio = crate::messages::MESSAGE_POSITIONS
+                .preview_pos(&ctx.db, channel_id, id, timeout)
                 .await?;
             pos = (*pos_ratio.numer() as f64 / *pos_ratio.denom() as f64).ceil();
         }
-        let cached_master =
-            if let Some(manager) = crate::events::context::store().get_manager(&space_id) {
-                match manager.get_member(channel_id, user_id).await {
-                    Ok(Ok(Some(member))) => Some(member.channel.is_master),
-                    Ok(Ok(None)) | Ok(Err(_)) => {
-                        manager.refresh_members_if_needed(channel_id).await.ok();
-                        None
-                    }
-                    Err(_) => None,
-                }
-            } else {
-                None
-            };
-        let is_master = if let Some(is_master) = cached_master {
-            is_master
+        let is_master = if let Some(member) = ctx
+            .space_store
+            .resolve_channel_member(space_id, channel_id, user_id)
+            .await?
+        {
+            member.channel.is_master
         } else {
-            let mut conn = pool.acquire().await?;
-            let channel_member =
-                ChannelMember::get(&mut conn, user_id, space_id, channel_id).await?;
-            if let Some(channel_member) = channel_member {
-                channel_member.is_master
+            // resolve_channel_member already performed the bounded authoritative wait.
+            let snapshot = ctx.space_store.loaded_authoritative_snapshot(space_id);
+            let (channel, is_space_member) = if let Some(snapshot) = snapshot {
+                let channel = snapshot.channels.get(&channel_id).cloned().or_not_found()?;
+                let is_space_member = snapshot.space_members.contains_key(&user_id);
+                (channel, is_space_member)
             } else {
+                let mut conn = ctx.db.acquire().await?;
                 let channel = Channel::get_by_id(&mut *conn, &channel_id)
                     .await
                     .or_not_found()?;
-                if channel.space_id != space_id {
-                    return Err(AppError::NoPermission(
-                        "Channel does not belong to this space".to_string(),
-                    ));
-                }
-                if !channel.is_public {
-                    return Err(AppError::NoPermission(
-                        "You are not a member of this channel".to_string(),
-                    ));
-                }
                 let is_space_member =
                     SpaceMember::get(&mut *conn, &user_id, &channel.space_id).await?;
-                if is_space_member.is_none() {
-                    return Err(AppError::NoPermission(
-                        "You are not a member of this space".to_string(),
-                    ));
-                }
-                tracing::warn!(
-                    "User {} is posting preview to public channel {} without being a member",
-                    user_id,
-                    channel_id
-                );
-                false
+                (channel, is_space_member.is_some())
+            };
+            if channel.space_id != space_id {
+                return Err(AppError::NoPermission(
+                    "Channel does not belong to this space".to_string(),
+                ));
             }
+            if !channel.is_public {
+                return Err(AppError::NoPermission(
+                    "You are not a member of this channel".to_string(),
+                ));
+            }
+            if !is_space_member {
+                return Err(AppError::NoPermission(
+                    "You are not a member of this space".to_string(),
+                ));
+            }
+            tracing::warn!(
+                "User {} is posting preview to public channel {} without being a member",
+                user_id,
+                channel_id
+            );
+            false
         };
         let whisper_to_users = None;
         let preview = Box::new(Preview {
@@ -293,9 +288,9 @@ impl PreviewPost {
         });
 
         if should_cancel_position {
-            crate::pos::CHANNEL_POS_MANAGER.cancel(channel_id, id);
+            crate::messages::MESSAGE_POSITIONS.cancel(channel_id, id);
         }
-        Update::message_preview(space_id, preview);
+        Update::message_preview(space_id, preview).await;
         Ok(())
     }
 }

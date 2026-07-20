@@ -2,25 +2,25 @@ import {
   autoUpdate,
   offset,
   type Placement,
+  type ReferenceType,
   shift,
   useDismiss,
   useFloating,
-  type UseFloatingReturn,
   useHover,
   useInteractions,
   useRole,
 } from '@floating-ui/react';
 import type React from 'react';
 import { useCallback, useState } from 'react';
+import { type FloatingSetters, useFloatingSetters } from './useFloatingSetters';
 
 type UseInteractionsReturn = ReturnType<typeof useInteractions>;
 
-interface UseTooltipReturn {
+interface UseTooltipReturn extends FloatingSetters<ReferenceType> {
   showTooltip: boolean;
   floatingStyles: React.CSSProperties;
   getReferenceProps: UseInteractionsReturn['getReferenceProps'];
   getFloatingProps: UseInteractionsReturn['getFloatingProps'];
-  refs: UseFloatingReturn['refs'];
   dismiss: () => void;
 }
 
@@ -42,12 +42,14 @@ export const useTooltip = (
   const dismiss = useDismiss(context, {});
   const role = useRole(context, { role: 'tooltip' });
   const { getReferenceProps, getFloatingProps } = useInteractions([hover, dismiss, role]);
+  const { setReference, setFloating } = useFloatingSetters(refs);
   return {
     showTooltip,
     floatingStyles,
     getReferenceProps,
     getFloatingProps,
-    refs,
+    setReference,
+    setFloating,
     dismiss: useCallback(() => setShowTooltip(false), []),
   };
 };

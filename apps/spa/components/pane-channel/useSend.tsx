@@ -1,7 +1,7 @@
 import { type NewMessage, type EditMessage, type MemberWithUser } from '@boluo/api';
 import { patch, post } from '@boluo/api-browser';
 import { useStore } from 'jotai';
-import { useCallback, useMemo, useRef } from 'react';
+import { useCallback, useLayoutEffect, useMemo, useRef } from 'react';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { useChannelId } from '../../hooks/useChannelId';
 import { useQueryChannelMembers } from '@boluo/hooks/useQueryChannelMembers';
@@ -29,14 +29,19 @@ export const useSend = () => {
   const { composeAtom, parsedAtom, checkComposeAtom, defaultDiceFaceRef } = useChannelAtoms();
   const store = useStore();
 
-  const { data: queryChannelMembers } = useQueryChannelMembers(channelId);
   const myMember = useMember();
+  const { data: queryChannelMembers } = useQueryChannelMembers(
+    channelId,
+    myMember?.space.spaceId,
+  );
   const channelMembersMap: Map<string, MemberWithUser> = useMemo(() => {
     if (queryChannelMembers == null) return new Map<string, MemberWithUser>();
     return new Map(queryChannelMembers.members.map((member) => [member.user.username, member]));
   }, [queryChannelMembers]);
   const channelMembersMapRef = useRef(channelMembersMap);
-  channelMembersMapRef.current = channelMembersMap;
+  useLayoutEffect(() => {
+    channelMembersMapRef.current = channelMembersMap;
+  });
 
   const setBanner = useSetBanner();
 
@@ -128,6 +133,7 @@ export const useSend = () => {
           messageId: null,
           previewId: composeState.previewId,
           channelId,
+          spaceId: myMember.space.spaceId,
           name,
           text,
           entities,

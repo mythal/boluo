@@ -4,6 +4,7 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import { useFloating, offset, flip, shift, autoUpdate } from '@floating-ui/react';
 import clsx from 'clsx';
 import { TooltipBox } from '../TooltipBox';
+import { useFloatingSetters } from '../hooks/useFloatingSetters';
 
 interface Props {
   source: string;
@@ -26,6 +27,7 @@ export const EntityCode: FC<Props> = ({
     middleware: [offset(8), flip(), shift({ padding: 8 })],
     whileElementsMounted: autoUpdate,
   });
+  const { setReference, setFloating } = useFloatingSetters(refs);
 
   const onCopy = async () => {
     try {
@@ -50,7 +52,7 @@ export const EntityCode: FC<Props> = ({
   return (
     <>
       <code
-        ref={refs.setReference}
+        ref={setReference}
         className={clsx(
           'EntityCode bg-surface-muted border-border-default hover:border-border-strong font-pixel cursor-pointer rounded-sm border px-1 not-italic shadow-xs',
           'active:relative active:top-px active:shadow-none',
@@ -70,14 +72,7 @@ export const EntityCode: FC<Props> = ({
       >
         {text}
       </code>
-      <TooltipBox
-        defaultStyle
-        show={showCopied}
-        // False positive
-        // eslint-disable-next-line react-hooks/refs
-        ref={refs.setFloating}
-        style={floatingStyles}
-      >
+      <TooltipBox defaultStyle show={showCopied} ref={setFloating} style={floatingStyles}>
         <FormattedMessage defaultMessage="Copied" />
       </TooltipBox>
     </>

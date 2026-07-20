@@ -1,4 +1,3 @@
-import { nextJsConfig } from '@boluo/eslint-config/next-js';
+import { createConfig } from '@boluo/eslint-config/next-js';
 
-/** @type {import("eslint").Linter.Config} */
-export default nextJsConfig;
+export default createConfig(import.meta.dirname);

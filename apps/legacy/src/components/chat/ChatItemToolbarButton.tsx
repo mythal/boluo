@@ -1,7 +1,7 @@
 import { css } from '@emotion/react';
 import { darken } from 'polished';
 import * as React from 'react';
-import RotateCw from '../../assets/icons/rotate-cw.svg';
+import RotateCw from '@boluo/icons/legacy/RotateCw';
 import { fontBase, fontNormal, p, textBase, textLg, textXs } from '../../styles/atoms';
 import { textColor } from '../../styles/colors';
 import { isMobile } from '../../utils/browser';

@@ -5,11 +5,11 @@
     "@boluo/eslint-config": "0.0.0",
     "@boluo/types": "0.0.0",
     "@boluo/typescript-config": "0.0.0",
-    "@types/node": "^24.0.12",
-    "@types/react": "^19.0.12",
-    "@types/react-dom": "^19.0.4",
-    "eslint": "^9.39.4",
-    "typescript": "^6.0.2"
+    "@types/node": "^26.1.1",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "eslint": "^10.6.0",
+    "typescript": "^6"
   },
   "exports": {
     ".": "./index.ts",
@@ -19,7 +19,7 @@
   "license": "AGPL-3.0",
   "scripts": {
     "check": "tsc --noEmit",
-    "lint": "eslint . --ext .ts,.tsx"
+    "lint": "eslint ."
   },
   "sideEffects": false,
   "type": "module"

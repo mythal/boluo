@@ -3,11 +3,11 @@ import styled from '@emotion/styled';
 import { darken } from 'polished';
 import Prando from 'prando';
 import React, { type MouseEventHandler, type ReactNode, useState } from 'react';
-import Cubes from '../../assets/icons/cubes.svg';
-import D20 from '../../assets/icons/d20.svg';
-import ElderSign from '../../assets/icons/elder-sign.svg';
-import ThumbDown from '../../assets/icons/thumb-down.svg';
-import ThumbUp from '../../assets/icons/thumb-up.svg';
+import Cubes from '@boluo/icons/legacy/Cubes';
+import D20 from '@boluo/icons/legacy/D20';
+import ElderSign from '@boluo/icons/legacy/ElderSign';
+import ThumbDown from '@boluo/icons/legacy/ThumbDown';
+import ThumbUp from '@boluo/icons/legacy/ThumbUp';
 import {
   type CocRollResult,
   type DicePoolResult,
@@ -317,20 +317,10 @@ const Node: React.FC<{ node: EvaluatedExprNode }> = ({ node }) => {
 };
 
 export const ExprEntity = React.memo<Props>(({ node, rng }) => {
+  const showEvaluated = node.type === 'SubExpr' || node.type === 'Binary';
+  let evaluated: EvaluatedExprNode;
   try {
-    const showEvaluated = node.type === 'SubExpr' || node.type === 'Binary';
-    const evaluated = evaluate(node, rng ?? fakeRng);
-    return (
-      <React.Fragment>
-        <Node node={evaluated} />
-        {showEvaluated && (
-          <span>
-            {' '}
-            = <Num>{evaluated.value}</Num>
-          </span>
-        )}
-      </React.Fragment>
-    );
+    evaluated = evaluate(node, rng ?? fakeRng);
   } catch (e) {
     if (e === TOO_MUCH_LAYER) {
       return <span css={error}>表达式嵌套太深</span>;
@@ -338,4 +328,15 @@ export const ExprEntity = React.memo<Props>(({ node, rng }) => {
       throw e;
     }
   }
+  return (
+    <React.Fragment>
+      <Node node={evaluated} />
+      {showEvaluated && (
+        <span>
+          {' '}
+          = <Num>{evaluated.value}</Num>
+        </span>
+      )}
+    </React.Fragment>
+  );
 });

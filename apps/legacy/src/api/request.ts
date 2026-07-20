@@ -8,6 +8,7 @@ import type {
   IdWithToken,
   KickFromChannel,
   MakeToken,
+  MessageIdQuery,
   MoveMessageBetween,
   QueryUser,
 } from '@boluo/api';
@@ -228,12 +229,12 @@ export function post(path: '/messages/send', payload: NewMessage): Promise<AppRe
 export function post(
   path: '/messages/delete',
   payload: {},
-  query: IdQuery,
+  query: MessageIdQuery,
 ): Promise<AppResult<Message>>;
 export function post(
   path: '/messages/toggle_fold',
   payload: {},
-  query: IdQuery,
+  query: MessageIdQuery,
 ): Promise<AppResult<Message>>;
 export function post(path: '/messages/move_to', payload: MoveTo): Promise<AppResult<Message>>;
 export function post(
@@ -287,10 +288,13 @@ export function get(
   path: '/spaces/members',
   query: IdQuery,
 ): Promise<AppResult<Record<string, SpaceMemberWithUser>>>;
-export function get(path: '/channels/query', query: IdQuery): Promise<AppResult<Channel>>;
+export function get(
+  path: '/channels/query',
+  query: IdQuery & { spaceId?: string },
+): Promise<AppResult<Channel>>;
 export function get(
   path: '/channels/query_with_related',
-  query: IdQuery,
+  query: IdQuery & { spaceId?: string },
 ): Promise<AppResult<ChannelWithRelated>>;
 export function get(
   path: '/channels/by_space',
@@ -298,7 +302,7 @@ export function get(
 ): Promise<AppResult<ChannelWithMaybeMember[]>>;
 export function get(
   path: '/channels/all_members',
-  query: IdQuery,
+  query: IdQuery & { spaceId?: string },
 ): Promise<AppResult<ChannelMemberWithUser[]>>;
 export function get(
   path: '/channels/check_name',
@@ -308,7 +312,7 @@ export function get(path: '/channels/export', query: Export): Promise<AppResult<
 export function get(path: '/messages/query', query: IdQuery): Promise<AppResult<Message | null>>;
 export function get(path: '/messages/by_channel', query: ByChannel): Promise<AppResult<Message[]>>;
 export function get(
-  path: '/events/token',
+  path: '/updates/token',
   query: MakeToken,
 ): Promise<AppResult<{ token: string; issuedAt: number }>>;
 

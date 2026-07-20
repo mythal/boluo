@@ -1,4 +1,4 @@
-import { createContext, useContext } from 'react';
+import { createContext, use } from 'react';
 import { type PointerEvent as ReactPointerEvent } from 'react';
 
 export interface PaneDragContextValue {
@@ -19,4 +19,4 @@ const defaultPaneDragContext: PaneDragContextValue = {
 
 export const PaneDragContext = createContext<PaneDragContextValue>(defaultPaneDragContext);
 export const PaneDragProvider = PaneDragContext.Provider;
-export const usePaneDrag = () => useContext(PaneDragContext);
+export const usePaneDrag = () => use(PaneDragContext);

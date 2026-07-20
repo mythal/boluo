@@ -36,6 +36,8 @@ const useThemeSetup = (settings: Settings | undefined | null): ResolvedTheme => 
   const themeFromSettings = settings?.theme;
   const [theme, setTheme] = useState<Theme>('system');
   const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>('light');
+  // Cookie and matchMedia are client-only, so the theme is corrected after mount.
+  /* eslint-disable @eslint-react/set-state-in-effect */
   useEffect(() => {
     const themeFromCookie = getThemeFromCookie();
     if (themeFromSettings) {
@@ -51,6 +53,7 @@ const useThemeSetup = (settings: Settings | undefined | null): ResolvedTheme => 
     setThemeToDom(theme);
     setResolvedTheme(resolveSystemTheme(theme));
   }, [theme]);
+  /* eslint-enable @eslint-react/set-state-in-effect */
   return resolvedTheme;
 };
 

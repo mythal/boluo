@@ -23,5 +23,5 @@ export const toSettings = (rawSettings: unknown): Settings => {
   if (!rawSettings || typeof rawSettings !== 'object') {
     return defaultSettings;
   }
-  return rawSettings as Settings;
+  return rawSettings;
 };

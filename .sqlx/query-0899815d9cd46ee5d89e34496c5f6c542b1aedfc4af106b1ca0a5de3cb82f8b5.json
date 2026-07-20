@@ -1,0 +1,46 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n    (msg.id IS NOT NULL) AS \"message_exists!\",\n    (ch.id IS NOT NULL) AS \"channel_exists!\",\n    COALESCE(\n        cm.user_id IS NOT NULL\n        AND sm.user_id IS NOT NULL\n        AND (ch.is_document OR msg.sender_id = $2),\n        FALSE\n    ) AS \"can_edit!\",\n    COALESCE(\n        $3::timestamptz IS NULL OR msg.modified = $3,\n        FALSE\n    ) AS \"version_matches!\"\nFROM\n    (SELECT 1) singleton\n    LEFT JOIN messages msg ON msg.id = $1\n        AND msg.deleted = FALSE\n    LEFT JOIN channels ch ON ch.id = msg.channel_id\n        AND ch.deleted = FALSE\n    LEFT JOIN channel_members cm ON cm.channel_id = msg.channel_id\n        AND cm.user_id = $2\n        AND cm.is_joined\n    LEFT JOIN space_members sm ON sm.space_id = ch.space_id\n        AND sm.user_id = $2\nLIMIT 1;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "message_exists!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "channel_exists!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "can_edit!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "version_matches!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "0899815d9cd46ee5d89e34496c5f6c542b1aedfc4af106b1ca0a5de3cb82f8b5"
+}

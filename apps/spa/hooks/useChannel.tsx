@@ -5,7 +5,7 @@ import { recordWarn } from '../error';
 export const ChannelContext = React.createContext<Channel | null>(null);
 
 export const useChannel = () => {
-  const channel = React.useContext(ChannelContext);
+  const channel = React.use(ChannelContext);
   if (!channel) {
     recordWarn('useChannel must be used within a channel context');
   }

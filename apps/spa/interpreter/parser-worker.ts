@@ -7,8 +7,7 @@ export interface ParserArguments {
 }
 
 export type ParserWorkerResponse =
-  | { type: 'result'; data: ParseResult }
-  | { type: 'error'; message: string };
+  { type: 'result'; data: ParseResult } | { type: 'error'; message: string };
 
 const worker = self as unknown as Worker;
 worker.addEventListener(

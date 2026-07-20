@@ -5,10 +5,10 @@ import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { type Channel } from '../../api/channels';
 import { type Space } from '../../api/spaces';
-import BellSlashSolid from '../../assets/icons/bell-slash-solid.svg';
-import BellSolid from '../../assets/icons/bell-solid.svg';
-import HelpIcon from '../../assets/icons/help.svg';
-import PlusCircle from '../../assets/icons/plus-circle.svg';
+import BellSlashSolid from '@boluo/icons/legacy/BellSlashSolid';
+import BellSolid from '@boluo/icons/legacy/BellSolid';
+import HelpIcon from '@boluo/icons/legacy/Help';
+import PlusCircle from '@boluo/icons/legacy/PlusCircle';
 import { useNotificationSwitch } from '../../states/notify';
 import { useSelector } from '../../store';
 import {

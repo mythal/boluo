@@ -9,12 +9,14 @@ interface Props {
 
 export const EntityExprFateRoll: FC<Props> = ({ node }) => {
   const className = clsx('EntityExprFateRoll inline-flex h-full items-end gap-0.5');
-  if ('value' in node) {
+  if ('values' in node) {
+    const [first, second, third, fourth] = node.values;
     return (
       <div className={className}>
-        {node.values.map((x, i) => (
-          <FateDice key={i} value={x} />
-        ))}
+        <FateDice value={first} />
+        <FateDice value={second} />
+        <FateDice value={third} />
+        <FateDice value={fourth} />
       </div>
     );
   } else {

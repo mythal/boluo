@@ -42,7 +42,7 @@ export const ChannelSubPaneMemberList: FC<Props> = ({ currentUser, channel, onCl
   }
 
   const { data: userStatusMap } = useQueryUsersStatus(channel.spaceId);
-  const { data: membersData, error } = useQueryChannelMembers(channel.id);
+  const { data: membersData, error } = useQueryChannelMembers(channel.id, channel.spaceId);
   const containerClassName = clsx(
     'border-border-subtle bg-pane-bg inset-y-0 right-0 z-40 flex h-full flex-col border-l',
     mini ? '' : 'absolute shadow-xl w-3xs @xl:static @xl:shadow-none',

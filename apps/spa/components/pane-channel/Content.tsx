@@ -63,37 +63,38 @@ export const Content = memo<Props>(
       }
       const nodeList = [];
       nodeList.push(
-        ...evaluatedEntities.map((entity, index) => {
+        ...evaluatedEntities.map((entity) => {
+          const key = entity.start;
           switch (entity.type) {
             case 'Text':
-              return <EntityText key={index} source={source} entity={entity} />;
+              return <EntityText key={key} source={source} entity={entity} />;
             case 'Link':
-              return <EntityLink key={index} source={source} entity={entity} />;
+              return <EntityLink key={key} source={source} entity={entity} />;
             case 'StrongEmphasis':
               return (
                 <EntityStrongEmphasis
-                  key={index}
+                  key={key}
                   source={source}
                   entity={entity}
                   isAction={isAction}
                 />
               );
             case 'Strong':
-              return <EntityStrong key={index} source={source} entity={entity} />;
+              return <EntityStrong key={key} source={source} entity={entity} />;
             case 'Emphasis':
               return (
-                <EntityEmphasis key={index} source={source} entity={entity} isAction={isAction} />
+                <EntityEmphasis key={key} source={source} entity={entity} isAction={isAction} />
               );
             case 'Code':
-              return <EntityCode key={index} source={source} entity={entity} />;
+              return <EntityCode key={key} source={source} entity={entity} />;
             case 'CodeBlock':
-              return <EntityCodeBlock key={index} source={source} entity={entity} />;
+              return <EntityCodeBlock key={key} source={source} entity={entity} />;
             case 'Expr':
-              return <EntityExpr key={index} source={source} entity={entity} />;
+              return <EntityExpr key={key} source={source} entity={entity} />;
             case 'EvaluatedExpr':
-              return <EntityEvaluatedExpr key={index} source={source} entity={entity} />;
+              return <EntityEvaluatedExpr key={key} source={source} entity={entity} />;
             default:
-              return <EntityUnknown key={index} />;
+              return <EntityUnknown key={key} />;
           }
         }),
       );

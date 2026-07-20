@@ -2,11 +2,13 @@
   "name": "@boluo/store",
   "version": "0.0.0",
   "dependencies": {
-    "jotai": "^2.12.2"
+    "jotai": "^2.20.1"
   },
   "devDependencies": {
+    "@boluo/eslint-config": "0.0.0",
     "@boluo/typescript-config": "0.0.0",
-    "typescript": "^6.0.2"
+    "eslint": "^10.6.0",
+    "typescript": "^6"
   },
   "exports": {
     ".": "./src/index.ts"
@@ -15,7 +17,8 @@
   "private": true,
   "scripts": {
     "build": "tsc --project tsconfig.json",
-    "check": "tsc --noEmit"
+    "check": "tsc --noEmit",
+    "lint": "eslint ."
   },
   "sideEffects": false,
   "type": "module"

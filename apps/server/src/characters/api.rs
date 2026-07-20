@@ -7,9 +7,16 @@ use super::models::{CharacterVariable, CharacterVisibility};
 #[serde(rename_all = "camelCase")]
 /// Query params for listing characters in a space.
 pub struct ListCharacters {
-    pub id: Uuid,
+    pub space_id: Uuid,
     #[serde(default)]
     pub include_archived: bool,
+}
+
+#[derive(Deserialize, Debug, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct QueryCharacter {
+    pub space_id: Uuid,
+    pub character_id: Uuid,
 }
 
 #[derive(Deserialize, Debug, specta::Type)]
@@ -45,6 +52,7 @@ pub struct CreateCharacter {
 #[serde(rename_all = "camelCase")]
 /// Payload for editing a character; `alias: Some("")` clears it.
 pub struct EditCharacter {
+    pub space_id: Uuid,
     pub character_id: Uuid,
     pub name: Option<String>,
     pub description: Option<String>,
@@ -60,6 +68,7 @@ pub struct EditCharacter {
 #[serde(rename_all = "camelCase")]
 /// Payload for creating a character variable.
 pub struct CreateVariable {
+    pub space_id: Uuid,
     pub character_id: Uuid,
     pub key: String,
     #[serde(default)]
@@ -78,6 +87,7 @@ pub struct CreateVariable {
 #[serde(rename_all = "camelCase")]
 /// Payload for editing a character variable.
 pub struct EditVariable {
+    pub space_id: Uuid,
     pub character_id: Uuid,
     pub key: String,
     pub display_name: Option<String>,
@@ -93,6 +103,7 @@ pub struct EditVariable {
 #[serde(rename_all = "camelCase")]
 /// Payload for deleting a character variable.
 pub struct DeleteVariable {
+    pub space_id: Uuid,
     pub character_id: Uuid,
     pub key: String,
 }
@@ -101,6 +112,7 @@ pub struct DeleteVariable {
 #[serde(rename_all = "camelCase")]
 /// Query params for listing variable history by key.
 pub struct VariableHistoryQuery {
+    pub space_id: Uuid,
     pub character_id: Uuid,
     pub key: String,
 }
@@ -109,6 +121,7 @@ pub struct VariableHistoryQuery {
 #[serde(rename_all = "camelCase")]
 /// Query params for checking variable key/alias availability.
 pub struct CheckVariableAvailability {
+    pub space_id: Uuid,
     pub character_id: Uuid,
     #[serde(default)]
     pub key: Option<String>,

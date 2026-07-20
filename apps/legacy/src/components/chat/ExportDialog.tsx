@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import Select from 'react-select';
 import { type Channel, type Export } from '../../api/channels';
 import { get } from '../../api/request';
-import FileExport from '../../assets/icons/file-export.svg';
+import FileExport from '@boluo/icons/legacy/FileExport';
 import { bbCodeTextBlob, csvBlob, exportMessage, jsonBlob, txtBlob } from '../../export';
 import { useDispatch } from '../../store';
 import { mB, mT, selectTheme, uiShadow, widthFull } from '../../styles/atoms';
@@ -47,7 +47,7 @@ function ExportDialog({ dismiss, channel }: Props) {
   const [simple, setSimple] = useState(false);
   const [headerAfterWrap, setHeaderAfterWrap] = useState(false);
   const dispatch = useDispatch();
-  const now = new Date();
+  const [now] = useState(() => new Date());
   let filename = `${fileNameDateTimeFormat(now)}_${channel.name}`;
   if (format.value === 'JSON') {
     filename += '.json';
@@ -61,13 +61,20 @@ function ExportDialog({ dismiss, channel }: Props) {
 
   const exportData = async () => {
     setLoading(true);
-    const membersResult = await get('/channels/all_members', { id: channel.id });
+    const membersResult = await get('/channels/all_members', {
+      id: channel.id,
+      spaceId: channel.spaceId,
+    });
     if (membersResult.isErr) {
       throwErr(dispatch)(membersResult.value);
       return;
     }
     const members = membersResult.value;
-    const exportGet: Export = { channelId: channel.id };
+    const exportGet: Export = {
+      channelId: channel.id,
+      spaceId: channel.spaceId,
+      after: null,
+    };
     if (afterDays.value) {
       const now = new Date();
       now.setHours(0, 0, 0, 0);

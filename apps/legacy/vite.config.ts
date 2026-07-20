@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import svgr from 'vite-plugin-svgr';
+import babel from '@rolldown/plugin-babel';
+import emotionBabelPlugin from '@boluo/emotion-babel-plugin';
 import path from 'path';
 import dotenv from 'dotenv';
 
@@ -15,15 +16,9 @@ export default defineConfig({
   plugins: [
     react({
       jsxImportSource: '@emotion/react',
-      babel: {
-        plugins: ['@emotion/babel-plugin'],
-      },
     }),
-    svgr({
-      include: '**/*.svg',
-      svgrOptions: {
-        icon: true,
-      },
+    babel({
+      plugins: [emotionBabelPlugin],
     }),
   ],
 
@@ -48,9 +43,17 @@ export default defineConfig({
     sourcemap: true,
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom'],
-          redux: ['redux', 'react-redux', 'redux-thunk'],
+        manualChunks(id) {
+          if (id.includes('/node_modules/react/') || id.includes('/node_modules/react-dom/')) {
+            return 'vendor';
+          }
+          if (
+            id.includes('/node_modules/redux/') ||
+            id.includes('/node_modules/react-redux/') ||
+            id.includes('/node_modules/redux-thunk/')
+          ) {
+            return 'redux';
+          }
         },
       },
     },

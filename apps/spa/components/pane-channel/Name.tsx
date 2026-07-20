@@ -19,6 +19,7 @@ import {
 import Icon from '@boluo/ui/Icon';
 import { Delay } from '@boluo/ui/Delay';
 import { FallbackIcon } from '@boluo/ui/FallbackIcon';
+import { useFloatingSetters } from '@boluo/ui/hooks/useFloatingSetters';
 import { NameUserPanel } from './NameUserPanel';
 
 interface Props {
@@ -45,6 +46,7 @@ export const Name: FC<Props> = ({ name, isMaster, inGame, userId, messageColor }
     ],
     whileElementsMounted: autoUpdate,
   });
+  const { setReference, setFloating } = useFloatingSetters(refs);
   const click = useClick(context);
   const dismiss = useDismiss(context);
   const { getReferenceProps, getFloatingProps } = useInteractions([click, dismiss]);
@@ -61,7 +63,7 @@ export const Name: FC<Props> = ({ name, isMaster, inGame, userId, messageColor }
         interactive={userId != null}
         color={color}
         icon={isMaster ? masterIcon : undefined}
-        ref={refs.setReference}
+        ref={setReference}
         {...getReferenceProps()}
       >
         {isEmptyName ? (
@@ -78,7 +80,7 @@ export const Name: FC<Props> = ({ name, isMaster, inGame, userId, messageColor }
       {isOpen && userId && (
         <FloatingPortal>
           <div
-            ref={refs.setFloating}
+            ref={setFloating}
             style={floatingStyles}
             {...getFloatingProps()}
             className={middlewareData.hide?.referenceHidden === true ? 'hidden' : ''}

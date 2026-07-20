@@ -35,9 +35,7 @@ export function useSendStatus() {
         return;
       }
       const panes = store.get(panesAtom);
-      const channelPanes: ChannelPane[] = panes.filter(
-        (pane) => pane.type === 'CHANNEL',
-      ) as ChannelPane[];
+      const channelPanes: ChannelPane[] = panes.filter((pane) => pane.type === 'CHANNEL');
       sendStatus(
         connection,
         'ONLINE',
@@ -46,9 +44,7 @@ export function useSendStatus() {
     }, SEND_STATUS_INTERVAL);
     const visibilityListener = () => {
       const panes = store.get(panesAtom);
-      const channelPanes: ChannelPane[] = panes.filter(
-        (pane) => pane.type === 'CHANNEL',
-      ) as ChannelPane[];
+      const channelPanes: ChannelPane[] = panes.filter((pane) => pane.type === 'CHANNEL');
       const state = document.visibilityState;
       const focus = channelPanes.map((pane) => pane.channelId);
       if (state === 'visible') {

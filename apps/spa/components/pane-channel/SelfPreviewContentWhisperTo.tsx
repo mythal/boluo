@@ -19,6 +19,8 @@ import { Avatar } from '@boluo/ui/users/Avatar';
 import { useQueryAppSettings } from '@boluo/hooks/useQueryAppSettings';
 import { ButtonInline } from '@boluo/ui/ButtonInline';
 import { FloatingBox } from '@boluo/ui/FloatingBox';
+import { useFloatingSetters } from '@boluo/ui/hooks/useFloatingSetters';
+import { useMember } from '../../hooks/useMember';
 
 interface Props {
   inGame: boolean;
@@ -29,7 +31,11 @@ interface Props {
 
 export const ContentWhisperTo: FC<Props> = ({ channelId, whisperToUsernames, inGame, myId }) => {
   const { data: appSettings } = useQueryAppSettings();
-  const { data: channelMembers, isLoading } = useQueryChannelMembers(channelId);
+  const member = useMember();
+  const { data: channelMembers, isLoading } = useQueryChannelMembers(
+    channelId,
+    member?.space.spaceId,
+  );
   const { composeAtom } = useChannelAtoms();
   const dispatch = useSetAtom(composeAtom);
   const removeUsername = useCallback(
@@ -149,6 +155,7 @@ export const WhisperToItemAdd: FC<{
     onOpenChange: setOpen,
     middleware: [offset({ mainAxis: -4 })],
   });
+  const { setReference, setFloating } = useFloatingSetters(refs);
   const click = useClick(context, {});
   const dismiss = useDismiss(context, {});
   const { getReferenceProps, getFloatingProps } = useInteractions([click, dismiss]);
@@ -162,14 +169,14 @@ export const WhisperToItemAdd: FC<{
 
   return (
     <>
-      <ButtonInline aria-pressed={open} ref={refs.setReference} {...getReferenceProps()}>
+      <ButtonInline aria-pressed={open} ref={setReference} {...getReferenceProps()}>
         <Icon icon={Plus} />
       </ButtonInline>
       {open && (
         <FloatingPortal>
           <FloatingBox
             className=""
-            ref={refs.setFloating}
+            ref={setFloating}
             style={floatingStyles}
             {...getFloatingProps()}
           >

@@ -121,6 +121,30 @@ test('legacy chatReducer applies preview diff update', () => {
   assert.strictEqual(previewItem.preview.v, 2);
 });
 
+test('legacy chatReducer removes a whitespace-only preview', () => {
+  let state = makeState();
+  state = applyEvent(
+    state,
+    makeEvent({ type: 'MESSAGE_PREVIEW', channelId, preview: makePreview() }, 1),
+  );
+  state = applyEvent(
+    state,
+    makeEvent(
+      {
+        type: 'MESSAGE_PREVIEW',
+        channelId,
+        preview: makePreview({
+          text: '   ',
+          entities: [{ type: 'Text', start: 0, len: 3 }],
+        }),
+      },
+      2,
+    ),
+  );
+
+  assert.strictEqual(state.itemSet.previews.get(senderId), undefined);
+});
+
 test('legacy chatReducer ignores preview diff with mismatched keyframe ref', () => {
   let state = makeState();
   state = applyEvent(

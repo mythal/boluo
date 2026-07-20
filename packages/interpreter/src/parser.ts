@@ -486,9 +486,10 @@ const operator2: P<Operator> = regex(/^[*/×÷]/).map(([op]): Operator => {
   throw Error('unreachable');
 });
 
-const num: P<ExprOf<'Num'>> = regex(/^\d{1,5}/).map(
-  ([n]): ExprOf<'Num'> => ({ type: 'Num', value: Number(n) }),
-);
+const num: P<ExprOf<'Num'>> = regex(/^\d{1,5}/).map(([n]): ExprOf<'Num'> => ({
+  type: 'Num',
+  value: Number(n),
+}));
 
 const chainl1 = <T, O>(op: P<O>, p: () => P<T>, cons: (op: O, l: T, r: T) => T): P<T> =>
   new P((state, env) => {
@@ -792,12 +793,7 @@ interface MuteModifier {
 }
 
 export type Modifier =
-  | MeModifier
-  | RollModifier
-  | WhisperModifier
-  | MuteModifier
-  | InGameModifier
-  | AsModifier;
+  MeModifier | RollModifier | WhisperModifier | MuteModifier | InGameModifier | AsModifier;
 
 const MAX_CHARACTER_NAME_LENGTH = 32;
 

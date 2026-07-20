@@ -14,7 +14,7 @@ interface Props {
 export const ChannelMembersButton: FC<Props> = ({ channelId, spaceId }) => {
   const { subPaneStateAtom } = useChannelAtoms();
   const [subPaneState, setSubPaneState] = useAtom(subPaneStateAtom);
-  const { data: membersInfo, isLoading } = useQueryChannelMembers(channelId);
+  const { data: membersInfo, isLoading } = useQueryChannelMembers(channelId, spaceId);
   const { data: userStatus } = useQueryUsersStatus(spaceId);
   const onlineCount = useMemo(() => {
     if (membersInfo == null || userStatus == null) return 0;

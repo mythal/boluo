@@ -6,7 +6,13 @@
       {
         "ordinal": 0,
         "name": "email_verified_at",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "users_extension",
+            "name": "email_verified_at"
+          }
+        }
       }
     ],
     "parameters": {

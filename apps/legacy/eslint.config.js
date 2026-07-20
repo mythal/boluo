@@ -1,8 +1,7 @@
-import { config } from '@boluo/eslint-config/react-internal';
+import { createConfig } from '@boluo/eslint-config/react-internal';
 
-/** @type {import("eslint").Linter.Config} */
 export default [
-  ...config,
+  ...createConfig(import.meta.dirname),
   {
     files: ['vite.config.ts'],
     rules: {
@@ -12,9 +11,8 @@ export default [
   },
   {
     rules: {
-      'react/no-unknown-property': ['error', { ignore: ['css'] }],
-      'react/prop-types': 'off',
-      'react/display-name': 'off',
+      '@eslint-react/dom-no-unknown-property': ['error', { ignore: ['css'] }],
+      '@eslint-react/no-missing-component-display-name': 'off',
       '@typescript-eslint/no-unused-vars': 'off',
       'react-hooks/incompatible-library': 'off',
       'react-hooks/set-state-in-effect': 'off',

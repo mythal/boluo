@@ -6,8 +6,8 @@ import { type JoinedSpace } from '../../actions';
 import { type AppError } from '../../api/error';
 import { post } from '../../api/request';
 import { type CreateSpace } from '../../api/spaces';
-import Implosion from '../../assets/icons/implosion.svg';
-import NightSky from '../../assets/icons/night-sky.svg';
+import Implosion from '@boluo/icons/legacy/Implosion';
+import NightSky from '@boluo/icons/legacy/NightSky';
 import { useTitle } from '../../hooks/useTitle';
 import { useDispatch } from '../../store';
 import {

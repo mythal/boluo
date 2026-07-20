@@ -38,7 +38,7 @@ const selector = ({ edit, media }: ComposeState): ComposeDrived => {
 
 // Keep the self preview fully visible when its own height or the scroller height changes.
 const useSelfPreviewVisibility = (
-  virtuosoIndex: number | null | undefined,
+  displayIndex: number | null | undefined,
   visibilityKey: string,
   boxRef: RefObject<HTMLDivElement | null>,
 ) => {
@@ -47,7 +47,7 @@ const useSelfPreviewVisibility = (
   const isVisibleRef = useRef(false);
 
   const ensureFullyVisible = useCallback(() => {
-    if (virtuosoIndex == null) return;
+    if (displayIndex == null) return;
     const element = boxRef.current;
     const scroller = scrollerRef.current;
     const virtuoso = virtuosoRef.current;
@@ -61,8 +61,8 @@ const useSelfPreviewVisibility = (
     const fullyVisible = rect.top >= scrollerRect.top && rect.bottom <= scrollerRect.bottom;
     if (fullyVisible) return;
 
-    virtuoso.scrollIntoView({ index: virtuosoIndex, behavior: 'auto' });
-  }, [boxRef, scrollerRef, virtuosoIndex, virtuosoRef]);
+    virtuoso.scrollIntoView({ index: displayIndex, behavior: 'auto' });
+  }, [boxRef, displayIndex, scrollerRef, virtuosoRef]);
 
   useEffect(() => {
     let frame: number | null = null;
@@ -139,10 +139,10 @@ const useSelfPreviewVisibility = (
 interface Props {
   preview: PreviewItem;
   isLast: boolean;
-  virtualListIndex?: number;
+  displayIndex?: number;
 }
 
-export const SelfPreview: FC<Props> = ({ preview, isLast, virtualListIndex }) => {
+export const SelfPreview: FC<Props> = ({ preview, isLast, displayIndex }) => {
   const isFocused = usePaneIsFocus();
   const member = useMember()!;
   const isMaster = member.channel.isMaster;
@@ -208,7 +208,7 @@ export const SelfPreview: FC<Props> = ({ preview, isLast, virtualListIndex }) =>
   const isInGameChannel = useIsInGameChannel();
   const boxRef = useRef<HTMLDivElement | null>(null);
   const visibilityKey = `${preview.id}:${preview.edit?.time ?? 'preview'}:${preview.posP}/${preview.posQ}`;
-  useSelfPreviewVisibility(virtualListIndex, visibilityKey, boxRef);
+  useSelfPreviewVisibility(displayIndex, visibilityKey, boxRef);
   useEffect(() => {
     if (boxRef.current == null) return;
     return readObserve(boxRef.current);

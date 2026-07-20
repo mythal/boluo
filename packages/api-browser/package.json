@@ -6,13 +6,13 @@
     "@boluo/store": "0.0.0",
     "@boluo/types": "0.0.0",
     "@boluo/utils": "0.0.0",
-    "jotai": "^2.12.2"
+    "jotai": "^2.20.1"
   },
   "devDependencies": {
     "@boluo/eslint-config": "0.0.0",
     "@boluo/typescript-config": "0.0.0",
-    "eslint": "^9.39.4",
-    "typescript": "^6.0.2"
+    "eslint": "^10.6.0",
+    "typescript": "^6"
   },
   "exports": {
     ".": "./src/index.ts"
@@ -20,7 +20,7 @@
   "homepage": "https://github.com/mythal/boluo",
   "license": "AGPL-3.0",
   "scripts": {
-    "lint": "eslint . --ext .ts,.tsx"
+    "lint": "eslint ."
   },
   "sideEffects": false,
   "type": "module"

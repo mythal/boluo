@@ -1,4 +1,4 @@
-import { createContext, useContext } from 'react';
+import { createContext, use } from 'react';
 import { useIntl } from 'react-intl';
 import { empty } from '@boluo/utils/function';
 import { toLocale } from '@boluo/locale';
@@ -13,7 +13,7 @@ export const ChangeLocaleContext = createContext<(locale: Locale) => void>(empty
 export const useLocale = (): [Locale, (locale: Locale) => void] => {
   const intl = useIntl();
   const locale = toLocale(intl.locale);
-  const changeLocale = useContext(ChangeLocaleContext);
+  const changeLocale = use(ChangeLocaleContext);
 
   return [locale, changeLocale];
 };

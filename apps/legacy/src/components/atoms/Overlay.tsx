@@ -54,7 +54,8 @@ function Overlay({
   const overlayRef = useRef<HTMLDivElement | null>(null);
   useOutside(onOuter, overlayRef, anchor);
   const [node, setNode] = useState(anchor.current);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // Mirrors the anchor ref into state to re-render once the anchor mounts.
+  // eslint-disable-next-line @eslint-react/exhaustive-deps, @eslint-react/set-state-in-effect
   useEffect(() => setNode(anchor.current), [anchor.current]);
   if (node == null) {
     return null;

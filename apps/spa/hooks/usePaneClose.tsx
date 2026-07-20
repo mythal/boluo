@@ -1,11 +1,11 @@
 import { useSetAtom } from 'jotai';
-import { useCallback, useContext } from 'react';
+import { useCallback, use } from 'react';
 import { panesAtom } from '../state/view.atoms';
 import { PaneContext } from '../state/view.context';
 import { useIsChildPane } from './useIsChildPane';
 
 export const usePaneClose = () => {
-  const { key } = useContext(PaneContext);
+  const { key } = use(PaneContext);
   const setPanes = useSetAtom(panesAtom);
   const isChild = useIsChildPane();
   return useCallback(

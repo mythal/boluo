@@ -7,10 +7,10 @@
   "devDependencies": {
     "@boluo/eslint-config": "0.0.0",
     "@boluo/typescript-config": "0.0.0",
-    "@types/node": "^24.0.12",
-    "eslint": "^9.39.4",
-    "tsx": "^4.21.0",
-    "typescript": "^6.0.2"
+    "@types/node": "^26.1.1",
+    "eslint": "^10.6.0",
+    "tsx": "^4.23.0",
+    "typescript": "^6"
   },
   "exports": {
     ".": "./src/index.ts"
@@ -20,7 +20,7 @@
   "private": true,
   "scripts": {
     "check": "tsc --noEmit",
-    "lint": "eslint . --ext .ts",
+    "lint": "eslint .",
     "test": "tsx --test src/**/*.test.ts"
   },
   "sideEffects": false,

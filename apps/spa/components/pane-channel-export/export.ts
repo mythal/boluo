@@ -158,7 +158,7 @@ export const exportMessage = (
     if (message.whisperToUsers) {
       whisperTo = message.whisperToUsers
         .map((id) => memberMap[id])
-        .filter((member) => member !== undefined) as ExportMessage['whisperTo'];
+        .filter((member) => member !== undefined);
     }
     const sender = memberMap[senderId] || makeDefaultMember(intl);
     let media: string | null = null;
@@ -443,9 +443,16 @@ export const exportChannel = async (
   options: ExportOptions,
 ): Promise<ExportResult> => {
   const { includeArchived, includeOutGame } = options;
-  const membersResult = await get('/channels/all_members', { id: channel.id });
+  const membersResult = await get('/channels/all_members', {
+    id: channel.id,
+    spaceId: channel.spaceId,
+  });
   const members = membersResult.unwrap();
-  const exportQuery: Export = { channelId: channel.id, after: null };
+  const exportQuery: Export = {
+    channelId: channel.id,
+    spaceId: channel.spaceId,
+    after: null,
+  };
   const now = new Date();
   if (options.range !== 'all') {
     const after = new Date();

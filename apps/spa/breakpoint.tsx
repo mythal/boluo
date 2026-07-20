@@ -1,4 +1,4 @@
-import React, { type FC, type ReactNode, useContext } from 'react';
+import React, { type FC, type ReactNode, use } from 'react';
 import { useEffect, useState } from 'react';
 import screens from '@boluo/ui/screens.json';
 
@@ -42,7 +42,6 @@ const useListenBreakpoint = (): Breakpoint => {
     };
 
     window.addEventListener('resize', handleResize);
-    handleResize();
 
     return () => window.removeEventListener('resize', handleResize);
   }, []);
@@ -59,7 +58,7 @@ export const BreakpointProvider: FC<{ children: ReactNode }> = ({ children }) =>
 };
 
 export const useBreakpoint = (): Breakpoint => {
-  const breakpoint = useContext(BreakpointContext);
+  const breakpoint = use(BreakpointContext);
   if (breakpoint == null) {
     return windowBreakpoint();
   } else {

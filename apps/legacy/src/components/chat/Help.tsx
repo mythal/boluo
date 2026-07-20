@@ -1,7 +1,7 @@
 import { css } from '@emotion/react';
 import * as React from 'react';
 import { useState } from 'react';
-import D20 from '../../assets/icons/d20.svg';
+import D20 from '@boluo/icons/legacy/D20';
 import rollExample from '../../assets/roll-example.png';
 import { fontBold, mY, roundedSm, spacingN, textSm } from '../../styles/atoms';
 import { black, blue, textColor } from '../../styles/colors';

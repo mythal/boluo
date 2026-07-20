@@ -19,7 +19,7 @@ While multi-node support is planned, currently only single-node deployment is av
 
 ### Development Notes
 
-- When modifying SQL statements or RESTful APIs, run: `./scripts/generate-types.sh` to regenerate types.
+- When modifying SQL statements or RESTful APIs, run: `cargo run -p server -- --types` to regenerate types.
 - You should run `cargo check` after modifying any Rust code.
 - Run tests: `cargo nextest run`
 - Database-related tests:

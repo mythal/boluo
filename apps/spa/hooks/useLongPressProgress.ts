@@ -21,7 +21,8 @@ export const useLongPressProgress = (
   }, [clearAnimationFrame]);
 
   if ((!active || startAt == null) && progress > 0) {
-    resetProgress();
+    // Only reset the state here; the effect below cancels the animation frame.
+    setProgress(0);
   }
   useEffect(() => {
     if (!active || startAt == null) {

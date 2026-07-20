@@ -6,17 +6,35 @@
       {
         "ordinal": 0,
         "name": "name",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "proxies",
+            "name": "name"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "url",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "proxies",
+            "name": "url"
+          }
+        }
       },
       {
         "ordinal": 2,
         "name": "region",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "proxies",
+            "name": "region"
+          }
+        }
       }
     ],
     "parameters": {

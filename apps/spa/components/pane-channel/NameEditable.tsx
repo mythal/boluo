@@ -20,6 +20,7 @@ import { type MemberWithUser } from '@boluo/api';
 import Icon from '@boluo/ui/Icon';
 import { Delay } from '@boluo/ui/Delay';
 import { FallbackIcon } from '@boluo/ui/FallbackIcon';
+import { useFloatingSetters } from '@boluo/ui/hooks/useFloatingSetters';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { atom, useAtom, useAtomValue, useStore } from 'jotai';
 import { useVirtualKeybroadChange } from '../../hooks/useVirtualKeybroadChange';
@@ -81,6 +82,7 @@ export const NameEditable: FC<Props> = ({ name, inGame, color, member }) => {
     ],
     whileElementsMounted: autoUpdate,
   });
+  const { setReference, setFloating } = useFloatingSetters(refs);
 
   useVirtualKeybroadChange(update);
 
@@ -95,7 +97,7 @@ export const NameEditable: FC<Props> = ({ name, inGame, color, member }) => {
         interactive
         pressed={isOpen}
         color={color}
-        ref={refs.setReference}
+        ref={setReference}
         icon={icon}
         {...getReferenceProps()}
       >
@@ -116,7 +118,7 @@ export const NameEditable: FC<Props> = ({ name, inGame, color, member }) => {
       {isOpen && (
         <FloatingPortal>
           <div
-            ref={refs.setFloating}
+            ref={setFloating}
             className="bg-surface-unit z-20 rounded-sm border px-4 py-3 shadow"
             style={floatingStyles}
             {...getFloatingProps()}

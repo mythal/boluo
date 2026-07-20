@@ -24,7 +24,7 @@ export const ChatItemMessageShowWhisper: FC<Props> = ({
   className,
 }) => {
   const member = useMember();
-  const { data: chanenlMembers } = useQueryChannelMembers(channelId);
+  const { data: chanenlMembers } = useQueryChannelMembers(channelId, member?.space.spaceId);
   if (chanenlMembers == null || chanenlMembers.members.length === 0 || member == null) {
     return null;
   }

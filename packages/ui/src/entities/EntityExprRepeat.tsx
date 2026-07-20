@@ -37,7 +37,8 @@ export const EntityExprRepeat: FC<Props> = ({ node: repeat }) => {
     <span className="EntityExprRepeat">
       &#123;{' '}
       {nodeList.map((item, key) => (
-        <RepeatItem item={item} key={key} />
+        /* eslint-disable-next-line @eslint-react/no-array-index-key -- Expanded repeat results are immutable and rendered in order. */
+        <RepeatItem key={key} item={item} />
       ))}{' '}
       &#125;
       {'value' in repeat && <Result final={topLevel}>{repeat.value}</Result>}

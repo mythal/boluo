@@ -1,0 +1,72 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT users AS  \"users!: User\"\nFROM users INNER JOIN reset_tokens ON users.id = reset_tokens.user_id\nWHERE reset_tokens.token = $1\n    AND reset_tokens.used_at IS NULL\n    AND reset_tokens.invalidated_at IS NULL\n    AND reset_tokens.created > now() - ($2::bigint * interval '1 second')\n    AND users.deactivated = FALSE\nLIMIT 1;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "users!: User",
+        "type_info": {
+          "Custom": {
+            "name": "users",
+            "kind": {
+              "Composite": [
+                [
+                  "id",
+                  "Uuid"
+                ],
+                [
+                  "email",
+                  "Text"
+                ],
+                [
+                  "username",
+                  "Text"
+                ],
+                [
+                  "nickname",
+                  "Text"
+                ],
+                [
+                  "password",
+                  "Text"
+                ],
+                [
+                  "bio",
+                  "Text"
+                ],
+                [
+                  "joined",
+                  "Timestamptz"
+                ],
+                [
+                  "deactivated",
+                  "Bool"
+                ],
+                [
+                  "avatar_id",
+                  "Uuid"
+                ],
+                [
+                  "default_color",
+                  "Text"
+                ]
+              ]
+            }
+          }
+        },
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "fba85d90763a9e6513fa45e9a030edbf85e3e687ccf16e4e8adce82c9f4e6d8b"
+}

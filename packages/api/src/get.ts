@@ -19,6 +19,7 @@ import type {
   Message,
   Note,
   NoteHistory,
+  QueryCharacter,
   SearchMessagesParams,
   SearchMessagesResult,
   Space,
@@ -52,10 +53,13 @@ export interface Get {
   '/spaces/token': { query: { id: string }; result: string };
   '/spaces/settings': { query: { id: string }; result: unknown };
   // channels
-  '/channels/query': { query: { id: string }; result: Channel };
+  '/channels/query': { query: { id: string; spaceId?: string }; result: Channel };
   '/channels/by_space': { query: { id: string }; result: ChannelWithMaybeMember[] };
-  '/channels/members': { query: { id: string }; result: ChannelMembers };
-  '/channels/all_members': { query: { id: string }; result: ChannelMemberWithUser[] };
+  '/channels/members': { query: { id: string; spaceId?: string }; result: ChannelMembers };
+  '/channels/all_members': {
+    query: { id: string; spaceId?: string };
+    result: ChannelMemberWithUser[];
+  };
   '/channels/check_name': { query: { name: string; spaceId: string }; result: boolean };
   '/channels/export': { query: Export; result: Message[] };
   // messages
@@ -70,17 +74,17 @@ export interface Get {
   '/notes/by_space': { query: { id: string }; result: Note[] };
   '/notes/history': { query: { id: string }; result: NoteHistory[] };
   // characters
-  '/characters/query': { query: { id: string }; result: Character };
+  '/characters/query': { query: QueryCharacter; result: Character };
   '/characters/by_space': { query: ListCharacters; result: Character[] };
-  '/characters/variables': { query: { id: string }; result: CharacterVariable[] };
+  '/characters/variables': { query: QueryCharacter; result: CharacterVariable[] };
   '/characters/variable_history': {
     query: VariableHistoryQuery;
     result: CharacterVariableHistory[];
   };
   '/characters/check_name': { query: CheckCharacterName; result: boolean };
   '/characters/check_variable': { query: CheckVariableAvailability; result: boolean };
-  // events
-  '/events/token': { query: MakeToken; result: { token: string; issuedAt: number } };
+  // updates (formerly known as events)
+  '/updates/token': { query: MakeToken; result: { token: string; issuedAt: number } };
   // info
   '/info/settings': { query: null; result: AppSettings };
 }

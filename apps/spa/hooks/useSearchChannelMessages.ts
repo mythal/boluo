@@ -20,6 +20,7 @@ export interface SearchOptions {
 
 export const useSearchChannelMessages = (
   channelId: string,
+  spaceId: string,
   keyword: string,
   searchOptions: SearchOptions,
 ): SWRInfiniteResponse<SearchMessagesResult, ApiError> => {
@@ -28,7 +29,7 @@ export const useSearchChannelMessages = (
   const getKey = (
     pageIndex: number,
     previousPageData: SearchMessagesResult | null,
-  ): [typeof path, string, string, SearchOptions, number | null] | null => {
+  ): [typeof path, string, string, string, SearchOptions, number | null] | null => {
     if (trimmedKeyword === '') {
       return null;
     }
@@ -36,18 +37,20 @@ export const useSearchChannelMessages = (
       return null;
     }
     const pos = pageIndex === 0 ? null : (previousPageData?.nextPos ?? null);
-    return [path, channelId, trimmedKeyword, searchOptions, pos] as const;
+    return [path, channelId, spaceId, trimmedKeyword, searchOptions, pos] as const;
   };
 
   const fetcher: SWRInfiniteFetcher<SearchMessagesResult, typeof getKey> = ([
     path,
     channel,
+    space,
     searchKeyword,
     searchOptions,
     pos,
   ]) =>
     get(path, {
       channelId: channel,
+      spaceId: space,
       keyword: searchKeyword,
       direction: searchOptions.direction,
       includeArchived: searchOptions.includeArchived,

@@ -7,9 +7,10 @@ use crate::events::Update;
 use crate::interface;
 use crate::interface::{Response, missing, ok_response, parse_query, response};
 use crate::messages::api::{
-    GetMessagesByChannel, MoveMessageBetween, SearchDirection, SearchFilter, SearchMessagesParams,
-    SearchMessagesResult, SearchNameFilter,
+    GetMessagesByChannel, MessageIdQuery, MoveMessageBetween, SearchDirection, SearchFilter,
+    SearchMessagesParams, SearchMessagesResult, SearchNameFilter,
 };
+use crate::notify;
 use crate::rate_limit;
 use crate::spaces::SpaceMember;
 use governor::{DefaultKeyedRateLimiter, RateLimiter};
@@ -49,6 +50,7 @@ async fn send(
         message_id: _,
         preview_id,
         channel_id,
+        space_id,
         name,
         text,
         entities,
@@ -59,42 +61,59 @@ async fn send(
         pos: request_pos,
         color,
     } = *new_message;
-    let channel = Channel::get_by_id(&ctx.db, &channel_id)
-        .await
+    let resolved = ctx
+        .space_store
+        .resolve_channel(channel_id, space_id)
+        .await?
         .or_not_found()?;
-    let (channel_member, space_member) = ChannelMember::get_with_space_member(
-        &ctx.db,
-        session.user_id,
-        channel_id,
-        &channel.space_id,
-    )
-    .await
-    .or_no_permission()?;
-    let message = {
-        let mut conn = ctx.db.acquire().await?;
-        Message::create(
-            &mut conn,
-            preview_id,
+    let (channel, channel_member, space_member) = if let Some(snapshot) = resolved.snapshot {
+        let channel_member = snapshot
+            .channel_members
+            .get(&channel_id)
+            .and_then(|members| members.get(&session.user_id))
+            .cloned()
+            .or_no_permission()?;
+        let space_member = snapshot
+            .space_members
+            .get(&session.user_id)
+            .cloned()
+            .or_no_permission()?;
+        (resolved.channel, channel_member, space_member)
+    } else {
+        let channel = resolved.channel;
+        let (channel_member, space_member) = ChannelMember::get_with_space_member(
+            &ctx.db,
+            session.user_id,
             channel_id,
-            channel.space_id,
-            &session.user_id,
-            &channel_member.character_name,
-            &name,
-            &text,
-            entities,
-            in_game,
-            is_action,
-            channel_member.is_master,
-            whisper_to_users,
-            media_id,
-            request_pos,
-            color,
+            &channel.space_id,
         )
         .await
-        .inspect_err(|_| {
-            metrics::counter!("boluo_server_messages_created_failed_total").increment(1);
-        })?
+        .or_no_permission()?;
+        (channel, channel_member, space_member)
     };
+    let message = Message::create(
+        &ctx.db,
+        preview_id,
+        channel_id,
+        channel.space_id,
+        &session.user_id,
+        &channel_member.character_name,
+        &name,
+        &text,
+        entities,
+        in_game,
+        is_action,
+        channel_member.is_master,
+        whisper_to_users,
+        media_id,
+        request_pos,
+        color,
+    )
+    .await
+    .inspect_err(|_| {
+        metrics::counter!("boluo_server_messages_created_failed_total").increment(1);
+    })?;
+    notify::space_activity(&ctx.space_store, channel.space_id, Some(message.created));
     Update::new_message(space_member.space_id, message.clone(), preview_id).await;
 
     metrics::counter!("boluo_server_messages_created_total").increment(1);
@@ -121,29 +140,11 @@ async fn edit(
         color,
         expect_modified,
     } = *edit_message;
-    let mut trans = ctx.db.begin().await?;
-    let message = Message::get(&mut *trans, &message_id, Some(&session.user_id))
-        .await?
-        .or_not_found()?;
-    let channel = Channel::get_by_id(&mut *trans, &message.channel_id)
-        .await
-        .or_not_found()?;
-    let (_, space_member) = ChannelMember::get_with_space_member(
-        &mut *trans,
-        session.user_id,
-        message.channel_id,
-        &channel.space_id,
-    )
-    .await
-    .or_no_permission()?;
-    if !channel.is_document && message.sender_id != session.user_id {
-        return Err(AppError::NoPermission("user id dismatch".to_string()));
-    }
-
     let text = &*text;
     let name = &*name;
-    let edited_message = Message::edit(
-        &mut *trans,
+    let edit_outcome = Message::edit(
+        &ctx.db,
+        session.user_id,
         name,
         &message_id,
         text,
@@ -155,28 +156,25 @@ async fn edit(
         expect_modified,
     )
     .await?;
-    let edited_message = match edited_message {
-        Some(edited_message) => edited_message,
-        None => {
-            let still_exists = Message::get(&mut *trans, &message_id, Some(&session.user_id))
-                .await?
-                .is_some();
-            if still_exists {
-                return Err(AppError::Conflict(
-                    "The message was edited elsewhere before this edit was submitted.".to_string(),
-                ));
-            }
+    let (edited_message, space_id) = match edit_outcome {
+        super::models::MessageEditOutcome::Updated { message, space_id } => (message, space_id),
+        super::models::MessageEditOutcome::MessageNotFound => {
             return Err(AppError::NotFound("Message"));
         }
+        super::models::MessageEditOutcome::ChannelNotFound => {
+            return Err(AppError::NotFound("channel"));
+        }
+        super::models::MessageEditOutcome::NoPermission => {
+            return Err(AppError::NoPermission("user id dismatch".to_string()));
+        }
+        super::models::MessageEditOutcome::Conflict => {
+            return Err(AppError::Conflict(
+                "The message was edited elsewhere before this edit was submitted.".to_string(),
+            ));
+        }
     };
-    trans.commit().await?;
     metrics::counter!("boluo_server_messages_edited_total").increment(1);
-    Update::message_edited(
-        space_member.space_id,
-        edited_message.clone(),
-        edited_message.pos,
-    )
-    .await;
+    Update::message_edited(space_id, edited_message.clone(), edited_message.pos).await;
     metrics::histogram!("boluo_server_messages_edit_duration_ms")
         .record(start_time.elapsed().as_millis() as f64);
     Ok(edited_message)
@@ -194,69 +192,52 @@ async fn move_between(
         expect_pos,
     } = interface::parse_body(req).await?;
 
-    let mut conn = ctx.db.acquire().await?;
-    let message = Message::get(&mut *conn, &message_id, Some(&session.user_id))
-        .await
-        .or_not_found()?;
-    if channel_id != message.channel_id {
+    if range == (None, None) {
         return Err(AppError::BadRequest(
-            "channelId does not match message channel".to_string(),
+            "a and b cannot both be null".to_string(),
         ));
     }
-    if let Some((expect_p, expect_q)) = expect_pos {
-        if message.pos_p != expect_p || message.pos_q != expect_q {
+    let move_outcome = Message::move_between(
+        &ctx.db,
+        session.user_id,
+        &message_id,
+        channel_id,
+        range,
+        expect_pos,
+    )
+    .await?;
+    let (mut moved_message, space_id, old_pos) = match move_outcome {
+        super::models::MessageMoveOutcome::Moved {
+            message,
+            space_id,
+            old_pos,
+        } => (message, space_id, old_pos),
+        super::models::MessageMoveOutcome::MessageNotFound => {
+            return Err(AppError::NotFound("Message"));
+        }
+        super::models::MessageMoveOutcome::ChannelMismatch => {
+            return Err(AppError::BadRequest(
+                "channelId does not match message channel".to_string(),
+            ));
+        }
+        super::models::MessageMoveOutcome::ChannelNotFound => {
+            return Err(AppError::NotFound("channel"));
+        }
+        super::models::MessageMoveOutcome::NoPermission => {
+            return Err(AppError::NoPermission(
+                "Only the master can move other's messages.".to_string(),
+            ));
+        }
+        super::models::MessageMoveOutcome::PositionChanged => {
             return Err(AppError::BadRequest(
                 "The message already moved".to_string(),
             ));
         }
-    }
-    let channel = Channel::get_by_id(&mut *conn, &message.channel_id)
-        .await
-        .or_not_found()?;
-    let channel_member = ChannelMember::get(
-        &mut conn,
-        session.user_id,
-        channel.space_id,
-        message.channel_id,
-    )
-    .await
-    .or_no_permission()?;
-    if !channel.is_document && !channel_member.is_master && message.sender_id != session.user_id {
-        return Err(AppError::NoPermission(
-            "Only the master can move other's messages.".to_string(),
-        ));
-    }
-    crate::pos::CHANNEL_POS_MANAGER.submitted(
-        channel_id,
-        message_id,
-        message.pos_p,
-        message.pos_q,
-        Some(message_id),
-    );
-    let mut moved_message = match range {
-        (None, None) => {
-            return Err(AppError::BadRequest(
-                "a and b cannot both be null".to_string(),
-            ));
-        }
-        (Some(a), Some((0, _) | (1, 0)) | None) => {
-            Message::move_bottom(&mut conn, &channel_id, &message_id, a)
-                .await?
-                .or_not_found()?
-        }
-        (Some((_, 0) | (0, 1)) | None, Some(b)) => {
-            Message::move_above(&mut conn, &channel_id, &message_id, b)
-                .await?
-                .or_not_found()?
-        }
-        (Some(a), Some(b)) => Message::move_between(&mut conn, &message_id, channel_id, a, b)
-            .await?
-            .or_not_found()?,
     };
     if moved_message.whisper_to_users.is_some() {
         moved_message.hide(None);
     }
-    Update::message_edited(channel.space_id, moved_message, message.pos).await;
+    Update::message_edited(space_id, moved_message, old_pos).await;
     metrics::counter!("boluo_server_messages_moved_total").increment(1);
     Ok(true)
 }
@@ -272,32 +253,83 @@ async fn query(
         .or_not_found()
 }
 
+async fn resolve_space_member_cache_first(
+    ctx: &crate::context::AppContext,
+    user_id: Uuid,
+    channel_id: Uuid,
+    space_id: Option<Uuid>,
+) -> Result<(Uuid, SpaceMember), AppError> {
+    if let Some(space_id) = space_id
+        && let Some(snapshot) = ctx
+            .space_store
+            .loaded_authoritative_snapshot_after_wait(space_id)
+            .await
+        && snapshot.channels.contains_key(&channel_id)
+    {
+        let member = snapshot
+            .space_members
+            .get(&user_id)
+            .cloned()
+            .or_no_permission()?;
+        return Ok((space_id, member));
+    }
+
+    let member = SpaceMember::get_by_channel(&ctx.db, &user_id, &channel_id)
+        .await
+        .or_no_permission()?;
+    Ok((member.space_id, member))
+}
+
+async fn resolve_channel_member_cache_first(
+    ctx: &crate::context::AppContext,
+    user_id: Uuid,
+    channel_id: Uuid,
+    space_id: Option<Uuid>,
+) -> Result<(Channel, ChannelMember), AppError> {
+    if let Some(space_id) = space_id
+        && let Some(snapshot) = ctx
+            .space_store
+            .loaded_authoritative_snapshot_after_wait(space_id)
+            .await
+        && snapshot.channels.contains_key(&channel_id)
+    {
+        let channel = snapshot.channels.get(&channel_id).cloned().or_not_found()?;
+        let member = snapshot
+            .channel_member(channel_id, user_id)
+            .map(|member| member.channel)
+            .or_no_permission()?;
+        return Ok((channel, member));
+    }
+
+    let channel = Channel::get_by_id(&ctx.db, &channel_id)
+        .await
+        .or_not_found()?;
+    let member =
+        ChannelMember::get_with_space_member(&ctx.db, user_id, channel_id, &channel.space_id)
+            .await?
+            .map(|(channel_member, _)| channel_member)
+            .or_no_permission()?;
+    Ok((channel, member))
+}
+
 async fn delete(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<Message, AppError> {
     let session = authenticate(&req).await?;
-    let interface::IdQuery { id } = interface::parse_query(req.uri())?;
-    let mut conn = ctx.db.acquire().await?;
-    let message = Message::get(&mut *conn, &id, Some(&session.user_id))
+    let MessageIdQuery { id, space_id } = interface::parse_query(req.uri())?;
+    let message = Message::get(&ctx.db, &id, Some(&session.user_id))
         .await
         .or_not_found()?;
-    let space_member =
-        SpaceMember::get_by_channel(&mut *conn, &session.user_id, &message.channel_id)
-            .await
-            .or_no_permission()?;
+    let (space_id, space_member) =
+        resolve_space_member_cache_first(ctx, session.user_id, message.channel_id, space_id)
+            .await?;
     if !space_member.is_admin && message.sender_id != session.user_id {
         return Err(AppError::NoPermission("user id mismatch".to_string()));
     }
-    Message::delete(&mut *conn, &id).await?;
-    Update::message_deleted(
-        space_member.space_id,
-        message.channel_id,
-        message.id,
-        message.pos,
-    )
-    .await;
-    crate::pos::CHANNEL_POS_MANAGER.cancel(message.channel_id, message.id);
+    Message::delete(&ctx.db, &id).await?;
+    Update::message_deleted(space_id, message.channel_id, message.id, message.pos).await;
+    crate::messages::MESSAGE_POSITIONS.cancel(message.channel_id, message.id);
     metrics::counter!("boluo_server_messages_deleted_total").increment(1);
     Ok(message)
 }
@@ -307,26 +339,17 @@ async fn toggle_fold(
     req: Request<impl Body>,
 ) -> Result<Message, AppError> {
     let session = authenticate(&req).await?;
-    let interface::IdQuery { id } = interface::parse_query(req.uri())?;
-    let mut conn = ctx.db.acquire().await?;
-    let message = Message::get(&mut *conn, &id, Some(&session.user_id))
+    let MessageIdQuery { id, space_id } = interface::parse_query(req.uri())?;
+    let message = Message::get(&ctx.db, &id, Some(&session.user_id))
         .await
         .or_not_found()?;
-    let channel = Channel::get_by_id(&mut *conn, &message.channel_id)
-        .await
-        .or_not_found()?;
-    let channel_member = ChannelMember::get(
-        &mut conn,
-        session.user_id,
-        channel.space_id,
-        message.channel_id,
-    )
-    .await
-    .or_no_permission()?;
+    let (channel, channel_member) =
+        resolve_channel_member_cache_first(ctx, session.user_id, message.channel_id, space_id)
+            .await?;
     if !channel.is_document && message.sender_id != session.user_id && !channel_member.is_master {
         return Err(AppError::NoPermission("user id dismatch".to_string()));
     }
-    let edited_message = Message::set_folded(&mut *conn, &message.id, !message.folded)
+    let edited_message = Message::set_folded(&ctx.db, &message.id, !message.folded)
         .await?
         .or_not_found()?;
     let mut event_message = edited_message.clone();
@@ -342,20 +365,34 @@ async fn by_channel(
 ) -> Result<Vec<Message>, AppError> {
     let GetMessagesByChannel {
         channel_id,
+        space_id,
         limit,
         before,
     } = parse_query(req.uri())?;
 
-    let channel = Channel::get_by_id(&ctx.db, &channel_id)
-        .await
-        .or_not_found()?;
     let session = authenticate(&req).await;
     let current_user_id = session.as_ref().ok().map(|session| session.user_id);
+    let resolved = ctx
+        .space_store
+        .resolve_channel(channel_id, space_id)
+        .await?
+        .or_not_found()?;
+    let channel = resolved.channel;
+    let used_snapshot = resolved.snapshot;
     let mut conn = ctx.db.acquire().await?;
     if !channel.is_public {
-        ChannelMember::get(&mut conn, session?.user_id, channel.space_id, channel_id)
-            .await
-            .or_no_permission()?;
+        let user_id = session?.user_id;
+        if let Some(snapshot) = used_snapshot {
+            snapshot
+                .channel_members
+                .get(&channel_id)
+                .and_then(|members| members.get(&user_id))
+                .or_no_permission()?;
+        } else {
+            ChannelMember::get(&mut conn, user_id, channel.space_id, channel_id)
+                .await
+                .or_no_permission()?;
+        }
     }
     let limit = limit.unwrap_or(128);
     Message::get_by_channel(
@@ -375,6 +412,7 @@ async fn search(
 ) -> Result<SearchMessagesResult, AppError> {
     let SearchMessagesParams {
         channel_id,
+        space_id,
         keyword,
         pos,
         direction,
@@ -403,16 +441,29 @@ async fn search(
     }
     const WINDOW_SIZE: i64 = 200;
 
-    let channel = Channel::get_by_id(&ctx.db, &channel_id)
-        .await
-        .or_not_found()?;
     let session = authenticate(&req).await;
     let current_user_id = session.as_ref().ok().map(|session| session.user_id);
+    let resolved = ctx
+        .space_store
+        .resolve_channel(channel_id, space_id)
+        .await?
+        .or_not_found()?;
+    let channel = resolved.channel;
+    let used_snapshot = resolved.snapshot;
     let mut conn = ctx.db.acquire().await?;
     if !channel.is_public {
-        ChannelMember::get(&mut conn, session?.user_id, channel.space_id, channel_id)
-            .await
-            .or_no_permission()?;
+        let user_id = session?.user_id;
+        if let Some(snapshot) = used_snapshot {
+            snapshot
+                .channel_members
+                .get(&channel_id)
+                .and_then(|members| members.get(&user_id))
+                .or_no_permission()?;
+        } else {
+            ChannelMember::get(&mut conn, user_id, channel.space_id, channel_id)
+                .await
+                .or_no_permission()?;
+        }
     }
 
     let window_messages = match direction {
@@ -501,5 +552,100 @@ pub async fn router(
         ("/delete", Method::POST) => response(delete(ctx, req).await).await,
         ("/search", Method::GET) => response(search(ctx, req).await).await,
         _ => missing(),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::channels::ChannelType;
+    use crate::context::AppContext;
+    use crate::spaces::Space;
+    use crate::users::User;
+
+    #[sqlx::test(migrator = "crate::db::MIGRATOR")]
+    async fn db_test_message_member_queries_use_loaded_space_cache(pool: sqlx::PgPool) {
+        let suffix = Uuid::new_v4().simple().to_string();
+        let owner = User::register(
+            &pool,
+            &format!("message_cache_{}@example.com", &suffix[..8]),
+            &format!("message_cache_{}", &suffix[..8]),
+            "Message Cache Tester",
+            "MessageCachePass123!",
+        )
+        .await
+        .expect("failed to create message cache test user");
+        let space = Space::create(
+            &pool,
+            format!("message_cache_{}", &suffix[..8]),
+            &owner.id,
+            "Message cache test Space".to_string(),
+            None,
+            Some("d20"),
+        )
+        .await
+        .expect("failed to create message cache test Space");
+        SpaceMember::add_admin(&pool, &owner.id, &space.id)
+            .await
+            .expect("failed to grant owner admin");
+        let channel = Channel::create(
+            &pool,
+            &space.id,
+            "Message cache test Channel",
+            true,
+            Some("d20"),
+            ChannelType::InGame,
+        )
+        .await
+        .expect("failed to create message cache test Channel");
+        ChannelMember::add_user(&pool, owner.id, channel.id, "GM", true)
+            .await
+            .expect("failed to add owner to Channel");
+
+        let single_connection_pool = sqlx::postgres::PgPoolOptions::new()
+            .max_connections(1)
+            .acquire_timeout(std::time::Duration::from_millis(100))
+            .connect_with(pool.connect_options().as_ref().clone())
+            .await
+            .expect("failed to create single-connection pool");
+        let ctx = AppContext::new(single_connection_pool.clone(), None);
+
+        assert!(ctx.space_store.get(&space.id).is_none());
+        let (cold_space_id, cold_space_member) =
+            resolve_space_member_cache_first(&ctx, owner.id, channel.id, None)
+                .await
+                .expect("cold space member lookup failed");
+        let (cold_channel, cold_channel_member) =
+            resolve_channel_member_cache_first(&ctx, owner.id, channel.id, None)
+                .await
+                .expect("cold channel member lookup failed");
+        assert_eq!(cold_space_id, space.id);
+        assert_eq!(cold_space_member.user_id, owner.id);
+        assert_eq!(cold_channel.id, channel.id);
+        assert_eq!(cold_channel_member.user_id, owner.id);
+        assert!(
+            ctx.space_store.get(&space.id).is_none(),
+            "cold member lookup unexpectedly loaded the Space runtime"
+        );
+
+        ctx.space_store
+            .get_or_load(space.id)
+            .await
+            .expect("failed to load Space runtime");
+        let _connection_blocker = single_connection_pool
+            .acquire()
+            .await
+            .expect("failed to reserve the only database connection");
+
+        let (_, cached_space_member) =
+            resolve_space_member_cache_first(&ctx, owner.id, channel.id, Some(space.id))
+                .await
+                .expect("loaded space member lookup unexpectedly queried the database");
+        let (_, cached_channel_member) =
+            resolve_channel_member_cache_first(&ctx, owner.id, channel.id, Some(space.id))
+                .await
+                .expect("loaded channel member lookup unexpectedly queried the database");
+        assert_eq!(cached_space_member, cold_space_member);
+        assert_eq!(cached_channel_member, cold_channel_member);
     }
 }

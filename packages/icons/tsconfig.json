@@ -1,9 +1,13 @@
 {
   "extends": "@boluo/typescript-config/react-library.json",
   "compilerOptions": {
+    "erasableSyntaxOnly": true,
+    "module": "Preserve",
+    "moduleResolution": "Bundler",
     "target": "ESNext",
+    "types": ["node"],
     "outDir": "./dist/"
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "build.ts"],
+  "include": ["src/**/*.ts", "src/**/*.tsx", "scripts/**/*.ts"],
   "exclude": ["dist", "build", "node_modules"]
 }

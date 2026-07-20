@@ -3,9 +3,9 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use uuid::Uuid;
 
-use crate::cache::{CACHE, CacheType};
+use crate::cache::CACHE;
 use crate::error::{ModelError, ValidationFailed};
-use crate::ttl::{Lifespan, fetch_entry, fetch_entry_optional, hour};
+use crate::ttl::{Lifespan, fetch_entry, hour};
 
 pub(crate) fn normalize_ident(value: &str) -> Result<String, ValidationFailed> {
     let key = value.trim().replace(char::is_whitespace, "_");
@@ -64,7 +64,7 @@ impl CharacterVisibility {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, specta::Type, sqlx::Type)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, specta::Type, sqlx::Type)]
 #[sqlx(type_name = "characters")]
 #[serde(rename_all = "camelCase")]
 pub struct Character {
@@ -81,18 +81,6 @@ pub struct Character {
     pub metadata: serde_json::Value,
     pub created: DateTime<Utc>,
     pub modified: DateTime<Utc>,
-}
-
-impl Lifespan for Character {
-    fn ttl_sec() -> u64 {
-        hour::TWO
-    }
-}
-
-fn insert_character_cache(character: &Character) {
-    CACHE
-        .Character
-        .insert(character.id, character.clone().into());
 }
 
 impl Character {
@@ -136,7 +124,6 @@ impl Character {
         )
         .fetch_one(db)
         .await
-        .inspect(insert_character_cache)
         .map_err(Into::into)
     }
 
@@ -144,13 +131,19 @@ impl Character {
         db: T,
         character_id: &Uuid,
     ) -> Result<Option<Character>, sqlx::Error> {
-        let character_id = *character_id;
-        fetch_entry_optional(&CACHE.Character, character_id, async move {
-            sqlx::query_file_scalar!("sql/characters/get_by_id.sql", character_id)
-                .fetch_one(db)
-                .await
-        })
-        .await
+        sqlx::query_file_scalar!("sql/characters/get_by_id.sql", character_id)
+            .fetch_optional(db)
+            .await
+    }
+
+    pub async fn get_by_id_in_space<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
+        space_id: Uuid,
+        character_id: &Uuid,
+    ) -> Result<Option<Character>, sqlx::Error> {
+        Ok(Self::get_by_id(db, character_id)
+            .await?
+            .filter(|character| character.space_id == space_id))
     }
 
     pub async fn list_by_space<'c, T: sqlx::PgExecutor<'c>>(
@@ -160,9 +153,6 @@ impl Character {
         let characters = sqlx::query_file_scalar!("sql/characters/list_by_space.sql", space_id)
             .fetch_all(db)
             .await?;
-        for character in &characters {
-            insert_character_cache(character);
-        }
         Ok(characters)
     }
 
@@ -234,11 +224,6 @@ impl Character {
         )
         .fetch_optional(db)
         .await
-        .inspect(|character| {
-            if let Some(character) = character {
-                insert_character_cache(character);
-            }
-        })
         .map_err(Into::into)
     }
 
@@ -249,14 +234,7 @@ impl Character {
         let result = sqlx::query_file!("sql/characters/delete.sql", character_id)
             .execute(db)
             .await?;
-        if result.rows_affected() > 0 {
-            CACHE.invalidate(CacheType::Character, *character_id).await;
-            CACHE
-                .invalidate(CacheType::CharacterVariables, *character_id)
-                .await;
-            return Ok(true);
-        }
-        Ok(false)
+        Ok(result.rows_affected() > 0)
     }
 
     pub async fn exists_name_or_alias<'c, T: sqlx::PgExecutor<'c>>(
@@ -325,7 +303,7 @@ impl CharacterVariable {
         let display_name = display_name.trim().to_string();
         crate::validators::DISPLAY_NAME.run(&display_name)?;
         let alias = normalize_aliases(alias)?;
-        let variable = sqlx::query_file_scalar!(
+        sqlx::query_file_scalar!(
             "sql/characters/variables/create.sql",
             key,
             character_id,
@@ -338,11 +316,7 @@ impl CharacterVariable {
         )
         .fetch_one(db)
         .await
-        .map_err(ModelError::from)?;
-        CACHE
-            .invalidate(CacheType::CharacterVariables, character_id)
-            .await;
-        Ok(variable)
+        .map_err(ModelError::from)
     }
 
     pub async fn get_by_key<'c, T: sqlx::PgExecutor<'c>>(
@@ -396,7 +370,7 @@ impl CharacterVariable {
             Some(alias) => Some(normalize_aliases(alias)?),
             None => None,
         };
-        let variable = sqlx::query_file_scalar!(
+        sqlx::query_file_scalar!(
             "sql/characters/variables/update.sql",
             character_id,
             key,
@@ -409,13 +383,7 @@ impl CharacterVariable {
         )
         .fetch_optional(db)
         .await
-        .map_err(ModelError::from)?;
-        if variable.is_some() {
-            CACHE
-                .invalidate(CacheType::CharacterVariables, *character_id)
-                .await;
-        }
-        Ok(variable)
+        .map_err(ModelError::from)
     }
 
     pub async fn delete<'c, T: sqlx::PgExecutor<'c>>(
@@ -426,13 +394,7 @@ impl CharacterVariable {
         let result = sqlx::query_file!("sql/characters/variables/delete.sql", character_id, key)
             .execute(db)
             .await?;
-        if result.rows_affected() > 0 {
-            CACHE
-                .invalidate(CacheType::CharacterVariables, *character_id)
-                .await;
-            return Ok(true);
-        }
-        Ok(false)
+        Ok(result.rows_affected() > 0)
     }
 
     pub async fn exists_key_or_alias<'c, T: sqlx::PgExecutor<'c>>(
@@ -627,6 +589,40 @@ mod tests {
     }
 
     #[sqlx::test(migrator = "crate::db::MIGRATOR")]
+    async fn db_test_rolled_back_character_writes_are_not_visible(pool: sqlx::PgPool) {
+        let owner = create_test_user(&pool, "rollback_char_owner").await;
+        let space = create_test_space(&pool, &owner, "rollback_char_space").await;
+
+        let mut transaction = pool.begin().await.expect("failed to begin transaction");
+        let rolled_back = Character::create(
+            &mut *transaction,
+            space.id,
+            owner.id,
+            "Rolled Back Character",
+            "",
+            "",
+            None,
+            None,
+            CharacterVisibility::Private,
+            false,
+            json!({}),
+        )
+        .await
+        .expect("failed to create character in transaction");
+        transaction
+            .rollback()
+            .await
+            .expect("failed to roll back character creation");
+        assert!(
+            Character::get_by_id(&pool, &rolled_back.id)
+                .await
+                .expect("failed to query rolled-back Character")
+                .is_none(),
+            "a rolled-back Character remained visible"
+        );
+    }
+
+    #[sqlx::test(migrator = "crate::db::MIGRATOR")]
     async fn db_test_character_variable_flow(pool: sqlx::PgPool) {
         let owner = create_test_user(&pool, "owner").await;
         let space = create_test_space(&pool, &owner, "var_space").await;
@@ -742,5 +738,67 @@ mod tests {
             .expect("list_by_key failed");
         assert_eq!(history.len(), 1);
         assert_eq!(history[0].key, "hp");
+    }
+
+    #[sqlx::test(migrator = "crate::db::MIGRATOR")]
+    async fn db_test_rolled_back_variable_update_does_not_invalidate_cache(pool: sqlx::PgPool) {
+        let owner = create_test_user(&pool, "rollback_var_owner").await;
+        let space = create_test_space(&pool, &owner, "rollback_var_space").await;
+        let character = Character::create(
+            &pool,
+            space.id,
+            owner.id,
+            "Variable Cache Owner",
+            "",
+            "",
+            None,
+            None,
+            CharacterVisibility::Private,
+            false,
+            json!({}),
+        )
+        .await
+        .expect("failed to create character");
+        CharacterVariable::create(
+            &pool,
+            character.id,
+            "hp",
+            "HP",
+            vec![],
+            0,
+            true,
+            json!(10),
+            json!({}),
+        )
+        .await
+        .expect("failed to create variable");
+        CharacterVariable::list_by_character(&pool, &character.id)
+            .await
+            .expect("failed to prime variable cache");
+        assert!(CACHE.CharacterVariables.get(&character.id).is_some());
+
+        let mut transaction = pool.begin().await.expect("failed to begin transaction");
+        CharacterVariable::update(
+            &mut *transaction,
+            &character.id,
+            "hp",
+            None,
+            None,
+            None,
+            None,
+            Some(json!(9)),
+            None,
+        )
+        .await
+        .expect("failed to update variable in transaction")
+        .expect("variable disappeared during update");
+        assert!(
+            CACHE.CharacterVariables.get(&character.id).is_some(),
+            "an uncommitted variable update invalidated the shared list cache"
+        );
+        transaction
+            .rollback()
+            .await
+            .expect("failed to roll back variable update");
     }
 }

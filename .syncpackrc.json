@@ -1,0 +1,19 @@
+{
+  "$schema": "./node_modules/syncpack/schema.json",
+  "source": [
+    "package.json",
+    "apps/**/package.json",
+    "packages/**/package.json",
+    "!**/.next/**/package.json",
+    "!**/node_modules/**/package.json"
+  ],
+  "versionGroups": [
+    {
+      "label": "Preserve vendored react-virtuoso peer compatibility",
+      "packages": ["react-virtuoso"],
+      "dependencies": ["react", "react-dom"],
+      "dependencyTypes": ["peer"],
+      "isIgnored": true
+    }
+  ]
+}

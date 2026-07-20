@@ -3,10 +3,9 @@ use std::sync::LazyLock;
 use quick_cache::sync::Cache;
 use uuid::Uuid;
 
-use crate::channels::{Channel, ChannelMembers, SpacesChannels};
-use crate::characters::{Character, CharacterVariables};
+use crate::characters::CharacterVariables;
 use crate::session::Session;
-use crate::spaces::{Space, SpaceSettings, UserSpaces};
+use crate::spaces::UserSpaces;
 use crate::users::User;
 use crate::users::UserExt;
 
@@ -71,7 +70,7 @@ macro_rules! define_caches {
                 }
             }
 
-            pub async fn invalidate(&self, cache_type: CacheType, key: Uuid) {
+            pub fn invalidate_local(&self, cache_type: CacheType, key: Uuid) {
                 match cache_type {
                     $(
                         CacheType::$type => {
@@ -79,6 +78,10 @@ macro_rules! define_caches {
                         }
                     )*
                 }
+            }
+
+            pub async fn invalidate(&self, cache_type: CacheType, key: Uuid) {
+                self.invalidate_local(cache_type, key);
                 self.notify_invalidate(cache_type, key).await;
             }
 
@@ -146,16 +149,10 @@ impl CacheStore {
 
 // Please adjust the cache capacities based on the production metrics.
 define_caches! {
-    (Channel, 5600),
-    (Character, 4096),
     (CharacterVariables, 4096),
     (Session, 512),
     (User, 256),
     (UserExt, 256),
-    (Space, 1200),
-    (SpaceSettings, 64),
-    (ChannelMembers, 128),
-    (SpacesChannels, 700),
     (UserSpaces, 110),
 }
 

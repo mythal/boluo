@@ -1,7 +1,7 @@
 import styled from '@emotion/styled';
 import * as React from 'react';
 import { Link } from 'react-router-dom';
-import Logo from '../../assets/logo.svg';
+import Logo from '@boluo/icons/legacy/Logo';
 import ExternalLink from '../../components/atoms/ExternalLink';
 import Text from '../../components/atoms/Text';
 import {

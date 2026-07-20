@@ -28,12 +28,6 @@ declare module '*.gif' {
   export default path;
 }
 
-declare module '*.svg' {
-  import type React from 'react';
-  const ReactComponent: React.FunctionComponent<React.SVGProps<SVGSVGElement>>;
-  export default ReactComponent;
-}
-
 declare module '*.woff2' {
   const path: string;
   export default path;

@@ -4,7 +4,7 @@ import {
   type MouseEvent,
   type PointerEvent,
   useCallback,
-  useContext,
+  use,
   useEffect,
   useMemo,
   useRef,
@@ -31,14 +31,20 @@ export const ChannelHeaderSplitPaneButton: FC = () => {
   const intl = useIntl();
   const dup = usePaneSplit();
   const channelId = useChannelId();
-  const { key: paneKey } = useContext(PaneContext);
+  const { key: paneKey } = use(PaneContext);
   const setPanes = useSetAtom(panesAtom);
   const longPressTimeoutRef = useRef<number | null>(null);
   const longPressVisualTimeoutRef = useRef<number | null>(null);
   const [longPressStart, setLongPressStart] = useState<number | null>(null);
   const longPressTriggeredRef = useRef(false);
-  const { showTooltip, refs, getFloatingProps, getReferenceProps, floatingStyles } =
-    useTooltip('bottom');
+  const {
+    showTooltip,
+    setReference,
+    setFloating,
+    getFloatingProps,
+    getReferenceProps,
+    floatingStyles,
+  } = useTooltip('bottom');
   const hasSameChildPane = useAtomValue(
     useMemo(
       () =>
@@ -96,6 +102,9 @@ export const ChannelHeaderSplitPaneButton: FC = () => {
       clearLongPressTimeout();
       clearLongPressVisualTimeout();
       resetProgress();
+      // Effects call this to cancel an in-flight press; the timer cleanup
+      // above can't move into render.
+      // eslint-disable-next-line @eslint-react/set-state-in-effect
       setLongPressStart(null);
       if (!keepTrigger) {
         longPressTriggeredRef.current = false;
@@ -176,7 +185,7 @@ export const ChannelHeaderSplitPaneButton: FC = () => {
   return (
     <div
       className="ChannelHeaderSplitPaneButton inline-flex"
-      ref={refs.setReference}
+      ref={setReference}
       {...getReferenceProps()}
     >
       <PaneHeaderButton
@@ -199,7 +208,7 @@ export const ChannelHeaderSplitPaneButton: FC = () => {
       <TooltipBox
         show={showTooltip}
         style={floatingStyles}
-        ref={refs.setFloating}
+        ref={setFloating}
         {...getFloatingProps()}
         defaultStyle
       >

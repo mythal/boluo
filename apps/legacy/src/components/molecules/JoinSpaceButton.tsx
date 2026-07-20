@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useState } from 'react';
 import { post } from '../../api/request';
-import Rocket from '../../assets/icons/rocket.svg';
+import Rocket from '@boluo/icons/legacy/Rocket';
 import { useIsLoggedIn } from '../../hooks/useIsLoggedIn';
 import { useDispatch, useSelector } from '../../store';
 import { type Id } from '../../utils/id';

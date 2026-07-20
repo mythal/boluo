@@ -6,5 +6,5 @@ const emptySettings: Settings = {};
 export const SettingsContext = React.createContext<Settings | null | undefined>(emptySettings);
 
 export const useSettings = () => {
-  return React.useContext(SettingsContext) || emptySettings;
+  return React.use(SettingsContext) || emptySettings;
 };

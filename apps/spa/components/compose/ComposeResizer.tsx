@@ -23,12 +23,12 @@ export const ComposeResizer = ({ composeContainerRef }: Props) => {
   const [previewSize, setPreviewSize] = useState<ComposeSize | null>(null);
   const dragStartYRef = useRef<number | null>(null);
   // Cache the last measured AUTO height so we can preview shrinking even when starting from LARGE.
-  const lastAutoHeightRef = useRef<number | null>(null);
+  const [lastAutoHeight, setLastAutoHeight] = useState<number | null>(null);
   const isTouch = useIsTouch();
 
   const getAutoHeight = () => {
-    if (lastAutoHeightRef.current != null) {
-      return `${lastAutoHeightRef.current}px`;
+    if (lastAutoHeight != null) {
+      return `${lastAutoHeight}px`;
     }
     return COMPOSE_AUTO_MAX_HEIGHT;
   };
@@ -40,7 +40,7 @@ export const ComposeResizer = ({ composeContainerRef }: Props) => {
     if (size === 'AUTO') {
       const rect = composeContainerRef.current?.getBoundingClientRect();
       if (rect) {
-        lastAutoHeightRef.current = rect.height;
+        setLastAutoHeight(rect.height);
       }
     }
     setDragging(true);

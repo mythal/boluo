@@ -1,16 +1,17 @@
 {
   "name": "boluo",
+  "version": "0.0.0",
   "devDependencies": {
-    "prettier": "^3.5.3",
-    "prettier-plugin-tailwindcss": "^0.7.1",
-    "turbo": "^2.5.0",
-    "typescript": "^6.0.2"
+    "prettier": "^3.9.4",
+    "prettier-plugin-tailwindcss": "^0.8.0",
+    "turbo": "^2.10.4",
+    "typescript": "^6"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=24.12.0"
   },
   "optionalDependencies": {
-    "syncpack": "^14.3.0"
+    "syncpack": "^15.3.2"
   },
   "packageManager": "npm@10.9.2",
   "private": true,
@@ -26,11 +27,12 @@
     "dev:legacy": "turbo run dev --filter=legacy",
     "dev:site": "turbo run dev --filter=site",
     "dev:spa": "turbo run dev --filter=spa",
-    "fix:versions": "syncpack-fix-mismatches",
-    "format": "prettier --write '{**/*.{ts,tsx,js,jsx,mjs,cjs,css,md},src/**/*.json}' '!**/next-env.d.ts'",
+    "fix:versions": "syncpack fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "format:versions": "syncpack format",
     "generate": "turbo run generate",
-    "lint": "turbo run lint --ui=stream --log-prefix=none --output-logs=new-only --continue=always",
+    "lint": "turbo run lint --ui=stream --log-prefix=none --output-logs=full --continue=always",
     "lint:fix": "turbo run lint -- --fix",
     "lint:versions": "syncpack lint",
     "storybook": "turbo storybook",
@@ -39,5 +41,8 @@
   "workspaces": [
     "apps/*",
     "packages/*"
-  ]
+  ],
+  "allowScripts": {
+    "esbuild@0.28.1": true
+  }
 }

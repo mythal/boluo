@@ -13,6 +13,8 @@ pub struct NewMessage {
     #[serde(default)]
     pub preview_id: Option<Uuid>,
     pub channel_id: Uuid,
+    #[serde(default)]
+    pub space_id: Option<Uuid>,
     pub name: String,
     pub text: String,
     #[serde(default)]
@@ -74,9 +76,19 @@ pub struct MoveMessageBetween {
 #[serde(rename_all = "camelCase")]
 pub struct GetMessagesByChannel {
     pub channel_id: Uuid,
+    #[serde(default)]
+    pub space_id: Option<Uuid>,
     pub before: Option<f64>,
     #[specta(type = Option<f64>)]
     pub limit: Option<i64>,
+}
+
+#[derive(Deserialize, Debug, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct MessageIdQuery {
+    pub id: Uuid,
+    #[serde(default)]
+    pub space_id: Option<Uuid>,
 }
 
 #[derive(Deserialize, Debug, Clone, Copy, specta::Type)]
@@ -118,6 +130,8 @@ fn default_search_name_filter() -> SearchNameFilter {
 #[serde(rename_all = "camelCase")]
 pub struct SearchMessagesParams {
     pub channel_id: Uuid,
+    #[serde(default)]
+    pub space_id: Option<Uuid>,
     pub keyword: String,
     #[serde(default)]
     pub pos: Option<f64>,

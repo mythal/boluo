@@ -60,7 +60,7 @@ const useScrollToBottom = (virtuosoRef: RefObject<VirtuosoHandle | null>): UseSc
   const goBottom = useCallback(() => {
     const virtuoso = virtuosoRef.current;
     if (!virtuoso) return;
-    virtuoso.scrollToIndex({ index: 'LAST' });
+    virtuoso.scrollToIndex({ index: 'LAST', align: 'end' });
     setShowButton(false);
   }, [virtuosoRef]);
   return { showButton, onBottomStateChange, goBottom };
@@ -89,11 +89,6 @@ const useDndHandles = (channelId: string, chatList: ChatItem[]): UseDragHandlesR
   const setBanner = useSetBanner();
   const dispatch = useSetAtom(chatAtom);
   const [draggingItem, setDraggingItem] = useState<DraggingItem | null>(null);
-  const activeRef = useRef<DraggingItem | null>(draggingItem);
-  activeRef.current = draggingItem;
-
-  const chatListRef = useRef<ChatItem[]>(chatList);
-  chatListRef.current = chatList;
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
     const data = event.active.data as DataRef<SortableData>;
@@ -105,8 +100,7 @@ const useDndHandles = (channelId: string, chatList: ChatItem[]): UseDragHandlesR
 
   const handleDragEnd = useCallback(
     async (event: DragEndEvent) => {
-      const active = activeRef.current;
-      const chatList = chatListRef.current;
+      const active = draggingItem;
       const messagesCount = chatList.length;
       if (active == null) return;
       resetDragging();
@@ -213,7 +207,7 @@ const useDndHandles = (channelId: string, chatList: ChatItem[]): UseDragHandlesR
         });
       }
     },
-    [resetDragging, setBanner, dispatch, channelId],
+    [channelId, chatList, dispatch, draggingItem, resetDragging, setBanner],
   );
 
   const handleDragCancel = useCallback(() => {
@@ -264,13 +258,12 @@ export const ChatContentView: FC<Props> = ({ setIsScrolling, currentUserId }) =>
     onBottomStateChange: goBottomButtonOnBottomChange,
     goBottom,
   } = useScrollToBottom(virtuosoRef);
-  const { chatList, firstItemIndex, filteredMessagesCount, scheduledGcLowerPos } = useChatList(
-    channelId,
-    myId,
-  );
+  const { chatList, firstItemIndex, virtualListKey, filteredMessagesCount, scheduledGcLowerPos } =
+    useChatList(channelId, myId);
 
   useScrollToMessage({
     channelId,
+    spaceId: myMember?.space.spaceId,
     virtuosoRef,
     chatList,
   });
@@ -284,6 +277,12 @@ export const ChatContentView: FC<Props> = ({ setIsScrolling, currentUserId }) =>
   const scrollerRef = useRef<HTMLDivElement | null>(null);
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const positionObserverRef = useRef<IntersectionObserver | null>(null);
+  const setScroller = useCallback((scroller: HTMLDivElement | null) => {
+    if (scrollerRef.current === scroller) return;
+    positionObserverRef.current?.disconnect();
+    positionObserverRef.current = null;
+    scrollerRef.current = scroller;
+  }, []);
 
   type UnregisterOberver = () => void;
 
@@ -321,9 +320,10 @@ export const ChatContentView: FC<Props> = ({ setIsScrolling, currentUserId }) =>
           { root: scroller, threshold: [0, 0.25, 0.5, 0.75, 0.8, 1] },
         );
       }
-      positionObserverRef.current.observe(node);
+      const observer = positionObserverRef.current;
+      observer.observe(node);
       return () => {
-        positionObserverRef.current?.unobserve(node);
+        observer.unobserve(node);
       };
     },
     [channelId, store],
@@ -355,12 +355,14 @@ export const ChatContentView: FC<Props> = ({ setIsScrolling, currentUserId }) =>
               >
                 <SortableContext items={chatList} strategy={verticalListSortingStrategy}>
                   <ChatContentVirtualList
+                    key={virtualListKey}
                     firstItemIndex={firstItemIndex}
                     setIsScrolling={setIsScrolling}
                     renderRangeRef={renderRangeRef}
                     filteredMessagesCount={filteredMessagesCount}
+                    handleBottomStateChange={goBottomButtonOnBottomChange}
                     virtuosoRef={virtuosoRef}
-                    scrollerRef={scrollerRef}
+                    setScroller={setScroller}
                     chatList={chatList}
                     currentUserId={currentUserId}
                   />

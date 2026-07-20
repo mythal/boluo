@@ -1,15 +1,8 @@
 import { List, Map } from 'immutable';
-import { isEmptyPreview, type Preview } from '../api/events';
+import { isClearedPreviewContent, type PreviewDiffBase } from '@boluo/api/preview/diff';
+import { type Preview } from '../api/events';
 import { type Message } from '../api/messages';
 import { type Id } from '../utils/id';
-
-export interface PreviewKeyframe {
-  id: string;
-  version: number;
-  name: string;
-  text: string | null;
-  entities: Preview['entities'];
-}
 
 export interface ChatNode {
   id: Id;
@@ -36,7 +29,7 @@ export const makeMessageItem =
 export interface PreviewItem extends ChatNode {
   type: 'PREVIEW';
   preview: Preview;
-  keyframe?: PreviewKeyframe;
+  keyframe?: PreviewDiffBase;
 }
 
 export type ChatItem = MessageItem | PreviewItem;
@@ -121,7 +114,7 @@ export const addItem = ({ messages, previews }: ChatItemSet, item: ChatItem): Ch
     if (prevPreview) {
       messages = removeItem(messages, item.id);
     }
-    if (isEmptyPreview(item.preview)) {
+    if (isClearedPreviewContent(item.preview)) {
       previews = previews.remove(item.id);
       messages = removeItem(messages, item.id);
     } else {

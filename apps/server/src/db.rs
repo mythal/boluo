@@ -22,7 +22,9 @@ pub async fn get() -> sqlx::Pool<sqlx::Postgres> {
                 Box::pin(async move {
                     use sqlx::Executor;
                     conn.execute(
-                        "SET application_name = 'boluo-server'; SET statement_timeout = 20000;",
+                        "SET application_name = 'boluo-server';
+                         SET statement_timeout = 20000;
+                         SET TIME ZONE 'UTC';",
                     )
                     .await?;
 
@@ -30,7 +32,7 @@ pub async fn get() -> sqlx::Pool<sqlx::Postgres> {
                 })
             })
             .max_connections(32)
-            .min_connections(4)
+            .min_connections(16)
             .acquire_slow_threshold(ACQUIRE_SLOW_THRESHOLD)
             .acquire_timeout(ACQUIRE_TIMEOUT)
             .max_lifetime(Some(LIFETIME))

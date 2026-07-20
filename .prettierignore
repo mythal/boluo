@@ -1,0 +1,9 @@
+packages/icons/src
+packages/react-virtuoso/README.md
+packages/react-virtuoso/src
+
+packages/lang/src/*.json
+
+package-lock.json
+flake.lock
+.sqlx

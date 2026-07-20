@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useCallback } from 'react';
-import BroadcastTower from '../../../assets/icons/broadcast-tower.svg';
+import BroadcastTower from '@boluo/icons/legacy/BroadcastTower';
 import { useChannelId } from '../../../hooks/useChannelId';
 import { useDispatch, useSelector } from '../../../store';
 import ChatItemToolbarButton from '../ChatItemToolbarButton';

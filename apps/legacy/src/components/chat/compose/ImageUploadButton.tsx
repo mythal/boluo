@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useCallback, useEffect, useRef } from 'react';
-import FileImage from '../../../assets/icons/file-image.svg';
-import RemoveFileImage from '../../../assets/icons/remove-file-image.svg';
+import FileImage from '@boluo/icons/legacy/FileImage';
+import RemoveFileImage from '@boluo/icons/legacy/RemoveFileImage';
 import { useChannelId } from '../../../hooks/useChannelId';
 import { useDispatch, useSelector } from '../../../store';
 import ChatItemToolbarButton from '../ChatItemToolbarButton';

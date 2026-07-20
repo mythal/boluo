@@ -8,9 +8,11 @@
   },
   "devDependencies": {
     "@boluo/eslint-config": "0.0.0",
-    "eslint": "^9.39.4",
-    "jotai": "^2.12.2",
-    "typescript": "^6.0.2"
+    "@types/node": "^26.1.1",
+    "eslint": "^10.6.0",
+    "jotai": "^2.20.1",
+    "tsx": "^4.23.0",
+    "typescript": "^6"
   },
   "exports": {
     ".": "./src/index.ts",
@@ -20,11 +22,12 @@
   "homepage": "https://github.com/mythal/boluo",
   "license": "AGPL-3.0",
   "peerDependencies": {
-    "jotai": "^2.12.2"
+    "jotai": "^2.20.1"
   },
   "scripts": {
     "check": "tsc --noEmit",
-    "lint": "eslint . --ext .ts,.tsx"
+    "lint": "eslint .",
+    "test": "tsx --test src/**/*.test.ts"
   },
   "sideEffects": false,
   "type": "module"

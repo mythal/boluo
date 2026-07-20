@@ -1,4 +1,4 @@
-import { type ReactNode, Suspense, useEffect, useState, createContext, useContext } from 'react';
+import { type ReactNode, Suspense, useEffect, useState, createContext, use } from 'react';
 
 interface Props {
   fallback: ReactNode;
@@ -10,7 +10,7 @@ export const DisableDelay = createContext(false);
 
 export const Delay = ({ fallback, children, suspense = false }: Props) => {
   const [showState, setShowState] = useState(false);
-  const disableDelay = useContext(DisableDelay);
+  const disableDelay = use(DisableDelay);
   const show = disableDelay ? true : showState;
   useEffect(() => {
     if (disableDelay) {

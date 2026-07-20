@@ -1,5 +1,5 @@
 import { getOS } from '@boluo/utils/browser';
-import { createContext, useContext, useSyncExternalStore } from 'react';
+import { createContext, use, useSyncExternalStore } from 'react';
 
 const isTouchOS = (): boolean => {
   const os = getOS();
@@ -40,4 +40,4 @@ export const useDetectIsTouch = (): boolean => {
 
 export const IsTouchContext = createContext<boolean>(false);
 
-export const useIsTouch = (): boolean => useContext(IsTouchContext);
+export const useIsTouch = (): boolean => use(IsTouchContext);

@@ -2,7 +2,7 @@ import { css } from '@emotion/react';
 import styled from '@emotion/styled';
 import * as React from 'react';
 import { useMemo, useState } from 'react';
-import UserPlus from '../../assets/icons/user-plus.svg';
+import UserPlus from '@boluo/icons/legacy/UserPlus';
 import { useChannelId } from '../../hooks/useChannelId';
 import { useSelector } from '../../store';
 import { roundedSm, textSm, uiShadow } from '../../styles/atoms';

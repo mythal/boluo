@@ -1,115 +1,53 @@
-import { type ClientEvent, type PreviewPost } from '@boluo/api';
-import { atom, type Atom, useAtomValue, useStore } from 'jotai';
-import { type RefObject, useEffect, useMemo, useRef } from 'react';
+import { subscribePreviewAcknowledgement } from '@boluo/api/preview/ack';
+import { createPreviewPublisher } from '@boluo/api/preview/publisher';
 import { makeId } from '@boluo/utils/id';
+import { atom, type Atom, useAtomValue, useStore } from 'jotai';
+import { selectAtom } from 'jotai/utils';
+import { useEffect, useEffectEvent, useMemo } from 'react';
+import { type ComposeParseResult } from '../../hooks/useChannelAtoms';
 import { type ComposeAtom } from '../../hooks/useComposeAtom';
 import { usePaneIsFocus } from '../../hooks/usePaneIsFocus';
-import { type ParseResult } from '@boluo/interpreter';
-import { chatAtom, connectionStateAtom } from '../../state/chat.atoms';
-import { type ComposeState } from '../../state/compose.reducer';
+import { chatAtom, connectionStateAtom, isChatInitializedAtom } from '../../state/chat.atoms';
 import {
-  buildPreviewDiffPlan,
-  nextKeyframeVersion,
-  type PreviewSendState,
-  toPreviewSendState,
-} from './previewDiffPlanner';
+  areComposePreviewMetadataEqual,
+  makeDesiredPreview,
+  selectComposePreviewMetadata,
+} from './makeDesiredPreview';
 
-const SEND_PREVIEW_TIMEOUT_MS = 250;
-
-const sendPreview = (
-  channelId: string,
-  nickname: string,
-  defaultCharacterName: string,
-  compose: ComposeState,
-  parsed: ParseResult,
-  connection: WebSocket,
-  sendTimeoutRef: RefObject<number | undefined>,
-  defaultInGame: boolean,
-  sendStateRef: RefObject<PreviewSendState | null>,
-): void => {
-  window.clearTimeout(sendTimeoutRef.current);
-
-  sendTimeoutRef.current = window.setTimeout(() => {
-    const { previewId, edit } = compose;
-    const {
-      isAction,
-      broadcast,
-      whisperToUsernames,
-      inGame: parsedInGame,
-      characterName: parsedCharacterName,
-    } = parsed;
-    const inGame = parsedCharacterName ? true : (parsedInGame ?? defaultInGame);
-    const inGameName = parsedCharacterName || defaultCharacterName;
-    if (!previewId) return;
-    const doNotBroadcast = !broadcast || whisperToUsernames != null;
-    const resetPreview = parsed.text === '' || parsed.entities.length === 0;
-    const text: string | null = doNotBroadcast ? null : parsed.text;
-    const currentSendState = sendStateRef.current;
-    const now = Date.now();
-    const nextPreview: PreviewPost = {
-      id: previewId,
-      channelId,
-      name: inGame ? inGameName : nickname,
-      mediaId: null,
-      inGame,
-      isAction,
-      text: resetPreview ? '' : text,
-      clear: false,
-      entities: doNotBroadcast || resetPreview ? [] : parsed.entities,
-      editFor: null,
-      edit,
-    };
-
-    if (currentSendState != null) {
-      const diffPlan = buildPreviewDiffPlan({
-        channelId,
-        currentSendState,
-        nextPreview,
-        now,
-        doNotBroadcast,
-        resetPreview,
-      });
-      if (diffPlan.type === 'DIFF') {
-        const clientEvent: ClientEvent = { type: 'DIFF', preview: diffPlan.diff };
-        if (connection.readyState !== WebSocket.OPEN) {
-          return;
-        }
-        connection.send(JSON.stringify(clientEvent));
-        sendStateRef.current = diffPlan.nextState;
-        return;
-      }
-      if (diffPlan.type === 'NOOP') {
-        return;
-      }
-    }
-
-    const keyframeVersion = nextKeyframeVersion(currentSendState, previewId);
-    const preview: PreviewPost = { ...nextPreview, v: keyframeVersion };
-    const clientEvent: ClientEvent = { type: 'PREVIEW', preview };
-    if (connection.readyState !== WebSocket.OPEN) {
-      return;
-    }
-    connection.send(JSON.stringify(clientEvent));
-    sendStateRef.current = toPreviewSendState(preview, keyframeVersion, now);
-  }, SEND_PREVIEW_TIMEOUT_MS);
-};
+const SEND_PREVIEW_DEBOUNCE_MS = 250;
 
 export const useSendPreview = (
   channelId: string,
   nickname: string | undefined,
   defaultCharacterName: string,
   composeAtom: ComposeAtom,
-  parsedAtom: Atom<ParseResult>,
+  parsedAtom: Atom<ComposeParseResult>,
   defaultInGame: boolean,
 ) => {
   const store = useStore();
-  const sendTimoutRef = useRef<number | undefined>(undefined);
-  const sendStateRef = useRef<PreviewSendState | null>(null);
-  const previousConnectionRef = useRef<WebSocket | null>(null);
   const isFocused = usePaneIsFocus();
-  const isFocusedRef = useRef(isFocused);
-  isFocusedRef.current = isFocused;
   const connectionState = useAtomValue(connectionStateAtom);
+  const initialized = useAtomValue(isChatInitializedAtom);
+  const publisher = useMemo(
+    () =>
+      createPreviewPublisher<WebSocket, number>({
+        debounceMs: SEND_PREVIEW_DEBOUNCE_MS,
+        now: Date.now,
+        send: (connection, event) => {
+          if (connection.readyState !== WebSocket.OPEN) return false;
+          connection.send(JSON.stringify(event));
+          return true;
+        },
+        setTimer: (callback, delay) => window.setTimeout(callback, delay),
+        clearTimer: (handle) => window.clearTimeout(handle),
+        requestReconnect: (connection, code, reason) => {
+          if (connection.readyState === WebSocket.OPEN) {
+            connection.close(code, reason);
+          }
+        },
+      }),
+    [],
+  );
   const hasCollidedAtom = useMemo(
     () =>
       atom((read) => {
@@ -121,8 +59,18 @@ export const useSendPreview = (
       }),
     [channelId, composeAtom],
   );
+  const previewMetadataAtom = useMemo(
+    () => selectAtom(composeAtom, selectComposePreviewMetadata, areComposePreviewMetadataEqual),
+    [composeAtom],
+  );
+
   useEffect(() => {
-    store.sub(hasCollidedAtom, () => {
+    publisher.activate();
+    return () => publisher.dispose();
+  }, [publisher]);
+
+  useEffect(() => {
+    return store.sub(hasCollidedAtom, () => {
       const hasCollided = store.get(hasCollidedAtom);
       const previewId = store.get(composeAtom).previewId;
       if (hasCollided) {
@@ -133,47 +81,78 @@ export const useSendPreview = (
       }
     });
   }, [composeAtom, hasCollidedAtom, store]);
-  useEffect(() => {
-    if (connectionState.type !== 'CONNECTED') {
-      previousConnectionRef.current = null;
-      sendStateRef.current = null;
-      return;
-    }
-    if (previousConnectionRef.current !== connectionState.connection) {
-      previousConnectionRef.current = connectionState.connection;
-      sendStateRef.current = null;
-    }
-  }, [connectionState]);
-  useEffect(() => {
-    return store.sub(parsedAtom, () => {
-      const chatState = store.get(chatAtom);
-      if (!chatState.context.initialized) return;
-      if (nickname === undefined || connectionState.type !== 'CONNECTED') return;
-      if (!isFocusedRef.current) return;
-      if (!document.hasFocus()) return;
-      const composeState = store.get(composeAtom);
-      const parsed = store.get(parsedAtom);
-      sendPreview(
-        channelId,
-        nickname,
-        defaultCharacterName,
-        composeState,
-        parsed,
-        connectionState.connection,
-        sendTimoutRef,
-        defaultInGame,
-        sendStateRef,
-      );
+
+  const updateDesiredPreview = useEffectEvent(() => {
+    if (nickname === undefined) return;
+    const compose = store.get(composeAtom);
+    const parsed = store.get(parsedAtom);
+    const desired = makeDesiredPreview({
+      channelId,
+      nickname,
+      defaultCharacterName,
+      defaultInGame,
+      compose,
+      parsed,
     });
+    if (desired == null) return;
+    publisher.dispatch({
+      type: 'DESIRED_PREVIEW_CHANGED',
+      desired,
+    });
+  });
+
+  useEffect(() => {
+    updateDesiredPreview();
+    const unsubscribeParsed = store.sub(parsedAtom, updateDesiredPreview);
+    const unsubscribePreviewMetadata = store.sub(previewMetadataAtom, updateDesiredPreview);
+    return () => {
+      unsubscribeParsed();
+      unsubscribePreviewMetadata();
+    };
   }, [
     channelId,
-    defaultCharacterName,
     composeAtom,
-    connectionState,
+    defaultCharacterName,
     defaultInGame,
     nickname,
     parsedAtom,
-    sendStateRef,
+    previewMetadataAtom,
+    publisher,
     store,
   ]);
+
+  useEffect(() => {
+    const connection = connectionState.type === 'CONNECTED' ? connectionState.connection : null;
+    publisher.dispatch({
+      type: 'CONNECTION_STATE_CHANGED',
+      connection,
+      initialized,
+    });
+  }, [connectionState, initialized, publisher]);
+
+  useEffect(() => {
+    const updateEnabled = () => {
+      publisher.dispatch({
+        type: 'ENABLED_CHANGED',
+        enabled: nickname !== undefined && isFocused && document.hasFocus(),
+      });
+    };
+    updateEnabled();
+    window.addEventListener('focus', updateEnabled);
+    window.addEventListener('blur', updateEnabled);
+    return () => {
+      window.removeEventListener('focus', updateEnabled);
+      window.removeEventListener('blur', updateEnabled);
+    };
+  }, [isFocused, nickname, publisher]);
+
+  useEffect(() => {
+    return subscribePreviewAcknowledgement(({ source, acknowledgement }) => {
+      publisher.dispatch({
+        type: 'ACKNOWLEDGEMENT_RECEIVED',
+        source,
+        acknowledgement,
+      });
+    });
+  }, [publisher]);
 };

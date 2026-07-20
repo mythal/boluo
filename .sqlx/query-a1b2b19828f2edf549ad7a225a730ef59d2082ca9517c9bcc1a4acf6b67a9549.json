@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO users_extension (user_id, email_verified_at, settings)\n               VALUES ($1, now(), '{}')\n               ON CONFLICT (user_id)\n               DO UPDATE SET email_verified_at = now()",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "a1b2b19828f2edf549ad7a225a730ef59d2082ca9517c9bcc1a4acf6b67a9549"
+}

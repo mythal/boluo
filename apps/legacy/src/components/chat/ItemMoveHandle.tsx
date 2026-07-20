@@ -2,7 +2,7 @@ import { css } from '@emotion/react';
 import { darken } from 'polished';
 import * as React from 'react';
 import { type DraggableProvidedDragHandleProps } from '@hello-pangea/dnd';
-import Handle from '../../assets/icons/handle.svg';
+import Handle from '@boluo/icons/legacy/Handle';
 import { p, pY, roundedMd, textXs } from '../../styles/atoms';
 import { textColor } from '../../styles/colors';
 import { parseDateString } from '../../utils/helper';

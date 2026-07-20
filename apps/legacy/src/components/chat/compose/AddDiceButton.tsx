@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useCallback } from 'react';
-import D20 from '../../../assets/icons/d20.svg';
+import D20 from '@boluo/icons/legacy/D20';
 import { useChannelId } from '../../../hooks/useChannelId';
 import { useDispatch, useSelector } from '../../../store';
 import { mL } from '../../../styles/atoms';

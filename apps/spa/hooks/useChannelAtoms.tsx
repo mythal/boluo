@@ -1,6 +1,6 @@
 import { type Atom, atom, type PrimitiveAtom, type WritableAtom } from 'jotai';
-import { atomWithStorage, loadable, selectAtom } from 'jotai/utils';
-import { createContext, useContext, useMemo, useRef } from 'react';
+import { atomWithStorage, selectAtom, unwrap } from 'jotai/utils';
+import { createContext, use, useLayoutEffect, useMemo, useRef } from 'react';
 import { asyncParse } from '../interpreter/async-parse';
 import { composeInitialParseResult, parseModifiers, type ParseResult } from '@boluo/interpreter';
 import type { ComposeActionUnion } from '../state/compose.actions';
@@ -20,10 +20,14 @@ export interface ScrollToMessageRequest {
   pos: number;
 }
 
+export type ComposeParseResult = ParseResult & {
+  source: string;
+};
+
 export interface ChannelAtoms {
   composeAtom: WritableAtom<ComposeState, [ComposeActionUnion], void>;
   checkComposeAtom: Atom<ComposeError | null>;
-  parsedAtom: Atom<ParseResult>;
+  parsedAtom: Atom<ComposeParseResult>;
   composeFocusedAtom: Atom<boolean>;
   isActionAtom: Atom<boolean>;
   hasMediaAtom: Atom<boolean>;
@@ -61,101 +65,117 @@ export const useMakeChannelAtoms = (
     throw new Error('Access channel atoms outside pane');
   }
   const defaultDiceFaceRef = useRef(defaultDiceFace);
-  defaultDiceFaceRef.current = defaultDiceFace;
+  useLayoutEffect(() => {
+    defaultDiceFaceRef.current = defaultDiceFace;
+  }, [defaultDiceFace]);
   const composeAtom = composeAtomFamily({ channelId, paneKey });
   const checkComposeAtom: Atom<ComposeError | null> = useMemo(
     () => selectAtom(composeAtom, checkCompose(characterName, defaultInGame)),
     [characterName, composeAtom, defaultInGame],
   );
-  const cachedParseResultRef = useRef<ParseResult>(composeInitialParseResult);
-  const atoms: Omit<ChannelAtoms, 'composeAtom' | 'checkComposeAtom' | 'inGameAtom'> =
-    useMemo(() => {
-      const sourceAtom = atom((get) => get(composeAtom).source);
-      const loadableParsedAtom = loadable(
-        atom(async (get, { signal }): Promise<ParseResult> => {
-          const source = get(sourceAtom);
-          return await asyncParse({ source, defaultDiceFace: defaultDiceFaceRef.current }, signal);
-        }),
-      );
-      const parsedAtom = atom((get) => {
-        const loadableParsed = get(loadableParsedAtom);
-        if (loadableParsed.state === 'hasData') {
-          cachedParseResultRef.current = loadableParsed.data;
-        }
-        return cachedParseResultRef.current;
-      });
-      const characterNameAtom = selectAtom(composeAtom, ({ source }) => {
-        try {
-          return parseModifiers(source).characterName;
-        } catch {
-          return '';
-        }
-      });
-      const broadcastAtom = selectAtom(parsedAtom, ({ broadcast }) => broadcast);
-      const isActionAtom = selectAtom(parsedAtom, ({ isAction }) => isAction);
-      const hasMediaAtom = selectAtom(composeAtom, ({ media }) => media != null);
-      const isEditingAtom = selectAtom(composeAtom, ({ edit }) => edit != null);
-      const isWhisperAtom = selectAtom(
-        parsedAtom,
-        ({ whisperToUsernames }) => whisperToUsernames != null,
-      );
-      const composeFocusedAtom = selectAtom(composeAtom, ({ focused }) => focused);
-      const isComposeEmptyAtom = atom((get) => {
-        const compose = get(composeAtom);
-        const hasMedia = get(hasMediaAtom);
-        return compose.source.trim().length === 0 && !hasMedia;
-      });
-      const selfPreviewNamePanelOpenAtom = atom<boolean>(false);
-      const selfPreviewDraftHistoryOpenAtom = atom<boolean>(false);
-      const selfPreviewHideAtAtom = atom<number | null>(null);
-      const selfPreviewHoverAtom = atom<boolean>(false);
-      const selfPreviewShouldHoldAtom = atom((get) => {
-        const focused = get(composeFocusedAtom);
-        const isComposeEmpty = get(isComposeEmptyAtom);
-        const namePanelOpen = get(selfPreviewNamePanelOpenAtom);
-        const draftHistoryOpen = get(selfPreviewDraftHistoryOpenAtom);
-        const isEditing = get(isEditingAtom);
-        const hovering = get(selfPreviewHoverAtom);
-        return (
-          !isComposeEmpty || focused || namePanelOpen || draftHistoryOpen || isEditing || hovering
+  const atoms: Omit<
+    ChannelAtoms,
+    'composeAtom' | 'checkComposeAtom' | 'inGameAtom' | 'defaultDiceFaceRef'
+  > = useMemo(() => {
+    const sourceAtom = atom((get) => get(composeAtom).source);
+    const initialParseResult: ComposeParseResult = {
+      ...composeInitialParseResult,
+      source: '',
+    };
+    const cachedParseResultRef = { current: initialParseResult };
+    // The atom read functions below run in the jotai store, not during
+    // render, so capturing and mutating the refs there is safe.
+    /* eslint-disable react-hooks/refs */
+    const unwrappedParsedAtom = unwrap(
+      atom(async (get, { signal }): Promise<ComposeParseResult> => {
+        const source = get(sourceAtom);
+        const result = await asyncParse(
+          { source, defaultDiceFace: defaultDiceFaceRef.current },
+          signal,
         );
-      });
-      const selfPreviewVisibleAtom = atom((get) => {
-        if (get(selfPreviewShouldHoldAtom)) return true;
-        const hideAt = get(selfPreviewHideAtAtom);
-        if (hideAt == null) return true;
-        // eslint-disable-next-line react-hooks/purity
-        return hideAt > Date.now();
-      });
-      return {
-        composeAtom,
-        parsedAtom,
-        isActionAtom,
-        characterNameAtom,
-        hasMediaAtom,
-        broadcastAtom,
-        isWhisperAtom,
-        composeFocusedAtom,
-        isEditingAtom,
-        isComposeEmptyAtom,
-        selfPreviewNamePanelOpenAtom,
-        selfPreviewDraftHistoryOpenAtom,
-        selfPreviewHideAtAtom,
-        selfPreviewHoverAtom,
-        selfPreviewShouldHoldAtom,
-        selfPreviewVisibleAtom,
-        lastWhisperTargetsAtom: atomWithStorage<string[] | null>(
-          `${channelId}:last-whisper-targets`,
-          null,
-        ),
-        filterAtom: atomWithStorage<ChannelFilter>(`${channelId}:filter`, 'ALL'),
-        showArchivedAtom: atomWithStorage(`${channelId}:show-archived`, false),
-        subPaneStateAtom: atom<SubPaneState>('NONE'),
-        scrollToMessageAtom: atom<ScrollToMessageRequest | null>(null),
-        highlightMessageAtom: atom<string | null>(null),
-        defaultDiceFaceRef,
-      };
-    }, [channelId, composeAtom]);
+        return { ...result, source };
+      }),
+      (previous) => previous ?? initialParseResult,
+    );
+    const parsedAtom = atom((get) => {
+      try {
+        cachedParseResultRef.current = get(unwrappedParsedAtom);
+      } catch {
+        // Keep the last successful parse result if parsing fails.
+      }
+      return cachedParseResultRef.current;
+    });
+    /* eslint-enable react-hooks/refs */
+    const characterNameAtom = selectAtom(composeAtom, ({ source }) => {
+      try {
+        return parseModifiers(source).characterName;
+      } catch {
+        return '';
+      }
+    });
+    const broadcastAtom = selectAtom(parsedAtom, ({ broadcast }) => broadcast);
+    const isActionAtom = selectAtom(parsedAtom, ({ isAction }) => isAction);
+    const hasMediaAtom = selectAtom(composeAtom, ({ media }) => media != null);
+    const isEditingAtom = selectAtom(composeAtom, ({ edit }) => edit != null);
+    const isWhisperAtom = selectAtom(
+      parsedAtom,
+      ({ whisperToUsernames }) => whisperToUsernames != null,
+    );
+    const composeFocusedAtom = selectAtom(composeAtom, ({ focused }) => focused);
+    const isComposeEmptyAtom = atom((get) => {
+      const compose = get(composeAtom);
+      const hasMedia = get(hasMediaAtom);
+      return compose.source.trim().length === 0 && !hasMedia;
+    });
+    const selfPreviewNamePanelOpenAtom = atom<boolean>(false);
+    const selfPreviewDraftHistoryOpenAtom = atom<boolean>(false);
+    const selfPreviewHideAtAtom = atom<number | null>(null);
+    const selfPreviewHoverAtom = atom<boolean>(false);
+    const selfPreviewShouldHoldAtom = atom((get) => {
+      const focused = get(composeFocusedAtom);
+      const isComposeEmpty = get(isComposeEmptyAtom);
+      const namePanelOpen = get(selfPreviewNamePanelOpenAtom);
+      const draftHistoryOpen = get(selfPreviewDraftHistoryOpenAtom);
+      const isEditing = get(isEditingAtom);
+      const hovering = get(selfPreviewHoverAtom);
+      return (
+        !isComposeEmpty || focused || namePanelOpen || draftHistoryOpen || isEditing || hovering
+      );
+    });
+    const selfPreviewVisibleAtom = atom((get) => {
+      if (get(selfPreviewShouldHoldAtom)) return true;
+      const hideAt = get(selfPreviewHideAtAtom);
+      if (hideAt == null) return true;
+      return hideAt > Date.now();
+    });
+    return {
+      composeAtom,
+      parsedAtom,
+      isActionAtom,
+      characterNameAtom,
+      hasMediaAtom,
+      broadcastAtom,
+      isWhisperAtom,
+      composeFocusedAtom,
+      isEditingAtom,
+      isComposeEmptyAtom,
+      selfPreviewNamePanelOpenAtom,
+      selfPreviewDraftHistoryOpenAtom,
+      selfPreviewHideAtAtom,
+      selfPreviewHoverAtom,
+      selfPreviewShouldHoldAtom,
+      selfPreviewVisibleAtom,
+      lastWhisperTargetsAtom: atomWithStorage<string[] | null>(
+        `${channelId}:last-whisper-targets`,
+        null,
+      ),
+      filterAtom: atomWithStorage<ChannelFilter>(`${channelId}:filter`, 'ALL'),
+      showArchivedAtom: atomWithStorage(`${channelId}:show-archived`, false),
+      subPaneStateAtom: atom<SubPaneState>('NONE'),
+      scrollToMessageAtom: atom<ScrollToMessageRequest | null>(null),
+      highlightMessageAtom: atom<string | null>(null),
+    };
+  }, [channelId, composeAtom]);
   const inGameAtom = useMemo(
     () =>
       atom((read) => {
@@ -168,11 +188,11 @@ export const useMakeChannelAtoms = (
       }),
     [atoms.parsedAtom, defaultInGame],
   );
-  return { ...atoms, checkComposeAtom, composeAtom, inGameAtom };
+  return { ...atoms, checkComposeAtom, composeAtom, inGameAtom, defaultDiceFaceRef };
 };
 
 export const useChannelAtoms = (): ChannelAtoms => {
-  const atoms = useContext(ChannelAtomsContext);
+  const atoms = use(ChannelAtomsContext);
   if (atoms == null) {
     throw new Error('Access channel atoms outside context');
   }

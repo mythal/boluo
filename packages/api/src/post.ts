@@ -28,8 +28,10 @@ import type {
   Login as LoginData,
   LoginReturn,
   Message,
+  MessageIdQuery,
   NewMessage,
   Note,
+  QueryCharacter,
   Register as RegisterData,
   ResendEmailVerification,
   ResendEmailVerificationResult,
@@ -74,8 +76,8 @@ export interface Post {
   // messages
   '/messages/send': { payload: NewMessage; query: null; result: Message };
   '/messages/move_between': { payload: MoveMessageBetween; query: null; result: Message };
-  '/messages/delete': { payload: Empty; query: { id: string }; result: Message };
-  '/messages/toggle_fold': { payload: Empty; query: { id: string }; result: Message };
+  '/messages/delete': { payload: Empty; query: MessageIdQuery; result: Message };
+  '/messages/toggle_fold': { payload: Empty; query: MessageIdQuery; result: Message };
   // channels
   '/channels/create': { payload: CreateChannel; query: null; result: ChannelWithMember };
   '/channels/join': { payload: JoinChannel; query: null; result: ChannelWithMember };
@@ -94,7 +96,7 @@ export interface Post {
   // characters
   '/characters/create': { payload: CreateCharacter; query: null; result: Character };
   '/characters/edit': { payload: EditCharacter; query: null; result: Character };
-  '/characters/delete': { payload: Empty; query: { id: string }; result: true };
+  '/characters/delete': { payload: Empty; query: QueryCharacter; result: true };
   '/characters/create_variable': {
     payload: CreateVariable;
     query: null;

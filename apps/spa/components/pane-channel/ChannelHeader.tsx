@@ -40,8 +40,14 @@ export const ChannelHeader: FC = () => {
     ) : null;
   }, [channel, headerStateAtom]);
   const extra = useMemo(() => {
-    return <ChannelHeaderExtra channelId={channelId} stateAtom={headerStateAtom} />;
-  }, [channelId, headerStateAtom]);
+    return (
+      <ChannelHeaderExtra
+        channelId={channelId}
+        spaceId={channel?.spaceId}
+        stateAtom={headerStateAtom}
+      />
+    );
+  }, [channel?.spaceId, channelId, headerStateAtom]);
   return (
     <PaneHeaderBox icon={icon} operators={operators} extra={extra}>
       {channelName}

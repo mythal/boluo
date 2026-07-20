@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE reset_tokens\nSET\n    invalidated_at = now()\nWHERE\n    user_id = $1\n    AND used_at IS NULL\n    AND invalidated_at IS NULL;\n",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "f786bb7782928a4d2b6437a6ef2409ab7d59543b3f2dc88bbb00eb35f0ccb3b1"
+}

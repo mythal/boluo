@@ -30,6 +30,7 @@ mod error;
 mod cache;
 mod channels;
 mod characters;
+mod committed_changes;
 mod config;
 mod context;
 mod cors;
@@ -52,9 +53,11 @@ mod sentry_tunnel;
 mod server_metrics;
 mod session;
 mod shutdown;
+mod space_runtime;
 mod spaces;
 mod ts;
 mod ttl;
+mod typegen;
 mod users;
 mod validators;
 mod websocket;
@@ -105,6 +108,7 @@ async fn router(
     table!("/api/spaces", spaces::router);
     table!("/api/notes", notes::router);
     table!("/api/events", events::router);
+    table!("/api/updates", events::router);
     missing()
 }
 
@@ -187,6 +191,7 @@ async fn handler(
                     if duration.as_millis() > 500 {
                         tracing::warn!("Slow request: {}ms", duration.as_millis());
                     } else if path.starts_with("/api/info")
+                        || path.starts_with("/api/updates/connect")
                         || path.starts_with("/api/events/connect")
                     {
                         tracing::debug!("Request Finished");
@@ -245,15 +250,20 @@ struct Args {
 #[tokio::main(worker_threads = 5)]
 async fn main() {
     use tracing_subscriber::filter::{EnvFilter, LevelFilter};
+
+    let args = Args::parse();
+    if args.types {
+        typegen::prepare();
+    }
+
     config::load();
     let filter = EnvFilter::builder()
         .with_default_directive(LevelFilter::INFO.into())
         .from_env_lossy();
     tracing_subscriber::fmt().with_env_filter(filter).init();
 
-    let args = Args::parse();
     if args.types {
-        ts::export();
+        typegen::run();
         return;
     }
 

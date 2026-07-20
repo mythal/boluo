@@ -1,39 +1,33 @@
-import js from '@eslint/js';
-import eslintConfigPrettier from 'eslint-config-prettier';
-import tseslint from 'typescript-eslint';
-import pluginReactHooks from 'eslint-plugin-react-hooks';
-import pluginReact from 'eslint-plugin-react';
 import globals from 'globals';
-import { config as baseConfig } from './base.js';
+import { createConfig as createBaseConfig } from './base.js';
+import { reactConfig } from './react.js';
 
 /**
- * A custom ESLint configuration for libraries that use React.
+ * Create the ESLint configuration for libraries that use React.
  *
- * @type {import("eslint").Linter.Config} */
-export const config = [
-  ...baseConfig,
-  js.configs.recommended,
-  eslintConfigPrettier,
-  ...tseslint.configs.recommended,
-  pluginReact.configs.flat.recommended,
-  {
-    languageOptions: {
-      ...pluginReact.configs.flat.recommended.languageOptions,
-      globals: {
-        ...globals.serviceworker,
-        ...globals.browser,
+ * @param {string} tsconfigRootDir The package directory, i.e. `import.meta.dirname`
+ *   of the package's `eslint.config.js`.
+ * @returns {import("eslint").Linter.Config[]}
+ */
+export function createConfig(tsconfigRootDir) {
+  return [
+    ...createBaseConfig(tsconfigRootDir),
+    ...reactConfig,
+    {
+      languageOptions: {
+        globals: {
+          ...globals.serviceworker,
+          ...globals.browser,
+        },
       },
     },
-  },
-  {
-    plugins: {
-      'react-hooks': pluginReactHooks,
+    {
+      rules: {
+        // Keep the react-hooks rules eslint-react's recommended set doesn't cover.
+        'react-hooks/refs': 'error',
+        'react-hooks/globals': 'error',
+        'react-hooks/immutability': 'error',
+      },
     },
-    settings: { react: { version: '19' } },
-    rules: {
-      ...pluginReactHooks.configs.recommended.rules,
-      // React scope no longer necessary with new JSX transform.
-      'react/react-in-jsx-scope': 'off',
-    },
-  },
-];
+  ];
+}

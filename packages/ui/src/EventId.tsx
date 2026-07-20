@@ -13,6 +13,7 @@ import {
 } from '@floating-ui/react';
 import { type FC, useState } from 'react';
 import { TooltipBox } from './TooltipBox';
+import { useFloatingSetters } from './hooks/useFloatingSetters';
 import { FormattedMessage } from 'react-intl';
 
 export const EventId: FC<{ eventId: string }> = ({ eventId }) => {
@@ -23,6 +24,7 @@ export const EventId: FC<{ eventId: string }> = ({ eventId }) => {
     middleware: [offset(4), flip(), shift()],
     whileElementsMounted: autoUpdate,
   });
+  const { setReference, setFloating } = useFloatingSetters(refs);
 
   const hover = useHover(context, { move: false });
   const focus = useFocus(context);
@@ -34,20 +36,14 @@ export const EventId: FC<{ eventId: string }> = ({ eventId }) => {
   const { getReferenceProps, getFloatingProps } = useInteractions([hover, focus, dismiss, role]);
   return (
     <>
-      <span
-        className="underline decoration-dashed"
-        ref={refs.setReference}
-        {...getReferenceProps()}
-      >
+      <span className="underline decoration-dashed" ref={setReference} {...getReferenceProps()}>
         {eventId.slice(0, 8)}
       </span>
 
       <TooltipBox
         defaultStyle
         show={isOpen}
-        // False positive
-        // eslint-disable-next-line react-hooks/refs
-        ref={refs.setFloating}
+        ref={setFloating}
         style={floatingStyles}
         {...getFloatingProps()}
       >

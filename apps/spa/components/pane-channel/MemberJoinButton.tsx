@@ -62,7 +62,7 @@ export const MemberJoinButton: FC<Props> = ({ channel }) => {
   const { data: currentUser } = useQueryCurrentUser();
   const { trigger, isMutating } = useSWRMutation(['/channels/members', channel.id], join);
   const { data: spaceMember } = useMySpaceMember(channel.spaceId);
-  const { data: channelMembers } = useQueryChannelMembers(channel.id);
+  const { data: channelMembers } = useQueryChannelMembers(channel.id, channel.spaceId);
   const paneAdd = usePaneAdd();
   const [showError, setShowError] = useState(false);
   const banner = useBannerNode();

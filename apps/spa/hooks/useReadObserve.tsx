@@ -7,5 +7,5 @@ export const ReadObserverContext = React.createContext<(node: Element) => () => 
 });
 
 export const useReadObserve = () => {
-  return React.useContext(ReadObserverContext);
+  return React.use(ReadObserverContext);
 };

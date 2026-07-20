@@ -3,7 +3,7 @@ import * as React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { type LoadMessages } from '../../actions';
 import { get } from '../../api/request';
-import RotateCw from '../../assets/icons/rotate-cw.svg';
+import RotateCw from '@boluo/icons/legacy/RotateCw';
 import { useChannelId } from '../../hooks/useChannelId';
 import { useDispatch, useSelector } from '../../store';
 import { bgColor } from '../../styles/colors';
@@ -23,6 +23,7 @@ export const LoadMoreContainer = styled.div`
 function LoadMore() {
   const pane = useChannelId();
   const channelId = useSelector((state) => state.chatStates.get(pane)!.channel.id);
+  const spaceId = useSelector((state) => state.chatStates.get(pane)!.channel.spaceId);
   const before = useSelector((state) => {
     const messages = state.chatStates.get(pane)?.itemSet.messages;
     if (!messages) {
@@ -43,8 +44,9 @@ function LoadMore() {
 
   useEffect(() => {
     if (initialized) {
+      let timer: number | undefined;
       const observer = new IntersectionObserver(() => {
-        window.setTimeout(() => {
+        timer = window.setTimeout(() => {
           if (!button.current) {
             return;
           }
@@ -60,6 +62,7 @@ function LoadMore() {
       return () => {
         mounted.current = false;
         observer.disconnect();
+        if (timer !== undefined) window.clearTimeout(timer);
       };
     }
   }, [initialized]);
@@ -74,6 +77,7 @@ function LoadMore() {
     }
     const result = await get('/messages/by_channel', {
       channelId,
+      spaceId,
       before: before ?? null,
       limit,
     });

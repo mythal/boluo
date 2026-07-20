@@ -57,6 +57,38 @@ async fn check_permissions<'c, T: sqlx::PgExecutor<'c>>(
     Ok(())
 }
 
+async fn check_space_permissions(
+    ctx: &crate::context::AppContext,
+    space_id: Uuid,
+    session: Option<&Session>,
+) -> Result<(), AppError> {
+    if let Some(snapshot) = ctx
+        .space_store
+        .loaded_authoritative_snapshot_after_wait(space_id)
+        .await
+    {
+        let space = snapshot.space();
+        if space.is_public || space.allow_spectator {
+            return Ok(());
+        }
+        let Some(session) = session else {
+            return Err(AppError::Unauthenticated(AuthenticateFail::Guest));
+        };
+        if space.owner_id == session.user_id
+            || snapshot.space_members.contains_key(&session.user_id)
+        {
+            return Ok(());
+        }
+        return Err(AppError::NoPermission(
+            "You are not a member of this space".to_string(),
+        ));
+    }
+    let Some(space) = Space::get_by_id(&ctx.db, &space_id).await? else {
+        return Ok(());
+    };
+    check_permissions(&ctx.db, &space, session).await
+}
+
 #[derive(Debug, Error)]
 enum PushUpdatesError {
     #[error("Failed to get cached updates")]
@@ -149,24 +181,18 @@ async fn push_updates(
             return Err(PushUpdatesError::FailedToGetCachedUpdates);
         }
         Err(GetFromStateError::RequestedUpdatesAreTooEarly { start_at }) => {
-            let elapsed = timestamp() - after.unwrap_or(0);
-            metrics::histogram!(
-                "boluo_server_events_push_updates_requested_updates_are_too_early_duration_ms"
-            )
-            .record(elapsed as f64);
-            if elapsed < 1000 * 60 * 20 {
-                tracing::warn!(
-                    mailbox_id = %mailbox,
-                    after,
-                    seq,
-                    node,
-                    start_at,
-                    elapsed,
-                    "The user requested updates with 'after', but the cached updates are too new"
-                );
-            }
-
-            vec![]
+            metrics::counter!("boluo_server_events_cursor_too_old_total").increment(1);
+            tracing::info!(
+                mailbox_id = %mailbox,
+                after,
+                seq,
+                node,
+                start_at,
+                "Cached updates after the cursor were trimmed, asking the client to reset"
+            );
+            let error_update = Update::error(mailbox, ConnectionError::CursorTooOld).encode();
+            outgoing.send(WsMessage::Text(error_update)).await?;
+            return Ok(());
         }
     };
     let cached_updates_count = cached_updates.len();
@@ -262,7 +288,7 @@ async fn push_updates(
 }
 
 async fn handle_client_event(
-    pool: &sqlx::PgPool,
+    ctx: &crate::context::AppContext,
     mailbox: Uuid,
     error_sender: tokio::sync::mpsc::Sender<ConnectionError>,
     session: Option<Session>,
@@ -311,7 +337,7 @@ async fn handle_client_event(
                 return;
             };
             metrics::counter!("boluo_server_events_preview_total").increment(1);
-            if let Err(err) = preview.broadcast(pool, mailbox, session.user_id).await {
+            if let Err(err) = preview.broadcast(ctx, mailbox, session.user_id).await {
                 tracing::warn!("Failed to broadcast preview update: {}", err);
             };
         }
@@ -399,31 +425,17 @@ async fn connect(ctx: &crate::context::AppContext, req: hyper::Request<Incoming>
         }
     };
     if !mailbox.is_nil() {
-        let space = match Space::get_by_id(&ctx.db, &mailbox).await {
-            Ok(space) => space,
-            Err(e) => {
-                tracing::error!(error = %e, "Failed to get space");
-                return connection_error(req, Some(mailbox), ConnectionError::Unexpected);
-            }
-        };
-
-        if let Some(space) = space.as_ref() {
-            if let Err(e) = check_permissions(&ctx.db, space, session.as_ref().ok()).await {
-                match &e {
-                    AppError::NoPermission(_) => {
-                        return connection_error(req, Some(mailbox), ConnectionError::NoPermission);
-                    }
-                    AppError::Unauthenticated(_) => {
-                        return connection_error(
-                            req,
-                            Some(mailbox),
-                            ConnectionError::Unauthenticated,
-                        );
-                    }
-                    _ => {
-                        tracing::error!(error = %e, "Failed to check permissions");
-                        return connection_error(req, Some(mailbox), ConnectionError::Unexpected);
-                    }
+        if let Err(e) = check_space_permissions(ctx, mailbox, session.as_ref().ok()).await {
+            match &e {
+                AppError::NoPermission(_) => {
+                    return connection_error(req, Some(mailbox), ConnectionError::NoPermission);
+                }
+                AppError::Unauthenticated(_) => {
+                    return connection_error(req, Some(mailbox), ConnectionError::Unauthenticated);
+                }
+                _ => {
+                    tracing::error!(error = %e, "Failed to check permissions");
+                    return connection_error(req, Some(mailbox), ConnectionError::Unexpected);
                 }
             }
         }
@@ -467,7 +479,7 @@ async fn connect(ctx: &crate::context::AppContext, req: hyper::Request<Incoming>
         }
     }
 
-    let pool = ctx.db.clone();
+    let ctx = ctx.clone();
     establish_web_socket(req, move |ws_stream| async move {
         let (mut outgoing, incoming) = ws_stream.split();
         let (error_sender, error_receiver) = tokio::sync::mpsc::channel(1);
@@ -501,7 +513,7 @@ async fn connect(ctx: &crate::context::AppContext, req: hyper::Request<Incoming>
             outgoing.close().await.ok();
         };
 
-        let pool = pool.clone();
+        let ctx = ctx.clone();
         let receive_client_events = incoming
             .timeout(Duration::from_secs(40))
             .map_err(|_| {
@@ -518,7 +530,7 @@ async fn connect(ctx: &crate::context::AppContext, req: hyper::Request<Incoming>
                         if message == "♡" {
                             return Ok(());
                         }
-                        handle_client_event(&pool, mailbox, error_sender, session.ok(), message)
+                        handle_client_event(&ctx, mailbox, error_sender, session.ok(), message)
                             .await
                     }
                     Ok(())
@@ -662,16 +674,8 @@ async fn sse(ctx: &crate::context::AppContext, req: Request<Incoming>) -> Respon
         Err(e) => return err_response(e),
     };
 
-    {
-        let mut conn = match ctx.db.acquire().await {
-            Ok(c) => c,
-            Err(e) => return err_response(e.into()),
-        };
-        if let Ok(Some(space)) = Space::get_by_id(&mut *conn, &mailbox).await {
-            if let Err(e) = check_permissions(&mut *conn, &space, session.as_ref()).await {
-                return err_response(e);
-            }
-        }
+    if let Err(error) = check_space_permissions(ctx, mailbox, session.as_ref()).await {
+        return err_response(error);
     }
 
     if let Some(uid) = user_id {
@@ -685,15 +689,20 @@ async fn sse(ctx: &crate::context::AppContext, req: Request<Incoming>) -> Respon
     messages.push(Update::app_info().encode());
 
     match Update::get_from_state(&mailbox, after, seq, node).await {
-        Ok(mut cached) => messages.append(&mut cached),
+        Ok(mut cached) => {
+            messages.append(&mut cached);
+            messages.push(Update::initialized(mailbox).encode());
+        }
         Err(GetFromStateError::FailedToQuery) => {
             let error_update = Update::error(mailbox, ConnectionError::Unexpected).encode();
             messages.push(error_update);
+            messages.push(Update::initialized(mailbox).encode());
         }
-        Err(GetFromStateError::RequestedUpdatesAreTooEarly { start_at: _ }) => {}
+        Err(GetFromStateError::RequestedUpdatesAreTooEarly { start_at: _ }) => {
+            let error_update = Update::error(mailbox, ConnectionError::CursorTooOld).encode();
+            messages.push(error_update);
+        }
     }
-
-    messages.push(Update::initialized(mailbox).encode());
 
     let mut body: Vec<u8> = Vec::new();
     for msg in messages {
@@ -724,16 +733,8 @@ async fn receive_events(ctx: &crate::context::AppContext, req: Request<Incoming>
         Err(e) => return err_response(e),
     };
 
-    {
-        let mut conn = match ctx.db.acquire().await {
-            Ok(c) => c,
-            Err(e) => return err_response(e.into()),
-        };
-        if let Ok(Some(space)) = Space::get_by_id(&mut *conn, &mailbox).await {
-            if let Err(e) = check_permissions(&mut *conn, &space, session.as_ref()).await {
-                return err_response(e);
-            }
-        }
+    if let Err(error) = check_space_permissions(ctx, mailbox, session.as_ref()).await {
+        return err_response(error);
     }
 
     let body_bytes = match req.into_body().collect().await {
@@ -755,7 +756,7 @@ async fn receive_events(ctx: &crate::context::AppContext, req: Request<Incoming>
 
     let (error_sender, _error_receiver) = tokio::sync::mpsc::channel(1);
 
-    handle_client_event(&ctx.db, mailbox, error_sender, session, body_str.into()).await;
+    handle_client_event(ctx, mailbox, error_sender, session, body_str.into()).await;
 
     ok_response(serde_json::json!({ "ok": true }))
 }

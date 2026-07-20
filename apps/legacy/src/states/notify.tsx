@@ -1,4 +1,5 @@
 import { atom, useAtom } from 'jotai';
+import { useEffect } from 'react';
 import { showFlash } from '../actions';
 import { useMyId } from '../hooks/useMyId';
 import { useSelector } from '../store';
@@ -52,51 +53,54 @@ export const useNotify = () => {
   const myChannel = useSelector((state) => state.profile?.channels);
   const focusChannelList = useSelector((state) => state.ui.focusChannelList);
   const [canNotify] = useAtom(canNotifyAtom);
-  if (!isNotificationSupported || !myChannel || !canNotify) {
-    return;
-  }
-  for (const [channelId, item] of latestMap.entries()) {
-    if (!myChannel.has(channelId)) {
-      continue;
+  useEffect(() => {
+    if (!isNotificationSupported || !myChannel || !canNotify) {
+      return;
     }
-    if (!item || item.type !== 'MESSAGE') {
-      continue;
-    }
-    const storageKey = `channel:${channelId}:latest`;
-    const storagePrev = localStorage.getItem(storageKey);
-    let prev: number | null = null;
-    if (storagePrev) {
-      const parsed = Date.parse(storagePrev);
-      if (!Number.isNaN(parsed)) {
-        prev = parsed;
-      }
-    }
-    if (prev == null) {
-      localStorage.setItem(storageKey, item.message.created);
-      continue;
-    }
-    if (prev < Date.parse(item.message.created)) {
-      localStorage.setItem(storageKey, item.message.created);
-      if (
-        (focusChannelList.includes(channelId) && document.visibilityState === 'visible') ||
-        item.message.senderId === myId
-      ) {
+    for (const [channelId, item] of latestMap.entries()) {
+      if (!myChannel.has(channelId)) {
         continue;
       }
-      const name = item.message.name;
-      const text = item.message.text;
-      const options: NotificationOptions & { renotify: boolean } = {
-        body: `${name}: ${text}`,
-        tag: channelId,
-        renotify: true,
-      };
-      const newNotification = new Notification('菠萝 的新消息', options as NotificationOptions);
-      const autoClouseTimeOut = 5000;
-      newNotification.onshow = () => {
-        setTimeout(() => {
-          newNotification.close();
-        }, autoClouseTimeOut);
-      };
+      if (!item || item.type !== 'MESSAGE') {
+        continue;
+      }
+      const storageKey = `channel:${channelId}:latest`;
+      const storagePrev = localStorage.getItem(storageKey);
+      let prev: number | null = null;
+      if (storagePrev) {
+        const parsed = Date.parse(storagePrev);
+        if (!Number.isNaN(parsed)) {
+          prev = parsed;
+        }
+      }
+      if (prev == null) {
+        localStorage.setItem(storageKey, item.message.created);
+        continue;
+      }
+      if (prev < Date.parse(item.message.created)) {
+        localStorage.setItem(storageKey, item.message.created);
+        if (
+          (focusChannelList.includes(channelId) && document.visibilityState === 'visible') ||
+          item.message.senderId === myId
+        ) {
+          continue;
+        }
+        const name = item.message.name;
+        const text = item.message.text;
+        const options: NotificationOptions & { renotify: boolean } = {
+          body: `${name}: ${text}`,
+          tag: channelId,
+          renotify: true,
+        };
+        const newNotification = new Notification('菠萝 的新消息', options);
+        const autoCloseTimeout = 5000;
+        newNotification.onshow = () => {
+          const timer = setTimeout(() => {
+            newNotification.close();
+          }, autoCloseTimeout);
+          newNotification.onclose = () => clearTimeout(timer);
+        };
+      }
     }
-  }
+  }, [latestMap, myChannel, canNotify, focusChannelList, myId]);
 };

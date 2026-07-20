@@ -14,6 +14,7 @@ import useSWRMutation from 'swr/mutation';
 import { Button } from '@boluo/ui/Button';
 import Icon from '@boluo/ui/Icon';
 import { FloatingBox } from '@boluo/ui/FloatingBox';
+import { useFloatingSetters } from '@boluo/ui/hooks/useFloatingSetters';
 import { InListButton } from './InListButton';
 
 interface Props {
@@ -58,12 +59,13 @@ export const ExileButton: FC<Props> = ({ spaceId, userId }) => {
     onOpenChange: setIsConfirming,
     whileElementsMounted: autoUpdate,
   });
+  const { setReference, setFloating } = useFloatingSetters(refs);
   const click = useClick(context, {});
   const dismiss = useDismiss(context);
   const { getReferenceProps, getFloatingProps } = useInteractions([click, dismiss]);
   return (
     <>
-      <InListButton ref={refs.setReference} {...getReferenceProps()}>
+      <InListButton ref={setReference} {...getReferenceProps()}>
         <Icon icon={UserX} />
         <span>
           <FormattedMessage defaultMessage="Exile" />
@@ -72,7 +74,7 @@ export const ExileButton: FC<Props> = ({ spaceId, userId }) => {
       {isConfirming && (
         <FloatingPortal>
           <div
-            ref={refs.setFloating}
+            ref={setFloating}
             style={{ position: strategy, top: y ?? 0, left: x ?? 0 }}
             {...getFloatingProps()}
           >

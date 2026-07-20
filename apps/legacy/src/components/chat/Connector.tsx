@@ -1,5 +1,6 @@
 import { css } from '@emotion/react';
 import { useAtom } from 'jotai';
+import { publishOwnPreviewAcknowledgement } from '@boluo/api/preview/ack';
 import { useEffect, useRef, useState } from 'react';
 import { connectSpace } from '../../actions';
 import { connect } from '../../api/connect';
@@ -46,7 +47,7 @@ async function getConnectionToken(
 ): Promise<
   { token: string; issuedAt: number } | 'NETWORK_ERROR' | 'UNAUTHENTICATED' | 'UNEXPECTED'
 > {
-  const tokenResult = await get('/events/token', { spaceId, userId });
+  const tokenResult = await get('/updates/token', { spaceId, userId });
   if (tokenResult.isOk) {
     return { token: tokenResult.value.token, issuedAt: tokenResult.value.issuedAt };
   }
@@ -71,6 +72,7 @@ const handleEvent = (
   dispatch: Dispatch,
   setState: (state: ConnectState) => void,
   event: Events,
+  resetCursor: () => void,
 ) => {
   const { body } = event;
   if (body.type === 'APP_UPDATED') {
@@ -79,6 +81,11 @@ const handleEvent = (
     if (body.code === 'CURSOR_TOO_OLD') {
       if (confirm('客户端状态已过期，是否刷新页面？')) {
         location.reload();
+      } else {
+        // The server closes the connection after this error; without a
+        // cursor reset every automatic reconnect would hit the same error
+        // and reopen this dialog.
+        resetCursor();
       }
       return;
     }
@@ -149,6 +156,8 @@ export const Connector = ({ spaceId, myId }: Props) => {
       connectionRef.current = null;
     }
     retryCount.current = 0;
+    // Part of the reconnect state machine: a new base URL restarts backoff.
+    // eslint-disable-next-line @eslint-react/set-state-in-effect
     setRetrySec(0);
     setState('CLOSED');
   }, [baseUrl, setState]);
@@ -248,7 +257,10 @@ export const Connector = ({ spaceId, myId }: Props) => {
           cursor.current = event.id;
         }
 
-        handleEvent(dispatch, setState, event);
+        publishOwnPreviewAcknowledgement(event, myId, connection);
+        handleEvent(dispatch, setState, event, () => {
+          cursor.current = { timestamp: 0, node: 0, seq: 0 };
+        });
       };
       dispatch(connectSpace(spaceId, connection));
     };

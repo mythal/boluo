@@ -1,5 +1,6 @@
 import { type MakeToken, type EventId, type UpdateEncoding } from '@boluo/api';
 import { isServerUpdate } from '@boluo/api/events';
+import { publishOwnPreviewAcknowledgement } from '@boluo/api/preview/ack';
 import { useQueryCurrentUser } from '@boluo/hooks/useQueryCurrentUser';
 import { webSocketUrlAtom } from '@boluo/hooks/useWebSocketUrl';
 import { useAtomValue, useSetAtom, useStore } from 'jotai';
@@ -7,13 +8,28 @@ import { useEffect, useRef } from 'react';
 import { isUuid } from '@boluo/utils/id';
 import { PING, PONG } from '../const';
 import { chatAtom, type ChatDispatch, connectionStateAtom } from '../state/chat.atoms';
+import { zeroEventId } from '../state/chat.reducer';
 import { type ConnectionState } from '../state/connection.reducer';
 import { get } from '@boluo/api-browser';
 import { sleep } from '@boluo/utils/async';
 import { useLogout } from '@boluo/hooks/useLogout';
 import { type ClientConnectionError } from '../state/chat.actions';
 
-let lastPongTime = Date.now();
+/**
+ * The last time the connection showed signs of life (any incoming message;
+ * the server heartbeats every 8 seconds). Used to decide whether resuming
+ * from the cursor is safe after a reconnect.
+ */
+let lastAliveAt = Date.now();
+
+/**
+ * The server evicts a mailbox only after two hours without updates, so a
+ * client alive within that window cannot have missed events to eviction,
+ * and trimmed-cache loss is signaled by CURSOR_TOO_OLD. Beyond the window
+ * resuming is not provably safe; reset instead. (Silent loss across server
+ * restarts is not covered and would need a startup identity signal.)
+ */
+const RESUME_GAP_LIMIT_MS = 90 * 60 * 1000;
 
 const UNAUTHENTICATED = 'UNAUTHENTICATED';
 const NETWORK_ERROR = 'NETWORK_ERROR';
@@ -42,7 +58,13 @@ const detectUpdateEncoding = (): UpdateEncoding => {
   return 'plain';
 };
 
-const parseAndDispatchUpdate = (raw: string, mailboxId: string, dispatch: ChatDispatch): void => {
+const parseAndDispatchUpdate = (
+  raw: string,
+  connection: WebSocket,
+  mailboxId: string,
+  userId: string | null,
+  dispatch: ChatDispatch,
+): void => {
   let update: unknown;
   try {
     update = JSON.parse(raw);
@@ -54,6 +76,7 @@ const parseAndDispatchUpdate = (raw: string, mailboxId: string, dispatch: ChatDi
     console.warn('Received invalid update', mailboxId, update);
     return;
   }
+  publishOwnPreviewAcknowledgement(update, userId, connection);
   dispatch({ type: 'update', payload: update });
 };
 
@@ -85,19 +108,20 @@ const handleIncomingMessage = async (
   connection: WebSocket,
   message: MessageEvent<unknown>,
   mailboxId: string,
+  userId: string | null,
   dispatch: ChatDispatch,
   encoding: UpdateEncoding,
 ): Promise<void> => {
   const raw = message.data;
+  lastAliveAt = Date.now();
   if (raw === PING) {
     connection.send(PONG);
-    lastPongTime = Date.now();
     return;
   } else if (raw === PONG) {
     return;
   }
   if (typeof raw === 'string') {
-    parseAndDispatchUpdate(raw, mailboxId, dispatch);
+    parseAndDispatchUpdate(raw, connection, mailboxId, userId, dispatch);
     return;
   }
   if (raw instanceof ArrayBuffer || raw instanceof Blob) {
@@ -109,7 +133,7 @@ const handleIncomingMessage = async (
     const updates = await decompressCachedUpdates(compressed, encoding, mailboxId);
     if (updates == null) return;
     for (const update of updates) {
-      parseAndDispatchUpdate(update, mailboxId, dispatch);
+      parseAndDispatchUpdate(update, connection, mailboxId, userId, dispatch);
     }
     return;
   }
@@ -125,7 +149,7 @@ const getToken = async (
     if (sleepMs > 0) {
       await sleep(sleepMs);
     }
-    const tokenResult = await get('/events/token', makeToken);
+    const tokenResult = await get('/updates/token', makeToken);
     if (tokenResult.isOk) {
       return { token: tokenResult.some.token, issuedAt: tokenResult.some.issuedAt };
     }
@@ -166,7 +190,7 @@ const buildWebsocket = (
   paramsObject.encoding = encoding;
   if (userId != null) paramsObject.userId = userId;
   const params = new URLSearchParams(paramsObject);
-  const url = `${baseUrl}/events/connect?${params.toString()}`;
+  const url = `${baseUrl}/updates/connect?${params.toString()}`;
   const socket = new WebSocket(url);
   socket.binaryType = 'arraybuffer';
   return socket;
@@ -187,6 +211,11 @@ const connect = async (
   if (connectionState.countdown > 0) {
     setTimeout(() => dispatch({ type: 'reconnectCountdownTick', payload: {} }), 1000);
     return null;
+  }
+  let resumeCursor = cursor;
+  if (cursor.timestamp > 0 && Date.now() - lastAliveAt > RESUME_GAP_LIMIT_MS) {
+    dispatch({ type: 'resetChatState', payload: {} });
+    resumeCursor = zeroEventId;
   }
   dispatch({ type: 'connecting', payload: { mailboxId } });
   const tokenResult = await getToken({ spaceId: mailboxId, userId });
@@ -213,10 +242,11 @@ const connect = async (
     userId,
     tokenResult.token,
     encoding,
-    cursor,
+    resumeCursor,
   );
   newConnection.onopen = (_) => {
     console.info(`connection established for ${mailboxId}`);
+    lastAliveAt = Date.now();
     dispatch({ type: 'connected', payload: { connection: newConnection, mailboxId } });
   };
   newConnection.onclose = (event) => {
@@ -226,7 +256,9 @@ const connect = async (
   let messageQueue = Promise.resolve();
   newConnection.onmessage = (message: MessageEvent<unknown>) => {
     messageQueue = messageQueue
-      .then(() => handleIncomingMessage(newConnection, message, mailboxId, dispatch, encoding))
+      .then(() =>
+        handleIncomingMessage(newConnection, message, mailboxId, userId, dispatch, encoding),
+      )
       .catch((error) => {
         console.warn('Failed to handle websocket message', mailboxId, error);
       });

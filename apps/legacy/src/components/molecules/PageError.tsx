@@ -1,7 +1,7 @@
 import styled from '@emotion/styled';
 import * as React from 'react';
-import MushroomCloud from '../../assets/icons/mushroom-cloud.svg';
-import RotateCw from '../../assets/icons/rotate-cw.svg';
+import MushroomCloud from '@boluo/icons/legacy/MushroomCloud';
+import RotateCw from '@boluo/icons/legacy/RotateCw';
 import Button from '../../components/atoms/Button';
 import Icon from '../../components/atoms/Icon';
 import Text from '../../components/atoms/Text';

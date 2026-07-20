@@ -218,8 +218,11 @@ const ExportForm: FC<{ channel: Channel }> = ({ channel }) => {
   );
 };
 
-export const PaneChannelExport: FC<{ channelId: string }> = ({ channelId }) => {
-  const { data: channel, error } = useQueryChannel(channelId);
+export const PaneChannelExport: FC<{ channelId: string; spaceId?: string }> = ({
+  channelId,
+  spaceId,
+}) => {
+  const { data: channel, error } = useQueryChannel(channelId, spaceId);
   if (error && channel == null) {
     return (
       <PaneBox

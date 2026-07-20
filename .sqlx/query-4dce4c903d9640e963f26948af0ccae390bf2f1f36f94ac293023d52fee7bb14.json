@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE spaces\nSET\n    latest_activity = GREATEST(spaces.latest_activity, activity.update_time)\nFROM (\n    SELECT\n        space_id,\n        MAX(update_time) AS update_time\n    FROM\n        unnest($1::uuid[], $2::timestamptz[]) AS updates (space_id, update_time)\n    GROUP BY\n        space_id\n) AS activity\nWHERE\n    spaces.id = activity.space_id;\n",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "UuidArray",
+        "TimestamptzArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "4dce4c903d9640e963f26948af0ccae390bf2f1f36f94ac293023d52fee7bb14"
+}

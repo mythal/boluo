@@ -7,15 +7,23 @@ use uuid::Uuid;
 use crate::db;
 use crate::space_runtime::SpaceStore;
 
-async fn persist_space_activity(
+async fn persist_space_activity_batch(
     pool: &sqlx::PgPool,
-    space_id: Uuid,
-    update_time: DateTime<Utc>,
-) -> Result<(), sqlx::Error> {
-    sqlx::query_file!("sql/spaces/set_latest_activity.sql", space_id, update_time)
-        .execute(pool)
-        .await?;
-    Ok(())
+    updates: impl IntoIterator<Item = (Uuid, DateTime<Utc>)>,
+) -> Result<u64, sqlx::Error> {
+    let (space_ids, update_times): (Vec<_>, Vec<_>) = updates.into_iter().unzip();
+    if space_ids.is_empty() {
+        return Ok(0);
+    }
+
+    let result = sqlx::query_file!(
+        "sql/spaces/set_latest_activity_batch.sql",
+        &*space_ids,
+        &*update_times
+    )
+    .execute(pool)
+    .await?;
+    Ok(result.rows_affected())
 }
 
 #[cfg(test)]
@@ -26,7 +34,9 @@ async fn apply_space_activity(
     update_time: DateTime<Utc>,
 ) -> Result<(), sqlx::Error> {
     space_store.record_latest_activity_if_loaded(space_id, update_time);
-    persist_space_activity(pool, space_id, update_time).await
+    persist_space_activity_batch(pool, [(space_id, update_time)])
+        .await
+        .map(|_| ())
 }
 
 static NOTIFY_SPACE_ACTIVITY: LazyLock<tokio::sync::mpsc::Sender<(Uuid, DateTime<Utc>)>> =
@@ -53,13 +63,26 @@ static NOTIFY_SPACE_ACTIVITY: LazyLock<tokio::sync::mpsc::Sender<(Uuid, DateTime
                         if !map.is_empty() {
                             let mut taken_map = HashMap::with_capacity_and_hasher(map.len(), ahash::RandomState::new());
                             std::mem::swap(&mut map, &mut taken_map);
-                            // Update the database with the latest activity.
-                            for (space_id, update_time) in taken_map {
-                                if let Err(err) =
-                                    persist_space_activity(&pool, space_id, update_time).await
-                                {
-                                    tracing::error!(error = %err, %space_id, "Failed to update Space activity");
-                                };
+                            let update_count = taken_map.len();
+                            if let Err(err) =
+                                persist_space_activity_batch(
+                                    &pool,
+                                    taken_map.iter().map(|(&space_id, &update_time)| {
+                                        (space_id, update_time)
+                                    }),
+                                )
+                                .await
+                            {
+                                tracing::error!(
+                                    error = %err,
+                                    update_count,
+                                    "Failed to update Space activity batch"
+                                );
+                                for (space_id, update_time) in taken_map {
+                                    map.entry(space_id)
+                                        .and_modify(|current| *current = (*current).max(update_time))
+                                        .or_insert(update_time);
+                                }
                             }
                         }
                     }
@@ -162,6 +185,96 @@ mod tests {
                 .latest_activity,
             pending_write_time,
             "a structural refresh regressed activity before its batched database write"
+        );
+    }
+
+    #[sqlx::test(migrator = "crate::db::MIGRATOR")]
+    async fn db_test_space_activity_batch_uses_latest_time_per_space(pool: sqlx::PgPool) {
+        let suffix = Uuid::new_v4().simple().to_string();
+        let owner = User::register(
+            &pool,
+            &format!("activity_batch_{}@example.com", &suffix[..8]),
+            &format!("activity_batch_{}", &suffix[..8]),
+            "Activity Batch Tester",
+            "ActivityPass123!",
+        )
+        .await
+        .expect("failed to create activity batch test user");
+        let first_space = Space::create(
+            &pool,
+            format!("activity_batch_first_{}", &suffix[..8]),
+            &owner.id,
+            "First activity batch test Space".to_string(),
+            None,
+            Some("d20"),
+        )
+        .await
+        .expect("failed to create first activity batch test Space");
+        let second_space = Space::create(
+            &pool,
+            format!("activity_batch_second_{}", &suffix[..8]),
+            &owner.id,
+            "Second activity batch test Space".to_string(),
+            None,
+            Some("d20"),
+        )
+        .await
+        .expect("failed to create second activity batch test Space");
+
+        let first_update = first_space.latest_activity + chrono::Duration::seconds(30);
+        let latest_first_update = first_update + chrono::Duration::seconds(30);
+        let second_update = second_space.latest_activity + chrono::Duration::seconds(45);
+        let affected = persist_space_activity_batch(
+            &pool,
+            [
+                (first_space.id, first_update),
+                (second_space.id, second_update),
+                (first_space.id, latest_first_update),
+            ],
+        )
+        .await
+        .expect("failed to persist Space activity batch");
+
+        assert_eq!(affected, 2);
+        let updated_spaces =
+            Space::get_by_id_list(&pool, [first_space.id, second_space.id].into_iter())
+                .await
+                .expect("failed to query updated Spaces");
+        assert_eq!(
+            updated_spaces[&first_space.id].latest_activity,
+            latest_first_update
+        );
+        assert_eq!(
+            updated_spaces[&second_space.id].latest_activity,
+            second_update
+        );
+
+        persist_space_activity_batch(
+            &pool,
+            [
+                (
+                    first_space.id,
+                    first_space.latest_activity - chrono::Duration::seconds(30),
+                ),
+                (
+                    second_space.id,
+                    second_space.latest_activity - chrono::Duration::seconds(30),
+                ),
+            ],
+        )
+        .await
+        .expect("failed to persist stale Space activity batch");
+        let spaces_after_stale_update =
+            Space::get_by_id_list(&pool, [first_space.id, second_space.id].into_iter())
+                .await
+                .expect("failed to query Spaces after stale update");
+        assert_eq!(
+            spaces_after_stale_update[&first_space.id].latest_activity,
+            latest_first_update
+        );
+        assert_eq!(
+            spaces_after_stale_update[&second_space.id].latest_activity,
+            second_update
         );
     }
 }

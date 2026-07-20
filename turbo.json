@@ -100,8 +100,8 @@
       "outputs": ["src/en.json", "dist/**"]
     },
     "@boluo/icons#generate": {
-      "inputs": ["icons/**", "svgr.config.js", "package.json"],
-      "outputs": ["src/**"]
+      "inputs": ["icons/**", "scripts/**", "package.json"],
+      "outputs": ["src/**", "generated/**"]
     }
   }
 }

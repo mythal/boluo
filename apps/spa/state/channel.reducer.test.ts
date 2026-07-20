@@ -890,6 +890,47 @@ describe('channelReducer', () => {
     assert.strictEqual(previewItem.pos, 2);
   });
 
+  test('messagePreview keeps the activity time for an equivalent keyframe', () => {
+    const previousPreview = toPreviewItem(makePreview(previewId1, 12, { v: 1 }), 1);
+    const state = {
+      ...makeInitialChannelState(channelId),
+      previewMap: { [previousPreview.senderId]: previousPreview },
+    };
+    const preview = makePreview(previewId1, 13, { v: 2 });
+
+    const next = channelReducer(
+      state,
+      { type: 'messagePreview', payload: { channelId, preview, timestamp: 2 } },
+      context,
+    );
+
+    const previewItem = next.previewMap[preview.senderId];
+    assert.ok(previewItem);
+    assert.strictEqual(previewItem.timestamp, 1);
+    assert.strictEqual(previewItem.v, 2);
+    assert.strictEqual(previewItem.pos, 13);
+  });
+
+  test('messagePreview refreshes the activity time when content changes', () => {
+    const previousPreview = toPreviewItem(makePreview(previewId1, 12), 1);
+    const state = {
+      ...makeInitialChannelState(channelId),
+      previewMap: { [previousPreview.senderId]: previousPreview },
+    };
+    const preview = makePreview(previewId1, 12, {
+      text: 'updated',
+      entities: [{ type: 'Text', start: 0, len: 7 }],
+    });
+
+    const next = channelReducer(
+      state,
+      { type: 'messagePreview', payload: { channelId, preview, timestamp: 2 } },
+      context,
+    );
+
+    assert.strictEqual(next.previewMap[preview.senderId]?.timestamp, 2);
+  });
+
   test('messagePreview removes cleared preview from previewMap', () => {
     const cases: Array<Partial<Preview>> = [
       { text: '', entities: [] },

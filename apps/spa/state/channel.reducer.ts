@@ -1,5 +1,6 @@
 import type { EditMessage, Message, NewMessage, Preview } from '@boluo/api';
 import {
+  equalPreviewEdit,
   isClearedPreviewContent,
   resolvePreviewDiff,
   toPreviewDiffBase,
@@ -15,6 +16,33 @@ import * as L from 'list';
 import { type ComposeState } from './compose.reducer';
 
 export type UserId = string;
+
+type PreviewActivityKey = Exclude<
+  keyof Preview,
+  'v' | 'senderId' | 'channelId' | 'parentMessageId' | 'isMaster' | 'entities' | 'pos'
+>;
+
+const equalOptionalStrings = (
+  left: string[] | null | undefined,
+  right: string[] | null | undefined,
+): boolean => {
+  if (left == null || right == null) return left == null && right == null;
+  return left.length === right.length && left.every((value, index) => value === right[index]);
+};
+
+const hasSamePreviewActivity = (previous: PreviewItem, next: Preview): boolean =>
+  Object.values({
+    id: previous.id === next.id,
+    name: previous.name === next.name,
+    mediaId: (previous.mediaId ?? null) === (next.mediaId ?? null),
+    inGame: (previous.inGame ?? false) === (next.inGame ?? false),
+    isAction: (previous.isAction ?? false) === (next.isAction ?? false),
+    clear: (previous.clear ?? false) === (next.clear ?? false),
+    text: (previous.text ?? null) === (next.text ?? null),
+    whisperToUsers: equalOptionalStrings(previous.whisperToUsers, next.whisperToUsers),
+    editFor: (previous.editFor ?? null) === (next.editFor ?? null),
+    edit: equalPreviewEdit(previous.edit, next.edit),
+  } satisfies Record<PreviewActivityKey, boolean>).every(Boolean);
 
 const GC_TRIGGER_LENGTH = 128;
 const GC_INITIAL_COUNTDOWN = 8;
@@ -555,6 +583,11 @@ const handleMessagePreview = (
 ): ChannelState => {
   let newItem: PreviewItem;
   let { previewMap, collidedPreviewIdSet } = state;
+  const previousPreview = previewMap[preview.senderId];
+  const activityTimestamp =
+    previousPreview != null && hasSamePreviewActivity(previousPreview, preview)
+      ? previousPreview.timestamp
+      : timestamp;
   if (isClearedPreviewContent(preview)) {
     previewMap = removePreviewBySender(previewMap, preview.senderId);
     if (collidedPreviewIdSet.has(preview.id)) {
@@ -578,7 +611,7 @@ const handleMessagePreview = (
         posP: preview.edit.p,
         posQ: preview.edit.q,
         key: preview.senderId,
-        timestamp,
+        timestamp: activityTimestamp,
         keyframe: toPreviewDiffBase(preview),
       };
     } else {
@@ -593,7 +626,7 @@ const handleMessagePreview = (
         posP: message.posP,
         posQ: message.posQ,
         key: preview.senderId,
-        timestamp,
+        timestamp: activityTimestamp,
         keyframe: toPreviewDiffBase(preview),
       };
     }
@@ -613,7 +646,7 @@ const handleMessagePreview = (
       posP,
       pos,
       key: preview.senderId,
-      timestamp,
+      timestamp: activityTimestamp,
       keyframe: toPreviewDiffBase(preview),
     };
   }

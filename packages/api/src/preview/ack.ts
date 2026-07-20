@@ -5,34 +5,14 @@ export const PREVIEW_ACK_TIMEOUT_MS = 15_000;
 export const PREVIEW_ACK_TIMEOUT_CLOSE_CODE = 4000;
 export const PREVIEW_ACK_TIMEOUT_CLOSE_REASON = 'preview acknowledgement timeout';
 
-type PreviewKeyframeAcknowledgementTarget = {
-  previewId: string;
+type PreviewKeyframeAcknowledgementTarget = Required<Omit<PreviewPost, 'id' | 'v' | 'entities'>> & {
+  previewId: PreviewPost['id'];
   version: number;
-  channelId: string;
-  name: string;
-  mediaId: string | null;
-  text: string | null;
-  inGame: boolean;
-  isAction: boolean;
-  clear: boolean;
-  editFor: string | null;
-  edit: PreviewPost['edit'];
 };
 
 // Version and content fields identify the keyframe echo; entities are omitted.
-type PreviewKeyframeAcknowledgementInput = {
-  id: string;
-  v?: number;
-  channelId: string;
-  name: string;
-  mediaId?: string | null;
-  text?: string | null;
-  inGame?: boolean;
-  isAction?: boolean;
-  clear?: boolean;
-  editFor?: string | null;
-  edit?: PreviewPost['edit'];
-};
+type PreviewKeyframeAcknowledgementInput = Pick<PreviewPost, 'id' | 'channelId' | 'name'> &
+  Partial<Omit<PreviewPost, 'id' | 'channelId' | 'name' | 'entities'>>;
 
 export type PreviewAcknowledgement =
   | ({ type: 'KEYFRAME' } & PreviewKeyframeAcknowledgementTarget)
@@ -116,17 +96,19 @@ const equalPreviewKeyframeAcknowledgement = (
   left: PreviewKeyframeAcknowledgementTarget,
   right: PreviewKeyframeAcknowledgementTarget,
 ): boolean =>
-  left.previewId === right.previewId &&
-  left.version === right.version &&
-  left.channelId === right.channelId &&
-  left.name === right.name &&
-  left.mediaId === right.mediaId &&
-  left.text === right.text &&
-  left.inGame === right.inGame &&
-  left.isAction === right.isAction &&
-  left.clear === right.clear &&
-  left.editFor === right.editFor &&
-  equalPreviewEdit(left.edit, right.edit);
+  Object.values({
+    previewId: left.previewId === right.previewId,
+    version: left.version === right.version,
+    channelId: left.channelId === right.channelId,
+    name: left.name === right.name,
+    mediaId: left.mediaId === right.mediaId,
+    text: left.text === right.text,
+    inGame: left.inGame === right.inGame,
+    isAction: left.isAction === right.isAction,
+    clear: left.clear === right.clear,
+    editFor: left.editFor === right.editFor,
+    edit: equalPreviewEdit(left.edit, right.edit),
+  } satisfies Record<keyof PreviewKeyframeAcknowledgementTarget, boolean>).every(Boolean);
 
 export const matchesPreviewAcknowledgement = (
   expected: ExpectedPreviewAcknowledgement,

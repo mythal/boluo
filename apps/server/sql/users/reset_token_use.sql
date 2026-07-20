@@ -1,6 +1,6 @@
 UPDATE reset_tokens
 SET
-    used_at = now() at time zone 'utc'
+    used_at = now()
 WHERE
     token = $1
     AND user_id = $2

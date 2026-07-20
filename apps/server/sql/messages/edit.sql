@@ -7,7 +7,7 @@ SET
     in_game = $5,
     is_action = $6,
     media_id = $7,
-    modified = (now() at time zone 'utc'),
+    modified = now(),
     color = $8,
     rev = rev + 1
 FROM

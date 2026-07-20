@@ -178,7 +178,7 @@ CREATE TABLE public._sqlx_migrations (
 CREATE TABLE public.channel_members (
     user_id uuid NOT NULL,
     channel_id uuid NOT NULL,
-    join_date timestamp with time zone DEFAULT (now() AT TIME ZONE 'utc'::text) NOT NULL,
+    join_date timestamp with time zone DEFAULT now() NOT NULL,
     character_name text NOT NULL,
     text_color text,
     is_joined boolean DEFAULT true NOT NULL,
@@ -195,7 +195,7 @@ CREATE TABLE public.channels (
     name text NOT NULL,
     topic text DEFAULT ''::text NOT NULL,
     space_id uuid NOT NULL,
-    created timestamp with time zone DEFAULT (now() AT TIME ZONE 'utc'::text) NOT NULL,
+    created timestamp with time zone DEFAULT now() NOT NULL,
     is_public boolean DEFAULT true NOT NULL,
     deleted boolean DEFAULT false NOT NULL,
     default_dice_type text DEFAULT 'd20'::text NOT NULL,
@@ -218,7 +218,7 @@ CREATE TABLE public.character_variable_history (
     reason jsonb,
     key public.citext NOT NULL,
     value jsonb NOT NULL,
-    created timestamp with time zone DEFAULT (now() AT TIME ZONE 'utc'::text) NOT NULL
+    created timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
@@ -235,8 +235,8 @@ CREATE TABLE public.character_variables (
     track_history boolean DEFAULT true NOT NULL,
     value jsonb NOT NULL,
     metadata jsonb DEFAULT '{}'::jsonb NOT NULL,
-    created timestamp with time zone DEFAULT (now() AT TIME ZONE 'utc'::text) NOT NULL,
-    modified timestamp with time zone DEFAULT (now() AT TIME ZONE 'utc'::text) NOT NULL,
+    created timestamp with time zone DEFAULT now() NOT NULL,
+    modified timestamp with time zone DEFAULT now() NOT NULL,
     CONSTRAINT character_variables_key_check CHECK ((length(TRIM(BOTH FROM key)) > 0))
 );
 
@@ -257,8 +257,8 @@ CREATE TABLE public.characters (
     visibility public.character_visibility DEFAULT 'Private'::public.character_visibility NOT NULL,
     is_archived boolean DEFAULT false NOT NULL,
     metadata jsonb DEFAULT '{}'::jsonb NOT NULL,
-    created timestamp with time zone DEFAULT (now() AT TIME ZONE 'utc'::text) NOT NULL,
-    modified timestamp with time zone DEFAULT (now() AT TIME ZONE 'utc'::text) NOT NULL
+    created timestamp with time zone DEFAULT now() NOT NULL,
+    modified timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
@@ -273,7 +273,7 @@ CREATE TABLE public.events (
     space_id uuid,
     receiver_id uuid,
     payload jsonb DEFAULT '{}'::jsonb NOT NULL,
-    created timestamp with time zone DEFAULT (now() AT TIME ZONE 'utc'::text) NOT NULL
+    created timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
@@ -291,7 +291,7 @@ CREATE TABLE public.media (
     size integer NOT NULL,
     description text DEFAULT ''::text NOT NULL,
     source text DEFAULT ''::text NOT NULL,
-    created timestamp with time zone DEFAULT (now() AT TIME ZONE 'utc'::text) NOT NULL
+    created timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
@@ -317,8 +317,8 @@ CREATE TABLE public.messages (
     text text DEFAULT ''::text NOT NULL,
     whisper_to_users uuid[],
     entities jsonb DEFAULT '[]'::jsonb NOT NULL,
-    created timestamp with time zone DEFAULT (now() AT TIME ZONE 'utc'::text) NOT NULL,
-    modified timestamp with time zone DEFAULT (now() AT TIME ZONE 'utc'::text) NOT NULL,
+    created timestamp with time zone DEFAULT now() NOT NULL,
+    modified timestamp with time zone DEFAULT now() NOT NULL,
     pos_p integer NOT NULL,
     pos_q integer NOT NULL,
     pos double precision GENERATED ALWAYS AS (((pos_p)::double precision / (pos_q)::double precision)) STORED,
@@ -344,8 +344,8 @@ CREATE TABLE public.notes (
     visible_to uuid[] DEFAULT '{}'::uuid[] NOT NULL,
     everyone_can_edit boolean DEFAULT false NOT NULL,
     track_history boolean DEFAULT false NOT NULL,
-    created timestamp with time zone DEFAULT (now() AT TIME ZONE 'utc'::text) NOT NULL,
-    modified timestamp with time zone DEFAULT (now() AT TIME ZONE 'utc'::text) NOT NULL
+    created timestamp with time zone DEFAULT now() NOT NULL,
+    modified timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
@@ -358,7 +358,7 @@ CREATE TABLE public.notes_history (
     note_id uuid NOT NULL,
     operator_id uuid,
     content text DEFAULT ''::text NOT NULL,
-    created timestamp with time zone DEFAULT (now() AT TIME ZONE 'utc'::text) NOT NULL
+    created timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
@@ -371,7 +371,7 @@ CREATE TABLE public.proxies (
     url text NOT NULL,
     is_enabled boolean DEFAULT true NOT NULL,
     region text DEFAULT ''::text NOT NULL,
-    created timestamp with time zone DEFAULT (now() AT TIME ZONE 'utc'::text) NOT NULL
+    created timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
@@ -382,7 +382,7 @@ CREATE TABLE public.proxies (
 CREATE TABLE public.reset_tokens (
     token uuid DEFAULT public.uuid_generate_v4() NOT NULL,
     user_id uuid NOT NULL,
-    created timestamp with time zone DEFAULT (now() AT TIME ZONE 'utc'::text) NOT NULL,
+    created timestamp with time zone DEFAULT now() NOT NULL,
     used_at timestamp with time zone,
     invalidated_at timestamp with time zone
 );
@@ -397,7 +397,7 @@ CREATE TABLE public.restrained_members (
     space_id uuid NOT NULL,
     blocked boolean DEFAULT false NOT NULL,
     muted boolean DEFAULT false NOT NULL,
-    restrained_date timestamp with time zone DEFAULT (now() AT TIME ZONE 'utc'::text) NOT NULL,
+    restrained_date timestamp with time zone DEFAULT now() NOT NULL,
     operator_id uuid
 );
 
@@ -410,7 +410,7 @@ CREATE TABLE public.space_members (
     user_id uuid NOT NULL,
     space_id uuid NOT NULL,
     is_admin boolean DEFAULT false NOT NULL,
-    join_date timestamp with time zone DEFAULT (now() AT TIME ZONE 'utc'::text) NOT NULL
+    join_date timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
@@ -422,8 +422,8 @@ CREATE TABLE public.spaces (
     id uuid DEFAULT public.uuid_generate_v1mc() NOT NULL,
     name text NOT NULL,
     description text DEFAULT ''::text NOT NULL,
-    created timestamp with time zone DEFAULT (now() AT TIME ZONE 'utc'::text) NOT NULL,
-    modified timestamp with time zone DEFAULT (now() AT TIME ZONE 'utc'::text) NOT NULL,
+    created timestamp with time zone DEFAULT now() NOT NULL,
+    modified timestamp with time zone DEFAULT now() NOT NULL,
     owner_id uuid NOT NULL,
     is_public boolean DEFAULT true NOT NULL,
     deleted boolean DEFAULT false NOT NULL,
@@ -433,7 +433,7 @@ CREATE TABLE public.spaces (
     explorable boolean DEFAULT false NOT NULL,
     invite_token uuid DEFAULT gen_random_uuid() NOT NULL,
     allow_spectator boolean DEFAULT true NOT NULL,
-    latest_activity timestamp with time zone DEFAULT (now() AT TIME ZONE 'utc'::text) NOT NULL
+    latest_activity timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
@@ -455,8 +455,8 @@ CREATE TABLE public.user_sessions (
     id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
     user_id uuid NOT NULL,
     active boolean DEFAULT true NOT NULL,
-    created timestamp with time zone DEFAULT (now() AT TIME ZONE 'utc'::text) NOT NULL,
-    latest_activity timestamp with time zone DEFAULT (now() AT TIME ZONE 'utc'::text) NOT NULL
+    created timestamp with time zone DEFAULT now() NOT NULL,
+    latest_activity timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
@@ -471,7 +471,7 @@ CREATE TABLE public.users (
     nickname text NOT NULL,
     password text NOT NULL,
     bio text DEFAULT ''::text NOT NULL,
-    joined timestamp with time zone DEFAULT (now() AT TIME ZONE 'utc'::text) NOT NULL,
+    joined timestamp with time zone DEFAULT now() NOT NULL,
     deactivated boolean DEFAULT false NOT NULL,
     avatar_id uuid,
     default_color text DEFAULT ''::text NOT NULL

@@ -32,8 +32,10 @@
     "uuid": "^14"
   },
   "devDependencies": {
+    "@babel/core": "^8.0.1",
     "@boluo/eslint-config": "0.0.0",
-    "@emotion/babel-plugin": "^11.13.5",
+    "@boluo/emotion-babel-plugin": "0.0.0",
+    "@rolldown/plugin-babel": "^0.2.3",
     "@types/node": "^26.1.1",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
@@ -48,7 +50,7 @@
   "private": true,
   "scripts": {
     "build": "vite build",
-    "check": "tsc --project tsconfig.json",
+    "check": "tsc --noEmit --project tsconfig.json && tsc --noEmit --project tsconfig.node.json",
     "dev": "vite",
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",

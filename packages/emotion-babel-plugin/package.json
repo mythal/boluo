@@ -1,0 +1,28 @@
+{
+  "name": "@boluo/emotion-babel-plugin",
+  "version": "0.0.0",
+  "description": "Babel 8 compatibility wrapper for @emotion/babel-plugin",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "import": "./src/index.js"
+    }
+  },
+  "dependencies": {
+    "@emotion/babel-plugin": "^11.13.5"
+  },
+  "devDependencies": {
+    "@babel/core": "^8.0.1",
+    "@boluo/eslint-config": "0.0.0",
+    "eslint": "^10.6.0"
+  },
+  "peerDependencies": {
+    "@babel/core": "^8.0.0"
+  },
+  "private": true,
+  "scripts": {
+    "check": "node --test",
+    "lint": "eslint ."
+  },
+  "type": "module"
+}

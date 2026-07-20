@@ -554,8 +554,9 @@ impl Message {
             .await
             .map_err(Into::into)
     }
-    pub async fn edit<'c, T: sqlx::PgExecutor<'c>>(
-        db: T,
+    pub(super) async fn edit(
+        db: &sqlx::PgPool,
+        user_id: Uuid,
         name: &str,
         id: &Uuid,
         text: &str,
@@ -565,11 +566,11 @@ impl Message {
         media_id: Option<Uuid>,
         color: String,
         expect_modified: Option<DateTime<Utc>>,
-    ) -> Result<Option<Message>, ModelError> {
+    ) -> Result<MessageEditOutcome, ModelError> {
         let entities = serde_json::to_value(entities).unwrap_or(JsonValue::Array(vec![]));
         let name = merge_blank(name);
         CHARACTER_NAME.run(&name)?;
-        let result = sqlx::query_file_scalar!(
+        let result = sqlx::query_file!(
             "sql/messages/edit.sql",
             id,
             &name,
@@ -579,16 +580,48 @@ impl Message {
             is_action,
             media_id,
             color,
-            expect_modified
+            expect_modified,
+            user_id
         )
         .fetch_optional(db)
         .await?;
-        if let Some(mut message) = result {
+        if let Some(record) = result {
+            let mut message = record.message;
             message.hide(None);
-            Ok(Some(message))
-        } else {
-            Ok(None)
+            return Ok(MessageEditOutcome::Updated {
+                message,
+                space_id: record.space_id,
+            });
         }
+
+        // UPDATE ... RETURNING cannot explain why no row matched. Keep successful edits to one
+        // query, and only diagnose the zero-row case to classify the failure.
+        let status = sqlx::query_file!(
+            "sql/messages/get_edit_status.sql",
+            id,
+            user_id,
+            expect_modified
+        )
+        .fetch_one(db)
+        .await?;
+        if !status.message_exists {
+            return Ok(MessageEditOutcome::MessageNotFound);
+        }
+        if !status.channel_exists {
+            return Ok(MessageEditOutcome::ChannelNotFound);
+        }
+        if !status.can_edit {
+            return Ok(MessageEditOutcome::NoPermission);
+        }
+        if !status.version_matches {
+            return Ok(MessageEditOutcome::Conflict);
+        }
+        tracing::warn!(
+            %id,
+            %user_id,
+            "Authorized message edit did not update a matching row"
+        );
+        Ok(MessageEditOutcome::Conflict)
     }
 
     pub async fn delete<'c, T: sqlx::PgExecutor<'c>>(db: T, id: &Uuid) -> Result<u64, sqlx::Error> {
@@ -597,6 +630,15 @@ impl Message {
             .await
             .map(|res| res.rows_affected())
     }
+}
+
+#[derive(Debug)]
+pub(super) enum MessageEditOutcome {
+    Updated { message: Message, space_id: Uuid },
+    MessageNotFound,
+    ChannelNotFound,
+    NoPermission,
+    Conflict,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -854,6 +896,7 @@ mod tests {
         let edited_entities = sample_entities("Updated text");
         let edited = Message::edit(
             &pool,
+            owner.id,
             "GM Updated",
             &message.id,
             "Updated text",
@@ -865,8 +908,15 @@ mod tests {
             None,
         )
         .await
-        .expect("edit failed")
-        .expect("edited message missing");
+        .expect("edit failed");
+        let MessageEditOutcome::Updated {
+            message: edited,
+            space_id,
+        } = edited
+        else {
+            panic!("edited message missing");
+        };
+        assert_eq!(space_id, space.id);
         assert_eq!(edited.text, "Updated text");
         assert!(edited.is_action);
         assert_eq!(edited.rev, folded.rev + 1);
@@ -889,6 +939,7 @@ mod tests {
 
         let edited_after_delete = Message::edit(
             &pool,
+            owner.id,
             "Deleted",
             &message.id,
             "Deleted text",
@@ -901,7 +952,10 @@ mod tests {
         )
         .await
         .expect("edit after delete failed");
-        assert!(edited_after_delete.is_none());
+        assert!(matches!(
+            edited_after_delete,
+            MessageEditOutcome::MessageNotFound
+        ));
 
         let mut conn = pool.acquire().await.expect("failed to acquire connection");
         let moved_after_delete = Message::move_bottom(
@@ -1287,6 +1341,7 @@ mod tests {
         // Tab A submits first, using the `modified` it observed when it started editing.
         let edited_by_a = Message::edit(
             &pool,
+            owner.id,
             "GM",
             &message.id,
             "Tab A's text",
@@ -1298,14 +1353,22 @@ mod tests {
             Some(stale_modified),
         )
         .await
-        .expect("tab A's edit errored")
-        .expect("tab A's edit should apply since expect_modified matched");
+        .expect("tab A's edit errored");
+        let MessageEditOutcome::Updated {
+            message: edited_by_a,
+            space_id,
+        } = edited_by_a
+        else {
+            panic!("tab A's edit should apply since expect_modified matched");
+        };
+        assert_eq!(space_id, space.id);
         assert_eq!(edited_by_a.text, "Tab A's text");
         assert!(edited_by_a.modified > stale_modified);
 
         // Tab B submits with the same now-stale `modified` it observed before A's edit landed.
         let edited_by_b = Message::edit(
             &pool,
+            owner.id,
             "GM",
             &message.id,
             "Tab B's text",
@@ -1319,7 +1382,7 @@ mod tests {
         .await
         .expect("tab B's edit errored");
         assert!(
-            edited_by_b.is_none(),
+            matches!(edited_by_b, MessageEditOutcome::Conflict),
             "tab B's edit must be rejected instead of overwriting tab A's edit"
         );
 
@@ -1335,6 +1398,7 @@ mod tests {
         // A client that doesn't send `expect_modified` (e.g. an older build) keeps working.
         let edited_without_precondition = Message::edit(
             &pool,
+            owner.id,
             "GM",
             &message.id,
             "Tab C's text",
@@ -1346,10 +1410,175 @@ mod tests {
             None,
         )
         .await
-        .expect("unconditional edit errored")
-        .expect("unconditional edit should always apply");
+        .expect("unconditional edit errored");
+        let MessageEditOutcome::Updated {
+            message: edited_without_precondition,
+            space_id,
+        } = edited_without_precondition
+        else {
+            panic!("unconditional edit should always apply");
+        };
+        assert_eq!(space_id, space.id);
         assert_eq!(edited_without_precondition.text, "Tab C's text");
 
         crate::messages::MESSAGE_POSITIONS.shutdown(channel.id);
+    }
+
+    #[sqlx::test(migrator = "crate::db::MIGRATOR")]
+    async fn db_test_message_edit_authorization(pool: sqlx::PgPool) {
+        let owner = create_test_user(&pool, "edit_owner").await;
+        let member = create_test_user(&pool, "edit_member").await;
+        let outsider = create_test_user(&pool, "edit_outsider").await;
+        let space = create_test_space(&pool, &owner, "edit_auth").await;
+        SpaceMember::add_user(&pool, &member.id, &space.id)
+            .await
+            .expect("failed to add member to space");
+        let channel = create_test_channel(&pool, &space, &owner, "Owner Only Editing").await;
+        ChannelMember::add_user(&pool, member.id, channel.id, "Player", false)
+            .await
+            .expect("failed to add member to channel");
+        let message = Message::create(
+            &pool,
+            None,
+            channel.id,
+            space.id,
+            &owner.id,
+            "GM",
+            "GM",
+            "Owner's text",
+            sample_entities("Owner's text"),
+            false,
+            false,
+            true,
+            None,
+            None,
+            None,
+            "#abcdef".to_string(),
+        )
+        .await
+        .expect("failed to create message");
+
+        let edit_as = |user_id| {
+            Message::edit(
+                &pool,
+                user_id,
+                "Player",
+                &message.id,
+                "Unauthorized edit",
+                sample_entities("Unauthorized edit"),
+                false,
+                false,
+                None,
+                "#abcdef".to_string(),
+                None,
+            )
+        };
+        let member_outcome = edit_as(member.id)
+            .await
+            .expect("member edit attempt errored");
+        assert!(matches!(member_outcome, MessageEditOutcome::NoPermission));
+        let outsider_outcome = edit_as(outsider.id)
+            .await
+            .expect("outsider edit attempt errored");
+        assert!(matches!(outsider_outcome, MessageEditOutcome::NoPermission));
+
+        let document_channel = Channel::create(
+            &pool,
+            &space.id,
+            "Shared Document",
+            true,
+            Some("d20"),
+            ChannelType::Document,
+        )
+        .await
+        .expect("failed to create document channel");
+        let document_channel = Channel::edit(
+            &pool,
+            &document_channel.id,
+            None,
+            None,
+            None,
+            None,
+            None,
+            Some(true),
+            None,
+            None,
+        )
+        .await
+        .expect("failed to enable document editing");
+        ChannelMember::add_user(&pool, owner.id, document_channel.id, "GM", true)
+            .await
+            .expect("failed to add owner to document channel");
+        ChannelMember::add_user(&pool, member.id, document_channel.id, "Player", false)
+            .await
+            .expect("failed to add member to document channel");
+        let document_message = Message::create(
+            &pool,
+            None,
+            document_channel.id,
+            space.id,
+            &owner.id,
+            "GM",
+            "GM",
+            "Shared text",
+            sample_entities("Shared text"),
+            false,
+            false,
+            true,
+            None,
+            None,
+            None,
+            "#abcdef".to_string(),
+        )
+        .await
+        .expect("failed to create document message");
+        let document_outcome = Message::edit(
+            &pool,
+            member.id,
+            "Player",
+            &document_message.id,
+            "Member edit",
+            sample_entities("Member edit"),
+            false,
+            false,
+            None,
+            "#abcdef".to_string(),
+            None,
+        )
+        .await
+        .expect("document member edit errored");
+        assert!(matches!(
+            document_outcome,
+            MessageEditOutcome::Updated { .. }
+        ));
+
+        let missing_outcome = Message::edit(
+            &pool,
+            owner.id,
+            "GM",
+            &Uuid::new_v4(),
+            "Missing",
+            sample_entities("Missing"),
+            false,
+            false,
+            None,
+            "#abcdef".to_string(),
+            None,
+        )
+        .await
+        .expect("missing message edit attempt errored");
+        assert!(matches!(
+            missing_outcome,
+            MessageEditOutcome::MessageNotFound
+        ));
+
+        let current = Message::get(&pool, &message.id, Some(&owner.id))
+            .await
+            .expect("failed to reload message")
+            .expect("message disappeared");
+        assert_eq!(current.text, "Owner's text");
+
+        crate::messages::MESSAGE_POSITIONS.shutdown(channel.id);
+        crate::messages::MESSAGE_POSITIONS.shutdown(document_channel.id);
     }
 }

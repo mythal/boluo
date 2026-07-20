@@ -1,5 +1,5 @@
 import { type Atom, atom, type PrimitiveAtom, type WritableAtom } from 'jotai';
-import { atomWithStorage, loadable, selectAtom } from 'jotai/utils';
+import { atomWithStorage, selectAtom, unwrap } from 'jotai/utils';
 import { createContext, use, useLayoutEffect, useMemo, useRef } from 'react';
 import { asyncParse } from '../interpreter/async-parse';
 import { composeInitialParseResult, parseModifiers, type ParseResult } from '@boluo/interpreter';
@@ -78,16 +78,18 @@ export const useMakeChannelAtoms = (
     // The atom read functions below run in the jotai store, not during
     // render, so capturing and mutating the refs there is safe.
     /* eslint-disable react-hooks/refs */
-    const loadableParsedAtom = loadable(
+    const unwrappedParsedAtom = unwrap(
       atom(async (get, { signal }): Promise<ParseResult> => {
         const source = get(sourceAtom);
         return await asyncParse({ source, defaultDiceFace: defaultDiceFaceRef.current }, signal);
       }),
+      (previous) => previous ?? composeInitialParseResult,
     );
     const parsedAtom = atom((get) => {
-      const loadableParsed = get(loadableParsedAtom);
-      if (loadableParsed.state === 'hasData') {
-        cachedParseResultRef.current = loadableParsed.data;
+      try {
+        cachedParseResultRef.current = get(unwrappedParsedAtom);
+      } catch {
+        // Keep the last successful parse result if parsing fails.
       }
       return cachedParseResultRef.current;
     });

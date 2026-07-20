@@ -192,69 +192,52 @@ async fn move_between(
         expect_pos,
     } = interface::parse_body(req).await?;
 
-    let mut conn = ctx.db.acquire().await?;
-    let message = Message::get(&mut *conn, &message_id, Some(&session.user_id))
-        .await
-        .or_not_found()?;
-    if channel_id != message.channel_id {
+    if range == (None, None) {
         return Err(AppError::BadRequest(
-            "channelId does not match message channel".to_string(),
+            "a and b cannot both be null".to_string(),
         ));
     }
-    if let Some((expect_p, expect_q)) = expect_pos {
-        if message.pos_p != expect_p || message.pos_q != expect_q {
+    let move_outcome = Message::move_between(
+        &ctx.db,
+        session.user_id,
+        &message_id,
+        channel_id,
+        range,
+        expect_pos,
+    )
+    .await?;
+    let (mut moved_message, space_id, old_pos) = match move_outcome {
+        super::models::MessageMoveOutcome::Moved {
+            message,
+            space_id,
+            old_pos,
+        } => (message, space_id, old_pos),
+        super::models::MessageMoveOutcome::MessageNotFound => {
+            return Err(AppError::NotFound("Message"));
+        }
+        super::models::MessageMoveOutcome::ChannelMismatch => {
+            return Err(AppError::BadRequest(
+                "channelId does not match message channel".to_string(),
+            ));
+        }
+        super::models::MessageMoveOutcome::ChannelNotFound => {
+            return Err(AppError::NotFound("channel"));
+        }
+        super::models::MessageMoveOutcome::NoPermission => {
+            return Err(AppError::NoPermission(
+                "Only the master can move other's messages.".to_string(),
+            ));
+        }
+        super::models::MessageMoveOutcome::PositionChanged => {
             return Err(AppError::BadRequest(
                 "The message already moved".to_string(),
             ));
         }
-    }
-    let channel = Channel::get_by_id(&mut *conn, &message.channel_id)
-        .await
-        .or_not_found()?;
-    let channel_member = ChannelMember::get(
-        &mut conn,
-        session.user_id,
-        channel.space_id,
-        message.channel_id,
-    )
-    .await
-    .or_no_permission()?;
-    if !channel.is_document && !channel_member.is_master && message.sender_id != session.user_id {
-        return Err(AppError::NoPermission(
-            "Only the master can move other's messages.".to_string(),
-        ));
-    }
-    crate::messages::MESSAGE_POSITIONS.submitted(
-        channel_id,
-        message_id,
-        message.pos_p,
-        message.pos_q,
-        Some(message_id),
-    );
-    let mut moved_message = match range {
-        (None, None) => {
-            return Err(AppError::BadRequest(
-                "a and b cannot both be null".to_string(),
-            ));
-        }
-        (Some(a), Some((0, _) | (1, 0)) | None) => {
-            Message::move_bottom(&mut conn, &channel_id, &message_id, a)
-                .await?
-                .or_not_found()?
-        }
-        (Some((_, 0) | (0, 1)) | None, Some(b)) => {
-            Message::move_above(&mut conn, &channel_id, &message_id, b)
-                .await?
-                .or_not_found()?
-        }
-        (Some(a), Some(b)) => Message::move_between(&mut conn, &message_id, channel_id, a, b)
-            .await?
-            .or_not_found()?,
     };
     if moved_message.whisper_to_users.is_some() {
         moved_message.hide(None);
     }
-    Update::message_edited(channel.space_id, moved_message, message.pos).await;
+    Update::message_edited(space_id, moved_message, old_pos).await;
     metrics::counter!("boluo_server_messages_moved_total").increment(1);
     Ok(true)
 }

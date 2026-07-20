@@ -1,5 +1,5 @@
 name = "boluo-storybook"
-compatibility_date = "2025-07-25"
+compatibility_date = "2026-07-18"
 
 [assets]
   directory = "./storybook-static/"

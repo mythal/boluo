@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
 import { type RegisterOptions, useForm } from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router-dom';
+import { errorText, NOT_FOUND } from '../../api/error';
 import { post } from '../../api/request';
 import { useTitle } from '../../hooks/useTitle';
 import { alignRight, largeInput, mT, mY, textLg } from '../../styles/atoms';
@@ -25,6 +26,7 @@ function ResetPasswordConfirm() {
     formState: { errors },
   } = useForm<FormData>();
   const [state, setState] = useState<'loading' | 'default'>('default');
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const { token } = useParams();
   const navigate = useNavigate();
 
@@ -34,10 +36,21 @@ function ResetPasswordConfirm() {
         return;
       }
       setState('loading');
-      await post('/users/reset_password_confirm', {
+      setSubmitError(null);
+      const result = await post('/users/reset_password_confirm', {
         password,
         token,
       });
+      if (result.isErr) {
+        setState('default');
+        if (result.value.code === NOT_FOUND) {
+          setSubmitError('重置链接无效或已过期，请重新申请');
+        } else {
+          const { description, detail } = errorText(result.value);
+          setSubmitError(detail ? `${description}：${detail}` : description);
+        }
+        return;
+      }
       navigate('/login');
     },
     [navigate, token],
@@ -80,6 +93,7 @@ function ResetPasswordConfirm() {
             </div>
           </div>
           <div css={[alignRight]}>
+            {submitError && <ErrorMessage>{submitError}</ErrorMessage>}
             <Button
               css={[textLg, mT(2)]}
               disabled={state === 'loading'}

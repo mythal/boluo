@@ -42,9 +42,11 @@ export const ConfirmResetPassword: FC<Props> = ({ token }) => {
     }
   };
   if (pageState === 'UNKNOWN_ERROR') {
-    <div className="py-6">
-      <FormattedMessage defaultMessage="An unknown error occurred." />
-    </div>;
+    return (
+      <div className="py-6">
+        <FormattedMessage defaultMessage="An unknown error occurred." />
+      </div>
+    );
   }
   if (!isUuid(token) || pageState === 'INVALID_TOKEN') {
     return (

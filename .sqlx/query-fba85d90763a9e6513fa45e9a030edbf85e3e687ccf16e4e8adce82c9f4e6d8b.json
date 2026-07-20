@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT users AS  \"users!: User\"\nFROM users INNER JOIN reset_tokens ON users.id = reset_tokens.user_id\nWHERE reset_tokens.token = $1\nLIMIT 1;\n",
+  "query": "SELECT users AS  \"users!: User\"\nFROM users INNER JOIN reset_tokens ON users.id = reset_tokens.user_id\nWHERE reset_tokens.token = $1\n    AND reset_tokens.used_at IS NULL\n    AND reset_tokens.invalidated_at IS NULL\n    AND reset_tokens.created > now() - ($2::bigint * interval '1 second')\n    AND users.deactivated = FALSE\nLIMIT 1;\n",
   "describe": {
     "columns": [
       {
@@ -60,12 +60,13 @@
     ],
     "parameters": {
       "Left": [
-        "Uuid"
+        "Uuid",
+        "Int8"
       ]
     },
     "nullable": [
       null
     ]
   },
-  "hash": "75818e4256ceadde7a2485afd43720a83fc52cf7dbe403d64548fb9bc6ec3392"
+  "hash": "fba85d90763a9e6513fa45e9a030edbf85e3e687ccf16e4e8adce82c9f4e6d8b"
 }

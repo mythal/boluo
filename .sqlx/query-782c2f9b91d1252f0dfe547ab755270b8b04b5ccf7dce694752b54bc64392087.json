@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT users.id\nFROM users\nINNER JOIN reset_tokens ON reset_tokens.user_id = users.id\nWHERE reset_tokens.token = $1\n    AND users.deactivated = FALSE\nFOR UPDATE OF users;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "782c2f9b91d1252f0dfe547ab755270b8b04b5ccf7dce694752b54bc64392087"
+}

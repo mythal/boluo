@@ -389,16 +389,18 @@ pub async fn reset_password(
     let email = email.trim().to_lowercase();
     crate::validators::EMAIL.run(&email)?;
 
-    let user = {
-        let mut conn = ctx.db.acquire().await?;
-        User::get_by_email(&mut *conn, &email)
-            .await?
-            .ok_or(AppError::NotFound("email"))?
-    };
-
     RESET_PASSWORD_EMAIL_LIMITER
         .check_key(&email)
         .map_err(|_| AppError::LimitExceeded("This email is requested too many times."))?;
+
+    let user = {
+        let mut conn = ctx.db.acquire().await?;
+        User::get_by_email(&mut *conn, &email).await?
+    };
+    let Some(user) = user else {
+        // Do not reveal whether an account exists for the supplied email address.
+        return Ok(());
+    };
 
     let token = {
         let mut conn = ctx.db.acquire().await?;
@@ -468,7 +470,11 @@ pub async fn reset_password_token_check(
     let token = token
         .parse::<Uuid>()
         .map_err(|_| AppError::BadRequest("Invalid token".to_string()))?;
-    Ok(User::get_by_reset_token(&mut *conn, token).await.is_ok())
+    match User::get_by_reset_token(&mut *conn, token).await {
+        Ok(_) => Ok(true),
+        Err(sqlx::Error::RowNotFound) => Ok(false),
+        Err(error) => Err(error.into()),
+    }
 }
 
 pub async fn reset_password_confirm(
@@ -476,12 +482,10 @@ pub async fn reset_password_confirm(
     req: Request<impl Body>,
 ) -> Result<(), AppError> {
     let ResetPasswordConfirm { token, password } = parse_body(req).await?;
-    let mut conn = ctx.db.acquire().await?;
     let token = token
         .parse::<Uuid>()
         .map_err(|_| AppError::BadRequest("Invalid token".to_string()))?;
-    let user = User::get_by_reset_token(&mut *conn, token).await?;
-    User::reset_password(&mut conn, user.id, token, &password).await?;
+    User::reset_password(&ctx.db, token, &password).await?;
     Ok(())
 }
 

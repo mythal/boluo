@@ -1,5 +1,6 @@
 import { css } from '@emotion/react';
 import { useAtom } from 'jotai';
+import { publishOwnPreviewAcknowledgement } from '@boluo/api/preview/ack';
 import { useEffect, useRef, useState } from 'react';
 import { connectSpace } from '../../actions';
 import { connect } from '../../api/connect';
@@ -256,6 +257,7 @@ export const Connector = ({ spaceId, myId }: Props) => {
           cursor.current = event.id;
         }
 
+        publishOwnPreviewAcknowledgement(event, myId, connection);
         handleEvent(dispatch, setState, event, () => {
           cursor.current = { timestamp: 0, node: 0, seq: 0 };
         });

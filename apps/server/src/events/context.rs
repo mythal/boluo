@@ -396,9 +396,6 @@ fn on_update(
     let update_id = update.id;
     match update.body {
         UpdateBody::MessagePreview { preview, .. } => {
-            // Volatile updates are fired via `spawn` without ordering guarantees,
-            // so a late keyframe can land after the `NewMessage` that consumed this
-            // preview and re-insert it as a ghost. Tolerated: it expires in cleanup.
             let key = ChannelUserId::new(preview.channel_id, preview.sender_id);
             if let Some(existing_preview) = preview_map.get(&key) {
                 if existing_preview.id >= update_id {
@@ -844,6 +841,7 @@ pub fn mailbox_count() -> usize {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::events::preview::{Preview, PreviewDiff, PreviewDiffPost};
     use crate::messages::{Entities, Message};
     use chrono::TimeZone;
 
@@ -896,6 +894,70 @@ mod tests {
             color: "#000000".to_string(),
             rev,
         }
+    }
+
+    #[tokio::test]
+    async fn ordered_preview_updates_are_cached_in_keyframe_diff_order() {
+        let mailbox_id = Uuid::new_v4();
+        let channel_id = Uuid::new_v4();
+        let sender_id = Uuid::new_v4();
+        let preview_id = Uuid::new_v4();
+        let preview = Box::new(Preview {
+            id: preview_id,
+            version: 1,
+            sender_id,
+            channel_id,
+            parent_message_id: None,
+            name: "Alice".to_string(),
+            media_id: None,
+            in_game: true,
+            is_action: false,
+            is_master: false,
+            clear: false,
+            text: Some("hello".to_string()),
+            whisper_to_users: None,
+            entities: Entities::default(),
+            pos: 1.0,
+            edit_for: None,
+            edit: None,
+        });
+        let diff = PreviewDiff {
+            sender: sender_id,
+            payload: PreviewDiffPost {
+                channel_id,
+                id: preview_id,
+                keyframe_version: 1,
+                version: 2,
+                op: vec![],
+                entities: vec![],
+            },
+        };
+
+        Update::message_preview(mailbox_id, preview).await;
+        Update::preview_diff(mailbox_id, diff).await;
+
+        let manager = store().get_or_create_manager(mailbox_id);
+        let cached = manager
+            .query_encoded_updates(None, None, None)
+            .await
+            .expect("query should be enqueued")
+            .await
+            .expect("mailbox should answer the query");
+        let update_types = cached
+            .updates
+            .iter()
+            .map(|update| {
+                let json: serde_json::Value =
+                    serde_json::from_str(update.as_str()).expect("cached update should be JSON");
+                json["body"]["type"]
+                    .as_str()
+                    .expect("cached update should have a body type")
+                    .to_string()
+            })
+            .collect::<Vec<_>>();
+
+        assert_eq!(update_types, ["MESSAGE_PREVIEW", "DIFF"]);
+        store().remove(mailbox_id);
     }
 
     #[test]

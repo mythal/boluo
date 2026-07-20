@@ -8,6 +8,7 @@ import { chatAtom } from '../state/chat.atoms';
 import { type ComposeState } from '../state/compose.reducer';
 import { type ChannelFilter, useChannelAtoms } from './useChannelAtoms';
 import { type PreviewEdit } from '@boluo/api';
+import { shallowEqual } from '@boluo/utils/equal';
 import * as L from 'list';
 
 interface UseChatListReturn {
@@ -268,15 +269,7 @@ type ChannelSlice = Pick<
   scheduledGcLowerPos: number | null;
 };
 
-function channelSliceEq(a: ChannelSlice, b: ChannelSlice) {
-  return (
-    a.messages === b.messages &&
-    a.fullLoaded === b.fullLoaded &&
-    a.previewMap === b.previewMap &&
-    a.optimisticMessageMap === b.optimisticMessageMap &&
-    a.scheduledGcLowerPos === b.scheduledGcLowerPos
-  );
-}
+const channelSliceEq = shallowEqual<ChannelSlice>;
 
 const EMPTY_CHANNEL_SLICE: ChannelSlice = {
   messages: L.empty(),

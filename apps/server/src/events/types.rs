@@ -348,25 +348,27 @@ impl Update {
         Update::persistent(UpdateBody::ChannelDeleted { channel_id }, mailbox)
     }
 
-    pub fn message_preview(mailbox: Uuid, preview: Box<Preview>) {
+    pub async fn message_preview(mailbox: Uuid, preview: Box<Preview>) {
         let channel_id = preview.channel_id;
-        Update::volatile(
+        Update::enqueue_volatile_update(
             UpdateBody::MessagePreview {
                 preview,
                 channel_id,
             },
             mailbox,
-        );
+        )
+        .await;
     }
 
-    pub fn preview_diff(mailbox: Uuid, diff: PreviewDiff) {
-        Update::volatile(
+    pub async fn preview_diff(mailbox: Uuid, diff: PreviewDiff) {
+        Update::enqueue_volatile_update(
             UpdateBody::Diff {
                 channel_id: diff.payload.channel_id,
                 diff: Box::new(diff),
             },
             mailbox,
         )
+        .await
     }
 
     pub async fn status(
@@ -600,20 +602,20 @@ impl Update {
         }
     }
 
-    pub fn volatile(body: UpdateBody, mailbox: Uuid) {
+    async fn enqueue_volatile_update(body: UpdateBody, mailbox: Uuid) {
+        // WebSocket client events are sequential, so awaiting preserves keyframe/diff order.
         let span = tracing::info_span!("Fire Volatile Update", mailbox = %mailbox);
-        spawn(
-            async move {
-                let mailbox_manager = super::context::store().get_or_create_manager(mailbox);
-                if let Err(e) = mailbox_manager
-                    .fire_update(body, UpdateLifetime::Volatile)
-                    .await
-                {
-                    tracing::error!("Failed to send update to mailbox {}: {}", mailbox, e);
-                }
+        async move {
+            let mailbox_manager = super::context::store().get_or_create_manager(mailbox);
+            if let Err(e) = mailbox_manager
+                .fire_update(body, UpdateLifetime::Volatile)
+                .await
+            {
+                tracing::error!("Failed to send update to mailbox {}: {}", mailbox, e);
             }
-            .instrument(span),
-        );
+        }
+        .instrument(span)
+        .await;
     }
 
     pub fn name(&self) -> &'static str {

@@ -42,10 +42,6 @@ export type ChannelDeleted = Extract<UpdateBody, { type: 'CHANNEL_DELETED' }>;
 export type PushMembers = Extract<UpdateBody, { type: 'MEMBERS' }>;
 export type StatusMap = Extract<UpdateBody, { type: 'STATUS_MAP' }>;
 
-export const isEmptyPreview = (preview: Preview): boolean =>
-  preview.text === '' ||
-  (preview.text != null && (preview.entities == null || preview.entities.length === 0));
-
 export const shouldAdvanceCursor = (event: Events): boolean =>
   event.live == null || event.live === 'P';
 

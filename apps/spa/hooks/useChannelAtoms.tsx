@@ -20,10 +20,14 @@ export interface ScrollToMessageRequest {
   pos: number;
 }
 
+export type ComposeParseResult = ParseResult & {
+  source: string;
+};
+
 export interface ChannelAtoms {
   composeAtom: WritableAtom<ComposeState, [ComposeActionUnion], void>;
   checkComposeAtom: Atom<ComposeError | null>;
-  parsedAtom: Atom<ParseResult>;
+  parsedAtom: Atom<ComposeParseResult>;
   composeFocusedAtom: Atom<boolean>;
   isActionAtom: Atom<boolean>;
   hasMediaAtom: Atom<boolean>;
@@ -74,16 +78,24 @@ export const useMakeChannelAtoms = (
     'composeAtom' | 'checkComposeAtom' | 'inGameAtom' | 'defaultDiceFaceRef'
   > = useMemo(() => {
     const sourceAtom = atom((get) => get(composeAtom).source);
-    const cachedParseResultRef = { current: composeInitialParseResult };
+    const initialParseResult: ComposeParseResult = {
+      ...composeInitialParseResult,
+      source: '',
+    };
+    const cachedParseResultRef = { current: initialParseResult };
     // The atom read functions below run in the jotai store, not during
     // render, so capturing and mutating the refs there is safe.
     /* eslint-disable react-hooks/refs */
     const unwrappedParsedAtom = unwrap(
-      atom(async (get, { signal }): Promise<ParseResult> => {
+      atom(async (get, { signal }): Promise<ComposeParseResult> => {
         const source = get(sourceAtom);
-        return await asyncParse({ source, defaultDiceFace: defaultDiceFaceRef.current }, signal);
+        const result = await asyncParse(
+          { source, defaultDiceFace: defaultDiceFaceRef.current },
+          signal,
+        );
+        return { ...result, source };
       }),
-      (previous) => previous ?? composeInitialParseResult,
+      (previous) => previous ?? initialParseResult,
     );
     const parsedAtom = atom((get) => {
       try {

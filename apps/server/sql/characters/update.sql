@@ -10,6 +10,6 @@ SET name = COALESCE($2, name),
     visibility = COALESCE(($7::text)::character_visibility, visibility),
     is_archived = COALESCE($8, is_archived),
     metadata = COALESCE($9, metadata),
-    modified = (now() at time zone 'utc')
+    modified = now()
 WHERE id = $1
 RETURNING characters as "character!: Character";

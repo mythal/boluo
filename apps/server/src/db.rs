@@ -22,7 +22,9 @@ pub async fn get() -> sqlx::Pool<sqlx::Postgres> {
                 Box::pin(async move {
                     use sqlx::Executor;
                     conn.execute(
-                        "SET application_name = 'boluo-server'; SET statement_timeout = 20000;",
+                        "SET application_name = 'boluo-server';
+                         SET statement_timeout = 20000;
+                         SET TIME ZONE 'UTC';",
                     )
                     .await?;
 

@@ -7,6 +7,6 @@ SET type = COALESCE(($2::text)::note_type, type),
     visible_to = COALESCE($7, visible_to),
     everyone_can_edit = COALESCE($8, everyone_can_edit),
     track_history = COALESCE($9, track_history),
-    modified = (now() at time zone 'utc')
+    modified = now()
 WHERE id = $1
 RETURNING notes as "note!: Note";

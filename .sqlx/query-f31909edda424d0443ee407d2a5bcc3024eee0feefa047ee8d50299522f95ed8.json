@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "UPDATE notes\nSET type = COALESCE(($2::text)::note_type, type),\n    title = COALESCE($3, title),\n    keywords = COALESCE($4, keywords),\n    content = COALESCE($5, content),\n    visibility = COALESCE(($6::text)::note_visibility, visibility),\n    visible_to = COALESCE($7, visible_to),\n    everyone_can_edit = COALESCE($8, everyone_can_edit),\n    track_history = COALESCE($9, track_history),\n    modified = (now() at time zone 'utc')\nWHERE id = $1\nRETURNING notes as \"note!: Note\";\n",
+  "query": "UPDATE notes\nSET type = COALESCE(($2::text)::note_type, type),\n    title = COALESCE($3, title),\n    keywords = COALESCE($4, keywords),\n    content = COALESCE($5, content),\n    visibility = COALESCE(($6::text)::note_visibility, visibility),\n    visible_to = COALESCE($7, visible_to),\n    everyone_can_edit = COALESCE($8, everyone_can_edit),\n    track_history = COALESCE($9, track_history),\n    modified = now()\nWHERE id = $1\nRETURNING notes as \"note!: Note\";\n",
   "describe": {
     "columns": [
       {
@@ -113,5 +113,5 @@
       null
     ]
   },
-  "hash": "ef642e57c335dd12580ed880ba40e2775d6015a0fc61a6abdb233dfbfe71c4b2"
+  "hash": "f31909edda424d0443ee407d2a5bcc3024eee0feefa047ee8d50299522f95ed8"
 }

@@ -1,7 +1,6 @@
 UPDATE
     spaces
 SET
-    latest_activity = now() at time zone 'utc'
+    latest_activity = now()
 WHERE
     id = $1;
-

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "UPDATE characters\nSET name = COALESCE($2, name),\n    description = COALESCE($3, description),\n    color = COALESCE($4, color),\n    alias = CASE\n        WHEN $5::text IS NULL THEN alias\n        ELSE NULLIF($5::text, '')\n    END,\n    image_id = COALESCE($6, image_id),\n    visibility = COALESCE(($7::text)::character_visibility, visibility),\n    is_archived = COALESCE($8, is_archived),\n    metadata = COALESCE($9, metadata),\n    modified = (now() at time zone 'utc')\nWHERE id = $1\nRETURNING characters as \"character!: Character\";\n",
+  "query": "UPDATE characters\nSET name = COALESCE($2, name),\n    description = COALESCE($3, description),\n    color = COALESCE($4, color),\n    alias = CASE\n        WHEN $5::text IS NULL THEN alias\n        ELSE NULLIF($5::text, '')\n    END,\n    image_id = COALESCE($6, image_id),\n    visibility = COALESCE(($7::text)::character_visibility, visibility),\n    is_archived = COALESCE($8, is_archived),\n    metadata = COALESCE($9, metadata),\n    modified = now()\nWHERE id = $1\nRETURNING characters as \"character!: Character\";\n",
   "describe": {
     "columns": [
       {
@@ -97,5 +97,5 @@
       null
     ]
   },
-  "hash": "c58ba42cae04a1fdb8bfc729692712da5631c304a1ea8e38fa68ca1152f2e0b7"
+  "hash": "3bea19672173ba04296ea361a8fc3a15dae35a6bda6e1b26e6515d5f8d815130"
 }

@@ -346,9 +346,9 @@ impl User {
         // Update email_verified_at in users_extension table
         sqlx::query!(
             r#"INSERT INTO users_extension (user_id, email_verified_at, settings)
-               VALUES ($1, now() at time zone 'utc', '{}')
+               VALUES ($1, now(), '{}')
                ON CONFLICT (user_id)
-               DO UPDATE SET email_verified_at = now() at time zone 'utc'"#,
+               DO UPDATE SET email_verified_at = now()"#,
             user_id
         )
         .execute(&mut *db)
@@ -470,9 +470,9 @@ impl User {
     ) -> Result<(), sqlx::Error> {
         sqlx::query!(
             r#"INSERT INTO users_extension (user_id, email_verified_at)
-               VALUES ($1, now() at time zone 'utc')
+               VALUES ($1, now())
                ON CONFLICT (user_id)
-               DO UPDATE SET email_verified_at = now() at time zone 'utc'"#,
+               DO UPDATE SET email_verified_at = now()"#,
             user_id
         )
         .execute(db)

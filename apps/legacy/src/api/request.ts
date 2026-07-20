@@ -8,6 +8,7 @@ import type {
   IdWithToken,
   KickFromChannel,
   MakeToken,
+  MessageIdQuery,
   MoveMessageBetween,
   QueryUser,
 } from '@boluo/api';
@@ -228,12 +229,12 @@ export function post(path: '/messages/send', payload: NewMessage): Promise<AppRe
 export function post(
   path: '/messages/delete',
   payload: {},
-  query: IdQuery,
+  query: MessageIdQuery,
 ): Promise<AppResult<Message>>;
 export function post(
   path: '/messages/toggle_fold',
   payload: {},
-  query: IdQuery,
+  query: MessageIdQuery,
 ): Promise<AppResult<Message>>;
 export function post(path: '/messages/move_to', payload: MoveTo): Promise<AppResult<Message>>;
 export function post(

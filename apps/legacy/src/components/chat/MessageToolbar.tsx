@@ -10,7 +10,7 @@ import Trash from '@boluo/icons/legacy/Trash';
 import Unfold from '@boluo/icons/legacy/Unfold';
 import { useChannelId } from '../../hooks/useChannelId';
 import { useIsAdmin } from '../../hooks/useIsAdmin';
-import store, { useDispatch } from '../../store';
+import { useDispatch, useSelector } from '../../store';
 import { fontMono, pL, spacingN, textSm } from '../../styles/atoms';
 import { primary } from '../../styles/colors';
 import { throwErr } from '../../utils/errors';
@@ -33,8 +33,8 @@ const quoteStyle = css`
 function MessageToolbar({ myMember, mine, message }: Props) {
   const dispatch = useDispatch();
   const channelId = useChannelId();
-  const pane = useChannelId();
-  const isAdmin = useIsAdmin(pane);
+  const spaceId = useSelector((state) => state.chatStates.get(channelId)?.channel.spaceId);
+  const isAdmin = useIsAdmin(channelId);
   const [deleteDialog, showDeleteDialog] = useState(false);
   const [loading, setLoading] = useState(false);
   const throwE = throwErr(dispatch);
@@ -43,7 +43,7 @@ function MessageToolbar({ myMember, mine, message }: Props) {
   }, [channelId, dispatch, message]);
   const deleteMessage = async () => {
     setLoading(true);
-    const result = await post('/messages/delete', {}, { id: message.id });
+    const result = await post('/messages/delete', {}, { id: message.id, spaceId });
     if (!result.isOk) {
       throwE(result.value);
       setLoading(false);
@@ -51,7 +51,7 @@ function MessageToolbar({ myMember, mine, message }: Props) {
   };
   const toggleFold = async () => {
     setLoading(true);
-    const result = await post('/messages/toggle_fold', {}, { id: message.id });
+    const result = await post('/messages/toggle_fold', {}, { id: message.id, spaceId });
     if (!result.isOk) {
       throwE(result.value);
     }

@@ -28,6 +28,7 @@ import type {
   Login as LoginData,
   LoginReturn,
   Message,
+  MessageIdQuery,
   NewMessage,
   Note,
   QueryCharacter,
@@ -75,8 +76,8 @@ export interface Post {
   // messages
   '/messages/send': { payload: NewMessage; query: null; result: Message };
   '/messages/move_between': { payload: MoveMessageBetween; query: null; result: Message };
-  '/messages/delete': { payload: Empty; query: { id: string }; result: Message };
-  '/messages/toggle_fold': { payload: Empty; query: { id: string }; result: Message };
+  '/messages/delete': { payload: Empty; query: MessageIdQuery; result: Message };
+  '/messages/toggle_fold': { payload: Empty; query: MessageIdQuery; result: Message };
   // channels
   '/channels/create': { payload: CreateChannel; query: null; result: ChannelWithMember };
   '/channels/join': { payload: JoinChannel; query: null; result: ChannelWithMember };

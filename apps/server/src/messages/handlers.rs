@@ -140,29 +140,11 @@ async fn edit(
         color,
         expect_modified,
     } = *edit_message;
-    let mut trans = ctx.db.begin().await?;
-    let message = Message::get(&mut *trans, &message_id, Some(&session.user_id))
-        .await?
-        .or_not_found()?;
-    let channel = Channel::get_by_id(&mut *trans, &message.channel_id)
-        .await
-        .or_not_found()?;
-    let (_, space_member) = ChannelMember::get_with_space_member(
-        &mut *trans,
-        session.user_id,
-        message.channel_id,
-        &channel.space_id,
-    )
-    .await
-    .or_no_permission()?;
-    if !channel.is_document && message.sender_id != session.user_id {
-        return Err(AppError::NoPermission("user id dismatch".to_string()));
-    }
-
     let text = &*text;
     let name = &*name;
-    let edited_message = Message::edit(
-        &mut *trans,
+    let edit_outcome = Message::edit(
+        &ctx.db,
+        session.user_id,
         name,
         &message_id,
         text,
@@ -174,28 +156,25 @@ async fn edit(
         expect_modified,
     )
     .await?;
-    let edited_message = match edited_message {
-        Some(edited_message) => edited_message,
-        None => {
-            let still_exists = Message::get(&mut *trans, &message_id, Some(&session.user_id))
-                .await?
-                .is_some();
-            if still_exists {
-                return Err(AppError::Conflict(
-                    "The message was edited elsewhere before this edit was submitted.".to_string(),
-                ));
-            }
+    let (edited_message, space_id) = match edit_outcome {
+        super::models::MessageEditOutcome::Updated { message, space_id } => (message, space_id),
+        super::models::MessageEditOutcome::MessageNotFound => {
             return Err(AppError::NotFound("Message"));
         }
+        super::models::MessageEditOutcome::ChannelNotFound => {
+            return Err(AppError::NotFound("channel"));
+        }
+        super::models::MessageEditOutcome::NoPermission => {
+            return Err(AppError::NoPermission("user id dismatch".to_string()));
+        }
+        super::models::MessageEditOutcome::Conflict => {
+            return Err(AppError::Conflict(
+                "The message was edited elsewhere before this edit was submitted.".to_string(),
+            ));
+        }
     };
-    trans.commit().await?;
     metrics::counter!("boluo_server_messages_edited_total").increment(1);
-    Update::message_edited(
-        space_member.space_id,
-        edited_message.clone(),
-        edited_message.pos,
-    )
-    .await;
+    Update::message_edited(space_id, edited_message.clone(), edited_message.pos).await;
     metrics::histogram!("boluo_server_messages_edit_duration_ms")
         .record(start_time.elapsed().as_millis() as f64);
     Ok(edited_message)

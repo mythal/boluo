@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT COUNT(*)\nFROM pragma_table_list\nWHERE schema = 'main'\n    AND name IN ('binding', 'channel_topic', 'boluo_cursor', 'message_map')\n    AND strict = 1;\n",
+  "describe": {
+    "columns": [
+      {
+        "name": "COUNT(*)",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "c1ffc22b108161e60a63d59b0799c458c5fcfb34d5952e4795d280460fa3af59"
+}

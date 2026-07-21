@@ -18,6 +18,13 @@ pub(crate) fn run() {
             "./packages/types/bindings.ts",
         ],
     );
+
+    crate::rs::export();
+    run_optional_command(
+        "rustfmt",
+        &["./packages/generated/src/generated.rs"],
+    );
+
     run_command(
         "cargo",
         &["sqlx", "prepare", "--workspace", "--", "--tests"],

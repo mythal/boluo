@@ -1,0 +1,50 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT id, boluo_space_id, tg_chat_id\nFROM binding\nWHERE boluo_base_url = ?1\n    AND paused_reason IS NULL\nORDER BY id;\n",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "binding",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "name": "boluo_space_id",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "binding",
+            "name": "boluo_space_id"
+          }
+        }
+      },
+      {
+        "name": "tg_chat_id",
+        "ordinal": 2,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "binding",
+            "name": "tg_chat_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "d5eabe8343b5d9a8b1fc169acf509c2b95427fdf236ba2f7651c0a6beb9934c6"
+}

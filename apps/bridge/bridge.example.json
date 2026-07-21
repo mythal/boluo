@@ -1,0 +1,11 @@
+{
+  "boluo": {
+    "base-url": "https://production.boluo.chat",
+    "username": "replace-with-a-boluo-username",
+    "password": "replace-with-a-boluo-password"
+  },
+  "telegram": {
+    "bot-token": "replace-with-a-telegram-bot-token"
+  },
+  "sqlite-path": "boluo-bridge-v1.sqlite"
+}

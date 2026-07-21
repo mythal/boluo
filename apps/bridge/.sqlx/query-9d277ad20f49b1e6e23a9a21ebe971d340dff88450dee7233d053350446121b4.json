@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM message_map\nWHERE binding_id = ?1 AND boluo_message_id = ?2;\n",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "9d277ad20f49b1e6e23a9a21ebe971d340dff88450dee7233d053350446121b4"
+}

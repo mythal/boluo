@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM channel_topic\nWHERE binding_id = ?1 AND channel_id = ?2;\n",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "c3a19f7b0810d2d98404fdb09ca8e97fcc3fdcc35d241e7e36320526387c741c"
+}

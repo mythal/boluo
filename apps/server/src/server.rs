@@ -55,6 +55,7 @@ mod session;
 mod shutdown;
 mod space_runtime;
 mod spaces;
+mod rs;
 mod ts;
 mod ttl;
 mod typegen;

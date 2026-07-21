@@ -2608,6 +2608,7 @@ dependencies = [
  "reqwest",
  "ring",
  "rpds",
+ "rustls",
  "rusty-s3",
  "serde",
  "serde_json",
@@ -2628,6 +2629,7 @@ dependencies = [
  "tracing-subscriber",
  "url",
  "uuid",
+ "webpki-roots",
 ]
 
 [[package]]

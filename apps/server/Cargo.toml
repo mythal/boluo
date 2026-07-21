@@ -35,6 +35,12 @@ tracing = { version = "0.1", features = ["attributes"] }
 percent-encoding = "2.2.0"
 regex = "1"
 ring = "0.17"
+rustls = { version = "0.23", default-features = false, features = [
+  "aws_lc_rs",
+  "std",
+  "tls12",
+] }
+webpki-roots = "1"
 serde_json.workspace = true
 serde_urlencoded = "0.7"
 url = "2.5"

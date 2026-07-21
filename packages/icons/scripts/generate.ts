@@ -19,6 +19,7 @@ interface GeneratedIcon {
 interface IconSet {
   readonly icons: GeneratedIcon[];
   readonly declarationReferencePath: string;
+  readonly inlineSprite?: boolean;
   readonly sourceDirectory: string;
   readonly spriteFilename: string;
   readonly spriteImportPath: string;
@@ -223,17 +224,23 @@ export default ${name};
 function generateCreateIconSource(
   declarationReferencePath: string,
   spriteImportPath: string,
+  inlineSprite: boolean,
 ): string {
-  return `/// <reference path=${JSON.stringify(declarationReferencePath)} />
-
-import type { SVGProps } from 'react';
-import spriteAsset from ${JSON.stringify(spriteImportPath)};
+  const spriteImport = inlineSprite
+    ? ''
+    : `import spriteAsset from ${JSON.stringify(spriteImportPath)};
 
 type ImportedAsset = string | { readonly src: string };
 
 const importedAsset = spriteAsset as ImportedAsset;
 const spriteUrl =
   typeof importedAsset === 'string' ? importedAsset : importedAsset.src;
+`;
+
+  return `/// <reference path=${JSON.stringify(declarationReferencePath)} />
+
+import type { SVGProps } from 'react';
+${spriteImport}
 
 interface IconDefinition {
   readonly name: string;
@@ -250,6 +257,7 @@ export function createIcon({
   preserveAspectRatio,
   defaults,
 }: IconDefinition) {
+  const href = ${inlineSprite ? '`#${id}`' : '`${spriteUrl}#${id}`'};
   const Icon = (props: SVGProps<SVGSVGElement>) => (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -260,11 +268,30 @@ export function createIcon({
       {...defaults}
       {...props}
     >
-      <use href={\`\${spriteUrl}#\${id}\`} />
+      <use href={href} xlinkHref={href} />
     </svg>
   );
   Icon.displayName = \`Svg\${name}\`;
   return Icon;
+}
+`;
+}
+
+function generateSpriteComponentSource(symbols: string): string {
+  return `const symbols = ${JSON.stringify(symbols)};
+
+export default function Sprite() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+      focusable="false"
+      width="0"
+      height="0"
+      style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden' }}
+      dangerouslySetInnerHTML={{ __html: symbols }}
+    />
+  );
 }
 `;
 }
@@ -333,6 +360,7 @@ async function readIcons(directory: string, idPrefix: string): Promise<Generated
 async function writeIconSet({
   icons,
   declarationReferencePath,
+  inlineSprite = false,
   sourceDirectory,
   spriteFilename,
   spriteImportPath,
@@ -346,8 +374,15 @@ async function writeIconSet({
   await writeFile(path.join(generatedDirectory, spriteFilename), sprite);
   await writeFile(
     path.join(sourceDirectory, 'createIcon.tsx'),
-    generateCreateIconSource(declarationReferencePath, spriteImportPath),
+    generateCreateIconSource(declarationReferencePath, spriteImportPath, inlineSprite),
   );
+
+  if (inlineSprite) {
+    await writeFile(
+      path.join(sourceDirectory, 'Sprite.tsx'),
+      generateSpriteComponentSource(icons.map(({ symbol }) => symbol).join('')),
+    );
+  }
 
   for (const icon of icons) {
     await writeFile(path.join(sourceDirectory, `${icon.name}.tsx`), icon.componentSource);
@@ -371,6 +406,7 @@ async function main(): Promise<void> {
     {
       icons: await readIcons(legacyIconsDirectory, 'legacy-'),
       declarationReferencePath: '../svg.d.ts',
+      inlineSprite: true,
       sourceDirectory: path.join(sourceDirectory, 'legacy'),
       spriteFilename: 'legacy-sprite.svg',
       spriteImportPath: '../../generated/legacy-sprite.svg',

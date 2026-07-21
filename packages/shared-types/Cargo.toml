@@ -6,8 +6,19 @@ edition = "2024"
 [lib]
 name = "shared_types"
 
+[features]
+# Enables the Postgres codec for `Entities`.
+sqlx = ["dep:sqlx", "dep:tracing"]
+
 [dependencies]
 serde.workspace = true
 serde_json.workspace = true
 specta.workspace = true
 specta-typescript.workspace = true
+uuid = { version = "1", features = ["serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+sqlx = { version = "0.9.0", default-features = false, features = [
+  "postgres",
+  "json",
+], optional = true }
+tracing = { version = "0.1", optional = true }

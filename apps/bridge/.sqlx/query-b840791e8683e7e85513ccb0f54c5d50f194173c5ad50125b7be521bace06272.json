@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO binding (\n    boluo_base_url,\n    boluo_space_id,\n    tg_chat_id,\n    created_at,\n    updated_at\n)\nVALUES (?1, ?2, ?3, ?4, ?4)\nRETURNING id;\n",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "binding",
+            "name": "id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "b840791e8683e7e85513ccb0f54c5d50f194173c5ad50125b7be521bace06272"
+}

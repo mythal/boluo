@@ -5,32 +5,7 @@ use uuid::Uuid;
 use super::Message;
 use super::models::Entities;
 
-#[derive(Deserialize, Debug, specta::Type)]
-#[serde(rename_all = "camelCase")]
-pub struct NewMessage {
-    #[serde(default)]
-    pub message_id: Option<Uuid>,
-    #[serde(default)]
-    pub preview_id: Option<Uuid>,
-    pub channel_id: Uuid,
-    #[serde(default)]
-    pub space_id: Option<Uuid>,
-    pub name: String,
-    pub text: String,
-    #[serde(default)]
-    pub entities: Entities,
-    pub in_game: bool,
-    #[serde(default)]
-    pub is_action: bool,
-    #[serde(default)]
-    pub media_id: Option<Uuid>,
-    #[serde(default)]
-    pub whisper_to_users: Option<Vec<Uuid>>,
-    #[serde(default)]
-    pub pos: Option<(i32, i32)>,
-    #[serde(default)]
-    pub color: String,
-}
+pub use shared_types::messages::NewMessage;
 
 #[derive(Deserialize, Debug, specta::Type)]
 #[serde(rename_all = "camelCase")]

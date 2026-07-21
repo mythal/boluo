@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO channel_topic (\n    binding_id,\n    channel_id,\n    message_thread_id,\n    created_at\n)\nVALUES (?1, ?2, ?3, ?4)\nON CONFLICT (binding_id, channel_id) DO UPDATE SET\n    message_thread_id = excluded.message_thread_id,\n    created_at = excluded.created_at;\n",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": []
+  },
+  "hash": "1d405bb884eb9aaf50aaae0b2ae9c71d54710d586fcd014bdbbe2cdaa66d8809"
+}

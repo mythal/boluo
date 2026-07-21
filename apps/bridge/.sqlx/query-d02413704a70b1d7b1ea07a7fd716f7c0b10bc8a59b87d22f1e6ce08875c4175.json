@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE binding\nSET paused_reason = ?2, paused_at = ?3, updated_at = ?3\nWHERE id = ?1;\n",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "d02413704a70b1d7b1ea07a7fd716f7c0b10bc8a59b87d22f1e6ce08875c4175"
+}

@@ -1,0 +1,38 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT tg_message_id, tg_is_media\nFROM message_map\nWHERE binding_id = ?1 AND boluo_message_id = ?2;\n",
+  "describe": {
+    "columns": [
+      {
+        "name": "tg_message_id",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "message_map",
+            "name": "tg_message_id"
+          }
+        }
+      },
+      {
+        "name": "tg_is_media",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "message_map",
+            "name": "tg_is_media"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "4397bab109f8ac47eba69bbf0a74a6cba2c944c52b813755d55b271e7ecbd31a"
+}

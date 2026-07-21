@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM boluo_cursor\nWHERE binding_id = ?1;\n",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "597610c6b247491cab6139ba0e6e066f9eb8dbe38ce69e7157d6565d8aaa292e"
+}

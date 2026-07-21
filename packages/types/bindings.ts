@@ -98,7 +98,7 @@ export type Character = {
   ownerId: string;
   visibility: CharacterVisibility;
   isArchived: boolean;
-  metadata: JsonValue;
+  metadata: Value;
   created: string;
   modified: string;
 };
@@ -110,8 +110,8 @@ export type CharacterVariable = {
   alias: string[];
   sort: number;
   trackHistory: boolean;
-  value: JsonValue;
-  metadata: JsonValue;
+  value: Value;
+  metadata: Value;
   created: string;
   modified: string;
 };
@@ -120,9 +120,9 @@ export type CharacterVariableHistory = {
   id: string;
   operatorId: string | null;
   characterId: string;
-  reason: JsonValue | null;
+  reason: Value | null;
   key: string;
-  value: JsonValue;
+  value: Value;
   created: string;
 };
 
@@ -210,7 +210,7 @@ export type CreateCharacter = {
   imageId: string | null;
   visibility: CharacterVisibility;
   isArchived?: boolean;
-  metadata: JsonValue | null;
+  metadata: Value | null;
 };
 
 /**  Payload for creating a note. */
@@ -244,8 +244,8 @@ export type CreateVariable = {
   alias?: string[];
   sort?: number;
   trackHistory?: boolean;
-  value: JsonValue;
-  metadata: JsonValue | null;
+  value: Value;
+  metadata: Value | null;
 };
 
 /**  Payload for deleting a character variable. */
@@ -310,7 +310,7 @@ export type EditCharacter = {
   imageId: string | null;
   visibility: CharacterVisibility | null;
   isArchived: boolean | null;
-  metadata: JsonValue | null;
+  metadata: Value | null;
 };
 
 export type EditMessage = {
@@ -367,9 +367,9 @@ export type EditVariable = {
   alias: string[] | null;
   sort: number | null;
   trackHistory: boolean | null;
-  value: JsonValue | null;
-  metadata: JsonValue | null;
-  reason: JsonValue | null;
+  value: Value | null;
+  metadata: Value | null;
+  reason: Value | null;
 };
 
 export type EmailVerificationStatus = {
@@ -485,7 +485,7 @@ export type FateResult = {
 
 export type GetMe = {
   user: User;
-  settings: JsonValue;
+  settings: Value;
   myChannels: ChannelWithMember[];
   mySpaces: SpaceWithMember[];
 };
@@ -1095,6 +1095,8 @@ export type UserStatus = {
   kind: StatusKind;
   focus: string[];
 };
+
+export type Value = JsonValue;
 
 /**  Query params for listing variable history by key. */
 export type VariableHistoryQuery = {

@@ -1,0 +1,11 @@
+[package]
+name = "specta-rust"
+description = "Export your Rust types to Rust (vendored fork with serde attribute support)"
+version = "0.0.1"
+edition = "2024"
+license = "MIT"
+publish = false
+
+[dependencies]
+specta.workspace = true
+unicode-ident = "1"

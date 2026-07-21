@@ -8,6 +8,10 @@ docker-compose.override.yml
 *.tsbuildinfo
 .tmp/
 docs/memory/
+bridge.kdl
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
 
 # nix
 .envrc

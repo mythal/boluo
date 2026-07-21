@@ -121,6 +121,7 @@
                 (craneLib.fileset.commonCargoSources unfilteredRoot)
                 (fileFilter (file: file.hasExt "sql") unfilteredRoot)
                 (maybeMissing ./.sqlx)
+                (maybeMissing ./apps/bridge/.sqlx)
                 (maybeMissing ./apps/server/text)
               ]) filesetToIgnore;
             in
@@ -189,6 +190,22 @@
                 postInstall = ''
                   pg_ctl stop -D "$PGDATA"
                 '';
+              }
+            );
+
+            # The bridge stores state in SQLite and verifies its queries against
+            # the committed `apps/bridge/.sqlx` cache, so it needs no database at
+            # build time.
+            bridge = craneLib.buildPackage (
+              commonArgs
+              // {
+                pname = "bridge";
+
+                inherit cargoArtifacts;
+                cargoExtraArgs = "--package=bridge";
+                cargoTestCommand = "cargo nextest run";
+                SQLX_OFFLINE = "true";
+                nativeBuildInputs = commonArgs.nativeBuildInputs ++ [ pkgs.cargo-nextest ];
               }
             );
 
@@ -475,6 +492,7 @@
 
           checks = {
             server = self'.packages.server;
+            bridge = self'.packages.bridge;
             legacy = self'.packages.legacy;
             site = self'.packages.site;
             spa = self'.packages.spa;

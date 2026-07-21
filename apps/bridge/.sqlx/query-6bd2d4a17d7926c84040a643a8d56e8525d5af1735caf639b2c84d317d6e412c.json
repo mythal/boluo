@@ -1,0 +1,21 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT CAST(synchronous AS INTEGER)\nFROM pragma_synchronous;\n",
+  "describe": {
+    "columns": [
+      {
+        "name": "CAST(synchronous AS INTEGER)",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "6bd2d4a17d7926c84040a643a8d56e8525d5af1735caf639b2c84d317d6e412c"
+}

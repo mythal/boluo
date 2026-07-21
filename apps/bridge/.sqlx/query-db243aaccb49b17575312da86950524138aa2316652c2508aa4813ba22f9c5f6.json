@@ -1,0 +1,62 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT\n    b.id,\n    b.boluo_space_id,\n    b.tg_chat_id,\n    ct.channel_id\nFROM binding b\nJOIN channel_topic ct ON ct.binding_id = b.id\nWHERE b.boluo_base_url = ?1\n    AND b.tg_chat_id = ?2\n    AND ct.message_thread_id = ?3;\n",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "binding",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "name": "boluo_space_id",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "binding",
+            "name": "boluo_space_id"
+          }
+        }
+      },
+      {
+        "name": "tg_chat_id",
+        "ordinal": 2,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "binding",
+            "name": "tg_chat_id"
+          }
+        }
+      },
+      {
+        "name": "channel_id",
+        "ordinal": 3,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "channel_topic",
+            "name": "channel_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "db243aaccb49b17575312da86950524138aa2316652c2508aa4813ba22f9c5f6"
+}

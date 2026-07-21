@@ -337,7 +337,10 @@ async fn handle_client_event(
                 return;
             };
             metrics::counter!("boluo_server_events_preview_total").increment(1);
-            if let Err(err) = preview.broadcast(ctx, mailbox, session.user_id).await {
+            if let Err(err) =
+                crate::events::preview::broadcast_preview_post(preview, ctx, mailbox, session.user_id)
+                    .await
+            {
                 tracing::warn!("Failed to broadcast preview update: {}", err);
             };
         }
@@ -355,7 +358,9 @@ async fn handle_client_event(
                 return;
             };
             metrics::counter!("boluo_server_events_preview_diff_total").increment(1);
-            if let Err(err) = preview.broadcast(mailbox, session.user_id).await {
+            if let Err(err) =
+                crate::events::preview::broadcast_preview_diff(preview, mailbox, session.user_id).await
+            {
                 tracing::warn!(error = %err, "Failed to broadcast preview diff update");
             }
         }

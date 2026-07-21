@@ -68,7 +68,10 @@ rpds = "1.2.1"
 specta.workspace = true
 specta-serde.workspace = true
 specta-typescript.workspace = true
-shared-types = { version = "0.1.0", path = "../../packages/shared-types" }
+specta-rust.workspace = true
+shared-types = { version = "0.1.0", path = "../../packages/shared-types", features = [
+  "sqlx",
+] }
 governor = "0.10.0"
 mimalloc = { version = "0.1.49" }
 redis = { version = "1.2.0", features = [

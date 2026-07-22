@@ -5,8 +5,10 @@ import { type LoggedIn } from '../../actions';
 import { type AppError, NO_PERMISSION } from '../../api/error';
 import { get, post } from '../../api/request';
 import { type LoginData, type Settings } from '../../api/users';
+import { useSWRConfig } from 'swr';
 import SignIn from '@boluo/icons/legacy/SignIn';
 import Icon from '../../components/atoms/Icon';
+import { clearProfileQueryCache } from '../../hooks/profileCache';
 import { useTitle } from '../../hooks/useTitle';
 import { useDispatch } from '../../store';
 import { setAuthToken } from '../../utils/token';
@@ -40,6 +42,7 @@ function Login() {
   useTitle('登录');
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { mutate } = useSWRConfig();
   const [loginError, setLoginError] = useState<AppError | null>(null);
   const {
     register,
@@ -56,6 +59,7 @@ function Login() {
       if (result.value.token) {
         setAuthToken(result.value.token);
       }
+      await clearProfileQueryCache(mutate);
 
       // Double check if the login is successful
       const querySelf = await get('/users/query', { id: null });

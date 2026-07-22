@@ -1,0 +1,12 @@
+[package]
+name = "generated"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+uuid = { version = "1", features = ["serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+shared-types = { version = "0.1.0", path = "../shared-types" }

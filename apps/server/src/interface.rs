@@ -129,7 +129,7 @@ where
             AppError::BadRequest("Failed to read the request body".to_string())
         })?
         .to_bytes();
-    serde_json::from_slice(&body).map_err(|e| {
+    sonic_rs::from_slice(&body).map_err(|e| {
         tracing::error!(error = %e, "Failed to parse the request body");
         AppError::BadRequest("Failed to parse the request body".to_string())
     })
@@ -156,15 +156,10 @@ where
             AppError::BadRequest("Failed to read the request body".to_string())
         })?
         .to_bytes();
-    tokio::task::spawn_blocking(move || {
-        serde_json::from_slice(&body).map(Box::new).map_err(|e| {
-            tracing::error!(error = %e, "Failed to parse the request body");
-            AppError::BadRequest("Failed to parse the request body".to_string())
-        })
+    sonic_rs::from_slice(&body).map(Box::new).map_err(|e| {
+        tracing::error!(error = %e, "Failed to parse the request body");
+        AppError::BadRequest("Failed to parse the request body".to_string())
     })
-    .await
-    .map_err(|e| AppError::Unexpected(e.into()))
-    .flatten()
 }
 
 #[derive(Deserialize, Debug, Eq, PartialEq)]

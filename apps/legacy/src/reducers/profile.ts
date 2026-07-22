@@ -55,7 +55,8 @@ const joinSpace = (state: ProfileState, { space, member }: JoinedSpace) => {
 
 const leaveSpace = (state: ProfileState, { spaceId }: LeftSpace): ProfileState => {
   const spaces = state.spaces.remove(spaceId);
-  return { ...state, spaces };
+  const channels = state.channels.filter(({ channel }) => channel.spaceId !== spaceId);
+  return { ...state, channels, spaces };
 };
 
 const joinChannel = (state: ProfileState, { channel, member }: JoinedChannel): ProfileState => {
@@ -124,7 +125,11 @@ export const editChannel = (state: ProfileState, { channel }: ChannelEdited): Pr
   return { ...state, channels };
 };
 
-function updateSpace(state: ProfileState, { space, members }: SpaceWithRelated): ProfileState {
+function updateSpace(
+  state: ProfileState,
+  { space, members, channels: spaceChannels, channelMembers }: SpaceWithRelated,
+): ProfileState {
+  let channels = state.channels.filter(({ channel }) => channel.spaceId !== space.id);
   const member = members[state.user.id];
   if (member) {
     const spaces = state.spaces.set(space.id, {
@@ -132,17 +137,24 @@ function updateSpace(state: ProfileState, { space, members }: SpaceWithRelated):
       member: member.space,
       user: member.user,
     });
-    return { ...state, spaces };
-  } else if (state.spaces.get(space.id)) {
-    const spaces = state.spaces.remove(space.id);
-    return { ...state, spaces };
+    for (const channel of spaceChannels) {
+      const myChannelMember = channelMembers[channel.id]?.find(
+        (channelMember) => channelMember.userId === state.user.id,
+      );
+      if (myChannelMember) {
+        channels = channels.set(channel.id, { channel, member: myChannelMember });
+      }
+    }
+    return { ...state, channels, spaces };
   }
-  return state;
+  const spaces = state.spaces.remove(space.id);
+  return { ...state, channels, spaces };
 }
 
 function removeSpace(state: ProfileState, spaceId: Id): ProfileState {
   const spaces = state.spaces.remove(spaceId);
-  return { ...state, spaces };
+  const channels = state.channels.filter(({ channel }) => channel.spaceId !== spaceId);
+  return { ...state, channels, spaces };
 }
 
 function updateSettings(state: ProfileState, { settings }: SettingsUpdated): ProfileState {

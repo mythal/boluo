@@ -140,7 +140,7 @@ impl CacheStore {
         };
         let topic = cache_type.to_str();
         let msg = crate::pubsub::PubSubMessage::invalidate(topic.into(), key);
-        let Ok(msg) = serde_json::to_string(&msg) else {
+        let Ok(msg) = sonic_rs::to_string(&msg) else {
             return;
         };
         let _sent: u32 = redis.publish(topic, msg).await.unwrap_or_default();

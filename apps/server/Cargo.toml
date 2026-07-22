@@ -21,7 +21,9 @@ sqlx-postgres = "0.9.0"
 
 [dependencies]
 anyhow = "1"
-rusty-s3 = { version = "0.10", default-features = false, features = ["rustcrypto"] }
+rusty-s3 = { version = "0.10", default-features = false, features = [
+  "rustcrypto",
+] }
 base64 = "0.22"
 bytes = "1"
 chrono = { version = "0.4", features = ["serde"] }
@@ -35,6 +37,12 @@ tracing = { version = "0.1", features = ["attributes"] }
 percent-encoding = "2.2.0"
 regex = "1"
 ring = "0.17"
+rustls = { version = "0.23", default-features = false, features = [
+  "aws_lc_rs",
+  "std",
+  "tls12",
+] }
+webpki-roots = "1"
 serde_json.workspace = true
 serde_urlencoded = "0.7"
 url = "2.5"
@@ -50,6 +58,7 @@ sqlx = { version = "0.9.0", features = [
   "uuid",
   "chrono",
   "json",
+  "sqlx-toml",
 ] }
 http-body-util = "0.1.2"
 hyper-util = { version = "0.1.7", features = ["full"] }
@@ -62,7 +71,10 @@ rpds = "1.2.1"
 specta.workspace = true
 specta-serde.workspace = true
 specta-typescript.workspace = true
-shared-types = { version = "0.1.0", path = "../../packages/shared-types" }
+specta-rust.workspace = true
+shared-types = { version = "0.1.0", path = "../../packages/shared-types", features = [
+  "sqlx",
+] }
 governor = "0.10.0"
 mimalloc = { version = "0.1.49" }
 redis = { version = "1.2.0", features = [
@@ -76,6 +88,7 @@ tokio-metrics = { version = "0.5.0", features = ["metrics-rs-integration"] }
 metrics-exporter-prometheus = "0.18.1"
 metrics = "0.24"
 netstat2 = "0.11.1"
+sonic-rs = "0.5.8"
 
 [dependencies.reqwest]
 version = "0.13.2"

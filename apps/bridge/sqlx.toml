@@ -1,0 +1,2 @@
+[common]
+database-url-var = "BRIDGE_DATABASE_URL"

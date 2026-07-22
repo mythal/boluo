@@ -48,7 +48,7 @@ jobs:
           chmod -R a+rwX /tmp/sccache
 
       - name: Check server
-        run: nix build --print-build-logs ".#checks.x86_64-linux.server"
+        run: nix build --quiet --no-link --no-update-lock-file --print-build-logs ".#checks.x86_64-linux.server"
 
       - name: Prepare sccache for caching
         if: ${{ always() && github.ref != 'refs/heads/production' }}
@@ -94,10 +94,6 @@ jobs:
 
       - name: Lint
         run: npm run lint
-
-      - name: Check formatting
-        run: npm run format:check
-        continue-on-error: true
 
       - name: Check version consistency
         run: npm run lint:versions

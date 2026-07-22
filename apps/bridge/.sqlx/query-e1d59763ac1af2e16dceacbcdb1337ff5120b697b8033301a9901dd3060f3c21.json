@@ -1,0 +1,50 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT timestamp, node, seq\nFROM boluo_cursor\nWHERE binding_id = ?1;\n",
+  "describe": {
+    "columns": [
+      {
+        "name": "timestamp",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "boluo_cursor",
+            "name": "timestamp"
+          }
+        }
+      },
+      {
+        "name": "node",
+        "ordinal": 1,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "boluo_cursor",
+            "name": "node"
+          }
+        }
+      },
+      {
+        "name": "seq",
+        "ordinal": 2,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "boluo_cursor",
+            "name": "seq"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "e1d59763ac1af2e16dceacbcdb1337ff5120b697b8033301a9901dd3060f3c21"
+}

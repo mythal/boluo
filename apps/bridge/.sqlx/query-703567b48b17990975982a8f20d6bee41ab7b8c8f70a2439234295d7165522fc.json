@@ -1,0 +1,38 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT boluo_message_id, boluo_media_id\nFROM message_map\nWHERE binding_id = ?1 AND tg_message_id = ?2;\n",
+  "describe": {
+    "columns": [
+      {
+        "name": "boluo_message_id",
+        "ordinal": 0,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "message_map",
+            "name": "boluo_message_id"
+          }
+        }
+      },
+      {
+        "name": "boluo_media_id",
+        "ordinal": 1,
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "message_map",
+            "name": "boluo_media_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false,
+      true
+    ]
+  },
+  "hash": "703567b48b17990975982a8f20d6bee41ab7b8c8f70a2439234295d7165522fc"
+}

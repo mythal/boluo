@@ -2,7 +2,6 @@ use chrono::prelude::*;
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
-use shared_types::legacy::LegacyEntity;
 use uuid::Uuid;
 
 use crate::error::{AppError, ModelError, ValidationFailed};
@@ -10,58 +9,7 @@ use crate::pos::{FailToFindIntermediate, check_pos, find_intermediate};
 use crate::utils::{is_false, merge_blank};
 use crate::validators::CHARACTER_NAME;
 
-#[derive(Debug, Serialize, Deserialize, Clone, Default, specta::Type)]
-pub struct Entities(pub Vec<shared_types::entities::Entity>);
-
-impl sqlx::Encode<'_, sqlx::Postgres> for Entities {
-    fn encode_by_ref(
-        &self,
-        _buf: &mut sqlx::postgres::PgArgumentBuffer,
-    ) -> Result<sqlx::encode::IsNull, sqlx::error::BoxDynError> {
-        let json = serde_json::to_value(&self.0)?;
-        sqlx::Encode::encode_by_ref(&json, _buf)
-    }
-}
-
-// sqlx-postgres/src/types/json.rs
-impl sqlx::Decode<'_, sqlx::Postgres> for Entities {
-    fn decode(
-        value: sqlx::postgres::PgValueRef<'_>,
-    ) -> std::result::Result<Self, sqlx::error::BoxDynError> {
-        let mut buf = value.as_bytes()?;
-
-        if value.format() == sqlx::postgres::PgValueFormat::Binary {
-            if buf[0] != 1 {
-                tracing::error!("Invalid JSONB format");
-                return Ok(Default::default());
-            }
-            buf = &buf[1..];
-        }
-        let entites = serde_json::from_slice::<'_, Entities>(buf);
-        match entites {
-            Err(_) => match serde_json::from_slice::<'_, Vec<LegacyEntity>>(buf) {
-                Ok(legacy_entities) => {
-                    let entities = legacy_entities
-                        .into_iter()
-                        .map(|entity| entity.into())
-                        .collect();
-                    Ok(Entities(entities))
-                }
-                Err(err) => {
-                    tracing::error!("Failed to decode JSONB: {}", err);
-                    Ok(Default::default())
-                }
-            },
-            Ok(entities) => Ok(entities),
-        }
-    }
-}
-
-impl sqlx::Type<sqlx::Postgres> for Entities {
-    fn type_info() -> sqlx::postgres::PgTypeInfo {
-        sqlx::postgres::PgTypeInfo::with_name("jsonb")
-    }
-}
+pub use shared_types::messages::Entities;
 
 #[derive(Debug, Serialize, Deserialize, Clone, specta::Type, sqlx::Type)]
 #[sqlx(type_name = "messages")]
@@ -113,6 +61,8 @@ pub struct Message {
 fn is_zero(value: &i32) -> bool {
     *value == 0
 }
+
+type MessagePositionRange = (Option<(i32, i32)>, Option<(i32, i32)>);
 
 impl Message {
     pub async fn get<'c, T: sqlx::PgExecutor<'c>>(
@@ -369,7 +319,7 @@ impl Message {
         user_id: Uuid,
         id: &Uuid,
         channel_id: Uuid,
-        range: (Option<(i32, i32)>, Option<(i32, i32)>),
+        range: MessagePositionRange,
         expect_pos: Option<(i32, i32)>,
     ) -> Result<MessageMoveOutcome, ModelError> {
         let moved = match range {
@@ -689,6 +639,7 @@ impl Message {
     }
 }
 
+#[allow(clippy::large_enum_variant)]
 #[derive(Debug)]
 pub(super) enum MessageEditOutcome {
     Updated { message: Message, space_id: Uuid },
@@ -698,6 +649,7 @@ pub(super) enum MessageEditOutcome {
     Conflict,
 }
 
+#[allow(clippy::large_enum_variant)]
 #[derive(Debug)]
 pub(super) enum MessageMoveOutcome {
     Moved {

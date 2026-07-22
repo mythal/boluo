@@ -48,6 +48,7 @@ mod pos;
 mod pubsub;
 mod rate_limit;
 mod redis;
+mod rs;
 mod s3;
 mod sentry_tunnel;
 mod server_metrics;

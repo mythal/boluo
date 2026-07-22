@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT message_thread_id\nFROM channel_topic\nWHERE binding_id = ?1 AND channel_id = ?2;\n",
+  "describe": {
+    "columns": [
+      {
+        "name": "message_thread_id",
+        "ordinal": 0,
+        "type_info": "Integer",
+        "origin": {
+          "Table": {
+            "table": "channel_topic",
+            "name": "message_thread_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "78cee31d8a1a9fd1579eb1397379debe1c08f9ed5bd513b380126fd677b5a4a1"
+}

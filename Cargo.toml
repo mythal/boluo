@@ -1,6 +1,12 @@
 [workspace]
 resolver = "2"
-members = ["apps/server", "packages/shared-types"]
+members = [
+  "apps/server",
+  "apps/bridge",
+  "packages/shared-types",
+  "packages/generated",
+  "packages/specta-rust",
+]
 metadata.crane.name = "boluo"
 
 [profile.release]
@@ -12,12 +18,21 @@ opt-level = 3
 [workspace.dependencies]
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-specta = { version = "2.0.0-rc.25", features = [
+specta = { version = "2.0.0-rc.26", features = [
   "chrono",
   "collect",
   "derive",
   "serde_json",
   "uuid",
 ] }
-specta-serde = "0.0.12"
-specta-typescript = "0.0.12"
+specta-serde = "0.0.13"
+specta-typescript = "0.0.13"
+specta-rust = { version = "0.0.1", path = "packages/specta-rust" }
+
+# specta rc.26 and its sibling crates are not published to crates.io yet, so the
+# whole family is pulled from git. specta-rust is vendored under packages/ with a
+# local fork that emits serde attributes.
+[patch.crates-io]
+specta = { git = "https://github.com/specta-rs/specta", rev = "d3509291b2ee900b634e599297f4e7ea22bc1527" }
+specta-serde = { git = "https://github.com/specta-rs/specta", rev = "d3509291b2ee900b634e599297f4e7ea22bc1527" }
+specta-typescript = { git = "https://github.com/specta-rs/specta", rev = "d3509291b2ee900b634e599297f4e7ea22bc1527" }

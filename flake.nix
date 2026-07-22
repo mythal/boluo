@@ -121,6 +121,7 @@
                 (craneLib.fileset.commonCargoSources unfilteredRoot)
                 (fileFilter (file: file.hasExt "sql") unfilteredRoot)
                 (maybeMissing ./.sqlx)
+                (maybeMissing ./apps/bridge/.sqlx)
                 (maybeMissing ./apps/server/text)
               ]) filesetToIgnore;
             in
@@ -137,7 +138,11 @@
             strictDeps = true;
 
             buildInputs = [ ];
-            nativeBuildInputs = [ pkgs.sccache ];
+            nativeBuildInputs = [
+              pkgs.sccache
+              pkgs.clang
+            ]
+            ++ lib.optionals stdenv.isLinux [ pkgs.wild ];
             RUSTC_WRAPPER = "${pkgs.sccache}/bin/sccache";
             SCCACHE_DIR = "/tmp/sccache";
           };
@@ -152,6 +157,54 @@
               cargoTestCommand = "cargo nextest run";
               cargoTestExtraArgs = "--no-run";
               nativeBuildInputs = commonArgs.nativeBuildInputs ++ [ pkgs.cargo-nextest ];
+            }
+          );
+
+          serverReleaseArtifacts = craneLib.buildDepsOnly (
+            commonArgs
+            // {
+              pname = "server";
+              cargoExtraArgs = "--locked --package=server";
+              cargoCheckCommand = "true";
+              doCheck = false;
+            }
+          );
+
+          # CI checks only need the test profile.
+          serverTestArtifacts = craneLib.buildDepsOnly (
+            commonArgs
+            // {
+              pname = "server-tests";
+              CARGO_PROFILE = "";
+              cargoExtraArgs = "--locked --package=server";
+              cargoCheckCommand = "true";
+              cargoBuildCommand = "true";
+              cargoTestCommand = "cargo nextest run";
+              cargoTestExtraArgs = "--no-run";
+              nativeBuildInputs = commonArgs.nativeBuildInputs ++ [ pkgs.cargo-nextest ];
+            }
+          );
+
+          serverCheck = craneLib.cargoNextest (
+            commonArgs
+            // {
+              pname = "server";
+              cargoArtifacts = serverTestArtifacts;
+              CARGO_PROFILE = "";
+              cargoExtraArgs = "--locked --package=server";
+              cargoNextestExtraArgs = "--retries 2";
+              nativeBuildInputs = commonArgs.nativeBuildInputs ++ [ pkgs.postgresql ];
+              preBuild = ''
+                export PGDATA=$(mktemp -d)
+                initdb --no-locale --encoding=UTF8 --username=postgres
+                pg_ctl start -o "-k $PGDATA -h '''"
+                createdb -h "$PGDATA" -U postgres boluo_test
+                psql -h "$PGDATA" -U postgres -d boluo_test -v ON_ERROR_STOP=1 -f ${./apps/db/schema.sql}
+                export DATABASE_URL="postgresql:///boluo_test?host=$PGDATA&user=postgres"
+              '';
+              postInstall = ''
+                pg_ctl stop -D "$PGDATA"
+              '';
             }
           );
         in
@@ -170,12 +223,10 @@
               // {
                 pname = "server";
 
-                inherit cargoArtifacts;
-                cargoExtraArgs = "--package=server";
-                cargoTestCommand = "cargo nextest run";
-                cargoTestExtraArgs = "--retries 2";
+                cargoArtifacts = serverReleaseArtifacts;
+                cargoExtraArgs = "--locked --package=server";
+                doCheck = false;
                 nativeBuildInputs = commonArgs.nativeBuildInputs ++ [
-                  pkgs.cargo-nextest
                   pkgs.postgresql
                 ];
                 preBuild = ''
@@ -189,6 +240,22 @@
                 postInstall = ''
                   pg_ctl stop -D "$PGDATA"
                 '';
+              }
+            );
+
+            # The bridge stores state in SQLite and verifies its queries against
+            # the committed `apps/bridge/.sqlx` cache, so it needs no database at
+            # build time.
+            bridge = craneLib.buildPackage (
+              commonArgs
+              // {
+                pname = "bridge";
+
+                inherit cargoArtifacts;
+                cargoExtraArgs = "--package=bridge";
+                cargoTestCommand = "cargo nextest run";
+                SQLX_OFFLINE = "true";
+                nativeBuildInputs = commonArgs.nativeBuildInputs ++ [ pkgs.cargo-nextest ];
               }
             );
 
@@ -474,7 +541,8 @@
           };
 
           checks = {
-            server = self'.packages.server;
+            server = serverCheck;
+            bridge = self'.packages.bridge;
             legacy = self'.packages.legacy;
             site = self'.packages.site;
             spa = self'.packages.spa;
@@ -493,20 +561,23 @@
                 );
             in
             pkgs.mkShell {
-              buildInputs = with pkgs; [
-                rustToolchain
-                nil
-                nodejs
-                clang
-                pgformatter
-                gnumake
-                nixfmt-rfc-style
-                sqlx-cli
-                ast-grep
-                flyctl
-                cargo-nextest
-                python3
-              ];
+              buildInputs =
+                with pkgs;
+                [
+                  rustToolchain
+                  nil
+                  nodejs
+                  clang
+                  pgformatter
+                  gnumake
+                  nixfmt-rfc-style
+                  sqlx-cli
+                  ast-grep
+                  flyctl
+                  cargo-nextest
+                  python3
+                ]
+                ++ lib.optionals stdenv.isLinux [ pkgs.wild ];
               shellHook = ''
                 export PATH="node_modules/.bin:$PATH"
                 export LD_LIBRARY_PATH=${libPath}

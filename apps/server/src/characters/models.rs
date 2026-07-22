@@ -341,7 +341,6 @@ impl CharacterVariable {
             .find(|variable| variable.key.eq_ignore_ascii_case(key)))
     }
 
-    /// Wait for the cache fill before acquiring a pooled connection.
     pub async fn list_by_character_with_cache(
         pool: &sqlx::PgPool,
         character_id: &Uuid,

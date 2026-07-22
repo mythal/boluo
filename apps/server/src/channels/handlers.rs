@@ -463,6 +463,11 @@ async fn edit_topic(
         .await
         .or_not_found()?;
     let mutation = ctx.space_store.acquire_mutation(mutation_space_id).await?;
+    let channel_member = ctx
+        .space_store
+        .resolve_channel_member(mutation_space_id, channel_id, session.user_id)
+        .await?
+        .map(|member| member.channel);
     let mut trans = ctx.db.begin().await?;
 
     let channel = Channel::get_by_id(&mut *trans, &channel_id)
@@ -476,12 +481,8 @@ async fn edit_topic(
         has_permission = space_member.is_admin;
     }
 
-    if !has_permission {
-        if let Some(channel_member) =
-            ChannelMember::get(&mut trans, session.user_id, channel.space_id, channel_id).await?
-        {
-            has_permission = channel_member.is_master;
-        }
+    if !has_permission && let Some(channel_member) = channel_member {
+        has_permission = channel_member.is_master;
     }
 
     if !has_permission {
@@ -575,18 +576,16 @@ async fn add_member(
         .await
         .or_not_found()?;
     let mutation = ctx.space_store.acquire_mutation(mutation_space_id).await?;
+    ctx.space_store
+        .resolve_channel_member(mutation_space_id, channel_id, session.user_id)
+        .await?
+        .or_no_permission()?;
     let mut trans = ctx.db.begin().await?;
 
     let channel = Channel::get_by_id(&mut *trans, &channel_id)
         .await
         .or_not_found()?;
 
-    ChannelMember::get(&mut trans, session.user_id, channel.space_id, channel_id)
-        .await
-        .or_no_permission()?;
-    SpaceMember::get(&mut *trans, &session.user_id, &channel.space_id)
-        .await
-        .or_no_permission()?;
     let member =
         ChannelMember::add_user(&mut *trans, user_id, channel_id, &character_name, false).await?;
     let mutation = mutation.commit(trans).await?;
@@ -613,14 +612,15 @@ async fn edit_member(
         .or_not_found()?;
 
     let mutation = ctx.space_store.acquire_mutation(space_id).await?;
+    ctx.space_store
+        .resolve_channel_member(space_id, channel_id, session.user_id)
+        .await?
+        .or_no_permission()?;
     let mut trans = ctx.db.begin().await?;
 
     Channel::get_by_id(&mut *trans, &channel_id)
         .await
         .or_not_found()?;
-    ChannelMember::get(&mut trans, session.user_id, space_id, channel_id)
-        .await
-        .or_no_permission()?;
 
     let character_name = character_name.as_deref();
     let text_color = text_color.as_deref();
@@ -746,15 +746,17 @@ async fn kick(ctx: &crate::context::AppContext, req: Request<impl Body>) -> Resu
     let operator_user_id = session.user_id;
     let owning_space_id = resolve_channel_mutation_space(ctx, channel_id, space_id).await?;
     let mutation = ctx.space_store.acquire_mutation(owning_space_id).await?;
+    let channel_member = ctx
+        .space_store
+        .resolve_channel_member(owning_space_id, channel_id, operator_user_id)
+        .await?
+        .map(|member| member.channel);
     let mut trans = ctx.db.begin().await?;
     let space_member = SpaceMember::get(&mut *trans, &operator_user_id, &owning_space_id)
         .await
         .or_no_permission()?;
     if !space_member.is_admin {
-        let channel_member =
-            ChannelMember::get(&mut trans, operator_user_id, owning_space_id, channel_id)
-                .await
-                .or_no_permission()?;
+        let channel_member = channel_member.or_no_permission()?;
         if !channel_member.is_master {
             return Err(AppError::NoPermission(
                 "You have no permission to kick user from this channel.".to_string(),

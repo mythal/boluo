@@ -114,7 +114,11 @@ pub async fn forward_message(
                 Ok(tg_message_id) => (tg_message_id, true),
                 Err(error) => {
                     warn!(error = %error, %media_id, "failed to forward Boluo media; sending text only");
-                    (send_text_message(bridge, topic, &message.name, &message.text, is_whisper).await?, false)
+                    (
+                        send_text_message(bridge, topic, &message.name, &message.text, is_whisper)
+                            .await?,
+                        false,
+                    )
                 }
             }
         }
@@ -493,7 +497,9 @@ async fn handle_update(bridge: &Arc<Bridge>, content: UpdateContent) -> Result<(
     match content {
         UpdateContent::Message(msg) => handle_message(bridge, *msg).await,
         UpdateContent::EditedMessage(msg) => handle_edited_message(bridge, *msg).await,
-        UpdateContent::CallbackQuery(query) => outbound::handle_callback_query(bridge, *query).await,
+        UpdateContent::CallbackQuery(query) => {
+            outbound::handle_callback_query(bridge, *query).await
+        }
         _ => Ok(()),
     }
 }
@@ -1161,12 +1167,18 @@ mod tests {
     #[test]
     fn staged_media_file_name_uses_the_mime_extension() {
         let media_id = Uuid::nil();
-        assert_eq!(media_file_name(media_id, "image/png"), format!("{media_id}.png"));
+        assert_eq!(
+            media_file_name(media_id, "image/png"),
+            format!("{media_id}.png")
+        );
         assert_eq!(
             media_file_name(media_id, "application/pdf; charset=binary"),
             format!("{media_id}.pdf")
         );
-        assert_eq!(media_file_name(media_id, "application/x-thing"), media_id.to_string());
+        assert_eq!(
+            media_file_name(media_id, "application/x-thing"),
+            media_id.to_string()
+        );
     }
 
     #[test]
@@ -1221,7 +1233,9 @@ mod tests {
         let token = Uuid::new_v4();
 
         assert_eq!(
-            parse_bind_command(&format!("/bind https://boluo.chat/space/invite/{space_id}/{token}")),
+            parse_bind_command(&format!(
+                "/bind https://boluo.chat/space/invite/{space_id}/{token}"
+            )),
             Some(Ok((space_id, Some(token))))
         );
         assert_eq!(

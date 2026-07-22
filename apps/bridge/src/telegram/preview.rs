@@ -25,7 +25,9 @@ pub struct PreviewTracker {
 impl PreviewTracker {
     async fn apply_keyframe(&self, preview: Preview) -> PreviewAction {
         let mut sessions = self.sessions.lock().await;
-        let session = sessions.entry(preview.id).or_insert_with(PreviewSession::new);
+        let session = sessions
+            .entry(preview.id)
+            .or_insert_with(PreviewSession::new);
         session.keyframe_version = preview.version;
         session.current_version = preview.version;
         session.name = preview.name;
@@ -158,7 +160,12 @@ fn reconcile(sessions: &mut HashMap<Uuid, PreviewSession>, preview_id: Uuid) -> 
     let Some(session) = sessions.get_mut(&preview_id) else {
         return PreviewAction::None;
     };
-    match preview_body(&session.name, session.text.as_deref(), session.is_whisper, session.clear) {
+    match preview_body(
+        &session.name,
+        session.text.as_deref(),
+        session.is_whisper,
+        session.clear,
+    ) {
         None => {
             let tg_message_id = session.tg_message_id;
             sessions.remove(&preview_id);
@@ -202,7 +209,9 @@ fn apply_diff_ops(
     base_name: &str,
     ops: &[PreviewDiffOp],
 ) -> Option<(Option<String>, String)> {
-    let mut units: Vec<u16> = base_text.map(|t| t.encode_utf16().collect()).unwrap_or_default();
+    let mut units: Vec<u16> = base_text
+        .map(|t| t.encode_utf16().collect())
+        .unwrap_or_default();
     let mut text_changed = false;
     let mut name = base_name.to_string();
     for op in ops {
@@ -245,7 +254,12 @@ async fn perform_preview_action(
     // Previews fire on every keystroke and are cosmetic, so failures log at debug.
     match action {
         PreviewAction::Create(body) => match send_preview_message(bridge, topic, &body).await {
-            Ok(tg_message_id) => bridge.previews.set_message_id(preview_id, tg_message_id).await,
+            Ok(tg_message_id) => {
+                bridge
+                    .previews
+                    .set_message_id(preview_id, tg_message_id)
+                    .await
+            }
             Err(error) => debug!(error = ?error, "failed to send preview message"),
         },
         PreviewAction::Edit(tg_message_id, body) => {
@@ -318,9 +332,17 @@ mod tests {
     #[test]
     fn diff_ops_splice_append_and_rename() {
         let ops = vec![
-            PreviewDiffOp::Splice { i: 0, len: 5, text: "hi".to_string() },
-            PreviewDiffOp::Append { text: " there".to_string() },
-            PreviewDiffOp::ChangeName { name: "Bob".to_string() },
+            PreviewDiffOp::Splice {
+                i: 0,
+                len: 5,
+                text: "hi".to_string(),
+            },
+            PreviewDiffOp::Append {
+                text: " there".to_string(),
+            },
+            PreviewDiffOp::ChangeName {
+                name: "Bob".to_string(),
+            },
         ];
         let (text, name) = apply_diff_ops(Some("hello"), "Alice", &ops).unwrap();
         assert_eq!(text.as_deref(), Some("hi there"));
@@ -330,27 +352,41 @@ mod tests {
     #[test]
     fn diff_ops_use_utf16_offsets_across_a_surrogate_pair() {
         // "😀" is two UTF-16 code units, so offset 2 lands right after it.
-        let ops = vec![PreviewDiffOp::Splice { i: 2, len: 0, text: "!".to_string() }];
+        let ops = vec![PreviewDiffOp::Splice {
+            i: 2,
+            len: 0,
+            text: "!".to_string(),
+        }];
         let (text, _) = apply_diff_ops(Some("😀"), "Alice", &ops).unwrap();
         assert_eq!(text.as_deref(), Some("😀!"));
     }
 
     #[test]
     fn diff_ops_reject_an_out_of_range_splice() {
-        let ops = vec![PreviewDiffOp::Splice { i: 99, len: 1, text: "x".to_string() }];
+        let ops = vec![PreviewDiffOp::Splice {
+            i: 99,
+            len: 1,
+            text: "x".to_string(),
+        }];
         assert!(apply_diff_ops(Some("hi"), "Alice", &ops).is_none());
     }
 
     #[test]
     fn diff_ops_reject_splitting_a_surrogate_pair() {
         // Offset 1 falls inside "😀", so the result would be invalid UTF-16.
-        let ops = vec![PreviewDiffOp::Splice { i: 1, len: 1, text: "x".to_string() }];
+        let ops = vec![PreviewDiffOp::Splice {
+            i: 1,
+            len: 1,
+            text: "x".to_string(),
+        }];
         assert!(apply_diff_ops(Some("😀"), "Alice", &ops).is_none());
     }
 
     #[test]
     fn diff_ops_rename_without_a_text_base() {
-        let ops = vec![PreviewDiffOp::ChangeName { name: "Bob".to_string() }];
+        let ops = vec![PreviewDiffOp::ChangeName {
+            name: "Bob".to_string(),
+        }];
         let (text, name) = apply_diff_ops(None, "Alice", &ops).unwrap();
         assert!(text.is_none());
         assert_eq!(name, "Bob");
@@ -358,7 +394,9 @@ mod tests {
 
     #[test]
     fn diff_ops_reject_a_text_edit_without_a_base() {
-        let ops = vec![PreviewDiffOp::Append { text: "x".to_string() }];
+        let ops = vec![PreviewDiffOp::Append {
+            text: "x".to_string(),
+        }];
         assert!(apply_diff_ops(None, "Alice", &ops).is_none());
     }
 }

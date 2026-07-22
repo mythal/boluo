@@ -8,9 +8,7 @@ use std::time::Duration;
 
 use anyhow::{Context, Result};
 use frankenstein::AsyncTelegramApi;
-use frankenstein::methods::{
-    AnswerCallbackQueryParams, EditMessageTextParams, SendMessageParams,
-};
+use frankenstein::methods::{AnswerCallbackQueryParams, EditMessageTextParams, SendMessageParams};
 use frankenstein::types::{
     CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message, MessageEntity, ReplyMarkup,
 };
@@ -18,9 +16,7 @@ use tokio::sync::Mutex;
 use tracing::{debug, warn};
 use uuid::Uuid;
 
-use super::{
-    PREVIEW_PREFIX, delete_message, sender_name, telegram_text, truncate_telegram_text,
-};
+use super::{PREVIEW_PREFIX, delete_message, sender_name, telegram_text, truncate_telegram_text};
 use crate::Bridge;
 use crate::boluo::{plain_message_with_preview, preview_frame};
 use crate::store::{Binding, TopicRef};
@@ -129,10 +125,16 @@ impl OutboundTracker {
     }
 
     /// Takes it only if its generation still matches, so a stale timeout is a no-op.
-    async fn take_if_generation(&self, preview_id: Uuid, generation: u64) -> Option<PendingOutbound> {
+    async fn take_if_generation(
+        &self,
+        preview_id: Uuid,
+        generation: u64,
+    ) -> Option<PendingOutbound> {
         let mut state = self.inner.lock().await;
         match state.by_preview.get(&preview_id) {
-            Some(pending) if pending.generation == generation => take_pending(&mut state, preview_id),
+            Some(pending) if pending.generation == generation => {
+                take_pending(&mut state, preview_id)
+            }
             _ => None,
         }
     }
@@ -257,7 +259,10 @@ fn parse_callback_data(data: &str) -> Option<(CallbackAction, Uuid)> {
 }
 
 /// Handles a Send or Cancel tap from the message's author only.
-pub(super) async fn handle_callback_query(bridge: &Arc<Bridge>, query: CallbackQuery) -> Result<()> {
+pub(super) async fn handle_callback_query(
+    bridge: &Arc<Bridge>,
+    query: CallbackQuery,
+) -> Result<()> {
     let Some((action, preview_id)) = query.data.as_deref().and_then(parse_callback_data) else {
         answer_callback(bridge, &query.id, None).await;
         return Ok(());
@@ -270,7 +275,12 @@ pub(super) async fn handle_callback_query(bridge: &Arc<Bridge>, query: CallbackQ
     }
 
     let Some(pending) = bridge.outbound.take(preview_id).await else {
-        answer_callback(bridge, &query.id, Some("This message is no longer pending.")).await;
+        answer_callback(
+            bridge,
+            &query.id,
+            Some("This message is no longer pending."),
+        )
+        .await;
         return Ok(());
     };
 
@@ -328,8 +338,12 @@ async fn send_pending_to_boluo(
         .await?;
         pending.preview_tg_message_id
     } else {
-        if let Err(error) =
-            delete_message(bridge, pending.topic.tg_chat_id, pending.preview_tg_message_id).await
+        if let Err(error) = delete_message(
+            bridge,
+            pending.topic.tg_chat_id,
+            pending.preview_tg_message_id,
+        )
+        .await
         {
             debug!(error = ?error, "failed to remove preview control message");
         }
@@ -337,7 +351,13 @@ async fn send_pending_to_boluo(
     };
     bridge
         .store
-        .record_message(pending.binding.id, boluo_message_id, tg_message_id, false, None)
+        .record_message(
+            pending.binding.id,
+            boluo_message_id,
+            tg_message_id,
+            false,
+            None,
+        )
         .await?;
     Ok(())
 }
@@ -368,7 +388,11 @@ async fn cancel_pending(bridge: &Bridge, preview_id: Uuid, pending: PendingOutbo
 fn schedule_pending_timeout(bridge: Arc<Bridge>, preview_id: Uuid, generation: u64) {
     tokio::spawn(async move {
         tokio::time::sleep(PENDING_TIMEOUT).await;
-        if let Some(pending) = bridge.outbound.take_if_generation(preview_id, generation).await {
+        if let Some(pending) = bridge
+            .outbound
+            .take_if_generation(preview_id, generation)
+            .await
+        {
             cancel_pending(&bridge, preview_id, pending).await;
         }
     });
@@ -400,7 +424,9 @@ async fn send_pending_message(
         .message_thread_id(topic.message_thread_id)
         .text(body)
         .disable_notification(true)
-        .reply_markup(ReplyMarkup::InlineKeyboardMarkup(pending_keyboard(preview_id)))
+        .reply_markup(ReplyMarkup::InlineKeyboardMarkup(pending_keyboard(
+            preview_id,
+        )))
         .build();
     let sent = bridge
         .tg

@@ -7,9 +7,7 @@ use crate::spaces::SpaceMember;
 use chrono::prelude::*;
 use uuid::Uuid;
 
-pub use shared_types::preview::{
-    Preview, PreviewDiff, PreviewDiffPost, PreviewEdit, PreviewPost,
-};
+pub use shared_types::preview::{Preview, PreviewDiff, PreviewDiffPost, PreviewEdit, PreviewPost};
 
 pub async fn broadcast_preview_diff(
     post: PreviewDiffPost,
@@ -66,8 +64,7 @@ pub async fn broadcast_preview_post(
         clear,
         edit,
     } = post;
-    let should_cancel_position =
-        should_cancel_preview_position(&text, &entities, &edit_for, &edit);
+    let should_cancel_position = should_cancel_preview_position(&text, &entities, &edit_for, &edit);
     let muted = text.is_none();
     let mut pos = 0.0;
     if let Some(PreviewEdit { p, q, time }) = edit.as_ref() {
@@ -104,8 +101,7 @@ pub async fn broadcast_preview_post(
             let channel = Channel::get_by_id(&mut *conn, &channel_id)
                 .await
                 .or_not_found()?;
-            let is_space_member =
-                SpaceMember::get(&mut *conn, &user_id, &channel.space_id).await?;
+            let is_space_member = SpaceMember::get(&mut *conn, &user_id, &channel.space_id).await?;
             (channel, is_space_member.is_some())
         };
         if channel.space_id != space_id {

@@ -8,9 +8,8 @@ This repository is a monorepo containing the following applications:
 
 - `apps/site`: The website frontend.
 - `apps/server`: The backend server.
-- `apps/legacy`: The legacy version of the Boluo web application.
-- `apps/spa`: The chat single-page application (SPA).
-  - [Staging environment](https://boluo-app-staging.mythal.workers.dev/). If you encounter connection issues, try disabling adblockers.
+- `apps/legacy`: The legacy version of the Boluo web application. [Staging environment](https://master-boluo-legacy.mythal.workers.dev)
+- `apps/spa`: The chat single-page application (SPA). [Staging environment](https://master-boluo-app.mythal.workers.dev)
 - [`apps/storybook`](https://boluo-storybook.mythal.workers.dev/): The Storybook instance for UI components.
 
 ## Set Up Development Environment

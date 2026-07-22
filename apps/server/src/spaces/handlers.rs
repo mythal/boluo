@@ -272,8 +272,8 @@ async fn my_spaces(
     req: Request<impl Body>,
 ) -> Result<Vec<SpaceWithMember>, AppError> {
     let session = authenticate(&req).await?;
-    let members = SpaceMember::get_by_user(&ctx.db, session.user_id).await?;
-    let Some(user) = User::get_by_id(&ctx.db, &session.user_id).await? else {
+    let members = SpaceMember::get_by_user_with_cache(&ctx.db, session.user_id).await?;
+    let Some(user) = User::get_by_id_with_cache(&ctx.db, &session.user_id).await? else {
         return Ok(Vec::new());
     };
     let mut loaded = HashMap::new();
@@ -477,7 +477,7 @@ async fn join(
     let session = authenticate(&req).await?;
     let JoinSpace { space_id, token } = parse_query(req.uri())?;
     let user_id = &session.user_id;
-    let user = User::get_by_id(&ctx.db, user_id)
+    let user = User::get_by_id_with_cache(&ctx.db, user_id)
         .await?
         .ok_or_else(|| unexpected!("No such user found."))?;
 
@@ -585,7 +585,7 @@ async fn my_space_member(
     if let Some(snapshot) = ctx.space_store.loaded_snapshot_maybe_stale(id) {
         return Ok(snapshot.space_members.get(&session.user_id).cloned());
     }
-    let my_space_members = SpaceMember::get_by_user(&ctx.db, session.user_id).await?;
+    let my_space_members = SpaceMember::get_by_user_with_cache(&ctx.db, session.user_id).await?;
     Ok(my_space_members
         .into_iter()
         .find(|space_member| space_member.space_id == id))
@@ -782,7 +782,7 @@ mod tests {
     #[sqlx::test(migrator = "crate::db::MIGRATOR")]
     async fn db_test_created_space_is_visible_after_transaction_commit(pool: sqlx::PgPool) {
         let owner = create_test_user(&pool).await;
-        let initial_spaces = SpaceMember::get_by_user(&pool, owner.id)
+        let initial_spaces = SpaceMember::get_by_user_with_cache(&pool, owner.id)
             .await
             .expect("failed to prime user spaces cache");
         assert!(initial_spaces.is_empty());
@@ -816,7 +816,7 @@ mod tests {
         reached_before_commit_rx
             .await
             .expect("space creation did not reach the commit barrier");
-        let before_commit = SpaceMember::get_by_user(&pool, owner.id)
+        let before_commit = SpaceMember::get_by_user_with_cache(&pool, owner.id)
             .await
             .expect("failed to reload user spaces before commit");
         assert!(
@@ -831,7 +831,7 @@ mod tests {
             .await
             .expect("space creation task panicked")
             .expect("space creation failed");
-        let after_commit = SpaceMember::get_by_user(&pool, owner.id)
+        let after_commit = SpaceMember::get_by_user_with_cache(&pool, owner.id)
             .await
             .expect("failed to load user spaces after commit");
         assert!(

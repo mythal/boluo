@@ -319,6 +319,17 @@ impl CharacterVariable {
         .map_err(ModelError::from)
     }
 
+    pub async fn get_by_key_with_cache(
+        pool: &sqlx::PgPool,
+        character_id: &Uuid,
+        key: &str,
+    ) -> Result<Option<CharacterVariable>, sqlx::Error> {
+        let variables = CharacterVariable::list_by_character_with_cache(pool, character_id).await?;
+        Ok(variables
+            .into_iter()
+            .find(|variable| variable.key.eq_ignore_ascii_case(key)))
+    }
+
     pub async fn get_by_key<'c, T: sqlx::PgExecutor<'c>>(
         db: T,
         character_id: &Uuid,
@@ -330,22 +341,31 @@ impl CharacterVariable {
             .find(|variable| variable.key.eq_ignore_ascii_case(key)))
     }
 
-    pub async fn list_by_character<'c, T: sqlx::PgExecutor<'c>>(
-        db: T,
+    /// Wait for the cache fill before acquiring a pooled connection.
+    pub async fn list_by_character_with_cache(
+        pool: &sqlx::PgPool,
         character_id: &Uuid,
     ) -> Result<Vec<CharacterVariable>, sqlx::Error> {
         let character_id = *character_id;
         let variables = fetch_entry(&CACHE.CharacterVariables, character_id, async move {
-            sqlx::query_file_scalar!(
-                "sql/characters/variables/list_by_character.sql",
-                character_id
-            )
-            .fetch_all(db)
-            .await
-            .map(CharacterVariables)
+            CharacterVariable::list_by_character(pool, &character_id)
+                .await
+                .map(CharacterVariables)
         })
         .await?;
         Ok(variables.0)
+    }
+
+    pub async fn list_by_character<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
+        character_id: &Uuid,
+    ) -> Result<Vec<CharacterVariable>, sqlx::Error> {
+        sqlx::query_file_scalar!(
+            "sql/characters/variables/list_by_character.sql",
+            character_id
+        )
+        .fetch_all(db)
+        .await
     }
 
     pub async fn update<'c, T: sqlx::PgExecutor<'c>>(
@@ -657,13 +677,13 @@ mod tests {
         .expect("failed to create variable");
         assert_eq!(variable.key, "hp");
 
-        let fetched = CharacterVariable::get_by_key(&pool, &character.id, "HP")
+        let fetched = CharacterVariable::get_by_key_with_cache(&pool, &character.id, "HP")
             .await
             .expect("get_by_key failed")
             .expect("variable not found");
         assert_eq!(fetched.key, "hp");
 
-        let variables = CharacterVariable::list_by_character(&pool, &character.id)
+        let variables = CharacterVariable::list_by_character_with_cache(&pool, &character.id)
             .await
             .expect("list_by_character failed");
         assert_eq!(variables.len(), 1);
@@ -772,7 +792,7 @@ mod tests {
         )
         .await
         .expect("failed to create variable");
-        CharacterVariable::list_by_character(&pool, &character.id)
+        CharacterVariable::list_by_character_with_cache(&pool, &character.id)
             .await
             .expect("failed to prime variable cache");
         assert!(CACHE.CharacterVariables.get(&character.id).is_some());

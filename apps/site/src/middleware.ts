@@ -34,16 +34,33 @@ const isLocale = (locale: string = ''): locale is Locale =>
 
 const IS_STATIC_FILES = /^\/\w+\.(png|ico|svg)/;
 const themePrefix = 'theme:';
+const PRODUCTION_WORKER_HOSTNAME = 'boluo-site.mythal.workers.dev';
+const WORKERS_DEV_SUFFIX = '.workers.dev';
+const PRODUCTION_BACKEND_URL = 'https://production.boluochat.com';
+const STAGING_BACKEND_URL = 'https://boluo-server-staging.fly.dev';
 
-export function proxy(request: NextRequest): NextResponse | void {
+function getBackendUrl(request: NextRequest): string {
+  // Fly.io and local development explicitly provide their backend URL.
+  // Cloudflare does not, so preview versions can be selected by hostname.
+  // eslint-disable-next-line no-restricted-globals
+  const configuredBackendUrl = process.env.BACKEND_URL;
+  if (configuredBackendUrl) {
+    return configuredBackendUrl;
+  }
+
+  const hostname = request.nextUrl.hostname;
+  if (hostname === PRODUCTION_WORKER_HOSTNAME || !hostname.endsWith(WORKERS_DEV_SUFFIX)) {
+    return PRODUCTION_BACKEND_URL;
+  }
+  return STAGING_BACKEND_URL;
+}
+
+// Keep the Edge Middleware convention until OpenNext supports Next.js' Node.js Proxy runtime.
+export function middleware(request: NextRequest): NextResponse | void {
   const pathname = request.nextUrl.pathname;
   if (pathname.startsWith('/api')) {
-    // eslint-disable-next-line no-restricted-globals
-    const hostname = process.env.BACKEND_URL;
-    if (!hostname) {
-      throw new Error('BACKEND_URL is not set');
-    }
-    const url = new URL(hostname + pathname + request.nextUrl.search, request.url);
+    const backendUrl = getBackendUrl(request);
+    const url = new URL(backendUrl + pathname + request.nextUrl.search, request.url);
 
     // eslint-disable-next-line no-restricted-globals, turbo/no-undeclared-env-vars
     const backEndApp = process.env.FLY_BACKEND_APP_NAME;

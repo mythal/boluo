@@ -1,7 +1,6 @@
 {
   "name": "@boluo/icons",
   "version": "0.0.0",
-  "type": "module",
   "devDependencies": {
     "@boluo/typescript-config": "0.0.0",
     "@types/node": "^26.1.1",
@@ -19,5 +18,6 @@
     "check": "tsc --noEmit",
     "generate": "node scripts/generate.ts"
   },
-  "sideEffects": false
+  "sideEffects": false,
+  "type": "module"
 }

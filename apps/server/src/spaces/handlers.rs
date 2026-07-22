@@ -217,7 +217,7 @@ async fn token(
                 "Only admins can get space invitation token".to_string(),
             ));
         }
-        return Ok(snapshot.space().invite_token.clone());
+        return Ok(snapshot.space().invite_token);
     }
     let mut conn = ctx.db.acquire().await?;
     let is_admin = SpaceMember::get(&mut *conn, &session.user_id, &id)

@@ -22,7 +22,7 @@ use crate::spaces::{Space, SpaceMember};
 use governor::{DefaultKeyedRateLimiter, RateLimiter};
 use hyper::Request;
 use hyper::body::Body;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::sync::LazyLock;
 use uuid::Uuid;
 
@@ -850,38 +850,11 @@ async fn by_space(
             .collect());
     }
     metrics::counter!("boluo_server_space_runtime_read_total", "result" => "fallback").increment(1);
-    let channels = Channel::get_by_space(&ctx.db, &space_id)
-        .await
-        .map_err(Into::<AppError>::into)?;
-
     let channels = if let Some(Session { user_id, .. }) = session {
-        let is_admin = SpaceMember::get_by_user(&ctx.db, user_id)
-            .await?
-            .into_iter()
-            .any(|space_member| space_member.space_id == space_id && space_member.is_admin);
-        let channel_ids_in_space: HashSet<Uuid> =
-            channels.iter().map(|channel| channel.id).collect();
-        let joined_members: HashMap<Uuid, ChannelMember> =
-            ChannelMember::get_by_user(&ctx.db, user_id)
-                .await?
-                .into_iter()
-                .filter(|member| channel_ids_in_space.contains(&member.channel_id))
-                .map(|member| (member.channel_id, member))
-                .collect();
-
-        channels
-            .into_iter()
-            .filter_map(|channel| {
-                let member = joined_members.get(&channel.id).cloned();
-                if channel.is_public || member.is_some() || is_admin {
-                    Some(ChannelWithMaybeMember { channel, member })
-                } else {
-                    None
-                }
-            })
-            .collect()
+        Channel::get_by_space_and_user(&ctx.db, &space_id, &user_id).await?
     } else {
-        channels
+        Channel::get_by_space(&ctx.db, &space_id)
+            .await?
             .into_iter()
             .filter(|channel| channel.is_public)
             .map(|channel| ChannelWithMaybeMember {

@@ -1,16 +1,18 @@
-import React, { useCallback } from 'react';
+import { useCallback } from 'react';
 import { showFlash } from '../../../actions';
+import { type AppError, FETCH_FAIL, UNEXPECTED } from '../../../api/error';
 import { type EditMessage, type Message, type NewMessage } from '../../../api/messages';
 import { type AppResult, patch, post } from '../../../api/request';
-import Button from '../../../components/atoms/Button';
 import { useChannelId } from '../../../hooks/useChannelId';
 import { parse } from '../../../interpreter/parser';
-import { type Compose } from '../../../reducers/chatState';
-import store, { type Dispatch } from '../../../store';
+import store from '../../../store';
 import { throwErr } from '../../../utils/errors';
 import { getDiceFace } from '../../../utils/game';
-import { type Id, newId } from '../../../utils/id';
-import { uploadMedia } from './helper';
+import { newId } from '../../../utils/id';
+import { SendTimeoutError, uploadMedia, withTimeout } from './helper';
+
+const MEDIA_UPLOAD_TIMEOUT_MS = 60_000;
+const MESSAGE_REQUEST_TIMEOUT_MS = 30_000;
 
 export const whyCannotSend = (
   inGame: boolean,
@@ -26,28 +28,25 @@ export const whyCannotSend = (
   return null;
 };
 
-const onSendFailed = (pane: Id, compose: Compose, dispatch: Dispatch) => {
-  showFlash(
-    'ERROR',
-    <span>
-      消息发送可能失败了，恢复之前的文本吗？{' '}
-      <Button
-        data-size="small"
-        data-variant="primary"
-        onClick={() => {
-          dispatch({ type: 'RESTORE_COMPOSE_STATE', compose, pane });
-        }}
-      >
-        恢复
-      </Button>
-    </span>,
-    10000,
-  )(dispatch);
+const unexpectedSendError = (error: unknown): AppError => {
+  if (error instanceof SendTimeoutError) {
+    return {
+      code: FETCH_FAIL,
+      message: error.message,
+      context: null,
+    };
+  }
+  console.error('Unexpected error while sending a message', error);
+  return {
+    code: UNEXPECTED,
+    message: error instanceof Error ? error.message : 'Unknown error',
+    context: null,
+  };
 };
+
 export const useOnSend = () => {
   const channelId = useChannelId();
   return useCallback(async () => {
-    const pane = channelId;
     const state = store.getState();
     const dispatch = store.dispatch;
     const channel = state.chatStates.get(channelId);
@@ -59,6 +58,9 @@ export const useOnSend = () => {
       return;
     }
     const { compose } = channel;
+    if (compose.sending) {
+      return;
+    }
     const { inputName, inGame, source, media, messageId, edit, whisperTo, isAction } = compose;
     const myMember = profile.channels.get(channelId)!.member;
     let name = profile.user.nickname;
@@ -72,73 +74,78 @@ export const useOnSend = () => {
     const reason = whyCannotSend(inGame, name, source);
     if (reason != null) {
       showFlash('ERROR', reason)(dispatch);
-    }
-    if (!edit) {
-      dispatch({ type: 'RESET_COMPOSE_AFTER_SENT', newId: newId(), pane: channelId });
-    }
-    const mediaId = await uploadMedia(store.dispatch, media);
-    if (media && !mediaId) {
-      onSendFailed(pane, compose, dispatch);
       return;
     }
-    const chatDiceType = channel.channel.defaultDiceType;
-    const defaultDiceFace = chatDiceType ? getDiceFace(chatDiceType) : 20;
 
-    const { text, entities } = parse(source, true, {
-      resolveUsername: () => null,
-      defaultDiceFace,
-    });
-    if (edit) {
-      const editPayload: EditMessage = {
-        messageId,
-        name,
-        inGame,
-        isAction,
-        text,
-        entities,
-        mediaId,
-      };
+    dispatch({ type: 'COMPOSE_SENDING', pane: channelId });
+    const sendFailed = (error: AppError) => {
+      dispatch({ type: edit ? 'COMPOSE_EDIT_FAILED' : 'COMPOSE_SEND_FAILED', pane: channelId });
+      throwErr(dispatch)(error);
+    };
 
-      const result: AppResult<Message> = await patch('/messages/edit', editPayload);
-      if (!result.isOk) {
-        dispatch({ type: 'COMPOSE_EDIT_FAILED', pane: channelId });
-        throwErr(dispatch)(result.value);
-        return;
-      } else {
-        dispatch({ type: 'RESET_COMPOSE_AFTER_SENT', newId: newId(), pane: channelId });
+    try {
+      const uploaded = await withTimeout(
+        uploadMedia(media),
+        MEDIA_UPLOAD_TIMEOUT_MS,
+        'Media upload',
+      );
+      if (!uploaded.isOk) {
+        sendFailed(uploaded.value);
         return;
       }
-    }
+      const mediaId = uploaded.value;
+      const chatDiceType = channel.channel.defaultDiceType;
+      const defaultDiceFace = chatDiceType ? getDiceFace(chatDiceType) : 20;
+      const { text, entities } = parse(source, true, {
+        resolveUsername: () => null,
+        defaultDiceFace,
+      });
 
-    const newMessage: NewMessage = {
-      previewId: messageId,
-      channelId,
-      spaceId: channel.channel.spaceId,
-      mediaId,
-      name,
-      inGame,
-      isAction,
-      text,
-      entities,
-    };
-    if (whisperTo) {
-      newMessage.whisperToUsers = whisperTo.map((item) => item.value);
-    }
-    let sent: AppResult<Message>;
-    let showFailed = false;
-    const handle = window.setTimeout(() => {
-      onSendFailed(pane, compose, dispatch);
-      showFailed = true;
-    }, 2000);
-    try {
-      sent = await post('/messages/send', newMessage);
-      window.clearTimeout(handle);
-    } catch {
-      onSendFailed(pane, compose, dispatch);
-      return;
-    }
-    if (!sent.isOk && !showFailed) {
-      onSendFailed(pane, compose, dispatch);
+      let result: AppResult<Message>;
+      if (edit) {
+        const editPayload: EditMessage = {
+          messageId,
+          name,
+          inGame,
+          isAction,
+          text,
+          entities,
+          mediaId,
+        };
+        result = await withTimeout(
+          patch('/messages/edit', editPayload),
+          MESSAGE_REQUEST_TIMEOUT_MS,
+          'Message edit',
+        );
+      } else {
+        const newMessage: NewMessage = {
+          previewId: messageId,
+          channelId,
+          spaceId: channel.channel.spaceId,
+          mediaId,
+          name,
+          inGame,
+          isAction,
+          text,
+          entities,
+        };
+        if (whisperTo) {
+          newMessage.whisperToUsers = whisperTo.map((item) => item.value);
+        }
+        result = await withTimeout(
+          post('/messages/send', newMessage),
+          MESSAGE_REQUEST_TIMEOUT_MS,
+          'Message send',
+        );
+      }
+
+      if (result.isOk) {
+        dispatch({ type: 'RESET_COMPOSE_AFTER_SENT', newId: newId(), pane: channelId });
+      } else {
+        sendFailed(result.value);
+      }
+    } catch (error) {
+      sendFailed(unexpectedSendError(error));
     }
   }, [channelId]);
 };

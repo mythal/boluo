@@ -547,42 +547,29 @@
             site = self'.packages.site;
             spa = self'.packages.spa;
           };
-          devShells.default =
-            let
-              libPath =
-                with pkgs;
-                lib.makeLibraryPath (
-                  lib.optionals pkgs.stdenv.isLinux [
-                    wayland-protocols
-                    wayland
-                    libxkbcommon
-                    libGL
-                  ]
-                );
-            in
-            pkgs.mkShell {
-              buildInputs =
-                with pkgs;
-                [
-                  rustToolchain
-                  nil
-                  nodejs
-                  clang
-                  pgformatter
-                  gnumake
-                  nixfmt-rfc-style
-                  sqlx-cli
-                  ast-grep
-                  flyctl
-                  cargo-nextest
-                  python3
-                ]
-                ++ lib.optionals stdenv.isLinux [ pkgs.wild ];
-              shellHook = ''
-                export PATH="node_modules/.bin:$PATH"
-                export LD_LIBRARY_PATH=${libPath}
-              '';
-            };
+          devShells.default = pkgs.mkShell {
+            buildInputs =
+              with pkgs;
+              [
+                rustToolchain
+                nil
+                nodejs
+                clang
+                pgformatter
+                gnumake
+                nixfmt-rfc-style
+                sqlx-cli
+                ast-grep
+                flyctl
+                cargo-nextest
+                python3
+                gh
+              ]
+              ++ lib.optionals stdenv.isLinux [ pkgs.wild ];
+            shellHook = ''
+              export PATH="node_modules/.bin:$PATH"
+            '';
+          };
         };
     };
 }

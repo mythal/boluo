@@ -138,7 +138,10 @@
             strictDeps = true;
 
             buildInputs = [ ];
-            nativeBuildInputs = [ pkgs.sccache ];
+            nativeBuildInputs = [
+              pkgs.sccache
+              pkgs.clang
+            ] ++ lib.optionals stdenv.isLinux [ pkgs.wild ];
             RUSTC_WRAPPER = "${pkgs.sccache}/bin/sccache";
             SCCACHE_DIR = "/tmp/sccache";
           };
@@ -524,7 +527,7 @@
                 flyctl
                 cargo-nextest
                 python3
-              ];
+              ] ++ lib.optionals stdenv.isLinux [ pkgs.wild ];
               shellHook = ''
                 export PATH="node_modules/.bin:$PATH"
                 export LD_LIBRARY_PATH=${libPath}

@@ -30,10 +30,7 @@ export const useSend = () => {
   const store = useStore();
 
   const myMember = useMember();
-  const { data: queryChannelMembers } = useQueryChannelMembers(
-    channelId,
-    myMember?.space.spaceId,
-  );
+  const { data: queryChannelMembers } = useQueryChannelMembers(channelId, myMember?.space.spaceId);
   const channelMembersMap: Map<string, MemberWithUser> = useMemo(() => {
     if (queryChannelMembers == null) return new Map<string, MemberWithUser>();
     return new Map(queryChannelMembers.members.map((member) => [member.user.username, member]));

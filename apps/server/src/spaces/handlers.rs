@@ -167,19 +167,25 @@ pub async fn space_related(
         });
     }
     metrics::counter!("boluo_server_space_runtime_read_total", "result" => "fallback").increment(1);
-    let mut conn = ctx.db.acquire().await?;
-    let space = Space::get_by_id(&mut *conn, id).await?.or_not_found()?;
-    let members = SpaceMemberWithUser::get_by_space(&mut *conn, id).await?;
-    let channels = Channel::get_by_space(&mut *conn, id).await?;
+    let (space, members, channels, channel_members) = {
+        let mut conn = ctx.db.acquire().await?;
+        let space = Space::get_by_id(&mut *conn, id).await?.or_not_found()?;
+        let members = SpaceMemberWithUser::get_by_space(&mut *conn, id).await?;
+        let channels = Channel::get_by_space(&mut *conn, id).await?;
+        let channel_ids: Vec<_> = channels.iter().map(|channel| channel.id).collect();
+        let channel_members = Member::get_by_channels(&mut *conn, space.id, &channel_ids).await?;
+        let channel_members = channel_members
+            .into_iter()
+            .map(|(channel_id, members)| {
+                (
+                    channel_id,
+                    members.into_iter().map(|member| member.channel).collect(),
+                )
+            })
+            .collect();
+        (space, members, channels, channel_members)
+    };
     let users_status = space_users_status(space.id).await.unwrap_or_default();
-    let mut channel_members: HashMap<Uuid, Vec<ChannelMember>> = HashMap::new();
-    for channel in channels.iter() {
-        let members = Member::get_by_channel(&mut *conn, space.id, channel.id).await?;
-        channel_members.insert(
-            channel.id,
-            members.into_iter().map(|member| member.channel).collect(),
-        );
-    }
     Ok(SpaceWithRelated {
         space,
         members,

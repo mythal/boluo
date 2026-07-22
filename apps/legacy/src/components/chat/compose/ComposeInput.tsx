@@ -45,6 +45,7 @@ function ComposeInput({ autoFocus = false, autoSize = false, className }: Props)
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
   useAutoHeight(autoSize, inputRef);
   const source = useSelector((state) => state.chatStates.get(channelId)!.compose.source);
+  const sending = useSelector((state) => state.chatStates.get(channelId)!.compose.sending);
   const setSource = useCallback(
     (source: string) => {
       dispatch({ type: 'SET_COMPOSE_SOURCE', pane: channelId, source });
@@ -107,6 +108,7 @@ function ComposeInput({ autoFocus = false, autoSize = false, className }: Props)
       css={style}
       className={className}
       value={source}
+      readOnly={sending}
       placeholder={placeholder}
       onChange={handleChange}
       data-dragging={dragging}

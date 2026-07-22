@@ -373,11 +373,11 @@ const handleChatInitialized = (
 };
 
 const handleComposeEditFailed = (state: ChatState, action: ComposeEditFailed): ChatState => {
-  return state;
+  return { ...state, compose: { ...state.compose, sending: false } };
 };
 
 const handleComposeSendFailed = (state: ChatState, action: ComposeSendFailed): ChatState => {
-  return state;
+  return { ...state, compose: { ...state.compose, sending: false } };
 };
 
 const handleResetComposeAfterSent = (
@@ -411,6 +411,20 @@ const handleCancelEdit = (state: ChatState, action: CancelEdit): ChatState => {
 const handleComposeRestore = (state: ChatState, { compose }: RestoreComposeState): ChatState => {
   return { ...state, compose: { ...compose, messageId: newId() } };
 };
+
+const composeInputActions = new Set<Action['type']>([
+  'SET_COMPOSE_SOURCE',
+  'SET_IS_ACTION',
+  'SET_BROADCAST',
+  'SET_IN_GAME',
+  'ADD_DICE',
+  'SET_INPUT_NAME',
+  'SET_COMPOSE_MEDIA',
+  'SET_WHISPER_TO',
+  'CANCEL_EDIT',
+  'RESTORE_COMPOSE_STATE',
+  'START_EDIT_MESSAGE',
+]);
 
 const handleChannelEvent = (chat: ChatState, event: Events, myId: Id | undefined): ChatState => {
   const body = event.body;
@@ -534,6 +548,10 @@ export const chatReducer = (
 ): ChatState | undefined => {
   if (state === undefined) {
     return undefined;
+  }
+
+  if (state.compose.sending && composeInputActions.has(action.type)) {
+    return state;
   }
 
   switch (action.type) {

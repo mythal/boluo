@@ -58,10 +58,10 @@ pub struct Rust {
     inline_as: HashMap<Cow<'static, str>, Cow<'static, str>>,
 }
 
+type OpaqueRenderFn = dyn Fn(&OpaqueReference) -> Option<Cow<'static, str>> + Send + Sync + 'static;
+
 #[derive(Clone)]
-struct OpaqueRenderer(
-    Arc<dyn Fn(&OpaqueReference) -> Option<Cow<'static, str>> + Send + Sync + 'static>,
-);
+struct OpaqueRenderer(Arc<OpaqueRenderFn>);
 
 impl fmt::Debug for OpaqueRenderer {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -334,6 +334,7 @@ fn render_named(
     Ok(())
 }
 
+#[allow(clippy::too_many_arguments)]
 fn render_struct(
     out: &mut String,
     exporter: &Rust,
@@ -385,6 +386,7 @@ fn render_struct(
     Ok(())
 }
 
+#[allow(clippy::too_many_arguments)]
 fn render_enum(
     out: &mut String,
     exporter: &Rust,
@@ -1432,6 +1434,7 @@ fn export_files(
     format: Option<&dyn Format>,
     types: &Types,
 ) -> Result<(), Error> {
+    #[allow(clippy::too_many_arguments)]
     fn render_module(
         exporter: &Rust,
         root: &Path,

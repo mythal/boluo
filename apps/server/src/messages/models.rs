@@ -62,6 +62,8 @@ fn is_zero(value: &i32) -> bool {
     *value == 0
 }
 
+type MessagePositionRange = (Option<(i32, i32)>, Option<(i32, i32)>);
+
 impl Message {
     pub async fn get<'c, T: sqlx::PgExecutor<'c>>(
         db: T,
@@ -317,7 +319,7 @@ impl Message {
         user_id: Uuid,
         id: &Uuid,
         channel_id: Uuid,
-        range: (Option<(i32, i32)>, Option<(i32, i32)>),
+        range: MessagePositionRange,
         expect_pos: Option<(i32, i32)>,
     ) -> Result<MessageMoveOutcome, ModelError> {
         let moved = match range {
@@ -637,6 +639,7 @@ impl Message {
     }
 }
 
+#[allow(clippy::large_enum_variant)]
 #[derive(Debug)]
 pub(super) enum MessageEditOutcome {
     Updated { message: Message, space_id: Uuid },
@@ -646,6 +649,7 @@ pub(super) enum MessageEditOutcome {
     Conflict,
 }
 
+#[allow(clippy::large_enum_variant)]
 #[derive(Debug)]
 pub(super) enum MessageMoveOutcome {
     Moved {

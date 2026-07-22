@@ -703,20 +703,12 @@ impl MailBoxState {
                                 let stale_edited_event_id =
                                     prepare_message_edited_old_pos(&persistent_updates, &mut body);
                                 let mailbox_id = id;
-                                let encoded_update = match tokio::task::spawn_blocking(move || {
-                                    EncodedUpdate::new(Update {
-                                        mailbox: mailbox_id,
-                                        body,
-                                        id: EventId::new(),
-                                        live,
-                                    })
-                                }).await {
-                                    Ok(encoded_update) => encoded_update,
-                                    Err(_) => {
-                                        tracing::error!("Failed to build update");
-                                        continue;
-                                    }
-                                };
+                                let encoded_update = EncodedUpdate::new(Update {
+                                    mailbox: mailbox_id,
+                                    body,
+                                    id: EventId::new(),
+                                    live,
+                                });
                                 if let Some(stale_edited_event_id) = stale_edited_event_id {
                                     persistent_updates.remove(&stale_edited_event_id);
                                 }

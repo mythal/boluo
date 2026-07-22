@@ -267,12 +267,9 @@ impl User {
         Ok(())
     }
 
-    pub async fn deactivated<'c, T: sqlx::PgExecutor<'c>>(
-        db: T,
-        id: &Uuid,
-    ) -> Result<u64, sqlx::Error> {
+    pub async fn deactivated(pool: &sqlx::PgPool, id: &Uuid) -> Result<u64, sqlx::Error> {
         let affected = sqlx::query_file!("sql/users/deactivated.sql", id)
-            .execute(db)
+            .execute(pool)
             .await?
             .rows_affected();
         CACHE.invalidate(CacheType::User, *id).await;
@@ -379,31 +376,27 @@ impl User {
         Uuid::from_slice(&user_id_bytes).context("Failed to convert user ID bytes to UUID")
     }
 
-    pub async fn verify_email(
-        db: &mut sqlx::PgConnection,
-        user_id: &Uuid,
-    ) -> Result<User, ModelError> {
-        // Update email_verified_at in users_extension table
-        sqlx::query!(
-            r#"INSERT INTO users_extension (user_id, email_verified_at, settings)
+    pub async fn verify_email(pool: &sqlx::PgPool, user_id: &Uuid) -> Result<User, ModelError> {
+        let user = {
+            let mut db = pool.acquire().await?;
+            // Update email_verified_at in users_extension table
+            sqlx::query!(
+                r#"INSERT INTO users_extension (user_id, email_verified_at, settings)
                VALUES ($1, now(), '{}')
                ON CONFLICT (user_id)
                DO UPDATE SET email_verified_at = now()"#,
-            user_id
-        )
-        .execute(&mut *db)
-        .await?;
+                user_id
+            )
+            .execute(&mut *db)
+            .await?;
 
-        // Get the user
-        let user = User::get_by_id(&mut *db, user_id)
-            .await?
-            .ok_or_else(|| sqlx::Error::RowNotFound)?;
+            User::get_by_id(&mut *db, user_id)
+                .await?
+                .ok_or(sqlx::Error::RowNotFound)?
+        };
 
-        // Invalidate cache
         CACHE.User.insert(user.id, user.clone().into());
-        CACHE
-            .invalidate(crate::cache::CacheType::UserExt, *user_id)
-            .await;
+        CACHE.invalidate(CacheType::UserExt, *user_id).await;
 
         Ok(user)
     }
@@ -504,8 +497,8 @@ impl User {
         Ok(user)
     }
 
-    pub async fn mark_email_verified<'c, T: sqlx::PgExecutor<'c>>(
-        db: T,
+    pub async fn mark_email_verified(
+        pool: &sqlx::PgPool,
         user_id: &Uuid,
     ) -> Result<(), sqlx::Error> {
         sqlx::query!(
@@ -515,13 +508,10 @@ impl User {
                DO UPDATE SET email_verified_at = now()"#,
             user_id
         )
-        .execute(db)
+        .execute(pool)
         .await?;
 
-        CACHE
-            .invalidate(crate::cache::CacheType::UserExt, *user_id)
-            .await;
-
+        CACHE.invalidate(CacheType::UserExt, *user_id).await;
         Ok(())
     }
 }

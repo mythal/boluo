@@ -134,18 +134,29 @@ impl User {
         Ok(result_map)
     }
 
+    /// Wait for the cache fill before acquiring a pooled connection.
+    pub async fn get_by_id_with_cache(
+        pool: &sqlx::PgPool,
+        id: &Uuid,
+    ) -> Result<Option<User>, sqlx::Error> {
+        fetch_entry_optional(&CACHE.User, *id, async {
+            User::get_by_id(pool, id)
+                .await?
+                .ok_or(sqlx::Error::RowNotFound)
+        })
+        .await
+    }
+
     pub async fn get_by_id<'c, T: sqlx::PgExecutor<'c>>(
         db: T,
         id: &Uuid,
     ) -> Result<Option<User>, sqlx::Error> {
-        fetch_entry_optional(&CACHE.User, *id, async {
-            query_scalar!(
-                r#"SELECT users as "users!: User" FROM users WHERE id = $1 AND deactivated = false LIMIT 1"#,
-                id
-            )
-            .fetch_one(db)
-            .await
-        }).await
+        query_scalar!(
+            r#"SELECT users as "users!: User" FROM users WHERE id = $1 AND deactivated = false LIMIT 1"#,
+            id
+        )
+        .fetch_optional(db)
+        .await
     }
 
     pub async fn get_by_email<'c, T: sqlx::PgExecutor<'c>>(
@@ -530,16 +541,24 @@ impl Lifespan for UserExt {
     }
 }
 impl UserExt {
+    /// Wait for the cache fill before acquiring a pooled connection.
+    pub async fn get_with_cache(
+        pool: &sqlx::PgPool,
+        user_id: Uuid,
+    ) -> Result<UserExt, sqlx::Error> {
+        fetch_entry(&CACHE.UserExt, user_id, async {
+            UserExt::get(pool, user_id).await
+        })
+        .await
+    }
+
     pub async fn get<'c, T: sqlx::PgExecutor<'c>>(
         db: T,
         user_id: Uuid,
     ) -> Result<UserExt, sqlx::Error> {
-        fetch_entry(&CACHE.UserExt, user_id, async {
-            sqlx::query_file_scalar!("sql/users/get_users_extension.sql", user_id)
-                .fetch_one(db)
-                .await
-        })
-        .await
+        sqlx::query_file_scalar!("sql/users/get_users_extension.sql", user_id)
+            .fetch_one(db)
+            .await
     }
 
     pub async fn update_settings<'c, T: sqlx::PgExecutor<'c>>(
@@ -621,7 +640,7 @@ mod tests {
             .expect("user registration failed");
         assert_ne!(user.password, password, "password should be hashed");
 
-        let fetched = User::get_by_id(&pool, &user.id)
+        let fetched = User::get_by_id_with_cache(&pool, &user.id)
             .await
             .expect("query by id failed")
             .expect("user not found by id");
@@ -876,7 +895,7 @@ mod tests {
             partial_settings["expand_dice"]
         );
 
-        let fetched = UserExt::get(&pool, user.id)
+        let fetched = UserExt::get_with_cache(&pool, user.id)
             .await
             .expect("failed to load settings");
         assert_eq!(fetched.settings, merged.settings);

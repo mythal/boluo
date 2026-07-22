@@ -227,15 +227,15 @@ impl Space {
             .await
     }
 
-    pub async fn get_by_user(
-        db: &mut sqlx::PgConnection,
+    /// Wait for the cache fill before acquiring a pooled connection.
+    pub async fn get_by_user_with_cache(
+        pool: &sqlx::PgPool,
         user_id: Uuid,
     ) -> Result<Vec<SpaceWithMember>, sqlx::Error> {
-        let space_members = SpaceMember::get_by_user(&mut *db, user_id).await?;
+        let space_members = SpaceMember::get_by_user_with_cache(pool, user_id).await?;
         let spaces =
-            Space::get_by_id_list(&mut *db, space_members.iter().map(|member| member.space_id))
-                .await?;
-        let Some(user) = User::get_by_id(db, &user_id).await? else {
+            Space::get_by_id_list(pool, space_members.iter().map(|member| member.space_id)).await?;
+        let Some(user) = User::get_by_id_with_cache(pool, &user_id).await? else {
             return Ok(vec![]);
         };
         let mut spaces_with_member: Vec<SpaceWithMember> = vec![];
@@ -325,7 +325,7 @@ mod tests {
         Space::get_settings(&pool, space.id)
             .await
             .expect("failed to fill settings cache");
-        SpaceMember::get_by_user(&pool, owner.id)
+        SpaceMember::get_by_user_with_cache(&pool, owner.id)
             .await
             .expect("failed to prime user spaces");
 
@@ -365,7 +365,7 @@ mod tests {
     async fn db_test_transactional_space_member_write_has_no_cache_side_effect(pool: sqlx::PgPool) {
         let owner = create_test_user(&pool, "member_tx_owner").await;
         let space = create_test_space(&pool, &owner, "member_tx_space").await;
-        let cached_spaces = SpaceMember::get_by_user(&pool, owner.id)
+        let cached_spaces = SpaceMember::get_by_user_with_cache(&pool, owner.id)
             .await
             .expect("failed to prime user spaces cache");
         assert!(cached_spaces.is_empty());
@@ -483,18 +483,16 @@ mod tests {
         changes.apply().await;
         assert!(assigned_admin.is_admin);
 
-        let members = SpaceMember::get_by_user(&pool, member.id)
+        let members = SpaceMember::get_by_user_with_cache(&pool, member.id)
             .await
             .expect("get_by_user failed");
         assert_eq!(members.len(), 1);
 
-        let mut conn = pool.acquire().await.expect("failed to acquire connection");
-        let spaces = Space::get_by_user(&mut conn, member.id)
+        let spaces = Space::get_by_user_with_cache(&pool, member.id)
             .await
             .expect("get_by_user spaces failed");
         assert_eq!(spaces.len(), 1);
         assert_eq!(spaces[0].space.id, space.id);
-        drop(conn);
 
         let mut conn = pool.acquire().await.expect("failed to acquire connection");
         let channels_removed = SpaceMember::remove_user(&mut conn, member.id, space.id)
@@ -511,7 +509,7 @@ mod tests {
             .expect("get member after removal failed");
         assert!(after_remove.is_none());
 
-        let members_after = SpaceMember::get_by_user(&pool, member.id)
+        let members_after = SpaceMember::get_by_user_with_cache(&pool, member.id)
             .await
             .expect("get_by_user after removal failed");
         assert!(members_after.is_empty());
@@ -525,7 +523,7 @@ mod tests {
         SpaceMember::add_user(&pool, &member.id, &space.id)
             .await
             .expect("failed to add member");
-        let cached_spaces = SpaceMember::get_by_user(&pool, member.id)
+        let cached_spaces = SpaceMember::get_by_user_with_cache(&pool, member.id)
             .await
             .expect("failed to prime user spaces cache");
         assert_eq!(cached_spaces.len(), 1);
@@ -618,18 +616,27 @@ impl SpaceMember {
         .await
     }
 
-    pub async fn get_by_user<'c, T: sqlx::PgExecutor<'c>>(
-        db: T,
+    /// Wait for the cache fill before acquiring a pooled connection.
+    pub async fn get_by_user_with_cache(
+        pool: &sqlx::PgPool,
         user_id: Uuid,
     ) -> Result<Vec<SpaceMember>, sqlx::Error> {
         let user_spaces = fetch_entry(&CACHE.UserSpaces, user_id, async move {
-            sqlx::query_file_scalar!("sql/spaces/get_space_member_list_by_user.sql", user_id)
-                .fetch_all(db)
+            SpaceMember::get_by_user(pool, user_id)
                 .await
                 .map(|space_members| UserSpaces { space_members })
         })
         .await?;
         Ok(user_spaces.space_members)
+    }
+
+    pub async fn get_by_user<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
+        user_id: Uuid,
+    ) -> Result<Vec<SpaceMember>, sqlx::Error> {
+        sqlx::query_file_scalar!("sql/spaces/get_space_member_list_by_user.sql", user_id)
+            .fetch_all(db)
+            .await
     }
 
     pub async fn remove_user(

@@ -34,7 +34,7 @@ jobs:
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
 
       - name: Check Rust formatting
-        run: nix develop --command cargo fmt --check
+        run: nix develop --quiet --no-update-lock-file --command cargo fmt --check
         continue-on-error: true
 
   nodejs:

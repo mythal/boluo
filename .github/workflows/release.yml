@@ -37,7 +37,7 @@ jobs:
           chmod -R a+rwX /tmp/sccache
 
       - name: Push images
-        run: nix run --print-build-logs ".#push-images"
+        run: nix run --quiet --no-update-lock-file --print-build-logs ".#push-images"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_ACTOR: ${{ github.actor }}
@@ -71,12 +71,12 @@ jobs:
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
 
       - name: Deploy site to staging
-        run: nix run .#deploy-site-staging
+        run: nix run --quiet --no-update-lock-file .#deploy-site-staging
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_IO_TOKEN }}
 
       - name: Deploy server to staging
-        run: nix run .#deploy-server-staging
+        run: nix run --quiet --no-update-lock-file .#deploy-server-staging
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_IO_TOKEN }}
 
@@ -100,11 +100,11 @@ jobs:
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
 
       - name: Deploy site to production
-        run: nix run .#deploy-site-production
+        run: nix run --quiet --no-update-lock-file .#deploy-site-production
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_IO_TOKEN }}
 
       - name: Deploy server to production
-        run: nix run .#deploy-server-production
+        run: nix run --quiet --no-update-lock-file .#deploy-server-production
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_IO_TOKEN }}

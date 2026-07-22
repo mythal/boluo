@@ -20,10 +20,7 @@ pub(crate) fn run() {
     );
 
     crate::rs::export();
-    run_optional_command(
-        "rustfmt",
-        &["./packages/generated/src/generated.rs"],
-    );
+    run_optional_command("rustfmt", &["./packages/generated/src/generated.rs"]);
 
     run_command(
         "cargo",

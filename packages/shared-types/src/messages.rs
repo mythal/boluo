@@ -35,9 +35,9 @@ impl sqlx::Decode<'_, sqlx::Postgres> for Entities {
             Ok(entities) => Ok(entities),
             // Fall back to the legacy on-disk shape.
             Err(_) => match serde_json::from_slice::<'_, Vec<crate::legacy::LegacyEntity>>(buf) {
-                Ok(legacy_entities) => {
-                    Ok(Entities(legacy_entities.into_iter().map(Into::into).collect()))
-                }
+                Ok(legacy_entities) => Ok(Entities(
+                    legacy_entities.into_iter().map(Into::into).collect(),
+                )),
                 Err(err) => {
                     tracing::error!("Failed to decode JSONB: {}", err);
                     Ok(Default::default())

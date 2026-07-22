@@ -601,10 +601,7 @@ mod tests {
             .unwrap();
 
         assert_eq!(
-            store
-                .boluo_message_by_tg(binding.id, 555)
-                .await
-                .unwrap(),
+            store.boluo_message_by_tg(binding.id, 555).await.unwrap(),
             Some(MappedMessage {
                 boluo_message_id,
                 boluo_media_id: Some(media_id),

@@ -456,8 +456,12 @@ mod tests {
     fn plain_message_with_preview_links_the_preview_id() {
         let channel_id = Uuid::new_v4();
         let preview_id = Uuid::new_v4();
-        let msg =
-            plain_message_with_preview(channel_id, "Alice".to_string(), "hi".to_string(), preview_id);
+        let msg = plain_message_with_preview(
+            channel_id,
+            "Alice".to_string(),
+            "hi".to_string(),
+            preview_id,
+        );
 
         assert_eq!(msg.preview_id, Some(preview_id));
         assert_eq!(msg.channel_id, channel_id);

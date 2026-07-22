@@ -1,0 +1,3 @@
+# Cache immutable Next.js build assets at Cloudflare's edge.
+/_next/static/*
+  Cache-Control: public,max-age=31536000,immutable

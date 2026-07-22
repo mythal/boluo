@@ -21,7 +21,9 @@ sqlx-postgres = "0.9.0"
 
 [dependencies]
 anyhow = "1"
-rusty-s3 = { version = "0.10", default-features = false, features = ["rustcrypto"] }
+rusty-s3 = { version = "0.10", default-features = false, features = [
+  "rustcrypto",
+] }
 base64 = "0.22"
 bytes = "1"
 chrono = { version = "0.4", features = ["serde"] }
@@ -85,6 +87,7 @@ tokio-metrics = { version = "0.5.0", features = ["metrics-rs-integration"] }
 metrics-exporter-prometheus = "0.18.1"
 metrics = "0.24"
 netstat2 = "0.11.1"
+sonic-rs = "0.5.8"
 
 [dependencies.reqwest]
 version = "0.13.2"

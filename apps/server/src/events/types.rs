@@ -285,7 +285,7 @@ impl Update {
     }
 
     pub fn encode(&self) -> tungstenite::Utf8Bytes {
-        let serialized = serde_json::to_string(self).expect("Failed to encode update");
+        let serialized = sonic_rs::to_string(self).expect("Failed to encode update");
         let bytes = tungstenite::Bytes::from_owner(serialized);
         unsafe { tungstenite::Utf8Bytes::from_bytes_unchecked(bytes) }
     }
@@ -696,7 +696,7 @@ pub async fn initialize_startup_id() -> u16 {
     let _: () = redis
         .set(
             format!("startup:{startup_id}:info"),
-            serde_json::to_string(&node_info).expect("Failed to serialize startup info"),
+            sonic_rs::to_string(&node_info).expect("Failed to serialize startup info"),
         )
         .await
         .expect("Failed to save startup information");

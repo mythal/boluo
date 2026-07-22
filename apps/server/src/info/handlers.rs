@@ -145,12 +145,7 @@ pub async fn get_proxies(ctx: &crate::context::AppContext) -> Result<Vec<Proxy>,
 
 pub async fn proxies(ctx: &crate::context::AppContext) -> Result<Response, AppError> {
     let proxies: Vec<Proxy> = get_proxies(ctx).await?;
-    let Ok(Ok(body)) = tokio::task::spawn_blocking(move || serde_json::to_string(&proxies)).await
-    else {
-        return Err(AppError::Unexpected(anyhow::anyhow!(
-            "Failed to serialize proxies"
-        )));
-    };
+    let body = sonic_rs::to_string(&proxies).map_err(|e| AppError::Unexpected(e.into()))?;
     let response = hyper::Response::builder()
         .header(hyper::header::CONTENT_TYPE, "application/json")
         .status(hyper::StatusCode::OK)
@@ -163,7 +158,7 @@ pub fn basic_info() -> Response {
     use std::sync::OnceLock;
     static BASIC_INFO: OnceLock<String> = OnceLock::new();
     let body = BASIC_INFO.get_or_init(|| {
-        serde_json::to_string(&BasicInfo::new())
+        sonic_rs::to_string(&BasicInfo::new())
             .expect("Unexpected failture in serialize version information")
     });
 

@@ -294,13 +294,7 @@ async fn handle_client_event(
     session: Option<Session>,
     message: Utf8Bytes,
 ) {
-    let Ok(deserialize_result) =
-        tokio::task::spawn_blocking(move || serde_json::from_str::<ClientEvent>(&message)).await
-    else {
-        tracing::warn!("Failed to parse event from client");
-        error_sender.send(ConnectionError::BadRequest).await.ok();
-        return;
-    };
+    let deserialize_result = sonic_rs::from_str::<ClientEvent>(&message);
     let event = match deserialize_result {
         Ok(event) => event,
         Err(e) => {
@@ -490,7 +484,7 @@ async fn connect(ctx: &crate::context::AppContext, req: hyper::Request<Incoming>
         let (error_sender, error_receiver) = tokio::sync::mpsc::channel(1);
 
         static BASIC_INFO: std::sync::LazyLock<Utf8Bytes> =
-            std::sync::LazyLock::new(|| serde_json::to_string(&Update::app_info()).unwrap().into());
+            std::sync::LazyLock::new(|| sonic_rs::to_string(&Update::app_info()).unwrap().into());
         if let Err(e) = outgoing.send(WsMessage::Text(BASIC_INFO.clone())).await {
             tracing::warn!(error = %e, "Failed to send basic info");
         }

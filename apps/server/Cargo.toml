@@ -58,6 +58,7 @@ sqlx = { version = "0.9.0", features = [
   "uuid",
   "chrono",
   "json",
+  "sqlx-toml",
 ] }
 http-body-util = "0.1.2"
 hyper-util = { version = "0.1.7", features = ["full"] }

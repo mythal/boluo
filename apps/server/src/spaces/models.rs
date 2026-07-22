@@ -227,7 +227,6 @@ impl Space {
             .await
     }
 
-    /// Wait for the cache fill before acquiring a pooled connection.
     pub async fn get_by_user_with_cache(
         pool: &sqlx::PgPool,
         user_id: Uuid,
@@ -616,7 +615,6 @@ impl SpaceMember {
         .await
     }
 
-    /// Wait for the cache fill before acquiring a pooled connection.
     pub async fn get_by_user_with_cache(
         pool: &sqlx::PgPool,
         user_id: Uuid,

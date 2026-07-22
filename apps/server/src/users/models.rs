@@ -134,7 +134,6 @@ impl User {
         Ok(result_map)
     }
 
-    /// Wait for the cache fill before acquiring a pooled connection.
     pub async fn get_by_id_with_cache(
         pool: &sqlx::PgPool,
         id: &Uuid,
@@ -531,7 +530,6 @@ impl Lifespan for UserExt {
     }
 }
 impl UserExt {
-    /// Wait for the cache fill before acquiring a pooled connection.
     pub async fn get_with_cache(
         pool: &sqlx::PgPool,
         user_id: Uuid,

@@ -150,13 +150,15 @@ async fn compress_cached_updates(
     cached_updates: &[Utf8Bytes],
     encoding: UpdateEncoding,
 ) -> Result<Vec<u8>, CompressCachedUpdatesError> {
-    let payload = serialize_cached_updates(cached_updates);
-    tokio::task::spawn_blocking(move || compress_cached_updates_payload(&payload, encoding))
-        .await?
-        .map_err(CompressCachedUpdatesError::from)
+    let cached_updates = cached_updates.to_vec();
+    tokio::task::spawn_blocking(move || {
+        let payload = serialize_cached_updates(&cached_updates);
+        compress_cached_updates_payload(&payload, encoding)
+    })
+    .await?
+    .map_err(CompressCachedUpdatesError::from)
 }
 
-// Allow the needless return for keep some visual hints
 async fn push_updates(
     mailbox: Uuid,
     outgoing: &mut Sender,
@@ -208,7 +210,9 @@ async fn push_updates(
                 let chunk = &cached_updates[offset..end];
                 match compress_cached_updates(chunk, encoding).await {
                     Ok(payload) => {
-                        outgoing.feed(WsMessage::Binary(payload.into())).await?;
+                        // Each chunk is already batched, so flush it immediately to let the client
+                        // process replay updates before the next chunk finishes compressing.
+                        outgoing.send(WsMessage::Binary(payload.into())).await?;
                         offset = end;
                     }
                     Err(err) => {
@@ -778,5 +782,49 @@ pub async fn router(
         ("/sse/receive", Method::POST) => Ok(receive_events(ctx, req).await),
         ("/token", Method::GET) => token(req).await.map(ok_response),
         _ => missing(),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::Read;
+
+    fn decompress_cached_updates(payload: &[u8], encoding: UpdateEncoding) -> Vec<u8> {
+        let mut decompressed = Vec::new();
+        match encoding {
+            UpdateEncoding::Plain => return payload.to_vec(),
+            UpdateEncoding::Gzip => {
+                flate2::read::GzDecoder::new(payload)
+                    .read_to_end(&mut decompressed)
+                    .expect("gzip payload should decompress");
+            }
+            UpdateEncoding::Brotli => {
+                brotli::Decompressor::new(payload, 4096)
+                    .read_to_end(&mut decompressed)
+                    .expect("brotli payload should decompress");
+            }
+        }
+        decompressed
+    }
+
+    #[tokio::test]
+    async fn compressed_update_chunk_preserves_serialized_updates() {
+        let updates = [
+            Utf8Bytes::from_static(r#"{"type":"FIRST"}"#),
+            Utf8Bytes::from_static(r#"{"type":"SECOND"}"#),
+        ];
+        let expected = serialize_cached_updates(&updates);
+
+        for encoding in [
+            UpdateEncoding::Plain,
+            UpdateEncoding::Gzip,
+            UpdateEncoding::Brotli,
+        ] {
+            let compressed = compress_cached_updates(&updates, encoding)
+                .await
+                .expect("updates should compress");
+            assert_eq!(decompress_cached_updates(&compressed, encoding), expected);
+        }
     }
 }

@@ -562,8 +562,7 @@ pub async fn verify_email(
     let user_id = User::verify_email_verification_token(&token)
         .map_err(|e| AppError::BadRequest(format!("Invalid verification token: {}", e)))?;
 
-    let mut conn = ctx.db.acquire().await?;
-    User::verify_email(&mut conn, &user_id).await?;
+    User::verify_email(&ctx.db, &user_id).await?;
 
     tracing::info!(
         user_id = %user_id,
@@ -747,12 +746,13 @@ pub async fn confirm_email_change(
     let current_user = User::get_by_id_with_cache(&ctx.db, &user_id)
         .await
         .or_not_found()?;
-    let mut conn = ctx.db.acquire().await?;
-
-    let updated_user = User::change_email(&mut *conn, &user_id, &new_email).await?;
+    let updated_user = {
+        let mut conn = ctx.db.acquire().await?;
+        User::change_email(&mut *conn, &user_id, &new_email).await?
+    };
 
     // Mark the new email as verified since user confirmed the change via email
-    User::mark_email_verified(&mut *conn, &user_id).await?;
+    User::mark_email_verified(&ctx.db, &user_id).await?;
 
     tracing::info!(
         user_id = %user_id,

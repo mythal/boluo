@@ -4,6 +4,7 @@
   "main": ".open-next/worker.js",
   "compatibility_date": "2026-07-22",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "preview_urls": true,
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS",
@@ -13,10 +14,14 @@
   },
   "env": {
     "production": {
-      "name": "boluo-site",
+      "vars": {
+        "BACKEND_URL": "https://production.boluochat.com",
+      },
     },
     "staging": {
-      "name": "boluo-site",
+      "vars": {
+        "BACKEND_URL": "https://boluo-server-staging.fly.dev",
+      },
     },
   },
 }

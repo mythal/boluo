@@ -35,7 +35,6 @@ jobs:
 
       - name: Check Rust formatting
         run: nix develop --quiet --no-update-lock-file --command cargo fmt --check
-        continue-on-error: true
 
   nodejs:
     name: Node.js Format Check
@@ -44,15 +43,8 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v5
-        with:
-          node-version: '24'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
+      - name: Node.js Setup
+        uses: ./.github/actions/node-setup
 
       - name: Check Node.js formatting
         run: npm run format:check
-        continue-on-error: true

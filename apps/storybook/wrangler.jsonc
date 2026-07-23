@@ -1,0 +1,9 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "boluo-storybook",
+  "compatibility_date": "2026-07-18",
+  "assets": {
+    "directory": "./storybook-static/",
+    "not_found_handling": "single-page-application",
+  },
+}

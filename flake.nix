@@ -107,7 +107,7 @@
                 maybeMissing
                 ;
               ignoreFilenames = [
-                "wrangler.toml"
+                "wrangler.jsonc"
                 ".rustfmt.toml"
                 ".taplo.toml"
                 "fly.toml"

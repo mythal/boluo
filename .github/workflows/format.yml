@@ -35,7 +35,6 @@ jobs:
 
       - name: Check Rust formatting
         run: nix develop --quiet --no-update-lock-file --command cargo fmt --check
-        continue-on-error: true
 
   nodejs:
     name: Node.js Format Check
@@ -49,4 +48,3 @@ jobs:
 
       - name: Check Node.js formatting
         run: npm run format:check
-        continue-on-error: true

@@ -65,7 +65,7 @@ jobs:
     timeout-minutes: 15
     permissions:
       contents: read
-      pull-requests: write
+      deployments: write
     steps:
       - uses: actions/checkout@v5
         with:
@@ -130,6 +130,35 @@ jobs:
       - name: Check version consistency
         run: npm run lint:versions
 
+      - name: Create Worker preview deployments
+        id: preview_deployments
+        if: >-
+          steps.affected_workers.outputs.legacy == 'true' ||
+          steps.affected_workers.outputs.spa == 'true' ||
+          steps.affected_workers.outputs.site == 'true'
+        uses: actions/github-script@v7
+        env:
+          LEGACY_AFFECTED: ${{ steps.affected_workers.outputs.legacy }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          SITE_AFFECTED: ${{ steps.affected_workers.outputs.site }}
+          SPA_AFFECTED: ${{ steps.affected_workers.outputs.spa }}
+        with:
+          script: |
+            const { createWorkerPreviewDeployments } = require(
+              './.github/scripts/worker-preview-deployments.js',
+            );
+            await createWorkerPreviewDeployments({
+              github,
+              context,
+              core,
+              logUrl: process.env.RUN_URL,
+              workers: [
+                { app: 'legacy', affected: process.env.LEGACY_AFFECTED },
+                { app: 'spa', affected: process.env.SPA_AFFECTED },
+                { app: 'site', affected: process.env.SITE_AFFECTED },
+              ],
+            });
+
       - name: Build site Worker
         if: steps.affected_workers.outputs.site == 'true'
         working-directory: apps/site
@@ -165,45 +194,50 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           WRANGLER_OUTPUT_FILE_PATH: ${{ runner.temp }}/wrangler-site-output.jsonl
 
-      - name: Comment Worker previews
+      - name: Finalize Worker preview deployments
         if: >-
           always() &&
-          github.event_name == 'pull_request' &&
-          github.event.pull_request.head.repo.full_name == github.repository
+          (steps.preview_deployments.outputs.legacy != '' ||
+          steps.preview_deployments.outputs.spa != '' ||
+          steps.preview_deployments.outputs.site != '')
         uses: actions/github-script@v7
         env:
-          LEGACY_AFFECTED: ${{ steps.affected_workers.outputs.legacy }}
+          LEGACY_DEPLOYMENT_ID: ${{ steps.preview_deployments.outputs.legacy }}
           LEGACY_OUTCOME: ${{ steps.upload_legacy.outcome }}
           LEGACY_OUTPUT_PATH: ${{ runner.temp }}/wrangler-legacy-output.jsonl
-          SITE_AFFECTED: ${{ steps.affected_workers.outputs.site }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          SITE_DEPLOYMENT_ID: ${{ steps.preview_deployments.outputs.site }}
           SITE_OUTCOME: ${{ steps.upload_site.outcome }}
           SITE_OUTPUT_PATH: ${{ runner.temp }}/wrangler-site-output.jsonl
-          SPA_AFFECTED: ${{ steps.affected_workers.outputs.spa }}
+          SPA_DEPLOYMENT_ID: ${{ steps.preview_deployments.outputs.spa }}
           SPA_OUTCOME: ${{ steps.upload_spa.outcome }}
           SPA_OUTPUT_PATH: ${{ runner.temp }}/wrangler-spa-output.jsonl
         with:
           script: |
-            const commentWorkerPreviews = require('./.github/scripts/worker-preview-comment.js');
-            await commentWorkerPreviews({
+            const { finalizeWorkerPreviewDeployments } = require(
+              './.github/scripts/worker-preview-deployments.js',
+            );
+            await finalizeWorkerPreviewDeployments({
               github,
               context,
               core,
-              previews: [
+              logUrl: process.env.RUN_URL,
+              workers: [
                 {
                   app: 'legacy',
-                  affected: process.env.LEGACY_AFFECTED,
+                  deploymentId: process.env.LEGACY_DEPLOYMENT_ID,
                   outcome: process.env.LEGACY_OUTCOME,
                   outputPath: process.env.LEGACY_OUTPUT_PATH,
                 },
                 {
                   app: 'spa',
-                  affected: process.env.SPA_AFFECTED,
+                  deploymentId: process.env.SPA_DEPLOYMENT_ID,
                   outcome: process.env.SPA_OUTCOME,
                   outputPath: process.env.SPA_OUTPUT_PATH,
                 },
                 {
                   app: 'site',
-                  affected: process.env.SITE_AFFECTED,
+                  deploymentId: process.env.SITE_DEPLOYMENT_ID,
                   outcome: process.env.SITE_OUTCOME,
                   outputPath: process.env.SITE_OUTPUT_PATH,
                 },

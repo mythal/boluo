@@ -187,11 +187,7 @@ test('legacy chatReducer preserves compose content when sending fails', () => {
     compose: { ...state.compose, source: 'hello', media },
   };
 
-  const sending = chatReducer(
-    state,
-    { type: 'COMPOSE_SENDING', pane: channelId },
-    undefined,
-  );
+  const sending = chatReducer(state, { type: 'COMPOSE_SENDING', pane: channelId }, undefined);
   assert.ok(sending);
   assert.strictEqual(sending.compose.sending, true);
   assert.strictEqual(sending.compose.source, 'hello');
@@ -204,11 +200,7 @@ test('legacy chatReducer preserves compose content when sending fails', () => {
   );
   assert.strictEqual(changedWhileSending, sending);
 
-  const failed = chatReducer(
-    sending,
-    { type: 'COMPOSE_SEND_FAILED', pane: channelId },
-    undefined,
-  );
+  const failed = chatReducer(sending, { type: 'COMPOSE_SEND_FAILED', pane: channelId }, undefined);
   assert.ok(failed);
   assert.strictEqual(failed.compose.sending, false);
   assert.strictEqual(failed.compose.source, 'hello');

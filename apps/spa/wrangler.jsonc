@@ -1,0 +1,28 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "boluo-app",
+  "compatibility_date": "2026-07-18",
+  "main": "../../packages/backend-proxy/dist/worker.js",
+  "preview_urls": true,
+  "assets": {
+    "directory": "./out/",
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "404-page",
+    "run_worker_first": ["/api/*"],
+  },
+  "vars": {
+    "BACKEND_URL": "https://production.boluo.chat",
+  },
+  "env": {
+    "production": {
+      "vars": {
+        "BACKEND_URL": "https://production.boluo.chat",
+      },
+    },
+    "staging": {
+      "vars": {
+        "BACKEND_URL": "https://boluo-server-staging.fly.dev",
+      },
+    },
+  },
+}

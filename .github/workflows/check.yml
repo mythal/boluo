@@ -3,6 +3,7 @@ on:
   pull_request:
     types:
       - opened
+      - reopened
       - synchronize
   push:
     branches:
@@ -62,8 +63,13 @@ jobs:
     name: Node.js Checks
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
       - name: Cache turbo build setup
         if: github.ref != 'refs/heads/production'
@@ -74,14 +80,40 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-turbo-
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v5
-        with:
-          node-version: '24'
-          cache: 'npm'
+      - name: Node.js Setup
+        uses: ./.github/actions/node-setup
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Detect affected Workers
+        id: affected_workers
+        if: >-
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.head.repo.full_name == github.repository
+        run: |
+          check_affected() {
+            local app="$1"
+            local affected
+            local result_code
+
+            if npx turbo query affected \
+              --packages "$app" \
+              --base "${{ github.event.pull_request.base.sha }}" \
+              --head "${{ github.event.pull_request.head.sha }}" \
+              --exit-code; then
+              affected=false
+            else
+              result_code=$?
+              if [ "$result_code" -ne 1 ]; then
+                return "$result_code"
+              fi
+              affected=true
+            fi
+
+            echo "$app=$affected" >> "$GITHUB_OUTPUT"
+          }
+
+          check_affected legacy
+          check_affected spa
+          check_affected site
 
       - name: Run build
         run: npm run build:deploy
@@ -97,3 +129,83 @@ jobs:
 
       - name: Check version consistency
         run: npm run lint:versions
+
+      - name: Build site Worker
+        if: steps.affected_workers.outputs.site == 'true'
+        working-directory: apps/site
+        run: npx --yes @opennextjs/cloudflare build --skipNextBuild
+
+      - name: Upload legacy PR version
+        id: upload_legacy
+        if: steps.affected_workers.outputs.legacy == 'true'
+        working-directory: apps/legacy
+        run: npx wrangler versions upload --env staging --preview-alias "pr-${{ github.event.pull_request.number }}"
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          WRANGLER_OUTPUT_FILE_PATH: ${{ runner.temp }}/wrangler-legacy-output.jsonl
+
+      - name: Upload SPA PR version
+        id: upload_spa
+        if: steps.affected_workers.outputs.spa == 'true'
+        working-directory: apps/spa
+        run: npx wrangler versions upload --env staging --preview-alias "pr-${{ github.event.pull_request.number }}"
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          WRANGLER_OUTPUT_FILE_PATH: ${{ runner.temp }}/wrangler-spa-output.jsonl
+
+      - name: Upload site PR version
+        id: upload_site
+        if: steps.affected_workers.outputs.site == 'true'
+        working-directory: apps/site
+        run: npx wrangler versions upload --env staging --preview-alias "pr-${{ github.event.pull_request.number }}"
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          WRANGLER_OUTPUT_FILE_PATH: ${{ runner.temp }}/wrangler-site-output.jsonl
+
+      - name: Comment Worker previews
+        if: >-
+          always() &&
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.head.repo.full_name == github.repository
+        uses: actions/github-script@v7
+        env:
+          LEGACY_AFFECTED: ${{ steps.affected_workers.outputs.legacy }}
+          LEGACY_OUTCOME: ${{ steps.upload_legacy.outcome }}
+          LEGACY_OUTPUT_PATH: ${{ runner.temp }}/wrangler-legacy-output.jsonl
+          SITE_AFFECTED: ${{ steps.affected_workers.outputs.site }}
+          SITE_OUTCOME: ${{ steps.upload_site.outcome }}
+          SITE_OUTPUT_PATH: ${{ runner.temp }}/wrangler-site-output.jsonl
+          SPA_AFFECTED: ${{ steps.affected_workers.outputs.spa }}
+          SPA_OUTCOME: ${{ steps.upload_spa.outcome }}
+          SPA_OUTPUT_PATH: ${{ runner.temp }}/wrangler-spa-output.jsonl
+        with:
+          script: |
+            const commentWorkerPreviews = require('./.github/scripts/worker-preview-comment.js');
+            await commentWorkerPreviews({
+              github,
+              context,
+              core,
+              previews: [
+                {
+                  app: 'legacy',
+                  affected: process.env.LEGACY_AFFECTED,
+                  outcome: process.env.LEGACY_OUTCOME,
+                  outputPath: process.env.LEGACY_OUTPUT_PATH,
+                },
+                {
+                  app: 'spa',
+                  affected: process.env.SPA_AFFECTED,
+                  outcome: process.env.SPA_OUTCOME,
+                  outputPath: process.env.SPA_OUTPUT_PATH,
+                },
+                {
+                  app: 'site',
+                  affected: process.env.SITE_AFFECTED,
+                  outcome: process.env.SITE_OUTCOME,
+                  outputPath: process.env.SITE_OUTPUT_PATH,
+                },
+              ],
+            });

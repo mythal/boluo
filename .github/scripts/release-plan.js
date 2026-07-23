@@ -1,6 +1,16 @@
 const STAGING_EVENTS = new Set(['schedule', 'workflow_dispatch']);
 
 module.exports = async function planRelease({ github, context, core }) {
+  const isMasterPush = context.eventName === 'push' && context.ref === 'refs/heads/master';
+
+  if (isMasterPush) {
+    core.setOutput('branch', 'master');
+    core.setOutput('deploy_staging', 'true');
+    core.setOutput('push_images', 'true');
+    core.setOutput('sha', context.sha);
+    return;
+  }
+
   if (!STAGING_EVENTS.has(context.eventName)) {
     core.setOutput('branch', context.ref.replace('refs/heads/', ''));
     core.setOutput('deploy_staging', 'false');

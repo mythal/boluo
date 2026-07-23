@@ -178,3 +178,57 @@ test('legacy chatReducer ignores stale preview diff version', () => {
   assert.strictEqual(previewItem.preview.text, 'hello');
   assert.strictEqual(previewItem.preview.v, 2);
 });
+
+test('legacy chatReducer preserves compose content when sending fails', () => {
+  const media = new File(['image'], 'image.png', { type: 'image/png' });
+  let state = makeState();
+  state = {
+    ...state,
+    compose: { ...state.compose, source: 'hello', media },
+  };
+
+  const sending = chatReducer(
+    state,
+    { type: 'COMPOSE_SENDING', pane: channelId },
+    undefined,
+  );
+  assert.ok(sending);
+  assert.strictEqual(sending.compose.sending, true);
+  assert.strictEqual(sending.compose.source, 'hello');
+  assert.strictEqual(sending.compose.media, media);
+
+  const changedWhileSending = chatReducer(
+    sending,
+    { type: 'SET_COMPOSE_SOURCE', pane: channelId, source: 'replacement' },
+    undefined,
+  );
+  assert.strictEqual(changedWhileSending, sending);
+
+  const failed = chatReducer(
+    sending,
+    { type: 'COMPOSE_SEND_FAILED', pane: channelId },
+    undefined,
+  );
+  assert.ok(failed);
+  assert.strictEqual(failed.compose.sending, false);
+  assert.strictEqual(failed.compose.source, 'hello');
+  assert.strictEqual(failed.compose.media, media);
+});
+
+test('legacy chatReducer clears compose content only after sending succeeds', () => {
+  const media = new File(['image'], 'image.png', { type: 'image/png' });
+  const state = {
+    ...makeState(),
+    compose: { ...makeState().compose, sending: true, source: 'hello', media },
+  };
+
+  const sent = chatReducer(
+    state,
+    { type: 'RESET_COMPOSE_AFTER_SENT', pane: channelId, newId: 'compose-2' },
+    undefined,
+  );
+  assert.ok(sent);
+  assert.strictEqual(sent.compose.sending, false);
+  assert.strictEqual(sent.compose.source, '');
+  assert.strictEqual(sent.compose.media, undefined);
+});

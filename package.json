@@ -1,6 +1,9 @@
 {
   "name": "boluo",
   "version": "0.0.0",
+  "allowScripts": {
+    "esbuild@0.28.1": true
+  },
   "devDependencies": {
     "prettier": "^3.9.4",
     "prettier-plugin-tailwindcss": "^0.8.0",
@@ -41,8 +44,5 @@
   "workspaces": [
     "apps/*",
     "packages/*"
-  ],
-  "allowScripts": {
-    "esbuild@0.28.1": true
-  }
+  ]
 }

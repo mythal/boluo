@@ -277,8 +277,7 @@ async fn variables(
             "You don't have permission to view this character".to_string(),
         ));
     }
-    let mut conn = ctx.db.acquire().await?;
-    CharacterVariable::list_by_character(&mut *conn, &character_id)
+    CharacterVariable::list_by_character_with_cache(&ctx.db, &character_id)
         .await
         .map_err(Into::into)
 }

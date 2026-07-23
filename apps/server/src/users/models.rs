@@ -134,18 +134,28 @@ impl User {
         Ok(result_map)
     }
 
+    pub async fn get_by_id_with_cache(
+        pool: &sqlx::PgPool,
+        id: &Uuid,
+    ) -> Result<Option<User>, sqlx::Error> {
+        fetch_entry_optional(&CACHE.User, *id, async {
+            User::get_by_id(pool, id)
+                .await?
+                .ok_or(sqlx::Error::RowNotFound)
+        })
+        .await
+    }
+
     pub async fn get_by_id<'c, T: sqlx::PgExecutor<'c>>(
         db: T,
         id: &Uuid,
     ) -> Result<Option<User>, sqlx::Error> {
-        fetch_entry_optional(&CACHE.User, *id, async {
-            query_scalar!(
-                r#"SELECT users as "users!: User" FROM users WHERE id = $1 AND deactivated = false LIMIT 1"#,
-                id
-            )
-            .fetch_one(db)
-            .await
-        }).await
+        query_scalar!(
+            r#"SELECT users as "users!: User" FROM users WHERE id = $1 AND deactivated = false LIMIT 1"#,
+            id
+        )
+        .fetch_optional(db)
+        .await
     }
 
     pub async fn get_by_email<'c, T: sqlx::PgExecutor<'c>>(
@@ -256,12 +266,9 @@ impl User {
         Ok(())
     }
 
-    pub async fn deactivated<'c, T: sqlx::PgExecutor<'c>>(
-        db: T,
-        id: &Uuid,
-    ) -> Result<u64, sqlx::Error> {
+    pub async fn deactivated(pool: &sqlx::PgPool, id: &Uuid) -> Result<u64, sqlx::Error> {
         let affected = sqlx::query_file!("sql/users/deactivated.sql", id)
-            .execute(db)
+            .execute(pool)
             .await?
             .rows_affected();
         CACHE.invalidate(CacheType::User, *id).await;
@@ -368,31 +375,27 @@ impl User {
         Uuid::from_slice(&user_id_bytes).context("Failed to convert user ID bytes to UUID")
     }
 
-    pub async fn verify_email(
-        db: &mut sqlx::PgConnection,
-        user_id: &Uuid,
-    ) -> Result<User, ModelError> {
-        // Update email_verified_at in users_extension table
-        sqlx::query!(
-            r#"INSERT INTO users_extension (user_id, email_verified_at, settings)
+    pub async fn verify_email(pool: &sqlx::PgPool, user_id: &Uuid) -> Result<User, ModelError> {
+        let user = {
+            let mut db = pool.acquire().await?;
+            // Update email_verified_at in users_extension table
+            sqlx::query!(
+                r#"INSERT INTO users_extension (user_id, email_verified_at, settings)
                VALUES ($1, now(), '{}')
                ON CONFLICT (user_id)
                DO UPDATE SET email_verified_at = now()"#,
-            user_id
-        )
-        .execute(&mut *db)
-        .await?;
+                user_id
+            )
+            .execute(&mut *db)
+            .await?;
 
-        // Get the user
-        let user = User::get_by_id(&mut *db, user_id)
-            .await?
-            .ok_or_else(|| sqlx::Error::RowNotFound)?;
+            User::get_by_id(&mut *db, user_id)
+                .await?
+                .ok_or(sqlx::Error::RowNotFound)?
+        };
 
-        // Invalidate cache
         CACHE.User.insert(user.id, user.clone().into());
-        CACHE
-            .invalidate(crate::cache::CacheType::UserExt, *user_id)
-            .await;
+        CACHE.invalidate(CacheType::UserExt, *user_id).await;
 
         Ok(user)
     }
@@ -493,8 +496,8 @@ impl User {
         Ok(user)
     }
 
-    pub async fn mark_email_verified<'c, T: sqlx::PgExecutor<'c>>(
-        db: T,
+    pub async fn mark_email_verified(
+        pool: &sqlx::PgPool,
         user_id: &Uuid,
     ) -> Result<(), sqlx::Error> {
         sqlx::query!(
@@ -504,13 +507,10 @@ impl User {
                DO UPDATE SET email_verified_at = now()"#,
             user_id
         )
-        .execute(db)
+        .execute(pool)
         .await?;
 
-        CACHE
-            .invalidate(crate::cache::CacheType::UserExt, *user_id)
-            .await;
-
+        CACHE.invalidate(CacheType::UserExt, *user_id).await;
         Ok(())
     }
 }
@@ -530,16 +530,23 @@ impl Lifespan for UserExt {
     }
 }
 impl UserExt {
+    pub async fn get_with_cache(
+        pool: &sqlx::PgPool,
+        user_id: Uuid,
+    ) -> Result<UserExt, sqlx::Error> {
+        fetch_entry(&CACHE.UserExt, user_id, async {
+            UserExt::get(pool, user_id).await
+        })
+        .await
+    }
+
     pub async fn get<'c, T: sqlx::PgExecutor<'c>>(
         db: T,
         user_id: Uuid,
     ) -> Result<UserExt, sqlx::Error> {
-        fetch_entry(&CACHE.UserExt, user_id, async {
-            sqlx::query_file_scalar!("sql/users/get_users_extension.sql", user_id)
-                .fetch_one(db)
-                .await
-        })
-        .await
+        sqlx::query_file_scalar!("sql/users/get_users_extension.sql", user_id)
+            .fetch_one(db)
+            .await
     }
 
     pub async fn update_settings<'c, T: sqlx::PgExecutor<'c>>(
@@ -621,7 +628,7 @@ mod tests {
             .expect("user registration failed");
         assert_ne!(user.password, password, "password should be hashed");
 
-        let fetched = User::get_by_id(&pool, &user.id)
+        let fetched = User::get_by_id_with_cache(&pool, &user.id)
             .await
             .expect("query by id failed")
             .expect("user not found by id");
@@ -876,7 +883,7 @@ mod tests {
             partial_settings["expand_dice"]
         );
 
-        let fetched = UserExt::get(&pool, user.id)
+        let fetched = UserExt::get_with_cache(&pool, user.id)
             .await
             .expect("failed to load settings");
         assert_eq!(fetched.settings, merged.settings);

@@ -16,6 +16,7 @@ function ImageUploadButton({ className, size }: Props) {
   const channelId = useChannelId();
   const dispatch = useDispatch();
   const media = useSelector((state) => state.chatStates.get(channelId)!.compose.media);
+  const sending = useSelector((state) => state.chatStates.get(channelId)!.compose.sending);
 
   const removeMedia = useCallback(
     () => dispatch({ type: 'SET_COMPOSE_MEDIA', pane: channelId }),
@@ -43,6 +44,7 @@ function ImageUploadButton({ className, size }: Props) {
           icon={RemoveFileImage}
           size={size}
           title="清除图片"
+          disabled={sending}
         />
       ) : (
         <ChatItemToolbarButton
@@ -52,9 +54,10 @@ function ImageUploadButton({ className, size }: Props) {
           size={size}
           title="上传图片"
           info="也可以拖放或粘贴"
+          disabled={sending}
         />
       )}
-      <input type="file" ref={fileInputRef} onChange={onFileChange} hidden />
+      <input type="file" ref={fileInputRef} onChange={onFileChange} disabled={sending} hidden />
     </React.Fragment>
   );
 }

@@ -122,7 +122,10 @@ pub async fn query_user(
         }
     };
 
-    User::get_by_id(&ctx.db, &id).await.or_not_found().map(Some)
+    User::get_by_id_with_cache(&ctx.db, &id)
+        .await
+        .or_not_found()
+        .map(Some)
 }
 
 pub async fn query_self(
@@ -134,7 +137,7 @@ pub async fn query_self(
     let session = authenticate(&req).await;
     match session {
         Ok(session) => Ok(Some(
-            User::get_by_id(&ctx.db, &session.user_id)
+            User::get_by_id_with_cache(&ctx.db, &session.user_id)
                 .await
                 .or_not_found()?,
         )),
@@ -152,7 +155,7 @@ pub async fn query_settings(
         return Ok(serde_json::json!({}));
     };
 
-    let user_ext = UserExt::get(&ctx.db, session.user_id).await;
+    let user_ext = UserExt::get_with_cache(&ctx.db, session.user_id).await;
     Ok(user_ext
         .map(|ext| ext.settings)
         .unwrap_or(serde_json::json!({})))
@@ -218,10 +221,11 @@ pub async fn login<B: Body>(
     let session = session::start(user_id).await?;
     let token: String = session::token(&session.id);
     let token = if form.with_token { Some(token) } else { None };
+    let my_spaces = Space::get_by_user_with_cache(&ctx.db, user_id).await?;
     let mut conn = ctx.db.acquire().await?;
-    let my_spaces = Space::get_by_user(&mut conn, user_id).await?;
     let my_channels = Channel::get_by_user(&mut conn, user_id).await?;
-    let user_ext = UserExt::get(&mut *conn, user_id).await;
+    drop(conn);
+    let user_ext = UserExt::get_with_cache(&ctx.db, user_id).await;
     let settings = user_ext
         .map(|ext| ext.settings)
         .unwrap_or(serde_json::json!({}));
@@ -558,8 +562,7 @@ pub async fn verify_email(
     let user_id = User::verify_email_verification_token(&token)
         .map_err(|e| AppError::BadRequest(format!("Invalid verification token: {}", e)))?;
 
-    let mut conn = ctx.db.acquire().await?;
-    User::verify_email(&mut conn, &user_id).await?;
+    User::verify_email(&ctx.db, &user_id).await?;
 
     tracing::info!(
         user_id = %user_id,
@@ -579,7 +582,7 @@ pub async fn resend_email_verification(
     let session = authenticate(&req).await?;
     let ResendEmailVerification { lang } = parse_body(req).await?;
 
-    let user = User::get_by_id(&ctx.db, &session.user_id)
+    let user = User::get_by_id_with_cache(&ctx.db, &session.user_id)
         .await
         .or_not_found()?;
 
@@ -694,9 +697,7 @@ pub async fn request_email_change(
     crate::validators::EMAIL.run(&new_email)?;
 
     let current_email = {
-        let mut conn = ctx.db.acquire().await?;
-
-        let current_user = User::get_by_id(&mut *conn, &session.user_id)
+        let current_user = User::get_by_id_with_cache(&ctx.db, &session.user_id)
             .await
             .or_not_found()?;
 
@@ -706,7 +707,7 @@ pub async fn request_email_change(
             ));
         }
 
-        if User::get_by_email(&mut *conn, &new_email).await?.is_some() {
+        if User::get_by_email(&ctx.db, &new_email).await?.is_some() {
             return Err(AppError::Conflict(
                 "Email address is already in use".to_string(),
             ));
@@ -742,14 +743,16 @@ pub async fn confirm_email_change(
     let (user_id, new_email) = User::verify_email_change_token(&token)
         .map_err(|e| AppError::BadRequest(format!("Invalid email change token: {}", e)))?;
 
-    let mut conn = ctx.db.acquire().await?;
-
-    let current_user = User::get_by_id(&mut *conn, &user_id).await.or_not_found()?;
-
-    let updated_user = User::change_email(&mut *conn, &user_id, &new_email).await?;
+    let current_user = User::get_by_id_with_cache(&ctx.db, &user_id)
+        .await
+        .or_not_found()?;
+    let updated_user = {
+        let mut conn = ctx.db.acquire().await?;
+        User::change_email(&mut *conn, &user_id, &new_email).await?
+    };
 
     // Mark the new email as verified since user confirmed the change via email
-    User::mark_email_verified(&mut *conn, &user_id).await?;
+    User::mark_email_verified(&ctx.db, &user_id).await?;
 
     tracing::info!(
         user_id = %user_id,
@@ -833,11 +836,10 @@ pub async fn discourse_login(
     };
 
     // Get user data
-    let mut conn = ctx.db.acquire().await?;
-    let user = User::get_by_id(&mut *conn, &session.user_id)
+    let user = User::get_by_id_with_cache(&ctx.db, &session.user_id)
         .await
         .or_not_found()?;
-    let email_verified: bool = UserExt::is_email_verified(&mut *conn, user.id).await?;
+    let email_verified: bool = UserExt::is_email_verified(&ctx.db, user.id).await?;
 
     if !email_verified {
         use crate::utils::url_percent_encode;

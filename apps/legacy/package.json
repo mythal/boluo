@@ -34,8 +34,8 @@
   },
   "devDependencies": {
     "@babel/core": "^8.0.1",
-    "@boluo/eslint-config": "0.0.0",
     "@boluo/emotion-babel-plugin": "0.0.0",
+    "@boluo/eslint-config": "0.0.0",
     "@rolldown/plugin-babel": "^0.2.3",
     "@types/node": "^26.1.1",
     "@types/react": "^19.2.17",

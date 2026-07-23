@@ -1,5 +1,7 @@
 const fs = require('node:fs');
 
+const PREVIEW_ENVIRONMENT = 'preview';
+
 function readWranglerOutput(outputPath) {
   if (!outputPath || !fs.existsSync(outputPath)) {
     return undefined;
@@ -14,10 +16,6 @@ function readWranglerOutput(outputPath) {
   return entries.reverse().find((entry) => entry.type === 'version-upload');
 }
 
-function getEnvironmentName(pullRequestNumber, app) {
-  return `pr-${pullRequestNumber}-${app}`;
-}
-
 async function createWorkerPreviewDeployments({ github, context, core, logUrl, workers }) {
   const pullRequest = context.payload.pull_request;
   if (!pullRequest) {
@@ -29,7 +27,6 @@ async function createWorkerPreviewDeployments({ github, context, core, logUrl, w
       continue;
     }
 
-    const environment = getEnvironmentName(pullRequest.number, worker.app);
     const { data: deployment } = await github.rest.repos.createDeployment({
       owner: context.repo.owner,
       repo: context.repo.repo,
@@ -37,7 +34,7 @@ async function createWorkerPreviewDeployments({ github, context, core, logUrl, w
       task: 'deploy',
       auto_merge: false,
       required_contexts: [],
-      environment,
+      environment: PREVIEW_ENVIRONMENT,
       description: `Cloudflare Worker preview for ${worker.app}`,
       transient_environment: true,
       production_environment: false,
@@ -53,12 +50,12 @@ async function createWorkerPreviewDeployments({ github, context, core, logUrl, w
       repo: context.repo.repo,
       deployment_id: deployment.id,
       state: 'in_progress',
-      environment,
+      environment: PREVIEW_ENVIRONMENT,
       log_url: logUrl,
-      description: 'Uploading Cloudflare Worker preview',
+      description: `Uploading ${worker.app} Worker preview`,
       auto_inactive: false,
     });
-    core.info(`Created ${environment} deployment ${deployment.id}.`);
+    core.info(`Created ${worker.app} preview deployment ${deployment.id}.`);
   }
 }
 
@@ -67,8 +64,8 @@ function getFinalStatus(worker) {
     const output = worker.output ?? readWranglerOutput(worker.outputPath);
     const environmentUrl = output?.preview_alias_url ?? output?.preview_url;
     const versionDescription = output?.version_id
-      ? `Uploaded Cloudflare Worker version ${output.version_id}`
-      : 'Uploaded Cloudflare Worker preview';
+      ? `${worker.app}: uploaded Worker version ${output.version_id}`
+      : `${worker.app}: uploaded Worker preview`;
 
     return {
       state: 'success',
@@ -80,13 +77,13 @@ function getFinalStatus(worker) {
   if (worker.outcome === 'failure') {
     return {
       state: 'failure',
-      description: 'Cloudflare Worker preview upload failed',
+      description: `${worker.app}: Worker preview upload failed`,
     };
   }
 
   return {
     state: 'error',
-    description: 'Cloudflare Worker preview was not uploaded',
+    description: `${worker.app}: Worker preview was not uploaded`,
   };
 }
 
@@ -101,20 +98,19 @@ async function finalizeWorkerPreviewDeployments({ github, context, core, logUrl,
       throw new Error(`Invalid deployment ID for ${worker.app}: ${worker.deploymentId}`);
     }
 
-    const environment = getEnvironmentName(context.payload.pull_request.number, worker.app);
     const finalStatus = getFinalStatus(worker);
     await github.rest.repos.createDeploymentStatus({
       owner: context.repo.owner,
       repo: context.repo.repo,
       deployment_id: deploymentId,
       state: finalStatus.state,
-      environment,
+      environment: PREVIEW_ENVIRONMENT,
       environment_url: finalStatus.environmentUrl,
       log_url: logUrl,
       description: finalStatus.description,
-      auto_inactive: true,
+      auto_inactive: false,
     });
-    core.info(`Marked ${environment} deployment ${deploymentId} as ${finalStatus.state}.`);
+    core.info(`Marked ${worker.app} preview deployment ${deploymentId} as ${finalStatus.state}.`);
   }
 }
 

@@ -10,5 +10,5 @@
   },
   "observability": {
     "enabled": true,
-  },
+  },"env": {"production":{"name":"boluo-site"}},
 }

@@ -116,6 +116,9 @@ jobs:
       - name: Build SPA
         run: npm run build:spa
 
+      - name: Build Storybook
+        run: npm run build:storybook
+
       - name: Build site Worker
         working-directory: apps/site
         run: npm --prefix ../.. run build:site && npx --yes @opennextjs/cloudflare build --skipNextBuild
@@ -140,6 +143,13 @@ jobs:
       - name: Deploy SPA to staging
         working-directory: apps/spa
         run: npx wrangler deploy --env staging
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+      - name: Deploy Storybook
+        working-directory: apps/storybook
+        run: npx wrangler deploy
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

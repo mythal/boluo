@@ -7,7 +7,6 @@ on:
       - synchronize
   push:
     branches:
-      - main
       - master
       - production
 
@@ -21,10 +20,31 @@ env:
   NEXT_TELEMETRY_DISABLED: 1
 
 jobs:
+  format:
+    name: Format Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Nix Setup
+        uses: ./.github/actions/nix-setup
+        with:
+          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
+
+      - name: Node.js Setup
+        uses: ./.github/actions/node-setup
+
+      - name: Check Rust formatting
+        run: nix develop --quiet --no-update-lock-file --command cargo fmt --check
+
+      - name: Check Node.js formatting
+        run: npm run format:check
+
   cargo:
     name: Cargo Checks
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v5
 
@@ -48,8 +68,11 @@ jobs:
           sudo chown -R "$(id -u):$(id -g)" /tmp/sccache
           chmod -R a+rwX /tmp/sccache
 
-      - name: Check server
-        run: nix build --quiet --no-link --no-update-lock-file --print-build-logs ".#checks.x86_64-linux.server"
+      - name: Check server and bridge
+        run: >-
+          nix build --quiet --no-link --no-update-lock-file --print-build-logs
+          ".#checks.x86_64-linux.server"
+          ".#checks.x86_64-linux.bridge"
 
       - name: Prepare sccache for caching
         if: ${{ always() && github.ref != 'refs/heads/production' }}
@@ -63,13 +86,8 @@ jobs:
     name: Node.js Checks
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    permissions:
-      contents: read
-      deployments: write
     steps:
       - uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
 
       - name: Cache turbo build setup
         if: github.ref != 'refs/heads/production'
@@ -83,163 +101,17 @@ jobs:
       - name: Node.js Setup
         uses: ./.github/actions/node-setup
 
-      - name: Detect affected Workers
-        id: affected_workers
-        if: >-
-          github.event_name == 'pull_request' &&
-          github.event.pull_request.head.repo.full_name == github.repository
-        run: |
-          check_affected() {
-            local app="$1"
-            local affected
-            local result_code
-
-            if npx turbo query affected \
-              --packages "$app" \
-              --base "${{ github.event.pull_request.base.sha }}" \
-              --head "${{ github.event.pull_request.head.sha }}" \
-              --exit-code; then
-              affected=false
-            else
-              result_code=$?
-              if [ "$result_code" -ne 1 ]; then
-                return "$result_code"
-              fi
-              affected=true
-            fi
-
-            echo "$app=$affected" >> "$GITHUB_OUTPUT"
-          }
-
-          check_affected legacy
-          check_affected spa
-          check_affected site
-
       - name: Run build
         run: npm run build:deploy
 
-      - name: Run tests
-        run: npm run test
-
       - name: Check types
         run: npm run check
+
+      - name: Run tests
+        run: npm run test
 
       - name: Lint
         run: npm run lint
 
       - name: Check version consistency
         run: npm run lint:versions
-
-      - name: Create Worker preview deployments
-        id: preview_deployments
-        if: >-
-          steps.affected_workers.outputs.legacy == 'true' ||
-          steps.affected_workers.outputs.spa == 'true' ||
-          steps.affected_workers.outputs.site == 'true'
-        uses: actions/github-script@v7
-        env:
-          LEGACY_AFFECTED: ${{ steps.affected_workers.outputs.legacy }}
-          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          SITE_AFFECTED: ${{ steps.affected_workers.outputs.site }}
-          SPA_AFFECTED: ${{ steps.affected_workers.outputs.spa }}
-        with:
-          script: |
-            const { createWorkerPreviewDeployments } = require(
-              './.github/scripts/worker-preview-deployments.js',
-            );
-            await createWorkerPreviewDeployments({
-              github,
-              context,
-              core,
-              logUrl: process.env.RUN_URL,
-              workers: [
-                { app: 'legacy', affected: process.env.LEGACY_AFFECTED },
-                { app: 'spa', affected: process.env.SPA_AFFECTED },
-                { app: 'site', affected: process.env.SITE_AFFECTED },
-              ],
-            });
-
-      - name: Build site Worker
-        if: steps.affected_workers.outputs.site == 'true'
-        working-directory: apps/site
-        run: npx --yes @opennextjs/cloudflare build --skipNextBuild
-
-      - name: Upload legacy PR version
-        id: upload_legacy
-        if: steps.affected_workers.outputs.legacy == 'true'
-        working-directory: apps/legacy
-        run: npx wrangler versions upload --env staging --preview-alias "pr-${{ github.event.pull_request.number }}"
-        env:
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          WRANGLER_OUTPUT_FILE_PATH: ${{ runner.temp }}/wrangler-legacy-output.jsonl
-
-      - name: Upload SPA PR version
-        id: upload_spa
-        if: steps.affected_workers.outputs.spa == 'true'
-        working-directory: apps/spa
-        run: npx wrangler versions upload --env staging --preview-alias "pr-${{ github.event.pull_request.number }}"
-        env:
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          WRANGLER_OUTPUT_FILE_PATH: ${{ runner.temp }}/wrangler-spa-output.jsonl
-
-      - name: Upload site PR version
-        id: upload_site
-        if: steps.affected_workers.outputs.site == 'true'
-        working-directory: apps/site
-        run: npx wrangler versions upload --env staging --preview-alias "pr-${{ github.event.pull_request.number }}"
-        env:
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          WRANGLER_OUTPUT_FILE_PATH: ${{ runner.temp }}/wrangler-site-output.jsonl
-
-      - name: Finalize Worker preview deployments
-        if: >-
-          always() &&
-          (steps.preview_deployments.outputs.legacy != '' ||
-          steps.preview_deployments.outputs.spa != '' ||
-          steps.preview_deployments.outputs.site != '')
-        uses: actions/github-script@v7
-        env:
-          LEGACY_DEPLOYMENT_ID: ${{ steps.preview_deployments.outputs.legacy }}
-          LEGACY_OUTCOME: ${{ steps.upload_legacy.outcome }}
-          LEGACY_OUTPUT_PATH: ${{ runner.temp }}/wrangler-legacy-output.jsonl
-          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          SITE_DEPLOYMENT_ID: ${{ steps.preview_deployments.outputs.site }}
-          SITE_OUTCOME: ${{ steps.upload_site.outcome }}
-          SITE_OUTPUT_PATH: ${{ runner.temp }}/wrangler-site-output.jsonl
-          SPA_DEPLOYMENT_ID: ${{ steps.preview_deployments.outputs.spa }}
-          SPA_OUTCOME: ${{ steps.upload_spa.outcome }}
-          SPA_OUTPUT_PATH: ${{ runner.temp }}/wrangler-spa-output.jsonl
-        with:
-          script: |
-            const { finalizeWorkerPreviewDeployments } = require(
-              './.github/scripts/worker-preview-deployments.js',
-            );
-            await finalizeWorkerPreviewDeployments({
-              github,
-              context,
-              core,
-              logUrl: process.env.RUN_URL,
-              workers: [
-                {
-                  app: 'legacy',
-                  deploymentId: process.env.LEGACY_DEPLOYMENT_ID,
-                  outcome: process.env.LEGACY_OUTCOME,
-                  outputPath: process.env.LEGACY_OUTPUT_PATH,
-                },
-                {
-                  app: 'spa',
-                  deploymentId: process.env.SPA_DEPLOYMENT_ID,
-                  outcome: process.env.SPA_OUTCOME,
-                  outputPath: process.env.SPA_OUTPUT_PATH,
-                },
-                {
-                  app: 'site',
-                  deploymentId: process.env.SITE_DEPLOYMENT_ID,
-                  outcome: process.env.SITE_OUTCOME,
-                  outputPath: process.env.SITE_OUTPUT_PATH,
-                },
-              ],
-            });

@@ -147,15 +147,41 @@
             SCCACHE_DIR = "/tmp/sccache";
           };
 
-          # Build *just* the cargo dependencies (of the entire workspace),
-          # so we can reuse all of that work (e.g. via cachix) when running in CI
-          # It is *highly* recommended to use something like cargo-hakari to avoid
-          # cache misses when building individual top-level-crates
-          cargoArtifacts = craneLib.buildDepsOnly (
+          bridgeReleaseArtifacts = craneLib.buildDepsOnly (
             commonArgs
             // {
+              pname = "bridge";
+              cargoExtraArgs = "--locked --package=bridge";
+              cargoCheckCommand = "true";
+              doCheck = false;
+              SQLX_OFFLINE = "true";
+            }
+          );
+
+          # CI checks only need the test profile.
+          bridgeTestArtifacts = craneLib.buildDepsOnly (
+            commonArgs
+            // {
+              pname = "bridge-tests";
+              CARGO_PROFILE = "";
+              cargoExtraArgs = "--locked --package=bridge";
+              cargoCheckCommand = "true";
+              cargoBuildCommand = "true";
               cargoTestCommand = "cargo nextest run";
               cargoTestExtraArgs = "--no-run";
+              SQLX_OFFLINE = "true";
+              nativeBuildInputs = commonArgs.nativeBuildInputs ++ [ pkgs.cargo-nextest ];
+            }
+          );
+
+          bridgeCheck = craneLib.cargoNextest (
+            commonArgs
+            // {
+              pname = "bridge";
+              cargoArtifacts = bridgeTestArtifacts;
+              CARGO_PROFILE = "";
+              cargoExtraArgs = "--locked --package=bridge";
+              SQLX_OFFLINE = "true";
               nativeBuildInputs = commonArgs.nativeBuildInputs ++ [ pkgs.cargo-nextest ];
             }
           );
@@ -251,11 +277,10 @@
               // {
                 pname = "bridge";
 
-                inherit cargoArtifacts;
-                cargoExtraArgs = "--package=bridge";
-                cargoTestCommand = "cargo nextest run";
+                cargoArtifacts = bridgeReleaseArtifacts;
+                cargoExtraArgs = "--locked --package=bridge";
+                doCheck = false;
                 SQLX_OFFLINE = "true";
-                nativeBuildInputs = commonArgs.nativeBuildInputs ++ [ pkgs.cargo-nextest ];
               }
             );
 
@@ -542,7 +567,7 @@
 
           checks = {
             server = serverCheck;
-            bridge = self'.packages.bridge;
+            bridge = bridgeCheck;
             legacy = self'.packages.legacy;
             site = self'.packages.site;
             spa = self'.packages.spa;

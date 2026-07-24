@@ -6,6 +6,10 @@ on:
       - master
       # - release-*
 
+concurrency:
+  group: release-${{ github.ref }}
+  queue: max
+
 env:
   DO_NOT_TRACK: 1
   NEXT_TELEMETRY_DISABLED: 1
@@ -14,8 +18,8 @@ env:
 jobs:
   images:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     permissions:
-      id-token: write
       packages: write
       contents: read
     steps:
@@ -58,8 +62,8 @@ jobs:
 
   staging:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     permissions:
-      id-token: write
       contents: read
     needs: images
     if: github.ref == 'refs/heads/master'
@@ -131,8 +135,8 @@ jobs:
 
   production:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     permissions:
-      id-token: write
       contents: read
     needs: images
     if: github.ref == 'refs/heads/production'

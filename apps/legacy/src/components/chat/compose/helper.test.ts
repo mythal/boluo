@@ -67,9 +67,7 @@ test('legacy uploadMedia converts unexpected rejections to fetch errors', async 
 });
 
 test('legacy uploadMedia accepts an empty attachment', async () => {
-  const result = await uploadMedia(undefined, () =>
-    Promise.resolve(new Ok({ mediaId: 'unused' })),
-  );
+  const result = await uploadMedia(undefined, () => Promise.resolve(new Ok({ mediaId: 'unused' })));
 
   assert.ok(result.isOk);
   assert.strictEqual(result.value, null);

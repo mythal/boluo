@@ -11,7 +11,7 @@ runs:
   steps:
     # https://github.com/DeterminateSystems/nix-installer-action
     - name: Install Nix
-      uses: DeterminateSystems/nix-installer-action@786fff0690178f1234e4e1fe9b536e94f5433196
+      uses: DeterminateSystems/nix-installer-action@ef8a148080ab6020fd15196c2084a2eea5ff2d25
       with:
         diagnostic-endpoint:
         extra-conf: |
@@ -19,7 +19,7 @@ runs:
 
     # https://github.com/cachix/cachix-action
     - name: Set up Cachix
-      uses: cachix/cachix-action@0fc020193b5a1fa3ac4575aa3a7d3aa6a35435ad
+      uses: cachix/cachix-action@5f2d7c5294214f71b873db4b969586b980625e71
       with:
         name: boluo
         # https://github.com/actions/runner/issues/2206#issuecomment-1532246677

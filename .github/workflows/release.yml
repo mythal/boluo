@@ -65,7 +65,7 @@ jobs:
     if: github.ref == 'refs/heads/master'
     environment:
       name: staging
-      url: https://boluo-site-staging.fly.dev
+      deployment: false
     steps:
       - name: Check out the repo
         uses: actions/checkout@v5
@@ -138,7 +138,7 @@ jobs:
     if: github.ref == 'refs/heads/production'
     environment:
       name: production
-      url: https://site.boluochat.com
+      deployment: false
     steps:
       - name: Check out the repo
         uses: actions/checkout@v5

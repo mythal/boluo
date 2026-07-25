@@ -221,6 +221,12 @@
               CARGO_PROFILE = "";
               cargoExtraArgs = "--locked --package=server";
               cargoNextestExtraArgs = "--retries 2";
+              # The nextest wrapper script keeps a portable `#!/usr/bin/env bash`
+              # shebang for the dev shell, but the Nix build sandbox has no
+              # `/usr/bin/env`, so patch it to the store bash before the tests run.
+              preBuild = ''
+                patchShebangs scripts/setup-test-db.sh
+              '';
               nativeBuildInputs = commonArgs.nativeBuildInputs ++ [
                 pkgs.postgresql
                 pkgs.cargo-nextest

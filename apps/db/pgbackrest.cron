@@ -1,0 +1,3 @@
+# 23:00 UTC is 07:00 the following day in UTC+08:00.
+0 23 * * 6 postgres pgbackrest --stanza=boluo --type=full backup
+0 23 * * 0-5 postgres pgbackrest --stanza=boluo --type=diff backup

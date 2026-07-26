@@ -6,13 +6,30 @@
 app = 'boluo-db'
 primary_region = 'nrt'
 swap_size_mb = 512
+kill_timeout = 60
 
 [build]
   image = 'ghcr.io/mythal/boluo/boluo-postgres:latest'
 
 [env]
+  PGBACKREST_STANZA = 'boluo'
   POSTGRES_DB = 'boluo'
   POSTGRES_USER = 'boluo'
+
+[[metrics]]
+  port = 9187
+  path = '/metrics'
+  processes = ['app']
+
+[[metrics]]
+  port = 9854
+  path = '/metrics'
+  processes = ['app']
+
+[[files]]
+  # base64 -w0 <PATH> | fly secrets set --stage -a boluo-db PGBACKREST_SFTP_PRIVATE_KEY=-
+  guest_path = '/run/secrets/pgbackrest-sftp-private-key'
+  secret_name = 'PGBACKREST_SFTP_PRIVATE_KEY'
 
 [[mounts]]
   source = 'pgdata'

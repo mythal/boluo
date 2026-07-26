@@ -17,3 +17,10 @@ pg_dump --username ... --host ... --dbname boluo --no-owner --no-privileges --sc
 ```
 psql --username ... --host ... --dbname boluo --file boluo-$(date +%Y%m%d).dump
 ```
+
+## Configuration Notes
+
+1. Set up PgHero permissions according to [PgHero recommendations](https://github.com/ankane/pghero/blob/master/guides/Permissions.md).
+2. Enabled `pg_stat_statements`.
+3. Modified `pg_hba.conf`.
+4. Enabled `io_uring`.

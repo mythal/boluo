@@ -1,0 +1,11 @@
+experimental = ["wrapper-scripts"]
+
+[store]
+dir = "target/nextest"
+
+[scripts.wrapper.setup-test-db]
+command = { command-line = "scripts/setup-test-db.sh", relative-to = "workspace-root" }
+
+[[profile.default.scripts]]
+filter = 'package(server)'
+run-wrapper = 'setup-test-db'

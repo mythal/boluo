@@ -107,7 +107,7 @@
                 maybeMissing
                 ;
               ignoreFilenames = [
-                "wrangler.toml"
+                "wrangler.jsonc"
                 ".rustfmt.toml"
                 ".taplo.toml"
                 "fly.toml"
@@ -123,6 +123,8 @@
                 (maybeMissing ./.sqlx)
                 (maybeMissing ./apps/bridge/.sqlx)
                 (maybeMissing ./apps/server/text)
+                (maybeMissing ./.config/nextest.toml)
+                (maybeMissing ./scripts/setup-test-db.sh)
               ]) filesetToIgnore;
             in
             lib.fileset.toSource {
@@ -147,15 +149,41 @@
             SCCACHE_DIR = "/tmp/sccache";
           };
 
-          # Build *just* the cargo dependencies (of the entire workspace),
-          # so we can reuse all of that work (e.g. via cachix) when running in CI
-          # It is *highly* recommended to use something like cargo-hakari to avoid
-          # cache misses when building individual top-level-crates
-          cargoArtifacts = craneLib.buildDepsOnly (
+          bridgeReleaseArtifacts = craneLib.buildDepsOnly (
             commonArgs
             // {
+              pname = "bridge";
+              cargoExtraArgs = "--locked --package=bridge";
+              cargoCheckCommand = "true";
+              doCheck = false;
+              SQLX_OFFLINE = "true";
+            }
+          );
+
+          # CI checks only need the test profile.
+          bridgeTestArtifacts = craneLib.buildDepsOnly (
+            commonArgs
+            // {
+              pname = "bridge-tests";
+              CARGO_PROFILE = "";
+              cargoExtraArgs = "--locked --package=bridge";
+              cargoCheckCommand = "true";
+              cargoBuildCommand = "true";
               cargoTestCommand = "cargo nextest run";
               cargoTestExtraArgs = "--no-run";
+              SQLX_OFFLINE = "true";
+              nativeBuildInputs = commonArgs.nativeBuildInputs ++ [ pkgs.cargo-nextest ];
+            }
+          );
+
+          bridgeCheck = craneLib.cargoNextest (
+            commonArgs
+            // {
+              pname = "bridge";
+              cargoArtifacts = bridgeTestArtifacts;
+              CARGO_PROFILE = "";
+              cargoExtraArgs = "--locked --package=bridge";
+              SQLX_OFFLINE = "true";
               nativeBuildInputs = commonArgs.nativeBuildInputs ++ [ pkgs.cargo-nextest ];
             }
           );
@@ -193,18 +221,10 @@
               CARGO_PROFILE = "";
               cargoExtraArgs = "--locked --package=server";
               cargoNextestExtraArgs = "--retries 2";
-              nativeBuildInputs = commonArgs.nativeBuildInputs ++ [ pkgs.postgresql ];
-              preBuild = ''
-                export PGDATA=$(mktemp -d)
-                initdb --no-locale --encoding=UTF8 --username=postgres
-                pg_ctl start -o "-k $PGDATA -h '''"
-                createdb -h "$PGDATA" -U postgres boluo_test
-                psql -h "$PGDATA" -U postgres -d boluo_test -v ON_ERROR_STOP=1 -f ${./apps/db/schema.sql}
-                export DATABASE_URL="postgresql:///boluo_test?host=$PGDATA&user=postgres"
-              '';
-              postInstall = ''
-                pg_ctl stop -D "$PGDATA"
-              '';
+              nativeBuildInputs = commonArgs.nativeBuildInputs ++ [
+                pkgs.postgresql
+                pkgs.cargo-nextest
+              ];
             }
           );
         in
@@ -251,11 +271,10 @@
               // {
                 pname = "bridge";
 
-                inherit cargoArtifacts;
-                cargoExtraArgs = "--package=bridge";
-                cargoTestCommand = "cargo nextest run";
+                cargoArtifacts = bridgeReleaseArtifacts;
+                cargoExtraArgs = "--locked --package=bridge";
+                doCheck = false;
                 SQLX_OFFLINE = "true";
-                nativeBuildInputs = commonArgs.nativeBuildInputs ++ [ pkgs.cargo-nextest ];
               }
             );
 
@@ -542,7 +561,7 @@
 
           checks = {
             server = serverCheck;
-            bridge = self'.packages.bridge;
+            bridge = bridgeCheck;
             legacy = self'.packages.legacy;
             site = self'.packages.site;
             spa = self'.packages.spa;
@@ -562,6 +581,7 @@
                 ast-grep
                 flyctl
                 cargo-nextest
+                postgresql
                 python3
                 gh
               ]

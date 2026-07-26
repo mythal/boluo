@@ -1,50 +1,30 @@
 name: Release
 on:
-  schedule:
-    # 09:00 JST (GitHub Actions cron uses UTC).
-    - cron: '0 0 * * *'
-  workflow_dispatch:
   push:
     branches:
       - production
-      - main
+      - master
       # - release-*
+
+concurrency:
+  group: release-${{ github.ref }}
+  queue: max
+
+env:
+  DO_NOT_TRACK: 1
+  NEXT_TELEMETRY_DISABLED: 1
+  TURBO_TELEMETRY_DISABLED: 1
+
 jobs:
-  release-plan:
-    runs-on: ubuntu-latest
-    permissions:
-      actions: read
-      contents: read
-    outputs:
-      branch: ${{ steps.plan.outputs.branch }}
-      deploy_staging: ${{ steps.plan.outputs.deploy_staging }}
-      push_images: ${{ steps.plan.outputs.push_images }}
-      sha: ${{ steps.plan.outputs.sha }}
-    steps:
-      - name: Check out the repo
-        uses: actions/checkout@v5
-
-      - name: Plan release
-        id: plan
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const planRelease = require('./.github/scripts/release-plan.js');
-            await planRelease({ github, context, core });
-
   images:
-    needs: release-plan
-    if: needs.release-plan.outputs.push_images == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     permissions:
-      id-token: write
       packages: write
       contents: read
     steps:
       - name: Check out the repo
         uses: actions/checkout@v5
-        with:
-          ref: ${{ needs.release-plan.outputs.sha }}
 
       - name: Nix Setup
         uses: ./.github/actions/nix-setup
@@ -70,7 +50,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_ACTOR: ${{ github.actor }}
-          BRANCH_NAME: ${{ needs.release-plan.outputs.branch }}
+          BRANCH_NAME: ${{ github.ref_name }}
 
       - name: Prepare sccache for caching
         if: ${{ always() }}
@@ -82,24 +62,38 @@ jobs:
 
   staging:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     permissions:
-      id-token: write
       contents: read
-    needs: [release-plan, images]
-    if: needs.release-plan.outputs.deploy_staging == 'true'
+    needs: images
+    if: github.ref == 'refs/heads/master'
     environment:
       name: staging
-      url: https://boluo-site-staging.fly.dev
+      deployment: false
     steps:
       - name: Check out the repo
         uses: actions/checkout@v5
-        with:
-          ref: ${{ needs.release-plan.outputs.sha }}
 
       - name: Nix Setup
         uses: ./.github/actions/nix-setup
         with:
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
+
+      - name: Node.js Setup
+        uses: ./.github/actions/node-setup
+
+      - name: Build legacy
+        run: npm run build:legacy
+
+      - name: Build SPA
+        run: npm run build:spa
+
+      - name: Build Storybook
+        run: npm run build:storybook
+
+      - name: Build site Worker
+        working-directory: apps/site
+        run: npm --prefix ../.. run build:site && npx --yes @opennextjs/cloudflare build --skipNextBuild
 
       - name: Deploy site to staging
         run: nix run --quiet --no-update-lock-file .#deploy-site-staging
@@ -111,26 +105,65 @@ jobs:
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_IO_TOKEN }}
 
+      - name: Deploy legacy to staging
+        working-directory: apps/legacy
+        run: npx wrangler deploy --env staging
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+      - name: Deploy SPA to staging
+        working-directory: apps/spa
+        run: npx wrangler deploy --env staging
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+      - name: Deploy Storybook
+        working-directory: apps/storybook
+        run: npx wrangler deploy
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+      - name: Deploy site Worker to staging
+        working-directory: apps/site
+        run: npx @opennextjs/cloudflare deploy --env staging
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
   production:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     permissions:
-      id-token: write
       contents: read
-    needs: [release-plan, images]
+    needs: images
     if: github.ref == 'refs/heads/production'
     environment:
       name: production
-      url: https://site.boluochat.com
+      deployment: false
     steps:
       - name: Check out the repo
         uses: actions/checkout@v5
-        with:
-          ref: ${{ needs.release-plan.outputs.sha }}
 
       - name: Nix Setup
         uses: ./.github/actions/nix-setup
         with:
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
+
+      - name: Node.js Setup
+        uses: ./.github/actions/node-setup
+
+      - name: Build legacy
+        run: npm run build:legacy
+
+      - name: Build SPA
+        run: npm run build:spa
+
+      - name: Build site Worker
+        working-directory: apps/site
+        run: npm --prefix ../.. run build:site && npx --yes @opennextjs/cloudflare build --skipNextBuild
 
       - name: Deploy site to production
         run: nix run --quiet --no-update-lock-file .#deploy-site-production
@@ -141,3 +174,24 @@ jobs:
         run: nix run --quiet --no-update-lock-file .#deploy-server-production
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_IO_TOKEN }}
+
+      - name: Deploy legacy to production
+        working-directory: apps/legacy
+        run: npx wrangler deploy --env production
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+      - name: Deploy SPA to production
+        working-directory: apps/spa
+        run: npx wrangler deploy --env production
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+      - name: Deploy site Worker to production
+        working-directory: apps/site
+        run: npx @opennextjs/cloudflare deploy --env production
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

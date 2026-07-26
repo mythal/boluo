@@ -3,10 +3,10 @@ on:
   pull_request:
     types:
       - opened
+      - reopened
       - synchronize
   push:
     branches:
-      - main
       - master
       - production
 
@@ -20,10 +20,31 @@ env:
   NEXT_TELEMETRY_DISABLED: 1
 
 jobs:
+  format:
+    name: Format Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Nix Setup
+        uses: ./.github/actions/nix-setup
+        with:
+          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
+
+      - name: Node.js Setup
+        uses: ./.github/actions/node-setup
+
+      - name: Check Rust formatting
+        run: nix develop --quiet --no-update-lock-file --command cargo fmt --check
+
+      - name: Check Node.js formatting
+        run: npm run format:check
+
   cargo:
     name: Cargo Checks
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v5
 
@@ -47,8 +68,11 @@ jobs:
           sudo chown -R "$(id -u):$(id -g)" /tmp/sccache
           chmod -R a+rwX /tmp/sccache
 
-      - name: Check server
-        run: nix build --quiet --no-link --no-update-lock-file --print-build-logs ".#checks.x86_64-linux.server"
+      - name: Check server and bridge
+        run: >-
+          nix build --quiet --no-link --no-update-lock-file --print-build-logs
+          ".#checks.x86_64-linux.server"
+          ".#checks.x86_64-linux.bridge"
 
       - name: Prepare sccache for caching
         if: ${{ always() && github.ref != 'refs/heads/production' }}
@@ -74,23 +98,17 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-turbo-
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v5
-        with:
-          node-version: '24'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
+      - name: Node.js Setup
+        uses: ./.github/actions/node-setup
 
       - name: Run build
         run: npm run build:deploy
 
-      - name: Run tests
-        run: npm run test
-
       - name: Check types
         run: npm run check
+
+      - name: Run tests
+        run: npm run test
 
       - name: Lint
         run: npm run lint

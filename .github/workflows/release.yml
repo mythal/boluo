@@ -24,7 +24,7 @@ jobs:
       contents: read
     steps:
       - name: Check out the repo
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Nix Setup
         uses: ./.github/actions/nix-setup
@@ -32,7 +32,7 @@ jobs:
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
 
       - name: Cache sccache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: /tmp/sccache
           key: ${{ runner.os }}-sccache-${{ github.run_id }}
@@ -72,7 +72,7 @@ jobs:
       deployment: false
     steps:
       - name: Check out the repo
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Nix Setup
         uses: ./.github/actions/nix-setup
@@ -145,7 +145,7 @@ jobs:
       deployment: false
     steps:
       - name: Check out the repo
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Nix Setup
         uses: ./.github/actions/nix-setup

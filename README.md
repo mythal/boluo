@@ -6,10 +6,10 @@ A chat application designed specifically for playing RPGs.
 
 This repository is a monorepo containing the following applications:
 
-- `apps/site`: The website frontend.
+- `apps/site`: The website frontend. ([Staging environment](https://boluo-site-staging.mythal.workers.dev/))
 - `apps/server`: The backend server.
-- `apps/legacy`: The legacy version of the Boluo web application. [Staging environment](https://master-boluo-legacy.mythal.workers.dev)
-- `apps/spa`: The chat single-page application (SPA). [Staging environment](https://master-boluo-app.mythal.workers.dev)
+- `apps/legacy`: The legacy version of the Boluo web application. ([Staging environment](https://boluo-legacy-staging.mythal.workers.dev/))
+- `apps/spa`: The chat single-page application (SPA). ([Staging environment](https://boluo-app-staging.mythal.workers.dev/))
 - [`apps/storybook`](https://boluo-storybook.mythal.workers.dev/): The Storybook instance for UI components.
 
 ## Set Up Development Environment
@@ -18,7 +18,7 @@ We recommend using the [nix](https://nixos.org/) package manager ([installer](ht
 
 If you prefer not to use nix, you can install the following tools manually:
 
-- Node.js (v20+) and npm
+- Node.js (v24+) and npm
 - Latest Rust toolchain, [sqlx-cli](https://crates.io/crates/sqlx-cli) and [cargo-nextest](https://nexte.st/).
 - Docker or Podman (recommended)
 

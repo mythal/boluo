@@ -9,7 +9,7 @@ swap_size_mb = 512
 kill_timeout = 60
 
 [build]
-  image = 'ghcr.io/mythal/boluo/boluo-postgres:latest'
+  image = 'ghcr.io/mythal/boluo/boluo-postgres:v26.07.27'
 
 [env]
   PGBACKREST_STANZA = 'boluo'

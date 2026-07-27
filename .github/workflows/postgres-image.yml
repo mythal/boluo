@@ -50,8 +50,8 @@ jobs:
           context: git
           images: ghcr.io/mythal/boluo/boluo-postgres
           tags: |
+            type=raw,value=v{{date 'YY.MM.DD' tz='Asia/Tokyo'}},priority=900
             type=raw,value=latest
-            type=schedule,pattern=monthly-{{date 'YYYYMM'}}
             type=sha
           labels: |
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}

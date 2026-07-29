@@ -116,8 +116,7 @@ export RESTORE_VOLUME_ID='<new-volume-id>'
 export RESTORE_MACHINE_NAME='<temporary-restore-machine-name>'
 ```
 
-Create a temporary Machine with no services, no internal DNS registration, and
-no automatic restart:
+Create a temporary Machine:
 
 ```sh
 fly machine run "$IMAGE" sleep infinity \
@@ -278,8 +277,7 @@ gosu postgres "$PG_CTL" -D "$PGDATA" -m fast -w stop
 exit
 ```
 
-Stop and destroy the temporary Machine to release the restored volume. This
-destroys only the Machine, not the volume:
+Stop and destroy the temporary Machine to release the restored volume.
 
 ```sh
 fly machine stop "$RESTORE_MACHINE_ID" --app "$APP"

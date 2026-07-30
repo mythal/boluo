@@ -5,21 +5,30 @@ import type {
   ChannelMembers,
   ChannelWithMaybeMember,
   CheckEmailExists,
-  CheckCharacterName,
+  CheckCharacterIdentifier,
+  CheckEntryIdentifier,
   CheckUsernameExists,
-  CheckVariableAvailability,
   Character,
-  CharacterVariable,
-  CharacterVariableHistory,
+  Entry,
+  EntryMetadata,
+  EntryComponentHistory,
+  EntryComponentHistoryQuery,
+  EntryHistory,
+  EntryHistoryQuery,
   EmailVerificationStatus,
   Export,
   GetMessagesByChannel,
   ListCharacters,
+  ListEntries,
+  ListNotes,
   MakeToken,
   Message,
   Note,
-  NoteHistory,
+  NoteContentRevision,
+  NoteMetadata,
+  QueryNote,
   QueryCharacter,
+  QueryEntry,
   SearchMessagesParams,
   SearchMessagesResult,
   Space,
@@ -29,7 +38,6 @@ import type {
   SpaceWithRelated,
   User,
   UserStatus,
-  VariableHistoryQuery,
   VerifyEmail,
 } from '@boluo/types/bindings';
 
@@ -70,19 +78,22 @@ export interface Get {
     result: SearchMessagesResult;
   };
   // notes
-  '/notes/query': { query: { id: string }; result: Note };
-  '/notes/by_space': { query: { id: string }; result: Note[] };
-  '/notes/history': { query: { id: string }; result: NoteHistory[] };
+  '/notes/query': { query: QueryNote; result: Note };
+  '/notes/by_space': { query: ListNotes; result: NoteMetadata[] };
+  '/notes/content_revisions': { query: QueryNote; result: NoteContentRevision[] };
+  // entries
+  '/entries/by_scope': { query: ListEntries; result: EntryMetadata[] };
+  '/entries/query': { query: QueryEntry; result: Entry };
+  '/entries/history': { query: EntryHistoryQuery; result: EntryHistory[] };
+  '/entries/component_history': {
+    query: EntryComponentHistoryQuery;
+    result: EntryComponentHistory[];
+  };
+  '/entries/check_identifier': { query: CheckEntryIdentifier; result: boolean };
   // characters
   '/characters/query': { query: QueryCharacter; result: Character };
   '/characters/by_space': { query: ListCharacters; result: Character[] };
-  '/characters/variables': { query: QueryCharacter; result: CharacterVariable[] };
-  '/characters/variable_history': {
-    query: VariableHistoryQuery;
-    result: CharacterVariableHistory[];
-  };
-  '/characters/check_name': { query: CheckCharacterName; result: boolean };
-  '/characters/check_variable': { query: CheckVariableAvailability; result: boolean };
+  '/characters/check_identifier': { query: CheckCharacterIdentifier; result: boolean };
   // updates (formerly known as events)
   '/updates/token': { query: MakeToken; result: { token: string; issuedAt: number } };
   // info

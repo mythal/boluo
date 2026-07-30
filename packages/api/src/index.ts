@@ -7,9 +7,10 @@ import {
 import type { Get } from './get';
 import type { Patch } from './patch';
 import type { Post } from './post';
+import type { Put } from './put';
 import type { AppResponse } from './request';
 
-export type { AppResponse, Get, Patch, Post };
+export type { AppResponse, Get, Patch, Post, Put };
 export { appFetch } from './common';
 export { makeUri } from './request';
 export { isApiError, errorCode } from './errors';

@@ -1,0 +1,18 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO scopes (\n    id,\n    space_id,\n    kind,\n    owner_id,\n    access_policy,\n    access_channel_id\n)\nSELECT\n    $1,\n    space.id,\n    'Character',\n    $3,\n    ($4::text)::access_policy,\n    $5\nFROM spaces space\nWHERE space.id = $2;\n",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Uuid",
+        "Text",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "d55137ae342c4fdd763c2f237cded839f41857a7e546e4cab9049e42920486ec"
+}

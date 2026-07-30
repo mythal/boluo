@@ -1,0 +1,136 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n    operation_id,\n    operator_id,\n    scope_id,\n    entry_id,\n    source_message_id,\n    key,\n    previous_key,\n    action AS \"action!: EntryHistoryAction\",\n    created\nFROM entry_history\nWHERE scope_id = $1\n  AND ($2::uuid IS NULL OR entry_id = $2)\nORDER BY created DESC, operation_id DESC, entry_id;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "operation_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "entry_history",
+            "name": "operation_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "operator_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "entry_history",
+            "name": "operator_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "scope_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "entry_history",
+            "name": "scope_id"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "entry_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "entry_history",
+            "name": "entry_id"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "source_message_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "entry_history",
+            "name": "source_message_id"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "key",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "entry_history",
+            "name": "key"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "previous_key",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "entry_history",
+            "name": "previous_key"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "action!: EntryHistoryAction",
+        "type_info": {
+          "Custom": {
+            "name": "entry_history_action",
+            "kind": {
+              "Enum": [
+                "Create",
+                "Rename",
+                "Delete"
+              ]
+            }
+          }
+        },
+        "origin": {
+          "Table": {
+            "table": "entry_history",
+            "name": "action"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "created",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "entry_history",
+            "name": "created"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      false,
+      true,
+      false,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "99d88b3c6804a4750397bf07bff535fb4931221cd0d2ab83664d2d6484d05a0f"
+}

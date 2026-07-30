@@ -1,101 +1,89 @@
 use chrono::prelude::*;
+use compact_str::CompactString;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
+use unicode_normalization::UnicodeNormalization;
 use uuid::Uuid;
 
-use crate::cache::CACHE;
 use crate::error::{ModelError, ValidationFailed};
-use crate::ttl::{Lifespan, fetch_entry, hour};
+use crate::spaces::{AccessPolicy, ResourceAccessContext, validate_access_channel};
+
+const IDENTIFIER_ALIAS_MAX_COUNT: usize = 16;
 
 pub(crate) fn normalize_ident(value: &str) -> Result<String, ValidationFailed> {
-    let key = value.trim().replace(char::is_whitespace, "_");
+    let key = value
+        .trim()
+        .replace(char::is_whitespace, "_")
+        .nfc()
+        .collect::<String>();
     crate::validators::IDENT.run(&key)?;
     Ok(key)
 }
 
-pub(crate) fn normalize_optional_ident(
-    value: Option<String>,
-) -> Result<Option<String>, ValidationFailed> {
-    let Some(value) = value else {
-        return Ok(None);
-    };
-    let value = value.trim();
-    if value.is_empty() {
-        return Ok(None);
-    }
-    let value = normalize_ident(value)?;
-    Ok(Some(value))
-}
-
-pub(crate) fn normalize_aliases(values: Vec<String>) -> Result<Vec<String>, ValidationFailed> {
+pub(crate) fn normalize_aliases(
+    values: Vec<String>,
+    primary: Option<&str>,
+) -> Result<Vec<String>, ValidationFailed> {
     let mut seen = HashSet::new();
+    if let Some(primary) = primary {
+        seen.insert(primary.to_lowercase());
+    }
     let mut normalized = Vec::new();
     for value in values {
         if value.trim().is_empty() {
             continue;
         }
-        let Ok(value) = normalize_ident(&value) else {
-            continue;
-        };
-        if seen.contains(&value) {
-            continue;
-        }
-        if seen.insert(value.clone()) {
+        let value = normalize_ident(&value)?;
+        if seen.insert(value.to_lowercase()) {
             normalized.push(value);
+            if normalized.len() > IDENTIFIER_ALIAS_MAX_COUNT {
+                return Err(ValidationFailed("Too many aliases (max 16)."));
+            }
         }
     }
     Ok(normalized)
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq, Eq, specta::Type, sqlx::Type)]
-#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
-#[sqlx(type_name = "character_visibility", rename_all = "PascalCase")]
-pub enum CharacterVisibility {
-    Private,
-    Public,
-}
-
-impl CharacterVisibility {
-    pub fn as_str(self) -> &'static str {
-        match self {
-            CharacterVisibility::Private => "Private",
-            CharacterVisibility::Public => "Public",
-        }
-    }
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, specta::Type, sqlx::Type)]
-#[sqlx(type_name = "characters")]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, specta::Type, sqlx::FromRow)]
 #[serde(rename_all = "camelCase")]
 pub struct Character {
     pub id: Uuid,
-    pub name: String,
+    #[specta(type = String)]
+    pub name: CompactString,
+    #[specta(type = String)]
+    pub key: CompactString,
+    #[specta(type = Vec<String>)]
+    pub aliases: Vec<CompactString>,
     pub description: String,
-    pub color: String,
-    pub alias: Option<String>,
-    pub image_id: Option<Uuid>,
+    #[specta(type = String)]
+    pub color: CompactString,
     pub space_id: Uuid,
-    pub owner_id: Uuid,
-    pub visibility: CharacterVisibility,
-    pub is_archived: bool,
-    pub metadata: serde_json::Value,
+    pub scope_id: Uuid,
+    pub owner_id: Option<Uuid>,
+    pub access_policy: AccessPolicy,
+    pub access_channel_id: Option<Uuid>,
+    pub scope_version: Uuid,
+    pub archived_at: Option<DateTime<Utc>>,
+    #[specta(type = Vec<String>)]
+    pub tags: Vec<CompactString>,
     pub created: DateTime<Utc>,
     pub modified: DateTime<Utc>,
+    pub version: Uuid,
 }
 
 impl Character {
-    pub async fn create<'c, T: sqlx::PgExecutor<'c>>(
-        db: T,
+    pub async fn create(
+        db: &mut sqlx::Transaction<'_, sqlx::Postgres>,
         space_id: Uuid,
         owner_id: Uuid,
         name: &str,
+        key: &str,
+        aliases: Vec<String>,
         description: &str,
         color: &str,
-        alias: Option<String>,
-        image_id: Option<Uuid>,
-        visibility: CharacterVisibility,
-        is_archived: bool,
-        metadata: serde_json::Value,
+        access_policy: AccessPolicy,
+        access_channel_id: Option<Uuid>,
+        tags: Vec<String>,
     ) -> Result<Character, ModelError> {
         use crate::validators;
 
@@ -106,32 +94,47 @@ impl Character {
         if !color.is_empty() {
             validators::HEX_COLOR.run(color)?;
         }
-        let alias = normalize_optional_ident(alias)?;
-        let visibility = visibility.as_str();
+        let key = normalize_ident(key)?;
+        let aliases = normalize_aliases(aliases, Some(&key))?;
+        let tags = crate::validators::normalize_tags(tags)?;
+        validate_access_channel(db, space_id, access_channel_id).await?;
+        let character_id = Uuid::now_v7();
+        let scope_id = Uuid::now_v7();
 
-        sqlx::query_file_scalar!(
+        sqlx::query_file!(
+            "sql/characters/create_scope.sql",
+            scope_id,
+            space_id,
+            owner_id,
+            access_policy.as_str(),
+            access_channel_id,
+        )
+        .execute(&mut **db)
+        .await?;
+        sqlx::query_file!(
             "sql/characters/create.sql",
+            character_id,
             name,
             description,
             color,
-            alias,
-            image_id,
             space_id,
-            owner_id,
-            visibility,
-            is_archived,
-            metadata,
+            scope_id,
+            &tags
         )
-        .fetch_one(db)
+        .execute(&mut **db)
         .await
-        .map_err(Into::into)
+        .map_err(ModelError::from)?;
+        insert_character_identifiers(&mut **db, space_id, character_id, &key, &aliases).await?;
+        Self::get_by_id(&mut **db, &character_id)
+            .await?
+            .ok_or(ModelError::NotFound("Character"))
     }
 
     pub async fn get_by_id<'c, T: sqlx::PgExecutor<'c>>(
         db: T,
         character_id: &Uuid,
     ) -> Result<Option<Character>, sqlx::Error> {
-        sqlx::query_file_scalar!("sql/characters/get_by_id.sql", character_id)
+        sqlx::query_file_as!(Character, "sql/characters/get_by_id.sql", character_id)
             .fetch_optional(db)
             .await
     }
@@ -150,295 +153,127 @@ impl Character {
         db: T,
         space_id: &Uuid,
     ) -> Result<Vec<Character>, sqlx::Error> {
-        let characters = sqlx::query_file_scalar!("sql/characters/list_by_space.sql", space_id)
-            .fetch_all(db)
-            .await?;
+        let characters =
+            sqlx::query_file_as!(Character, "sql/characters/list_by_space.sql", space_id)
+                .fetch_all(db)
+                .await?;
         Ok(characters)
     }
 
-    pub async fn update<'c, T: sqlx::PgExecutor<'c>>(
-        db: T,
+    pub fn can_view(&self, user_id: Option<Uuid>, context: ResourceAccessContext) -> bool {
+        self.access_policy.can_view(self.owner_id, user_id, context)
+    }
+
+    pub fn can_edit(&self, user_id: Uuid, context: ResourceAccessContext) -> bool {
+        self.access_policy.can_edit(self.owner_id, user_id, context)
+    }
+
+    pub async fn update(
+        db: &mut sqlx::Transaction<'_, sqlx::Postgres>,
         character_id: &Uuid,
-        name: Option<String>,
-        description: Option<String>,
-        color: Option<String>,
-        alias: Option<String>,
-        image_id: Option<Uuid>,
-        visibility: Option<CharacterVisibility>,
-        is_archived: Option<bool>,
-        metadata: Option<serde_json::Value>,
+        expected_version: Uuid,
+        expected_scope_version: Uuid,
+        name: String,
+        key: String,
+        aliases: Vec<String>,
+        description: String,
+        color: String,
+        access_policy: AccessPolicy,
+        access_channel_id: Option<Uuid>,
+        tags: Vec<String>,
     ) -> Result<Option<Character>, ModelError> {
         use crate::validators;
 
-        let name = if let Some(name) = name {
-            let name = name.trim().to_string();
-            validators::CHARACTER_NAME.run(&name)?;
-            Some(name)
-        } else {
-            None
-        };
+        let name = name.trim().to_string();
+        validators::CHARACTER_NAME.run(&name)?;
+        validators::DESCRIPTION.run(&description)?;
+        let color = color.trim().to_string();
+        if !color.is_empty() {
+            validators::HEX_COLOR.run(&color)?;
+        }
+        let key = normalize_ident(&key)?;
+        let aliases = normalize_aliases(aliases, Some(&key))?;
+        let tags = crate::validators::normalize_tags(tags)?;
+        let target_space_id = sqlx::query_scalar!(
+            "SELECT space_id FROM characters WHERE id = $1",
+            character_id,
+        )
+        .fetch_optional(&mut **db)
+        .await?
+        .ok_or(ModelError::NotFound("Character"))?;
+        validate_access_channel(db, target_space_id, access_channel_id).await?;
 
-        let description = if let Some(description) = description {
-            validators::DESCRIPTION.run(&description)?;
-            Some(description)
-        } else {
-            None
-        };
-
-        let color = if let Some(color) = color {
-            let color = color.trim().to_string();
-            if !color.is_empty() {
-                validators::HEX_COLOR.run(&color)?;
-            }
-            Some(color)
-        } else {
-            None
-        };
-
-        let alias = if let Some(alias) = alias {
-            let trimmed = alias.trim();
-            if trimmed.is_empty() {
-                // Set to NULL in database
-                Some(String::new())
-            } else {
-                let alias = normalize_ident(trimmed)?;
-                Some(alias)
-            }
-        } else {
-            None
-        };
-
-        let visibility = visibility.map(CharacterVisibility::as_str);
-
-        sqlx::query_file_scalar!(
+        let target = sqlx::query_file!(
             "sql/characters/update.sql",
             character_id,
-            name.as_deref(),
-            description.as_deref(),
-            color.as_deref(),
-            alias.as_deref(),
-            image_id,
-            visibility,
-            is_archived,
-            metadata,
+            expected_version,
+            expected_scope_version,
+            name,
+            description,
+            color,
+            &tags,
+            access_policy.as_str(),
+            access_channel_id,
         )
-        .fetch_optional(db)
+        .fetch_optional(&mut **db)
         .await
-        .map_err(Into::into)
+        .map_err(ModelError::from)?;
+        let Some(target) = target else {
+            return Ok(None);
+        };
+        replace_character_identifiers(&mut **db, target.space_id, *character_id, &key, &aliases)
+            .await?;
+        Self::get_by_id(&mut **db, character_id)
+            .await
+            .map_err(Into::into)
     }
 
     pub async fn delete<'c, T: sqlx::PgExecutor<'c>>(
         db: T,
         character_id: &Uuid,
-    ) -> Result<bool, sqlx::Error> {
-        let result = sqlx::query_file!("sql/characters/delete.sql", character_id)
-            .execute(db)
-            .await?;
-        Ok(result.rows_affected() > 0)
+    ) -> Result<Vec<Uuid>, sqlx::Error> {
+        sqlx::query_file_scalar!("sql/characters/delete.sql", character_id)
+            .fetch_all(db)
+            .await
     }
 
-    pub async fn exists_name_or_alias<'c, T: sqlx::PgExecutor<'c>>(
+    pub async fn set_archived(
+        db: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+        character_id: &Uuid,
+        expected_version: Uuid,
+        archived: bool,
+    ) -> Result<Option<Character>, sqlx::Error> {
+        let updated_id = sqlx::query_file_scalar!(
+            "sql/characters/set_archived.sql",
+            character_id,
+            expected_version,
+            archived
+        )
+        .fetch_optional(&mut **db)
+        .await?;
+        let Some(updated_id) = updated_id else {
+            return Ok(None);
+        };
+        Self::get_by_id(&mut **db, &updated_id).await
+    }
+
+    pub async fn exists_identifier<'c, T: sqlx::PgExecutor<'c>>(
         db: T,
         space_id: Uuid,
-        name: Option<&str>,
-        alias: Option<&str>,
-    ) -> Result<bool, ModelError> {
-        let name = name.map(|name| name.trim()).filter(|name| !name.is_empty());
-        let alias = normalize_optional_ident(alias.map(|alias| alias.to_string()))?;
-
-        sqlx::query_file_scalar!(
-            "sql/characters/check_name_alias.sql",
-            space_id,
-            name,
-            alias.as_deref()
-        )
-        .fetch_one(db)
-        .await
-        .map_err(Into::into)
-    }
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone, specta::Type, sqlx::Type)]
-#[sqlx(type_name = "character_variables")]
-#[serde(rename_all = "camelCase")]
-pub struct CharacterVariable {
-    pub key: String,
-    pub character_id: Uuid,
-    pub display_name: String,
-    pub alias: Vec<String>,
-    pub sort: i32,
-    pub track_history: bool,
-    pub value: serde_json::Value,
-    pub metadata: serde_json::Value,
-    pub created: DateTime<Utc>,
-    pub modified: DateTime<Utc>,
-}
-
-#[derive(Default, Debug, Clone)]
-pub struct CharacterVariables(pub Vec<CharacterVariable>);
-
-impl Lifespan for CharacterVariables {
-    fn ttl_sec() -> u64 {
-        hour::HALF
-    }
-}
-
-impl CharacterVariable {
-    pub fn default_track_history() -> bool {
-        true
-    }
-
-    pub async fn create<'c, T: sqlx::PgExecutor<'c>>(
-        db: T,
-        character_id: Uuid,
-        key: &str,
-        display_name: &str,
-        alias: Vec<String>,
-        sort: i32,
-        track_history: bool,
-        value: serde_json::Value,
-        metadata: serde_json::Value,
-    ) -> Result<CharacterVariable, ModelError> {
-        let key = normalize_ident(key)?;
-        let display_name = display_name.trim().to_string();
-        crate::validators::DISPLAY_NAME.run(&display_name)?;
-        let alias = normalize_aliases(alias)?;
-        sqlx::query_file_scalar!(
-            "sql/characters/variables/create.sql",
-            key,
-            character_id,
-            display_name,
-            &alias,
-            sort,
-            track_history,
-            value,
-            metadata,
-        )
-        .fetch_one(db)
-        .await
-        .map_err(ModelError::from)
-    }
-
-    pub async fn get_by_key_with_cache(
-        pool: &sqlx::PgPool,
-        character_id: &Uuid,
-        key: &str,
-    ) -> Result<Option<CharacterVariable>, sqlx::Error> {
-        let variables = CharacterVariable::list_by_character_with_cache(pool, character_id).await?;
-        Ok(variables
-            .into_iter()
-            .find(|variable| variable.key.eq_ignore_ascii_case(key)))
-    }
-
-    pub async fn get_by_key<'c, T: sqlx::PgExecutor<'c>>(
-        db: T,
-        character_id: &Uuid,
-        key: &str,
-    ) -> Result<Option<CharacterVariable>, sqlx::Error> {
-        let variables = CharacterVariable::list_by_character(db, character_id).await?;
-        Ok(variables
-            .into_iter()
-            .find(|variable| variable.key.eq_ignore_ascii_case(key)))
-    }
-
-    pub async fn list_by_character_with_cache(
-        pool: &sqlx::PgPool,
-        character_id: &Uuid,
-    ) -> Result<Vec<CharacterVariable>, sqlx::Error> {
-        let character_id = *character_id;
-        let variables = fetch_entry(&CACHE.CharacterVariables, character_id, async move {
-            CharacterVariable::list_by_character(pool, &character_id)
-                .await
-                .map(CharacterVariables)
-        })
-        .await?;
-        Ok(variables.0)
-    }
-
-    pub async fn list_by_character<'c, T: sqlx::PgExecutor<'c>>(
-        db: T,
-        character_id: &Uuid,
-    ) -> Result<Vec<CharacterVariable>, sqlx::Error> {
-        sqlx::query_file_scalar!(
-            "sql/characters/variables/list_by_character.sql",
-            character_id
-        )
-        .fetch_all(db)
-        .await
-    }
-
-    pub async fn update<'c, T: sqlx::PgExecutor<'c>>(
-        db: T,
-        character_id: &Uuid,
-        key: &str,
-        display_name: Option<String>,
-        alias: Option<Vec<String>>,
-        sort: Option<i32>,
-        track_history: Option<bool>,
-        value: Option<serde_json::Value>,
-        metadata: Option<serde_json::Value>,
-    ) -> Result<Option<CharacterVariable>, ModelError> {
-        let key = normalize_ident(key)?;
-        let display_name = display_name.map(|name| name.trim().to_string());
-        if let Some(display_name) = &display_name {
-            if !display_name.is_empty() {
-                crate::validators::DISPLAY_NAME.run(display_name)?;
-            }
-        }
-        let alias = match alias {
-            Some(alias) => Some(normalize_aliases(alias)?),
-            None => None,
-        };
-        sqlx::query_file_scalar!(
-            "sql/characters/variables/update.sql",
-            character_id,
-            key,
-            display_name.as_deref(),
-            alias.as_ref().map(|alias| alias.as_slice()),
-            sort,
-            track_history,
-            value,
-            metadata,
-        )
-        .fetch_optional(db)
-        .await
-        .map_err(ModelError::from)
-    }
-
-    pub async fn delete<'c, T: sqlx::PgExecutor<'c>>(
-        db: T,
-        character_id: &Uuid,
-        key: &str,
-    ) -> Result<bool, sqlx::Error> {
-        let result = sqlx::query_file!("sql/characters/variables/delete.sql", character_id, key)
-            .execute(db)
-            .await?;
-        Ok(result.rows_affected() > 0)
-    }
-
-    pub async fn exists_key_or_alias<'c, T: sqlx::PgExecutor<'c>>(
-        db: T,
-        character_id: Uuid,
         key: Option<&str>,
-        alias: Option<&[String]>,
+        aliases: Option<&[String]>,
     ) -> Result<bool, ModelError> {
-        let key = match key {
-            Some(key) => Some(normalize_ident(key)?),
-            None => None,
-        };
-        let alias = match alias {
-            Some(alias) => {
-                let alias = normalize_aliases(alias.to_vec())?;
-                if alias.is_empty() { None } else { Some(alias) }
-            }
-            None => None,
-        };
+        let key = key.map(normalize_ident).transpose()?;
+        let aliases = aliases
+            .map(|aliases| normalize_aliases(aliases.to_vec(), key.as_deref()))
+            .transpose()?
+            .unwrap_or_default();
+        let identifiers = key.into_iter().chain(aliases).collect::<Vec<_>>();
 
         sqlx::query_file_scalar!(
-            "sql/characters/variables/check_key_alias.sql",
-            character_id,
-            key.as_deref(),
-            alias.as_ref().map(|alias| alias.as_slice())
+            "sql/characters/check_identifiers.sql",
+            space_id,
+            &identifiers
         )
         .fetch_one(db)
         .await
@@ -446,67 +281,114 @@ impl CharacterVariable {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, specta::Type, sqlx::Type)]
-#[sqlx(type_name = "character_variable_history")]
-#[serde(rename_all = "camelCase")]
-pub struct CharacterVariableHistory {
-    pub id: Uuid,
-    pub operator_id: Option<Uuid>,
-    pub character_id: Uuid,
-    pub reason: Option<serde_json::Value>,
-    pub key: String,
-    pub value: serde_json::Value,
-    pub created: DateTime<Utc>,
+async fn insert_character_identifiers(
+    db: &mut sqlx::PgConnection,
+    space_id: Uuid,
+    character_id: Uuid,
+    key: &str,
+    aliases: &[String],
+) -> Result<(), ModelError> {
+    let identifiers = std::iter::once(key.to_string())
+        .chain(aliases.iter().cloned())
+        .collect::<Vec<_>>();
+    sqlx::query_file!(
+        "sql/characters/insert_identifiers.sql",
+        space_id,
+        character_id,
+        &identifiers
+    )
+    .execute(&mut *db)
+    .await?;
+    Ok(())
 }
 
-impl CharacterVariableHistory {
-    pub async fn create<'c, T: sqlx::PgExecutor<'c>>(
-        db: T,
-        operator_id: Option<Uuid>,
-        character_id: Uuid,
-        reason: Option<serde_json::Value>,
-        key: &str,
-        value: serde_json::Value,
-    ) -> Result<(), sqlx::Error> {
-        sqlx::query_file!(
-            "sql/characters/variables/insert_history.sql",
-            operator_id,
-            character_id,
-            reason,
-            key,
-            value,
-        )
-        .execute(db)
-        .await?;
-        Ok(())
+async fn bind_character_scope(
+    db: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    character_id: Uuid,
+    scope_id: Uuid,
+    purpose: &str,
+) -> Result<(), ModelError> {
+    let binding = sqlx::query_file!(
+        "sql/characters/bind_scope.sql",
+        character_id,
+        scope_id,
+        purpose
+    )
+    .execute(&mut **db)
+    .await?;
+    if binding.rows_affected() == 0 {
+        return Err(ModelError::NotFound("Character Scope"));
     }
+    Ok(())
+}
 
-    pub async fn list_by_key<'c, T: sqlx::PgExecutor<'c>>(
-        db: T,
-        character_id: &Uuid,
-        key: &str,
-    ) -> Result<Vec<CharacterVariableHistory>, sqlx::Error> {
-        sqlx::query_file_scalar!(
-            "sql/characters/variables/history_by_key.sql",
-            character_id,
-            key
-        )
-        .fetch_all(db)
-        .await
-    }
+async fn replace_character_identifiers(
+    db: &mut sqlx::PgConnection,
+    space_id: Uuid,
+    character_id: Uuid,
+    key: &str,
+    aliases: &[String],
+) -> Result<(), ModelError> {
+    sqlx::query_file!("sql/characters/delete_identifiers.sql", character_id)
+        .execute(&mut *db)
+        .await?;
+    insert_character_identifiers(db, space_id, character_id, key, aliases).await
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::spaces::{Space, SpaceMember};
+    use crate::spaces::{AccessPolicy, ResourceAccessContext, Space};
     use crate::users::User;
-    use serde_json::json;
     use uuid::Uuid;
 
     fn unique_name(prefix: &str) -> String {
         let raw = Uuid::new_v4().simple().to_string();
         format!("{prefix}_{}", &raw[..6])
+    }
+
+    #[test]
+    fn identifier_normalization_accepts_single_characters_and_uses_nfc() {
+        assert_eq!(normalize_ident(" 力 "), Ok("力".to_string()));
+        assert_eq!(normalize_ident(" e\u{301} "), Ok("é".to_string()));
+        assert_eq!(normalize_ident("a\t b"), Ok("a__b".to_string()));
+    }
+
+    #[test]
+    fn identifier_aliases_are_limited_after_normalization_and_deduplication() {
+        let aliases = (0..IDENTIFIER_ALIAS_MAX_COUNT)
+            .map(|index| format!("alias_{index}"))
+            .chain([" ".to_string(), "ALIAS_0".to_string()])
+            .collect();
+        assert_eq!(
+            normalize_aliases(aliases, None)
+                .expect("16 unique aliases should be valid")
+                .len(),
+            IDENTIFIER_ALIAS_MAX_COUNT
+        );
+
+        let too_many = (0..=IDENTIFIER_ALIAS_MAX_COUNT)
+            .map(|index| format!("alias_{index}"))
+            .collect();
+        assert_eq!(
+            normalize_aliases(too_many, None),
+            Err(ValidationFailed("Too many aliases (max 16)."))
+        );
+    }
+
+    #[test]
+    fn identifier_aliases_ignore_the_normalized_primary() {
+        assert_eq!(
+            normalize_aliases(
+                vec![
+                    "e\u{301}".to_string(),
+                    "É".to_string(),
+                    "Health".to_string(),
+                ],
+                Some("é"),
+            ),
+            Ok(vec!["Health".to_string()])
+        );
     }
 
     async fn create_test_user(pool: &sqlx::PgPool, prefix: &str) -> User {
@@ -521,13 +403,40 @@ mod tests {
     async fn create_test_space(pool: &sqlx::PgPool, owner: &User, prefix: &str) -> Space {
         let name = unique_name(prefix);
         let description = format!("Description for {name}");
-        let space = Space::create(pool, name, &owner.id, description, None, Some("d20"))
+        Space::create(pool, name, &owner.id, description, None, Some("d20"))
             .await
-            .expect("failed to create space");
-        SpaceMember::add_admin(pool, &owner.id, &space.id)
+            .expect("failed to create space")
+    }
+
+    async fn create_test_character(
+        pool: &sqlx::PgPool,
+        space: &Space,
+        owner: &User,
+        name: &str,
+        key: &str,
+        aliases: Vec<String>,
+    ) -> Character {
+        let mut transaction = pool.begin().await.expect("failed to begin transaction");
+        let character = Character::create(
+            &mut transaction,
+            space.id,
+            owner.id,
+            name,
+            key,
+            aliases,
+            "",
+            "",
+            AccessPolicy::Secret,
+            None,
+            vec![],
+        )
+        .await
+        .expect("failed to create test character");
+        transaction
+            .commit()
             .await
-            .expect("failed to add owner as admin");
-        space
+            .expect("failed to commit test character");
+        character
     }
 
     #[sqlx::test(migrator = "crate::db::MIGRATOR")]
@@ -535,26 +444,92 @@ mod tests {
         let owner = create_test_user(&pool, "owner").await;
         let space = create_test_space(&pool, &owner, "char_space").await;
 
-        let character = Character::create(
+        let character = create_test_character(
             &pool,
+            &space,
+            &owner,
+            "Homura",
+            "homura",
+            vec!["homu".to_string()],
+        )
+        .await;
+
+        let initial_scope = crate::scopes::models::Scope::get_by_id(&pool, character.scope_id)
+            .await
+            .expect("get character scope failed")
+            .expect("character scope missing");
+        assert_ne!(initial_scope.id, character.id);
+        assert_eq!(
+            initial_scope.kind,
+            crate::scopes::models::ScopeKind::Character
+        );
+        assert_eq!(initial_scope.owner_id, Some(owner.id));
+        assert_eq!(character.owner_id, initial_scope.owner_id);
+        assert_eq!(character.scope_version, initial_scope.version);
+        let main_scope_id = sqlx::query_scalar!(
+            "SELECT main_scope_id FROM characters WHERE id = $1",
+            character.id
+        )
+        .fetch_one(&pool)
+        .await
+        .expect("get Character main Scope failed");
+        assert_eq!(main_scope_id, character.scope_id);
+
+        let private_scope_id = Uuid::now_v7();
+        let mut private_scope_transaction =
+            pool.begin().await.expect("begin private Scope creation");
+        sqlx::query_file!(
+            "sql/characters/create_scope.sql",
+            private_scope_id,
             space.id,
             owner.id,
-            "Homura",
-            "Time traveler",
-            "#7c4dff",
-            Some("homu".to_string()),
-            None,
-            CharacterVisibility::Private,
-            false,
-            json!({}),
+            AccessPolicy::Secret.as_str(),
+            None::<Uuid>
+        )
+        .execute(&mut *private_scope_transaction)
+        .await
+        .expect("create private character Scope failed");
+        bind_character_scope(
+            &mut private_scope_transaction,
+            character.id,
+            private_scope_id,
+            "private",
         )
         .await
-        .expect("failed to create character");
+        .expect("bind private character Scope failed");
+        private_scope_transaction
+            .commit()
+            .await
+            .expect("commit private Scope creation");
+        assert_eq!(initial_scope.access_policy, AccessPolicy::Secret);
+        assert_eq!(initial_scope.access_channel_id, None);
+        let owner_access = ResourceAccessContext {
+            can_view: true,
+            is_member: true,
+            is_game_master: false,
+            can_manage: false,
+        };
+        assert!(character.can_view(Some(owner.id), owner_access));
+        assert!(character.can_edit(owner.id, owner_access));
+
+        let other_member_id = Uuid::now_v7();
+        assert!(!character.can_view(Some(other_member_id), owner_access));
+        assert!(!character.can_edit(other_member_id, owner_access));
+
+        let admin_id = Uuid::now_v7();
+        let admin_access = ResourceAccessContext {
+            can_view: true,
+            is_member: true,
+            is_game_master: false,
+            can_manage: true,
+        };
+        assert!(!character.can_view(Some(admin_id), admin_access));
+        assert!(!character.can_edit(admin_id, admin_access));
 
         let exists_by_alias_trimmed =
-            Character::exists_name_or_alias(&pool, space.id, None, Some(" homu "))
+            Character::exists_identifier(&pool, space.id, Some(" homu "), None)
                 .await
-                .expect("exists_name_or_alias failed");
+                .expect("exists_identifier failed");
         assert!(exists_by_alias_trimmed);
 
         let fetched = Character::get_by_id(&pool, &character.id)
@@ -568,256 +543,217 @@ mod tests {
             .expect("list_by_space failed");
         assert!(list.iter().any(|item| item.id == character.id));
 
+        let mut conflicting_transaction = pool.begin().await.expect("failed to begin transaction");
+        let conflicting_name = Character::create(
+            &mut conflicting_transaction,
+            space.id,
+            owner.id,
+            "Another Homura",
+            "HOMU",
+            vec![],
+            "",
+            "",
+            AccessPolicy::Secret,
+            None,
+            vec![],
+        )
+        .await;
+        assert!(
+            matches!(conflicting_name, Err(ModelError::Conflict(_))),
+            "a character key must not collide with another character's alias"
+        );
+
+        let mut update_transaction = pool.begin().await.expect("failed to begin transaction");
         let updated = Character::update(
-            &pool,
+            &mut update_transaction,
             &character.id,
-            Some("Akemi Homura".to_string()),
-            Some("Hentai".to_string()),
+            character.version,
+            character.scope_version,
+            "Akemi Homura".to_string(),
+            "akemi_homura".to_string(),
+            vec![],
+            "Hentai".to_string(),
+            String::new(),
+            AccessPolicy::Public,
             None,
-            Some(String::new()),
-            None,
-            Some(CharacterVisibility::Public),
-            Some(true),
-            Some(json!({"role": "pc"})),
+            vec![
+                " Player ".to_string(),
+                "第一幕".to_string(),
+                "player".to_string(),
+                String::new(),
+            ],
         )
         .await
         .expect("update failed")
         .expect("character not found on update");
+        update_transaction
+            .commit()
+            .await
+            .expect("failed to commit character update");
         assert_eq!(updated.name, "Akemi Homura");
-        assert_eq!(updated.alias, None);
-        assert_eq!(updated.visibility, CharacterVisibility::Public);
+        assert_eq!(updated.key, "akemi_homura");
+        assert!(updated.aliases.is_empty());
+        assert_eq!(updated.access_policy, AccessPolicy::Public);
+        assert_eq!(updated.access_channel_id, None);
+        assert_ne!(updated.version, character.version);
+        assert_ne!(updated.scope_version, character.scope_version);
         assert_eq!(updated.description, "Hentai");
-        assert!(updated.is_archived);
+        assert!(updated.archived_at.is_none());
+        assert_eq!(updated.tags, vec!["Player", "第一幕", "player"]);
+        let viewer_access = ResourceAccessContext {
+            can_view: true,
+            is_member: false,
+            is_game_master: false,
+            can_manage: false,
+        };
+        assert!(updated.can_view(None, viewer_access));
+        assert!(!updated.can_edit(other_member_id, viewer_access));
 
-        let exists_by_name =
-            Character::exists_name_or_alias(&pool, space.id, Some("Akemi Homura"), None)
-                .await
-                .expect("exists_name_or_alias failed");
-        assert!(exists_by_name);
+        let mut stale_transaction = pool.begin().await.expect("failed to begin stale update");
+        let stale_update = Character::update(
+            &mut stale_transaction,
+            &character.id,
+            character.version,
+            updated.scope_version,
+            updated.name.to_string(),
+            updated.key.to_string(),
+            updated.aliases.iter().map(ToString::to_string).collect(),
+            updated.description.clone(),
+            updated.color.to_string(),
+            updated.access_policy,
+            updated.access_channel_id,
+            updated.tags.iter().map(ToString::to_string).collect(),
+        )
+        .await
+        .expect("stale update query failed");
+        assert!(stale_update.is_none());
+        stale_transaction
+            .rollback()
+            .await
+            .expect("failed to rollback stale update");
 
-        let exists_by_alias =
-            Character::exists_name_or_alias(&pool, space.id, None, Some("homura"))
+        let mut stale_scope_transaction = pool
+            .begin()
+            .await
+            .expect("failed to begin stale Scope update");
+        let stale_scope_update = Character::update(
+            &mut stale_scope_transaction,
+            &character.id,
+            updated.version,
+            character.scope_version,
+            updated.name.to_string(),
+            updated.key.to_string(),
+            updated.aliases.iter().map(ToString::to_string).collect(),
+            updated.description.clone(),
+            updated.color.to_string(),
+            updated.access_policy,
+            updated.access_channel_id,
+            updated.tags.iter().map(ToString::to_string).collect(),
+        )
+        .await
+        .expect("stale Scope update query failed");
+        assert!(stale_scope_update.is_none());
+        stale_scope_transaction
+            .rollback()
+            .await
+            .expect("failed to rollback stale Scope update");
+
+        let updated_scope = crate::scopes::models::Scope::get_by_id(&pool, character.scope_id)
+            .await
+            .expect("get updated character scope failed")
+            .expect("updated character scope missing");
+        assert_eq!(updated_scope.access_policy, AccessPolicy::Public);
+        assert_eq!(updated_scope.access_channel_id, None);
+        assert_ne!(updated_scope.version, initial_scope.version);
+        assert_eq!(updated.scope_version, updated_scope.version);
+
+        let exists_by_key =
+            Character::exists_identifier(&pool, space.id, Some("akemi_homura"), None)
                 .await
-                .expect("exists_name_or_alias failed");
+                .expect("exists_identifier failed");
+        assert!(exists_by_key);
+
+        let exists_by_alias = Character::exists_identifier(&pool, space.id, Some("homura"), None)
+            .await
+            .expect("exists_identifier failed");
         assert!(!exists_by_alias);
 
-        let deleted = Character::delete(&pool, &character.id)
+        let mut archive_transaction = pool.begin().await.expect("failed to begin archive");
+        let archived = Character::set_archived(
+            &mut archive_transaction,
+            &character.id,
+            updated.version,
+            true,
+        )
+        .await
+        .expect("archive failed")
+        .expect("character missing on archive");
+        archive_transaction
+            .commit()
+            .await
+            .expect("failed to commit archive");
+        assert!(archived.archived_at.is_some());
+        assert_ne!(archived.version, updated.version);
+        assert!(
+            Character::exists_identifier(&pool, space.id, Some("akemi_homura"), None)
+                .await
+                .expect("identifier lookup after archive failed"),
+            "archiving must retain the character identifiers"
+        );
+
+        let mut restore_transaction = pool.begin().await.expect("failed to begin restore");
+        let restored = Character::set_archived(
+            &mut restore_transaction,
+            &character.id,
+            archived.version,
+            false,
+        )
+        .await
+        .expect("restore failed")
+        .expect("character missing on restore");
+        restore_transaction
+            .commit()
+            .await
+            .expect("failed to commit restore");
+        assert!(restored.archived_at.is_none());
+        assert_ne!(restored.version, archived.version);
+
+        let mut stale_archive_transaction =
+            pool.begin().await.expect("failed to begin stale archive");
+        assert!(
+            Character::set_archived(
+                &mut stale_archive_transaction,
+                &character.id,
+                archived.version,
+                true
+            )
+            .await
+            .expect("stale archive query failed")
+            .is_none()
+        );
+        stale_archive_transaction
+            .rollback()
+            .await
+            .expect("failed to roll back stale archive");
+
+        let mut deleted_scope_ids = Character::delete(&pool, &character.id)
             .await
             .expect("delete failed");
-        assert!(deleted);
-    }
-
-    #[sqlx::test(migrator = "crate::db::MIGRATOR")]
-    async fn db_test_rolled_back_character_writes_are_not_visible(pool: sqlx::PgPool) {
-        let owner = create_test_user(&pool, "rollback_char_owner").await;
-        let space = create_test_space(&pool, &owner, "rollback_char_space").await;
-
-        let mut transaction = pool.begin().await.expect("failed to begin transaction");
-        let rolled_back = Character::create(
-            &mut *transaction,
-            space.id,
-            owner.id,
-            "Rolled Back Character",
-            "",
-            "",
-            None,
-            None,
-            CharacterVisibility::Private,
-            false,
-            json!({}),
-        )
-        .await
-        .expect("failed to create character in transaction");
-        transaction
-            .rollback()
-            .await
-            .expect("failed to roll back character creation");
+        deleted_scope_ids.sort_unstable();
+        let mut expected_scope_ids = vec![character.scope_id, private_scope_id];
+        expected_scope_ids.sort_unstable();
+        assert_eq!(deleted_scope_ids, expected_scope_ids);
         assert!(
-            Character::get_by_id(&pool, &rolled_back.id)
+            crate::scopes::models::Scope::get_by_id(&pool, character.scope_id)
                 .await
-                .expect("failed to query rolled-back Character")
-                .is_none(),
-            "a rolled-back Character remained visible"
+                .expect("get deleted main Scope failed")
+                .is_none()
         );
-    }
-
-    #[sqlx::test(migrator = "crate::db::MIGRATOR")]
-    async fn db_test_character_variable_flow(pool: sqlx::PgPool) {
-        let owner = create_test_user(&pool, "owner").await;
-        let space = create_test_space(&pool, &owner, "var_space").await;
-        let character = Character::create(
-            &pool,
-            space.id,
-            owner.id,
-            "Madoka",
-            "",
-            "",
-            None,
-            None,
-            CharacterVisibility::Private,
-            false,
-            json!({}),
-        )
-        .await
-        .expect("failed to create character");
-
-        let variable = CharacterVariable::create(
-            &pool,
-            character.id,
-            "hp",
-            "HP",
-            vec!["health".to_string()],
-            0,
-            true,
-            json!(100),
-            json!({}),
-        )
-        .await
-        .expect("failed to create variable");
-        assert_eq!(variable.key, "hp");
-
-        let fetched = CharacterVariable::get_by_key_with_cache(&pool, &character.id, "HP")
-            .await
-            .expect("get_by_key failed")
-            .expect("variable not found");
-        assert_eq!(fetched.key, "hp");
-
-        let variables = CharacterVariable::list_by_character_with_cache(&pool, &character.id)
-            .await
-            .expect("list_by_character failed");
-        assert_eq!(variables.len(), 1);
-
-        let updated = CharacterVariable::update(
-            &pool,
-            &character.id,
-            "hp",
-            Some("Health".to_string()),
-            Some(vec!["health".to_string(), "HP".to_string()]),
-            Some(1),
-            Some(false),
-            Some(json!(80)),
-            Some(json!({"unit": "points"})),
-        )
-        .await
-        .expect("update failed")
-        .expect("variable not found on update");
-        assert_eq!(updated.display_name, "Health");
-        assert!(!updated.track_history);
-
-        let exists_key =
-            CharacterVariable::exists_key_or_alias(&pool, character.id, Some("hp"), None)
-                .await
-                .expect("exists_key_or_alias failed");
-        assert!(exists_key);
-
-        let exists_key_trimmed =
-            CharacterVariable::exists_key_or_alias(&pool, character.id, Some(" hp "), None)
-                .await
-                .expect("exists_key_or_alias failed");
-        assert!(exists_key_trimmed);
-
-        let alias_check = vec!["HP".to_string()];
-        let exists_alias =
-            CharacterVariable::exists_key_or_alias(&pool, character.id, None, Some(&alias_check))
-                .await
-                .expect("exists_key_or_alias failed");
-        assert!(exists_alias);
-
-        let alias_trimmed_check = vec![" health ".to_string()];
-        let exists_alias_trimmed = CharacterVariable::exists_key_or_alias(
-            &pool,
-            character.id,
-            None,
-            Some(&alias_trimmed_check),
-        )
-        .await
-        .expect("exists_key_or_alias failed");
-        assert!(exists_alias_trimmed);
-
-        let missing_alias = vec!["mp".to_string()];
-        let exists_missing =
-            CharacterVariable::exists_key_or_alias(&pool, character.id, None, Some(&missing_alias))
-                .await
-                .expect("exists_key_or_alias failed");
-        assert!(!exists_missing);
-
-        CharacterVariableHistory::create(
-            &pool,
-            Some(owner.id),
-            character.id,
-            Some(json!({"reason": "damage"})),
-            "hp",
-            json!(79),
-        )
-        .await
-        .expect("failed to create variable history");
-
-        let history = CharacterVariableHistory::list_by_key(&pool, &character.id, "hp")
-            .await
-            .expect("list_by_key failed");
-        assert_eq!(history.len(), 1);
-        assert_eq!(history[0].key, "hp");
-    }
-
-    #[sqlx::test(migrator = "crate::db::MIGRATOR")]
-    async fn db_test_rolled_back_variable_update_does_not_invalidate_cache(pool: sqlx::PgPool) {
-        let owner = create_test_user(&pool, "rollback_var_owner").await;
-        let space = create_test_space(&pool, &owner, "rollback_var_space").await;
-        let character = Character::create(
-            &pool,
-            space.id,
-            owner.id,
-            "Variable Cache Owner",
-            "",
-            "",
-            None,
-            None,
-            CharacterVisibility::Private,
-            false,
-            json!({}),
-        )
-        .await
-        .expect("failed to create character");
-        CharacterVariable::create(
-            &pool,
-            character.id,
-            "hp",
-            "HP",
-            vec![],
-            0,
-            true,
-            json!(10),
-            json!({}),
-        )
-        .await
-        .expect("failed to create variable");
-        CharacterVariable::list_by_character_with_cache(&pool, &character.id)
-            .await
-            .expect("failed to prime variable cache");
-        assert!(CACHE.CharacterVariables.get(&character.id).is_some());
-
-        let mut transaction = pool.begin().await.expect("failed to begin transaction");
-        CharacterVariable::update(
-            &mut *transaction,
-            &character.id,
-            "hp",
-            None,
-            None,
-            None,
-            None,
-            Some(json!(9)),
-            None,
-        )
-        .await
-        .expect("failed to update variable in transaction")
-        .expect("variable disappeared during update");
         assert!(
-            CACHE.CharacterVariables.get(&character.id).is_some(),
-            "an uncommitted variable update invalidated the shared list cache"
+            crate::scopes::models::Scope::get_by_id(&pool, private_scope_id)
+                .await
+                .expect("get deleted private Scope failed")
+                .is_none()
         );
-        transaction
-            .rollback()
-            .await
-            .expect("failed to roll back variable update");
     }
 }

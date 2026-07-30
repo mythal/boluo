@@ -1,42 +1,73 @@
 use serde::Deserialize;
+use shared_types::messages::Entities;
 use uuid::Uuid;
 
-use super::models::{NoteType, NoteVisibility};
+use crate::spaces::AccessPolicy;
 
 #[derive(Deserialize, Debug, specta::Type)]
 #[serde(rename_all = "camelCase")]
-/// Payload for creating a note.
+pub struct QueryNote {
+    pub space_id: Uuid,
+    pub note_id: Uuid,
+}
+
+#[derive(Deserialize, Debug, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct ListNotes {
+    pub space_id: Uuid,
+    #[serde(default)]
+    pub include_archived: bool,
+}
+
+#[derive(Deserialize, Debug, specta::Type)]
+#[serde(rename_all = "camelCase")]
 pub struct CreateNote {
     pub space_id: Uuid,
-    #[serde(rename = "type")]
-    pub note_type: NoteType,
     #[serde(default)]
     pub title: String,
     #[serde(default)]
     pub keywords: Vec<String>,
     #[serde(default)]
-    pub content: String,
-    pub visibility: NoteVisibility,
+    pub tags: Vec<String>,
     #[serde(default)]
-    pub visible_to: Vec<Uuid>,
+    pub text: String,
     #[serde(default)]
-    pub everyone_can_edit: bool,
-    #[serde(default)]
-    pub track_history: bool,
+    pub entities: Entities,
+    pub access_policy: AccessPolicy,
+    pub access_channel_id: Option<Uuid>,
 }
 
 #[derive(Deserialize, Debug, specta::Type)]
 #[serde(rename_all = "camelCase")]
-/// Payload for editing a note.
 pub struct EditNote {
+    pub space_id: Uuid,
     pub note_id: Uuid,
-    #[serde(rename = "type")]
-    pub note_type: Option<NoteType>,
-    pub title: Option<String>,
-    pub keywords: Option<Vec<String>>,
-    pub content: Option<String>,
-    pub visibility: Option<NoteVisibility>,
-    pub visible_to: Option<Vec<Uuid>>,
-    pub everyone_can_edit: Option<bool>,
-    pub track_history: Option<bool>,
+    #[specta(type = f64)]
+    pub expected_revision: i64,
+    pub title: String,
+    pub keywords: Vec<String>,
+    pub tags: Vec<String>,
+    pub text: String,
+    #[serde(default)]
+    pub entities: Entities,
+    pub access_policy: AccessPolicy,
+    pub access_channel_id: Option<Uuid>,
+}
+
+#[derive(Deserialize, Debug, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct ArchiveNote {
+    pub space_id: Uuid,
+    pub note_id: Uuid,
+    #[specta(type = f64)]
+    pub expected_revision: i64,
+}
+
+#[derive(Deserialize, Debug, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct RestoreNote {
+    pub space_id: Uuid,
+    pub note_id: Uuid,
+    #[specta(type = f64)]
+    pub expected_revision: i64,
 }

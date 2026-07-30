@@ -36,6 +36,7 @@ mod context;
 mod cors;
 mod csrf;
 mod db;
+mod entries;
 mod events;
 mod info;
 mod interface;
@@ -50,6 +51,7 @@ mod rate_limit;
 mod redis;
 mod rs;
 mod s3;
+mod scopes;
 mod sentry_tunnel;
 mod server_metrics;
 mod session;
@@ -108,6 +110,7 @@ async fn router(
     table!("/api/characters", characters::router);
     table!("/api/spaces", spaces::router);
     table!("/api/notes", notes::router);
+    table!("/api/entries", entries::router);
     table!("/api/events", events::router);
     table!("/api/updates", events::router);
     missing()

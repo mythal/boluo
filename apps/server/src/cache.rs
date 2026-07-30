@@ -3,7 +3,6 @@ use std::sync::LazyLock;
 use quick_cache::sync::Cache;
 use uuid::Uuid;
 
-use crate::characters::CharacterVariables;
 use crate::session::Session;
 use crate::spaces::UserSpaces;
 use crate::users::User;
@@ -149,7 +148,6 @@ impl CacheStore {
 
 // Please adjust the cache capacities based on the production metrics.
 define_caches! {
-    (CharacterVariables, 4096),
     (Session, 512),
     (User, 256),
     (UserExt, 256),

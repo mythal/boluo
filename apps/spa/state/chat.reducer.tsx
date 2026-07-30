@@ -134,7 +134,7 @@ const handleUpdate = (
     }
     nextCursor = update.id;
   }
-  const updateEffects: ChatEffect[] = (() => {
+  const updateEffects: ChatEffect[] | null | undefined = (() => {
     switch (update.body.type) {
       case 'CHANNEL_DELETED':
         return [
@@ -198,6 +198,9 @@ const handleUpdate = (
       case 'INITIALIZED':
       case 'DIFF':
       case 'APP_INFO':
+      case 'ENTRY_CHANGED':
+      case 'CHARACTER_CHANGED':
+      case 'NOTE_CHANGED':
       case 'APP_UPDATED':
         return [];
     }
@@ -205,7 +208,7 @@ const handleUpdate = (
   const chatAction = toChatAction(update);
   if (chatAction == null) {
     const nextState = shouldAdvanceCursor ? { ...state, cursor: nextCursor } : state;
-    return updateEffects.length === 0
+    return updateEffects == null || updateEffects.length === 0
       ? nextState
       : { ...nextState, effects: mergeEffects(nextState.effects, updateEffects) };
   }
@@ -214,7 +217,7 @@ const handleUpdate = (
     ...nextState,
     cursor: nextCursor,
     effects:
-      updateEffects.length === 0
+      updateEffects == null || updateEffects.length === 0
         ? nextState.effects
         : mergeEffects(nextState.effects, updateEffects),
   };

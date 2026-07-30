@@ -292,10 +292,11 @@ impl ChannelMember {
             character_name,
             is_master
         )
-        .fetch_one(db)
+        .fetch_optional(db)
         .await
+        .map_err(ModelError::from)?
         .map(|record| record.member)
-        .map_err(Into::into)
+        .ok_or(ModelError::NotFound("Space Member"))
     }
 
     pub async fn get_color_list<'c, T: sqlx::PgExecutor<'c>>(
@@ -802,6 +803,66 @@ mod tests {
             .expect("resolve_owning_space_id after delete failed")
             .expect("deleted channel ownership was lost");
         assert_eq!(space_id_after_delete, space.id);
+    }
+
+    #[sqlx::test(migrator = "crate::db::MIGRATOR")]
+    async fn db_test_channel_members_require_space_membership_and_restore_master(
+        pool: sqlx::PgPool,
+    ) {
+        let owner = create_test_user(&pool, "membership_owner").await;
+        let member = create_test_user(&pool, "membership_member").await;
+        let outsider = create_test_user(&pool, "membership_outsider").await;
+        let space = create_test_space(&pool, &owner, "membership_space").await;
+        SpaceMember::add_user(&pool, &member.id, &space.id)
+            .await
+            .expect("failed to add Space member");
+        let channel = Channel::create(
+            &pool,
+            &space.id,
+            "Membership Boundary",
+            false,
+            Some("d20"),
+            ChannelType::InGame,
+        )
+        .await
+        .expect("failed to create Channel");
+
+        assert!(matches!(
+            ChannelMember::add_user(&pool, outsider.id, channel.id, "Outsider", false).await,
+            Err(ModelError::NotFound("Space Member"))
+        ));
+
+        let original = ChannelMember::add_user(&pool, member.id, channel.id, "GM", true)
+            .await
+            .expect("failed to add Channel master");
+        assert!(original.is_master);
+        ChannelMember::remove_user(&pool, member.id, channel.id)
+            .await
+            .expect("failed to leave Channel");
+        let rejoined = ChannelMember::add_user(&pool, member.id, channel.id, "GM Again", false)
+            .await
+            .expect("failed to rejoin Channel");
+        assert!(
+            rejoined.is_master,
+            "rejoining should restore the old master role"
+        );
+
+        let mut connection = pool.acquire().await.expect("failed to acquire connection");
+        let removed_channels = SpaceMember::remove_user(&mut connection, member.id, space.id)
+            .await
+            .expect("failed to leave Space");
+        assert_eq!(removed_channels, vec![channel.id]);
+        drop(connection);
+        SpaceMember::add_user(&pool, &member.id, &space.id)
+            .await
+            .expect("failed to rejoin Space");
+        let restored = ChannelMember::add_user(&pool, member.id, channel.id, "GM Restored", false)
+            .await
+            .expect("failed to rejoin Channel after Space");
+        assert!(
+            restored.is_master,
+            "rejoining Space and Channel should restore the old master role"
+        );
     }
 
     #[sqlx::test(migrator = "crate::db::MIGRATOR")]

@@ -1,6 +1,9 @@
-INSERT INTO public.spaces (id, name, description, owner_id, language, default_dice_type, explorable, allow_spectator)
+BEGIN;
+
+INSERT INTO public.spaces (id, scope_id, name, description, owner_id, language, default_dice_type, explorable, allow_spectator)
 VALUES (
   'a400dd6f-c26c-4849-bdfb-74b67154ab28',
+  uuidv7(),
   '星落王国',
   '高魔奇幻：龙灾将王国化为焦土，余烬未冷，
    派系争夺古龙遗藏与王位正统。远古符文在地下苏醒，
@@ -12,9 +15,10 @@ VALUES (
   true
 );
 
-INSERT INTO public.spaces (id, name, description, owner_id, language, default_dice_type, explorable, allow_spectator)
+INSERT INTO public.spaces (id, scope_id, name, description, owner_id, language, default_dice_type, explorable, allow_spectator)
 VALUES (
   '2d7c2985-cb47-4912-a3cd-3966d347ced6',
+  uuidv7(),
   '霓虹学园：午夜都市传说',
   '学园都市系轻奇幻：午夜后，校园传说开始兑现——
    天台足音、旧体育馆的镜中人、食堂自动售货机的第十三号菜单。
@@ -26,9 +30,10 @@ VALUES (
   true
 );
 
-INSERT INTO public.spaces (id, name, description, owner_id, language, default_dice_type, explorable, allow_spectator)
+INSERT INTO public.spaces (id, scope_id, name, description, owner_id, language, default_dice_type, explorable, allow_spectator)
 VALUES (
   'd72d44be-d71f-4e5a-a678-f8aeaa6d8c63',
+  uuidv7(),
   '雾港疑云',
   '克苏鲁式调查：潮汐在码头写下无法辨读的螺旋文字，溺亡者口袋里
    装着同一枚盐锈硬币。雾港的钟声在凌晨四点响起，只有调查员听见——
@@ -38,6 +43,28 @@ VALUES (
   'd100',
   false,
   true
+);
+
+INSERT INTO public.scopes (
+  id,
+  space_id,
+  kind,
+  owner_id,
+  view_policy,
+  edit_policy
+)
+SELECT
+  scope_id,
+  id,
+  'Space',
+  owner_id,
+  'SpaceViewers',
+  'SpaceAdmins'
+FROM public.spaces
+WHERE id IN (
+  'a400dd6f-c26c-4849-bdfb-74b67154ab28',
+  '2d7c2985-cb47-4912-a3cd-3966d347ced6',
+  'd72d44be-d71f-4e5a-a678-f8aeaa6d8c63'
 );
 
 
@@ -62,3 +89,5 @@ VALUES
   ('73bf49a7-4a59-4c52-9c90-25796042a6a3', 'caseboard', '案件线索与拼图（文档）', 'd72d44be-d71f-4e5a-a678-f8aeaa6d8c63', false, 'd100', 'd', true, 'out_of_game'),
   ('bb682813-9e71-4445-8965-f97f0884f826', 'ooc', 'OOC讨论与汇总', 'd72d44be-d71f-4e5a-a678-f8aeaa6d8c63', true, 'd100', 'd', false, 'out_of_game'),
   ('aeeb9e83-8792-4249-b94c-fd20523bbbfa', 'dice', '掷骰频道', 'd72d44be-d71f-4e5a-a678-f8aeaa6d8c63', true, 'd100', 'd', false, 'in_game');
+
+COMMIT;

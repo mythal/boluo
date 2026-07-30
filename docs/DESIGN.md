@@ -60,9 +60,9 @@ Some changes produce history records to help players understand what happened du
 
 #### Scopes and Characters
 
-A Scope is a container for Entries. A Space creates its own root Scope. Each Character creates a Character Scope as a child of the Space Scope. A Character's HP, for example, belongs to its Character Scope.
+A Scope is a container for Entries within a Space. It defines an access-control and identifier boundary. A Space has a shared Scope, and each Character has a required main Character Scope. Additional Character Scopes can be associated through named purposes. A Character's HP, for example, belongs to its main Character Scope.
 
-Entries do not have their own access control. Access is controlled through Scope permissions. For example, a Character may have a public Character Scope. In the future, private child Scopes could be created beneath it to hold private Entries such as secret missions or plot points. For simplicity, permissions are not currently inherited between Scopes.
+Entries do not have their own access control. Access is controlled through their Scope's access policy, using the same policy model as Notes. A Character may use additional named Scopes for state that needs different access. Scopes do not inherit permissions from other Scopes.
 
 An Entry's key and aliases are unique within the same Scope. Entries in different Scopes may use the same name. This supports command parsing and references in chat.
 

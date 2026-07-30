@@ -789,6 +789,39 @@ async fn resolve_channel_mutation_space(
     Ok(owning_space_id)
 }
 
+async fn ensure_channel_not_referenced(
+    db: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    channel_id: Uuid,
+) -> Result<(), AppError> {
+    // Resource creation and updates take the same lock while validating their
+    // access Channel, so no new reference can race with this check.
+    sqlx::query_scalar!(
+        "SELECT id FROM channels WHERE id = $1 AND deleted = FALSE FOR UPDATE",
+        channel_id,
+    )
+    .fetch_optional(&mut **db)
+    .await?
+    .ok_or(AppError::NotFound("channel"))?;
+    let referenced = sqlx::query_scalar!(
+        r#"
+        SELECT EXISTS(
+            SELECT 1 FROM scopes WHERE access_channel_id = $1
+            UNION ALL
+            SELECT 1 FROM notes WHERE access_channel_id = $1
+        ) AS "referenced!"
+        "#,
+        channel_id,
+    )
+    .fetch_one(&mut **db)
+    .await?;
+    if referenced {
+        return Err(AppError::Conflict(
+            "Channel is still used as a resource access context".to_string(),
+        ));
+    }
+    Ok(())
+}
+
 async fn delete(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
@@ -805,6 +838,7 @@ async fn delete(
     let channel = Channel::get_by_id(&mut *trans, &id).await.or_not_found()?;
 
     admin_only(&mut *trans, &session.user_id, &channel.space_id).await?;
+    ensure_channel_not_referenced(&mut trans, id).await?;
 
     if !Channel::delete(&mut trans, &id).await? {
         return Err(AppError::NotFound("channel"));
@@ -998,6 +1032,71 @@ mod tests {
             .await
             .expect("failed to grant owner admin");
         space
+    }
+
+    #[sqlx::test(migrator = "crate::db::MIGRATOR")]
+    async fn db_test_referenced_access_channel_cannot_be_deleted(pool: sqlx::PgPool) {
+        let owner = create_test_user(&pool).await;
+        let space = create_test_space(&pool, &owner).await;
+        let channel = Channel::create(
+            &pool,
+            &space.id,
+            "Access Context",
+            false,
+            Some("d20"),
+            ChannelType::InGame,
+        )
+        .await
+        .expect("failed to create Channel");
+
+        let mut transaction = pool.begin().await.expect("failed to begin transaction");
+        ensure_channel_not_referenced(&mut transaction, channel.id)
+            .await
+            .expect("unused Channel was treated as referenced");
+        transaction
+            .rollback()
+            .await
+            .expect("failed to roll back unused check");
+
+        sqlx::query!(
+            "UPDATE scopes SET access_channel_id = $1 WHERE id = $2",
+            channel.id,
+            space.scope_id,
+        )
+        .execute(&pool)
+        .await
+        .expect("failed to bind Space Scope to Channel");
+        let mut transaction = pool.begin().await.expect("failed to begin transaction");
+        assert!(matches!(
+            ensure_channel_not_referenced(&mut transaction, channel.id).await,
+            Err(AppError::Conflict(_))
+        ));
+        transaction
+            .rollback()
+            .await
+            .expect("failed to roll back Scope reference check");
+
+        sqlx::query!(
+            "UPDATE scopes SET access_channel_id = NULL WHERE id = $1",
+            space.scope_id,
+        )
+        .execute(&pool)
+        .await
+        .expect("failed to unbind Space Scope");
+        sqlx::query!(
+            "INSERT INTO notes (space_id, creator_id, access_channel_id) VALUES ($1, $2, $3)",
+            space.id,
+            owner.id,
+            channel.id,
+        )
+        .execute(&pool)
+        .await
+        .expect("failed to create referenced Note");
+        let mut transaction = pool.begin().await.expect("failed to begin transaction");
+        assert!(matches!(
+            ensure_channel_not_referenced(&mut transaction, channel.id).await,
+            Err(AppError::Conflict(_))
+        ));
     }
 
     #[sqlx::test(migrator = "crate::db::MIGRATOR")]

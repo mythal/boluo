@@ -46,6 +46,7 @@ pub struct Space {
     pub invite_token: Uuid,
     pub allow_spectator: bool,
     pub latest_activity: DateTime<Utc>,
+    pub scope_id: Uuid,
 }
 
 impl Space {
@@ -482,6 +483,12 @@ mod tests {
         changes.apply().await;
         assert!(assigned_admin.is_admin);
 
+        let assigned_game_master = SpaceMember::set_game_master(&pool, &member.id, &space.id, true)
+            .await
+            .expect("set_game_master failed")
+            .expect("expected updated member");
+        assert!(assigned_game_master.is_game_master);
+
         let members = SpaceMember::get_by_user_with_cache(&pool, member.id)
             .await
             .expect("get_by_user failed");
@@ -591,6 +598,7 @@ pub struct SpaceMember {
     pub space_id: Uuid,
     pub is_admin: bool,
     pub join_date: DateTime<Utc>,
+    pub is_game_master: bool,
 }
 
 struct AddUserToSpace {
@@ -608,6 +616,24 @@ impl SpaceMember {
         sqlx::query_file_scalar!(
             "sql/spaces/set_space_member.sql",
             Some(is_admin),
+            None::<bool>,
+            user_id,
+            space_id,
+        )
+        .fetch_optional(db)
+        .await
+    }
+
+    pub async fn set_game_master<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
+        user_id: &Uuid,
+        space_id: &Uuid,
+        is_game_master: bool,
+    ) -> Result<Option<SpaceMember>, sqlx::Error> {
+        sqlx::query_file_scalar!(
+            "sql/spaces/set_space_member.sql",
+            None::<bool>,
+            Some(is_game_master),
             user_id,
             space_id,
         )

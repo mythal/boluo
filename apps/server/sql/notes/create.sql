@@ -1,14 +1,24 @@
 INSERT INTO notes (
-    type,
+    id,
     space_id,
     title,
     keywords,
-    owner_id,
-    content,
-    visibility,
-    visible_to,
-    everyone_can_edit,
-    track_history
+    tags,
+    creator_id,
+    text,
+    entities,
+    access_policy,
+    access_channel_id
 )
-VALUES (($1::text)::note_type, $2, $3, $4, $5, $6, ($7::text)::note_visibility, $8, $9, $10)
-RETURNING notes as "note!: Note";
+VALUES (
+    $1,
+    $2,
+    $3,
+    $4,
+    $5,
+    $6,
+    $7,
+    $8,
+    ($9::text)::access_policy,
+    $10
+);

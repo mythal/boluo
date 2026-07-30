@@ -410,6 +410,8 @@ async fn edit(
         allow_spectator,
         grant_admins,
         remove_admins,
+        grant_game_masters,
+        remove_game_masters,
     }: EditSpace = interface::parse_body(req).await?;
 
     let mutation = ctx.space_store.acquire_mutation(space_id).await?;
@@ -461,6 +463,20 @@ async fn edit(
                 {
                     changed_members.push(member);
                 }
+            }
+        }
+        for user_id in grant_game_masters.iter() {
+            if let Some(member) =
+                SpaceMember::set_game_master(&mut *trans, user_id, &space_id, true).await?
+            {
+                changed_members.push(member);
+            }
+        }
+        for user_id in remove_game_masters.iter() {
+            if let Some(member) =
+                SpaceMember::set_game_master(&mut *trans, user_id, &space_id, false).await?
+            {
+                changed_members.push(member);
             }
         }
     }

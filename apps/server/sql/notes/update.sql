@@ -1,12 +1,15 @@
 UPDATE notes
-SET type = COALESCE(($2::text)::note_type, type),
-    title = COALESCE($3, title),
-    keywords = COALESCE($4, keywords),
-    content = COALESCE($5, content),
-    visibility = COALESCE(($6::text)::note_visibility, visibility),
-    visible_to = COALESCE($7, visible_to),
-    everyone_can_edit = COALESCE($8, everyone_can_edit),
-    track_history = COALESCE($9, track_history),
+SET title = $4,
+    keywords = $5,
+    tags = $6,
+    text = $7,
+    entities = $8,
+    access_policy = ($9::text)::access_policy,
+    access_channel_id = $10,
+    revision = revision + 1,
     modified = now()
-WHERE id = $1
-RETURNING notes as "note!: Note";
+WHERE space_id = $1
+  AND id = $2
+  AND revision = $3
+  AND archived_at IS NULL
+RETURNING revision;

@@ -1,0 +1,36 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT EXISTS(\n    SELECT 1\n    FROM entry_identifiers\n    WHERE scope_id = $1\n      AND value = ANY($2::citext[])\n) AS \"exists!\";\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "exists!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        {
+          "Custom": {
+            "name": "citext[]",
+            "kind": {
+              "Array": {
+                "Custom": {
+                  "name": "citext",
+                  "kind": "Simple"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "f50adbb8e893792f6be7a612b81b32aa79abd6c9b52336f606e9081592a15a35"
+}

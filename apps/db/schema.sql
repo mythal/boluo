@@ -1,6 +1,3 @@
--- Dumped from database version 18.1 (Debian 18.1-1.pgdg13+2)
--- Dumped by pg_dump version 18.1 (Debian 18.1-1.pgdg13+2)
-
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
@@ -70,12 +67,23 @@ COMMENT ON EXTENSION "uuid-ossp" IS 'generate universally unique identifiers (UU
 
 
 --
--- Name: character_visibility; Type: TYPE; Schema: public; Owner: -
+-- Name: entry_component_history_action; Type: TYPE; Schema: public; Owner: -
 --
 
-CREATE TYPE public.character_visibility AS ENUM (
-    'Private',
-    'Public'
+CREATE TYPE public.entry_component_history_action AS ENUM (
+    'Set',
+    'Remove'
+);
+
+
+--
+-- Name: entry_history_action; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.entry_history_action AS ENUM (
+    'Create',
+    'Rename',
+    'Delete'
 );
 
 
@@ -92,24 +100,35 @@ CREATE TYPE public.event_type AS ENUM (
 
 
 --
--- Name: note_type; Type: TYPE; Schema: public; Owner: -
+-- Name: identifier_kind; Type: TYPE; Schema: public; Owner: -
 --
 
-CREATE TYPE public.note_type AS ENUM (
-    'Term',
-    'Character'
+CREATE TYPE public.identifier_kind AS ENUM (
+    'Primary',
+    'Alias'
 );
 
 
 --
--- Name: note_visibility; Type: TYPE; Schema: public; Owner: -
+-- Name: access_policy; Type: TYPE; Schema: public; Owner: -
 --
 
-CREATE TYPE public.note_visibility AS ENUM (
-    'Private',
-    'Channels',
-    'Users',
-    'Public'
+CREATE TYPE public.access_policy AS ENUM (
+    'Public',
+    'Collaborative',
+    'Personal',
+    'Secret',
+    'GameMaster'
+);
+
+
+--
+-- Name: scope_kind; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.scope_kind AS ENUM (
+    'Space',
+    'Character'
 );
 
 
@@ -158,20 +177,6 @@ SET default_tablespace = '';
 SET default_table_access_method = heap;
 
 --
--- Name: _sqlx_migrations; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public._sqlx_migrations (
-    version bigint NOT NULL,
-    description text NOT NULL,
-    installed_on timestamp with time zone DEFAULT now() NOT NULL,
-    success boolean NOT NULL,
-    checksum bytea NOT NULL,
-    execution_time bigint NOT NULL
-);
-
-
---
 -- Name: channel_members; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -208,36 +213,27 @@ CREATE TABLE public.channels (
 
 
 --
--- Name: character_variable_history; Type: TABLE; Schema: public; Owner: -
+-- Name: character_identifiers; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.character_variable_history (
-    id uuid DEFAULT public.uuid_generate_v1mc() NOT NULL,
-    operator_id uuid,
+CREATE TABLE public.character_identifiers (
+    space_id uuid NOT NULL,
     character_id uuid NOT NULL,
-    reason jsonb,
-    key public.citext NOT NULL,
-    value jsonb NOT NULL,
-    created timestamp with time zone DEFAULT now() NOT NULL
+    value public.citext NOT NULL,
+    kind public.identifier_kind NOT NULL
 );
 
 
 --
--- Name: character_variables; Type: TABLE; Schema: public; Owner: -
+-- Name: character_scopes; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.character_variables (
-    key public.citext NOT NULL,
+CREATE TABLE public.character_scopes (
+    space_id uuid NOT NULL,
     character_id uuid NOT NULL,
-    display_name text DEFAULT ''::text NOT NULL,
-    alias text[] DEFAULT '{}'::text[] NOT NULL,
-    sort integer DEFAULT 0 NOT NULL,
-    track_history boolean DEFAULT true NOT NULL,
-    value jsonb NOT NULL,
-    metadata jsonb DEFAULT '{}'::jsonb NOT NULL,
-    created timestamp with time zone DEFAULT now() NOT NULL,
-    modified timestamp with time zone DEFAULT now() NOT NULL,
-    CONSTRAINT character_variables_key_check CHECK ((length(TRIM(BOTH FROM key)) > 0))
+    scope_id uuid NOT NULL,
+    purpose text NOT NULL,
+    CONSTRAINT character_scope_purpose_valid CHECK (((purpose <> 'main'::text) AND (length(purpose) <= 64) AND (purpose ~ '^[a-z][a-z0-9_-]*$'::text)))
 );
 
 
@@ -246,19 +242,101 @@ CREATE TABLE public.character_variables (
 --
 
 CREATE TABLE public.characters (
-    id uuid DEFAULT public.uuid_generate_v1mc() NOT NULL,
+    id uuid DEFAULT uuidv7() NOT NULL,
     name text NOT NULL,
     description text DEFAULT ''::text NOT NULL,
     color text DEFAULT ''::text NOT NULL,
-    alias text,
-    image_id uuid,
     space_id uuid NOT NULL,
-    owner_id uuid NOT NULL,
-    visibility public.character_visibility DEFAULT 'Private'::public.character_visibility NOT NULL,
-    is_archived boolean DEFAULT false NOT NULL,
-    metadata jsonb DEFAULT '{}'::jsonb NOT NULL,
+    main_scope_id uuid NOT NULL,
+    archived_at timestamp with time zone,
+    tags text[] DEFAULT '{}'::text[] NOT NULL,
+    created timestamp with time zone DEFAULT now() NOT NULL,
+    modified timestamp with time zone DEFAULT now() NOT NULL,
+    version uuid DEFAULT uuidv7() NOT NULL
+);
+
+
+--
+-- Name: entries; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.entries (
+    id uuid DEFAULT uuidv7() NOT NULL,
+    scope_id uuid NOT NULL,
+    display_name text NOT NULL,
+    reference_note_id uuid,
+    tags text[] DEFAULT '{}'::text[] NOT NULL,
+    sort integer DEFAULT 0 NOT NULL,
+    metadata_version uuid DEFAULT uuidv7() NOT NULL,
     created timestamp with time zone DEFAULT now() NOT NULL,
     modified timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: entry_component_history; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.entry_component_history (
+    operation_id uuid NOT NULL,
+    operator_id uuid,
+    scope_id uuid NOT NULL,
+    entry_id uuid NOT NULL,
+    source_message_id uuid,
+    key text NOT NULL,
+    component_type text NOT NULL,
+    action public.entry_component_history_action NOT NULL,
+    data jsonb,
+    schema_version integer,
+    created timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT entry_component_history_state_valid CHECK ((((action = 'Set'::public.entry_component_history_action) AND (data IS NOT NULL) AND (schema_version IS NOT NULL) AND (schema_version > 0)) OR ((action = 'Remove'::public.entry_component_history_action) AND (data IS NULL) AND (schema_version IS NULL)))),
+    CONSTRAINT entry_component_history_type_valid CHECK (((length(component_type) <= 200) AND (component_type ~ '^[a-z0-9]+([._-][a-z0-9]+)*(/[a-z0-9]+([._-][a-z0-9]+)*)+$'::text)))
+);
+
+
+--
+-- Name: entry_components; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.entry_components (
+    entry_id uuid NOT NULL,
+    component_type text NOT NULL,
+    data jsonb NOT NULL,
+    schema_version integer DEFAULT 1 NOT NULL,
+    version uuid DEFAULT uuidv7() NOT NULL,
+    modified timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT entry_components_schema_version_check CHECK ((schema_version > 0)),
+    CONSTRAINT entry_component_type_valid CHECK (((length(component_type) <= 200) AND (component_type ~ '^[a-z0-9]+([._-][a-z0-9]+)*(/[a-z0-9]+([._-][a-z0-9]+)*)+$'::text)))
+);
+
+
+--
+-- Name: entry_history; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.entry_history (
+    operation_id uuid NOT NULL,
+    operator_id uuid,
+    scope_id uuid NOT NULL,
+    entry_id uuid NOT NULL,
+    source_message_id uuid,
+    key text NOT NULL,
+    previous_key text,
+    action public.entry_history_action NOT NULL,
+    created timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT entry_history_rename_valid CHECK (((action = 'Rename'::public.entry_history_action) AND (previous_key IS NOT NULL) AND (previous_key <> key)) OR ((action <> 'Rename'::public.entry_history_action) AND (previous_key IS NULL)))
+);
+
+
+--
+-- Name: entry_identifiers; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.entry_identifiers (
+    scope_id uuid NOT NULL,
+    entry_id uuid NOT NULL,
+    value public.citext NOT NULL,
+    kind public.identifier_kind NOT NULL
 );
 
 
@@ -328,37 +406,41 @@ CREATE TABLE public.messages (
 
 
 --
--- Name: notes; Type: TABLE; Schema: public; Owner: -
+-- Name: note_content_revisions; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.notes (
-    id uuid DEFAULT public.uuid_generate_v1mc() NOT NULL,
-    type public.note_type DEFAULT 'Term'::public.note_type NOT NULL,
-    space_id uuid NOT NULL,
-    title text DEFAULT ''::text NOT NULL,
-    keywords text[] DEFAULT '{}'::text[] NOT NULL,
-    disabled boolean DEFAULT false NOT NULL,
-    owner_id uuid NOT NULL,
-    content text DEFAULT ''::text NOT NULL,
-    visibility public.note_visibility DEFAULT 'Private'::public.note_visibility NOT NULL,
-    visible_to uuid[] DEFAULT '{}'::uuid[] NOT NULL,
-    everyone_can_edit boolean DEFAULT false NOT NULL,
-    track_history boolean DEFAULT false NOT NULL,
+CREATE TABLE public.note_content_revisions (
+    note_id uuid NOT NULL,
+    revision bigint NOT NULL,
+    operator_id uuid,
+    title text NOT NULL,
+    text text NOT NULL,
+    entities jsonb DEFAULT '[]'::jsonb NOT NULL,
     created timestamp with time zone DEFAULT now() NOT NULL,
-    modified timestamp with time zone DEFAULT now() NOT NULL
+    CONSTRAINT note_content_revisions_revision_check CHECK ((revision > 0))
 );
 
 
 --
--- Name: notes_history; Type: TABLE; Schema: public; Owner: -
+-- Name: notes; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.notes_history (
-    id uuid DEFAULT public.uuid_generate_v1mc() NOT NULL,
-    note_id uuid NOT NULL,
-    operator_id uuid,
-    content text DEFAULT ''::text NOT NULL,
-    created timestamp with time zone DEFAULT now() NOT NULL
+CREATE TABLE public.notes (
+    id uuid DEFAULT uuidv7() NOT NULL,
+    space_id uuid NOT NULL,
+    title text DEFAULT ''::text NOT NULL,
+    keywords text[] DEFAULT '{}'::text[] NOT NULL,
+    tags text[] DEFAULT '{}'::text[] NOT NULL,
+    creator_id uuid,
+    text text DEFAULT ''::text NOT NULL,
+    entities jsonb DEFAULT '[]'::jsonb NOT NULL,
+    access_policy public.access_policy DEFAULT 'Secret'::public.access_policy NOT NULL,
+    access_channel_id uuid,
+    revision bigint DEFAULT 1 NOT NULL,
+    archived_at timestamp with time zone,
+    created timestamp with time zone DEFAULT now() NOT NULL,
+    modified timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT notes_revision_check CHECK ((revision > 0))
 );
 
 
@@ -403,6 +485,23 @@ CREATE TABLE public.restrained_members (
 
 
 --
+-- Name: scopes; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.scopes (
+    id uuid DEFAULT uuidv7() NOT NULL,
+    space_id uuid NOT NULL,
+    kind public.scope_kind NOT NULL,
+    owner_id uuid,
+    access_policy public.access_policy DEFAULT 'Secret'::public.access_policy NOT NULL,
+    access_channel_id uuid,
+    version uuid DEFAULT uuidv7() NOT NULL,
+    created timestamp with time zone DEFAULT now() NOT NULL,
+    modified timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
 -- Name: space_members; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -410,7 +509,8 @@ CREATE TABLE public.space_members (
     user_id uuid NOT NULL,
     space_id uuid NOT NULL,
     is_admin boolean DEFAULT false NOT NULL,
-    join_date timestamp with time zone DEFAULT now() NOT NULL
+    join_date timestamp with time zone DEFAULT now() NOT NULL,
+    is_game_master boolean DEFAULT false NOT NULL
 );
 
 
@@ -419,7 +519,7 @@ CREATE TABLE public.space_members (
 --
 
 CREATE TABLE public.spaces (
-    id uuid DEFAULT public.uuid_generate_v1mc() NOT NULL,
+    id uuid DEFAULT uuidv7() NOT NULL,
     name text NOT NULL,
     description text DEFAULT ''::text NOT NULL,
     created timestamp with time zone DEFAULT now() NOT NULL,
@@ -433,7 +533,8 @@ CREATE TABLE public.spaces (
     explorable boolean DEFAULT false NOT NULL,
     invite_token uuid DEFAULT gen_random_uuid() NOT NULL,
     allow_spectator boolean DEFAULT true NOT NULL,
-    latest_activity timestamp with time zone DEFAULT now() NOT NULL
+    latest_activity timestamp with time zone DEFAULT now() NOT NULL,
+    scope_id uuid NOT NULL
 );
 
 
@@ -490,14 +591,6 @@ CREATE TABLE public.users_extension (
 
 
 --
--- Name: _sqlx_migrations _sqlx_migrations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public._sqlx_migrations
-    ADD CONSTRAINT _sqlx_migrations_pkey PRIMARY KEY (version);
-
-
---
 -- Name: channels channels_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -506,35 +599,43 @@ ALTER TABLE ONLY public.channels
 
 
 --
--- Name: characters character_space_alias_unique; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: character_identifiers character_identifier_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.character_identifiers
+    ADD CONSTRAINT character_identifier_pkey PRIMARY KEY (space_id, value);
+
+
+--
+-- Name: character_scopes character_scope_scope_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.character_scopes
+    ADD CONSTRAINT character_scope_scope_unique UNIQUE (scope_id);
+
+
+--
+-- Name: character_scopes character_scopes_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.character_scopes
+    ADD CONSTRAINT character_scopes_pkey PRIMARY KEY (character_id, purpose);
+
+
+--
+-- Name: characters character_main_scope_unique; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.characters
-    ADD CONSTRAINT character_space_alias_unique UNIQUE (space_id, alias);
+    ADD CONSTRAINT character_main_scope_unique UNIQUE (main_scope_id);
 
 
 --
--- Name: characters character_space_name_unique; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: characters character_space_id_unique; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.characters
-    ADD CONSTRAINT character_space_name_unique UNIQUE (space_id, name);
-
-
---
--- Name: character_variable_history character_variable_history_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.character_variable_history
-    ADD CONSTRAINT character_variable_history_pkey PRIMARY KEY (id);
-
-
---
--- Name: character_variables character_variable_primary; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.character_variables
-    ADD CONSTRAINT character_variable_primary PRIMARY KEY (character_id, key);
+    ADD CONSTRAINT character_space_id_unique UNIQUE (space_id, id);
 
 
 --
@@ -543,6 +644,54 @@ ALTER TABLE ONLY public.character_variables
 
 ALTER TABLE ONLY public.characters
     ADD CONSTRAINT characters_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: entries entries_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.entries
+    ADD CONSTRAINT entries_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: entry_component_history entry_component_history_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.entry_component_history
+    ADD CONSTRAINT entry_component_history_pkey PRIMARY KEY (operation_id, entry_id, component_type);
+
+
+--
+-- Name: entry_components entry_components_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.entry_components
+    ADD CONSTRAINT entry_components_pkey PRIMARY KEY (entry_id, component_type);
+
+
+--
+-- Name: entry_history entry_history_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.entry_history
+    ADD CONSTRAINT entry_history_pkey PRIMARY KEY (operation_id, entry_id);
+
+
+--
+-- Name: entry_identifiers entry_identifiers_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.entry_identifiers
+    ADD CONSTRAINT entry_identifiers_pkey PRIMARY KEY (scope_id, value);
+
+
+--
+-- Name: entries entry_scope_id_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.entries
+    ADD CONSTRAINT entry_scope_id_unique UNIQUE (scope_id, id);
 
 
 --
@@ -570,11 +719,11 @@ ALTER TABLE ONLY public.messages
 
 
 --
--- Name: notes_history notes_history_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: note_content_revisions note_content_revisions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.notes_history
-    ADD CONSTRAINT notes_history_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.note_content_revisions
+    ADD CONSTRAINT note_content_revisions_pkey PRIMARY KEY (note_id, revision);
 
 
 --
@@ -615,6 +764,30 @@ ALTER TABLE ONLY public.reset_tokens
 
 ALTER TABLE ONLY public.restrained_members
     ADD CONSTRAINT restrained_space_id_pair PRIMARY KEY (user_id, space_id);
+
+
+--
+-- Name: scopes scope_space_id_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.scopes
+    ADD CONSTRAINT scope_space_id_unique UNIQUE (space_id, id);
+
+
+--
+-- Name: scopes scopes_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.scopes
+    ADD CONSTRAINT scopes_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: spaces space_scope_id_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.spaces
+    ADD CONSTRAINT space_scope_id_unique UNIQUE (scope_id);
 
 
 --
@@ -696,6 +869,7 @@ ALTER TABLE ONLY public.users
 ALTER TABLE ONLY public.users
     ADD CONSTRAINT users_username_key UNIQUE (username);
 
+
 --
 -- Name: channel_members_channel_id_is_joined_index; Type: INDEX; Schema: public; Owner: -
 --
@@ -704,24 +878,73 @@ CREATE INDEX channel_members_channel_id_is_joined_index ON public.channel_member
 
 
 --
--- Name: character_space_id_index; Type: INDEX; Schema: public; Owner: -
+-- Name: character_identifier_character_index; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX character_space_id_index ON public.characters USING btree (space_id);
-
-
---
--- Name: character_variable_character_sort_index; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX character_variable_character_sort_index ON public.character_variables USING btree (character_id, sort);
+CREATE INDEX character_identifier_character_index ON public.character_identifiers USING btree (character_id, value);
 
 
 --
--- Name: character_variable_history_character_created_index; Type: INDEX; Schema: public; Owner: -
+-- Name: character_identifier_one_primary; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX character_variable_history_character_created_index ON public.character_variable_history USING btree (character_id, created DESC);
+CREATE UNIQUE INDEX character_identifier_one_primary ON public.character_identifiers USING btree (character_id) WHERE (kind = 'Primary'::public.identifier_kind);
+
+
+--
+-- Name: character_space_modified_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX character_space_modified_index ON public.characters USING btree (space_id, modified DESC);
+
+
+--
+-- Name: entry_component_history_entry_created_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX entry_component_history_entry_created_index ON public.entry_component_history USING btree (scope_id, entry_id, created DESC, operation_id DESC, component_type);
+
+
+--
+-- Name: entry_component_history_key_created_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX entry_component_history_key_created_index ON public.entry_component_history USING btree (scope_id, key, created DESC, operation_id DESC, entry_id, component_type);
+
+
+--
+-- Name: entry_reference_note_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX entry_reference_note_index ON public.entries USING btree (reference_note_id) WHERE (reference_note_id IS NOT NULL);
+
+
+--
+-- Name: entry_history_scope_created_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX entry_history_scope_created_index ON public.entry_history USING btree (scope_id, created DESC, operation_id DESC, entry_id);
+
+
+--
+-- Name: entry_identifier_entry_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX entry_identifier_entry_index ON public.entry_identifiers USING btree (entry_id, value);
+
+
+--
+-- Name: entry_identifier_one_primary; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX entry_identifier_one_primary ON public.entry_identifiers USING btree (entry_id) WHERE (kind = 'Primary'::public.identifier_kind);
+
+
+--
+-- Name: entry_scope_sort_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX entry_scope_sort_index ON public.entries USING btree (scope_id, sort, id);
 
 
 --
@@ -732,24 +955,10 @@ CREATE INDEX message_tags ON public.messages USING gin (tags);
 
 
 --
--- Name: notes_history_note_created_index; Type: INDEX; Schema: public; Owner: -
+-- Name: notes_space_modified_index; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX notes_history_note_created_index ON public.notes_history USING btree (note_id, created DESC);
-
-
---
--- Name: notes_space_index; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX notes_space_index ON public.notes USING btree (space_id);
-
-
---
--- Name: notes_space_owner_index; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX notes_space_owner_index ON public.notes USING btree (space_id, owner_id);
+CREATE INDEX notes_space_modified_index ON public.notes USING btree (space_id, modified DESC, id DESC);
 
 
 --
@@ -757,6 +966,20 @@ CREATE INDEX notes_space_owner_index ON public.notes USING btree (space_id, owne
 --
 
 CREATE INDEX reset_token_user ON public.reset_tokens USING btree (user_id);
+
+
+--
+-- Name: scope_one_space_scope; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX scope_one_space_scope ON public.scopes USING btree (space_id) WHERE (kind = 'Space'::public.scope_kind);
+
+
+--
+-- Name: scope_owner_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX scope_owner_index ON public.scopes USING btree (owner_id, id) WHERE (owner_id IS NOT NULL);
 
 
 --
@@ -791,19 +1014,35 @@ ALTER TABLE ONLY public.channels
 
 
 --
--- Name: characters character_image; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: character_identifiers character_identifier_character; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.character_identifiers
+    ADD CONSTRAINT character_identifier_character FOREIGN KEY (space_id, character_id) REFERENCES public.characters(space_id, id) ON DELETE CASCADE;
+
+
+--
+-- Name: character_scopes character_scope_character; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.character_scopes
+    ADD CONSTRAINT character_scope_character FOREIGN KEY (space_id, character_id) REFERENCES public.characters(space_id, id) ON DELETE CASCADE;
+
+
+--
+-- Name: character_scopes character_scope_scope; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.character_scopes
+    ADD CONSTRAINT character_scope_scope FOREIGN KEY (space_id, scope_id) REFERENCES public.scopes(space_id, id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: characters character_main_scope; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.characters
-    ADD CONSTRAINT character_image FOREIGN KEY (image_id) REFERENCES public.media(id) ON DELETE SET NULL;
-
-
---
--- Name: characters character_owner; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.characters
-    ADD CONSTRAINT character_owner FOREIGN KEY (owner_id) REFERENCES public.users(id) ON DELETE CASCADE;
+    ADD CONSTRAINT character_main_scope FOREIGN KEY (space_id, main_scope_id) REFERENCES public.scopes(space_id, id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -815,27 +1054,67 @@ ALTER TABLE ONLY public.characters
 
 
 --
--- Name: character_variables character_variable_character; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: entry_components entry_component_entry; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.character_variables
-    ADD CONSTRAINT character_variable_character FOREIGN KEY (character_id) REFERENCES public.characters(id) ON DELETE CASCADE;
-
-
---
--- Name: character_variable_history character_variable_history_character; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.character_variable_history
-    ADD CONSTRAINT character_variable_history_character FOREIGN KEY (character_id) REFERENCES public.characters(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.entry_components
+    ADD CONSTRAINT entry_component_entry FOREIGN KEY (entry_id) REFERENCES public.entries(id) ON DELETE CASCADE;
 
 
 --
--- Name: character_variable_history character_variable_history_operator; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: entry_component_history entry_component_history_operator; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.character_variable_history
-    ADD CONSTRAINT character_variable_history_operator FOREIGN KEY (operator_id) REFERENCES public.users(id) ON DELETE SET NULL;
+ALTER TABLE ONLY public.entry_component_history
+    ADD CONSTRAINT entry_component_history_operator FOREIGN KEY (operator_id) REFERENCES public.users(id) ON DELETE SET NULL;
+
+
+--
+-- Name: entry_component_history entry_component_history_scope; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.entry_component_history
+    ADD CONSTRAINT entry_component_history_scope FOREIGN KEY (scope_id) REFERENCES public.scopes(id) ON DELETE CASCADE;
+
+
+--
+-- Name: entries entry_reference_note; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.entries
+    ADD CONSTRAINT entry_reference_note FOREIGN KEY (reference_note_id) REFERENCES public.notes(id) ON DELETE SET NULL;
+
+
+--
+-- Name: entry_history entry_history_operator; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.entry_history
+    ADD CONSTRAINT entry_history_operator FOREIGN KEY (operator_id) REFERENCES public.users(id) ON DELETE SET NULL;
+
+
+--
+-- Name: entry_history entry_history_scope; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.entry_history
+    ADD CONSTRAINT entry_history_scope FOREIGN KEY (scope_id) REFERENCES public.scopes(id) ON DELETE CASCADE;
+
+
+--
+-- Name: entry_identifiers entry_identifier_entry; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.entry_identifiers
+    ADD CONSTRAINT entry_identifier_entry FOREIGN KEY (scope_id, entry_id) REFERENCES public.entries(scope_id, id) ON DELETE CASCADE;
+
+
+--
+-- Name: entries entry_scope; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.entries
+    ADD CONSTRAINT entry_scope FOREIGN KEY (scope_id) REFERENCES public.scopes(id) ON DELETE CASCADE;
 
 
 --
@@ -887,27 +1166,35 @@ ALTER TABLE ONLY public.media
 
 
 --
--- Name: notes_history notes_history_note; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: note_content_revisions note_content_revision_note; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.notes_history
-    ADD CONSTRAINT notes_history_note FOREIGN KEY (note_id) REFERENCES public.notes(id) ON DELETE CASCADE;
-
-
---
--- Name: notes_history notes_history_operator; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.notes_history
-    ADD CONSTRAINT notes_history_operator FOREIGN KEY (operator_id) REFERENCES public.users(id) ON DELETE SET NULL;
+ALTER TABLE ONLY public.note_content_revisions
+    ADD CONSTRAINT note_content_revision_note FOREIGN KEY (note_id) REFERENCES public.notes(id) ON DELETE CASCADE;
 
 
 --
--- Name: notes notes_owner; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: note_content_revisions note_content_revision_operator; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.note_content_revisions
+    ADD CONSTRAINT note_content_revision_operator FOREIGN KEY (operator_id) REFERENCES public.users(id) ON DELETE SET NULL;
+
+
+--
+-- Name: notes note_access_channel; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.notes
-    ADD CONSTRAINT notes_owner FOREIGN KEY (owner_id) REFERENCES public.users(id) ON DELETE CASCADE;
+    ADD CONSTRAINT note_access_channel FOREIGN KEY (access_channel_id) REFERENCES public.channels(id);
+
+
+--
+-- Name: notes notes_creator; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.notes
+    ADD CONSTRAINT notes_creator FOREIGN KEY (creator_id) REFERENCES public.users(id) ON DELETE SET NULL;
 
 
 --
@@ -951,6 +1238,30 @@ ALTER TABLE ONLY public.restrained_members
 
 
 --
+-- Name: scopes scope_access_channel; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.scopes
+    ADD CONSTRAINT scope_access_channel FOREIGN KEY (access_channel_id) REFERENCES public.channels(id);
+
+
+--
+-- Name: scopes scope_owner; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.scopes
+    ADD CONSTRAINT scope_owner FOREIGN KEY (owner_id) REFERENCES public.users(id) ON DELETE SET NULL;
+
+
+--
+-- Name: scopes scope_space; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.scopes
+    ADD CONSTRAINT scope_space FOREIGN KEY (space_id) REFERENCES public.spaces(id) ON DELETE CASCADE;
+
+
+--
 -- Name: user_sessions session_user; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -983,13 +1294,16 @@ ALTER TABLE ONLY public.spaces
 
 
 --
+-- Name: spaces space_scope; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.spaces
+    ADD CONSTRAINT space_scope FOREIGN KEY (id, scope_id) REFERENCES public.scopes(space_id, id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: users user_avatar; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.users
     ADD CONSTRAINT user_avatar FOREIGN KEY (avatar_id) REFERENCES public.media(id) ON DELETE SET NULL;
-
-
---
--- PostgreSQL database dump complete
---

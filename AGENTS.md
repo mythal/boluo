@@ -4,7 +4,7 @@ This project is an open‑source chat tool designed for playing traditional tabl
 
 - The language of the codebase is English. However, you should respond to the user in the language they used.
 - Before making changes, ensure you understand the relevant parts of the codebase.
-- After making changes, provide 2-3 concise possible commit messages as options to summarize your work using the conventional commit format, with the package name as the scope.
+- After making changes, provide 2-3 concise possible commit messages as options to summarize all uncommitted work using the conventional commit format, with the package name as the scope.
 - Temporary files created during development can be placed in the `.tmp/` directory, which is ignored.
 
 ---
@@ -13,7 +13,7 @@ This project is an open‑source chat tool designed for playing traditional tabl
 
 The backend is written in Rust using **hyper** and **tokio**. PostgreSQL is accessed through **sqlx**.
 
-The standalone database schema is located in `apps/db/schema.sql`. Migrations are in `apps/db/migrations`.
+The standalone database schema is located in `apps/db/schema.sql`. Migrations are in `apps/server/migrations`.
 
 While multi-node support is planned, currently only single-node deployment is available.
 

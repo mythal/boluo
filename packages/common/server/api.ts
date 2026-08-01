@@ -5,27 +5,32 @@ import { appFetch } from '@boluo/api';
 import type { StringKeyOf } from '@boluo/types';
 import { type Result } from '@boluo/utils/result';
 
-// eslint-disable-next-line no-restricted-globals
-const BACKEND_URL = process.env.BACKEND_URL;
 let cachedBackEndUrl: string | undefined;
 
 const getBackEndUrl = () => {
   if (cachedBackEndUrl) {
     return cachedBackEndUrl;
-  } else if (BACKEND_URL) {
-    if (BACKEND_URL.endsWith('/api/')) {
-      cachedBackEndUrl = BACKEND_URL.slice(0, -1);
-    } else if (BACKEND_URL.endsWith('/')) {
-      cachedBackEndUrl = BACKEND_URL + 'api';
-    } else if (BACKEND_URL.endsWith('/api')) {
-      cachedBackEndUrl = BACKEND_URL;
+  }
+
+  // Cloudflare Workers exposes runtime bindings through process.env while handling a request.
+  // Reading the value at module initialization can capture undefined before OpenNext installs
+  // the request context.
+  // eslint-disable-next-line no-restricted-globals
+  const backendUrl = process.env.BACKEND_URL;
+  if (backendUrl) {
+    if (backendUrl.endsWith('/api/')) {
+      cachedBackEndUrl = backendUrl.slice(0, -1);
+    } else if (backendUrl.endsWith('/')) {
+      cachedBackEndUrl = backendUrl + 'api';
+    } else if (backendUrl.endsWith('/api')) {
+      cachedBackEndUrl = backendUrl;
     } else {
-      cachedBackEndUrl = BACKEND_URL + '/api';
+      cachedBackEndUrl = backendUrl + '/api';
     }
     return cachedBackEndUrl;
-  } else {
-    throw new Error('BACKEND_URL is not set');
   }
+
+  throw new Error('BACKEND_URL is not set');
 };
 
 export async function get<P extends StringKeyOf<Get>>(

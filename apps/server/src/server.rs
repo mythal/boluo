@@ -27,6 +27,7 @@ use rusty_s3::S3Action;
 mod utils;
 #[macro_use]
 mod error;
+mod assets;
 mod cache;
 mod channels;
 mod characters;
@@ -103,6 +104,7 @@ async fn router(
         return Ok(sentry_tunnel::handler(req).await);
     }
     table!("/api/info", info::router);
+    table!("/api/assets", assets::router);
     table!("/api/messages", messages::router);
     table!("/api/users", users::router);
     table!("/api/media", media::router);

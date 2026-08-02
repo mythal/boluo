@@ -161,6 +161,8 @@ pub struct Message {
     #[serde(default)]
     pub character_id: ::std::option::Option<::uuid::Uuid>,
     #[serde(default)]
+    pub portrait_id: ::std::option::Option<::uuid::Uuid>,
+    #[serde(default)]
     pub entry_effect_id: ::std::option::Option<::uuid::Uuid>,
 }
 
@@ -178,6 +180,8 @@ pub struct NewMessage {
     pub name: ::std::string::String,
     #[serde(default)]
     pub character_id: ::std::option::Option<::uuid::Uuid>,
+    #[serde(default)]
+    pub portrait_id: ::std::option::Option<::uuid::Uuid>,
     pub text: ::std::string::String,
     #[serde(default)]
     pub entities: shared_types::messages::Entities,

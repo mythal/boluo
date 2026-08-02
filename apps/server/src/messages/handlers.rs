@@ -53,6 +53,7 @@ async fn send(
         space_id,
         mut name,
         character_id,
+        portrait_id,
         text,
         entities,
         in_game,
@@ -107,6 +108,17 @@ async fn send(
         .await?;
         name = character.name.to_string();
     }
+    if let Some(portrait_id) = portrait_id {
+        let portrait =
+            crate::assets::Asset::get_by_id_in_space(&ctx.db, channel.space_id, portrait_id)
+                .await
+                .or_not_found()?;
+        if !portrait.mime_type.starts_with("image/") {
+            return Err(AppError::BadRequest(
+                "A Message portrait must reference an image Asset".to_string(),
+            ));
+        }
+    }
     let message = Message::create(
         &ctx.db,
         preview_id,
@@ -116,6 +128,7 @@ async fn send(
         &channel_member.character_name,
         &name,
         character_id,
+        portrait_id,
         &text,
         entities,
         in_game,

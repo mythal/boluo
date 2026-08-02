@@ -19,6 +19,12 @@ SELECT
     scope.version AS scope_version,
     character.archived_at,
     character.tags AS "tags!: Vec<CompactString>",
+    ARRAY(
+        SELECT character_asset.asset_id
+        FROM character_assets character_asset
+        WHERE character_asset.character_id = character.id
+        ORDER BY character_asset.sort
+    ) AS "asset_ids!: Vec<Uuid>",
     character.created,
     character.modified,
     character.version

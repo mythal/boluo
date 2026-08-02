@@ -63,6 +63,8 @@ pub struct Message {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub character_id: Option<Uuid>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub portrait_id: Option<Uuid>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub entry_effect_id: Option<Uuid>,
 }
 
@@ -180,6 +182,7 @@ impl Message {
         default_name: &str,
         name: &str,
         character_id: Option<Uuid>,
+        portrait_id: Option<Uuid>,
         text: &str,
         entities: Entities,
         in_game: bool,
@@ -212,6 +215,7 @@ impl Message {
             channel_id,
             &name,
             character_id,
+            portrait_id,
             text,
             entities,
             in_game,
@@ -254,6 +258,7 @@ impl Message {
                 channel_id,
                 &name,
                 character_id,
+                portrait_id,
                 text,
                 entities,
                 in_game,
@@ -324,6 +329,7 @@ impl Message {
         self.text = String::new();
         self.entities = Default::default();
         self.character_id = None;
+        self.portrait_id = None;
         self.entry_effect_id = None;
     }
 
@@ -729,8 +735,10 @@ pub(super) struct MaxPos {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::assets::Asset;
     use crate::channels::{Channel, ChannelMember, ChannelType};
     use crate::characters::Character;
+    use crate::media::models::Media;
     use crate::spaces::{AccessPolicy, Space, SpaceMember};
     use crate::users::User;
     use shared_types::entities::{Entity as RichEntity, Span};
@@ -809,6 +817,7 @@ mod tests {
             "GM",
             "GM",
             None,
+            None,
             text,
             sample_entities(text),
             false,
@@ -863,6 +872,7 @@ mod tests {
             AccessPolicy::Personal,
             None,
             Vec::new(),
+            Vec::new(),
         )
         .await
         .expect("failed to create Character");
@@ -870,6 +880,89 @@ mod tests {
             .commit()
             .await
             .expect("failed to commit Character");
+
+        let asset_media = Media::create(
+            &pool,
+            &Uuid::now_v7(),
+            "image/webp",
+            owner.id,
+            "game_master.webp",
+            "game_master.webp",
+            Uuid::new_v4().simple().to_string(),
+            1024,
+            "test",
+        )
+        .await
+        .expect("failed to create Asset Media");
+        let mut asset_transaction = pool.begin().await.expect("failed to begin Asset");
+        let asset = Asset::create(
+            &mut asset_transaction,
+            space.id,
+            asset_media.id,
+            owner.id,
+            "Game Master portrait",
+            crate::assets::AssetPolicy::Unlisted,
+        )
+        .await
+        .expect("failed to create Asset");
+        asset_transaction
+            .commit()
+            .await
+            .expect("failed to commit Asset");
+
+        let audio_media = Media::create(
+            &pool,
+            &Uuid::now_v7(),
+            "audio/ogg",
+            owner.id,
+            "theme.ogg",
+            "theme.ogg",
+            Uuid::new_v4().simple().to_string(),
+            1024,
+            "test",
+        )
+        .await
+        .expect("failed to create audio Media");
+        let mut audio_asset_transaction = pool.begin().await.expect("failed to begin audio Asset");
+        let audio_asset = Asset::create(
+            &mut audio_asset_transaction,
+            space.id,
+            audio_media.id,
+            owner.id,
+            "Theme music",
+            crate::assets::AssetPolicy::Unlisted,
+        )
+        .await
+        .expect("failed to create audio Asset");
+        audio_asset_transaction
+            .commit()
+            .await
+            .expect("failed to commit audio Asset");
+        assert!(
+            Message::create(
+                &pool,
+                None,
+                channel.id,
+                space.id,
+                &owner.id,
+                "GM",
+                "GM",
+                Some(character.id),
+                Some(audio_asset.id),
+                "Invalid portrait",
+                sample_entities("Invalid portrait"),
+                true,
+                false,
+                true,
+                None,
+                None,
+                None,
+                "#abcdef".to_string(),
+            )
+            .await
+            .is_err(),
+            "an audio Asset must not be accepted as a Message portrait",
+        );
 
         let text = "Hello world";
         let entities = sample_entities(text);
@@ -882,6 +975,7 @@ mod tests {
             "GM",
             "GM",
             Some(character.id),
+            Some(asset.id),
             text,
             entities.clone(),
             true,
@@ -897,6 +991,7 @@ mod tests {
         assert_eq!(message.channel_id, channel.id);
         assert_eq!(message.sender_id, owner.id);
         assert_eq!(message.character_id, Some(character.id));
+        assert_eq!(message.portrait_id, Some(asset.id));
         assert_eq!(message.text, text);
         assert_eq!(message.rev, 0);
         let pos_one = (message.pos_p, message.pos_q);
@@ -911,6 +1006,7 @@ mod tests {
             "GM",
             "GM",
             Some(character.id),
+            Some(asset.id),
             whisper_text,
             sample_entities(whisper_text),
             false,
@@ -937,6 +1033,7 @@ mod tests {
             .expect("whisper message missing for master");
         assert_eq!(fetched_master.text, whisper_text);
         assert_eq!(fetched_master.character_id, Some(character.id));
+        assert_eq!(fetched_master.portrait_id, Some(asset.id));
 
         let fetched_hidden = Message::get(&pool, &whisper_message.id, Some(&bystander.id))
             .await
@@ -944,6 +1041,7 @@ mod tests {
             .expect("whisper message missing for bystander");
         assert!(fetched_hidden.text.is_empty());
         assert_eq!(fetched_hidden.character_id, None);
+        assert_eq!(fetched_hidden.portrait_id, None);
 
         let fetched_visible = Message::get(&pool, &whisper_message.id, Some(&other.id))
             .await
@@ -951,6 +1049,7 @@ mod tests {
             .expect("whisper message missing for member");
         assert_eq!(fetched_visible.text, whisper_text);
         assert_eq!(fetched_visible.character_id, Some(character.id));
+        assert_eq!(fetched_visible.portrait_id, Some(asset.id));
 
         let channel_messages_for_owner =
             Message::get_by_channel(&pool, &channel.id, None, 10, Some(&owner.id))
@@ -1115,6 +1214,7 @@ mod tests {
                 "GM",
                 "GM",
                 None,
+                None,
                 "Cold position message",
                 sample_entities("Cold position message"),
                 false,
@@ -1244,6 +1344,7 @@ mod tests {
             "GM",
             "GM",
             None,
+            None,
             "Message A",
             sample_entities("Message A"),
             false,
@@ -1265,6 +1366,7 @@ mod tests {
             "GM",
             "GM",
             None,
+            None,
             "Message B",
             sample_entities("Message B"),
             false,
@@ -1285,6 +1387,7 @@ mod tests {
             &owner.id,
             "GM",
             "GM",
+            None,
             None,
             "Message C",
             sample_entities("Message C"),
@@ -1382,6 +1485,7 @@ mod tests {
             "GM",
             "GM",
             None,
+            None,
             "Source message",
             sample_entities("Source message"),
             false,
@@ -1403,6 +1507,7 @@ mod tests {
             "GM",
             "GM",
             None,
+            None,
             "Other A",
             sample_entities("Other A"),
             false,
@@ -1423,6 +1528,7 @@ mod tests {
             &owner.id,
             "GM",
             "GM",
+            None,
             None,
             "Other B",
             sample_entities("Other B"),
@@ -1870,6 +1976,7 @@ mod tests {
             "GM",
             "GM",
             None,
+            None,
             text,
             sample_entities(text),
             false,
@@ -1992,6 +2099,7 @@ mod tests {
             "GM",
             "GM",
             None,
+            None,
             "Owner's text",
             sample_entities("Owner's text"),
             false,
@@ -2067,6 +2175,7 @@ mod tests {
             &owner.id,
             "GM",
             "GM",
+            None,
             None,
             "Shared text",
             sample_entities("Shared text"),

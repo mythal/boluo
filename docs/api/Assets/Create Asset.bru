@@ -1,0 +1,27 @@
+meta {
+  name: Create Asset
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{base_url}}/assets/create
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "spaceId": "{{space_id}}",
+    "mediaId": "{{media_id}}",
+    "name": "Happy portrait",
+    "policy": "UNLISTED"
+  }
+}
+
+script:post-response {
+  let data = res.getBody();
+  if (data.isOk) {
+    bru.setVar("asset_id", data.ok.id);
+  }
+}

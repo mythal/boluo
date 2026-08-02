@@ -175,6 +175,7 @@ async fn create(
         access_policy,
         access_channel_id,
         tags,
+        asset_ids,
     } = parse_body(req).await?;
     let mutation = ctx.space_store.acquire_mutation(space_id).await?;
     let mut trans = ctx.db.begin().await?;
@@ -207,6 +208,7 @@ async fn create(
         access_policy,
         access_channel_id,
         tags,
+        asset_ids,
     )
     .await?;
     let scope = Scope::get_by_id(&mut *trans, character.scope_id)
@@ -238,6 +240,7 @@ async fn edit(
         access_policy,
         access_channel_id,
         tags,
+        asset_ids,
     } = parse_body(req).await?;
     let mutation = ctx.space_store.acquire_mutation(space_id).await?;
     let mut trans = ctx.db.begin().await?;
@@ -278,6 +281,7 @@ async fn edit(
         access_policy,
         access_channel_id,
         tags,
+        asset_ids,
     )
     .await?
     .ok_or_else(|| AppError::Conflict("Character version is stale".to_string()))?;
@@ -438,6 +442,7 @@ mod tests {
             "#123456",
             AccessPolicy::Personal,
             None,
+            Vec::new(),
             Vec::new(),
         )
         .await

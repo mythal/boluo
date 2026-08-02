@@ -67,6 +67,8 @@ pub struct NewMessage {
     pub name: String,
     #[serde(default)]
     pub character_id: Option<Uuid>,
+    #[serde(default)]
+    pub portrait_id: Option<Uuid>,
     pub text: String,
     #[serde(default)]
     pub entities: Entities,

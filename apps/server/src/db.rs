@@ -98,6 +98,7 @@ pub async fn check_db_host() {
 /// Runtime check if the database is available and can correctly deserialize data
 #[tracing::instrument]
 pub async fn check(pool: &sqlx::Pool<sqlx::Postgres>) {
+    use crate::assets::Asset;
     use crate::channels::{Channel, ChannelMember};
     use crate::characters::Character;
     use crate::entries::models::{
@@ -217,6 +218,17 @@ pub async fn check(pool: &sqlx::Pool<sqlx::Postgres>) {
     .await
     .expect("Cannot create media");
 
+    let asset = Asset::create(
+        &mut trans,
+        space.id,
+        media.id,
+        user.id,
+        "Homura portrait",
+        crate::assets::AssetPolicy::Listed,
+    )
+    .await
+    .expect("Cannot create Asset");
+
     let message = sqlx::query_file_scalar!(
         "sql/messages/create.sql",
         uuid::Uuid::new_v4(),
@@ -224,6 +236,7 @@ pub async fn check(pool: &sqlx::Pool<sqlx::Postgres>) {
         channel.id,
         "Madokami",
         None::<uuid::Uuid>,
+        asset.id,
         "Love you, Homura",
         &json!([]),
         true,
@@ -251,6 +264,7 @@ pub async fn check(pool: &sqlx::Pool<sqlx::Postgres>) {
         AccessPolicy::Secret,
         None,
         vec!["player".to_string()],
+        vec![asset.id],
     )
     .await
     .expect("Cannot create character");
@@ -379,6 +393,23 @@ pub async fn check(pool: &sqlx::Pool<sqlx::Postgres>) {
         kind: IdentifierKind,
     })
     .expect("Cannot decode character_identifiers composite row");
+    check_composite_row!(&mut *trans, "assets", {
+        id: uuid::Uuid,
+        space_id: uuid::Uuid,
+        media_id: uuid::Uuid,
+        creator_id: Option<uuid::Uuid>,
+        name: String,
+        policy: crate::assets::AssetPolicy,
+        created: chrono::DateTime<chrono::Utc>,
+    })
+    .expect("Cannot decode assets composite row");
+    check_composite_row!(&mut *trans, "character_assets", {
+        space_id: uuid::Uuid,
+        character_id: uuid::Uuid,
+        asset_id: uuid::Uuid,
+        sort: i32,
+    })
+    .expect("Cannot decode character_assets composite row");
     check_composite_row!(&mut *trans, "notes", {
         id: uuid::Uuid,
         space_id: uuid::Uuid,

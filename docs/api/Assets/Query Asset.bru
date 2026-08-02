@@ -1,0 +1,16 @@
+meta {
+  name: Query Asset
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{base_url}}/assets/query?spaceId={{space_id}}&assetId={{asset_id}}
+  body: none
+  auth: inherit
+}
+
+params:query {
+  spaceId: {{space_id}}
+  assetId: {{asset_id}}
+}

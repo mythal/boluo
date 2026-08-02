@@ -5,6 +5,7 @@ DROP TABLE characters;
 DROP TYPE character_visibility;
 
 CREATE TYPE identifier_kind AS ENUM ('Primary', 'Alias');
+CREATE TYPE asset_policy AS ENUM ('Unlisted', 'Listed');
 
 CREATE TABLE characters (
     "id" uuid NOT NULL DEFAULT uuidv7() PRIMARY KEY,
@@ -44,6 +45,52 @@ CREATE UNIQUE INDEX "character_identifier_one_primary"
     ON "character_identifiers" ("character_id")
     WHERE "kind" = 'Primary';
 
+CREATE TABLE assets (
+    id uuid NOT NULL DEFAULT uuidv7() PRIMARY KEY,
+    space_id uuid NOT NULL
+        CONSTRAINT asset_space
+        REFERENCES spaces (id)
+        ON DELETE CASCADE,
+    media_id uuid NOT NULL
+        CONSTRAINT asset_media
+        REFERENCES media (id)
+        ON DELETE RESTRICT,
+    creator_id uuid
+        CONSTRAINT asset_creator
+        REFERENCES users (id)
+        ON DELETE SET NULL,
+    name text NOT NULL,
+    policy asset_policy NOT NULL DEFAULT 'Unlisted',
+    created timestamptz NOT NULL DEFAULT now(),
+    CONSTRAINT asset_name_valid CHECK (
+        length(name) BETWEEN 1 AND 100
+    ),
+    CONSTRAINT asset_space_id_unique UNIQUE (space_id, id)
+);
+
+CREATE INDEX asset_space_created_index
+    ON assets (space_id, created DESC, id DESC);
+
+CREATE TABLE character_assets (
+    space_id uuid NOT NULL,
+    character_id uuid NOT NULL,
+    asset_id uuid NOT NULL,
+    sort integer NOT NULL CHECK (sort >= 0),
+    PRIMARY KEY (character_id, asset_id),
+    CONSTRAINT character_asset_sort_unique UNIQUE (character_id, sort),
+    CONSTRAINT character_asset_character
+        FOREIGN KEY (space_id, character_id)
+        REFERENCES characters (space_id, id)
+        ON DELETE CASCADE,
+    CONSTRAINT character_asset_asset
+        FOREIGN KEY (space_id, asset_id)
+        REFERENCES assets (space_id, id)
+        ON DELETE CASCADE
+);
+
+CREATE INDEX character_asset_asset_index
+    ON character_assets (asset_id, character_id);
+
 ALTER TABLE channel_members
     ADD COLUMN character_id uuid
         CONSTRAINT channel_member_character
@@ -54,6 +101,10 @@ ALTER TABLE messages
     ADD COLUMN character_id uuid
         CONSTRAINT message_character
         REFERENCES characters (id)
+        ON DELETE SET NULL,
+    ADD COLUMN portrait_id uuid
+        CONSTRAINT message_portrait
+        REFERENCES assets (id)
         ON DELETE SET NULL;
 
 CREATE INDEX channel_member_character_index
@@ -63,6 +114,10 @@ CREATE INDEX channel_member_character_index
 CREATE INDEX message_character_index
     ON messages (character_id, created DESC)
     WHERE character_id IS NOT NULL;
+
+CREATE INDEX message_portrait_index
+    ON messages (portrait_id, created DESC)
+    WHERE portrait_id IS NOT NULL;
 
 ALTER TABLE spaces
     ALTER COLUMN id SET DEFAULT uuidv7(),

@@ -30,6 +30,19 @@ export type ArchiveNote = {
   expectedRevision: number;
 };
 
+export type Asset = {
+  id: string;
+  spaceId: string;
+  mediaId: string;
+  creatorId: string | null;
+  name: string;
+  policy: AssetPolicy;
+  mimeType: string;
+  created: string;
+};
+
+export type AssetPolicy = 'UNLISTED' | 'LISTED';
+
 export type BasicInfo = {
   version: string;
 };
@@ -118,6 +131,7 @@ export type Character = {
   scopeVersion: string;
   archivedAt: string | null;
   tags: string[];
+  assetIds: string[];
   created: string;
   modified: string;
   version: string;
@@ -182,6 +196,13 @@ export type ConnectionError =
   | 'UNEXPECTED'
   | 'BAD_REQUEST';
 
+export type CreateAsset = {
+  spaceId: string;
+  mediaId: string;
+  name: string;
+  policy?: AssetPolicy;
+};
+
 export type CreateChannel = {
   spaceId: string;
   name: string;
@@ -202,6 +223,7 @@ export type CreateCharacter = {
   accessPolicy: AccessPolicy;
   accessChannelId: string | null;
   tags?: string[];
+  assetIds?: string[];
 };
 
 export type CreateEntry = {
@@ -235,6 +257,10 @@ export type CreateSpace = {
   defaultDiceType: string | null;
   firstChannelName: string;
   firstChannelType: ChannelType | null;
+};
+
+export type DeleteAsset = {
+  assetId: string;
 };
 
 export type DeleteEntry = {
@@ -304,6 +330,7 @@ export type EditCharacter = {
   accessPolicy: AccessPolicy;
   accessChannelId: string | null;
   tags: string[];
+  assetIds: string[];
 };
 
 export type EditEntry = {
@@ -627,6 +654,10 @@ export type LinkEntity = {
   title?: string | null;
 } & Span;
 
+export type ListAssets = {
+  spaceId: string;
+};
+
 export type ListCharacters = {
   spaceId: string;
   includeArchived?: boolean;
@@ -721,6 +752,7 @@ export type Message = {
   color: string;
   rev?: number;
   characterId?: string | null;
+  portraitId?: string | null;
   entryEffectId?: string | null;
 };
 
@@ -746,6 +778,7 @@ export type NewMessage = {
   spaceId?: string | null;
   name: string;
   characterId?: string | null;
+  portraitId?: string | null;
   text: string;
   entities?: Entities;
   inGame: boolean;
@@ -940,6 +973,11 @@ export type PureExprNode =
 export type PureRepeat = {
   node: PureExprNode;
   count: number;
+};
+
+export type QueryAsset = {
+  spaceId: string;
+  assetId: string;
 };
 
 export type QueryChannel = {
@@ -1172,6 +1210,12 @@ export type Update = {
   body: UpdateBody;
   /**  How clients should treat this update for reconnect/cursor purposes. */
   live?: UpdateLifetime;
+};
+
+export type UpdateAsset = {
+  assetId: string;
+  name: string;
+  policy: AssetPolicy;
 };
 
 export type UpdateBody =

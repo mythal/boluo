@@ -112,6 +112,10 @@
                   "Uuid"
                 ],
                 [
+                  "portrait_id",
+                  "Uuid"
+                ],
+                [
                   "entry_effect_id",
                   "Uuid"
                 ]

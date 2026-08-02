@@ -2821,6 +2821,7 @@ mod tests {
             AccessPolicy::Secret,
             None,
             vec![],
+            vec![],
         )
         .await
         .expect("failed to create Character");

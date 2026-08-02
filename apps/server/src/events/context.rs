@@ -886,6 +886,7 @@ mod tests {
             color: "#000000".into(),
             rev,
             character_id: None,
+            portrait_id: None,
             entry_effect_id: None,
         }
     }

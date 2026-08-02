@@ -1,5 +1,6 @@
 import type {
   AppSettings,
+  Asset,
   Channel,
   ChannelMemberWithUser,
   ChannelMembers,
@@ -19,6 +20,7 @@ import type {
   Export,
   GetMessagesByChannel,
   ListCharacters,
+  ListAssets,
   ListEntries,
   ListNotes,
   MakeToken,
@@ -27,6 +29,7 @@ import type {
   NoteContentRevision,
   NoteMetadata,
   QueryNote,
+  QueryAsset,
   QueryCharacter,
   QueryEntry,
   SearchMessagesParams,
@@ -42,6 +45,10 @@ import type {
 } from '@boluo/types/bindings';
 
 export interface Get {
+  // assets
+  '/assets/query': { query: QueryAsset; result: Asset };
+  '/assets/by_space': { query: ListAssets; result: Asset[] };
+  '/assets/by_creator': { query: null; result: Asset[] };
   // users
   '/users/query': { query: { id: string | null }; result: User | null };
   '/users/query_self': { query: null; result: User | null };

@@ -1,3 +1,10 @@
+--
+-- PostgreSQL database dump
+--
+
+-- Dumped from database version 19beta2
+-- Dumped by pg_dump version 19beta2
+
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
@@ -76,6 +83,16 @@ CREATE TYPE public.access_policy AS ENUM (
     'Personal',
     'Secret',
     'GameMaster'
+);
+
+
+--
+-- Name: asset_policy; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.asset_policy AS ENUM (
+    'Unlisted',
+    'Listed'
 );
 
 
@@ -177,6 +194,36 @@ SET default_tablespace = '';
 SET default_table_access_method = heap;
 
 --
+-- Name: _sqlx_migrations; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public._sqlx_migrations (
+    version bigint NOT NULL,
+    description text NOT NULL,
+    installed_on timestamp with time zone DEFAULT now() NOT NULL,
+    success boolean NOT NULL,
+    checksum bytea NOT NULL,
+    execution_time bigint NOT NULL
+);
+
+
+--
+-- Name: assets; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.assets (
+    id uuid DEFAULT uuidv7() NOT NULL,
+    space_id uuid NOT NULL,
+    media_id uuid NOT NULL,
+    creator_id uuid,
+    name text NOT NULL,
+    policy public.asset_policy DEFAULT 'Unlisted'::public.asset_policy NOT NULL,
+    created timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT asset_name_valid CHECK (((length(name) >= 1) AND (length(name) <= 100)))
+);
+
+
+--
 -- Name: channel_members; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -210,6 +257,19 @@ CREATE TABLE public.channels (
     old_name text DEFAULT ''::text NOT NULL,
     type text DEFAULT 'in_game'::text NOT NULL,
     is_archived boolean DEFAULT false NOT NULL
+);
+
+
+--
+-- Name: character_assets; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.character_assets (
+    space_id uuid NOT NULL,
+    character_id uuid NOT NULL,
+    asset_id uuid NOT NULL,
+    sort integer NOT NULL,
+    CONSTRAINT character_assets_sort_check CHECK ((sort >= 0))
 );
 
 
@@ -409,6 +469,7 @@ CREATE TABLE public.messages (
     color text DEFAULT ''::text NOT NULL,
     rev integer DEFAULT 0 NOT NULL,
     character_id uuid,
+    portrait_id uuid,
     entry_effect_id uuid
 );
 
@@ -599,11 +660,51 @@ CREATE TABLE public.users_extension (
 
 
 --
+-- Name: _sqlx_migrations _sqlx_migrations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public._sqlx_migrations
+    ADD CONSTRAINT _sqlx_migrations_pkey PRIMARY KEY (version);
+
+
+--
+-- Name: assets asset_space_id_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.assets
+    ADD CONSTRAINT asset_space_id_unique UNIQUE (space_id, id);
+
+
+--
+-- Name: assets assets_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.assets
+    ADD CONSTRAINT assets_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: channels channels_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.channels
     ADD CONSTRAINT channels_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: character_assets character_asset_sort_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.character_assets
+    ADD CONSTRAINT character_asset_sort_unique UNIQUE (character_id, sort);
+
+
+--
+-- Name: character_assets character_assets_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.character_assets
+    ADD CONSTRAINT character_assets_pkey PRIMARY KEY (character_id, asset_id);
 
 
 --
@@ -887,10 +988,31 @@ ALTER TABLE ONLY public.users
 
 
 --
+-- Name: asset_space_created_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX asset_space_created_index ON public.assets USING btree (space_id, created DESC, id DESC);
+
+
+--
+-- Name: channel_member_character_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX channel_member_character_index ON public.channel_members USING btree (character_id) WHERE (character_id IS NOT NULL);
+
+
+--
 -- Name: channel_members_channel_id_is_joined_index; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX channel_members_channel_id_is_joined_index ON public.channel_members USING btree (channel_id, is_joined);
+
+
+--
+-- Name: character_asset_asset_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX character_asset_asset_index ON public.character_assets USING btree (asset_id, character_id);
 
 
 --
@@ -971,10 +1093,24 @@ CREATE INDEX entry_scope_sort_index ON public.entries USING btree (scope_id, sor
 
 
 --
+-- Name: message_character_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX message_character_index ON public.messages USING btree (character_id, created DESC) WHERE (character_id IS NOT NULL);
+
+
+--
 -- Name: message_entry_effect_unique; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE UNIQUE INDEX message_entry_effect_unique ON public.messages USING btree (entry_effect_id) WHERE (entry_effect_id IS NOT NULL);
+
+
+--
+-- Name: message_portrait_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX message_portrait_index ON public.messages USING btree (portrait_id, created DESC) WHERE (portrait_id IS NOT NULL);
 
 
 --
@@ -1020,17 +1156,27 @@ CREATE INDEX space_members_space_id_index ON public.space_members USING btree (s
 
 
 --
--- Name: channel_member_character_index; Type: INDEX; Schema: public; Owner: -
+-- Name: assets asset_creator; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-CREATE INDEX channel_member_character_index ON public.channel_members USING btree (character_id) WHERE (character_id IS NOT NULL);
+ALTER TABLE ONLY public.assets
+    ADD CONSTRAINT asset_creator FOREIGN KEY (creator_id) REFERENCES public.users(id) ON DELETE SET NULL;
 
 
 --
--- Name: message_character_index; Type: INDEX; Schema: public; Owner: -
+-- Name: assets asset_media; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-CREATE INDEX message_character_index ON public.messages USING btree (character_id, created DESC) WHERE (character_id IS NOT NULL);
+ALTER TABLE ONLY public.assets
+    ADD CONSTRAINT asset_media FOREIGN KEY (media_id) REFERENCES public.media(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: assets asset_space; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.assets
+    ADD CONSTRAINT asset_space FOREIGN KEY (space_id) REFERENCES public.spaces(id) ON DELETE CASCADE;
 
 
 --
@@ -1063,6 +1209,22 @@ ALTER TABLE ONLY public.channel_members
 
 ALTER TABLE ONLY public.channels
     ADD CONSTRAINT channel_space FOREIGN KEY (space_id) REFERENCES public.spaces(id) ON DELETE CASCADE;
+
+
+--
+-- Name: character_assets character_asset_asset; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.character_assets
+    ADD CONSTRAINT character_asset_asset FOREIGN KEY (space_id, asset_id) REFERENCES public.assets(space_id, id) ON DELETE CASCADE;
+
+
+--
+-- Name: character_assets character_asset_character; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.character_assets
+    ADD CONSTRAINT character_asset_character FOREIGN KEY (space_id, character_id) REFERENCES public.characters(space_id, id) ON DELETE CASCADE;
 
 
 --
@@ -1218,6 +1380,14 @@ ALTER TABLE ONLY public.media
 
 
 --
+-- Name: messages message_character; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.messages
+    ADD CONSTRAINT message_character FOREIGN KEY (character_id) REFERENCES public.characters(id) ON DELETE SET NULL;
+
+
+--
 -- Name: messages message_entry_effect; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1226,11 +1396,11 @@ ALTER TABLE ONLY public.messages
 
 
 --
--- Name: messages message_character; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: messages message_portrait; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.messages
-    ADD CONSTRAINT message_character FOREIGN KEY (character_id) REFERENCES public.characters(id) ON DELETE SET NULL;
+    ADD CONSTRAINT message_portrait FOREIGN KEY (portrait_id) REFERENCES public.assets(id) ON DELETE SET NULL;
 
 
 --
@@ -1375,3 +1545,8 @@ ALTER TABLE ONLY public.spaces
 
 ALTER TABLE ONLY public.users
     ADD CONSTRAINT user_avatar FOREIGN KEY (avatar_id) REFERENCES public.media(id) ON DELETE SET NULL;
+
+
+--
+-- PostgreSQL database dump complete
+--

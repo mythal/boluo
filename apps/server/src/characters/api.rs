@@ -57,6 +57,8 @@ pub struct CreateCharacter {
     pub access_channel_id: Option<Uuid>,
     #[serde(default)]
     pub tags: Vec<String>,
+    #[serde(default)]
+    pub asset_ids: Vec<Uuid>,
 }
 
 #[derive(Deserialize, Debug, specta::Type)]
@@ -75,6 +77,7 @@ pub struct EditCharacter {
     pub access_policy: AccessPolicy,
     pub access_channel_id: Option<Uuid>,
     pub tags: Vec<String>,
+    pub asset_ids: Vec<Uuid>,
 }
 
 #[cfg(test)]

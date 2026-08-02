@@ -4,15 +4,18 @@ import type {
   AddChannelMember,
   ArchiveCharacter,
   ArchiveNote,
+  Asset,
   Channel,
   ChannelMember,
   ChannelWithMember,
   Character,
   CreateCharacter,
+  CreateAsset,
   CreateChannel,
   CreateEntry,
   CreateNote,
   CreateSpace,
+  DeleteAsset,
   DeleteEntry,
   EditChannel,
   EditChannelMember,
@@ -43,9 +46,14 @@ import type {
   SpaceMemberWithUser,
   SpaceWithMember,
   User,
+  UpdateAsset,
 } from '@boluo/types/bindings';
 
 export interface Post {
+  // assets
+  '/assets/create': { payload: CreateAsset; query: null; result: Asset };
+  '/assets/update': { payload: UpdateAsset; query: null; result: Asset };
+  '/assets/delete': { payload: DeleteAsset; query: null; result: Asset };
   // users
   '/users/login': { payload: LoginData; query: null; result: LoginReturn };
   '/users/register': { payload: RegisterData; query: null; result: User };

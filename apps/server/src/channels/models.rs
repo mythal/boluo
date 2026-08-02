@@ -933,6 +933,7 @@ mod tests {
             AccessPolicy::Personal,
             None,
             Vec::new(),
+            Vec::new(),
         )
         .await
         .expect("failed to create Character");

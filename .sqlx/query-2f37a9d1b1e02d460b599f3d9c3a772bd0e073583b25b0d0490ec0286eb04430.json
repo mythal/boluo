@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT\n    character.id,\n    character.name AS \"name!: CompactString\",\n    primary_identifier.value::text AS \"key!: CompactString\",\n    ARRAY(\n        SELECT identifier.value::text\n        FROM character_identifiers identifier\n        WHERE identifier.character_id = character.id\n          AND identifier.kind = 'Alias'\n        ORDER BY identifier.value\n    ) AS \"aliases!: Vec<CompactString>\",\n    character.description,\n    character.color AS \"color!: CompactString\",\n    character.space_id,\n    character.main_scope_id AS scope_id,\n    scope.owner_id,\n    scope.access_policy AS \"access_policy!: AccessPolicy\",\n    scope.access_channel_id,\n    scope.version AS scope_version,\n    character.archived_at,\n    character.tags AS \"tags!: Vec<CompactString>\",\n    character.created,\n    character.modified,\n    character.version\nFROM characters character\nJOIN scopes scope ON scope.id = character.main_scope_id\nJOIN character_identifiers primary_identifier\n  ON primary_identifier.character_id = character.id\n AND primary_identifier.kind = 'Primary'\nWHERE character.space_id = $1\nORDER BY character.modified DESC;\n",
+  "query": "SELECT\n    character.id,\n    character.name AS \"name!: CompactString\",\n    primary_identifier.value::text AS \"key!: CompactString\",\n    ARRAY(\n        SELECT identifier.value::text\n        FROM character_identifiers identifier\n        WHERE identifier.character_id = character.id\n          AND identifier.kind = 'Alias'\n        ORDER BY identifier.value\n    ) AS \"aliases!: Vec<CompactString>\",\n    character.description,\n    character.color AS \"color!: CompactString\",\n    character.space_id,\n    character.main_scope_id AS scope_id,\n    scope.owner_id,\n    scope.access_policy AS \"access_policy!: AccessPolicy\",\n    scope.access_channel_id,\n    scope.version AS scope_version,\n    character.archived_at,\n    character.tags AS \"tags!: Vec<CompactString>\",\n    ARRAY(\n        SELECT character_asset.asset_id\n        FROM character_assets character_asset\n        WHERE character_asset.character_id = character.id\n        ORDER BY character_asset.sort\n    ) AS \"asset_ids!: Vec<Uuid>\",\n    character.created,\n    character.modified,\n    character.version\nFROM characters character\nJOIN scopes scope ON scope.id = character.main_scope_id\nJOIN character_identifiers primary_identifier\n  ON primary_identifier.character_id = character.id\n AND primary_identifier.kind = 'Primary'\nWHERE character.space_id = $1\nORDER BY character.modified DESC;\n",
   "describe": {
     "columns": [
       {
@@ -162,6 +162,12 @@
       },
       {
         "ordinal": 14,
+        "name": "asset_ids!: Vec<Uuid>",
+        "type_info": "UuidArray",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 15,
         "name": "created",
         "type_info": "Timestamptz",
         "origin": {
@@ -172,7 +178,7 @@
         }
       },
       {
-        "ordinal": 15,
+        "ordinal": 16,
         "name": "modified",
         "type_info": "Timestamptz",
         "origin": {
@@ -183,7 +189,7 @@
         }
       },
       {
-        "ordinal": 16,
+        "ordinal": 17,
         "name": "version",
         "type_info": "Uuid",
         "origin": {
@@ -214,10 +220,11 @@
       false,
       true,
       false,
+      null,
       false,
       false,
       false
     ]
   },
-  "hash": "2e32cb242973f10eb2e031cd5bada90689d1d3e87bae709d3742dcea2ab596af"
+  "hash": "2f37a9d1b1e02d460b599f3d9c3a772bd0e073583b25b0d0490ec0286eb04430"
 }

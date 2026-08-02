@@ -101,6 +101,14 @@ pub static CHARACTER_NAME: Validator<str> = Validator(&[
     ("Name length shall not be more than 32.", &max!(32)),
 ]);
 
+pub static ASSET_NAME: Validator<str> = Validator(&[
+    ("Asset name must not be empty.", &min!(1)),
+    (
+        "Asset name must not be longer than 100 characters.",
+        &max!(100),
+    ),
+]);
+
 pub static EMAIL: Validator<str> = Validator(&[
     ("E-mail address length shall not be less than 5.", &min!(5)),
     (

@@ -172,6 +172,31 @@ CREATE TABLE character_scopes (
     )
 );
 
+CREATE TABLE entry_effects (
+    id uuid NOT NULL DEFAULT uuidv7() PRIMARY KEY,
+    space_id uuid NOT NULL,
+    scope_id uuid NOT NULL,
+    operator_id uuid CONSTRAINT entry_effect_operator REFERENCES users (id) ON DELETE SET NULL,
+    created timestamptz NOT NULL DEFAULT now(),
+    CONSTRAINT entry_effect_scope
+        FOREIGN KEY (space_id, scope_id)
+        REFERENCES scopes (space_id, id)
+        ON DELETE CASCADE
+);
+
+CREATE INDEX entry_effect_scope_created_index
+    ON entry_effects (scope_id, created DESC, id DESC);
+
+ALTER TABLE messages
+    ADD COLUMN entry_effect_id uuid
+        CONSTRAINT message_entry_effect
+        REFERENCES entry_effects (id)
+        ON DELETE SET NULL;
+
+CREATE UNIQUE INDEX message_entry_effect_unique
+    ON messages (entry_effect_id)
+    WHERE entry_effect_id IS NOT NULL;
+
 CREATE TABLE entries (
     id uuid NOT NULL DEFAULT uuidv7() PRIMARY KEY,
     scope_id uuid NOT NULL CONSTRAINT entry_scope REFERENCES scopes (id) ON DELETE CASCADE,
@@ -214,16 +239,15 @@ CREATE INDEX entry_reference_note_index
 CREATE TYPE entry_history_action AS ENUM ('Create', 'Rename', 'Delete');
 
 CREATE TABLE entry_history (
-    operation_id uuid NOT NULL,
-    operator_id uuid CONSTRAINT entry_history_operator REFERENCES users (id) ON DELETE SET NULL,
-    scope_id uuid NOT NULL CONSTRAINT entry_history_scope REFERENCES scopes (id) ON DELETE CASCADE,
+    entry_effect_id uuid NOT NULL
+        CONSTRAINT entry_history_effect
+        REFERENCES entry_effects (id)
+        ON DELETE CASCADE,
     entry_id uuid NOT NULL,
-    source_message_id uuid,
     key text NOT NULL,
     previous_key text,
     action entry_history_action NOT NULL,
-    created timestamptz NOT NULL DEFAULT now(),
-    PRIMARY KEY (operation_id, entry_id),
+    PRIMARY KEY (entry_effect_id, entry_id),
     CONSTRAINT entry_history_rename_valid CHECK (
         (
             action = 'Rename'
@@ -238,8 +262,8 @@ CREATE TABLE entry_history (
     )
 );
 
-CREATE INDEX entry_history_scope_created_index
-    ON entry_history (scope_id, created DESC, operation_id DESC, entry_id);
+CREATE INDEX entry_history_entry_effect_index
+    ON entry_history (entry_id, entry_effect_id);
 
 CREATE TABLE entry_components (
     entry_id uuid NOT NULL
@@ -261,24 +285,17 @@ CREATE TABLE entry_components (
 CREATE TYPE entry_component_history_action AS ENUM ('Set', 'Remove');
 
 CREATE TABLE entry_component_history (
-    operation_id uuid NOT NULL,
-    operator_id uuid
-        CONSTRAINT entry_component_history_operator
-        REFERENCES users (id)
-        ON DELETE SET NULL,
-    scope_id uuid NOT NULL
-        CONSTRAINT entry_component_history_scope
-        REFERENCES scopes (id)
+    entry_effect_id uuid NOT NULL
+        CONSTRAINT entry_component_history_effect
+        REFERENCES entry_effects (id)
         ON DELETE CASCADE,
     entry_id uuid NOT NULL,
-    source_message_id uuid,
     key text NOT NULL,
     component_type text NOT NULL,
     action entry_component_history_action NOT NULL,
     data jsonb,
     schema_version integer,
-    created timestamptz NOT NULL DEFAULT now(),
-    PRIMARY KEY (operation_id, entry_id, component_type),
+    PRIMARY KEY (entry_effect_id, entry_id, component_type),
     CONSTRAINT entry_component_history_type_valid CHECK (
         length(component_type) <= 200
         AND component_type ~ '^[a-z0-9]+([._-][a-z0-9]+)*(/[a-z0-9]+([._-][a-z0-9]+)*)+$'
@@ -299,21 +316,17 @@ CREATE TABLE entry_component_history (
     )
 );
 
-CREATE INDEX entry_component_history_entry_created_index
+CREATE INDEX entry_component_history_entry_effect_index
     ON entry_component_history (
-        scope_id,
         entry_id,
-        created DESC,
-        operation_id DESC,
-        component_type
+        component_type,
+        entry_effect_id
     );
 
-CREATE INDEX entry_component_history_key_created_index
+CREATE INDEX entry_component_history_key_effect_index
     ON entry_component_history (
-        scope_id,
         key,
-        created DESC,
-        operation_id DESC,
+        entry_effect_id,
         entry_id,
         component_type
     );

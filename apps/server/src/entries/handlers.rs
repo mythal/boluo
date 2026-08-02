@@ -1,19 +1,22 @@
 use super::api::{
     CheckEntryIdentifier, CreateEntry, DeleteEntry, EditEntry, EditEntryComponents,
-    EntryComponentHistoryQuery, EntryHistoryQuery, ListEntries, QueryEntry,
+    EntryComponentHistoryQuery, EntryHistoryQuery, ListEntries, QueryEntry, QueryEntryEffects,
 };
 use super::models::{
-    Entry, EntryComponentHistory, EntryHistory, EntryHistoryAction, EntryMetadata,
-    components_as_set_changes,
+    Entry, EntryComponentHistory, EntryEffect, EntryEffectHistory, EntryHistory,
+    EntryHistoryAction, EntryMetadata, components_as_set_changes,
 };
 use crate::committed_changes::CommittedChanges;
 use crate::csrf::{authenticate, authenticate_optional};
 use crate::error::{AppError, Find};
+use crate::events::Update;
 use crate::interface::{missing, parse_body, parse_query, response};
+use crate::messages::Message;
 use crate::scopes::models::Scope;
 use crate::spaces::resolve_resource_access_context;
 use hyper::Request;
 use hyper::body::Body;
+use std::collections::HashMap;
 use uuid::Uuid;
 
 pub(crate) async fn can_view_scope(
@@ -73,6 +76,32 @@ async fn ensure_reference_access(
         ));
     }
     Ok(())
+}
+
+async fn attach_message(
+    transaction: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    message_id: Option<Uuid>,
+    user_id: Uuid,
+    entry_effect_id: Uuid,
+) -> Result<Option<Message>, AppError> {
+    let Some(message_id) = message_id else {
+        return Ok(None);
+    };
+    let message = Message::attach_entry_effect(transaction, message_id, user_id, entry_effect_id)
+        .await?
+        .ok_or_else(|| {
+            AppError::NoPermission(
+                "The message cannot be associated with this Entry Effect".to_string(),
+            )
+        })?;
+    Ok(Some(message))
+}
+
+async fn publish_attached_message(space_id: Uuid, message: Option<Message>) {
+    if let Some(message) = message {
+        let old_pos = message.pos;
+        Update::message_edited(space_id, message, old_pos).await;
+    }
 }
 
 async fn list_entries(
@@ -142,33 +171,41 @@ async fn create_entry(
         payload.sort,
     )
     .await?;
-    let operation_id = Uuid::now_v7();
+    let effect = EntryEffect::create(
+        &mut transaction,
+        payload.space_id,
+        entry.scope_id,
+        session.user_id,
+    )
+    .await?;
     EntryHistory::record(
         &mut transaction,
-        operation_id,
-        Some(session.user_id),
-        entry.scope_id,
+        effect.id,
         entry.id,
-        payload.source_message_id,
         &entry.key,
         EntryHistoryAction::Create,
     )
     .await?;
     EntryComponentHistory::record(
         &mut transaction,
-        operation_id,
-        Some(session.user_id),
-        entry.scope_id,
+        effect.id,
         entry.id,
-        payload.source_message_id,
         &entry.key,
         &components_as_set_changes(&entry.components),
+    )
+    .await?;
+    let attached_message = attach_message(
+        &mut transaction,
+        payload.message_id,
+        session.user_id,
+        effect.id,
     )
     .await?;
     let mutation = mutation.commit(transaction).await?;
     let mut changes = CommittedChanges::default();
     changes.entry_updated(payload.space_id, &entry.metadata);
     changes.apply_with_mutation(ctx, &mutation).await;
+    publish_attached_message(payload.space_id, attached_message).await;
     Ok(entry)
 }
 
@@ -210,23 +247,43 @@ async fn edit_entry(
     )
     .await?
     .or_not_found()?;
-    if previous.key.to_lowercase() != entry.key.to_lowercase() {
+    let renamed = previous.key.to_lowercase() != entry.key.to_lowercase();
+    if payload.message_id.is_some() && !renamed {
+        return Err(AppError::BadRequest(
+            "messageId requires a recorded Entry change".to_string(),
+        ));
+    }
+    let attached_message = if renamed {
+        let effect = EntryEffect::create(
+            &mut transaction,
+            payload.space_id,
+            entry.scope_id,
+            session.user_id,
+        )
+        .await?;
         EntryHistory::record_rename(
             &mut transaction,
-            Uuid::now_v7(),
-            Some(session.user_id),
-            entry.scope_id,
+            effect.id,
             entry.id,
-            payload.source_message_id,
             &previous.key,
             &entry.key,
         )
         .await?;
-    }
+        attach_message(
+            &mut transaction,
+            payload.message_id,
+            session.user_id,
+            effect.id,
+        )
+        .await?
+    } else {
+        None
+    };
     let mutation = mutation.commit(transaction).await?;
     let mut changes = CommittedChanges::default();
     changes.entry_updated(payload.space_id, &entry.metadata);
     changes.apply_with_mutation(ctx, &mutation).await;
+    publish_attached_message(payload.space_id, attached_message).await;
     Ok(entry)
 }
 
@@ -251,16 +308,26 @@ async fn edit_entry_components(
         .or_not_found()?;
     let history_changes =
         Entry::apply_component_mutations(&mut transaction, entry.id, &payload.changes).await?;
-    let operation_id = Uuid::now_v7();
+    let effect = EntryEffect::create(
+        &mut transaction,
+        payload.space_id,
+        entry.scope_id,
+        session.user_id,
+    )
+    .await?;
     EntryComponentHistory::record(
         &mut transaction,
-        operation_id,
-        Some(session.user_id),
-        entry.scope_id,
+        effect.id,
         entry.id,
-        payload.source_message_id,
         &entry.key,
         &history_changes,
+    )
+    .await?;
+    let attached_message = attach_message(
+        &mut transaction,
+        payload.message_id,
+        session.user_id,
+        effect.id,
     )
     .await?;
     let entry = Entry::get_by_id_in_transaction(&mut transaction, entry.scope_id, entry.id)
@@ -270,6 +337,7 @@ async fn edit_entry_components(
     let mut changes = CommittedChanges::default();
     changes.entry_updated(payload.space_id, &entry.metadata);
     changes.apply_with_mutation(ctx, &mutation).await;
+    publish_attached_message(payload.space_id, attached_message).await;
     Ok(entry)
 }
 
@@ -296,16 +364,26 @@ async fn delete_entry(
             "Entry metadata version is stale".to_string(),
         ));
     }
-    let operation_id = Uuid::now_v7();
+    let effect = EntryEffect::create(
+        &mut transaction,
+        payload.space_id,
+        entry.scope_id,
+        session.user_id,
+    )
+    .await?;
     EntryHistory::record(
         &mut transaction,
-        operation_id,
-        Some(session.user_id),
-        entry.scope_id,
+        effect.id,
         entry.id,
-        payload.source_message_id,
         &entry.key,
         EntryHistoryAction::Delete,
+    )
+    .await?;
+    let attached_message = attach_message(
+        &mut transaction,
+        payload.message_id,
+        session.user_id,
+        effect.id,
     )
     .await?;
     if !Entry::delete(
@@ -324,7 +402,70 @@ async fn delete_entry(
     let mut changes = CommittedChanges::default();
     changes.entry_deleted(payload.space_id, entry.scope_id, entry.id);
     changes.apply_with_mutation(ctx, &mutation).await;
+    publish_attached_message(payload.space_id, attached_message).await;
     Ok(true)
+}
+
+async fn effects(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<Vec<EntryEffectHistory>, AppError> {
+    const MAX_EFFECTS: usize = 256;
+
+    let session = authenticate_optional(&req).await?;
+    let payload: QueryEntryEffects = parse_body(req).await?;
+    if payload.entry_effect_ids.is_empty() || payload.entry_effect_ids.len() > MAX_EFFECTS {
+        return Err(AppError::BadRequest(format!(
+            "entryEffectIds must contain between 1 and {MAX_EFFECTS} IDs"
+        )));
+    }
+
+    let mut effects =
+        EntryEffect::list_by_ids(&ctx.db, payload.space_id, &payload.entry_effect_ids).await?;
+    let user_id = session.map(|session| session.user_id);
+    let mut visible_effects = Vec::with_capacity(effects.len());
+    for effect in effects.drain(..) {
+        let scope = resolve_scope(ctx, effect.space_id, effect.scope_id).await?;
+        if can_view_scope(ctx, &scope, user_id).await? {
+            visible_effects.push(effect);
+        }
+    }
+
+    let effect_ids = visible_effects
+        .iter()
+        .map(|effect| effect.id)
+        .collect::<Vec<_>>();
+    if effect_ids.is_empty() {
+        return Ok(Vec::new());
+    }
+    let entry_history = EntryHistory::list_by_effects(&ctx.db, &effect_ids).await?;
+    let component_history = EntryComponentHistory::list_by_effects(&ctx.db, &effect_ids).await?;
+    let mut entries_by_effect: HashMap<Uuid, Vec<EntryHistory>> = HashMap::new();
+    for history in entry_history {
+        entries_by_effect
+            .entry(history.entry_effect_id)
+            .or_default()
+            .push(history);
+    }
+    let mut components_by_effect: HashMap<Uuid, Vec<EntryComponentHistory>> = HashMap::new();
+    for history in component_history {
+        components_by_effect
+            .entry(history.entry_effect_id)
+            .or_default()
+            .push(history);
+    }
+
+    Ok(visible_effects
+        .into_iter()
+        .map(|effect| {
+            let effect_id = effect.id;
+            EntryEffectHistory {
+                effect,
+                entry_history: entries_by_effect.remove(&effect_id).unwrap_or_default(),
+                component_history: components_by_effect.remove(&effect_id).unwrap_or_default(),
+            }
+        })
+        .collect())
 }
 
 async fn history(
@@ -413,6 +554,7 @@ pub async fn router(
         ("/delete", Method::POST) => response(delete_entry(ctx, req).await).await,
         ("/history", Method::GET) => response(history(ctx, req).await).await,
         ("/component_history", Method::GET) => response(component_history(ctx, req).await).await,
+        ("/effects", Method::POST) => response(effects(ctx, req).await).await,
         _ => missing(),
     }
 }

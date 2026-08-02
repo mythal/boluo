@@ -211,7 +211,7 @@ export type CreateEntry = {
   components?: { [key in string]: Value };
   tags?: string[];
   sort: number;
-  sourceMessageId: string | null;
+  messageId: string | null;
 };
 
 export type CreateNote = {
@@ -239,7 +239,7 @@ export type DeleteEntry = {
   scopeId: string;
   entryId: string;
   expectedMetadataVersion: string;
-  sourceMessageId: string | null;
+  messageId: string | null;
 };
 
 export type DicePool = {
@@ -307,7 +307,7 @@ export type EditEntry = {
   scopeId: string;
   entryId: string;
   expectedMetadataVersion: string;
-  sourceMessageId: string | null;
+  messageId: string | null;
   key: string;
   aliases: string[];
   displayName: string;
@@ -320,7 +320,7 @@ export type EditEntryComponents = {
   spaceId: string;
   scopeId: string;
   entryId: string;
-  sourceMessageId: string | null;
+  messageId: string | null;
   changes: EntryComponentMutation[];
 };
 
@@ -415,11 +415,10 @@ export type EntryComponent = {
 };
 
 export type EntryComponentHistory = {
-  operationId: string;
+  entryEffectId: string;
   operatorId: string | null;
   scopeId: string;
   entryId: string;
-  sourceMessageId: string | null;
   key: string;
   componentType: string;
   action: EntryComponentHistoryAction;
@@ -447,12 +446,24 @@ export type EntryComponentMutation =
     }
   | { action: 'REMOVE'; componentType: string; expectedVersion: string };
 
+export type EntryEffect = {
+  id: string;
+  spaceId: string;
+  scopeId: string;
+  operatorId: string | null;
+  created: string;
+};
+
+export type EntryEffectHistory = {
+  entryHistory: EntryHistory[];
+  componentHistory: EntryComponentHistory[];
+} & EntryEffect;
+
 export type EntryHistory = {
-  operationId: string;
+  entryEffectId: string;
   operatorId: string | null;
   scopeId: string;
   entryId: string;
-  sourceMessageId: string | null;
   key: string;
   previousKey: string | null;
   action: EntryHistoryAction;
@@ -704,6 +715,7 @@ export type Message = {
    */
   color: string;
   rev?: number;
+  entryEffectId?: string | null;
 };
 
 export type MessageIdQuery = {
@@ -938,6 +950,11 @@ export type QueryEntry = {
   spaceId: string;
   scopeId: string;
   entryId: string;
+};
+
+export type QueryEntryEffects = {
+  spaceId: string;
+  entryEffectIds: string[];
 };
 
 export type QueryNote = {

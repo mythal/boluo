@@ -26,10 +26,12 @@ import type {
   Login as LoginData,
   LoginReturn,
   Entry,
+  EntryEffectHistory,
   Message,
   MessageIdQuery,
   NewMessage,
   Note,
+  QueryEntryEffects,
   Register as RegisterData,
   ResendEmailVerification,
   ResendEmailVerificationResult,
@@ -96,6 +98,11 @@ export interface Post {
   // entries
   '/entries/create': { payload: CreateEntry; query: null; result: Entry };
   '/entries/delete': { payload: DeleteEntry; query: null; result: true };
+  '/entries/effects': {
+    payload: QueryEntryEffects;
+    query: null;
+    result: EntryEffectHistory[];
+  };
   // characters
   '/characters/create': { payload: CreateCharacter; query: null; result: Character };
   '/characters/archive': { payload: ArchiveCharacter; query: null; result: Character };

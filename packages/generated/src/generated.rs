@@ -157,6 +157,8 @@ pub struct Message {
     pub color: ::std::string::String,
     #[serde(default)]
     pub rev: i32,
+    #[serde(default)]
+    pub entry_effect_id: ::std::option::Option<::uuid::Uuid>,
 }
 
 #[allow(deprecated, non_camel_case_types, non_snake_case)]

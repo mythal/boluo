@@ -1,16 +1,16 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT\n    operation_id,\n    operator_id,\n    scope_id,\n    entry_id,\n    source_message_id,\n    key,\n    previous_key,\n    action AS \"action!: EntryHistoryAction\",\n    created\nFROM entry_history\nWHERE scope_id = $1\n  AND ($2::uuid IS NULL OR entry_id = $2)\nORDER BY created DESC, operation_id DESC, entry_id;\n",
+  "query": "SELECT\n    history.entry_effect_id,\n    effect.operator_id,\n    effect.scope_id,\n    history.entry_id,\n    history.key,\n    history.previous_key,\n    history.action AS \"action!: EntryHistoryAction\",\n    effect.created\nFROM entry_history history\nJOIN entry_effects effect ON effect.id = history.entry_effect_id\nWHERE history.entry_effect_id = ANY($1)\nORDER BY effect.created DESC, history.entry_effect_id DESC, history.entry_id;\n",
   "describe": {
     "columns": [
       {
         "ordinal": 0,
-        "name": "operation_id",
+        "name": "entry_effect_id",
         "type_info": "Uuid",
         "origin": {
           "Table": {
             "table": "entry_history",
-            "name": "operation_id"
+            "name": "entry_effect_id"
           }
         }
       },
@@ -20,7 +20,7 @@
         "type_info": "Uuid",
         "origin": {
           "Table": {
-            "table": "entry_history",
+            "table": "entry_effects",
             "name": "operator_id"
           }
         }
@@ -31,7 +31,7 @@
         "type_info": "Uuid",
         "origin": {
           "Table": {
-            "table": "entry_history",
+            "table": "entry_effects",
             "name": "scope_id"
           }
         }
@@ -49,17 +49,6 @@
       },
       {
         "ordinal": 4,
-        "name": "source_message_id",
-        "type_info": "Uuid",
-        "origin": {
-          "Table": {
-            "table": "entry_history",
-            "name": "source_message_id"
-          }
-        }
-      },
-      {
-        "ordinal": 5,
         "name": "key",
         "type_info": "Text",
         "origin": {
@@ -70,7 +59,7 @@
         }
       },
       {
-        "ordinal": 6,
+        "ordinal": 5,
         "name": "previous_key",
         "type_info": "Text",
         "origin": {
@@ -81,7 +70,7 @@
         }
       },
       {
-        "ordinal": 7,
+        "ordinal": 6,
         "name": "action!: EntryHistoryAction",
         "type_info": {
           "Custom": {
@@ -103,12 +92,12 @@
         }
       },
       {
-        "ordinal": 8,
+        "ordinal": 7,
         "name": "created",
         "type_info": "Timestamptz",
         "origin": {
           "Table": {
-            "table": "entry_history",
+            "table": "entry_effects",
             "name": "created"
           }
         }
@@ -116,8 +105,7 @@
     ],
     "parameters": {
       "Left": [
-        "Uuid",
-        "Uuid"
+        "UuidArray"
       ]
     },
     "nullable": [
@@ -125,12 +113,11 @@
       true,
       false,
       false,
-      true,
       false,
       true,
       false,
       false
     ]
   },
-  "hash": "99d88b3c6804a4750397bf07bff535fb4931221cd0d2ab83664d2d6484d05a0f"
+  "hash": "52d50292fc8424813fda019b01591a1cda6ffe5012a42adf1885a9223d87bb13"
 }

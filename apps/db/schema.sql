@@ -67,6 +67,19 @@ COMMENT ON EXTENSION "uuid-ossp" IS 'generate universally unique identifiers (UU
 
 
 --
+-- Name: access_policy; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.access_policy AS ENUM (
+    'Public',
+    'Collaborative',
+    'Personal',
+    'Secret',
+    'GameMaster'
+);
+
+
+--
 -- Name: entry_component_history_action; Type: TYPE; Schema: public; Owner: -
 --
 
@@ -106,19 +119,6 @@ CREATE TYPE public.event_type AS ENUM (
 CREATE TYPE public.identifier_kind AS ENUM (
     'Primary',
     'Alias'
-);
-
-
---
--- Name: access_policy; Type: TYPE; Schema: public; Owner: -
---
-
-CREATE TYPE public.access_policy AS ENUM (
-    'Public',
-    'Collaborative',
-    'Personal',
-    'Secret',
-    'GameMaster'
 );
 
 
@@ -278,17 +278,13 @@ CREATE TABLE public.entries (
 --
 
 CREATE TABLE public.entry_component_history (
-    operation_id uuid NOT NULL,
-    operator_id uuid,
-    scope_id uuid NOT NULL,
+    entry_effect_id uuid NOT NULL,
     entry_id uuid NOT NULL,
-    source_message_id uuid,
     key text NOT NULL,
     component_type text NOT NULL,
     action public.entry_component_history_action NOT NULL,
     data jsonb,
     schema_version integer,
-    created timestamp with time zone DEFAULT now() NOT NULL,
     CONSTRAINT entry_component_history_state_valid CHECK ((((action = 'Set'::public.entry_component_history_action) AND (data IS NOT NULL) AND (schema_version IS NOT NULL) AND (schema_version > 0)) OR ((action = 'Remove'::public.entry_component_history_action) AND (data IS NULL) AND (schema_version IS NULL)))),
     CONSTRAINT entry_component_history_type_valid CHECK (((length(component_type) <= 200) AND (component_type ~ '^[a-z0-9]+([._-][a-z0-9]+)*(/[a-z0-9]+([._-][a-z0-9]+)*)+$'::text)))
 );
@@ -305,8 +301,21 @@ CREATE TABLE public.entry_components (
     schema_version integer DEFAULT 1 NOT NULL,
     version uuid DEFAULT uuidv7() NOT NULL,
     modified timestamp with time zone DEFAULT now() NOT NULL,
-    CONSTRAINT entry_components_schema_version_check CHECK ((schema_version > 0)),
-    CONSTRAINT entry_component_type_valid CHECK (((length(component_type) <= 200) AND (component_type ~ '^[a-z0-9]+([._-][a-z0-9]+)*(/[a-z0-9]+([._-][a-z0-9]+)*)+$'::text)))
+    CONSTRAINT entry_component_type_valid CHECK (((length(component_type) <= 200) AND (component_type ~ '^[a-z0-9]+([._-][a-z0-9]+)*(/[a-z0-9]+([._-][a-z0-9]+)*)+$'::text))),
+    CONSTRAINT entry_components_schema_version_check CHECK ((schema_version > 0))
+);
+
+
+--
+-- Name: entry_effects; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.entry_effects (
+    id uuid DEFAULT uuidv7() NOT NULL,
+    space_id uuid NOT NULL,
+    scope_id uuid NOT NULL,
+    operator_id uuid,
+    created timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
@@ -315,16 +324,12 @@ CREATE TABLE public.entry_components (
 --
 
 CREATE TABLE public.entry_history (
-    operation_id uuid NOT NULL,
-    operator_id uuid,
-    scope_id uuid NOT NULL,
+    entry_effect_id uuid NOT NULL,
     entry_id uuid NOT NULL,
-    source_message_id uuid,
     key text NOT NULL,
     previous_key text,
     action public.entry_history_action NOT NULL,
-    created timestamp with time zone DEFAULT now() NOT NULL,
-    CONSTRAINT entry_history_rename_valid CHECK (((action = 'Rename'::public.entry_history_action) AND (previous_key IS NOT NULL) AND (previous_key <> key)) OR ((action <> 'Rename'::public.entry_history_action) AND (previous_key IS NULL)))
+    CONSTRAINT entry_history_rename_valid CHECK ((((action = 'Rename'::public.entry_history_action) AND (previous_key IS NOT NULL) AND (previous_key <> key)) OR ((action <> 'Rename'::public.entry_history_action) AND (previous_key IS NULL))))
 );
 
 
@@ -401,7 +406,8 @@ CREATE TABLE public.messages (
     pos_q integer NOT NULL,
     pos double precision GENERATED ALWAYS AS (((pos_p)::double precision / (pos_q)::double precision)) STORED,
     color text DEFAULT ''::text NOT NULL,
-    rev integer DEFAULT 0 NOT NULL
+    rev integer DEFAULT 0 NOT NULL,
+    entry_effect_id uuid
 );
 
 
@@ -607,6 +613,14 @@ ALTER TABLE ONLY public.character_identifiers
 
 
 --
+-- Name: characters character_main_scope_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.characters
+    ADD CONSTRAINT character_main_scope_unique UNIQUE (main_scope_id);
+
+
+--
 -- Name: character_scopes character_scope_scope_unique; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -620,14 +634,6 @@ ALTER TABLE ONLY public.character_scopes
 
 ALTER TABLE ONLY public.character_scopes
     ADD CONSTRAINT character_scopes_pkey PRIMARY KEY (character_id, purpose);
-
-
---
--- Name: characters character_main_scope_unique; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.characters
-    ADD CONSTRAINT character_main_scope_unique UNIQUE (main_scope_id);
 
 
 --
@@ -659,7 +665,7 @@ ALTER TABLE ONLY public.entries
 --
 
 ALTER TABLE ONLY public.entry_component_history
-    ADD CONSTRAINT entry_component_history_pkey PRIMARY KEY (operation_id, entry_id, component_type);
+    ADD CONSTRAINT entry_component_history_pkey PRIMARY KEY (entry_effect_id, entry_id, component_type);
 
 
 --
@@ -671,11 +677,19 @@ ALTER TABLE ONLY public.entry_components
 
 
 --
+-- Name: entry_effects entry_effects_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.entry_effects
+    ADD CONSTRAINT entry_effects_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: entry_history entry_history_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.entry_history
-    ADD CONSTRAINT entry_history_pkey PRIMARY KEY (operation_id, entry_id);
+    ADD CONSTRAINT entry_history_pkey PRIMARY KEY (entry_effect_id, entry_id);
 
 
 --
@@ -899,31 +913,31 @@ CREATE INDEX character_space_modified_index ON public.characters USING btree (sp
 
 
 --
--- Name: entry_component_history_entry_created_index; Type: INDEX; Schema: public; Owner: -
+-- Name: entry_component_history_entry_effect_index; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX entry_component_history_entry_created_index ON public.entry_component_history USING btree (scope_id, entry_id, created DESC, operation_id DESC, component_type);
-
-
---
--- Name: entry_component_history_key_created_index; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX entry_component_history_key_created_index ON public.entry_component_history USING btree (scope_id, key, created DESC, operation_id DESC, entry_id, component_type);
+CREATE INDEX entry_component_history_entry_effect_index ON public.entry_component_history USING btree (entry_id, component_type, entry_effect_id);
 
 
 --
--- Name: entry_reference_note_index; Type: INDEX; Schema: public; Owner: -
+-- Name: entry_component_history_key_effect_index; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX entry_reference_note_index ON public.entries USING btree (reference_note_id) WHERE (reference_note_id IS NOT NULL);
+CREATE INDEX entry_component_history_key_effect_index ON public.entry_component_history USING btree (key, entry_effect_id, entry_id, component_type);
 
 
 --
--- Name: entry_history_scope_created_index; Type: INDEX; Schema: public; Owner: -
+-- Name: entry_effect_scope_created_index; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX entry_history_scope_created_index ON public.entry_history USING btree (scope_id, created DESC, operation_id DESC, entry_id);
+CREATE INDEX entry_effect_scope_created_index ON public.entry_effects USING btree (scope_id, created DESC, id DESC);
+
+
+--
+-- Name: entry_history_entry_effect_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX entry_history_entry_effect_index ON public.entry_history USING btree (entry_id, entry_effect_id);
 
 
 --
@@ -941,10 +955,24 @@ CREATE UNIQUE INDEX entry_identifier_one_primary ON public.entry_identifiers USI
 
 
 --
+-- Name: entry_reference_note_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX entry_reference_note_index ON public.entries USING btree (reference_note_id) WHERE (reference_note_id IS NOT NULL);
+
+
+--
 -- Name: entry_scope_sort_index; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX entry_scope_sort_index ON public.entries USING btree (scope_id, sort, id);
+
+
+--
+-- Name: message_entry_effect_unique; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX message_entry_effect_unique ON public.messages USING btree (entry_effect_id) WHERE (entry_effect_id IS NOT NULL);
 
 
 --
@@ -1022,6 +1050,14 @@ ALTER TABLE ONLY public.character_identifiers
 
 
 --
+-- Name: characters character_main_scope; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.characters
+    ADD CONSTRAINT character_main_scope FOREIGN KEY (space_id, main_scope_id) REFERENCES public.scopes(space_id, id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: character_scopes character_scope_character; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1035,14 +1071,6 @@ ALTER TABLE ONLY public.character_scopes
 
 ALTER TABLE ONLY public.character_scopes
     ADD CONSTRAINT character_scope_scope FOREIGN KEY (space_id, scope_id) REFERENCES public.scopes(space_id, id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: characters character_main_scope; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.characters
-    ADD CONSTRAINT character_main_scope FOREIGN KEY (space_id, main_scope_id) REFERENCES public.scopes(space_id, id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -1062,43 +1090,35 @@ ALTER TABLE ONLY public.entry_components
 
 
 --
--- Name: entry_component_history entry_component_history_operator; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: entry_component_history entry_component_history_effect; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.entry_component_history
-    ADD CONSTRAINT entry_component_history_operator FOREIGN KEY (operator_id) REFERENCES public.users(id) ON DELETE SET NULL;
+    ADD CONSTRAINT entry_component_history_effect FOREIGN KEY (entry_effect_id) REFERENCES public.entry_effects(id) ON DELETE CASCADE;
 
 
 --
--- Name: entry_component_history entry_component_history_scope; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: entry_effects entry_effect_operator; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.entry_component_history
-    ADD CONSTRAINT entry_component_history_scope FOREIGN KEY (scope_id) REFERENCES public.scopes(id) ON DELETE CASCADE;
-
-
---
--- Name: entries entry_reference_note; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.entries
-    ADD CONSTRAINT entry_reference_note FOREIGN KEY (reference_note_id) REFERENCES public.notes(id) ON DELETE SET NULL;
+ALTER TABLE ONLY public.entry_effects
+    ADD CONSTRAINT entry_effect_operator FOREIGN KEY (operator_id) REFERENCES public.users(id) ON DELETE SET NULL;
 
 
 --
--- Name: entry_history entry_history_operator; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: entry_effects entry_effect_scope; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.entry_history
-    ADD CONSTRAINT entry_history_operator FOREIGN KEY (operator_id) REFERENCES public.users(id) ON DELETE SET NULL;
+ALTER TABLE ONLY public.entry_effects
+    ADD CONSTRAINT entry_effect_scope FOREIGN KEY (space_id, scope_id) REFERENCES public.scopes(space_id, id) ON DELETE CASCADE;
 
 
 --
--- Name: entry_history entry_history_scope; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: entry_history entry_history_effect; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.entry_history
-    ADD CONSTRAINT entry_history_scope FOREIGN KEY (scope_id) REFERENCES public.scopes(id) ON DELETE CASCADE;
+    ADD CONSTRAINT entry_history_effect FOREIGN KEY (entry_effect_id) REFERENCES public.entry_effects(id) ON DELETE CASCADE;
 
 
 --
@@ -1107,6 +1127,14 @@ ALTER TABLE ONLY public.entry_history
 
 ALTER TABLE ONLY public.entry_identifiers
     ADD CONSTRAINT entry_identifier_entry FOREIGN KEY (scope_id, entry_id) REFERENCES public.entries(scope_id, id) ON DELETE CASCADE;
+
+
+--
+-- Name: entries entry_reference_note; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.entries
+    ADD CONSTRAINT entry_reference_note FOREIGN KEY (reference_note_id) REFERENCES public.notes(id) ON DELETE SET NULL;
 
 
 --
@@ -1166,6 +1194,22 @@ ALTER TABLE ONLY public.media
 
 
 --
+-- Name: messages message_entry_effect; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.messages
+    ADD CONSTRAINT message_entry_effect FOREIGN KEY (entry_effect_id) REFERENCES public.entry_effects(id) ON DELETE SET NULL;
+
+
+--
+-- Name: notes note_access_channel; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.notes
+    ADD CONSTRAINT note_access_channel FOREIGN KEY (access_channel_id) REFERENCES public.channels(id);
+
+
+--
 -- Name: note_content_revisions note_content_revision_note; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1179,14 +1223,6 @@ ALTER TABLE ONLY public.note_content_revisions
 
 ALTER TABLE ONLY public.note_content_revisions
     ADD CONSTRAINT note_content_revision_operator FOREIGN KEY (operator_id) REFERENCES public.users(id) ON DELETE SET NULL;
-
-
---
--- Name: notes note_access_channel; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.notes
-    ADD CONSTRAINT note_access_channel FOREIGN KEY (access_channel_id) REFERENCES public.channels(id);
 
 
 --

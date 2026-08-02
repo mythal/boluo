@@ -885,6 +885,7 @@ mod tests {
             pos,
             color: "#000000".into(),
             rev,
+            entry_effect_id: None,
         }
     }
 

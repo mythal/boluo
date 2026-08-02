@@ -41,6 +41,13 @@ pub struct EntryComponentHistoryQuery {
 
 #[derive(Debug, Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
+pub struct QueryEntryEffects {
+    pub space_id: Uuid,
+    pub entry_effect_ids: Vec<Uuid>,
+}
+
+#[derive(Debug, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
 pub struct CheckEntryIdentifier {
     pub space_id: Uuid,
     pub scope_id: Uuid,
@@ -62,7 +69,7 @@ pub struct CreateEntry {
     #[serde(default)]
     pub tags: Vec<String>,
     pub sort: i32,
-    pub source_message_id: Option<Uuid>,
+    pub message_id: Option<Uuid>,
 }
 
 #[derive(Debug, Deserialize, specta::Type)]
@@ -72,7 +79,7 @@ pub struct EditEntry {
     pub scope_id: Uuid,
     pub entry_id: Uuid,
     pub expected_metadata_version: Uuid,
-    pub source_message_id: Option<Uuid>,
+    pub message_id: Option<Uuid>,
     pub key: String,
     pub aliases: Vec<String>,
     pub display_name: String,
@@ -87,7 +94,7 @@ pub struct EditEntryComponents {
     pub space_id: Uuid,
     pub scope_id: Uuid,
     pub entry_id: Uuid,
-    pub source_message_id: Option<Uuid>,
+    pub message_id: Option<Uuid>,
     pub changes: Vec<EntryComponentMutation>,
 }
 
@@ -98,7 +105,7 @@ pub struct DeleteEntry {
     pub scope_id: Uuid,
     pub entry_id: Uuid,
     pub expected_metadata_version: Uuid,
-    pub source_message_id: Option<Uuid>,
+    pub message_id: Option<Uuid>,
 }
 
 #[cfg(test)]

@@ -60,6 +60,8 @@ pub struct Message {
     pub color: CompactString,
     #[serde(default, skip_serializing_if = "is_zero")]
     pub rev: i32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub entry_effect_id: Option<Uuid>,
 }
 
 fn is_zero(value: &i32) -> bool {
@@ -316,6 +318,23 @@ impl Message {
         self.seed = vec![0; 4];
         self.text = String::new();
         self.entities = Default::default();
+        self.entry_effect_id = None;
+    }
+
+    pub(crate) async fn attach_entry_effect(
+        db: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+        message_id: Uuid,
+        user_id: Uuid,
+        entry_effect_id: Uuid,
+    ) -> Result<Option<Message>, sqlx::Error> {
+        sqlx::query_file_scalar!(
+            "sql/messages/attach_entry_effect.sql",
+            message_id,
+            user_id,
+            entry_effect_id,
+        )
+        .fetch_optional(&mut **db)
+        .await
     }
 
     pub(super) async fn move_between(

@@ -101,7 +101,7 @@ pub async fn check(pool: &sqlx::Pool<sqlx::Postgres>) {
     use crate::channels::{Channel, ChannelMember};
     use crate::characters::Character;
     use crate::entries::models::{
-        Entry, EntryComponentHistory, EntryComponentHistoryAction, EntryHistory,
+        Entry, EntryComponentHistory, EntryComponentHistoryAction, EntryEffect, EntryHistory,
         EntryHistoryAction, components_as_set_changes,
     };
     use crate::media::models::Media;
@@ -314,14 +314,13 @@ pub async fn check(pool: &sqlx::Pool<sqlx::Postgres>) {
     )
     .await
     .expect("Cannot create entry");
-    let operation_id = uuid::Uuid::now_v7();
+    let effect = EntryEffect::create(&mut trans, space.id, entry.scope_id, user.id)
+        .await
+        .expect("Cannot create Entry Effect");
     EntryHistory::record(
         &mut trans,
-        operation_id,
-        Some(user.id),
-        entry.scope_id,
+        effect.id,
         entry.id,
-        Some(message.id),
         &entry.key,
         EntryHistoryAction::Create,
     )
@@ -329,16 +328,25 @@ pub async fn check(pool: &sqlx::Pool<sqlx::Postgres>) {
     .expect("Cannot create entry history");
     EntryComponentHistory::record(
         &mut trans,
-        operation_id,
-        Some(user.id),
-        entry.scope_id,
+        effect.id,
         entry.id,
-        Some(message.id),
         &entry.key,
         &components_as_set_changes(&entry.components),
     )
     .await
     .expect("Cannot create entry component history");
+    let attached_message =
+        crate::messages::Message::attach_entry_effect(&mut trans, message.id, user.id, effect.id)
+            .await
+            .expect("Cannot attach Entry Effect")
+            .expect("Message is not attachable");
+    assert_eq!(attached_message.entry_effect_id, Some(effect.id));
+    assert!(
+        crate::messages::Message::attach_entry_effect(&mut trans, message.id, user.id, effect.id,)
+            .await
+            .expect("Cannot check duplicate Entry Effect attachment")
+            .is_none()
+    );
 
     #[allow(dead_code)]
     #[derive(sqlx::Type)]
@@ -427,6 +435,14 @@ pub async fn check(pool: &sqlx::Pool<sqlx::Postgres>) {
         modified: chrono::DateTime<chrono::Utc>,
     })
     .expect("Cannot decode entries composite row");
+    check_composite_row!(&mut *trans, "entry_effects", {
+        id: uuid::Uuid,
+        space_id: uuid::Uuid,
+        scope_id: uuid::Uuid,
+        operator_id: Option<uuid::Uuid>,
+        created: chrono::DateTime<chrono::Utc>,
+    })
+    .expect("Cannot decode entry_effects composite row");
     check_composite_row!(&mut *trans, "entry_identifiers", {
         scope_id: uuid::Uuid,
         entry_id: uuid::Uuid,
@@ -435,15 +451,11 @@ pub async fn check(pool: &sqlx::Pool<sqlx::Postgres>) {
     })
     .expect("Cannot decode entry_identifiers composite row");
     check_composite_row!(&mut *trans, "entry_history", {
-        operation_id: uuid::Uuid,
-        operator_id: Option<uuid::Uuid>,
-        scope_id: uuid::Uuid,
+        entry_effect_id: uuid::Uuid,
         entry_id: uuid::Uuid,
-        source_message_id: Option<uuid::Uuid>,
         key: String,
         previous_key: Option<String>,
         action: EntryHistoryAction,
-        created: chrono::DateTime<chrono::Utc>,
     })
     .expect("Cannot decode entry_history composite row");
     check_composite_row!(&mut *trans, "entry_components", {
@@ -456,17 +468,13 @@ pub async fn check(pool: &sqlx::Pool<sqlx::Postgres>) {
     })
     .expect("Cannot decode entry_components composite row");
     check_composite_row!(&mut *trans, "entry_component_history", {
-        operation_id: uuid::Uuid,
-        operator_id: Option<uuid::Uuid>,
-        scope_id: uuid::Uuid,
+        entry_effect_id: uuid::Uuid,
         entry_id: uuid::Uuid,
-        source_message_id: Option<uuid::Uuid>,
         key: String,
         component_type: String,
         action: EntryComponentHistoryAction,
         data: Option<serde_json::Value>,
         schema_version: Option<i32>,
-        created: chrono::DateTime<chrono::Utc>,
     })
     .expect("Cannot decode entry_component_history composite row");
 

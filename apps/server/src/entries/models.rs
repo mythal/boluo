@@ -69,6 +69,53 @@ pub struct EntryComponent {
     pub modified: DateTime<Utc>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, specta::Type, sqlx::FromRow)]
+#[serde(rename_all = "camelCase")]
+pub struct EntryEffect {
+    pub id: Uuid,
+    pub space_id: Uuid,
+    pub scope_id: Uuid,
+    pub operator_id: Option<Uuid>,
+    pub created: DateTime<Utc>,
+}
+
+impl EntryEffect {
+    pub async fn create(
+        db: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+        space_id: Uuid,
+        scope_id: Uuid,
+        operator_id: Uuid,
+    ) -> Result<Self, ModelError> {
+        let id = Uuid::now_v7();
+        sqlx::query_file_as!(
+            EntryEffect,
+            "sql/entries/create_effect.sql",
+            id,
+            scope_id,
+            operator_id,
+            space_id,
+        )
+        .fetch_optional(&mut **db)
+        .await?
+        .ok_or(ModelError::NotFound("Scope"))
+    }
+
+    pub async fn list_by_ids<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
+        space_id: Uuid,
+        entry_effect_ids: &[Uuid],
+    ) -> Result<Vec<Self>, sqlx::Error> {
+        sqlx::query_file_as!(
+            EntryEffect,
+            "sql/entries/list_effects.sql",
+            space_id,
+            entry_effect_ids,
+        )
+        .fetch_all(db)
+        .await
+    }
+}
+
 impl Deref for Entry {
     type Target = EntryMetadata;
 
@@ -434,11 +481,10 @@ impl EntryHistoryAction {
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type, sqlx::FromRow)]
 #[serde(rename_all = "camelCase")]
 pub struct EntryHistory {
-    pub operation_id: Uuid,
+    pub entry_effect_id: Uuid,
     pub operator_id: Option<Uuid>,
     pub scope_id: Uuid,
     pub entry_id: Uuid,
-    pub source_message_id: Option<Uuid>,
     pub key: String,
     pub previous_key: Option<String>,
     pub action: EntryHistoryAction,
@@ -449,49 +495,29 @@ impl EntryHistory {
     #[allow(clippy::too_many_arguments)]
     pub async fn record(
         db: &mut sqlx::Transaction<'_, sqlx::Postgres>,
-        operation_id: Uuid,
-        operator_id: Option<Uuid>,
-        scope_id: Uuid,
+        entry_effect_id: Uuid,
         entry_id: Uuid,
-        source_message_id: Option<Uuid>,
         key: &str,
         action: EntryHistoryAction,
     ) -> Result<(), ModelError> {
         if action == EntryHistoryAction::Rename {
             return Err(ValidationFailed("Rename history requires a previous key.").into());
         }
-        Self::record_event(
-            db,
-            operation_id,
-            operator_id,
-            scope_id,
-            entry_id,
-            source_message_id,
-            key,
-            None,
-            action,
-        )
-        .await
+        Self::record_event(db, entry_effect_id, entry_id, key, None, action).await
     }
 
     #[allow(clippy::too_many_arguments)]
     pub async fn record_rename(
         db: &mut sqlx::Transaction<'_, sqlx::Postgres>,
-        operation_id: Uuid,
-        operator_id: Option<Uuid>,
-        scope_id: Uuid,
+        entry_effect_id: Uuid,
         entry_id: Uuid,
-        source_message_id: Option<Uuid>,
         previous_key: &str,
         key: &str,
     ) -> Result<(), ModelError> {
         Self::record_event(
             db,
-            operation_id,
-            operator_id,
-            scope_id,
+            entry_effect_id,
             entry_id,
-            source_message_id,
             key,
             Some(previous_key),
             EntryHistoryAction::Rename,
@@ -502,11 +528,8 @@ impl EntryHistory {
     #[allow(clippy::too_many_arguments)]
     async fn record_event(
         db: &mut sqlx::Transaction<'_, sqlx::Postgres>,
-        operation_id: Uuid,
-        operator_id: Option<Uuid>,
-        scope_id: Uuid,
+        entry_effect_id: Uuid,
         entry_id: Uuid,
-        source_message_id: Option<Uuid>,
         key: &str,
         previous_key: Option<&str>,
         action: EntryHistoryAction,
@@ -521,11 +544,8 @@ impl EntryHistory {
         }
         let result = sqlx::query_file!(
             "sql/entries/insert_history.sql",
-            operation_id,
-            operator_id,
-            scope_id,
+            entry_effect_id,
             entry_id,
-            source_message_id,
             key,
             previous_key,
             action.as_str(),
@@ -533,10 +553,7 @@ impl EntryHistory {
         .execute(&mut **db)
         .await?;
         if result.rows_affected() == 0 {
-            return Err(ValidationFailed(
-                "Source message must belong to the same space as the entry.",
-            )
-            .into());
+            return Err(ModelError::NotFound("Entry Effect"));
         }
         Ok(())
     }
@@ -550,6 +567,20 @@ impl EntryHistory {
             .fetch_all(db)
             .await
             .map_err(Into::into)
+    }
+
+    pub async fn list_by_effects<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
+        entry_effect_ids: &[Uuid],
+    ) -> Result<Vec<Self>, ModelError> {
+        sqlx::query_file_as!(
+            EntryHistory,
+            "sql/entries/history_by_effects.sql",
+            entry_effect_ids,
+        )
+        .fetch_all(db)
+        .await
+        .map_err(Into::into)
     }
 }
 
@@ -739,11 +770,10 @@ pub fn components_as_set_changes(
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type, sqlx::FromRow)]
 #[serde(rename_all = "camelCase")]
 pub struct EntryComponentHistory {
-    pub operation_id: Uuid,
+    pub entry_effect_id: Uuid,
     pub operator_id: Option<Uuid>,
     pub scope_id: Uuid,
     pub entry_id: Uuid,
-    pub source_message_id: Option<Uuid>,
     pub key: String,
     pub component_type: String,
     pub action: EntryComponentHistoryAction,
@@ -756,11 +786,8 @@ impl EntryComponentHistory {
     #[allow(clippy::too_many_arguments)]
     pub async fn record(
         db: &mut sqlx::Transaction<'_, sqlx::Postgres>,
-        operation_id: Uuid,
-        operator_id: Option<Uuid>,
-        scope_id: Uuid,
+        entry_effect_id: Uuid,
         entry_id: Uuid,
-        source_message_id: Option<Uuid>,
         key: &str,
         changes: &[EntryComponentChange],
     ) -> Result<(), ModelError> {
@@ -768,11 +795,8 @@ impl EntryComponentHistory {
         for change in changes {
             let result = sqlx::query_file!(
                 "sql/entries/insert_component_history.sql",
-                operation_id,
-                operator_id,
-                scope_id,
+                entry_effect_id,
                 entry_id,
-                source_message_id,
                 key,
                 change.component_type,
                 change.action.as_str(),
@@ -782,10 +806,7 @@ impl EntryComponentHistory {
             .execute(&mut **db)
             .await?;
             if result.rows_affected() == 0 {
-                return Err(ValidationFailed(
-                    "Source message must belong to the same space as the entry.",
-                )
-                .into());
+                return Err(ModelError::NotFound("Entry Effect"));
             }
         }
         Ok(())
@@ -823,6 +844,29 @@ impl EntryComponentHistory {
         .await
         .map_err(Into::into)
     }
+
+    pub async fn list_by_effects<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
+        entry_effect_ids: &[Uuid],
+    ) -> Result<Vec<Self>, ModelError> {
+        sqlx::query_file_as!(
+            EntryComponentHistory,
+            "sql/entries/component_history_by_effects.sql",
+            entry_effect_ids,
+        )
+        .fetch_all(db)
+        .await
+        .map_err(Into::into)
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct EntryEffectHistory {
+    #[serde(flatten)]
+    pub effect: EntryEffect,
+    pub entry_history: Vec<EntryHistory>,
+    pub component_history: Vec<EntryComponentHistory>,
 }
 
 #[cfg(test)]
@@ -959,14 +1003,14 @@ mod tests {
                 CompactString::new("resource")
             ]
         );
-        let create_operation_id = Uuid::now_v7();
+        let create_effect =
+            EntryEffect::create(&mut transaction, space.id, space_scope.id, user.id)
+                .await
+                .expect("create Entry Effect failed");
         EntryHistory::record(
             &mut transaction,
-            create_operation_id,
-            Some(user.id),
-            space_scope.id,
+            create_effect.id,
             entry.id,
-            None,
             &entry.key,
             EntryHistoryAction::Create,
         )
@@ -974,28 +1018,13 @@ mod tests {
         .expect("create entry history failed");
         EntryComponentHistory::record(
             &mut transaction,
-            create_operation_id,
-            Some(user.id),
-            space_scope.id,
+            create_effect.id,
             entry.id,
-            None,
             &entry.key,
             &components_as_set_changes(&entry.components),
         )
         .await
         .expect("create history failed");
-        let foreign_source = EntryComponentHistory::record(
-            &mut transaction,
-            Uuid::now_v7(),
-            Some(user.id),
-            space_scope.id,
-            entry.id,
-            Some(Uuid::new_v4()),
-            &entry.key,
-            &components_as_set_changes(&entry.components),
-        )
-        .await;
-        assert!(matches!(foreign_source, Err(ModelError::Validation(_))));
         transaction.commit().await.expect("commit failed");
 
         let invalid_component = sqlx::query(
@@ -1073,7 +1102,9 @@ mod tests {
         let metadata_version = updated.metadata_version;
         let core_version = updated.components["core/counter"].version;
         let mut transaction = pool.begin().await.expect("begin failed");
-        let operation_id = Uuid::now_v7();
+        let effect = EntryEffect::create(&mut transaction, space.id, space_scope.id, user.id)
+            .await
+            .expect("create component Entry Effect failed");
         let changes = Entry::apply_component_mutations(
             &mut transaction,
             updated.id,
@@ -1094,11 +1125,8 @@ mod tests {
         .expect("component batch failed");
         EntryComponentHistory::record(
             &mut transaction,
-            operation_id,
-            Some(user.id),
-            updated.scope_id,
+            effect.id,
             updated.id,
-            None,
             &updated.key,
             &changes,
         )
@@ -1132,13 +1160,14 @@ mod tests {
         )
         .await
         .expect("component update failed");
+        let update_effect =
+            EntryEffect::create(&mut transaction, space.id, space_scope.id, user.id)
+                .await
+                .expect("create update Entry Effect failed");
         EntryComponentHistory::record(
             &mut transaction,
-            Uuid::now_v7(),
-            Some(user.id),
-            updated.scope_id,
+            update_effect.id,
             updated.id,
-            None,
             &updated.key,
             &changes,
         )
@@ -1219,14 +1248,14 @@ mod tests {
         .await
         .expect("rename failed")
         .expect("entry missing");
-        let rename_operation_id = Uuid::now_v7();
+        let rename_effect =
+            EntryEffect::create(&mut transaction, space.id, space_scope.id, user.id)
+                .await
+                .expect("create rename Entry Effect failed");
         EntryHistory::record_rename(
             &mut transaction,
-            rename_operation_id,
-            Some(user.id),
-            renamed.scope_id,
+            rename_effect.id,
             renamed.id,
-            None,
             &detached.key,
             &renamed.key,
         )
@@ -1245,14 +1274,14 @@ mod tests {
             .await
             .expect("stale delete failed")
         );
-        let delete_operation_id = Uuid::now_v7();
+        let delete_effect =
+            EntryEffect::create(&mut transaction, space.id, space_scope.id, user.id)
+                .await
+                .expect("create delete Entry Effect failed");
         EntryHistory::record(
             &mut transaction,
-            delete_operation_id,
-            Some(user.id),
-            renamed.scope_id,
+            delete_effect.id,
             renamed.id,
-            None,
             &renamed.key,
             EntryHistoryAction::Delete,
         )
@@ -1297,14 +1326,14 @@ mod tests {
         )
         .await
         .expect("create replacement failed");
-        let replacement_operation_id = Uuid::now_v7();
+        let replacement_effect =
+            EntryEffect::create(&mut transaction, space.id, space_scope.id, user.id)
+                .await
+                .expect("create replacement Entry Effect failed");
         EntryHistory::record(
             &mut transaction,
-            replacement_operation_id,
-            Some(user.id),
-            replacement.scope_id,
+            replacement_effect.id,
             replacement.id,
-            None,
             &replacement.key,
             EntryHistoryAction::Create,
         )
@@ -1312,11 +1341,8 @@ mod tests {
         .expect("record replacement entry history failed");
         EntryComponentHistory::record(
             &mut transaction,
-            replacement_operation_id,
-            Some(user.id),
-            replacement.scope_id,
+            replacement_effect.id,
             replacement.id,
-            None,
             &replacement.key,
             &components_as_set_changes(&replacement.components),
         )
@@ -1374,25 +1400,51 @@ mod tests {
         assert_eq!(entry_history.len(), 4);
         assert!(entry_history.iter().any(|row| {
             row.entry_id == updated.id
-                && row.operation_id == create_operation_id
+                && row.entry_effect_id == create_effect.id
                 && row.action == EntryHistoryAction::Create
         }));
         assert!(entry_history.iter().any(|row| {
             row.entry_id == renamed.id
-                && row.operation_id == rename_operation_id
+                && row.entry_effect_id == rename_effect.id
                 && row.action == EntryHistoryAction::Rename
                 && row.previous_key.as_deref() == Some("hp")
                 && row.key == "stamina"
         }));
         assert!(entry_history.iter().any(|row| {
             row.entry_id == updated.id
-                && row.operation_id == delete_operation_id
+                && row.entry_effect_id == delete_effect.id
                 && row.action == EntryHistoryAction::Delete
         }));
         assert!(entry_history.iter().any(|row| {
             row.entry_id == replacement.id
-                && row.operation_id == replacement_operation_id
+                && row.entry_effect_id == replacement_effect.id
                 && row.action == EntryHistoryAction::Create
         }));
+
+        let effects = EntryEffect::list_by_ids(
+            &pool,
+            space.id,
+            &[create_effect.id, replacement_effect.id, Uuid::new_v4()],
+        )
+        .await
+        .expect("list Entry Effects failed");
+        assert_eq!(effects.len(), 2);
+        assert!(effects.iter().all(|effect| {
+            effect.space_id == space.id
+                && effect.scope_id == space_scope.id
+                && effect.operator_id == Some(user.id)
+        }));
+        let effect_entry_history =
+            EntryHistory::list_by_effects(&pool, &[create_effect.id, replacement_effect.id])
+                .await
+                .expect("list Entry History by Effect failed");
+        assert_eq!(effect_entry_history.len(), 2);
+        let effect_component_history = EntryComponentHistory::list_by_effects(
+            &pool,
+            &[create_effect.id, replacement_effect.id],
+        )
+        .await
+        .expect("list Component History by Effect failed");
+        assert_eq!(effect_component_history.len(), 2);
     }
 }

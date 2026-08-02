@@ -1,16 +1,16 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT\n    operation_id,\n    operator_id,\n    scope_id,\n    entry_id,\n    source_message_id,\n    key,\n    component_type,\n    action AS \"action!: EntryComponentHistoryAction\",\n    data,\n    schema_version,\n    created\nFROM entry_component_history\nWHERE scope_id = $1\n  AND entry_id = $2\nORDER BY created DESC, operation_id DESC, component_type;\n",
+  "query": "SELECT\n    history.entry_effect_id,\n    effect.operator_id,\n    effect.scope_id,\n    history.entry_id,\n    history.key,\n    history.component_type,\n    history.action AS \"action!: EntryComponentHistoryAction\",\n    history.data,\n    history.schema_version,\n    effect.created\nFROM entry_component_history history\nJOIN entry_effects effect ON effect.id = history.entry_effect_id\nWHERE history.entry_effect_id = ANY($1)\nORDER BY\n    effect.created DESC,\n    history.entry_effect_id DESC,\n    history.entry_id,\n    history.component_type;\n",
   "describe": {
     "columns": [
       {
         "ordinal": 0,
-        "name": "operation_id",
+        "name": "entry_effect_id",
         "type_info": "Uuid",
         "origin": {
           "Table": {
             "table": "entry_component_history",
-            "name": "operation_id"
+            "name": "entry_effect_id"
           }
         }
       },
@@ -20,7 +20,7 @@
         "type_info": "Uuid",
         "origin": {
           "Table": {
-            "table": "entry_component_history",
+            "table": "entry_effects",
             "name": "operator_id"
           }
         }
@@ -31,7 +31,7 @@
         "type_info": "Uuid",
         "origin": {
           "Table": {
-            "table": "entry_component_history",
+            "table": "entry_effects",
             "name": "scope_id"
           }
         }
@@ -49,17 +49,6 @@
       },
       {
         "ordinal": 4,
-        "name": "source_message_id",
-        "type_info": "Uuid",
-        "origin": {
-          "Table": {
-            "table": "entry_component_history",
-            "name": "source_message_id"
-          }
-        }
-      },
-      {
-        "ordinal": 5,
         "name": "key",
         "type_info": "Text",
         "origin": {
@@ -70,7 +59,7 @@
         }
       },
       {
-        "ordinal": 6,
+        "ordinal": 5,
         "name": "component_type",
         "type_info": "Text",
         "origin": {
@@ -81,7 +70,7 @@
         }
       },
       {
-        "ordinal": 7,
+        "ordinal": 6,
         "name": "action!: EntryComponentHistoryAction",
         "type_info": {
           "Custom": {
@@ -102,7 +91,7 @@
         }
       },
       {
-        "ordinal": 8,
+        "ordinal": 7,
         "name": "data",
         "type_info": "Jsonb",
         "origin": {
@@ -113,7 +102,7 @@
         }
       },
       {
-        "ordinal": 9,
+        "ordinal": 8,
         "name": "schema_version",
         "type_info": "Int4",
         "origin": {
@@ -124,12 +113,12 @@
         }
       },
       {
-        "ordinal": 10,
+        "ordinal": 9,
         "name": "created",
         "type_info": "Timestamptz",
         "origin": {
           "Table": {
-            "table": "entry_component_history",
+            "table": "entry_effects",
             "name": "created"
           }
         }
@@ -137,8 +126,7 @@
     ],
     "parameters": {
       "Left": [
-        "Uuid",
-        "Uuid"
+        "UuidArray"
       ]
     },
     "nullable": [
@@ -146,7 +134,6 @@
       true,
       false,
       false,
-      true,
       false,
       false,
       false,
@@ -155,5 +142,5 @@
       false
     ]
   },
-  "hash": "7fa08db100dbfe4b0526164d70fe74887dafc58aaa46cebc082448e7f764e82c"
+  "hash": "87596d8a9fab9f6b605b7014245764fec477f5ab65ff8f456379625d3d522781"
 }

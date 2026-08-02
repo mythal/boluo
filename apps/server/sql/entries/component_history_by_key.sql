@@ -1,16 +1,20 @@
 SELECT
-    operation_id,
-    operator_id,
-    scope_id,
-    entry_id,
-    source_message_id,
-    key,
-    component_type,
-    action AS "action!: EntryComponentHistoryAction",
-    data,
-    schema_version,
-    created
-FROM entry_component_history
-WHERE scope_id = $1
-  AND key = $2
-ORDER BY created DESC, operation_id DESC, entry_id, component_type;
+    history.entry_effect_id,
+    effect.operator_id,
+    effect.scope_id,
+    history.entry_id,
+    history.key,
+    history.component_type,
+    history.action AS "action!: EntryComponentHistoryAction",
+    history.data,
+    history.schema_version,
+    effect.created
+FROM entry_component_history history
+JOIN entry_effects effect ON effect.id = history.entry_effect_id
+WHERE effect.scope_id = $1
+  AND history.key = $2
+ORDER BY
+    effect.created DESC,
+    history.entry_effect_id DESC,
+    history.entry_id,
+    history.component_type;

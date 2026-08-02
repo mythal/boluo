@@ -529,4 +529,21 @@ mod tests {
     async fn db_test_check(pool: sqlx::PgPool) {
         super::check(&pool).await;
     }
+
+    #[sqlx::test(
+        migrator = "super::MIGRATOR",
+        fixtures(
+            path = "../fixtures",
+            scripts("0-users", "1-spaces-and-channels", "2-member")
+        )
+    )]
+    async fn db_test_all_fixtures(pool: sqlx::PgPool) {
+        let space_scope_count: i64 =
+            sqlx::query_scalar("SELECT COUNT(*) FROM scopes WHERE kind = 'Space'")
+                .fetch_one(&pool)
+                .await
+                .expect("failed to count fixture space scopes");
+
+        assert_eq!(space_scope_count, 3);
+    }
 }

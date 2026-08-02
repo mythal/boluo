@@ -50,16 +50,14 @@ INSERT INTO public.scopes (
   space_id,
   kind,
   owner_id,
-  view_policy,
-  edit_policy
+  access_policy
 )
 SELECT
   scope_id,
   id,
   'Space',
   owner_id,
-  'SpaceViewers',
-  'SpaceAdmins'
+  'Public'
 FROM public.spaces
 WHERE id IN (
   'a400dd6f-c26c-4849-bdfb-74b67154ab28',

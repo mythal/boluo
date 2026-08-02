@@ -1,4 +1,5 @@
 use chrono::prelude::*;
+use compact_str::CompactString;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -53,18 +54,22 @@ impl ChannelType {
 #[serde(rename_all = "camelCase")]
 pub struct Channel {
     pub id: Uuid,
-    pub name: String,
+    #[specta(type = String)]
+    pub name: CompactString,
     pub topic: String,
     pub space_id: Uuid,
     pub created: DateTime<Utc>,
     pub is_public: bool,
     #[serde(skip)]
     pub deleted: bool,
-    pub default_dice_type: String,
-    pub default_roll_command: String,
+    #[specta(type = String)]
+    pub default_dice_type: CompactString,
+    #[specta(type = String)]
+    pub default_roll_command: CompactString,
     pub is_document: bool,
     #[serde(skip)]
-    pub old_name: String,
+    #[specta(type = String)]
+    pub old_name: CompactString,
     pub r#type: ChannelType,
     #[serde(default, skip_serializing_if = "is_false")]
     pub is_archived: bool,
@@ -264,8 +269,10 @@ pub struct ChannelMember {
     pub user_id: Uuid,
     pub channel_id: Uuid,
     pub join_date: DateTime<Utc>,
-    pub character_name: String,
-    pub text_color: Option<String>,
+    #[specta(type = String)]
+    pub character_name: CompactString,
+    #[specta(type = Option<String>)]
+    pub text_color: Option<CompactString>,
     #[serde(skip)]
     pub is_joined: bool,
     pub is_master: bool,

@@ -1,4 +1,5 @@
 use chrono::prelude::*;
+use compact_str::CompactString;
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
@@ -20,7 +21,8 @@ pub struct Message {
     pub channel_id: Uuid,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub parent_message_id: Option<Uuid>,
-    pub name: String,
+    #[specta(type = String)]
+    pub name: CompactString,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub media_id: Option<Uuid>,
     pub seed: Vec<u8>,
@@ -35,7 +37,8 @@ pub struct Message {
     #[serde(skip_serializing_if = "is_false")]
     pub pinned: bool,
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub tags: Vec<String>,
+    #[specta(type = Vec<String>)]
+    pub tags: Vec<CompactString>,
     #[serde(skip_serializing_if = "is_false")]
     pub folded: bool,
     pub text: String,
@@ -53,7 +56,8 @@ pub struct Message {
     /// or refer to a character's name like "char:DM".
     ///
     /// If the string contains a semicolon, the second part is for the dark mode.
-    pub color: String,
+    #[specta(type = String)]
+    pub color: CompactString,
     #[serde(default, skip_serializing_if = "is_zero")]
     pub rev: i32,
 }

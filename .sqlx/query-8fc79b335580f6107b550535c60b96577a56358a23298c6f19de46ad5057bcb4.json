@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "UPDATE\n    channel_members\nSET\n    character_name = COALESCE($3, character_name),\n    text_color = COALESCE($4, text_color)\nWHERE\n    user_id = $1\n    AND channel_id = $2\n    AND is_joined\nRETURNING\n    channel_members AS \"member!: ChannelMember\";\n\n",
+  "query": "UPDATE channel_members member\nSET\n    character_name = COALESCE($3, character_name),\n    text_color = COALESCE($4, text_color),\n    character_id = CASE WHEN $5 THEN $6 ELSE character_id END\nFROM channels channel\nLEFT JOIN characters target_character\n    ON target_character.id = $6\n    AND target_character.space_id = channel.space_id\n    AND target_character.archived_at IS NULL\nWHERE\n    member.user_id = $1\n    AND member.channel_id = $2\n    AND member.is_joined\n    AND channel.id = member.channel_id\n    AND (NOT $5 OR $6::uuid IS NULL OR target_character.id IS NOT NULL)\nRETURNING\n    member AS \"member!: ChannelMember\";\n",
   "describe": {
     "columns": [
       {
@@ -38,6 +38,10 @@
                 [
                   "is_master",
                   "Bool"
+                ],
+                [
+                  "character_id",
+                  "Uuid"
                 ]
               ]
             }
@@ -51,12 +55,14 @@
         "Uuid",
         "Uuid",
         "Text",
-        "Text"
+        "Text",
+        "Bool",
+        "Uuid"
       ]
     },
     "nullable": [
       null
     ]
   },
-  "hash": "451e953dab8059887276018ba65265207d8ab10bb1f973a688eac1c150bcb068"
+  "hash": "8fc79b335580f6107b550535c60b96577a56358a23298c6f19de46ad5057bcb4"
 }

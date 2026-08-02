@@ -187,7 +187,8 @@ CREATE TABLE public.channel_members (
     character_name text NOT NULL,
     text_color text,
     is_joined boolean DEFAULT true NOT NULL,
-    is_master boolean DEFAULT false NOT NULL
+    is_master boolean DEFAULT false NOT NULL,
+    character_id uuid
 );
 
 
@@ -407,6 +408,7 @@ CREATE TABLE public.messages (
     pos double precision GENERATED ALWAYS AS (((pos_p)::double precision / (pos_q)::double precision)) STORED,
     color text DEFAULT ''::text NOT NULL,
     rev integer DEFAULT 0 NOT NULL,
+    character_id uuid,
     entry_effect_id uuid
 );
 
@@ -1018,11 +1020,33 @@ CREATE INDEX space_members_space_id_index ON public.space_members USING btree (s
 
 
 --
+-- Name: channel_member_character_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX channel_member_character_index ON public.channel_members USING btree (character_id) WHERE (character_id IS NOT NULL);
+
+
+--
+-- Name: message_character_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX message_character_index ON public.messages USING btree (character_id, created DESC) WHERE (character_id IS NOT NULL);
+
+
+--
 -- Name: channel_members channel_member_channel; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.channel_members
     ADD CONSTRAINT channel_member_channel FOREIGN KEY (channel_id) REFERENCES public.channels(id) ON DELETE CASCADE;
+
+
+--
+-- Name: channel_members channel_member_character; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.channel_members
+    ADD CONSTRAINT channel_member_character FOREIGN KEY (character_id) REFERENCES public.characters(id) ON DELETE SET NULL;
 
 
 --
@@ -1199,6 +1223,14 @@ ALTER TABLE ONLY public.media
 
 ALTER TABLE ONLY public.messages
     ADD CONSTRAINT message_entry_effect FOREIGN KEY (entry_effect_id) REFERENCES public.entry_effects(id) ON DELETE SET NULL;
+
+
+--
+-- Name: messages message_character; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.messages
+    ADD CONSTRAINT message_character FOREIGN KEY (character_id) REFERENCES public.characters(id) ON DELETE SET NULL;
 
 
 --

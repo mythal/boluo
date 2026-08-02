@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "INSERT INTO messages (id, sender_id, channel_id, name, text, entities, in_game, is_action, is_master, whisper_to_users, media_id, pos_p, pos_q, color)\n    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)\nRETURNING\n    messages AS \"message!: Message\";\n\n",
+  "query": "INSERT INTO messages (id, sender_id, channel_id, name, character_id, text, entities, in_game, is_action, is_master, whisper_to_users, media_id, pos_p, pos_q, color)\n    SELECT $1, $2, channel.id, $4, target_character.id, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15\n    FROM channels channel\n    LEFT JOIN characters target_character\n        ON target_character.id = $5\n        AND target_character.space_id = channel.space_id\n        AND target_character.archived_at IS NULL\n    WHERE channel.id = $3\n      AND ($5::uuid IS NULL OR target_character.id IS NOT NULL)\nRETURNING\n    messages AS \"message!: Message\";\n",
   "describe": {
     "columns": [
       {
@@ -108,6 +108,10 @@
                   "Int4"
                 ],
                 [
+                  "character_id",
+                  "Uuid"
+                ],
+                [
                   "entry_effect_id",
                   "Uuid"
                 ]
@@ -124,6 +128,7 @@
         "Uuid",
         "Uuid",
         "Text",
+        "Uuid",
         "Text",
         "Jsonb",
         "Bool",
@@ -140,5 +145,5 @@
       null
     ]
   },
-  "hash": "8720a05a1ced8a036404b0a7f1b26d498477727fff3b26ff519c252bc1df0662"
+  "hash": "0998b048b8530ce3735f80a12dcf4b28567acd996bb03c6006c2de5afe3b43f2"
 }

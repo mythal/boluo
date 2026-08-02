@@ -68,6 +68,7 @@ function useChannelJoinLeave(id: Id): ChannelMemberOperators {
     }
     const result = await post('/channels/edit_member', {
       characterName,
+      characterId: null,
       channelId,
       textColor: null,
     });

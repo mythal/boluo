@@ -1,0 +1,74 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH ADD (\n    channel_members\n) AS (\nINSERT INTO channel_members (user_id, channel_id, character_name, is_master, is_joined, character_id)\n        SELECT\n            $1,\n            channel.id,\n            $3,\n            $4,\n            TRUE,\n            target_character.id\n        FROM\n            channels channel\n            INNER JOIN space_members space_member\n                ON space_member.space_id = channel.space_id\n                AND space_member.user_id = $1\n            LEFT JOIN characters target_character\n                ON target_character.id = $5\n                AND target_character.space_id = channel.space_id\n                AND target_character.archived_at IS NULL\n        WHERE\n            channel.id = $2\n            AND channel.deleted = FALSE\n            AND ($5::uuid IS NULL OR target_character.id IS NOT NULL)\n    ON CONFLICT (user_id, channel_id)\n        DO UPDATE SET\n            is_joined = TRUE,\n            character_name = $3,\n            character_id = EXCLUDED.character_id\n        RETURNING\n            channel_members)\n        SELECT\n            TRUE AS \"created!\",\n            channel_members AS \"member!: ChannelMember\"\n        FROM\n            ADD\n        UNION ALL\n        SELECT\n            FALSE AS \"created!\",\n            channel_members AS \"member!: ChannelMember\"\n        FROM\n            channel_members\n        WHERE\n            user_id = $1\n            AND channel_id = $2\n        LIMIT 1;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "created!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "member!: ChannelMember",
+        "type_info": {
+          "Custom": {
+            "name": "channel_members",
+            "kind": {
+              "Composite": [
+                [
+                  "user_id",
+                  "Uuid"
+                ],
+                [
+                  "channel_id",
+                  "Uuid"
+                ],
+                [
+                  "join_date",
+                  "Timestamptz"
+                ],
+                [
+                  "character_name",
+                  "Text"
+                ],
+                [
+                  "text_color",
+                  "Text"
+                ],
+                [
+                  "is_joined",
+                  "Bool"
+                ],
+                [
+                  "is_master",
+                  "Bool"
+                ],
+                [
+                  "character_id",
+                  "Uuid"
+                ]
+              ]
+            }
+          }
+        },
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Text",
+        "Bool",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "eae8cfe4e2b6dbd46da91c455cef0fa02563b015e807b7f1cc2b8f39c76d94ec"
+}

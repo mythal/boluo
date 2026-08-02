@@ -108,6 +108,10 @@
                   "Int4"
                 ],
                 [
+                  "character_id",
+                  "Uuid"
+                ],
+                [
                   "entry_effect_id",
                   "Uuid"
                 ]

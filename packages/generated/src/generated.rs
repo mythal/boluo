@@ -34,6 +34,7 @@ pub struct ChannelMember {
     pub character_name: ::std::string::String,
     pub text_color: ::std::option::Option<::std::string::String>,
     pub is_master: bool,
+    pub character_id: ::std::option::Option<::uuid::Uuid>,
 }
 
 #[allow(deprecated, non_camel_case_types, non_snake_case)]
@@ -158,6 +159,8 @@ pub struct Message {
     #[serde(default)]
     pub rev: i32,
     #[serde(default)]
+    pub character_id: ::std::option::Option<::uuid::Uuid>,
+    #[serde(default)]
     pub entry_effect_id: ::std::option::Option<::uuid::Uuid>,
 }
 
@@ -173,6 +176,8 @@ pub struct NewMessage {
     #[serde(default)]
     pub space_id: ::std::option::Option<::uuid::Uuid>,
     pub name: ::std::string::String,
+    #[serde(default)]
+    pub character_id: ::std::option::Option<::uuid::Uuid>,
     pub text: ::std::string::String,
     #[serde(default)]
     pub entities: shared_types::messages::Entities,

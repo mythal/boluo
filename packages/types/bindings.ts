@@ -8,6 +8,7 @@ export type AddChannelMember = {
   channelId: string;
   userId: string;
   characterName?: string;
+  characterId?: string | null;
 };
 
 export type AppSettings = {
@@ -67,6 +68,7 @@ export type ChannelMember = {
   characterName: string;
   textColor: string | null;
   isMaster: boolean;
+  characterId: string | null;
 };
 
 export type ChannelMemberWithUser = {
@@ -184,6 +186,7 @@ export type CreateChannel = {
   spaceId: string;
   name: string;
   characterName?: string;
+  characterId?: string | null;
   defaultDiceType: string | null;
   isPublic: boolean;
   type: ChannelType | null;
@@ -278,6 +281,7 @@ export type EditChannel = {
 export type EditChannelMember = {
   channelId: string;
   characterName: string | null;
+  characterId: string | null;
   textColor: string | null;
 };
 
@@ -598,6 +602,7 @@ export type Href = string | Span;
 export type JoinChannel = {
   channelId: string;
   characterName?: string;
+  characterId?: string | null;
 };
 
 export type JoinSpace = {
@@ -715,6 +720,7 @@ export type Message = {
    */
   color: string;
   rev?: number;
+  characterId?: string | null;
   entryEffectId?: string | null;
 };
 
@@ -739,6 +745,7 @@ export type NewMessage = {
   channelId: string;
   spaceId?: string | null;
   name: string;
+  characterId?: string | null;
   text: string;
   entities?: Entities;
   inGame: boolean;

@@ -51,7 +51,8 @@ async fn send(
         preview_id,
         channel_id,
         space_id,
-        name,
+        mut name,
+        character_id,
         text,
         entities,
         in_game,
@@ -91,6 +92,21 @@ async fn send(
         .or_no_permission()?;
         (channel, channel_member, space_member)
     };
+    if let Some(character_id) = character_id {
+        if !in_game {
+            return Err(AppError::BadRequest(
+                "Out-of-game messages cannot be associated with a character".to_string(),
+            ));
+        }
+        let character = crate::characters::handlers::resolve_character_for_portrayal(
+            ctx,
+            channel.space_id,
+            character_id,
+            session.user_id,
+        )
+        .await?;
+        name = character.name.to_string();
+    }
     let message = Message::create(
         &ctx.db,
         preview_id,
@@ -99,6 +115,7 @@ async fn send(
         &session.user_id,
         &channel_member.character_name,
         &name,
+        character_id,
         &text,
         entities,
         in_game,

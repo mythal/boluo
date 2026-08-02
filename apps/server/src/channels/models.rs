@@ -276,6 +276,7 @@ pub struct ChannelMember {
     #[serde(skip)]
     pub is_joined: bool,
     pub is_master: bool,
+    pub character_id: Option<Uuid>,
 }
 
 impl ChannelMember {
@@ -284,6 +285,18 @@ impl ChannelMember {
         user_id: Uuid,
         channel_id: Uuid,
         character_name: &str,
+        is_master: bool,
+    ) -> Result<ChannelMember, ModelError> {
+        Self::add_user_with_character(db, user_id, channel_id, character_name, None, is_master)
+            .await
+    }
+
+    pub async fn add_user_with_character<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
+        user_id: Uuid,
+        channel_id: Uuid,
+        character_name: &str,
+        character_id: Option<Uuid>,
         is_master: bool,
     ) -> Result<ChannelMember, ModelError> {
         use crate::validators;
@@ -297,7 +310,8 @@ impl ChannelMember {
             user_id,
             &channel_id,
             character_name,
-            is_master
+            is_master,
+            character_id,
         )
         .fetch_optional(db)
         .await
@@ -433,6 +447,28 @@ impl ChannelMember {
         character_name: Option<&str>,
         text_color: Option<&str>,
     ) -> Result<Option<ChannelMember>, ModelError> {
+        Self::edit_with_character(
+            db,
+            user_id,
+            channel_id,
+            character_name,
+            text_color,
+            false,
+            None,
+        )
+        .await
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    pub async fn edit_with_character<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
+        user_id: Uuid,
+        channel_id: Uuid,
+        character_name: Option<&str>,
+        text_color: Option<&str>,
+        update_character: bool,
+        character_id: Option<Uuid>,
+    ) -> Result<Option<ChannelMember>, ModelError> {
         use crate::validators;
         let character_name = character_name.map(str::trim);
         let text_color = text_color.map(str::trim);
@@ -449,7 +485,9 @@ impl ChannelMember {
             user_id,
             channel_id,
             character_name,
-            text_color
+            text_color,
+            update_character,
+            character_id,
         )
         .fetch_optional(db)
         .await?;
@@ -563,9 +601,10 @@ pub async fn members_attach_user<'c, T: sqlx::PgExecutor<'c>>(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::characters::Character;
     use crate::committed_changes::CommittedChanges;
     use crate::context::AppContext;
-    use crate::spaces::{Space, SpaceMember};
+    use crate::spaces::{AccessPolicy, Space, SpaceMember};
     use crate::users::User;
     use uuid::Uuid;
 
@@ -881,6 +920,27 @@ mod tests {
             .await
             .expect("failed to add member to space");
 
+        let mut character_transaction = pool.begin().await.expect("failed to begin Character");
+        let character = Character::create(
+            &mut character_transaction,
+            space.id,
+            member.id,
+            "Player Character",
+            "player_character",
+            Vec::new(),
+            "",
+            "#112233",
+            AccessPolicy::Personal,
+            None,
+            Vec::new(),
+        )
+        .await
+        .expect("failed to create Character");
+        character_transaction
+            .commit()
+            .await
+            .expect("failed to commit Character");
+
         let channel = Channel::create(
             &pool,
             &space.id,
@@ -897,10 +957,18 @@ mod tests {
             .expect("failed to add owner to channel");
         assert!(owner_member.is_master);
 
-        let member_record = ChannelMember::add_user(&pool, member.id, channel.id, "Player", false)
-            .await
-            .expect("failed to add member to channel");
+        let member_record = ChannelMember::add_user_with_character(
+            &pool,
+            member.id,
+            channel.id,
+            "Player Character",
+            Some(character.id),
+            false,
+        )
+        .await
+        .expect("failed to add member to channel");
         assert!(!member_record.is_master);
+        assert_eq!(member_record.character_id, Some(character.id));
 
         let members_with_user = ChannelMember::get_by_channel(&pool, &channel.id, false)
             .await
@@ -936,7 +1004,17 @@ mod tests {
         changes.channel_member_changed(space.id, &updated_member);
         changes.apply_with_context(&ctx).await;
         assert_eq!(updated_member.character_name, "Player One");
+        assert_eq!(updated_member.character_id, Some(character.id));
         assert_eq!(updated_member.text_color.as_deref(), Some("#112233"));
+
+        let unlinked_member = ChannelMember::edit_with_character(
+            &pool, member.id, channel.id, None, None, true, None,
+        )
+        .await
+        .expect("failed to unlink Character")
+        .expect("member should exist after unlinking Character");
+        assert_eq!(unlinked_member.character_name, "Player One");
+        assert_eq!(unlinked_member.character_id, None);
 
         let color_list_after = ChannelMember::get_color_list(&pool, &channel.id)
             .await

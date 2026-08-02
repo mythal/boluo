@@ -28,7 +28,7 @@ pub(crate) async fn can_view_character_in_space(
     Ok(character.can_view(user_id, context))
 }
 
-async fn can_edit_character_in_space(
+pub(crate) async fn can_edit_character_in_space(
     ctx: &crate::context::AppContext,
     character: &Character,
     user_id: Uuid,
@@ -41,6 +41,30 @@ async fn can_edit_character_in_space(
     )
     .await?;
     Ok(character.can_edit(user_id, context))
+}
+
+pub(crate) async fn resolve_character_for_portrayal(
+    ctx: &crate::context::AppContext,
+    space_id: Uuid,
+    character_id: Uuid,
+    user_id: Uuid,
+) -> Result<Character, AppError> {
+    let character = ctx
+        .space_store
+        .resolve_character(space_id, character_id)
+        .await?
+        .or_not_found()?;
+    if character.archived_at.is_some() {
+        return Err(AppError::BadRequest(
+            "Archived characters cannot be used as a speaker".to_string(),
+        ));
+    }
+    if !can_edit_character_in_space(ctx, &character, user_id).await? {
+        return Err(AppError::NoPermission(
+            "You don't have permission to portray this character".to_string(),
+        ));
+    }
+    Ok(character)
 }
 
 async fn query(
@@ -357,5 +381,95 @@ pub async fn router(
         ("/archive", Method::POST) => response(archive(ctx, req).await).await,
         ("/restore", Method::POST) => response(restore(ctx, req).await).await,
         _ => missing(),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::spaces::{AccessPolicy, Space, SpaceMember};
+    use crate::users::User;
+
+    async fn create_user(pool: &sqlx::PgPool, prefix: &str) -> User {
+        let suffix = Uuid::new_v4().simple().to_string();
+        User::register(
+            pool,
+            &format!("{prefix}_{suffix}@example.com"),
+            &format!("{prefix}_{}", &suffix[..8]),
+            "Portrayal Tester",
+            "PortrayalPass123!",
+        )
+        .await
+        .expect("failed to create user")
+    }
+
+    #[sqlx::test(migrator = "crate::db::MIGRATOR")]
+    async fn db_test_character_portrayal_requires_edit_access_and_active_character(
+        pool: sqlx::PgPool,
+    ) {
+        let owner = create_user(&pool, "portray_owner").await;
+        let other = create_user(&pool, "portray_other").await;
+        let space = Space::create(
+            &pool,
+            format!("portray_{}", &Uuid::new_v4().simple().to_string()[..8]),
+            &owner.id,
+            "Portrayal test".to_string(),
+            None,
+            Some("d20"),
+        )
+        .await
+        .expect("failed to create Space");
+        SpaceMember::add_user(&pool, &owner.id, &space.id)
+            .await
+            .expect("failed to add owner to Space");
+        SpaceMember::add_user(&pool, &other.id, &space.id)
+            .await
+            .expect("failed to add other user to Space");
+
+        let mut transaction = pool.begin().await.expect("failed to begin Character");
+        let character = Character::create(
+            &mut transaction,
+            space.id,
+            owner.id,
+            "Portrayal Character",
+            "portrayal_character",
+            Vec::new(),
+            "",
+            "#123456",
+            AccessPolicy::Personal,
+            None,
+            Vec::new(),
+        )
+        .await
+        .expect("failed to create Character");
+        transaction
+            .commit()
+            .await
+            .expect("failed to commit Character");
+
+        let ctx = crate::context::AppContext::new(pool.clone(), None);
+        let resolved = resolve_character_for_portrayal(&ctx, space.id, character.id, owner.id)
+            .await
+            .expect("owner should be able to portray Character");
+        assert_eq!(resolved.id, character.id);
+        assert!(matches!(
+            resolve_character_for_portrayal(&ctx, space.id, character.id, other.id).await,
+            Err(AppError::NoPermission(_))
+        ));
+
+        let mut transaction = pool.begin().await.expect("failed to begin archive");
+        Character::set_archived(&mut transaction, &character.id, character.version, true)
+            .await
+            .expect("failed to archive Character")
+            .expect("Character version should match");
+        transaction
+            .commit()
+            .await
+            .expect("failed to commit archive");
+        let fresh_ctx = crate::context::AppContext::new(pool.clone(), None);
+        assert!(matches!(
+            resolve_character_for_portrayal(&fresh_ctx, space.id, character.id, owner.id).await,
+            Err(AppError::BadRequest(_))
+        ));
     }
 }

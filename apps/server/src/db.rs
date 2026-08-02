@@ -195,6 +195,7 @@ pub async fn check(pool: &sqlx::Pool<sqlx::Postgres>) {
         channel.id,
         "Madokami",
         true,
+        None::<uuid::Uuid>,
     )
     .fetch_one(&mut *trans)
     .await
@@ -222,6 +223,7 @@ pub async fn check(pool: &sqlx::Pool<sqlx::Postgres>) {
         user.id,
         channel.id,
         "Madokami",
+        None::<uuid::Uuid>,
         "Love you, Homura",
         &json!([]),
         true,

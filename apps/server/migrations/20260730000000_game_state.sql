@@ -44,6 +44,26 @@ CREATE UNIQUE INDEX "character_identifier_one_primary"
     ON "character_identifiers" ("character_id")
     WHERE "kind" = 'Primary';
 
+ALTER TABLE channel_members
+    ADD COLUMN character_id uuid
+        CONSTRAINT channel_member_character
+        REFERENCES characters (id)
+        ON DELETE SET NULL;
+
+ALTER TABLE messages
+    ADD COLUMN character_id uuid
+        CONSTRAINT message_character
+        REFERENCES characters (id)
+        ON DELETE SET NULL;
+
+CREATE INDEX channel_member_character_index
+    ON channel_members (character_id)
+    WHERE character_id IS NOT NULL;
+
+CREATE INDEX message_character_index
+    ON messages (character_id, created DESC)
+    WHERE character_id IS NOT NULL;
+
 ALTER TABLE spaces
     ALTER COLUMN id SET DEFAULT uuidv7(),
     ADD COLUMN scope_id uuid;

@@ -21,6 +21,7 @@ export const useEditChannelCharacterName = (
       const result = await post('/channels/edit_member', null, {
         channelId,
         characterName,
+        characterId: null,
         textColor: null,
       });
       return result.unwrap();

@@ -26,6 +26,26 @@ use std::collections::HashMap;
 use std::sync::LazyLock;
 use uuid::Uuid;
 
+async fn resolve_channel_character(
+    ctx: &crate::context::AppContext,
+    space_id: Uuid,
+    user_id: Uuid,
+    character_name: String,
+    character_id: Option<Uuid>,
+) -> Result<(String, Option<Uuid>), AppError> {
+    let Some(character_id) = character_id else {
+        return Ok((character_name, None));
+    };
+    let character = crate::characters::handlers::resolve_character_for_portrayal(
+        ctx,
+        space_id,
+        character_id,
+        user_id,
+    )
+    .await?;
+    Ok((character.name.to_string(), Some(character.id)))
+}
+
 static CREATE_CHANNEL_LIMITER: LazyLock<DefaultKeyedRateLimiter<Uuid>> = LazyLock::new(|| {
     RateLimiter::keyed(rate_limit::per_hour(
         rate_limit::CREATE_CHANNEL_USER_PER_HOUR,
@@ -311,6 +331,7 @@ where
         space_id,
         name,
         character_name,
+        character_id,
         default_dice_type,
         is_public,
         _type,
@@ -323,6 +344,9 @@ where
         .ok_or_else(|| AppError::BadRequest("The space not found".to_string()))?;
     admin_only(&mut *trans, &user_id, &space_id).await?;
 
+    let (character_name, character_id) =
+        resolve_channel_character(ctx, space_id, user_id, character_name, character_id).await?;
+
     let channel = Channel::create(
         &mut *trans,
         &space_id,
@@ -332,8 +356,15 @@ where
         _type.unwrap_or(ChannelType::InGame),
     )
     .await?;
-    let channel_member =
-        ChannelMember::add_user(&mut *trans, user_id, channel.id, &character_name, true).await?;
+    let channel_member = ChannelMember::add_user_with_character(
+        &mut *trans,
+        user_id,
+        channel.id,
+        &character_name,
+        character_id,
+        true,
+    )
+    .await?;
     before_commit.await;
     let mutation = mutation.commit(trans).await?;
     let mut changes = CommittedChanges::default();
@@ -571,6 +602,7 @@ async fn add_member(
         channel_id,
         user_id,
         character_name,
+        character_id,
     } = parse_body(req).await?;
     let mutation_space_id = Channel::resolve_owning_space_id(&ctx.db, &channel_id)
         .await
@@ -586,8 +618,19 @@ async fn add_member(
         .await
         .or_not_found()?;
 
-    let member =
-        ChannelMember::add_user(&mut *trans, user_id, channel_id, &character_name, false).await?;
+    let (character_name, character_id) =
+        resolve_channel_character(ctx, channel.space_id, user_id, character_name, character_id)
+            .await?;
+
+    let member = ChannelMember::add_user_with_character(
+        &mut *trans,
+        user_id,
+        channel_id,
+        &character_name,
+        character_id,
+        false,
+    )
+    .await?;
     let mutation = mutation.commit(trans).await?;
     let mut changes = CommittedChanges::default();
     changes.channel_member_added(channel.space_id, &member);
@@ -605,6 +648,7 @@ async fn edit_member(
     let EditChannelMember {
         channel_id,
         character_name,
+        character_id,
         text_color,
     } = interface::parse_body(req).await?;
     let space_id = Channel::resolve_owning_space_id(&ctx.db, &channel_id)
@@ -622,14 +666,30 @@ async fn edit_member(
         .await
         .or_not_found()?;
 
+    let character_name = match character_id {
+        Some(character_id) => Some(
+            crate::characters::handlers::resolve_character_for_portrayal(
+                ctx,
+                space_id,
+                character_id,
+                session.user_id,
+            )
+            .await?
+            .name
+            .to_string(),
+        ),
+        None => character_name,
+    };
     let character_name = character_name.as_deref();
     let text_color = text_color.as_deref();
-    let channel_member = ChannelMember::edit(
+    let channel_member = ChannelMember::edit_with_character(
         &mut *trans,
         session.user_id,
         channel_id,
         character_name,
         text_color,
+        true,
+        character_id,
     )
     .await?
     .or_not_found();
@@ -667,6 +727,7 @@ async fn join(
     let JoinChannel {
         channel_id,
         character_name,
+        character_id,
     } = parse_body(req).await?;
     let mutation_space_id = Channel::resolve_owning_space_id(&ctx.db, &channel_id)
         .await
@@ -697,11 +758,20 @@ async fn join(
     SpaceMember::get(&mut *trans, &session.user_id, &channel.space_id)
         .await
         .or_no_permission()?;
-    let member = ChannelMember::add_user(
+    let (character_name, character_id) = resolve_channel_character(
+        ctx,
+        channel.space_id,
+        session.user_id,
+        character_name,
+        character_id,
+    )
+    .await?;
+    let member = ChannelMember::add_user_with_character(
         &mut *trans,
         session.user_id,
         channel.id,
         &character_name,
+        character_id,
         false,
     )
     .await?;
@@ -1211,6 +1281,7 @@ mod tests {
             space_id: space.id,
             name: "Visible after commit".to_string(),
             character_name: "GM".to_string(),
+            character_id: None,
             default_dice_type: Some("d20".to_string()),
             is_public: true,
             _type: Some(ChannelType::InGame),

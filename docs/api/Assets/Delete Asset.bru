@@ -1,0 +1,17 @@
+meta {
+  name: Delete Asset
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{base_url}}/assets/delete
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "assetId": "{{asset_id}}"
+  }
+}

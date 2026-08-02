@@ -1,11 +1,14 @@
 use std::collections::{HashMap, HashSet};
-
 use uuid::Uuid;
 
 use crate::cache::{CACHE, CacheType};
 use crate::channels::models::Member;
 use crate::channels::{Channel, ChannelMember};
 use crate::characters::Character;
+use crate::entries::models::EntryMetadata;
+use crate::events::Update;
+use crate::notes::NoteMetadata;
+use crate::scopes::models::Scope;
 use crate::space_runtime::{
     CommittedSpaceMutation, SpaceDelta, SpaceMutationProof, SpaceRuntimeError,
 };
@@ -22,9 +25,11 @@ use crate::spaces::{Space, SpaceMember};
 pub(crate) struct CommittedChanges {
     space_deltas: HashMap<Uuid, Vec<SpaceDelta>>,
     removed_spaces: HashMap<Uuid, HashSet<Uuid>>,
-    changed_character_variables: HashSet<Uuid>,
     changed_user_spaces: HashSet<Uuid>,
     channel_member_refreshes: HashSet<(Uuid, Uuid)>,
+    entry_invalidations: HashSet<(Uuid, Uuid, Uuid)>,
+    character_invalidations: HashSet<(Uuid, Uuid)>,
+    note_invalidations: HashSet<(Uuid, Uuid)>,
 }
 
 #[derive(Default)]
@@ -103,18 +108,65 @@ impl CommittedChanges {
             .entry(character.space_id)
             .or_default()
             .push(SpaceDelta::CharacterUpserted(character.clone()));
+        self.character_invalidations
+            .insert((character.space_id, character.id));
     }
 
-    pub(crate) fn character_deleted(&mut self, space_id: Uuid, character_id: Uuid) {
+    pub(crate) fn character_deleted(
+        &mut self,
+        space_id: Uuid,
+        character_id: Uuid,
+        scope_ids: Vec<Uuid>,
+    ) {
         self.space_deltas
             .entry(space_id)
             .or_default()
             .push(SpaceDelta::CharacterDeleted(character_id));
-        self.changed_character_variables.insert(character_id);
+        self.character_invalidations
+            .insert((space_id, character_id));
+        for scope_id in scope_ids {
+            self.scope_deleted(space_id, scope_id);
+        }
     }
 
-    pub(crate) fn character_variables_changed(&mut self, character_id: Uuid) {
-        self.changed_character_variables.insert(character_id);
+    pub(crate) fn note_updated(&mut self, note: &NoteMetadata) {
+        self.space_deltas
+            .entry(note.space_id)
+            .or_default()
+            .push(SpaceDelta::NoteUpserted(note.clone()));
+        self.note_invalidations.insert((note.space_id, note.id));
+    }
+
+    pub(crate) fn scope_updated(&mut self, scope: &Scope) {
+        self.space_deltas
+            .entry(scope.space_id)
+            .or_default()
+            .push(SpaceDelta::ScopeUpserted(scope.clone()));
+    }
+
+    pub(crate) fn scope_deleted(&mut self, space_id: Uuid, scope_id: Uuid) {
+        self.space_deltas
+            .entry(space_id)
+            .or_default()
+            .push(SpaceDelta::ScopeDeleted(scope_id));
+    }
+
+    pub(crate) fn entry_updated(&mut self, space_id: Uuid, entry: &EntryMetadata) {
+        self.space_deltas
+            .entry(space_id)
+            .or_default()
+            .push(SpaceDelta::EntryUpserted(entry.clone()));
+        self.entry_invalidations
+            .insert((space_id, entry.scope_id, entry.id));
+    }
+
+    pub(crate) fn entry_deleted(&mut self, space_id: Uuid, scope_id: Uuid, entry_id: Uuid) {
+        self.space_deltas
+            .entry(space_id)
+            .or_default()
+            .push(SpaceDelta::EntryDeleted { scope_id, entry_id });
+        self.entry_invalidations
+            .insert((space_id, scope_id, entry_id));
     }
 
     pub(crate) fn channel_member_added(&mut self, space_id: Uuid, member: &ChannelMember) {
@@ -187,9 +239,6 @@ impl CommittedChanges {
                 CACHE.invalidate_local(CacheType::UserSpaces, user_id);
             }
         }
-        for character_id in self.changed_character_variables {
-            CACHE.invalidate_local(CacheType::CharacterVariables, character_id);
-        }
         for user_id in self.changed_user_spaces {
             CACHE.invalidate_local(CacheType::UserSpaces, user_id);
         }
@@ -230,12 +279,15 @@ impl CommittedChanges {
     }
 
     async fn apply_with_context_inner(
-        self,
+        mut self,
         ctx: &crate::context::AppContext,
         mutation: Option<SpaceMutationProof>,
     ) -> AppliedChanges {
-        let space_deltas = self.space_deltas.clone();
-        let channel_member_refreshes = self.channel_member_refreshes.clone();
+        let space_deltas = std::mem::take(&mut self.space_deltas);
+        let channel_member_refreshes = std::mem::take(&mut self.channel_member_refreshes);
+        let entry_invalidations = std::mem::take(&mut self.entry_invalidations);
+        let character_invalidations = std::mem::take(&mut self.character_invalidations);
+        let note_invalidations = std::mem::take(&mut self.note_invalidations);
         let removed_spaces: HashSet<_> = self.removed_spaces.keys().copied().collect();
         let mut applied = self.apply().await;
         for space_id in &removed_spaces {
@@ -330,6 +382,15 @@ impl CommittedChanges {
                     );
                 }
             }
+        }
+        for (space_id, scope_id, entry_id) in entry_invalidations {
+            Update::entry_changed(space_id, scope_id, entry_id);
+        }
+        for (space_id, character_id) in character_invalidations {
+            Update::character_changed(space_id, character_id);
+        }
+        for (space_id, note_id) in note_invalidations {
+            Update::note_changed(space_id, note_id);
         }
         applied
     }

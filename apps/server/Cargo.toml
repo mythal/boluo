@@ -26,6 +26,7 @@ rusty-s3 = { version = "0.10", default-features = false, features = [
 ] }
 base64 = "0.22"
 bytes = "1"
+compact_str = { version = "0.10", features = ["serde", "sqlx-postgres"] }
 chrono = { version = "0.4", features = ["serde"] }
 clap = { version = "4.4.12", features = ["derive", "env"] }
 cookie = "0.18"
@@ -47,6 +48,7 @@ serde_json.workspace = true
 serde_urlencoded = "0.7"
 url = "2.5"
 thiserror = "2.0"
+unicode-normalization = "0.1"
 tokio-stream = "0.1"
 tokio-tungstenite = "0.29.0"
 brotli = "8.0.2"
@@ -104,7 +106,7 @@ workspace = true
 
 [dependencies.uuid]
 version = "1"
-features = ["serde", "v1", "v4"]
+features = ["serde", "v1", "v4", "v7"]
 
 [dependencies.tokio]
 version = "1"

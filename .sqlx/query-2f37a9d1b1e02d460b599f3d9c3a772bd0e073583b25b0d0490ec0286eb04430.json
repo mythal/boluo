@@ -1,0 +1,230 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n    character.id,\n    character.name AS \"name!: CompactString\",\n    primary_identifier.value::text AS \"key!: CompactString\",\n    ARRAY(\n        SELECT identifier.value::text\n        FROM character_identifiers identifier\n        WHERE identifier.character_id = character.id\n          AND identifier.kind = 'Alias'\n        ORDER BY identifier.value\n    ) AS \"aliases!: Vec<CompactString>\",\n    character.description,\n    character.color AS \"color!: CompactString\",\n    character.space_id,\n    character.main_scope_id AS scope_id,\n    scope.owner_id,\n    scope.access_policy AS \"access_policy!: AccessPolicy\",\n    scope.access_channel_id,\n    scope.version AS scope_version,\n    character.archived_at,\n    character.tags AS \"tags!: Vec<CompactString>\",\n    ARRAY(\n        SELECT character_asset.asset_id\n        FROM character_assets character_asset\n        WHERE character_asset.character_id = character.id\n        ORDER BY character_asset.sort\n    ) AS \"asset_ids!: Vec<Uuid>\",\n    character.created,\n    character.modified,\n    character.version\nFROM characters character\nJOIN scopes scope ON scope.id = character.main_scope_id\nJOIN character_identifiers primary_identifier\n  ON primary_identifier.character_id = character.id\n AND primary_identifier.kind = 'Primary'\nWHERE character.space_id = $1\nORDER BY character.modified DESC;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "characters",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "name!: CompactString",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "characters",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "key!: CompactString",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "aliases!: Vec<CompactString>",
+        "type_info": "TextArray",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "description",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "characters",
+            "name": "description"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "color!: CompactString",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "characters",
+            "name": "color"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "space_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "characters",
+            "name": "space_id"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "scope_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "characters",
+            "name": "main_scope_id"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "owner_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "scopes",
+            "name": "owner_id"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "access_policy!: AccessPolicy",
+        "type_info": {
+          "Custom": {
+            "name": "access_policy",
+            "kind": {
+              "Enum": [
+                "Public",
+                "Collaborative",
+                "Personal",
+                "Secret",
+                "GameMaster"
+              ]
+            }
+          }
+        },
+        "origin": {
+          "Table": {
+            "table": "scopes",
+            "name": "access_policy"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "access_channel_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "scopes",
+            "name": "access_channel_id"
+          }
+        }
+      },
+      {
+        "ordinal": 11,
+        "name": "scope_version",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "scopes",
+            "name": "version"
+          }
+        }
+      },
+      {
+        "ordinal": 12,
+        "name": "archived_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "characters",
+            "name": "archived_at"
+          }
+        }
+      },
+      {
+        "ordinal": 13,
+        "name": "tags!: Vec<CompactString>",
+        "type_info": "TextArray",
+        "origin": {
+          "Table": {
+            "table": "characters",
+            "name": "tags"
+          }
+        }
+      },
+      {
+        "ordinal": 14,
+        "name": "asset_ids!: Vec<Uuid>",
+        "type_info": "UuidArray",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 15,
+        "name": "created",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "characters",
+            "name": "created"
+          }
+        }
+      },
+      {
+        "ordinal": 16,
+        "name": "modified",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "characters",
+            "name": "modified"
+          }
+        }
+      },
+      {
+        "ordinal": 17,
+        "name": "version",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "characters",
+            "name": "version"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      null,
+      null,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      true,
+      false,
+      true,
+      false,
+      null,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "2f37a9d1b1e02d460b599f3d9c3a772bd0e073583b25b0d0490ec0286eb04430"
+}

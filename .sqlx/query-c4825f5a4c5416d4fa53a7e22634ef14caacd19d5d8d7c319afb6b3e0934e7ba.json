@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT EXISTS(\n    SELECT 1\n    FROM scopes scope\n    JOIN notes note ON note.space_id = scope.space_id\n    WHERE scope.id = $1\n      AND note.id = $2\n) AS \"reference_valid!\";\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "reference_valid!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "c4825f5a4c5416d4fa53a7e22634ef14caacd19d5d8d7c319afb6b3e0934e7ba"
+}

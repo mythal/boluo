@@ -51,7 +51,9 @@ async fn send(
         preview_id,
         channel_id,
         space_id,
-        name,
+        mut name,
+        character_id,
+        portrait_id,
         text,
         entities,
         in_game,
@@ -91,6 +93,32 @@ async fn send(
         .or_no_permission()?;
         (channel, channel_member, space_member)
     };
+    if let Some(character_id) = character_id {
+        if !in_game {
+            return Err(AppError::BadRequest(
+                "Out-of-game messages cannot be associated with a character".to_string(),
+            ));
+        }
+        let character = crate::characters::handlers::resolve_character_for_portrayal(
+            ctx,
+            channel.space_id,
+            character_id,
+            session.user_id,
+        )
+        .await?;
+        name = character.name.to_string();
+    }
+    if let Some(portrait_id) = portrait_id {
+        let portrait =
+            crate::assets::Asset::get_by_id_in_space(&ctx.db, channel.space_id, portrait_id)
+                .await
+                .or_not_found()?;
+        if !portrait.mime_type.starts_with("image/") {
+            return Err(AppError::BadRequest(
+                "A Message portrait must reference an image Asset".to_string(),
+            ));
+        }
+    }
     let message = Message::create(
         &ctx.db,
         preview_id,
@@ -99,6 +127,8 @@ async fn send(
         &session.user_id,
         &channel_member.character_name,
         &name,
+        character_id,
+        portrait_id,
         &text,
         entities,
         in_game,

@@ -1,6 +1,6 @@
 mod api;
-mod handlers;
+pub(crate) mod handlers;
 mod models;
 
 pub use handlers::router;
-pub use models::{Note, NoteHistory, NoteType, NoteVisibility};
+pub use models::{Note, NoteContentRevision, NoteMetadata};

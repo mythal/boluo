@@ -136,6 +136,10 @@
                 [
                   "latest_activity",
                   "Timestamptz"
+                ],
+                [
+                  "scope_id",
+                  "Uuid"
                 ]
               ]
             }

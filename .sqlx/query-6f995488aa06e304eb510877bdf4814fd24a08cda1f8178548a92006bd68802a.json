@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO notes (\n    id,\n    space_id,\n    title,\n    keywords,\n    tags,\n    creator_id,\n    text,\n    entities,\n    access_policy,\n    access_channel_id\n)\nVALUES (\n    $1,\n    $2,\n    $3,\n    $4,\n    $5,\n    $6,\n    $7,\n    $8,\n    ($9::text)::access_policy,\n    $10\n);\n",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Text",
+        "TextArray",
+        "TextArray",
+        "Uuid",
+        "Text",
+        "Jsonb",
+        "Text",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "6f995488aa06e304eb510877bdf4814fd24a08cda1f8178548a92006bd68802a"
+}

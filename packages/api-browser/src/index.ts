@@ -1,4 +1,4 @@
-import { appFetch, type Get, makeUri, type Patch, type Post } from '@boluo/api';
+import { appFetch, type Get, makeUri, type Patch, type Post, type Put } from '@boluo/api';
 import { atom } from 'jotai';
 import { store } from '@boluo/store';
 import type { Result } from '@boluo/utils/result';
@@ -97,6 +97,23 @@ export async function post<P extends StringKeyOf<Post>>(
     headers,
     cache: 'no-cache',
     method: 'POST',
+    body: JSON.stringify(payload),
+  });
+  return appFetch(url, params);
+}
+
+export async function put<P extends StringKeyOf<Put>>(
+  path: P,
+  query: Put[P]['query'],
+  payload: Put[P]['payload'],
+): Promise<Result<Put[P]['result'], ApiError>> {
+  const baseUrl = store.get(apiUrlAtom);
+  const url = makeUri(baseUrl, path, query);
+  const params: RequestInit = addToken({
+    credentials: 'include',
+    headers,
+    cache: 'no-cache',
+    method: 'PUT',
     body: JSON.stringify(payload),
   });
   return appFetch(url, params);

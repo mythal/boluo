@@ -32,6 +32,10 @@
                 [
                   "join_date",
                   "Timestamptz"
+                ],
+                [
+                  "is_game_master",
+                  "Bool"
                 ]
               ]
             }

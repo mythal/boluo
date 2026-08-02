@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO entry_identifiers (scope_id, entry_id, value, kind)\nSELECT\n    $1,\n    $2,\n    identifier.value,\n    CASE identifier.ordinality\n        WHEN 1 THEN 'Primary'::identifier_kind\n        ELSE 'Alias'::identifier_kind\n    END\nFROM unnest($3::text[]) WITH ORDINALITY AS identifier(value, ordinality);\n",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "TextArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "21dfb33783b5047c0f139c0686c79580be98cd8c97096ccc84c830d4c74df084"
+}

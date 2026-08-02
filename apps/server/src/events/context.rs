@@ -865,7 +865,7 @@ mod tests {
             sender_id: Uuid::from_u128(101),
             channel_id,
             parent_message_id: None,
-            name: "Alice".to_string(),
+            name: "Alice".into(),
             media_id: None,
             seed: Vec::new(),
             deleted: false,
@@ -883,8 +883,11 @@ mod tests {
             pos_p: pos as i32,
             pos_q: 1,
             pos,
-            color: "#000000".to_string(),
+            color: "#000000".into(),
             rev,
+            character_id: None,
+            portrait_id: None,
+            entry_effect_id: None,
         }
     }
 

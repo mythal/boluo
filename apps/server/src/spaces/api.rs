@@ -58,6 +58,10 @@ pub struct EditSpace {
     pub grant_admins: Vec<Uuid>,
     #[serde(default)]
     pub remove_admins: Vec<Uuid>,
+    #[serde(default)]
+    pub grant_game_masters: Vec<Uuid>,
+    #[serde(default)]
+    pub remove_game_masters: Vec<Uuid>,
 }
 
 #[derive(Serialize, Debug, Clone, specta::Type)]

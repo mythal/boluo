@@ -1,11 +1,10 @@
 use serde::Deserialize;
 use uuid::Uuid;
 
-use super::models::{CharacterVariable, CharacterVisibility};
+use crate::spaces::AccessPolicy;
 
 #[derive(Deserialize, Debug, specta::Type)]
 #[serde(rename_all = "camelCase")]
-/// Query params for listing characters in a space.
 pub struct ListCharacters {
     pub space_id: Uuid,
     #[serde(default)]
@@ -21,110 +20,78 @@ pub struct QueryCharacter {
 
 #[derive(Deserialize, Debug, specta::Type)]
 #[serde(rename_all = "camelCase")]
-/// Query params for checking name/alias availability.
-pub struct CheckCharacterName {
+pub struct ArchiveCharacter {
     pub space_id: Uuid,
-    #[serde(default)]
-    pub name: Option<String>,
-    #[serde(default)]
-    pub alias: Option<String>,
+    pub character_id: Uuid,
+    pub expected_version: Uuid,
 }
 
 #[derive(Deserialize, Debug, specta::Type)]
 #[serde(rename_all = "camelCase")]
-/// Payload for creating a character.
+pub struct RestoreCharacter {
+    pub space_id: Uuid,
+    pub character_id: Uuid,
+    pub expected_version: Uuid,
+}
+
+#[derive(Deserialize, Debug, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct CheckCharacterIdentifier {
+    pub space_id: Uuid,
+    pub identifier: String,
+}
+
+#[derive(Deserialize, Debug, specta::Type)]
+#[serde(rename_all = "camelCase")]
 pub struct CreateCharacter {
     pub space_id: Uuid,
     pub name: String,
+    pub key: String,
+    #[serde(default)]
+    pub aliases: Vec<String>,
     #[serde(default)]
     pub description: String,
     #[serde(default)]
     pub color: String,
-    pub alias: Option<String>,
-    pub image_id: Option<Uuid>,
-    pub visibility: CharacterVisibility,
+    pub access_policy: AccessPolicy,
+    pub access_channel_id: Option<Uuid>,
     #[serde(default)]
-    pub is_archived: bool,
-    pub metadata: Option<serde_json::Value>,
+    pub tags: Vec<String>,
+    #[serde(default)]
+    pub asset_ids: Vec<Uuid>,
 }
 
 #[derive(Deserialize, Debug, specta::Type)]
 #[serde(rename_all = "camelCase")]
-/// Payload for editing a character; `alias: Some("")` clears it.
+/// Complete replacement of editable character fields. Archive state is managed separately.
 pub struct EditCharacter {
     pub space_id: Uuid,
     pub character_id: Uuid,
-    pub name: Option<String>,
-    pub description: Option<String>,
-    pub color: Option<String>,
-    pub alias: Option<String>,
-    pub image_id: Option<Uuid>,
-    pub visibility: Option<CharacterVisibility>,
-    pub is_archived: Option<bool>,
-    pub metadata: Option<serde_json::Value>,
-}
-
-#[derive(Deserialize, Debug, specta::Type)]
-#[serde(rename_all = "camelCase")]
-/// Payload for creating a character variable.
-pub struct CreateVariable {
-    pub space_id: Uuid,
-    pub character_id: Uuid,
+    pub expected_version: Uuid,
+    pub expected_scope_version: Uuid,
+    pub name: String,
     pub key: String,
-    #[serde(default)]
-    pub display_name: String,
-    #[serde(default)]
-    pub alias: Vec<String>,
-    #[serde(default)]
-    pub sort: i32,
-    #[serde(default = "CharacterVariable::default_track_history")]
-    pub track_history: bool,
-    pub value: serde_json::Value,
-    pub metadata: Option<serde_json::Value>,
+    pub aliases: Vec<String>,
+    pub description: String,
+    pub color: String,
+    pub access_policy: AccessPolicy,
+    pub access_channel_id: Option<Uuid>,
+    pub tags: Vec<String>,
+    pub asset_ids: Vec<Uuid>,
 }
 
-#[derive(Deserialize, Debug, specta::Type)]
-#[serde(rename_all = "camelCase")]
-/// Payload for editing a character variable.
-pub struct EditVariable {
-    pub space_id: Uuid,
-    pub character_id: Uuid,
-    pub key: String,
-    pub display_name: Option<String>,
-    pub alias: Option<Vec<String>>,
-    pub sort: Option<i32>,
-    pub track_history: Option<bool>,
-    pub value: Option<serde_json::Value>,
-    pub metadata: Option<serde_json::Value>,
-    pub reason: Option<serde_json::Value>,
-}
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-#[derive(Deserialize, Debug, specta::Type)]
-#[serde(rename_all = "camelCase")]
-/// Payload for deleting a character variable.
-pub struct DeleteVariable {
-    pub space_id: Uuid,
-    pub character_id: Uuid,
-    pub key: String,
-}
+    #[test]
+    fn check_character_identifier_decodes_scalar_query() {
+        let space_id = Uuid::now_v7();
+        let query = format!("spaceId={space_id}&identifier=investigator%20one");
+        let payload: CheckCharacterIdentifier =
+            serde_urlencoded::from_str(&query).expect("query should decode");
 
-#[derive(Deserialize, Debug, specta::Type)]
-#[serde(rename_all = "camelCase")]
-/// Query params for listing variable history by key.
-pub struct VariableHistoryQuery {
-    pub space_id: Uuid,
-    pub character_id: Uuid,
-    pub key: String,
-}
-
-#[derive(Deserialize, Debug, specta::Type)]
-#[serde(rename_all = "camelCase")]
-/// Query params for checking variable key/alias availability.
-pub struct CheckVariableAvailability {
-    pub space_id: Uuid,
-    pub character_id: Uuid,
-    #[serde(default)]
-    pub key: Option<String>,
-    #[serde(default)]
-    pub alias: Vec<String>,
+        assert_eq!(payload.space_id, space_id);
+        assert_eq!(payload.identifier, "investigator one");
+    }
 }

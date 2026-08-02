@@ -1,0 +1,32 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE entry_components\nSET data = $4,\n    schema_version = COALESCE($5, schema_version),\n    version = uuidv7(),\n    modified = now()\nWHERE entry_id = $1\n  AND component_type = $2\n  AND version = $3\nRETURNING schema_version;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "schema_version",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "entry_components",
+            "name": "schema_version"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Uuid",
+        "Jsonb",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "f987b3c9e27412bbcae22d2534c2a78032db786d636278e02c8dd1aacd4a4129"
+}

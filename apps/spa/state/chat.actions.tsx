@@ -74,7 +74,7 @@ export type ChatActionUnion = MakeAction<ChatActionMap, keyof ChatActionMap>;
 
 export type ChatAction<T extends keyof ChatActionMap> = MakeAction<ChatActionMap, T>;
 
-export const toChatAction = (update: Update): ChatActionUnion | null => {
+export const toChatAction = (update: Update): ChatActionUnion | null | undefined => {
   switch (update.body.type) {
     case 'NEW_MESSAGE':
       return { type: 'receiveMessage', payload: update.body };
@@ -113,6 +113,9 @@ export const toChatAction = (update: Update): ChatActionUnion | null => {
     case 'MEMBERS':
     case 'STATUS_MAP':
     case 'APP_INFO':
+    case 'ENTRY_CHANGED':
+    case 'CHARACTER_CHANGED':
+    case 'NOTE_CHANGED':
     case 'APP_UPDATED':
       return null;
   }

@@ -143,6 +143,20 @@ pub enum UpdateBody {
         #[serde(rename = "spaceWithRelated")]
         space_with_related: Box<SpaceWithRelated>,
     },
+    EntryChanged {
+        #[serde(rename = "scopeId")]
+        scope_id: Uuid,
+        #[serde(rename = "entryId")]
+        entry_id: Uuid,
+    },
+    CharacterChanged {
+        #[serde(rename = "characterId")]
+        character_id: Uuid,
+    },
+    NoteChanged {
+        #[serde(rename = "noteId")]
+        note_id: Uuid,
+    },
     Error {
         code: ConnectionError,
         reason: String,
@@ -205,6 +219,9 @@ impl UpdateBody {
             | Initialized
             | StatusMap { .. }
             | SpaceUpdated { .. }
+            | EntryChanged { .. }
+            | CharacterChanged { .. }
+            | NoteChanged { .. }
             | Error { .. }
             | AppUpdated { .. }
             | AppInfo { .. } => None,
@@ -226,6 +243,9 @@ impl UpdateBody {
             | Initialized
             | StatusMap { .. }
             | SpaceUpdated { .. }
+            | EntryChanged { .. }
+            | CharacterChanged { .. }
+            | NoteChanged { .. }
             | Error { .. }
             | AppUpdated { .. }
             | AppInfo { .. } => None,
@@ -415,6 +435,20 @@ impl Update {
                 channel_id,
             },
         )
+    }
+
+    // Resource IDs are intentionally broadcast to every connection in the Space. These events are
+    // only invalidation hints; the REST APIs still enforce resource permissions when fetching data.
+    pub fn entry_changed(space_id: Uuid, scope_id: Uuid, entry_id: Uuid) {
+        Update::transient(space_id, UpdateBody::EntryChanged { scope_id, entry_id })
+    }
+
+    pub fn character_changed(space_id: Uuid, character_id: Uuid) {
+        Update::transient(space_id, UpdateBody::CharacterChanged { character_id })
+    }
+
+    pub fn note_changed(space_id: Uuid, note_id: Uuid) {
+        Update::transient(space_id, UpdateBody::NoteChanged { note_id })
     }
 
     pub async fn get_from_state(
@@ -631,6 +665,9 @@ impl Update {
             UpdateBody::Initialized => "Initialized",
             UpdateBody::StatusMap { .. } => "StatusMap",
             UpdateBody::SpaceUpdated { .. } => "SpaceUpdated",
+            UpdateBody::EntryChanged { .. } => "EntryChanged",
+            UpdateBody::CharacterChanged { .. } => "CharacterChanged",
+            UpdateBody::NoteChanged { .. } => "NoteChanged",
             UpdateBody::Error { .. } => "Error",
             UpdateBody::AppUpdated { .. } => "AppUpdated",
             UpdateBody::AppInfo { .. } => "AppInfo",
@@ -639,6 +676,50 @@ impl Update {
 }
 
 static STARTUP_ID: OnceLock<u16> = OnceLock::new();
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::time::Duration;
+
+    #[tokio::test]
+    async fn changed_updates_broadcast_resource_ids() {
+        let space_id = Uuid::new_v4();
+        let character_id = Uuid::new_v4();
+        let note_id = Uuid::new_v4();
+        let mut receiver = crate::events::get_mailbox_broadcast_rx(space_id);
+
+        Update::character_changed(space_id, character_id);
+        let encoded = tokio::time::timeout(Duration::from_secs(1), receiver.recv())
+            .await
+            .expect("Character update timed out")
+            .expect("Character update sender was dropped");
+        let update: serde_json::Value =
+            serde_json::from_str(encoded.as_str()).expect("Character update is invalid JSON");
+        assert_eq!(
+            update["body"],
+            serde_json::json!({
+                "type": "CHARACTER_CHANGED",
+                "characterId": character_id,
+            })
+        );
+
+        Update::note_changed(space_id, note_id);
+        let encoded = tokio::time::timeout(Duration::from_secs(1), receiver.recv())
+            .await
+            .expect("Note update timed out")
+            .expect("Note update sender was dropped");
+        let update: serde_json::Value =
+            serde_json::from_str(encoded.as_str()).expect("Note update is invalid JSON");
+        assert_eq!(
+            update["body"],
+            serde_json::json!({
+                "type": "NOTE_CHANGED",
+                "noteId": note_id,
+            })
+        );
+    }
+}
 
 #[derive(Serialize, Debug)]
 struct StartupInfo {

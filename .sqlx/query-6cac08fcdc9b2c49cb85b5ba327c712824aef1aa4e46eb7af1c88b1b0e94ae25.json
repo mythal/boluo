@@ -1,0 +1,99 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH identifiers AS MATERIALIZED (\n    SELECT uuidv7() AS space_id, uuidv7() AS scope_id\n),\ninserted_space AS MATERIALIZED (\n    INSERT INTO spaces (\n        id,\n        scope_id,\n        \"name\",\n        owner_id,\n        \"password\",\n        default_dice_type,\n        \"description\"\n    )\n    SELECT\n        space_id,\n        scope_id,\n        $1,\n        $2,\n        COALESCE($3, ''),\n        COALESCE($4, 'd20'),\n        $5\n    FROM identifiers\n    RETURNING *\n),\ninserted_scope AS (\n    INSERT INTO scopes (\n        id,\n        space_id,\n        kind,\n        owner_id,\n        access_policy\n    )\n    SELECT\n        scope_id,\n        id,\n        'Space',\n        owner_id,\n        'Public'\n    FROM inserted_space\n    RETURNING id\n)\nSELECT ROW(inserted_space.*)::spaces AS \"space!: Space\"\nFROM inserted_space\nCROSS JOIN inserted_scope;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "space!: Space",
+        "type_info": {
+          "Custom": {
+            "name": "spaces",
+            "kind": {
+              "Composite": [
+                [
+                  "id",
+                  "Uuid"
+                ],
+                [
+                  "name",
+                  "Text"
+                ],
+                [
+                  "description",
+                  "Text"
+                ],
+                [
+                  "created",
+                  "Timestamptz"
+                ],
+                [
+                  "modified",
+                  "Timestamptz"
+                ],
+                [
+                  "owner_id",
+                  "Uuid"
+                ],
+                [
+                  "is_public",
+                  "Bool"
+                ],
+                [
+                  "deleted",
+                  "Bool"
+                ],
+                [
+                  "password",
+                  "Text"
+                ],
+                [
+                  "language",
+                  "Text"
+                ],
+                [
+                  "default_dice_type",
+                  "Text"
+                ],
+                [
+                  "explorable",
+                  "Bool"
+                ],
+                [
+                  "invite_token",
+                  "Uuid"
+                ],
+                [
+                  "allow_spectator",
+                  "Bool"
+                ],
+                [
+                  "latest_activity",
+                  "Timestamptz"
+                ],
+                [
+                  "scope_id",
+                  "Uuid"
+                ]
+              ]
+            }
+          }
+        },
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Uuid",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "6cac08fcdc9b2c49cb85b5ba327c712824aef1aa4e46eb7af1c88b1b0e94ae25"
+}

@@ -111,6 +111,8 @@ export const useSend = () => {
         name = myMember.channel.characterName;
       }
     }
+    const characterId =
+      inGame && effectiveCharacterName === '' ? myMember.channel.characterId : null;
     let payload:
       { type: 'NEW'; newMessage: NewMessage } | { type: 'EDIT'; editMessage: EditMessage };
     if (composeState.edit == null) {
@@ -132,6 +134,7 @@ export const useSend = () => {
           channelId,
           spaceId: myMember.space.spaceId,
           name,
+          characterId,
           text,
           entities,
           inGame,

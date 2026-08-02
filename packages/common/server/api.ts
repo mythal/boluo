@@ -1,5 +1,5 @@
 import 'server-only';
-import type { ApiError, Get, Post } from '@boluo/api';
+import type { ApiError, Get, Post, Put } from '@boluo/api';
 import { makeUri } from '@boluo/api';
 import { appFetch } from '@boluo/api';
 import type { StringKeyOf } from '@boluo/types';
@@ -52,6 +52,21 @@ export async function post<P extends StringKeyOf<Post>>(
   return appFetch(url, {
     headers,
     method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function put<P extends StringKeyOf<Put>>(
+  path: P,
+  payload: Put[P]['payload'],
+): Promise<Result<Put[P]['result'], ApiError>> {
+  const url = getBackEndUrl() + path;
+
+  const headers = new Headers();
+  headers.set('Content-Type', 'application/json');
+  return appFetch(url, {
+    headers,
+    method: 'PUT',
     body: JSON.stringify(payload),
   });
 }

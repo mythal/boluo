@@ -1,0 +1,68 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE channel_members member\nSET\n    character_name = COALESCE($3, character_name),\n    text_color = COALESCE($4, text_color),\n    character_id = CASE WHEN $5 THEN $6 ELSE character_id END\nFROM channels channel\nLEFT JOIN characters target_character\n    ON target_character.id = $6\n    AND target_character.space_id = channel.space_id\n    AND target_character.archived_at IS NULL\nWHERE\n    member.user_id = $1\n    AND member.channel_id = $2\n    AND member.is_joined\n    AND channel.id = member.channel_id\n    AND (NOT $5 OR $6::uuid IS NULL OR target_character.id IS NOT NULL)\nRETURNING\n    member AS \"member!: ChannelMember\";\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "member!: ChannelMember",
+        "type_info": {
+          "Custom": {
+            "name": "channel_members",
+            "kind": {
+              "Composite": [
+                [
+                  "user_id",
+                  "Uuid"
+                ],
+                [
+                  "channel_id",
+                  "Uuid"
+                ],
+                [
+                  "join_date",
+                  "Timestamptz"
+                ],
+                [
+                  "character_name",
+                  "Text"
+                ],
+                [
+                  "text_color",
+                  "Text"
+                ],
+                [
+                  "is_joined",
+                  "Bool"
+                ],
+                [
+                  "is_master",
+                  "Bool"
+                ],
+                [
+                  "character_id",
+                  "Uuid"
+                ]
+              ]
+            }
+          }
+        },
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Text",
+        "Text",
+        "Bool",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "8fc79b335580f6107b550535c60b96577a56358a23298c6f19de46ad5057bcb4"
+}

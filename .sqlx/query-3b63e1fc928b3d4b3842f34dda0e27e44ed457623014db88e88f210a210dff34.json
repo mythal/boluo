@@ -1,0 +1,36 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH target_character AS MATERIALIZED (\n    SELECT character.id, character.space_id, character.main_scope_id AS scope_id\n    FROM characters character\n    WHERE character.id = $1\n      AND character.version = $2\n    FOR UPDATE OF character\n),\nupdated_scope AS MATERIALIZED (\n    UPDATE scopes scope\n    SET access_policy = ($8::text)::access_policy,\n        access_channel_id = $9,\n        version = uuidv7(),\n        modified = now()\n    FROM target_character character\n    WHERE scope.id = character.scope_id\n      AND scope.version = $3\n    RETURNING scope.id\n),\nupdated_character AS (\n    UPDATE characters character\n    SET name = $4,\n        description = $5,\n        color = $6,\n        tags = $7,\n        version = uuidv7(),\n        modified = now()\n    FROM target_character target, updated_scope scope\n    WHERE character.id = target.id\n      AND scope.id = target.scope_id\n    RETURNING character.space_id\n)\nSELECT space_id\nFROM updated_character;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "space_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "characters",
+            "name": "space_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Uuid",
+        "Text",
+        "Text",
+        "Text",
+        "TextArray",
+        "Text",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "3b63e1fc928b3d4b3842f34dda0e27e44ed457623014db88e88f210a210dff34"
+}

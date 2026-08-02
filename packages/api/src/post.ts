@@ -2,48 +2,58 @@ import type { MoveMessageBetween, PreSign, PreSignResult } from '@boluo/api';
 import { type Empty } from '@boluo/types';
 import type {
   AddChannelMember,
+  ArchiveCharacter,
+  ArchiveNote,
+  Asset,
   Channel,
   ChannelMember,
   ChannelWithMember,
   Character,
-  CharacterVariable,
   CreateCharacter,
+  CreateAsset,
   CreateChannel,
+  CreateEntry,
   CreateNote,
   CreateSpace,
-  CreateVariable,
-  DeleteVariable,
+  DeleteAsset,
+  DeleteEntry,
   EditChannel,
   EditChannelMember,
   EditChannelTopic,
-  EditCharacter,
-  EditNote,
   EditSpace,
   EditUser,
-  EditVariable,
   GrantOrRemoveChannelMaster,
   JoinChannel,
   KickFromChannel,
   KickFromSpace,
   Login as LoginData,
   LoginReturn,
+  Entry,
+  EntryEffectHistory,
   Message,
   MessageIdQuery,
   NewMessage,
   Note,
-  QueryCharacter,
+  QueryEntryEffects,
   Register as RegisterData,
   ResendEmailVerification,
   ResendEmailVerificationResult,
+  RestoreCharacter,
+  RestoreNote,
   ResetPassword,
   ResetPasswordConfirm,
   Space,
   SpaceMemberWithUser,
   SpaceWithMember,
   User,
+  UpdateAsset,
 } from '@boluo/types/bindings';
 
 export interface Post {
+  // assets
+  '/assets/create': { payload: CreateAsset; query: null; result: Asset };
+  '/assets/update': { payload: UpdateAsset; query: null; result: Asset };
+  '/assets/delete': { payload: DeleteAsset; query: null; result: Asset };
   // users
   '/users/login': { payload: LoginData; query: null; result: LoginReturn };
   '/users/register': { payload: RegisterData; query: null; result: User };
@@ -91,19 +101,20 @@ export interface Post {
   '/channels/edit_topic': { payload: EditChannelTopic; query: null; result: Channel };
   // notes
   '/notes/create': { payload: CreateNote; query: null; result: Note };
-  '/notes/edit': { payload: EditNote; query: null; result: Note };
-  '/notes/delete': { payload: Empty; query: { id: string }; result: true };
+  '/notes/archive': { payload: ArchiveNote; query: null; result: true };
+  '/notes/restore': { payload: RestoreNote; query: null; result: true };
+  // entries
+  '/entries/create': { payload: CreateEntry; query: null; result: Entry };
+  '/entries/delete': { payload: DeleteEntry; query: null; result: true };
+  '/entries/effects': {
+    payload: QueryEntryEffects;
+    query: null;
+    result: EntryEffectHistory[];
+  };
   // characters
   '/characters/create': { payload: CreateCharacter; query: null; result: Character };
-  '/characters/edit': { payload: EditCharacter; query: null; result: Character };
-  '/characters/delete': { payload: Empty; query: QueryCharacter; result: true };
-  '/characters/create_variable': {
-    payload: CreateVariable;
-    query: null;
-    result: CharacterVariable;
-  };
-  '/characters/edit_variable': { payload: EditVariable; query: null; result: CharacterVariable };
-  '/characters/delete_variable': { payload: DeleteVariable; query: null; result: true };
-  // meida
+  '/characters/archive': { payload: ArchiveCharacter; query: null; result: Character };
+  '/characters/restore': { payload: RestoreCharacter; query: null; result: Character };
+  // media
   '/media/presigned': { query: PreSign; payload: Empty; result: PreSignResult };
 }

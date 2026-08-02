@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO entry_components (\n    entry_id,\n    component_type,\n    data\n)\nVALUES ($1, $2, $3);\n",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Jsonb"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "977e7662068ca7107bc775ac56accc0a89545fd811753fe504dc339a6cd6e52b"
+}

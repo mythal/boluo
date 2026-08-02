@@ -1,0 +1,15 @@
+meta {
+  name: Assets By Space
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{base_url}}/assets/by_space?spaceId={{space_id}}
+  body: none
+  auth: inherit
+}
+
+params:query {
+  spaceId: {{space_id}}
+}

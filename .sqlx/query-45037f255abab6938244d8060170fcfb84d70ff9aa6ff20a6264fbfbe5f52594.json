@@ -1,0 +1,31 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO entry_components (\n    entry_id,\n    component_type,\n    data,\n    schema_version\n)\nVALUES ($1, $2, $3, COALESCE($4, 1))\nON CONFLICT (entry_id, component_type) DO NOTHING\nRETURNING schema_version;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "schema_version",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "entry_components",
+            "name": "schema_version"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Jsonb",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "45037f255abab6938244d8060170fcfb84d70ff9aa6ff20a6264fbfbe5f52594"
+}

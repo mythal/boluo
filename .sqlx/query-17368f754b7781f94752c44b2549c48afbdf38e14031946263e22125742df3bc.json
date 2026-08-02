@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO character_assets (space_id, character_id, asset_id, sort)\nSELECT\n    $1,\n    $2,\n    requested.asset_id,\n    requested.ordinality::integer - 1\nFROM unnest($3::uuid[]) WITH ORDINALITY AS requested(asset_id, ordinality)\nJOIN assets asset\n  ON asset.space_id = $1\n AND asset.id = requested.asset_id\nORDER BY requested.ordinality;\n",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "UuidArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "17368f754b7781f94752c44b2549c48afbdf38e14031946263e22125742df3bc"
+}

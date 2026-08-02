@@ -27,6 +27,7 @@ use rusty_s3::S3Action;
 mod utils;
 #[macro_use]
 mod error;
+mod assets;
 mod cache;
 mod channels;
 mod characters;
@@ -36,6 +37,7 @@ mod context;
 mod cors;
 mod csrf;
 mod db;
+mod entries;
 mod events;
 mod info;
 mod interface;
@@ -50,6 +52,7 @@ mod rate_limit;
 mod redis;
 mod rs;
 mod s3;
+mod scopes;
 mod sentry_tunnel;
 mod server_metrics;
 mod session;
@@ -101,6 +104,7 @@ async fn router(
         return Ok(sentry_tunnel::handler(req).await);
     }
     table!("/api/info", info::router);
+    table!("/api/assets", assets::router);
     table!("/api/messages", messages::router);
     table!("/api/users", users::router);
     table!("/api/media", media::router);
@@ -108,6 +112,7 @@ async fn router(
     table!("/api/characters", characters::router);
     table!("/api/spaces", spaces::router);
     table!("/api/notes", notes::router);
+    table!("/api/entries", entries::router);
     table!("/api/events", events::router);
     table!("/api/updates", events::router);
     missing()

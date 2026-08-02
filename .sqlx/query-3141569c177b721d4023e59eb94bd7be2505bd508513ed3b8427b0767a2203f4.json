@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO character_scopes (\n    space_id,\n    character_id,\n    scope_id,\n    purpose\n)\nSELECT\n    character.space_id,\n    character.id,\n    scope.id,\n    $3\nFROM characters character\nJOIN scopes scope ON scope.space_id = character.space_id\nWHERE character.id = $1\n  AND scope.id = $2\n  AND scope.kind = 'Character'\n  AND NOT EXISTS (\n      SELECT 1\n      FROM characters scope_owner\n      WHERE scope_owner.main_scope_id = scope.id\n  )\n  AND $3 <> 'main';\n",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "3141569c177b721d4023e59eb94bd7be2505bd508513ed3b8427b0767a2203f4"
+}

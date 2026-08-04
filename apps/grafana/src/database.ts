@@ -23,6 +23,25 @@ export const DATABASE_DASHBOARD_RESOURCE_NAME = 'd0f4f08d-8d6e-4afc-b738-f3d503c
 
 const RATE_INTERVAL = '$__rate_interval';
 const CACHE_RATIO_INTERVAL = '5m';
+const CONNECTION_STATES = [
+  'active',
+  'disabled',
+  'fastpath function call',
+  'idle',
+  'idle in transaction',
+  'idle in transaction (aborted)',
+];
+const LOCK_MODES = [
+  'AccessShareLock',
+  'RowShareLock',
+  'RowExclusiveLock',
+  'ShareUpdateExclusiveLock',
+  'ShareLock',
+  'ShareRowExclusiveLock',
+  'ExclusiveLock',
+  'AccessExclusiveLock',
+];
+const BACKUP_TYPES = ['full', 'diff'];
 
 const panels = {
   connections: 'panel-4',
@@ -72,6 +91,7 @@ export function buildDatabaseDashboard(datasourceUid: string): DashboardBuilder 
         title: 'PostgreSQL connections by state',
         datasourceUid,
         tooltipMode: TooltipDisplayMode.Multi,
+        seriesNames: CONNECTION_STATES,
         targets: [
           {
             refId: 'connections',
@@ -113,6 +133,7 @@ export function buildDatabaseDashboard(datasourceUid: string): DashboardBuilder 
         title: 'Longest transaction',
         datasourceUid,
         unit: 's',
+        seriesNames: CONNECTION_STATES,
         targets: [
           {
             refId: 'duration',
@@ -165,6 +186,7 @@ export function buildDatabaseDashboard(datasourceUid: string): DashboardBuilder 
         title: 'Locks by mode',
         datasourceUid,
         tooltipMode: TooltipDisplayMode.Multi,
+        seriesNames: LOCK_MODES,
         targets: [
           {
             refId: 'locks',
@@ -311,6 +333,7 @@ export function buildDatabaseDashboard(datasourceUid: string): DashboardBuilder 
         title: 'Last backup duration',
         datasourceUid,
         unit: 's',
+        seriesNames: BACKUP_TYPES,
         targets: [
           {
             refId: 'duration',
@@ -329,6 +352,7 @@ export function buildDatabaseDashboard(datasourceUid: string): DashboardBuilder 
         description: 'Compressed bytes written by the latest backup.',
         datasourceUid,
         unit: 'bytes',
+        seriesNames: BACKUP_TYPES,
         targets: [
           {
             refId: 'size',

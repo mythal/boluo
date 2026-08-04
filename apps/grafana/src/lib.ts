@@ -41,6 +41,7 @@ import {
   TooltipDisplayMode,
   VisibilityMode,
   VizLegendOptionsBuilder,
+  VizTextDisplayOptionsBuilder,
   VizTooltipOptionsBuilder,
 } from '@grafana/grafana-foundation-sdk/common';
 import { QueryEditorMode, QueryV2Builder } from '@grafana/grafana-foundation-sdk/prometheus';
@@ -73,6 +74,7 @@ interface TimeSeriesPanelOptions {
   fieldMinMax?: boolean;
   fillOpacity?: number;
   tooltipMode?: TooltipDisplayMode;
+  seriesNames?: string[];
   scale?: ScaleDistribution;
   scaleLog?: number;
   overrides?: {
@@ -90,6 +92,23 @@ interface StatPanelOptions {
   targets: PrometheusTarget[];
   mappings?: ValueMapping[];
 }
+
+type TimeSeriesOverride = NonNullable<TimeSeriesPanelOptions['overrides']>[number];
+
+const LINE_STYLES = [
+  { fill: 'solid' },
+  { fill: 'dash', dash: [10, 6] },
+  { fill: 'dot', dash: [2, 5] },
+  { fill: 'dash', dash: [12, 4, 2, 4] },
+  { fill: 'dot', dash: [2, 5] },
+  { fill: 'solid' },
+  { fill: 'dash', dash: [10, 6] },
+  { fill: 'dot', dash: [2, 5] },
+  { fill: 'dash', dash: [12, 4, 2, 4] },
+  { fill: 'dot', dash: [2, 5] },
+  { fill: 'solid' },
+  { fill: 'dash', dash: [10, 6] },
+] as const;
 
 function valueBuilder<T>(value: T): Builder<T> {
   return { build: () => value };
@@ -127,6 +146,27 @@ function prometheusTarget(datasourceUid: string, target: PrometheusTarget): Targ
     .hidden(target.hidden ?? false);
 }
 
+function seriesStyleOverrides(options: TimeSeriesPanelOptions): TimeSeriesOverride[] {
+  const matchers =
+    options.seriesNames?.map((name) => ({ id: 'byName', options: name })) ??
+    (options.targets.length > 1
+      ? options.targets.map((target) => ({ id: 'byFrameRefID', options: target.refId }))
+      : []);
+  if (matchers.length === 0) {
+    return [];
+  }
+  return matchers.map((matcher, index) => {
+    const lineStyle = LINE_STYLES[index % LINE_STYLES.length];
+    if (lineStyle === undefined) {
+      throw new Error('Missing line style.');
+    }
+    return {
+      matcher,
+      properties: [{ id: 'custom.lineStyle', value: lineStyle }],
+    };
+  });
+}
+
 export function timeSeriesPanel(options: TimeSeriesPanelOptions): PanelBuilder {
   const scale = new ScaleDistributionConfigBuilder().type(
     options.scale ?? ScaleDistribution.Linear,
@@ -153,7 +193,7 @@ export function timeSeriesPanel(options: TimeSeriesPanelOptions): PanelBuilder {
     .tooltip(
       new VizTooltipOptionsBuilder()
         .hideZeros(false)
-        .mode(options.tooltipMode ?? TooltipDisplayMode.Single)
+        .mode(options.tooltipMode ?? TooltipDisplayMode.Multi)
         .sort(SortOrder.None),
     )
     .axisBorderShow(false)
@@ -192,8 +232,9 @@ export function timeSeriesPanel(options: TimeSeriesPanelOptions): PanelBuilder {
   if (options.fillOpacity !== undefined) {
     visualization.lineStyle(new LineStyleBuilder().fill('solid'));
   }
-  if (options.overrides !== undefined) {
-    visualization.overrides(options.overrides);
+  const overrides = [...seriesStyleOverrides(options), ...(options.overrides ?? [])];
+  if (overrides.length > 0) {
+    visualization.overrides(overrides);
   }
 
   // The SDK does not expose Grafana's showValues option.
@@ -223,16 +264,17 @@ export function timeSeriesPanel(options: TimeSeriesPanelOptions): PanelBuilder {
 
 export function healthStatPanel(options: StatPanelOptions): PanelBuilder {
   const visualization = new StatVisualizationBuilder()
-    .colorMode(BigValueColorMode.Background)
+    .colorMode(BigValueColorMode.BackgroundSolid)
     .graphMode(BigValueGraphMode.None)
     .justifyMode(BigValueJustifyMode.Center)
     .textMode(BigValueTextMode.ValueAndName)
-    .wideLayout(true)
+    .text(new VizTextDisplayOptionsBuilder().titleSize(14).valueSize(36))
+    .wideLayout(false)
     .reduceOptions(new ReduceDataOptionsBuilder().values(false).calcs(['lastNotNull']))
     .thresholds(
       new ThresholdsConfigBuilder().mode(ThresholdsMode.Absolute).steps([
-        { value: null, color: 'red' },
-        { value: 1, color: 'green' },
+        { value: null, color: '#d81b3a' },
+        { value: 1, color: '#76b900' },
       ]),
     )
     .colorScheme(new FieldColorBuilder().mode(FieldColorModeId.Thresholds))
@@ -241,8 +283,8 @@ export function healthStatPanel(options: StatPanelOptions): PanelBuilder {
         {
           type: MappingType.Value,
           options: {
-            '0': { text: 'DOWN', color: 'red' },
-            '1': { text: 'UP', color: 'green' },
+            '0': { text: 'DOWN', color: '#d81b3a' },
+            '1': { text: 'UP', color: '#76b900' },
           },
         },
       ],

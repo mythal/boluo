@@ -21,11 +21,6 @@ kill_timeout = 60
   path = '/metrics'
   processes = ['app']
 
-[[metrics]]
-  port = 9854
-  path = '/metrics'
-  processes = ['app']
-
 [[files]]
   # base64 -w0 <PATH> | fly secrets set --stage -a boluo-db PGBACKREST_SFTP_PRIVATE_KEY=-
   guest_path = '/run/secrets/pgbackrest-sftp-private-key'

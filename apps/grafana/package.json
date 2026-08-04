@@ -17,6 +17,7 @@
   "scripts": {
     "build": "tsx src/build.ts",
     "check": "tsc --noEmit",
+    "import": "npm run build && tsx src/import.ts",
     "lint": "eslint ."
   },
   "type": "module"

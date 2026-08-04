@@ -11,12 +11,12 @@ import {
   defaultAnnotations,
   timeSeriesPanel,
 } from './lib.js';
+import { SERVER_APP as APP, memoryUtilization } from './metrics.js';
 
 export const BOLUO_DASHBOARD_RESOURCE_NAME = 'c35465c7-1203-42c4-9bcc-5b5cb012d67b';
 export const DEFAULT_PROMETHEUS_DATASOURCE_UID = 'ferpuzyhrhh4wf';
 export const PROMETHEUS_ENDPOINT = 'https://api.fly.io/prometheus/mythal/';
 
-const APP = 'boluo-server';
 const RATE_INTERVAL = '$__rate_interval';
 const CACHE_RATIO_INTERVAL = '30m';
 
@@ -161,7 +161,7 @@ export function buildBoluoDashboard(
           {
             refId: 'memory',
             editorMode: QueryEditorMode.Code,
-            expr: `(fly_instance_memory_mem_total{app="${APP}"} - fly_instance_memory_mem_available{app="${APP}"}) / fly_instance_memory_mem_total{app="${APP}"}`,
+            expr: memoryUtilization(APP),
             legendFormat: '{{instance}} memory',
           },
           {

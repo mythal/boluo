@@ -21,15 +21,19 @@ import {
   healthStatPanel,
   timeSeriesPanel,
 } from './lib.js';
+import {
+  DAILY_BACKUP_MAX_AGE_SECONDS,
+  DATABASE_APP,
+  FULL_BACKUP_MAX_AGE_SECONDS,
+  SERVER_APP,
+  backupMetric,
+  cpuBudget,
+  databaseVolumeUtilization,
+} from './metrics.js';
 
 export const HEALTH_DASHBOARD_RESOURCE_NAME = '42772a90-01f2-4b96-b40d-ad99a7608308';
 
-const SERVER_APP = 'boluo-server';
-const DATABASE_APP = 'boluo-db';
-const BACKUP_STANZA = 'boluo';
 const RATE_INTERVAL = '$__rate_interval';
-const DAILY_BACKUP_MAX_AGE_SECONDS = 36 * 60 * 60;
-const FULL_BACKUP_MAX_AGE_SECONDS = 8 * 24 * 60 * 60;
 
 const panels = {
   mascot: 'panel-9',
@@ -49,15 +53,6 @@ function withMissingAsDown(expression: string): string {
 
 function serverRate(metric: string): string {
   return `rate(${metric}{app="${SERVER_APP}"}[${RATE_INTERVAL}])`;
-}
-
-function backupMetric(metric: string, extraLabels = ''): string {
-  const labels = extraLabels ? `,${extraLabels}` : '';
-  return `${metric}{app="${DATABASE_APP}",stanza="${BACKUP_STANZA}"${labels}}`;
-}
-
-function cpuBudget(app: string): string {
-  return `min_over_time(fly_instance_cpu_balance{app="${app}"}[60s]) / count without(cpu_id, mode) (fly_instance_cpu{app="${app}",mode="idle"}) / 100`;
 }
 
 function mascotPanel(): PanelBuilder {
@@ -303,7 +298,7 @@ export function buildHealthDashboard(datasourceUid: string): DashboardBuilder {
           {
             refId: 'volume',
             editorMode: QueryEditorMode.Code,
-            expr: `1 - fly_instance_filesystem_blocks_avail{app="${DATABASE_APP}",mount="/var/lib/postgresql"} / fly_instance_filesystem_blocks{app="${DATABASE_APP}",mount="/var/lib/postgresql"}`,
+            expr: databaseVolumeUtilization(),
             legendFormat: '{{instance}}',
           },
         ],

@@ -19,6 +19,8 @@ export const PROMETHEUS_ENDPOINT = 'https://api.fly.io/prometheus/mythal/';
 
 const RATE_INTERVAL = '$__rate_interval';
 const CACHE_RATIO_INTERVAL = '30m';
+const HTTP_STATUS_CODES = ['200', '204', '304', '400', '401', '403', '404', '429', '500', '502'];
+const CACHE_NAMES = ['CharacterVariables', 'Session', 'User', 'UserExt', 'UserSpaces'];
 
 const panels = {
   httpTraffic: 'panel-13',
@@ -71,6 +73,7 @@ export function buildBoluoDashboard(
         title: 'HTTP request rate',
         datasourceUid,
         unit: 'reqps',
+        seriesNames: HTTP_STATUS_CODES,
         targets: [
           {
             refId: 'responses',
@@ -119,6 +122,7 @@ export function buildBoluoDashboard(
         unit: 'percentunit',
         min: 0,
         max: 1,
+        seriesNames: CACHE_NAMES,
         targets: [
           {
             refId: 'usage',
@@ -267,6 +271,7 @@ export function buildBoluoDashboard(
         min: 0,
         max: 1,
         tooltipMode: TooltipDisplayMode.Multi,
+        seriesNames: CACHE_NAMES,
         targets: [
           {
             refId: 'utilization',

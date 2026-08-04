@@ -1,0 +1,23 @@
+{
+  "name": "@boluo/grafana",
+  "version": "0.0.0",
+  "dependencies": {
+    "@grafana/grafana-foundation-sdk": "0.0.18"
+  },
+  "devDependencies": {
+    "@boluo/eslint-config": "0.0.0",
+    "@boluo/typescript-config": "0.0.0",
+    "@types/node": "^26.1.1",
+    "eslint": "^10.6.0",
+    "prettier": "^3.9.4",
+    "tsx": "^4.23.0",
+    "typescript": "^6"
+  },
+  "private": true,
+  "scripts": {
+    "build": "tsx src/build.ts",
+    "check": "tsc --noEmit",
+    "lint": "eslint ."
+  },
+  "type": "module"
+}

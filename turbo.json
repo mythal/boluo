@@ -102,6 +102,10 @@
     "@boluo/icons#generate": {
       "inputs": ["icons/**", "scripts/**", "package.json"],
       "outputs": ["src/**", "generated/**"]
+    },
+    "@boluo/grafana#build": {
+      "dependsOn": [],
+      "outputs": ["dist/**"]
     }
   }
 }

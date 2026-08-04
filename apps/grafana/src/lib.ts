@@ -1,0 +1,302 @@
+import type { Builder } from '@grafana/grafana-foundation-sdk/cog';
+import {
+  AnnotationQueryBuilder,
+  FieldColorBuilder,
+  FieldColorModeId,
+  MappingType,
+  PanelBuilder,
+  QueryGroupBuilder,
+  TargetBuilder,
+  ThresholdsConfigBuilder,
+  ThresholdsMode,
+  TimeSettingsBuilder,
+  type DataQueryKind,
+  type DynamicConfigValue,
+  type ValueMapping,
+  type VizConfigKind,
+} from '@grafana/grafana-foundation-sdk/dashboardv2';
+import {
+  AxisColorMode,
+  AxisPlacement,
+  BarAlignment,
+  BigValueColorMode,
+  BigValueGraphMode,
+  BigValueJustifyMode,
+  BigValueTextMode,
+  GraphDrawStyle,
+  GraphGradientMode,
+  GraphThresholdsStyleConfigBuilder,
+  GraphThresholdsStyleMode,
+  HideSeriesConfigBuilder,
+  LegendDisplayMode,
+  LegendPlacement,
+  LineInterpolation,
+  LineStyleBuilder,
+  ScaleDistribution,
+  ScaleDistributionConfigBuilder,
+  ReduceDataOptionsBuilder,
+  SortOrder,
+  StackingConfigBuilder,
+  StackingMode,
+  TooltipDisplayMode,
+  VisibilityMode,
+  VizLegendOptionsBuilder,
+  VizTooltipOptionsBuilder,
+} from '@grafana/grafana-foundation-sdk/common';
+import { QueryEditorMode, QueryV2Builder } from '@grafana/grafana-foundation-sdk/prometheus';
+import { VisualizationV2Builder } from '@grafana/grafana-foundation-sdk/timeseries';
+import { VisualizationV2Builder as StatVisualizationBuilder } from '@grafana/grafana-foundation-sdk/stat';
+
+export const GRAFANA_PLUGIN_VERSION = '12.4.2';
+
+export interface PrometheusTarget {
+  refId: string;
+  expr: string;
+  legendFormat: string;
+  editorMode?: QueryEditorMode;
+  hidden?: boolean;
+  exemplar?: boolean;
+  interval?: string;
+  instant?: boolean;
+  range?: boolean;
+}
+
+interface TimeSeriesPanelOptions {
+  id: number;
+  title: string;
+  description?: string;
+  datasourceUid: string;
+  targets: PrometheusTarget[];
+  unit?: string;
+  min?: number;
+  max?: number;
+  fieldMinMax?: boolean;
+  fillOpacity?: number;
+  tooltipMode?: TooltipDisplayMode;
+  scale?: ScaleDistribution;
+  scaleLog?: number;
+  overrides?: {
+    __systemRef?: string;
+    matcher: { id: string; options?: unknown };
+    properties: DynamicConfigValue[];
+  }[];
+}
+
+interface StatPanelOptions {
+  id: number;
+  title: string;
+  description?: string;
+  datasourceUid: string;
+  targets: PrometheusTarget[];
+  mappings?: ValueMapping[];
+}
+
+function valueBuilder<T>(value: T): Builder<T> {
+  return { build: () => value };
+}
+
+function versionedVisualization(visualization: Builder<VizConfigKind>): Builder<VizConfigKind> {
+  return {
+    build: () => {
+      const result = visualization.build();
+      result.version = GRAFANA_PLUGIN_VERSION;
+      return result;
+    },
+  };
+}
+
+function prometheusTarget(datasourceUid: string, target: PrometheusTarget): TargetBuilder {
+  const query = new QueryV2Builder()
+    .datasource({ name: datasourceUid })
+    .editorMode(target.editorMode ?? QueryEditorMode.Builder)
+    .expr(target.expr)
+    .instant(target.instant ?? false)
+    .legendFormat(target.legendFormat)
+    .range(target.range ?? true);
+
+  if (target.exemplar !== undefined) {
+    query.exemplar(target.exemplar);
+  }
+  if (target.interval !== undefined) {
+    query.interval(target.interval);
+  }
+
+  return new TargetBuilder()
+    .query(query)
+    .refId(target.refId)
+    .hidden(target.hidden ?? false);
+}
+
+export function timeSeriesPanel(options: TimeSeriesPanelOptions): PanelBuilder {
+  const scale = new ScaleDistributionConfigBuilder().type(
+    options.scale ?? ScaleDistribution.Linear,
+  );
+  if (options.scaleLog !== undefined) {
+    scale.log(options.scaleLog);
+  }
+
+  const visualization = new VisualizationV2Builder()
+    .thresholds(
+      new ThresholdsConfigBuilder().mode(ThresholdsMode.Absolute).steps([
+        { value: 0, color: 'green' },
+        { value: 80, color: 'red' },
+      ]),
+    )
+    .colorScheme(new FieldColorBuilder().mode(FieldColorModeId.PaletteClassic))
+    .legend(
+      new VizLegendOptionsBuilder()
+        .calcs([])
+        .displayMode(LegendDisplayMode.List)
+        .placement(LegendPlacement.Bottom)
+        .showLegend(true),
+    )
+    .tooltip(
+      new VizTooltipOptionsBuilder()
+        .hideZeros(false)
+        .mode(options.tooltipMode ?? TooltipDisplayMode.Single)
+        .sort(SortOrder.None),
+    )
+    .axisBorderShow(false)
+    .axisCenteredZero(false)
+    .axisColorMode(AxisColorMode.Text)
+    .axisLabel('')
+    .axisPlacement(AxisPlacement.Auto)
+    .barAlignment(BarAlignment.Center)
+    .barWidthFactor(0.6)
+    .drawStyle(GraphDrawStyle.Line)
+    .fillOpacity(options.fillOpacity ?? 0)
+    .gradientMode(GraphGradientMode.None)
+    .hideFrom(new HideSeriesConfigBuilder().legend(false).tooltip(false).viz(false))
+    .insertNulls(false)
+    .lineInterpolation(LineInterpolation.Linear)
+    .lineWidth(1)
+    .pointSize(5)
+    .scaleDistribution(scale)
+    .showPoints(VisibilityMode.Auto)
+    .spanNulls(false)
+    .stacking(new StackingConfigBuilder().group('A').mode(StackingMode.None))
+    .thresholdsStyle(new GraphThresholdsStyleConfigBuilder().mode(GraphThresholdsStyleMode.Off));
+
+  if (options.unit !== undefined) {
+    visualization.unit(options.unit);
+  }
+  if (options.min !== undefined) {
+    visualization.min(options.min);
+  }
+  if (options.max !== undefined) {
+    visualization.max(options.max);
+  }
+  if (options.fieldMinMax !== undefined) {
+    visualization.fieldMinMax(options.fieldMinMax);
+  }
+  if (options.fillOpacity !== undefined) {
+    visualization.lineStyle(new LineStyleBuilder().fill('solid'));
+  }
+  if (options.overrides !== undefined) {
+    visualization.overrides(options.overrides);
+  }
+
+  // The SDK does not expose Grafana's showValues option.
+  const patchedVisualization = valueBuilder<VizConfigKind>(
+    (() => {
+      const result = visualization.build();
+      const custom = result.spec.fieldConfig.defaults.custom as Record<string, unknown>;
+      custom.showValues = false;
+      return result;
+    })(),
+  );
+
+  const panel = new PanelBuilder()
+    .id(options.id)
+    .title(options.title)
+    .data(
+      new QueryGroupBuilder().targets(
+        options.targets.map((target) => prometheusTarget(options.datasourceUid, target)),
+      ),
+    )
+    .visualization(versionedVisualization(patchedVisualization));
+  if (options.description !== undefined) {
+    panel.description(options.description);
+  }
+  return panel;
+}
+
+export function healthStatPanel(options: StatPanelOptions): PanelBuilder {
+  const visualization = new StatVisualizationBuilder()
+    .colorMode(BigValueColorMode.Background)
+    .graphMode(BigValueGraphMode.None)
+    .justifyMode(BigValueJustifyMode.Center)
+    .textMode(BigValueTextMode.ValueAndName)
+    .wideLayout(true)
+    .reduceOptions(new ReduceDataOptionsBuilder().values(false).calcs(['lastNotNull']))
+    .thresholds(
+      new ThresholdsConfigBuilder().mode(ThresholdsMode.Absolute).steps([
+        { value: null, color: 'red' },
+        { value: 1, color: 'green' },
+      ]),
+    )
+    .colorScheme(new FieldColorBuilder().mode(FieldColorModeId.Thresholds))
+    .mappings(
+      options.mappings ?? [
+        {
+          type: MappingType.Value,
+          options: {
+            '0': { text: 'DOWN', color: 'red' },
+            '1': { text: 'UP', color: 'green' },
+          },
+        },
+      ],
+    );
+
+  const panel = new PanelBuilder()
+    .id(options.id)
+    .title(options.title)
+    .data(
+      new QueryGroupBuilder().targets(
+        options.targets.map((target) =>
+          prometheusTarget(options.datasourceUid, {
+            ...target,
+            instant: true,
+            range: false,
+          }),
+        ),
+      ),
+    )
+    .visualization(versionedVisualization(visualization));
+  if (options.description !== undefined) {
+    panel.description(options.description);
+  }
+  return panel;
+}
+
+export function defaultAnnotations(): AnnotationQueryBuilder {
+  const grafanaQuery: DataQueryKind = {
+    kind: 'DataQuery',
+    group: 'grafana',
+    version: 'v0',
+    datasource: { name: '-- Grafana --' },
+    spec: {},
+  };
+
+  return new AnnotationQueryBuilder()
+    .query(valueBuilder(grafanaQuery))
+    .enable(true)
+    .hide(true)
+    .iconColor('rgba(0, 211, 255, 1)')
+    .name('Annotations & Alerts')
+    .builtIn(true)
+    .legacyOptions({ type: 'dashboard' });
+}
+
+export function dashboardTimeSettings(from: string): TimeSettingsBuilder {
+  return new TimeSettingsBuilder()
+    .timezone('browser')
+    .from(from)
+    .to('now')
+    .autoRefresh('30s')
+    .autoRefreshIntervals(['15s', '30s', '1m', '5m', '15m', '30m', '1h'])
+    .hideTimepicker(false)
+    .fiscalYearStartMonth(0);
+}
+
+export { QueryEditorMode, ScaleDistribution, TooltipDisplayMode };

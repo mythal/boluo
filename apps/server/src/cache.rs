@@ -15,6 +15,7 @@ trait GetCacheType {
 pub struct CacheStats {
     name: &'static str,
     items: usize,
+    capacity: usize,
     hits: u64,
     misses: u64,
 }
@@ -119,6 +120,7 @@ macro_rules! define_caches {
                         CacheStats {
                             name: stringify!($type),
                             items: self.$type.len(),
+                            capacity: $capacity,
                             hits: self.$type.hits(),
                             misses: self.$type.misses(),
                         },
@@ -173,6 +175,8 @@ pub fn start_log_cache_stats() {
                         let labels = vec![metrics::Label::new("cache", stats.name)];
                         metrics::gauge!("boluo_server_cache_items", labels.clone())
                             .set(stats.items as f64);
+                        metrics::gauge!("boluo_server_cache_capacity", labels.clone())
+                            .set(stats.capacity as f64);
                         metrics::counter!("boluo_server_cache_hits_total", labels.clone())
                             .absolute(stats.hits);
                         metrics::counter!("boluo_server_cache_misses_total", labels)

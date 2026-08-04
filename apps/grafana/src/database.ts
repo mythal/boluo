@@ -11,12 +11,16 @@ import {
   defaultAnnotations,
   timeSeriesPanel,
 } from './lib.js';
+import {
+  DATABASE_APP,
+  DATABASE_NAME,
+  backupMetric,
+  databaseVolumeUtilization,
+  memoryUtilization,
+} from './metrics.js';
 
 export const DATABASE_DASHBOARD_RESOURCE_NAME = 'd0f4f08d-8d6e-4afc-b738-f3d503c9e389';
 
-const DATABASE_APP = 'boluo-db';
-const DATABASE_NAME = 'boluo';
-const BACKUP_STANZA = 'boluo';
 const RATE_INTERVAL = '$__rate_interval';
 const CACHE_RATIO_INTERVAL = '5m';
 
@@ -54,11 +58,6 @@ function databaseMetric(metric: string): string {
 
 function databaseRate(metric: string): string {
   return `rate(${databaseMetric(metric)}[${RATE_INTERVAL}])`;
-}
-
-function backupMetric(metric: string, extraLabels = ''): string {
-  const labels = extraLabels ? `,${extraLabels}` : '';
-  return `${metric}{app="${DATABASE_APP}",stanza="${BACKUP_STANZA}"${labels}}`;
 }
 
 export function buildDatabaseDashboard(datasourceUid: string): DashboardBuilder {
@@ -396,7 +395,7 @@ export function buildDatabaseDashboard(datasourceUid: string): DashboardBuilder 
           {
             refId: 'memory',
             editorMode: QueryEditorMode.Code,
-            expr: `(fly_instance_memory_mem_total{app="${DATABASE_APP}"} - fly_instance_memory_mem_available{app="${DATABASE_APP}"}) / fly_instance_memory_mem_total{app="${DATABASE_APP}"}`,
+            expr: memoryUtilization(DATABASE_APP),
             legendFormat: '{{instance}}',
           },
         ],
@@ -415,7 +414,7 @@ export function buildDatabaseDashboard(datasourceUid: string): DashboardBuilder 
           {
             refId: 'filesystem',
             editorMode: QueryEditorMode.Code,
-            expr: `1 - fly_instance_filesystem_blocks_avail{app="${DATABASE_APP}",mount="/var/lib/postgresql"} / fly_instance_filesystem_blocks{app="${DATABASE_APP}",mount="/var/lib/postgresql"}`,
+            expr: databaseVolumeUtilization(),
             legendFormat: '{{instance}}',
           },
         ],

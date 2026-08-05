@@ -1,4 +1,4 @@
-FROM postgres:18-trixie
+FROM docker.io/library/postgres:18-trixie
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     cron \

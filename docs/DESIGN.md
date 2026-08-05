@@ -1,5 +1,7 @@
 # System Design
 
+> **Maintenance note:** Only document design intent, non-obvious constraints, and tradeoffs that cannot be learned directly from the code. Do NOT duplicate behavior, data structures, or implementation details that the code or schema already makes clear.
+
 This document records some of the design concepts and decisions behind Boluo. It intentionally avoids design details and contains only high-level guiding principles.
 
 ## Design Principles

@@ -62,6 +62,7 @@
                 (maybeMissing (unfilteredRoot + "/turbo.json"))
                 (unfilteredRoot + "/packages")
                 (unfilteredRoot + "/apps/interpreter-cli")
+                (unfilteredRoot + "/apps/grafana")
                 (unfilteredRoot + "/apps/legacy")
                 (unfilteredRoot + "/apps/site")
                 (unfilteredRoot + "/apps/spa")

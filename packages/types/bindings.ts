@@ -486,6 +486,7 @@ export type EntryEffect = {
   scopeId: string;
   operatorId: string | null;
   created: string;
+  messageId: string | null;
 };
 
 export type EntryEffectHistory = {
@@ -766,7 +767,12 @@ export type Message = {
   rev?: number;
   characterId?: string | null;
   portraitId?: string | null;
-  entryEffectId?: string | null;
+  hasEntryEffects?: boolean;
+};
+
+export type MessageEntryEffects = {
+  messageId: string;
+  effects: EntryEffectHistory[];
 };
 
 export type MessageIdQuery = {
@@ -1019,9 +1025,9 @@ export type QueryEntry = {
   entryId: string;
 };
 
-export type QueryEntryEffects = {
+export type QueryEntryEffectsByMessages = {
   spaceId: string;
-  entryEffectIds: string[];
+  messageIds: string[];
 };
 
 export type QueryNote = {

@@ -60,7 +60,7 @@ For example, a simplified HP Entry could be represented as:
 
 Open-ended Component payloads use JSON. Dedicated payload types are reserved for data that benefits from relational constraints or specialized queries. The [Shared Primary Key representation](https://www.parsonsmatt.org/2019/03/19/sum_types_in_sql.html) favors extensibility over enforcing that every Component has a payload; readers therefore omit and report incomplete Components instead of rejecting the whole Entry.
 
-Component history just a player-facing record. It stores a JSON projection so historical presentation does not depend on the live payload type or referenced resources.
+Component history is just a player-facing record. It stores a JSON projection so historical presentation does not depend on the live payload type or referenced resources.
 
 #### Scopes and Characters
 

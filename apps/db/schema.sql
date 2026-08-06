@@ -403,7 +403,8 @@ CREATE TABLE public.entry_effects (
     space_id uuid NOT NULL,
     scope_id uuid NOT NULL,
     operator_id uuid,
-    created timestamp with time zone DEFAULT now() NOT NULL
+    created timestamp with time zone DEFAULT now() NOT NULL,
+    message_id uuid
 );
 
 
@@ -497,7 +498,7 @@ CREATE TABLE public.messages (
     rev integer DEFAULT 0 NOT NULL,
     character_id uuid,
     portrait_id uuid,
-    entry_effect_id uuid
+    has_entry_effects boolean DEFAULT false NOT NULL
 );
 
 
@@ -1101,6 +1102,13 @@ CREATE INDEX entry_components_asset_scope_index ON public.entry_components_asset
 
 
 --
+-- Name: entry_effect_message_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX entry_effect_message_index ON public.entry_effects USING btree (message_id, created, id) WHERE (message_id IS NOT NULL);
+
+
+--
 -- Name: entry_effect_scope_created_index; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1147,13 +1155,6 @@ CREATE INDEX entry_scope_position_index ON public.entries USING btree (scope_id,
 --
 
 CREATE INDEX message_character_index ON public.messages USING btree (character_id, created DESC) WHERE (character_id IS NOT NULL);
-
-
---
--- Name: message_entry_effect_unique; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE UNIQUE INDEX message_entry_effect_unique ON public.messages USING btree (entry_effect_id) WHERE (entry_effect_id IS NOT NULL);
 
 
 --
@@ -1358,6 +1359,14 @@ ALTER TABLE ONLY public.entry_components_json
 
 
 --
+-- Name: entry_effects entry_effect_message; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.entry_effects
+    ADD CONSTRAINT entry_effect_message FOREIGN KEY (message_id) REFERENCES public.messages(id) ON DELETE SET NULL;
+
+
+--
 -- Name: entry_effects entry_effect_operator; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1459,14 +1468,6 @@ ALTER TABLE ONLY public.media
 
 ALTER TABLE ONLY public.messages
     ADD CONSTRAINT message_character FOREIGN KEY (character_id) REFERENCES public.characters(id) ON DELETE SET NULL;
-
-
---
--- Name: messages message_entry_effect; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.messages
-    ADD CONSTRAINT message_entry_effect FOREIGN KEY (entry_effect_id) REFERENCES public.entry_effects(id) ON DELETE SET NULL;
 
 
 --

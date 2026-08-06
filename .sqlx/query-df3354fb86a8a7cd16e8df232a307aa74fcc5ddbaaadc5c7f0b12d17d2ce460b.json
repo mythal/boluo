@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "UPDATE messages message\nSET entry_effect_id = effect.id,\n    rev = message.rev + 1\nFROM entry_effects effect, channels channel\nWHERE message.id = $1\n  AND message.sender_id = $2\n  AND message.deleted = FALSE\n  AND message.entry_effect_id IS NULL\n  AND effect.id = $3\n  AND effect.operator_id = $2\n  AND message.channel_id = channel.id\n  AND channel.space_id = effect.space_id\nRETURNING message AS \"message!: Message\";\n",
+  "query": "WITH target_message AS MATERIALIZED (\n    SELECT message.id\n    FROM messages message\n    JOIN channels channel ON channel.id = message.channel_id\n    JOIN entry_effects effect\n      ON effect.id = $3\n     AND effect.operator_id = $2\n     AND effect.space_id = channel.space_id\n     AND effect.message_id IS NULL\n    WHERE message.id = $1\n      AND message.sender_id = $2\n      AND message.deleted = FALSE\n    FOR UPDATE OF message, effect\n), attached_effect AS (\n    UPDATE entry_effects effect\n    SET message_id = target.id\n    FROM target_message target\n    WHERE effect.id = $3\n    RETURNING effect.message_id\n)\nUPDATE messages message\nSET has_entry_effects = TRUE,\n    rev = message.rev + 1\nFROM attached_effect effect\nWHERE message.id = effect.message_id\nRETURNING message AS \"message!: Message\";\n",
   "describe": {
     "columns": [
       {
@@ -116,8 +116,8 @@
                   "Uuid"
                 ],
                 [
-                  "entry_effect_id",
-                  "Uuid"
+                  "has_entry_effects",
+                  "Bool"
                 ]
               ]
             }
@@ -137,5 +137,5 @@
       null
     ]
   },
-  "hash": "e1fde8f221995f7e1bceae2afc8f2f50619eece45ab8e11f94f070bd17b5d7ea"
+  "hash": "df3354fb86a8a7cd16e8df232a307aa74fcc5ddbaaadc5c7f0b12d17d2ce460b"
 }

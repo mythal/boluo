@@ -208,6 +208,7 @@ pub struct EntryEffect {
     pub scope_id: Uuid,
     pub operator_id: Option<Uuid>,
     pub created: DateTime<Utc>,
+    pub message_id: Option<Uuid>,
 }
 
 impl EntryEffect {
@@ -241,6 +242,21 @@ impl EntryEffect {
             "sql/entries/list_effects.sql",
             space_id,
             entry_effect_ids,
+        )
+        .fetch_all(db)
+        .await
+    }
+
+    pub async fn list_by_message_ids<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
+        space_id: Uuid,
+        message_ids: &[Uuid],
+    ) -> Result<Vec<Self>, sqlx::Error> {
+        sqlx::query_file_as!(
+            EntryEffect,
+            "sql/entries/list_effects_by_messages.sql",
+            space_id,
+            message_ids,
         )
         .fetch_all(db)
         .await
@@ -1318,6 +1334,13 @@ pub struct EntryEffectHistory {
     pub component_history: Vec<EntryComponentHistory>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct MessageEntryEffects {
+    pub message_id: Uuid,
+    pub effects: Vec<EntryEffectHistory>,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1549,10 +1572,7 @@ mod tests {
             Some(Uuid::now_v7()),
         )
         .await;
-        assert!(matches!(
-            invalid_move,
-            Err(ModelError::NotFound("Entry"))
-        ));
+        assert!(matches!(invalid_move, Err(ModelError::NotFound("Entry"))));
         let portrait = Entry::move_before(
             &mut transaction,
             character.scope_id,

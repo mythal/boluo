@@ -116,8 +116,8 @@
                   "Uuid"
                 ],
                 [
-                  "entry_effect_id",
-                  "Uuid"
+                  "has_entry_effects",
+                  "Bool"
                 ]
               ]
             }

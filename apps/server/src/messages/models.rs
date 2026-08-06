@@ -64,8 +64,8 @@ pub struct Message {
     pub character_id: Option<Uuid>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub portrait_id: Option<Uuid>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub entry_effect_id: Option<Uuid>,
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub has_entry_effects: bool,
 }
 
 fn is_zero(value: &i32) -> bool {
@@ -330,7 +330,7 @@ impl Message {
         self.entities = Default::default();
         self.character_id = None;
         self.portrait_id = None;
-        self.entry_effect_id = None;
+        self.has_entry_effects = false;
     }
 
     pub(crate) async fn attach_entry_effect(
@@ -738,6 +738,7 @@ mod tests {
     use crate::assets::Asset;
     use crate::channels::{Channel, ChannelMember, ChannelType};
     use crate::characters::Character;
+    use crate::entries::models::EntryEffect;
     use crate::media::models::Media;
     use crate::spaces::{AccessPolicy, Space, SpaceMember};
     use crate::users::User;
@@ -837,6 +838,73 @@ mod tests {
             MessageMoveOutcome::Moved { message, .. } => message,
             outcome => panic!("{context}: {outcome:?}"),
         }
+    }
+
+    #[sqlx::test(migrator = "crate::db::MIGRATOR")]
+    async fn db_test_message_accepts_multiple_entry_effects(pool: sqlx::PgPool) {
+        let owner = create_test_user(&pool, "effect_owner").await;
+        let space = create_test_space(&pool, &owner, "effect_space").await;
+        let channel = create_test_channel(&pool, &space, &owner, "Effects").await;
+        let message = create_position_test_message(
+            &pool,
+            channel.id,
+            space.id,
+            &owner.id,
+            "Multiple effects",
+            None,
+        )
+        .await;
+
+        let mut transaction = pool.begin().await.expect("failed to begin transaction");
+        let first_effect =
+            EntryEffect::create(&mut transaction, space.id, space.scope_id, owner.id)
+                .await
+                .expect("failed to create first Entry Effect");
+        let second_effect =
+            EntryEffect::create(&mut transaction, space.id, space.scope_id, owner.id)
+                .await
+                .expect("failed to create second Entry Effect");
+
+        let first_attachment =
+            Message::attach_entry_effect(&mut transaction, message.id, owner.id, first_effect.id)
+                .await
+                .expect("failed to attach first Entry Effect")
+                .expect("message should accept first Entry Effect");
+        assert!(first_attachment.has_entry_effects);
+        assert_eq!(first_attachment.rev, 1);
+
+        let second_attachment =
+            Message::attach_entry_effect(&mut transaction, message.id, owner.id, second_effect.id)
+                .await
+                .expect("failed to attach second Entry Effect")
+                .expect("message should accept second Entry Effect");
+        assert!(second_attachment.has_entry_effects);
+        assert_eq!(second_attachment.rev, 2);
+
+        assert!(
+            Message::attach_entry_effect(&mut transaction, message.id, owner.id, first_effect.id,)
+                .await
+                .expect("failed to check duplicate attachment")
+                .is_none()
+        );
+
+        let effects = EntryEffect::list_by_message_ids(&mut *transaction, space.id, &[message.id])
+            .await
+            .expect("failed to list Entry Effects by Message");
+        assert_eq!(effects.len(), 2);
+        assert!(
+            effects
+                .iter()
+                .all(|effect| effect.message_id == Some(message.id))
+        );
+        transaction.commit().await.expect("failed to commit");
+
+        let fetched = Message::get(&pool, &message.id, Some(&owner.id))
+            .await
+            .expect("failed to fetch Message")
+            .expect("Message is missing");
+        assert!(fetched.has_entry_effects);
+        assert_eq!(fetched.rev, 2);
     }
 
     #[sqlx::test(migrator = "crate::db::MIGRATOR")]

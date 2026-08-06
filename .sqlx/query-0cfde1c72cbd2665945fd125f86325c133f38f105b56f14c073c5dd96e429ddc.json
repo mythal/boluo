@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "INSERT INTO entry_effects (\n    id,\n    space_id,\n    scope_id,\n    operator_id\n)\nSELECT\n    $1,\n    scope.space_id,\n    scope.id,\n    $3\nFROM scopes scope\nWHERE scope.id = $2\n  AND scope.space_id = $4\nRETURNING\n    id,\n    space_id,\n    scope_id,\n    operator_id,\n    created;\n",
+  "query": "SELECT\n    id,\n    space_id,\n    scope_id,\n    operator_id,\n    created,\n    message_id\nFROM entry_effects\nWHERE space_id = $1\n  AND id = ANY($2)\nORDER BY created DESC, id DESC;\n",
   "describe": {
     "columns": [
       {
@@ -57,14 +57,23 @@
             "name": "created"
           }
         }
+      },
+      {
+        "ordinal": 5,
+        "name": "message_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "entry_effects",
+            "name": "message_id"
+          }
+        }
       }
     ],
     "parameters": {
       "Left": [
         "Uuid",
-        "Uuid",
-        "Uuid",
-        "Uuid"
+        "UuidArray"
       ]
     },
     "nullable": [
@@ -72,8 +81,9 @@
       false,
       false,
       true,
-      false
+      false,
+      true
     ]
   },
-  "hash": "e3d0059ec489efb4ed4701019fdaefb617104633e730afdf56a8749dfd9bbf10"
+  "hash": "0cfde1c72cbd2665945fd125f86325c133f38f105b56f14c073c5dd96e429ddc"
 }

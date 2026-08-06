@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT\n    id,\n    space_id,\n    scope_id,\n    operator_id,\n    created\nFROM entry_effects\nWHERE space_id = $1\n  AND id = ANY($2)\nORDER BY created DESC, id DESC;\n",
+  "query": "SELECT\n    effect.id,\n    effect.space_id,\n    effect.scope_id,\n    effect.operator_id,\n    effect.created,\n    effect.message_id\nFROM entry_effects effect\nJOIN messages message ON message.id = effect.message_id\nJOIN channels channel ON channel.id = message.channel_id\nWHERE effect.space_id = $1\n  AND effect.message_id = ANY($2)\n  AND message.deleted = FALSE\n  AND channel.space_id = effect.space_id\nORDER BY effect.message_id, effect.created, effect.id;\n",
   "describe": {
     "columns": [
       {
@@ -57,6 +57,17 @@
             "name": "created"
           }
         }
+      },
+      {
+        "ordinal": 5,
+        "name": "message_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "entry_effects",
+            "name": "message_id"
+          }
+        }
       }
     ],
     "parameters": {
@@ -70,8 +81,9 @@
       false,
       false,
       true,
-      false
+      false,
+      true
     ]
   },
-  "hash": "3559754197d46824159deec05dd2912ab8af925c29ab4ea4959ddecd2cafe791"
+  "hash": "ae83c89374e2ce1cb4a5c00220ae3eb324972bb192317c3a42412d4b82234a02"
 }

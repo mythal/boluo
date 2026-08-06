@@ -400,12 +400,34 @@ pub async fn check(pool: &sqlx::Pool<sqlx::Postgres>) {
             .await
             .expect("Cannot attach Entry Effect")
             .expect("Message is not attachable");
-    assert_eq!(attached_message.entry_effect_id, Some(effect.id));
+    assert!(attached_message.has_entry_effects);
     assert!(
         crate::messages::Message::attach_entry_effect(&mut trans, message.id, user.id, effect.id,)
             .await
             .expect("Cannot check duplicate Entry Effect attachment")
             .is_none()
+    );
+    let second_effect = EntryEffect::create(&mut trans, space.id, entry.scope_id, user.id)
+        .await
+        .expect("Cannot create second Entry Effect");
+    let attached_message = crate::messages::Message::attach_entry_effect(
+        &mut trans,
+        message.id,
+        user.id,
+        second_effect.id,
+    )
+    .await
+    .expect("Cannot attach second Entry Effect")
+    .expect("Message should accept multiple Entry Effects");
+    assert!(attached_message.has_entry_effects);
+    let message_effects = EntryEffect::list_by_message_ids(&mut *trans, space.id, &[message.id])
+        .await
+        .expect("Cannot list Entry Effects by Message");
+    assert_eq!(message_effects.len(), 2);
+    assert!(
+        message_effects
+            .iter()
+            .all(|effect| effect.message_id == Some(message.id))
     );
 
     #[allow(dead_code)]
@@ -513,6 +535,7 @@ pub async fn check(pool: &sqlx::Pool<sqlx::Postgres>) {
         scope_id: uuid::Uuid,
         operator_id: Option<uuid::Uuid>,
         created: chrono::DateTime<chrono::Utc>,
+        message_id: Option<uuid::Uuid>,
     })
     .expect("Cannot decode entry_effects composite row");
     check_composite_row!(&mut *trans, "entry_identifiers", {

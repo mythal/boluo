@@ -887,7 +887,7 @@ mod tests {
             rev,
             character_id: None,
             portrait_id: None,
-            entry_effect_id: None,
+            has_entry_effects: false,
         }
     }
 

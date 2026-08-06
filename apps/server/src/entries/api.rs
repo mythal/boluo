@@ -49,9 +49,9 @@ pub struct EntryComponentHistoryQuery {
 
 #[derive(Debug, Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
-pub struct QueryEntryEffects {
+pub struct QueryEntryEffectsByMessages {
     pub space_id: Uuid,
-    pub entry_effect_ids: Vec<Uuid>,
+    pub message_ids: Vec<Uuid>,
 }
 
 #[derive(Debug, Deserialize, specta::Type)]

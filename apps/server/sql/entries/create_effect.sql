@@ -17,4 +17,5 @@ RETURNING
     space_id,
     scope_id,
     operator_id,
-    created;
+    created,
+    message_id;

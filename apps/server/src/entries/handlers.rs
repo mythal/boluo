@@ -1,11 +1,12 @@
 use super::api::{
     CheckEntryIdentifier, CreateEntry, DeleteEntry, EditEntry, EditEntryComponents,
     EntryComponentHistoryQuery, EntryHistoryQuery, ListEntries, ListEntriesByComponent, MoveEntry,
-    QueryEntry, QueryEntryEffects,
+    QueryEntry, QueryEntryEffectsByMessages,
 };
 use super::models::{
     Entry, EntryComponentHistory, EntryComponentMatch, EntryEffect, EntryEffectHistory,
-    EntryHistory, EntryHistoryAction, EntryMetadata, components_as_set_history_changes,
+    EntryHistory, EntryHistoryAction, EntryMetadata, MessageEntryEffects,
+    components_as_set_history_changes,
 };
 use crate::committed_changes::CommittedChanges;
 use crate::csrf::{authenticate, authenticate_optional};
@@ -494,23 +495,11 @@ async fn delete_entry(
     Ok(true)
 }
 
-async fn effects(
+async fn visible_effect_history(
     ctx: &crate::context::AppContext,
-    req: Request<impl Body>,
+    mut effects: Vec<EntryEffect>,
+    user_id: Option<Uuid>,
 ) -> Result<Vec<EntryEffectHistory>, AppError> {
-    const MAX_EFFECTS: usize = 256;
-
-    let session = authenticate_optional(&req).await?;
-    let payload: QueryEntryEffects = parse_body(req).await?;
-    if payload.entry_effect_ids.is_empty() || payload.entry_effect_ids.len() > MAX_EFFECTS {
-        return Err(AppError::BadRequest(format!(
-            "entryEffectIds must contain between 1 and {MAX_EFFECTS} IDs"
-        )));
-    }
-
-    let mut effects =
-        EntryEffect::list_by_ids(&ctx.db, payload.space_id, &payload.entry_effect_ids).await?;
-    let user_id = session.map(|session| session.user_id);
     let mut visible_effects = Vec::with_capacity(effects.len());
     for effect in effects.drain(..) {
         let scope = resolve_scope(ctx, effect.space_id, effect.scope_id).await?;
@@ -552,6 +541,50 @@ async fn effects(
                 entry_history: entries_by_effect.remove(&effect_id).unwrap_or_default(),
                 component_history: components_by_effect.remove(&effect_id).unwrap_or_default(),
             }
+        })
+        .collect())
+}
+
+async fn effects_by_messages(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<Vec<MessageEntryEffects>, AppError> {
+    const MAX_MESSAGES: usize = 256;
+
+    let session = authenticate_optional(&req).await?;
+    let payload: QueryEntryEffectsByMessages = parse_body(req).await?;
+    if payload.message_ids.is_empty() || payload.message_ids.len() > MAX_MESSAGES {
+        return Err(AppError::BadRequest(format!(
+            "messageIds must contain between 1 and {MAX_MESSAGES} IDs"
+        )));
+    }
+
+    let effects =
+        EntryEffect::list_by_message_ids(&ctx.db, payload.space_id, &payload.message_ids).await?;
+    let user_id = session.map(|session| session.user_id);
+    let visible_effects = visible_effect_history(ctx, effects, user_id).await?;
+    let mut effects_by_message: HashMap<Uuid, Vec<EntryEffectHistory>> = HashMap::new();
+    for effect in visible_effects {
+        if let Some(message_id) = effect.effect.message_id {
+            effects_by_message
+                .entry(message_id)
+                .or_default()
+                .push(effect);
+        }
+    }
+
+    let mut seen = std::collections::HashSet::with_capacity(payload.message_ids.len());
+    Ok(payload
+        .message_ids
+        .into_iter()
+        .filter(|message_id| seen.insert(*message_id))
+        .filter_map(|message_id| {
+            effects_by_message
+                .remove(&message_id)
+                .map(|effects| MessageEntryEffects {
+                    message_id,
+                    effects,
+                })
         })
         .collect())
 }
@@ -644,7 +677,9 @@ pub async fn router(
         ("/delete", Method::POST) => response(delete_entry(ctx, req).await).await,
         ("/history", Method::GET) => response(history(ctx, req).await).await,
         ("/component_history", Method::GET) => response(component_history(ctx, req).await).await,
-        ("/effects", Method::POST) => response(effects(ctx, req).await).await,
+        ("/effects_by_messages", Method::POST) => {
+            response(effects_by_messages(ctx, req).await).await
+        }
         _ => missing(),
     }
 }

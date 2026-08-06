@@ -1,4 +1,6 @@
-use serde::Deserialize;
+use crate::channels::{Channel, ChannelMember};
+use crate::users::User;
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::spaces::AccessPolicy;
@@ -9,7 +11,9 @@ pub struct ListCharacters {
     pub space_id: Uuid,
     #[serde(default)]
     pub include_archived: bool,
-    /// Restrict the result to characters the current user can use as a speaker.
+    /// Restrict the result to characters the current user is allowed to portray.
+    /// Archived characters are included when `include_archived` is true, but must be restored
+    /// before they can be used as a speaker.
     #[serde(default)]
     pub portrayable_only: bool,
 }
@@ -19,6 +23,14 @@ pub struct ListCharacters {
 pub struct QueryCharacter {
     pub space_id: Uuid,
     pub character_id: Uuid,
+}
+
+#[derive(Serialize, Debug, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct CharacterUsage {
+    pub channel: Channel,
+    pub member: ChannelMember,
+    pub user: User,
 }
 
 #[derive(Deserialize, Debug, specta::Type)]

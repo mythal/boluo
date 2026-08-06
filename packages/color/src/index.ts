@@ -91,6 +91,20 @@ export const parseHexColor = (color: string): string | null => {
   return null;
 };
 
+const isColorPart = (color: string): boolean => {
+  if (parseHexColor(color) != null) return true;
+  if (color.startsWith(PALETTE_PREFIX)) {
+    return paletteKeys.includes(color.slice(PALETTE_PREFIX.length) as PaletteKey);
+  }
+  return color.startsWith(RANDOM_PREFIX) && color.length > RANDOM_PREFIX.length;
+};
+
+export const isGameColor = (color: string): boolean => {
+  if (color === '') return true;
+  const parts = color.split(';');
+  return parts.length <= 2 && parts.every(isColorPart);
+};
+
 export function generateColor(seed: string, lightnessDelta = 0.0): string {
   const rng = new Prando(seed);
   const h = rng.next(0, 365);
@@ -111,7 +125,11 @@ export type ByTheme<T> = { light: T; dark: T };
 
 export const parseColorPart = (color: string): GameColor => {
   if (color.startsWith(PALETTE_PREFIX)) {
-    return { type: 'palette', key: color.slice(PALETTE_PREFIX.length) as PaletteKey };
+    const key = color.slice(PALETTE_PREFIX.length) as PaletteKey;
+    if (paletteKeys.includes(key)) {
+      return { type: 'palette', key };
+    }
+    return { type: 'random', seed: '' };
   } else if (color.startsWith(RANDOM_PREFIX)) {
     return { type: 'random', seed: color.slice(RANDOM_PREFIX.length) };
   }

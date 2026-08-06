@@ -112,7 +112,7 @@ async fn query_channel(
     Ok(resolved.channel)
 }
 
-async fn push_refreshed_members(
+pub(crate) async fn push_refreshed_members(
     ctx: &crate::context::AppContext,
     space_id: Uuid,
     channel_id: Uuid,

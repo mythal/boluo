@@ -136,6 +136,12 @@ export type Character = {
   version: string;
 };
 
+export type CharacterUsage = {
+  channel: Channel;
+  member: ChannelMember;
+  user: User;
+};
+
 export type CheckChannelName = {
   spaceId: string;
   name: string;
@@ -667,7 +673,11 @@ export type ListAssets = {
 export type ListCharacters = {
   spaceId: string;
   includeArchived?: boolean;
-  /**  Restrict the result to characters the current user can use as a speaker. */
+  /**
+   *  Restrict the result to characters the current user is allowed to portray.
+   *  Archived characters are included when `include_archived` is true, but must be restored
+   *  before they can be used as a speaker.
+   */
   portrayableOnly?: boolean;
 };
 

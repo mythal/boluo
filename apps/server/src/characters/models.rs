@@ -5,8 +5,11 @@ use std::collections::HashSet;
 use unicode_normalization::UnicodeNormalization;
 use uuid::Uuid;
 
+use super::api::CharacterUsage;
+use crate::channels::{Channel, ChannelMember};
 use crate::error::{ModelError, ValidationFailed};
 use crate::spaces::{AccessPolicy, ResourceAccessContext, validate_access_channel};
+use crate::users::User;
 
 const IDENTIFIER_ALIAS_MAX_COUNT: usize = 16;
 
@@ -158,6 +161,23 @@ impl Character {
                 .fetch_all(db)
                 .await?;
         Ok(characters)
+    }
+
+    pub async fn list_usages<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
+        character_id: Uuid,
+        space_id: Uuid,
+        viewer_id: Option<Uuid>,
+    ) -> Result<Vec<CharacterUsage>, sqlx::Error> {
+        sqlx::query_file_as!(
+            CharacterUsage,
+            "sql/characters/list_usages.sql",
+            character_id,
+            space_id,
+            viewer_id,
+        )
+        .fetch_all(db)
+        .await
     }
 
     pub fn can_view(&self, user_id: Option<Uuid>, context: ResourceAccessContext) -> bool {

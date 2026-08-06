@@ -10,6 +10,7 @@ import type {
   CheckEntryIdentifier,
   CheckUsernameExists,
   Character,
+  CharacterUsage,
   Entry,
   EntryComponentMatch,
   EntryMetadata,
@@ -106,6 +107,7 @@ export interface Get {
   // characters
   '/characters/query': { query: QueryCharacter; result: Character };
   '/characters/by_space': { query: ListCharacters; result: Character[] };
+  '/characters/usages': { query: QueryCharacter; result: CharacterUsage[] };
   '/characters/check_identifier': { query: CheckCharacterIdentifier; result: boolean };
   // updates (formerly known as events)
   '/updates/token': { query: MakeToken; result: { token: string; issuedAt: number } };

@@ -3,6 +3,7 @@ import test, { describe } from 'node:test';
 import {
   computeColors,
   generateColor,
+  isGameColor,
   parseColorPart,
   parseGameColor,
   parseHexColor,
@@ -24,6 +25,22 @@ describe('parseHexColor', () => {
     assert.strictEqual(parseHexColor('000000'), null);
     assert.strictEqual(parseHexColor('#gggggg'), null);
     assert.strictEqual(parseHexColor(''), null);
+  });
+});
+
+describe('isGameColor', () => {
+  test('accepts hex, palette, random, and theme-paired colors', () => {
+    assert.equal(isGameColor('#AABBCC'), true);
+    assert.equal(isGameColor('palette:blue'), true);
+    assert.equal(isGameColor('seed:test;#AABBCC'), true);
+    assert.equal(isGameColor(''), true);
+  });
+
+  test('rejects unknown or malformed colors', () => {
+    assert.equal(isGameColor('palette:unknown'), false);
+    assert.equal(isGameColor('seed:'), false);
+    assert.equal(isGameColor('#fff'), false);
+    assert.equal(isGameColor('#AABBCC;#DDEEFF;#001122'), false);
   });
 });
 
@@ -70,6 +87,11 @@ describe('parseColorPart', () => {
 
   test('defaults to random with empty seed for invalid input', () => {
     const result = parseColorPart('invalid');
+    assert.deepStrictEqual(result, { type: 'random', seed: '' });
+  });
+
+  test('defaults to random for an unknown palette', () => {
+    const result = parseColorPart('palette:unknown');
     assert.deepStrictEqual(result, { type: 'random', seed: '' });
   });
 });

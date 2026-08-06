@@ -190,6 +190,27 @@ const handleUpdate = (
             dedupeKey: `status:${update.body.spaceId}`,
           },
         ];
+      case 'CHARACTER_CHANGED':
+        return [
+          {
+            type: 'CHARACTER_CHANGED',
+            id: createEffectId(),
+            spaceId: update.mailbox,
+            characterId: update.body.characterId,
+            dedupeKey: `character:${update.mailbox}:${update.body.characterId}`,
+          },
+        ];
+      case 'ENTRY_CHANGED':
+        return [
+          {
+            type: 'ENTRY_CHANGED',
+            id: createEffectId(),
+            spaceId: update.mailbox,
+            scopeId: update.body.scopeId,
+            entryId: update.body.entryId,
+            dedupeKey: `entry:${update.mailbox}:${update.body.scopeId}:${update.body.entryId}`,
+          },
+        ];
       case 'ERROR':
       case 'NEW_MESSAGE':
       case 'MESSAGE_DELETED':
@@ -198,8 +219,6 @@ const handleUpdate = (
       case 'INITIALIZED':
       case 'DIFF':
       case 'APP_INFO':
-      case 'ENTRY_CHANGED':
-      case 'CHARACTER_CHANGED':
       case 'NOTE_CHANGED':
       case 'APP_UPDATED':
         return [];

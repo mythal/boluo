@@ -24,4 +24,19 @@ export type ChatEffect =
       spaceId: string;
       statusMap: Record<string, UserStatus | undefined>;
       dedupeKey: string;
+    }
+  | {
+      type: 'CHARACTER_CHANGED';
+      id: string;
+      spaceId: string;
+      characterId: string;
+      dedupeKey: string;
+    }
+  | {
+      type: 'ENTRY_CHANGED';
+      id: string;
+      spaceId: string;
+      scopeId: string;
+      entryId: string;
+      dedupeKey: string;
     };

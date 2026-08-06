@@ -7,6 +7,7 @@ import useSWRMutation, {
 
 interface Arg {
   characterName: string;
+  characterId?: string | null;
 }
 
 type Key = ['/channels/members', string];
@@ -17,11 +18,11 @@ export const useEditChannelCharacterName = (
 ): SWRMutationResponse<ChannelMember, ApiError, Key, Arg> => {
   return useSWRMutation<ChannelMember, ApiError, Key, Arg>(
     ['/channels/members', channelId],
-    async ([, channelId], { arg: { characterName } }) => {
+    async ([, channelId], { arg: { characterName, characterId = null } }) => {
       const result = await post('/channels/edit_member', null, {
         channelId,
         characterName,
-        characterId: null,
+        characterId,
         textColor: null,
       });
       return result.unwrap();

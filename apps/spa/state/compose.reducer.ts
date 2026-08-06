@@ -8,6 +8,13 @@ export type ComposeError = 'TEXT_EMPTY' | 'NO_NAME' | MediaError;
 
 export type ComposeRange = [number, number];
 
+export interface EditingAttribution {
+  characterId: string | null;
+  name: string;
+  color: string;
+  inGame: boolean;
+}
+
 export interface ComposeState {
   previewId: string;
   source: string;
@@ -24,6 +31,7 @@ export interface ComposeState {
   composingAt: number | null;
   backup?: ComposeState;
   edit: PreviewEdit | null;
+  editingAttribution?: EditingAttribution;
 }
 
 export const makeInitialComposeState = (): ComposeState => ({
@@ -188,6 +196,12 @@ const handleEditMessage = (
     ...makeInitialComposeState(),
     previewId,
     edit: { time: modified, p: posP, q: posQ },
+    editingAttribution: {
+      characterId: message.characterId ?? null,
+      name: message.name,
+      color: message.color,
+      inGame: message.inGame ?? false,
+    },
     media: mediaId,
     source,
     range,
@@ -480,11 +494,16 @@ export const composeReducer = (state: ComposeState, action: ComposeActionUnion):
 
 export const checkCompose =
   (characterName: string, defaultInGame: boolean) =>
-  ({ source, media }: Pick<ComposeState, 'source' | 'media'>): ComposeError | null => {
+  ({
+    source,
+    media,
+    editingAttribution,
+  }: Pick<ComposeState, 'source' | 'media' | 'editingAttribution'>): ComposeError | null => {
     const { inGame, rest, characterName: modifierCharacterName } = parseModifiers(source);
     const nameInSource = modifierCharacterName.trim();
     const effectiveInGame = nameInSource ? true : inGame ? inGame.inGame : defaultInGame;
-    if (effectiveInGame && nameInSource === '' && characterName === '') {
+    const hasBoundEditCharacter = editingAttribution?.characterId != null;
+    if (effectiveInGame && nameInSource === '' && characterName === '' && !hasBoundEditCharacter) {
       return 'NO_NAME';
     }
     const mediaResult = validateMedia(media);

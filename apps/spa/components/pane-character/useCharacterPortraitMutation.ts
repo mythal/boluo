@@ -11,6 +11,7 @@ import {
   makePortraitAssetName,
   makePortraitDisplayName,
   makePortraitEntryKey,
+  MAX_PORTRAIT_COUNT,
   parsePortraitComponent,
   PORTRAIT_COMPONENT_TYPE,
   reorderPortraitEntries,
@@ -127,6 +128,15 @@ export const useCharacterPortraitMutation = ({
 
   const uploadPortrait = useCallback(
     async (file: File, entry?: EntryComponentMatch) => {
+      if (entry == null && portraitEntries.length >= MAX_PORTRAIT_COUNT) {
+        setError(
+          intl.formatMessage(
+            { defaultMessage: 'A character can have up to {maxCount} portraits.' },
+            { maxCount: MAX_PORTRAIT_COUNT },
+          ),
+        );
+        return;
+      }
       setOperation({ type: 'UPLOAD', entryId: entry?.id ?? null });
       setError(null);
       let asset: Asset | null = null;
@@ -155,7 +165,15 @@ export const useCharacterPortraitMutation = ({
         setOperation(null);
       }
     },
-    [attachPortraitAsset, characterName, intl, mutate, revalidatePortraitEntries, spaceId],
+    [
+      attachPortraitAsset,
+      characterName,
+      intl,
+      mutate,
+      portraitEntries.length,
+      revalidatePortraitEntries,
+      spaceId,
+    ],
   );
 
   const removePortrait = useCallback(

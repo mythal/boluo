@@ -31,7 +31,7 @@ import {
   portraitSourceFromEntry,
 } from './CharacterPortrait';
 import { CharacterPortraitMetadataForm } from './CharacterPortraitMetadataForm';
-import { sortPortraitEntries } from './portrait';
+import { MAX_PORTRAIT_COUNT, sortPortraitEntries } from './portrait';
 import { SortableCharacterPortrait } from './SortableCharacterPortrait';
 import { useCharacterPortraitMutation } from './useCharacterPortraitMutation';
 
@@ -66,6 +66,7 @@ export const CharacterPortraitEditor: FC<Props> = ({
   const previewFile = uploadState.type === 'UPLOADING' ? uploadState.file : null;
   const previewUrl = useObjectUrl(previewFile);
   const entries = useMemo(() => sortPortraitEntries(portraitEntries), [portraitEntries]);
+  const portraitLimitReached = entries.length >= MAX_PORTRAIT_COUNT;
   const selectedEntry = entries.find((entry) => entry.id === selectedEntryId) ?? entries[0];
   const { editPortraitMetadata, error, movePortrait, operation, removePortrait, uploadPortrait } =
     useCharacterPortraitMutation({
@@ -167,7 +168,7 @@ export const CharacterPortraitEditor: FC<Props> = ({
             )}
             <button
               type="button"
-              disabled={disabled}
+              disabled={disabled || portraitLimitReached}
               onClick={() => openFilePicker()}
               className={`border-border-default text-text-muted hover:bg-surface-strong hover:text-text-secondary focus-visible:ring-border-focus flex aspect-3/4 ${characterPortraitSizeClassName.gallery} shrink-0 flex-col items-center justify-center gap-2 rounded-md border border-dashed p-3 text-sm focus-visible:ring enabled:cursor-pointer disabled:cursor-not-allowed disabled:opacity-50`}
             >
@@ -182,6 +183,10 @@ export const CharacterPortraitEditor: FC<Props> = ({
         <FormattedMessage
           defaultMessage="PNG, JPEG, GIF, or WebP. Up to {sizeLimit} MB."
           values={{ sizeLimit: mediaMaxSizeMb }}
+        />{' '}
+        <FormattedMessage
+          defaultMessage="Up to {maxCount} portraits."
+          values={{ maxCount: MAX_PORTRAIT_COUNT }}
         />
       </div>
 

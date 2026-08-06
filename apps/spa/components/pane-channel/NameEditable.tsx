@@ -25,6 +25,7 @@ import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { atom, useAtom, useAtomValue, useStore } from 'jotai';
 import { useVirtualKeybroadChange } from '../../hooks/useVirtualKeybroadChange';
 import { CharacterPopover } from './CharacterPopover';
+import { useResolvedTheme } from '../../hooks/useResolvedTheme';
 
 interface Props {
   name: string | undefined | null;
@@ -37,6 +38,7 @@ interface Props {
 }
 
 export const NameEditable: FC<Props> = ({ name, inGame, color, member }) => {
+  const theme = useResolvedTheme();
   const store = useStore();
   const { composeFocusedAtom, selfPreviewNamePanelOpenAtom, isComposeEmptyAtom } =
     useChannelAtoms();
@@ -102,6 +104,8 @@ export const NameEditable: FC<Props> = ({ name, inGame, color, member }) => {
         interactive
         pressed={isOpen}
         color={color}
+        theme={theme}
+        inGame={inGame}
         ref={setReference}
         icon={icon}
         {...getReferenceProps()}

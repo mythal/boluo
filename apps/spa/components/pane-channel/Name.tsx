@@ -21,6 +21,7 @@ import { Delay } from '@boluo/ui/Delay';
 import { FallbackIcon } from '@boluo/ui/FallbackIcon';
 import { useFloatingSetters } from '@boluo/ui/hooks/useFloatingSetters';
 import { NameUserPanel } from './NameUserPanel';
+import { useResolvedTheme } from '../../hooks/useResolvedTheme';
 
 interface Props {
   name: string | undefined | null;
@@ -34,6 +35,7 @@ interface Props {
 }
 
 export const Name: FC<Props> = ({ name, isMaster, inGame, userId, messageColor, colorSeed }) => {
+  const theme = useResolvedTheme();
   const [isOpen, setIsOpen] = useState(false);
   const { refs, floatingStyles, middlewareData, context } = useFloating({
     open: isOpen,
@@ -63,6 +65,8 @@ export const Name: FC<Props> = ({ name, isMaster, inGame, userId, messageColor, 
         pressed={isOpen}
         interactive={userId != null}
         color={color}
+        theme={theme}
+        inGame={inGame}
         icon={isMaster ? masterIcon : undefined}
         ref={setReference}
         {...getReferenceProps()}

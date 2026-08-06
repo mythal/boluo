@@ -11,8 +11,9 @@ import {
 import { Button } from '@boluo/ui/Button';
 import { ColorCell } from '@boluo/ui/ColorCell';
 import { ColorPickerInput } from '@boluo/ui/ColorPickerInput';
+import { getNameStrokeStyle } from '@boluo/ui/chat/NameBox';
 import { classifyLightOrDark } from '@boluo/theme';
-import { type CSSProperties, type FC, type ReactNode, useMemo } from 'react';
+import { type FC, type ReactNode, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { useResolvedTheme } from '../hooks/useResolvedTheme';
 
@@ -39,7 +40,8 @@ export const ColorEditor: FC<Props> = ({
   disabled = false,
   title,
 }) => {
-  const lightOrDark = classifyLightOrDark(useResolvedTheme());
+  const resolvedTheme = useResolvedTheme();
+  const lightOrDark = classifyLightOrDark(resolvedTheme);
   const effectiveColor = color === '' && fallbackColor != null ? fallbackColor : color;
   const effectiveSeed = color === '' && fallbackColorSeed != null ? fallbackColorSeed : colorSeed;
   const parsedColors = useMemo(() => parseGameColor(effectiveColor), [effectiveColor]);
@@ -58,12 +60,13 @@ export const ColorEditor: FC<Props> = ({
         <div className="light mode-light">
           <div
             className="stroke-name border-border-strong rounded-lg border bg-white p-6"
-            style={
-              {
-                color: computedColors.light,
-                '--name-color': computedColors.light,
-              } as CSSProperties
-            }
+            style={{
+              color: computedColors.light,
+              ...getNameStrokeStyle(computedColors.light, 'light', {
+                type: 'solid',
+                color: '#FFFFFF',
+              }),
+            }}
           >
             <FormattedMessage defaultMessage="In Light Mode" />
           </div>
@@ -71,12 +74,13 @@ export const ColorEditor: FC<Props> = ({
         <div className="dark mode-dark">
           <div
             className="stroke-name border-border-strong rounded-lg border bg-slate-900 p-6"
-            style={
-              {
-                color: computedColors.dark,
-                '--name-color': computedColors.dark,
-              } as CSSProperties
-            }
+            style={{
+              color: computedColors.dark,
+              ...getNameStrokeStyle(computedColors.dark, 'dark', {
+                type: 'solid',
+                color: '#0F172A',
+              }),
+            }}
           >
             <FormattedMessage defaultMessage="In Dark Mode" />
           </div>

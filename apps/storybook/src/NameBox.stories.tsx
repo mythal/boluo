@@ -3,6 +3,7 @@ import { NameBox } from '@boluo/ui/chat/NameBox';
 import Gamemaster from '@boluo/icons/Gamemaster';
 import ChevronDown from '@boluo/icons/ChevronDown';
 import Icon from '@boluo/ui/Icon';
+import type { ResolvedTheme } from '@boluo/types';
 
 const meta: Meta<typeof NameBox> = {
   title: 'Chat/NameBox',
@@ -12,6 +13,7 @@ const meta: Meta<typeof NameBox> = {
   },
   args: {
     color: '#3b82f6',
+    theme: 'light',
     children: 'Iroha',
   },
 };
@@ -52,19 +54,92 @@ export const Pressed: Story = {
 const lightnessSteps = [45, 55, 59, 61, 70, 74, 76, 85] as const;
 
 const colorFamilies = [
-  { name: 'Neutral', chroma: 0, hue: 0 },
-  { name: 'Red', chroma: 0.18, hue: 25 },
-  { name: 'Yellow', chroma: 0.16, hue: 95 },
-  { name: 'Green', chroma: 0.16, hue: 145 },
-  { name: 'Blue', chroma: 0.18, hue: 255 },
-  { name: 'Purple', chroma: 0.18, hue: 310 },
+  {
+    name: 'Neutral',
+    colors: [
+      '#555555',
+      '#717171',
+      '#7D7D7D',
+      '#838383',
+      '#9E9E9E',
+      '#ABABAB',
+      '#B1B1B1',
+      '#CECECE',
+    ],
+  },
+  {
+    name: 'Red',
+    colors: [
+      '#843C38',
+      '#A45953',
+      '#B1645F',
+      '#B86A64',
+      '#D6857F',
+      '#E3928B',
+      '#EA9891',
+      '#FFB4AD',
+    ],
+  },
+  {
+    name: 'Yellow',
+    colors: [
+      '#675400',
+      '#847020',
+      '#907C2E',
+      '#968234',
+      '#B29E51',
+      '#BEAA5E',
+      '#C5B164',
+      '#E2CE80',
+    ],
+  },
+  {
+    name: 'Green',
+    colors: [
+      '#2C6330',
+      '#49814C',
+      '#558D57',
+      '#5B935D',
+      '#76AF77',
+      '#82BC83',
+      '#88C28A',
+      '#A5E0A5',
+    ],
+  },
+  {
+    name: 'Blue',
+    colors: [
+      '#2B568B',
+      '#4773AB',
+      '#537FB8',
+      '#5985BE',
+      '#73A1DC',
+      '#7FAEE9',
+      '#85B4F0',
+      '#A1D1FF',
+    ],
+  },
+  {
+    name: 'Purple',
+    colors: [
+      '#66447E',
+      '#83609D',
+      '#8F6CAA',
+      '#9672B0',
+      '#B28DCD',
+      '#BE99DA',
+      '#C59FE1',
+      '#E2BCFF',
+    ],
+  },
 ] as const;
 
 interface ColorMatrixProps {
   background: 'in-game' | 'out-of-game';
+  theme: ResolvedTheme;
 }
 
-const ColorMatrix = ({ background }: ColorMatrixProps) => {
+const ColorMatrix = ({ background, theme }: ColorMatrixProps) => {
   const inGame = background === 'in-game';
 
   return (
@@ -73,14 +148,14 @@ const ColorMatrix = ({ background }: ColorMatrixProps) => {
         {inGame ? 'In-game message background' : 'Out-of-game message background'}
       </h2>
       <p className="text-text-secondary mb-3 text-sm">
-        Hover the table to inspect the corresponding hover background.
+        Hover the table for the message hover state, or a name for its interactive state.
       </p>
       <div className="border-border-subtle overflow-x-auto rounded-lg border">
         <div
           className={
             inGame
-              ? 'bg-message-in-game-bg hover:bg-message-in-game-bg-hover p-4'
-              : 'bg-message-out-of-game-bg hover:bg-message-out-of-game-bg-hover p-4'
+              ? 'group/msg bg-message-in-game-bg hover:bg-message-in-game-bg-hover p-4'
+              : 'group/msg bg-message-out-of-game-bg hover:bg-message-out-of-game-bg-hover p-4'
           }
         >
           <div className="grid w-max grid-cols-[4rem_repeat(6,8rem)] items-center gap-2">
@@ -90,13 +165,21 @@ const ColorMatrix = ({ background }: ColorMatrixProps) => {
                 {name}
               </span>
             ))}
-            {lightnessSteps.map((lightness) => (
+            {lightnessSteps.map((lightness, lightnessIndex) => (
               <div key={lightness} className="contents">
                 <span className="text-text-secondary text-sm font-bold">{lightness}%</span>
-                {colorFamilies.map(({ name, chroma, hue }) => {
-                  const color = `oklch(${lightness}% ${chroma} ${hue})`;
+                {colorFamilies.map(({ name, colors }) => {
+                  const color = colors[lightnessIndex];
+                  if (color == null) return null;
                   return (
-                    <NameBox key={name} color={color} title={color}>
+                    <NameBox
+                      key={name}
+                      color={color}
+                      theme={theme}
+                      inGame={inGame}
+                      interactive
+                      title={color}
+                    >
                       {name}
                     </NameBox>
                   );
@@ -115,18 +198,25 @@ export const CurrentContrastMatrix: Story = {
     layout: 'fullscreen',
     controls: { disable: true },
   },
-  render: () => (
-    <main className="bg-pane-bg text-text-primary min-h-screen space-y-8 p-8">
-      <header className="max-w-3xl">
-        <h1 className="mb-2 text-xl font-bold">Current name stroke behavior</h1>
-        <p className="text-text-secondary text-sm">
-          Every row has the same OKLCH lightness and varies only in hue and chroma. The current CSS
-          adds a black stroke above 75% in light mode and a white stroke below 60% in dark mode.
-          Switch themes from the Storybook toolbar to compare all four themes.
-        </p>
-      </header>
-      <ColorMatrix background="out-of-game" />
-      <ColorMatrix background="in-game" />
-    </main>
-  ),
+  render: (_, context) => {
+    const selectedTheme = context.globals.theme;
+    const theme: ResolvedTheme =
+      selectedTheme === 'dark' || selectedTheme === 'graphite' || selectedTheme === 'dusha'
+        ? selectedTheme
+        : 'light';
+    return (
+      <main className="bg-pane-bg text-text-primary min-h-screen space-y-8 p-8">
+        <header className="max-w-3xl">
+          <h1 className="mb-2 text-xl font-bold">Name stroke contrast matrix</h1>
+          <p className="text-text-secondary text-sm">
+            Every row has the same OKLCH lightness and varies only in hue and chroma. A solid 3px
+            stroke appears below 2.2:1 contrast. Switch themes from the Storybook toolbar to compare
+            all four themes.
+          </p>
+        </header>
+        <ColorMatrix background="out-of-game" theme={theme} />
+        <ColorMatrix background="in-game" theme={theme} />
+      </main>
+    );
+  },
 };

@@ -12,10 +12,11 @@ import { Failed } from '@boluo/ui/Failed';
 import { Loading } from '@boluo/ui/Loading';
 import { PaneHeaderButton } from '@boluo/ui/PaneHeaderButton';
 import { unwrap } from '@boluo/utils/result';
-import { useState, type CSSProperties, type FC } from 'react';
+import { useState, type FC } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { useSWRConfig } from 'swr';
 import { useResolvedTheme } from '../../hooks/useResolvedTheme';
+import { getNameStrokeStyle } from '@boluo/ui/chat/NameBox';
 import { PaneBox } from '../PaneBox';
 import { PaneHeaderBox } from '../PaneHeaderBox';
 import { CharacterEditForm, type CharacterEditDraft } from './CharacterEditForm';
@@ -57,7 +58,8 @@ const PaneCharacter: FC<Props> = ({ spaceId, characterId }) => {
   } = useQueryEntriesByComponent(spaceId, character?.scopeId, COUNTER_COMPONENT_TYPE);
   const { data: currentUser } = useQueryCurrentUser();
   const { mutate } = useSWRConfig();
-  const lightOrDark = classifyLightOrDark(useResolvedTheme());
+  const resolvedTheme = useResolvedTheme();
+  const lightOrDark = classifyLightOrDark(resolvedTheme);
   const [isEditing, setIsEditing] = useState(false);
 
   if (characterLoading || character == null) {
@@ -177,10 +179,12 @@ const PaneCharacter: FC<Props> = ({ spaceId, characterId }) => {
                 style={
                   characterDisplayColor == null
                     ? undefined
-                    : ({
+                    : {
                         color: characterDisplayColor,
-                        '--name-color': characterDisplayColor,
-                      } as CSSProperties)
+                        ...getNameStrokeStyle(characterDisplayColor, resolvedTheme, {
+                          type: 'pane',
+                        }),
+                      }
                 }
               >
                 {character.name}

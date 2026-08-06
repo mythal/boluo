@@ -128,11 +128,23 @@ const withLocale: DecoratorFunction = (Story, context) => {
   );
 };
 
+const withThemeMode: DecoratorFunction = (Story, context) => {
+  const theme = context.globals.theme;
+  const isDarkMode = theme === 'dark' || theme === 'graphite';
+
+  return (
+    <div className={`${isDarkMode ? 'mode-dark' : 'mode-light'} contents`}>
+      <Story />
+    </div>
+  );
+};
+
 export const decorators = [
   withThemeByDataAttribute({
     themes: Object.fromEntries(CONCRETE_THEMES.map((theme) => [theme, theme])),
     defaultTheme: 'light',
   }),
+  withThemeMode,
   withLocale,
 ];
 export default preview;

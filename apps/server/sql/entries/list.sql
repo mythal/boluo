@@ -12,7 +12,9 @@ SELECT
     entry.display_name AS "display_name!: CompactString",
     entry.reference_note_id,
     entry.tags AS "tags!: Vec<CompactString>",
-    entry.sort,
+    entry.pos_p,
+    entry.pos_q,
+    entry.pos AS "pos!",
     entry.metadata_version AS "metadata_version!",
     entry.created,
     entry.modified
@@ -21,4 +23,4 @@ JOIN entry_identifiers primary_identifier
   ON primary_identifier.entry_id = entry.id
  AND primary_identifier.kind = 'Primary'
 WHERE entry.scope_id = $1
-ORDER BY entry.sort, entry.id;
+ORDER BY entry.pos, entry.id;

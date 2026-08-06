@@ -4,8 +4,7 @@ INSERT INTO entry_component_history (
     key,
     component_type,
     action,
-    data,
-    schema_version
+    payload
 )
 VALUES (
     $1,
@@ -13,6 +12,5 @@ VALUES (
     $3,
     $4,
     ($5::text)::entry_component_history_action,
-    $6,
-    $7
+    $6
 );

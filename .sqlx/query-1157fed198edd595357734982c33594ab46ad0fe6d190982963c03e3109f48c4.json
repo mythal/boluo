@@ -1,0 +1,257 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n    entry.id,\n    entry.scope_id,\n    primary_identifier.value::text AS \"key!: CompactString\",\n    ARRAY(\n        SELECT identifier.value::text\n        FROM entry_identifiers identifier\n        WHERE identifier.entry_id = entry.id\n          AND identifier.kind = 'Alias'\n        ORDER BY identifier.value\n    ) AS \"aliases!: Vec<CompactString>\",\n    entry.display_name AS \"display_name!: CompactString\",\n    entry.reference_note_id,\n    entry.tags AS \"tags!: Vec<CompactString>\",\n    entry.pos_p,\n    entry.pos_q,\n    entry.pos AS \"pos!\",\n    entry.metadata_version AS \"metadata_version!\",\n    entry.created,\n    entry.modified AS entry_modified,\n    component.component_type AS \"component_type!: CompactString\",\n    component.payload_type AS \"payload_type!: EntryComponentPayloadType\",\n    json_component.data AS \"json_data?\",\n    json_component.schema_version AS \"json_schema_version?\",\n    asset_component.asset_id AS \"asset_id?\",\n    component.version AS component_version,\n    component.modified AS component_modified\nFROM entries entry\nJOIN entry_identifiers primary_identifier\n  ON primary_identifier.entry_id = entry.id\n AND primary_identifier.kind = 'Primary'\nJOIN entry_components component\n  ON component.entry_id = entry.id\n AND component.component_type = $2\nLEFT JOIN entry_components_json json_component\n  ON json_component.entry_id = component.entry_id\n AND json_component.component_type = component.component_type\n AND json_component.payload_type = component.payload_type\nLEFT JOIN entry_components_asset asset_component\n  ON asset_component.entry_id = component.entry_id\n AND asset_component.component_type = component.component_type\n AND asset_component.payload_type = component.payload_type\nWHERE entry.scope_id = $1\nORDER BY entry.pos, entry.id;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "entries",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "scope_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "entries",
+            "name": "scope_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "key!: CompactString",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "aliases!: Vec<CompactString>",
+        "type_info": "TextArray",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "display_name!: CompactString",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "entries",
+            "name": "display_name"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "reference_note_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "entries",
+            "name": "reference_note_id"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "tags!: Vec<CompactString>",
+        "type_info": "TextArray",
+        "origin": {
+          "Table": {
+            "table": "entries",
+            "name": "tags"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "pos_p",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "entries",
+            "name": "pos_p"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "pos_q",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "entries",
+            "name": "pos_q"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "pos!",
+        "type_info": "Float8",
+        "origin": {
+          "Table": {
+            "table": "entries",
+            "name": "pos"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "metadata_version!",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "entries",
+            "name": "metadata_version"
+          }
+        }
+      },
+      {
+        "ordinal": 11,
+        "name": "created",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "entries",
+            "name": "created"
+          }
+        }
+      },
+      {
+        "ordinal": 12,
+        "name": "entry_modified",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "entries",
+            "name": "modified"
+          }
+        }
+      },
+      {
+        "ordinal": 13,
+        "name": "component_type!: CompactString",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "entry_components",
+            "name": "component_type"
+          }
+        }
+      },
+      {
+        "ordinal": 14,
+        "name": "payload_type!: EntryComponentPayloadType",
+        "type_info": {
+          "Custom": {
+            "name": "entry_component_payload_type",
+            "kind": {
+              "Enum": [
+                "Json",
+                "Asset"
+              ]
+            }
+          }
+        },
+        "origin": {
+          "Table": {
+            "table": "entry_components",
+            "name": "payload_type"
+          }
+        }
+      },
+      {
+        "ordinal": 15,
+        "name": "json_data?",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "entry_components_json",
+            "name": "data"
+          }
+        }
+      },
+      {
+        "ordinal": 16,
+        "name": "json_schema_version?",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "entry_components_json",
+            "name": "schema_version"
+          }
+        }
+      },
+      {
+        "ordinal": 17,
+        "name": "asset_id?",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "entry_components_asset",
+            "name": "asset_id"
+          }
+        }
+      },
+      {
+        "ordinal": 18,
+        "name": "component_version",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "entry_components",
+            "name": "version"
+          }
+        }
+      },
+      {
+        "ordinal": 19,
+        "name": "component_modified",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "entry_components",
+            "name": "modified"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      null,
+      null,
+      false,
+      true,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "1157fed198edd595357734982c33594ab46ad0fe6d190982963c03e3109f48c4"
+}

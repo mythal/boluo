@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT\n    history.entry_effect_id,\n    effect.operator_id,\n    effect.scope_id,\n    history.entry_id,\n    history.key,\n    history.component_type,\n    history.action AS \"action!: EntryComponentHistoryAction\",\n    history.data,\n    history.schema_version,\n    effect.created\nFROM entry_component_history history\nJOIN entry_effects effect ON effect.id = history.entry_effect_id\nWHERE history.entry_effect_id = ANY($1)\nORDER BY\n    effect.created DESC,\n    history.entry_effect_id DESC,\n    history.entry_id,\n    history.component_type;\n",
+  "query": "SELECT\n    history.entry_effect_id,\n    effect.operator_id,\n    effect.scope_id,\n    history.entry_id,\n    history.key,\n    history.component_type,\n    history.action AS \"action!: EntryComponentHistoryAction\",\n    history.payload,\n    effect.created\nFROM entry_component_history history\nJOIN entry_effects effect ON effect.id = history.entry_effect_id\nWHERE effect.scope_id = $1\n  AND history.key = $2\nORDER BY\n    effect.created DESC,\n    history.entry_effect_id DESC,\n    history.entry_id,\n    history.component_type;\n",
   "describe": {
     "columns": [
       {
@@ -92,28 +92,17 @@
       },
       {
         "ordinal": 7,
-        "name": "data",
+        "name": "payload",
         "type_info": "Jsonb",
         "origin": {
           "Table": {
             "table": "entry_component_history",
-            "name": "data"
+            "name": "payload"
           }
         }
       },
       {
         "ordinal": 8,
-        "name": "schema_version",
-        "type_info": "Int4",
-        "origin": {
-          "Table": {
-            "table": "entry_component_history",
-            "name": "schema_version"
-          }
-        }
-      },
-      {
-        "ordinal": 9,
         "name": "created",
         "type_info": "Timestamptz",
         "origin": {
@@ -126,7 +115,8 @@
     ],
     "parameters": {
       "Left": [
-        "UuidArray"
+        "Uuid",
+        "Text"
       ]
     },
     "nullable": [
@@ -138,9 +128,8 @@
       false,
       false,
       true,
-      true,
       false
     ]
   },
-  "hash": "87596d8a9fab9f6b605b7014245764fec477f5ab65ff8f456379625d3d522781"
+  "hash": "890d82cfbc4a378a9a0b1b6779a808123cf62240f1ddc7a2e732907289381edb"
 }

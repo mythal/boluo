@@ -123,6 +123,13 @@ pub static EMAIL: Validator<str> = Validator(&[
 pub static HEX_COLOR: Validator<str> =
     Validator(&[("Invalid color", &is_match!(r"#[0-9abcdef]{6}"))]);
 
+pub static GAME_COLOR: Validator<str> = Validator(&[(
+    "Invalid color",
+    &is_match!(
+        r"^(?:#[0-9a-fA-F]{6}|palette:(?:basic|blue|red|green|yellow|grey)|seed:[^;]+)(?:;(?:#[0-9a-fA-F]{6}|palette:(?:basic|blue|red|green|yellow|grey)|seed:[^;]+))?$"
+    ),
+)]);
+
 pub static BIO: Validator<str> = Validator(&[("Bio shall not be more than 512.", &max!(512))]);
 
 pub static TOPIC: Validator<str> = Validator(&[("Topic shall not be more than 128.", &max!(128))]);
@@ -148,6 +155,12 @@ fn validator_test() {
 
     assert!(EMAIL.run("").is_err());
     assert!(EMAIL.run("example@example.com").is_ok());
+
+    assert!(GAME_COLOR.run("#AABBCC").is_ok());
+    assert!(GAME_COLOR.run("palette:blue").is_ok());
+    assert!(GAME_COLOR.run("seed:0.123").is_ok());
+    assert!(GAME_COLOR.run("palette:blue;#AABBCC").is_ok());
+    assert!(GAME_COLOR.run("palette:unknown").is_err());
 
     assert!(IDENT.run("HP:满").is_ok());
     assert!(IDENT.run("H").is_ok());

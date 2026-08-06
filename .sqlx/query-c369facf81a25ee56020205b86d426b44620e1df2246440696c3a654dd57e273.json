@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM entry_components\nWHERE entry_id = $1\n  AND component_type = $2;\n",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "c369facf81a25ee56020205b86d426b44620e1df2246440696c3a654dd57e273"
+}

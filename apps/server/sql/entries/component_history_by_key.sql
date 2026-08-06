@@ -6,8 +6,7 @@ SELECT
     history.key,
     history.component_type,
     history.action AS "action!: EntryComponentHistoryAction",
-    history.data,
-    history.schema_version,
+    history.payload,
     effect.created
 FROM entry_component_history history
 JOIN entry_effects effect ON effect.id = history.entry_effect_id

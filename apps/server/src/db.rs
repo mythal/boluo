@@ -102,8 +102,8 @@ pub async fn check(pool: &sqlx::Pool<sqlx::Postgres>) {
     use crate::channels::{Channel, ChannelMember};
     use crate::characters::Character;
     use crate::entries::models::{
-        Entry, EntryComponentHistory, EntryComponentHistoryAction, EntryEffect, EntryHistory,
-        EntryHistoryAction, components_as_set_changes,
+        Entry, EntryComponentHistory, EntryComponentHistoryAction, EntryComponentPayloadType,
+        EntryEffect, EntryHistory, EntryHistoryAction, components_as_set_history_changes,
     };
     use crate::media::models::Media;
     use crate::messages::Message;
@@ -264,10 +264,25 @@ pub async fn check(pool: &sqlx::Pool<sqlx::Postgres>) {
         AccessPolicy::Secret,
         None,
         vec!["player".to_string()],
-        vec![asset.id],
     )
     .await
     .expect("Cannot create character");
+    let _portrait = crate::entries::models::Entry::create(
+        &mut trans,
+        character.scope_id,
+        "homura_portrait".to_string(),
+        Vec::new(),
+        "Homura portrait".to_string(),
+        None,
+        std::collections::BTreeMap::from([(
+            crate::entries::models::CORE_PORTRAIT_COMPONENT_TYPE.to_string(),
+            crate::entries::models::EntryComponentPayloadInput::Asset { asset_id: asset.id },
+        )]),
+        Vec::new(),
+        None,
+    )
+    .await
+    .expect("Cannot create Character portrait");
 
     let private_scope_id = uuid::Uuid::now_v7();
     sqlx::query_file!(
@@ -324,9 +339,12 @@ pub async fn check(pool: &sqlx::Pool<sqlx::Postgres>) {
         vec!["spell".to_string()],
         "Magic".to_string(),
         Some(note.id),
-        BTreeMap::from([("core/counter".to_string(), json!({"value": 1}))]),
+        BTreeMap::from([(
+            "core/counter".to_string(),
+            crate::entries::models::EntryComponentPayloadInput::json(json!({"value": 1})),
+        )]),
         vec!["rules".to_string()],
-        0,
+        None,
     )
     .await
     .expect("Cannot create entry");
@@ -347,10 +365,36 @@ pub async fn check(pool: &sqlx::Pool<sqlx::Postgres>) {
         effect.id,
         entry.id,
         &entry.key,
-        &components_as_set_changes(&entry.components),
+        &components_as_set_history_changes(&entry.components),
     )
     .await
     .expect("Cannot create entry component history");
+    sqlx::query(
+        r#"
+        WITH component AS (
+            INSERT INTO entry_components (entry_id, component_type, payload_type)
+            VALUES ($1, 'example/illustration', 'Asset')
+            RETURNING entry_id, component_type, payload_type
+        )
+        INSERT INTO entry_components_asset (
+            entry_id,
+            component_type,
+            payload_type,
+            scope_id,
+            space_id,
+            asset_id
+        )
+        SELECT entry_id, component_type, payload_type, $2, $3, $4
+        FROM component
+        "#,
+    )
+    .bind(entry.id)
+    .bind(entry.scope_id)
+    .bind(space.id)
+    .bind(asset.id)
+    .execute(&mut *trans)
+    .await
+    .expect("Cannot create Asset Entry Component");
     let attached_message =
         crate::messages::Message::attach_entry_effect(&mut trans, message.id, user.id, effect.id)
             .await
@@ -403,13 +447,6 @@ pub async fn check(pool: &sqlx::Pool<sqlx::Postgres>) {
         created: chrono::DateTime<chrono::Utc>,
     })
     .expect("Cannot decode assets composite row");
-    check_composite_row!(&mut *trans, "character_assets", {
-        space_id: uuid::Uuid,
-        character_id: uuid::Uuid,
-        asset_id: uuid::Uuid,
-        sort: i32,
-    })
-    .expect("Cannot decode character_assets composite row");
     check_composite_row!(&mut *trans, "notes", {
         id: uuid::Uuid,
         space_id: uuid::Uuid,
@@ -462,10 +499,12 @@ pub async fn check(pool: &sqlx::Pool<sqlx::Postgres>) {
         display_name: String,
         reference_note_id: Option<uuid::Uuid>,
         tags: Vec<String>,
-        sort: i32,
         metadata_version: uuid::Uuid,
         created: chrono::DateTime<chrono::Utc>,
         modified: chrono::DateTime<chrono::Utc>,
+        pos_p: i32,
+        pos_q: i32,
+        pos: f64,
     })
     .expect("Cannot decode entries composite row");
     check_composite_row!(&mut *trans, "entry_effects", {
@@ -494,20 +533,35 @@ pub async fn check(pool: &sqlx::Pool<sqlx::Postgres>) {
     check_composite_row!(&mut *trans, "entry_components", {
         entry_id: uuid::Uuid,
         component_type: String,
-        data: serde_json::Value,
-        schema_version: i32,
+        payload_type: EntryComponentPayloadType,
         version: uuid::Uuid,
         modified: chrono::DateTime<chrono::Utc>,
     })
     .expect("Cannot decode entry_components composite row");
+    check_composite_row!(&mut *trans, "entry_components_json", {
+        entry_id: uuid::Uuid,
+        component_type: String,
+        payload_type: EntryComponentPayloadType,
+        data: serde_json::Value,
+        schema_version: i32,
+    })
+    .expect("Cannot decode entry_components_json composite row");
+    check_composite_row!(&mut *trans, "entry_components_asset", {
+        entry_id: uuid::Uuid,
+        component_type: String,
+        payload_type: EntryComponentPayloadType,
+        scope_id: uuid::Uuid,
+        space_id: uuid::Uuid,
+        asset_id: uuid::Uuid,
+    })
+    .expect("Cannot decode entry_components_asset composite row");
     check_composite_row!(&mut *trans, "entry_component_history", {
         entry_effect_id: uuid::Uuid,
         entry_id: uuid::Uuid,
         key: String,
         component_type: String,
         action: EntryComponentHistoryAction,
-        data: Option<serde_json::Value>,
-        schema_version: Option<i32>,
+        payload: Option<serde_json::Value>,
     })
     .expect("Cannot decode entry_component_history composite row");
 

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT\n    entry.id,\n    entry.scope_id,\n    primary_identifier.value::text AS \"key!: CompactString\",\n    ARRAY(\n        SELECT identifier.value::text\n        FROM entry_identifiers identifier\n        WHERE identifier.entry_id = entry.id\n          AND identifier.kind = 'Alias'\n        ORDER BY identifier.value\n    ) AS \"aliases!: Vec<CompactString>\",\n    entry.display_name AS \"display_name!: CompactString\",\n    entry.reference_note_id,\n    entry.tags AS \"tags!: Vec<CompactString>\",\n    entry.sort,\n    entry.metadata_version AS \"metadata_version!\",\n    entry.created,\n    entry.modified\nFROM entries entry\nJOIN entry_identifiers primary_identifier\n  ON primary_identifier.entry_id = entry.id\n AND primary_identifier.kind = 'Primary'\nWHERE entry.scope_id = $1\nORDER BY entry.sort, entry.id;\n",
+  "query": "SELECT\n    entry.id,\n    entry.scope_id,\n    primary_identifier.value::text AS \"key!: CompactString\",\n    ARRAY(\n        SELECT identifier.value::text\n        FROM entry_identifiers identifier\n        WHERE identifier.entry_id = entry.id\n          AND identifier.kind = 'Alias'\n        ORDER BY identifier.value\n    ) AS \"aliases!: Vec<CompactString>\",\n    entry.display_name AS \"display_name!: CompactString\",\n    entry.reference_note_id,\n    entry.tags AS \"tags!: Vec<CompactString>\",\n    entry.pos_p,\n    entry.pos_q,\n    entry.pos AS \"pos!\",\n    entry.metadata_version AS \"metadata_version!\",\n    entry.created,\n    entry.modified\nFROM entries entry\nJOIN scopes scope ON scope.id = entry.scope_id\nJOIN entry_identifiers primary_identifier\n  ON primary_identifier.entry_id = entry.id\n AND primary_identifier.kind = 'Primary'\nWHERE scope.space_id = $1\nORDER BY entry.scope_id, entry.pos, entry.id;\n",
   "describe": {
     "columns": [
       {
@@ -72,17 +72,39 @@
       },
       {
         "ordinal": 7,
-        "name": "sort",
+        "name": "pos_p",
         "type_info": "Int4",
         "origin": {
           "Table": {
             "table": "entries",
-            "name": "sort"
+            "name": "pos_p"
           }
         }
       },
       {
         "ordinal": 8,
+        "name": "pos_q",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "entries",
+            "name": "pos_q"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "pos!",
+        "type_info": "Float8",
+        "origin": {
+          "Table": {
+            "table": "entries",
+            "name": "pos"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
         "name": "metadata_version!",
         "type_info": "Uuid",
         "origin": {
@@ -93,7 +115,7 @@
         }
       },
       {
-        "ordinal": 9,
+        "ordinal": 11,
         "name": "created",
         "type_info": "Timestamptz",
         "origin": {
@@ -104,7 +126,7 @@
         }
       },
       {
-        "ordinal": 10,
+        "ordinal": 12,
         "name": "modified",
         "type_info": "Timestamptz",
         "origin": {
@@ -130,9 +152,11 @@
       false,
       false,
       false,
+      true,
+      false,
       false,
       false
     ]
   },
-  "hash": "11dd714220b4c45be1ce7fac2046cb8c4c75818b57056c959ac4625fd1756c11"
+  "hash": "1683d46720d484fcbf4c11d45a2c05b3cf069543e5a2a951b8779586cacb93b0"
 }

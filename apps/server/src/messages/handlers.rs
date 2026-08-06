@@ -53,7 +53,7 @@ async fn send(
         space_id,
         mut name,
         character_id,
-        portrait_id,
+        mut portrait_id,
         text,
         entities,
         in_game,
@@ -61,7 +61,7 @@ async fn send(
         media_id,
         whisper_to_users,
         pos: request_pos,
-        color,
+        mut color,
     } = *new_message;
     let resolved = ctx
         .space_store
@@ -107,6 +107,15 @@ async fn send(
         )
         .await?;
         name = character.name.to_string();
+        color = character.color.to_string();
+        if portrait_id.is_none() {
+            portrait_id = crate::entries::models::Entry::first_asset_by_component(
+                &ctx.db,
+                character.scope_id,
+                crate::entries::models::CORE_PORTRAIT_COMPONENT_TYPE,
+            )
+            .await?;
+        }
     }
     if let Some(portrait_id) = portrait_id {
         let portrait =

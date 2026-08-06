@@ -107,6 +107,16 @@ CREATE TYPE public.entry_component_history_action AS ENUM (
 
 
 --
+-- Name: entry_component_payload_type; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.entry_component_payload_type AS ENUM (
+    'Json',
+    'Asset'
+);
+
+
+--
 -- Name: entry_history_action; Type: TYPE; Schema: public; Owner: -
 --
 
@@ -261,19 +271,6 @@ CREATE TABLE public.channels (
 
 
 --
--- Name: character_assets; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.character_assets (
-    space_id uuid NOT NULL,
-    character_id uuid NOT NULL,
-    asset_id uuid NOT NULL,
-    sort integer NOT NULL,
-    CONSTRAINT character_assets_sort_check CHECK ((sort >= 0))
-);
-
-
---
 -- Name: character_identifiers; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -327,10 +324,13 @@ CREATE TABLE public.entries (
     display_name text NOT NULL,
     reference_note_id uuid,
     tags text[] DEFAULT '{}'::text[] NOT NULL,
-    sort integer DEFAULT 0 NOT NULL,
     metadata_version uuid DEFAULT uuidv7() NOT NULL,
     created timestamp with time zone DEFAULT now() NOT NULL,
-    modified timestamp with time zone DEFAULT now() NOT NULL
+    modified timestamp with time zone DEFAULT now() NOT NULL,
+    pos_p integer NOT NULL,
+    pos_q integer NOT NULL,
+    pos double precision GENERATED ALWAYS AS (((pos_p)::double precision / (pos_q)::double precision)) STORED,
+    CONSTRAINT entry_position_valid CHECK (((pos_p >= 0) AND (pos_q > 0)))
 );
 
 
@@ -344,9 +344,8 @@ CREATE TABLE public.entry_component_history (
     key text NOT NULL,
     component_type text NOT NULL,
     action public.entry_component_history_action NOT NULL,
-    data jsonb,
-    schema_version integer,
-    CONSTRAINT entry_component_history_state_valid CHECK ((((action = 'Set'::public.entry_component_history_action) AND (data IS NOT NULL) AND (schema_version IS NOT NULL) AND (schema_version > 0)) OR ((action = 'Remove'::public.entry_component_history_action) AND (data IS NULL) AND (schema_version IS NULL)))),
+    payload jsonb,
+    CONSTRAINT entry_component_history_state_valid CHECK ((((action = 'Set'::public.entry_component_history_action) AND (payload IS NOT NULL)) OR ((action = 'Remove'::public.entry_component_history_action) AND (payload IS NULL)))),
     CONSTRAINT entry_component_history_type_valid CHECK (((length(component_type) <= 200) AND (component_type ~ '^[a-z0-9]+([._-][a-z0-9]+)*(/[a-z0-9]+([._-][a-z0-9]+)*)+$'::text)))
 );
 
@@ -358,12 +357,40 @@ CREATE TABLE public.entry_component_history (
 CREATE TABLE public.entry_components (
     entry_id uuid NOT NULL,
     component_type text NOT NULL,
-    data jsonb NOT NULL,
-    schema_version integer DEFAULT 1 NOT NULL,
+    payload_type public.entry_component_payload_type NOT NULL,
     version uuid DEFAULT uuidv7() NOT NULL,
     modified timestamp with time zone DEFAULT now() NOT NULL,
-    CONSTRAINT entry_component_type_valid CHECK (((length(component_type) <= 200) AND (component_type ~ '^[a-z0-9]+([._-][a-z0-9]+)*(/[a-z0-9]+([._-][a-z0-9]+)*)+$'::text))),
-    CONSTRAINT entry_components_schema_version_check CHECK ((schema_version > 0))
+    CONSTRAINT entry_component_type_valid CHECK (((length(component_type) <= 200) AND (component_type ~ '^[a-z0-9]+([._-][a-z0-9]+)*(/[a-z0-9]+([._-][a-z0-9]+)*)+$'::text)))
+);
+
+
+--
+-- Name: entry_components_asset; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.entry_components_asset (
+    entry_id uuid NOT NULL,
+    component_type text NOT NULL,
+    payload_type public.entry_component_payload_type DEFAULT 'Asset'::public.entry_component_payload_type NOT NULL,
+    scope_id uuid NOT NULL,
+    space_id uuid NOT NULL,
+    asset_id uuid NOT NULL,
+    CONSTRAINT entry_components_asset_payload_type_valid CHECK ((payload_type = 'Asset'::public.entry_component_payload_type))
+);
+
+
+--
+-- Name: entry_components_json; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.entry_components_json (
+    entry_id uuid NOT NULL,
+    component_type text NOT NULL,
+    payload_type public.entry_component_payload_type DEFAULT 'Json'::public.entry_component_payload_type NOT NULL,
+    data jsonb NOT NULL,
+    schema_version integer DEFAULT 1 NOT NULL,
+    CONSTRAINT entry_components_json_payload_type_valid CHECK ((payload_type = 'Json'::public.entry_component_payload_type)),
+    CONSTRAINT entry_components_json_schema_version_valid CHECK ((schema_version > 0))
 );
 
 
@@ -692,22 +719,6 @@ ALTER TABLE ONLY public.channels
 
 
 --
--- Name: character_assets character_asset_sort_unique; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.character_assets
-    ADD CONSTRAINT character_asset_sort_unique UNIQUE (character_id, sort);
-
-
---
--- Name: character_assets character_assets_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.character_assets
-    ADD CONSTRAINT character_assets_pkey PRIMARY KEY (character_id, asset_id);
-
-
---
 -- Name: character_identifiers character_identifier_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -772,6 +783,30 @@ ALTER TABLE ONLY public.entry_component_history
 
 
 --
+-- Name: entry_components entry_component_payload_type_identity; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.entry_components
+    ADD CONSTRAINT entry_component_payload_type_identity UNIQUE (entry_id, component_type, payload_type);
+
+
+--
+-- Name: entry_components_asset entry_components_asset_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.entry_components_asset
+    ADD CONSTRAINT entry_components_asset_pkey PRIMARY KEY (entry_id, component_type);
+
+
+--
+-- Name: entry_components_json entry_components_json_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.entry_components_json
+    ADD CONSTRAINT entry_components_json_pkey PRIMARY KEY (entry_id, component_type);
+
+
+--
 -- Name: entry_components entry_components_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -809,6 +844,14 @@ ALTER TABLE ONLY public.entry_identifiers
 
 ALTER TABLE ONLY public.entries
     ADD CONSTRAINT entry_scope_id_unique UNIQUE (scope_id, id);
+
+
+--
+-- Name: entries entry_scope_position_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.entries
+    ADD CONSTRAINT entry_scope_position_unique UNIQUE (scope_id, pos) DEFERRABLE;
 
 
 --
@@ -1009,13 +1052,6 @@ CREATE INDEX channel_members_channel_id_is_joined_index ON public.channel_member
 
 
 --
--- Name: character_asset_asset_index; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX character_asset_asset_index ON public.character_assets USING btree (asset_id, character_id);
-
-
---
 -- Name: character_identifier_character_index; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1048,6 +1084,20 @@ CREATE INDEX entry_component_history_entry_effect_index ON public.entry_componen
 --
 
 CREATE INDEX entry_component_history_key_effect_index ON public.entry_component_history USING btree (key, entry_effect_id, entry_id, component_type);
+
+
+--
+-- Name: entry_components_asset_asset_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX entry_components_asset_asset_index ON public.entry_components_asset USING btree (space_id, asset_id);
+
+
+--
+-- Name: entry_components_asset_scope_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX entry_components_asset_scope_index ON public.entry_components_asset USING btree (space_id, scope_id, entry_id);
 
 
 --
@@ -1086,10 +1136,10 @@ CREATE INDEX entry_reference_note_index ON public.entries USING btree (reference
 
 
 --
--- Name: entry_scope_sort_index; Type: INDEX; Schema: public; Owner: -
+-- Name: entry_scope_position_index; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX entry_scope_sort_index ON public.entries USING btree (scope_id, sort, id);
+CREATE INDEX entry_scope_position_index ON public.entries USING btree (scope_id, pos, id);
 
 
 --
@@ -1212,22 +1262,6 @@ ALTER TABLE ONLY public.channels
 
 
 --
--- Name: character_assets character_asset_asset; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.character_assets
-    ADD CONSTRAINT character_asset_asset FOREIGN KEY (space_id, asset_id) REFERENCES public.assets(space_id, id) ON DELETE CASCADE;
-
-
---
--- Name: character_assets character_asset_character; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.character_assets
-    ADD CONSTRAINT character_asset_character FOREIGN KEY (space_id, character_id) REFERENCES public.characters(space_id, id) ON DELETE CASCADE;
-
-
---
 -- Name: character_identifiers character_identifier_character; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1281,6 +1315,46 @@ ALTER TABLE ONLY public.entry_components
 
 ALTER TABLE ONLY public.entry_component_history
     ADD CONSTRAINT entry_component_history_effect FOREIGN KEY (entry_effect_id) REFERENCES public.entry_effects(id) ON DELETE CASCADE;
+
+
+--
+-- Name: entry_components_asset entry_components_asset_asset; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.entry_components_asset
+    ADD CONSTRAINT entry_components_asset_asset FOREIGN KEY (space_id, asset_id) REFERENCES public.assets(space_id, id) ON DELETE RESTRICT;
+
+
+--
+-- Name: entry_components_asset entry_components_asset_entry; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.entry_components_asset
+    ADD CONSTRAINT entry_components_asset_entry FOREIGN KEY (scope_id, entry_id) REFERENCES public.entries(scope_id, id) ON DELETE CASCADE;
+
+
+--
+-- Name: entry_components_asset entry_components_asset_parent; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.entry_components_asset
+    ADD CONSTRAINT entry_components_asset_parent FOREIGN KEY (entry_id, component_type, payload_type) REFERENCES public.entry_components(entry_id, component_type, payload_type) ON DELETE CASCADE;
+
+
+--
+-- Name: entry_components_asset entry_components_asset_scope; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.entry_components_asset
+    ADD CONSTRAINT entry_components_asset_scope FOREIGN KEY (space_id, scope_id) REFERENCES public.scopes(space_id, id) ON DELETE CASCADE;
+
+
+--
+-- Name: entry_components_json entry_components_json_parent; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.entry_components_json
+    ADD CONSTRAINT entry_components_json_parent FOREIGN KEY (entry_id, component_type, payload_type) REFERENCES public.entry_components(entry_id, component_type, payload_type) ON DELETE CASCADE;
 
 
 --

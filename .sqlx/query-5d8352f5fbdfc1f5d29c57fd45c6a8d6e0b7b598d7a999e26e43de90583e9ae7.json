@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT\n    history.entry_effect_id,\n    effect.operator_id,\n    effect.scope_id,\n    history.entry_id,\n    history.key,\n    history.component_type,\n    history.action AS \"action!: EntryComponentHistoryAction\",\n    history.data,\n    history.schema_version,\n    effect.created\nFROM entry_component_history history\nJOIN entry_effects effect ON effect.id = history.entry_effect_id\nWHERE effect.scope_id = $1\n  AND history.entry_id = $2\nORDER BY effect.created DESC, history.entry_effect_id DESC, history.component_type;\n",
+  "query": "SELECT\n    history.entry_effect_id,\n    effect.operator_id,\n    effect.scope_id,\n    history.entry_id,\n    history.key,\n    history.component_type,\n    history.action AS \"action!: EntryComponentHistoryAction\",\n    history.payload,\n    effect.created\nFROM entry_component_history history\nJOIN entry_effects effect ON effect.id = history.entry_effect_id\nWHERE effect.scope_id = $1\n  AND history.entry_id = $2\nORDER BY effect.created DESC, history.entry_effect_id DESC, history.component_type;\n",
   "describe": {
     "columns": [
       {
@@ -92,28 +92,17 @@
       },
       {
         "ordinal": 7,
-        "name": "data",
+        "name": "payload",
         "type_info": "Jsonb",
         "origin": {
           "Table": {
             "table": "entry_component_history",
-            "name": "data"
+            "name": "payload"
           }
         }
       },
       {
         "ordinal": 8,
-        "name": "schema_version",
-        "type_info": "Int4",
-        "origin": {
-          "Table": {
-            "table": "entry_component_history",
-            "name": "schema_version"
-          }
-        }
-      },
-      {
-        "ordinal": 9,
         "name": "created",
         "type_info": "Timestamptz",
         "origin": {
@@ -139,9 +128,8 @@
       false,
       false,
       true,
-      true,
       false
     ]
   },
-  "hash": "37c70ee93360b52cde069e6e7ffd6f38e662c6ffa7b7fb8c1e1934083d7abf25"
+  "hash": "5d8352f5fbdfc1f5d29c57fd45c6a8d6e0b7b598d7a999e26e43de90583e9ae7"
 }

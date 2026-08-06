@@ -131,7 +131,6 @@ export type Character = {
   scopeVersion: string;
   archivedAt: string | null;
   tags: string[];
-  assetIds: string[];
   created: string;
   modified: string;
   version: string;
@@ -223,7 +222,6 @@ export type CreateCharacter = {
   accessPolicy: AccessPolicy;
   accessChannelId: string | null;
   tags?: string[];
-  assetIds?: string[];
 };
 
 export type CreateEntry = {
@@ -233,9 +231,9 @@ export type CreateEntry = {
   aliases?: string[];
   displayName: string;
   referenceNoteId: string | null;
-  components?: { [key in string]: Value };
+  components?: { [key in string]: EntryComponentPayloadInput };
   tags?: string[];
-  sort: number;
+  beforeEntryId?: string | null;
   messageId: string | null;
 };
 
@@ -330,7 +328,6 @@ export type EditCharacter = {
   accessPolicy: AccessPolicy;
   accessChannelId: string | null;
   tags: string[];
-  assetIds: string[];
 };
 
 export type EditEntry = {
@@ -344,7 +341,6 @@ export type EditEntry = {
   displayName: string;
   referenceNoteId: string | null;
   tags: string[];
-  sort: number;
 };
 
 export type EditEntryComponents = {
@@ -352,6 +348,9 @@ export type EditEntryComponents = {
   scopeId: string;
   entryId: string;
   messageId: string | null;
+  skipRecordHistory?: boolean;
+  /**  Keep the Entry when the mutations leave it with no Components. */
+  keepEmptyEntry?: boolean;
   changes: EntryComponentMutation[];
 };
 
@@ -438,12 +437,9 @@ export type Entry = {
   components: { [key in string]: EntryComponent };
 } & EntryMetadata;
 
-export type EntryComponent = {
-  data: Value;
-  schemaVersion: number;
-  version: string;
-  modified: string;
-};
+export type EntryComponent =
+  | { payloadType: 'JSON'; data: Value; schemaVersion: number; version: string; modified: string }
+  | { payloadType: 'ASSET'; assetId: string; version: string; modified: string };
 
 export type EntryComponentHistory = {
   entryEffectId: string;
@@ -453,8 +449,7 @@ export type EntryComponentHistory = {
   key: string;
   componentType: string;
   action: EntryComponentHistoryAction;
-  data: Value | null;
-  schemaVersion: number | null;
+  payload: Value | null;
   created: string;
 };
 
@@ -467,15 +462,23 @@ export type EntryComponentHistoryQuery = {
   key?: string | null;
 };
 
+export type EntryComponentMatch = {
+  componentType: string;
+  component: EntryComponent;
+} & EntryMetadata;
+
 export type EntryComponentMutation =
-  | {
+  | ({
       action: 'SET';
+    } & {
       componentType: string;
       expectedVersion: string | null;
-      schemaVersion?: number | null;
-      data: Value;
-    }
-  | { action: 'REMOVE'; componentType: string; expectedVersion: string };
+    } & EntryComponentPayloadInput)
+  | { action: 'REMOVE'; componentType: string; expectedVersion: string | null };
+
+export type EntryComponentPayloadInput =
+  | { payloadType: 'JSON'; schemaVersion?: number | null; data: Value }
+  | { payloadType: 'ASSET'; assetId: string };
 
 export type EntryEffect = {
   id: string;
@@ -517,7 +520,9 @@ export type EntryMetadata = {
   displayName: string;
   referenceNoteId: string | null;
   tags: string[];
-  sort: number;
+  posP: number;
+  posQ: number;
+  pos: number;
   metadataVersion: string;
   created: string;
   modified: string;
@@ -661,11 +666,19 @@ export type ListAssets = {
 export type ListCharacters = {
   spaceId: string;
   includeArchived?: boolean;
+  /**  Restrict the result to characters the current user can use as a speaker. */
+  portrayableOnly?: boolean;
 };
 
 export type ListEntries = {
   spaceId: string;
   scopeId: string;
+};
+
+export type ListEntriesByComponent = {
+  spaceId: string;
+  scopeId: string;
+  componentType: string;
 };
 
 export type ListNotes = {
@@ -762,6 +775,15 @@ export type MessageIdQuery = {
 };
 
 export type MessageMoveToMode = 'TOP' | 'BOTTOM';
+
+export type MoveEntry = {
+  spaceId: string;
+  scopeId: string;
+  entryId: string;
+  expectedMetadataVersion: string;
+  /**  Omit or set to `null` to move the Entry to the end. */
+  beforeEntryId?: string | null;
+};
 
 export type MoveMessageBetween = {
   messageId: string;

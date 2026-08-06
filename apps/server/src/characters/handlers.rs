@@ -104,6 +104,7 @@ async fn by_space(
     let ListCharacters {
         space_id,
         include_archived,
+        portrayable_only,
     } = parse_query(req.uri())?;
     let mut characters = if let Some(snapshot) =
         ctx.space_store.loaded_snapshot_maybe_stale(space_id)
@@ -128,9 +129,21 @@ async fn by_space(
     }
     let mut visible = Vec::with_capacity(characters.len());
     for character in characters {
-        if can_view_character_in_space(ctx, &character, user_id).await? {
-            visible.push(character);
+        if !can_view_character_in_space(ctx, &character, user_id).await? {
+            continue;
         }
+        if portrayable_only {
+            if character.archived_at.is_some() {
+                continue;
+            }
+            let Some(user_id) = user_id else {
+                continue;
+            };
+            if !can_edit_character_in_space(ctx, &character, user_id).await? {
+                continue;
+            }
+        }
+        visible.push(character);
     }
     Ok(visible)
 }
@@ -175,7 +188,6 @@ async fn create(
         access_policy,
         access_channel_id,
         tags,
-        asset_ids,
     } = parse_body(req).await?;
     let mutation = ctx.space_store.acquire_mutation(space_id).await?;
     let mut trans = ctx.db.begin().await?;
@@ -208,7 +220,6 @@ async fn create(
         access_policy,
         access_channel_id,
         tags,
-        asset_ids,
     )
     .await?;
     let scope = Scope::get_by_id(&mut *trans, character.scope_id)
@@ -240,7 +251,6 @@ async fn edit(
         access_policy,
         access_channel_id,
         tags,
-        asset_ids,
     } = parse_body(req).await?;
     let mutation = ctx.space_store.acquire_mutation(space_id).await?;
     let mut trans = ctx.db.begin().await?;
@@ -281,7 +291,6 @@ async fn edit(
         access_policy,
         access_channel_id,
         tags,
-        asset_ids,
     )
     .await?
     .ok_or_else(|| AppError::Conflict("Character version is stale".to_string()))?;
@@ -442,7 +451,6 @@ mod tests {
             "#123456",
             AccessPolicy::Personal,
             None,
-            Vec::new(),
             Vec::new(),
         )
         .await

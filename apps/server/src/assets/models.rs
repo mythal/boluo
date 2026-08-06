@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use unicode_normalization::UnicodeNormalization;
 use uuid::Uuid;
 
-use crate::error::{ModelError, ValidationFailed};
+use crate::error::ModelError;
 use crate::spaces::SpaceAccess;
 
 #[derive(
@@ -136,239 +136,37 @@ impl Asset {
     pub async fn delete(
         db: &mut sqlx::Transaction<'_, sqlx::Postgres>,
         asset_id: Uuid,
-    ) -> Result<bool, sqlx::Error> {
-        Ok(sqlx::query!("DELETE FROM assets WHERE id = $1", asset_id)
+    ) -> Result<bool, ModelError> {
+        let Some(space_id) =
+            sqlx::query_scalar::<_, Uuid>("SELECT space_id FROM assets WHERE id = $1 FOR UPDATE")
+                .bind(asset_id)
+                .fetch_optional(&mut **db)
+                .await?
+        else {
+            return Ok(false);
+        };
+        let is_entry_component = sqlx::query_scalar::<_, bool>(
+            "SELECT EXISTS(SELECT 1 FROM entry_components_asset WHERE space_id = $1 AND asset_id = $2)",
+        )
+        .bind(space_id)
+        .bind(asset_id)
+        .fetch_one(&mut **db)
+        .await?;
+        if is_entry_component {
+            return Err(ModelError::Conflict(
+                "Asset is used by an Entry Component".to_string(),
+            ));
+        }
+        sqlx::query!("DELETE FROM assets WHERE id = $1", asset_id)
             .execute(&mut **db)
-            .await?
-            .rows_affected()
-            == 1)
+            .await?;
+        Ok(true)
     }
-}
-
-pub(crate) fn validate_asset_ids(asset_ids: &[Uuid]) -> Result<(), ValidationFailed> {
-    const MAX_ASSETS_PER_CHARACTER: usize = 64;
-    if asset_ids.len() > MAX_ASSETS_PER_CHARACTER {
-        return Err(ValidationFailed("Too many Character Assets (max 64)."));
-    }
-    let unique = asset_ids.iter().collect::<std::collections::HashSet<_>>();
-    if unique.len() != asset_ids.len() {
-        return Err(ValidationFailed(
-            "Character Assets must not contain duplicates.",
-        ));
-    }
-    Ok(())
-}
-
-pub(crate) async fn replace_character_assets(
-    db: &mut sqlx::Transaction<'_, sqlx::Postgres>,
-    space_id: Uuid,
-    character_id: Uuid,
-    asset_ids: &[Uuid],
-) -> Result<(), ModelError> {
-    validate_asset_ids(asset_ids)?;
-    sqlx::query!(
-        "DELETE FROM character_assets WHERE character_id = $1",
-        character_id
-    )
-    .execute(&mut **db)
-    .await?;
-    if asset_ids.is_empty() {
-        return Ok(());
-    }
-    let inserted = sqlx::query_file!(
-        "sql/assets/attach_to_character.sql",
-        space_id,
-        character_id,
-        asset_ids,
-    )
-    .execute(&mut **db)
-    .await?
-    .rows_affected();
-    if inserted != asset_ids.len() as u64 {
-        return Err(
-            ValidationFailed("Every Character Asset must belong to the same Space.").into(),
-        );
-    }
-    Ok(())
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::characters::Character;
-    use crate::media::models::Media;
-    use crate::spaces::{AccessPolicy, Space};
-    use crate::users::User;
-
-    async fn create_user(pool: &sqlx::PgPool) -> User {
-        let suffix = Uuid::new_v4().simple().to_string();
-        User::register(
-            pool,
-            &format!("asset_{suffix}@example.com"),
-            &format!("asset_{}", &suffix[..8]),
-            "Asset Tester",
-            "AssetPass123!",
-        )
-        .await
-        .expect("failed to create Asset test user")
-    }
-
-    async fn create_media(pool: &sqlx::PgPool, user_id: Uuid, suffix: &str) -> Media {
-        Media::create(
-            pool,
-            &Uuid::now_v7(),
-            "image/webp",
-            user_id,
-            &format!("{suffix}.webp"),
-            &format!("{suffix}.webp"),
-            suffix.to_string(),
-            1024,
-            "test",
-        )
-        .await
-        .expect("failed to create Media")
-    }
-
-    #[sqlx::test(migrator = "crate::db::MIGRATOR")]
-    async fn db_test_assets_and_ordered_character_references(pool: sqlx::PgPool) {
-        let user = create_user(&pool).await;
-        let space = Space::create(
-            &pool,
-            format!("asset_space_{}", &Uuid::new_v4().simple().to_string()[..8]),
-            &user.id,
-            "Asset test".to_string(),
-            None,
-            Some("d20"),
-        )
-        .await
-        .expect("failed to create Space");
-        let media_one = create_media(&pool, user.id, "neutral").await;
-        let media_two = create_media(&pool, user.id, "happy").await;
-        let mut transaction = pool
-            .begin()
-            .await
-            .expect("failed to begin Asset transaction");
-        let neutral = Asset::create(
-            &mut transaction,
-            space.id,
-            media_one.id,
-            user.id,
-            " Neutral ",
-            AssetPolicy::Unlisted,
-        )
-        .await
-        .expect("failed to create neutral Asset");
-        let happy = Asset::create(
-            &mut transaction,
-            space.id,
-            media_two.id,
-            user.id,
-            "Happy",
-            AssetPolicy::Listed,
-        )
-        .await
-        .expect("failed to create happy Asset");
-        let character = Character::create(
-            &mut transaction,
-            space.id,
-            user.id,
-            "Asset Character",
-            "asset_character",
-            Vec::new(),
-            "",
-            "",
-            AccessPolicy::Personal,
-            None,
-            Vec::new(),
-            vec![happy.id, neutral.id],
-        )
-        .await
-        .expect("failed to create Character with Assets");
-        transaction.commit().await.expect("failed to commit Assets");
-
-        assert_eq!(neutral.name, "Neutral");
-        assert_eq!(neutral.policy, AssetPolicy::Unlisted);
-        assert_eq!(neutral.mime_type, "image/webp");
-        assert_eq!(character.asset_ids, vec![happy.id, neutral.id]);
-        assert_eq!(
-            Asset::list_by_space(&pool, space.id)
-                .await
-                .expect("failed to list Assets")
-                .len(),
-            1
-        );
-        assert_eq!(
-            Asset::list_by_creator(&pool, user.id)
-                .await
-                .expect("failed to list creator Assets")
-                .len(),
-            2
-        );
-        assert_eq!(
-            Asset::get_by_id_in_space(&pool, space.id, neutral.id)
-                .await
-                .expect("failed to query Asset")
-                .expect("Asset missing")
-                .media_id,
-            media_one.id
-        );
-
-        let mut transaction = pool.begin().await.expect("failed to begin Asset update");
-        let updated = Asset::update(
-            &mut transaction,
-            neutral.id,
-            " Updated neutral ",
-            AssetPolicy::Listed,
-        )
-        .await
-        .expect("failed to update Asset");
-        transaction
-            .commit()
-            .await
-            .expect("failed to commit Asset update");
-        assert_eq!(updated.name, "Updated neutral");
-        assert_eq!(updated.policy, AssetPolicy::Listed);
-        assert_eq!(
-            Asset::list_by_space(&pool, space.id)
-                .await
-                .expect("failed to list updated Assets")
-                .len(),
-            2
-        );
-
-        let mut transaction = pool.begin().await.expect("failed to begin Asset delete");
-        assert!(
-            Asset::delete(&mut transaction, neutral.id)
-                .await
-                .expect("failed to delete Asset")
-        );
-        transaction
-            .commit()
-            .await
-            .expect("failed to commit Asset delete");
-        assert!(
-            Asset::get_by_id_in_space(&pool, space.id, neutral.id)
-                .await
-                .expect("failed to query deleted Asset")
-                .is_none()
-        );
-        assert_eq!(
-            Character::get_by_id(&pool, &character.id)
-                .await
-                .expect("failed to reload Character")
-                .expect("Character missing")
-                .asset_ids,
-            vec![happy.id]
-        );
-    }
-
-    #[test]
-    fn character_asset_ids_are_bounded_and_unique() {
-        let id = Uuid::now_v7();
-        assert!(validate_asset_ids(&[id]).is_ok());
-        assert!(validate_asset_ids(&[id, id]).is_err());
-        assert!(validate_asset_ids(&vec![Uuid::nil(); 65]).is_err());
-    }
 
     #[test]
     fn asset_policy_separates_edit_and_delete_permissions() {

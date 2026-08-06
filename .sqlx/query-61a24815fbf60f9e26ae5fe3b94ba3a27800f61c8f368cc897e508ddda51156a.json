@@ -1,0 +1,31 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH target_scope AS MATERIALIZED (\n    SELECT id\n    FROM scopes\n    WHERE id = $1\n    FOR UPDATE\n),\ntarget AS MATERIALIZED (\n    SELECT entry.id\n    FROM entries entry\n    JOIN target_scope ON target_scope.id = entry.scope_id\n    WHERE entry.id = $2\n      AND entry.metadata_version = $3\n    FOR UPDATE OF entry\n),\nupper_bound AS (\n    SELECT entry.pos_p, entry.pos_q\n    FROM entries entry\n    JOIN target_scope ON target_scope.id = entry.scope_id\n    WHERE entry.id = $4\n      AND entry.id <> $2\n),\nlower_bound AS (\n    SELECT entry.pos_p, entry.pos_q\n    FROM entries entry\n    JOIN target_scope ON target_scope.id = entry.scope_id\n    WHERE entry.id <> $2\n      AND (\n          $4::uuid IS NULL\n          OR entry.pos < (SELECT pos_p::double precision / pos_q FROM upper_bound)\n      )\n    ORDER BY entry.pos DESC\n    LIMIT 1\n),\nposition AS (\n    SELECT\n        (\n            COALESCE((SELECT pos_p::bigint / pos_q FROM lower_bound), 0)\n            + 1024\n        )::integer AS p,\n        1::integer AS q\n    WHERE $4::uuid IS NULL\n\n    UNION ALL\n\n    SELECT intermediate.p, intermediate.q\n    FROM find_intermediate(\n        COALESCE((SELECT pos_p FROM lower_bound), 0),\n        COALESCE((SELECT pos_q FROM lower_bound), 1),\n        (SELECT pos_p FROM upper_bound),\n        (SELECT pos_q FROM upper_bound)\n    ) intermediate\n    WHERE $4::uuid IS NOT NULL\n      AND EXISTS (SELECT 1 FROM upper_bound)\n),\nupdated AS (\n    UPDATE entries entry\n    SET pos_p = position.p,\n        pos_q = position.q,\n        metadata_version = uuidv7(),\n        modified = now()\n    FROM target, position\n    WHERE entry.id = target.id\n    RETURNING entry.id\n)\nSELECT id FROM updated;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "entries",
+            "name": "id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "61a24815fbf60f9e26ae5fe3b94ba3a27800f61c8f368cc897e508ddda51156a"
+}

@@ -1,7 +1,7 @@
 use chrono::{DateTime, Utc};
 use compact_str::CompactString;
 use serde::{Deserialize, Serialize};
-use serde_json::value::RawValue;
+use serde_json::Value;
 use std::collections::BTreeMap;
 use std::ops::Deref;
 use uuid::Uuid;
@@ -9,13 +9,79 @@ use uuid::Uuid;
 use crate::characters::{normalize_aliases, normalize_ident};
 use crate::error::{ModelError, ValidationFailed};
 
+pub(crate) const CORE_PORTRAIT_COMPONENT_TYPE: &str = "core/portrait";
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, sqlx::Type)]
+#[sqlx(type_name = "entry_component_payload_type", rename_all = "PascalCase")]
+pub(crate) enum EntryComponentPayloadType {
+    Json,
+    Asset,
+}
+
+impl EntryComponentPayloadType {
+    fn as_str(self) -> &'static str {
+        match self {
+            Self::Json => "JSON",
+            Self::Asset => "ASSET",
+        }
+    }
+}
+
 #[derive(Debug, Clone, sqlx::FromRow)]
-struct EntryComponentRow {
-    component_type: String,
-    data: serde_json::Value,
-    schema_version: i32,
+struct EntryComponentJoinedRow {
+    component_type: CompactString,
+    payload_type: EntryComponentPayloadType,
+    json_data: Option<Value>,
+    json_schema_version: Option<i32>,
+    asset_id: Option<Uuid>,
     version: Uuid,
     modified: DateTime<Utc>,
+}
+
+#[derive(Debug, Clone, sqlx::FromRow)]
+struct EntryComponentMatchRow {
+    id: Uuid,
+    scope_id: Uuid,
+    key: CompactString,
+    aliases: Vec<CompactString>,
+    display_name: CompactString,
+    reference_note_id: Option<Uuid>,
+    tags: Vec<CompactString>,
+    pos_p: i32,
+    pos_q: i32,
+    pos: f64,
+    metadata_version: Uuid,
+    created: DateTime<Utc>,
+    entry_modified: DateTime<Utc>,
+    component_type: CompactString,
+    payload_type: EntryComponentPayloadType,
+    json_data: Option<Value>,
+    json_schema_version: Option<i32>,
+    asset_id: Option<Uuid>,
+    component_version: Uuid,
+    component_modified: DateTime<Utc>,
+}
+
+#[derive(Debug, Clone, sqlx::FromRow)]
+struct EntryComponentForUpdateRow {
+    payload_type: EntryComponentPayloadType,
+    version: Uuid,
+    schema_version: Option<i32>,
+    json_exists: bool,
+    asset_exists: bool,
+}
+
+impl EntryComponentForUpdateRow {
+    fn has_payload(&self) -> bool {
+        match self.payload_type {
+            EntryComponentPayloadType::Json => self.json_exists,
+            EntryComponentPayloadType::Asset => self.asset_exists,
+        }
+    }
+
+    fn has_json_payload(&self) -> bool {
+        self.payload_type == EntryComponentPayloadType::Json && self.json_exists
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
@@ -26,7 +92,17 @@ pub struct Entry {
     pub components: BTreeMap<String, EntryComponent>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, specta::Type, sqlx::FromRow)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct EntryComponentMatch {
+    #[serde(flatten)]
+    pub metadata: EntryMetadata,
+    #[specta(type = String)]
+    pub component_type: CompactString,
+    pub component: EntryComponent,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, specta::Type, sqlx::FromRow)]
 #[serde(rename_all = "camelCase")]
 pub struct EntryMetadata {
     pub id: Uuid,
@@ -40,33 +116,88 @@ pub struct EntryMetadata {
     pub reference_note_id: Option<Uuid>,
     #[specta(type = Vec<String>)]
     pub tags: Vec<CompactString>,
-    pub sort: i32,
+    pub pos_p: i32,
+    pub pos_q: i32,
+    pub pos: f64,
     pub metadata_version: Uuid,
     pub created: DateTime<Utc>,
     pub modified: DateTime<Utc>,
 }
 
 #[derive(Debug)]
-struct CachedEntryComponent {
-    component_type: CompactString,
-    data: Box<RawValue>,
-    schema_version: i32,
-    version: Uuid,
-    modified: DateTime<Utc>,
-}
-
-#[derive(Debug)]
 pub(crate) struct CachedEntryComponents {
-    components: Box<[CachedEntryComponent]>,
+    components: Box<[(CompactString, EntryComponent)]>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, specta::Type)]
-#[serde(rename_all = "camelCase")]
-pub struct EntryComponent {
-    pub data: serde_json::Value,
-    pub schema_version: i32,
-    pub version: Uuid,
-    pub modified: DateTime<Utc>,
+#[serde(
+    tag = "payloadType",
+    rename_all = "SCREAMING_SNAKE_CASE",
+    rename_all_fields = "camelCase"
+)]
+pub enum EntryComponent {
+    Json {
+        data: Value,
+        schema_version: i32,
+        version: Uuid,
+        modified: DateTime<Utc>,
+    },
+    Asset {
+        asset_id: Uuid,
+        version: Uuid,
+        modified: DateTime<Utc>,
+    },
+}
+
+impl EntryComponent {
+    fn history_payload(&self) -> Value {
+        match self {
+            Self::Json {
+                data,
+                schema_version,
+                ..
+            } => json_component_history_payload(data, *schema_version),
+            Self::Asset { asset_id, .. } => asset_component_history_payload(*asset_id),
+        }
+    }
+
+    #[cfg(test)]
+    pub(crate) fn json_data(&self) -> serde_json::Value {
+        match self {
+            Self::Json { data, .. } => data.clone(),
+            Self::Asset { .. } => panic!("expected a JSON Entry Component"),
+        }
+    }
+
+    #[cfg(test)]
+    pub(crate) fn schema_version(&self) -> i32 {
+        match self {
+            Self::Json { schema_version, .. } => *schema_version,
+            Self::Asset { .. } => panic!("expected a JSON Entry Component"),
+        }
+    }
+
+    #[cfg(test)]
+    pub(crate) fn version(&self) -> Uuid {
+        match self {
+            Self::Json { version, .. } | Self::Asset { version, .. } => *version,
+        }
+    }
+}
+
+fn json_component_history_payload(data: &Value, schema_version: i32) -> Value {
+    serde_json::json!({
+        "payloadType": "JSON",
+        "schemaVersion": schema_version,
+        "data": data,
+    })
+}
+
+fn asset_component_history_payload(asset_id: Uuid) -> Value {
+    serde_json::json!({
+        "payloadType": "ASSET",
+        "assetId": asset_id,
+    })
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, specta::Type, sqlx::FromRow)]
@@ -160,56 +291,127 @@ impl EntryMetadata {
     }
 }
 
+impl EntryComponentJoinedRow {
+    fn into_response(self, entry_id: Uuid) -> Option<(CompactString, EntryComponent)> {
+        let component = match self.payload_type {
+            EntryComponentPayloadType::Json => {
+                let (Some(data), Some(schema_version)) = (self.json_data, self.json_schema_version)
+                else {
+                    report_missing_component_payload(
+                        entry_id,
+                        &self.component_type,
+                        self.payload_type,
+                    );
+                    return None;
+                };
+                EntryComponent::Json {
+                    data,
+                    schema_version,
+                    version: self.version,
+                    modified: self.modified,
+                }
+            }
+            EntryComponentPayloadType::Asset => {
+                let Some(asset_id) = self.asset_id else {
+                    report_missing_component_payload(
+                        entry_id,
+                        &self.component_type,
+                        self.payload_type,
+                    );
+                    return None;
+                };
+                EntryComponent::Asset {
+                    asset_id,
+                    version: self.version,
+                    modified: self.modified,
+                }
+            }
+        };
+        Some((self.component_type, component))
+    }
+}
+
+impl EntryComponentMatchRow {
+    fn into_response(self) -> Option<EntryComponentMatch> {
+        let entry_id = self.id;
+        let (component_type, component) = EntryComponentJoinedRow {
+            component_type: self.component_type,
+            payload_type: self.payload_type,
+            json_data: self.json_data,
+            json_schema_version: self.json_schema_version,
+            asset_id: self.asset_id,
+            version: self.component_version,
+            modified: self.component_modified,
+        }
+        .into_response(entry_id)?;
+        Some(EntryComponentMatch {
+            metadata: EntryMetadata {
+                id: entry_id,
+                scope_id: self.scope_id,
+                key: self.key,
+                aliases: self.aliases,
+                display_name: self.display_name,
+                reference_note_id: self.reference_note_id,
+                tags: self.tags,
+                pos_p: self.pos_p,
+                pos_q: self.pos_q,
+                pos: self.pos,
+                metadata_version: self.metadata_version,
+                created: self.created,
+                modified: self.entry_modified,
+            },
+            component_type,
+            component,
+        })
+    }
+}
+
 impl CachedEntryComponents {
     pub(crate) async fn load(db: &sqlx::PgPool, entry_id: Uuid) -> Result<Self, sqlx::Error> {
-        let rows = sqlx::query_file!("sql/entries/get_components_raw.sql", entry_id)
-            .fetch_all(db)
-            .await?;
+        let rows = sqlx::query_file_as!(
+            EntryComponentJoinedRow,
+            "sql/entries/get_components.sql",
+            entry_id
+        )
+        .fetch_all(db)
+        .await?;
         let components = rows
             .into_iter()
-            .map(|row| {
-                let data = RawValue::from_string(row.data).map_err(|error| {
-                    sqlx::Error::Decode(Box::new(error) as Box<dyn std::error::Error + Send + Sync>)
-                })?;
-                Ok(CachedEntryComponent {
-                    component_type: row.component_type,
-                    data,
-                    schema_version: row.schema_version,
-                    version: row.version,
-                    modified: row.modified,
-                })
-            })
-            .collect::<Result<Box<[_]>, sqlx::Error>>()?;
+            .filter_map(|row| row.into_response(entry_id))
+            .collect();
         Ok(Self { components })
     }
 
-    pub(crate) fn decode_for_response(
-        &self,
-    ) -> Result<BTreeMap<String, EntryComponent>, serde_json::Error> {
+    pub(crate) fn to_response(&self) -> BTreeMap<String, EntryComponent> {
         self.components
             .iter()
-            .map(|component| {
-                Ok((
-                    component.component_type.to_string(),
-                    EntryComponent {
-                        data: serde_json::from_str(component.data.get())?,
-                        schema_version: component.schema_version,
-                        version: component.version,
-                        modified: component.modified,
-                    },
-                ))
-            })
+            .map(|(component_type, component)| (component_type.to_string(), component.clone()))
             .collect()
     }
 }
 
 fn validate_components(
-    components: &BTreeMap<String, serde_json::Value>,
+    components: &BTreeMap<String, EntryComponentPayloadInput>,
 ) -> Result<(), ValidationFailed> {
-    for component_type in components.keys() {
+    for (component_type, payload) in components {
         validate_component_type(component_type)?;
+        validate_component_payload(component_type, payload)?;
     }
     Ok(())
+}
+
+fn validate_component_payload(
+    component_type: &str,
+    payload: &EntryComponentPayloadInput,
+) -> Result<(), ValidationFailed> {
+    if component_type == CORE_PORTRAIT_COMPONENT_TYPE
+        && !matches!(payload, EntryComponentPayloadInput::Asset { .. })
+    {
+        return Err(ValidationFailed(
+            "A core/portrait Component requires an Asset payload.",
+        ));
+    }
+    payload.validate()
 }
 
 fn validate_component_type(component_type: &str) -> Result<(), ValidationFailed> {
@@ -219,37 +421,96 @@ fn validate_component_type(component_type: &str) -> Result<(), ValidationFailed>
 }
 
 fn components_from_rows(
-    rows: impl IntoIterator<Item = EntryComponentRow>,
+    entry_id: Uuid,
+    rows: impl IntoIterator<Item = EntryComponentJoinedRow>,
 ) -> BTreeMap<String, EntryComponent> {
     rows.into_iter()
-        .map(|row| {
-            (
-                row.component_type,
-                EntryComponent {
-                    data: row.data,
-                    schema_version: row.schema_version,
-                    version: row.version,
-                    modified: row.modified,
-                },
-            )
-        })
+        .filter_map(|row| row.into_response(entry_id))
+        .map(|(component_type, component)| (component_type.to_string(), component))
         .collect()
 }
 
-async fn insert_components(
-    db: &mut sqlx::PgConnection,
+fn report_missing_component_payload(
     entry_id: Uuid,
-    components: &BTreeMap<String, serde_json::Value>,
-) -> Result<(), sqlx::Error> {
-    for (component_type, data) in components {
-        sqlx::query_file!(
-            "sql/entries/insert_component.sql",
-            entry_id,
-            component_type,
-            data,
-        )
-        .execute(&mut *db)
-        .await?;
+    component_type: &str,
+    payload_type: EntryComponentPayloadType,
+) {
+    metrics::counter!(
+        "boluo_server_entry_component_integrity_error_total",
+        "payload_type" => payload_type.as_str()
+    )
+    .increment(1);
+    tracing::warn!(
+        %entry_id,
+        component_type,
+        payload_type = payload_type.as_str(),
+        "Entry Component payload is missing; omitting the Component"
+    );
+}
+
+async fn insert_components(
+    db: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    entry_id: Uuid,
+    components: &BTreeMap<String, EntryComponentPayloadInput>,
+) -> Result<(), ModelError> {
+    for (component_type, payload) in components {
+        match payload {
+            EntryComponentPayloadInput::Json {
+                schema_version,
+                data,
+            } => {
+                sqlx::query_file_scalar!(
+                    "sql/entries/insert_json_component.sql",
+                    entry_id,
+                    component_type,
+                    data,
+                    schema_version.as_ref(),
+                )
+                .fetch_one(&mut **db)
+                .await?;
+            }
+            EntryComponentPayloadInput::Asset { asset_id } => {
+                let inserted = sqlx::query_file_scalar!(
+                    "sql/entries/insert_asset_component.sql",
+                    entry_id,
+                    component_type,
+                    asset_id,
+                )
+                .fetch_optional(&mut **db)
+                .await?;
+                if inserted.is_none() {
+                    return Err(ModelError::NotFound("Asset"));
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
+async fn validate_asset_component(
+    db: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    component_type: &str,
+    asset_id: Uuid,
+) -> Result<(), ModelError> {
+    if component_type != CORE_PORTRAIT_COMPONENT_TYPE {
+        return Ok(());
+    }
+    let mime_type = sqlx::query_scalar::<_, String>(
+        r#"
+        SELECT media.mime_type
+        FROM assets asset
+        JOIN media ON media.id = asset.media_id
+        WHERE asset.id = $1
+        "#,
+    )
+    .bind(asset_id)
+    .fetch_optional(&mut **db)
+    .await?
+    .ok_or(ModelError::NotFound("Asset"))?;
+    if !mime_type.starts_with("image/") {
+        return Err(
+            ValidationFailed("A core/portrait Component must reference an image Asset.").into(),
+        );
     }
     Ok(())
 }
@@ -293,6 +554,42 @@ async fn insert_identifiers(
 }
 
 impl Entry {
+    pub async fn first_asset_by_component(
+        db: &sqlx::PgPool,
+        scope_id: Uuid,
+        component_type: &str,
+    ) -> Result<Option<Uuid>, ModelError> {
+        validate_component_type(component_type)?;
+        sqlx::query_file_scalar!(
+            "sql/entries/first_asset_by_component.sql",
+            scope_id,
+            component_type,
+        )
+        .fetch_optional(db)
+        .await
+        .map_err(Into::into)
+    }
+
+    pub async fn list_by_component(
+        db: &sqlx::PgPool,
+        scope_id: Uuid,
+        component_type: &str,
+    ) -> Result<Vec<EntryComponentMatch>, ModelError> {
+        validate_component_type(component_type)?;
+        let rows = sqlx::query_file_as!(
+            EntryComponentMatchRow,
+            "sql/entries/list_by_component.sql",
+            scope_id,
+            component_type,
+        )
+        .fetch_all(db)
+        .await?;
+        Ok(rows
+            .into_iter()
+            .filter_map(EntryComponentMatchRow::into_response)
+            .collect())
+    }
+
     pub async fn get_by_id(
         db: &sqlx::PgPool,
         scope_id: Uuid,
@@ -306,15 +603,15 @@ impl Entry {
             return Ok(None);
         };
         let components = sqlx::query_file_as!(
-            EntryComponentRow,
+            EntryComponentJoinedRow,
             "sql/entries/get_components.sql",
             entry_id
         )
         .fetch_all(db)
         .await?;
-        Ok(Some(
-            entry.with_components(components_from_rows(components)),
-        ))
+        Ok(Some(entry.with_components(components_from_rows(
+            entry_id, components,
+        ))))
     }
 
     pub(crate) async fn get_by_id_in_transaction(
@@ -330,15 +627,15 @@ impl Entry {
             return Ok(None);
         };
         let components = sqlx::query_file_as!(
-            EntryComponentRow,
+            EntryComponentJoinedRow,
             "sql/entries/get_components.sql",
             entry_id
         )
         .fetch_all(&mut **db)
         .await?;
-        Ok(Some(
-            entry.with_components(components_from_rows(components)),
-        ))
+        Ok(Some(entry.with_components(components_from_rows(
+            entry_id, components,
+        ))))
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -349,15 +646,20 @@ impl Entry {
         aliases: Vec<String>,
         display_name: String,
         reference_note_id: Option<Uuid>,
-        components: BTreeMap<String, serde_json::Value>,
+        components: BTreeMap<String, EntryComponentPayloadInput>,
         tags: Vec<String>,
-        sort: i32,
+        before_entry_id: Option<Uuid>,
     ) -> Result<Self, ModelError> {
         let key = normalize_ident(&key)?;
         let aliases = normalize_aliases(aliases, Some(&key))?;
         let display_name = display_name.trim().to_string();
         crate::validators::DISPLAY_NAME.run(&display_name)?;
         validate_components(&components)?;
+        for (component_type, payload) in &components {
+            if let EntryComponentPayloadInput::Asset { asset_id } = payload {
+                validate_asset_component(db, component_type, *asset_id).await?;
+            }
+        }
         let tags = crate::validators::normalize_tags(tags)?;
         validate_reference_note(db, scope_id, reference_note_id).await?;
         let entry_id = Uuid::now_v7();
@@ -368,12 +670,21 @@ impl Entry {
             display_name,
             reference_note_id,
             &tags,
-            sort,
+            before_entry_id,
         )
         .execute(&mut **db)
         .await?;
         if result.rows_affected() == 0 {
-            return Err(ModelError::NotFound("Scope"));
+            let scope_exists =
+                sqlx::query_scalar::<_, bool>("SELECT EXISTS(SELECT 1 FROM scopes WHERE id = $1)")
+                    .bind(scope_id)
+                    .fetch_one(&mut **db)
+                    .await?;
+            return Err(ModelError::NotFound(if scope_exists {
+                "Entry"
+            } else {
+                "Scope"
+            }));
         }
         insert_identifiers(db, scope_id, entry_id, &key, &aliases).await?;
         insert_components(db, entry_id, &components).await?;
@@ -393,7 +704,6 @@ impl Entry {
         display_name: String,
         reference_note_id: Option<Uuid>,
         tags: Vec<String>,
-        sort: i32,
     ) -> Result<Option<Self>, ModelError> {
         let key = normalize_ident(&key)?;
         let aliases = normalize_aliases(aliases, Some(&key))?;
@@ -409,7 +719,6 @@ impl Entry {
             display_name,
             reference_note_id,
             &tags,
-            sort,
         )
         .execute(&mut **db)
         .await?;
@@ -421,6 +730,45 @@ impl Entry {
             .await?;
         insert_identifiers(db, scope_id, entry_id, &key, &aliases).await?;
         Self::get_by_id_in_transaction(db, scope_id, entry_id)
+            .await
+            .map_err(Into::into)
+    }
+
+    pub async fn move_before(
+        db: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+        scope_id: Uuid,
+        entry_id: Uuid,
+        expected_metadata_version: Uuid,
+        before_entry_id: Option<Uuid>,
+    ) -> Result<Option<Self>, ModelError> {
+        if before_entry_id == Some(entry_id) {
+            return Err(ValidationFailed("An Entry cannot be moved before itself.").into());
+        }
+        let updated_id = sqlx::query_file_scalar!(
+            "sql/entries/move_before.sql",
+            scope_id,
+            entry_id,
+            expected_metadata_version,
+            before_entry_id,
+        )
+        .fetch_optional(&mut **db)
+        .await?;
+        let Some(updated_id) = updated_id else {
+            if let Some(before_entry_id) = before_entry_id {
+                let before_entry_exists = sqlx::query_scalar::<_, bool>(
+                    "SELECT EXISTS(SELECT 1 FROM entries WHERE scope_id = $1 AND id = $2)",
+                )
+                .bind(scope_id)
+                .bind(before_entry_id)
+                .fetch_one(&mut **db)
+                .await?;
+                if !before_entry_exists {
+                    return Err(ModelError::NotFound("Entry"));
+                }
+            }
+            return Ok(None);
+        };
+        Self::get_by_id_in_transaction(db, scope_id, updated_id)
             .await
             .map_err(Into::into)
     }
@@ -594,14 +942,57 @@ pub enum EntryComponentMutation {
     Set {
         component_type: String,
         expected_version: Option<Uuid>,
-        #[serde(default)]
-        schema_version: Option<i32>,
-        data: serde_json::Value,
+        #[serde(flatten)]
+        payload: EntryComponentPayloadInput,
     },
     Remove {
         component_type: String,
-        expected_version: Uuid,
+        expected_version: Option<Uuid>,
     },
+}
+
+#[derive(Debug, Clone, Deserialize, specta::Type)]
+#[serde(
+    tag = "payloadType",
+    rename_all = "SCREAMING_SNAKE_CASE",
+    rename_all_fields = "camelCase"
+)]
+pub enum EntryComponentPayloadInput {
+    Json {
+        #[serde(default)]
+        schema_version: Option<i32>,
+        data: Value,
+    },
+    Asset {
+        asset_id: Uuid,
+    },
+}
+
+impl EntryComponentPayloadInput {
+    pub(crate) fn json(data: serde_json::Value) -> Self {
+        Self::json_with_schema(data, None)
+    }
+
+    pub(crate) fn json_with_schema(data: serde_json::Value, schema_version: Option<i32>) -> Self {
+        Self::Json {
+            schema_version,
+            data,
+        }
+    }
+
+    fn validate(&self) -> Result<(), ValidationFailed> {
+        if let Self::Json {
+            schema_version: Some(schema_version),
+            ..
+        } = self
+            && *schema_version <= 0
+        {
+            return Err(ValidationFailed(
+                "Component schema version must be positive.",
+            ));
+        }
+        Ok(())
+    }
 }
 
 impl EntryComponentMutation {
@@ -614,12 +1005,24 @@ impl EntryComponentMutation {
     }
 }
 
+fn validate_component_precondition(
+    current: Option<&EntryComponentForUpdateRow>,
+    expected_version: Option<Uuid>,
+) -> Result<(), ModelError> {
+    match (current, expected_version) {
+        (Some(current), Some(expected_version)) if current.version == expected_version => Ok(()),
+        (Some(current), None) if !current.has_payload() => Ok(()),
+        (None, None) => Ok(()),
+        _ => Err(ModelError::Conflict("EntryComponent".to_string())),
+    }
+}
+
 impl Entry {
     pub async fn apply_component_mutations(
         db: &mut sqlx::Transaction<'_, sqlx::Postgres>,
         entry_id: Uuid,
         changes: &[EntryComponentMutation],
-    ) -> Result<Vec<EntryComponentChange>, ModelError> {
+    ) -> Result<EntryComponentMutationResult, ModelError> {
         if changes.is_empty() {
             return Err(ValidationFailed("At least one component change is required.").into());
         }
@@ -627,13 +1030,8 @@ impl Entry {
         for change in changes {
             let component_type = change.component_type();
             validate_component_type(component_type)?;
-            if let EntryComponentMutation::Set {
-                schema_version: Some(schema_version),
-                ..
-            } = change
-                && *schema_version <= 0
-            {
-                return Err(ValidationFailed("Component schema version must be positive.").into());
+            if let EntryComponentMutation::Set { payload, .. } = change {
+                validate_component_payload(component_type, payload)?;
             }
             if !component_types.insert(component_type) {
                 return Err(ValidationFailed(
@@ -645,83 +1043,117 @@ impl Entry {
 
         let mut history_changes = Vec::with_capacity(changes.len());
         for change in changes {
+            let component_type = change.component_type();
+            let current = sqlx::query_file_as!(
+                EntryComponentForUpdateRow,
+                "sql/entries/get_component_for_update.sql",
+                entry_id,
+                component_type,
+            )
+            .fetch_optional(&mut **db)
+            .await?;
+            let current_has_json_payload = current
+                .as_ref()
+                .is_some_and(EntryComponentForUpdateRow::has_json_payload);
+
             match change {
                 EntryComponentMutation::Set {
                     component_type,
-                    expected_version: None,
-                    schema_version,
-                    data,
+                    expected_version,
+                    payload,
                 } => {
-                    let schema_version = sqlx::query_file_scalar!(
-                        "sql/entries/create_component.sql",
-                        entry_id,
-                        component_type,
-                        data,
-                        schema_version.as_ref()
-                    )
-                    .fetch_optional(&mut **db)
-                    .await?;
-                    let Some(schema_version) = schema_version else {
-                        return Err(ModelError::Conflict("EntryComponent".to_string()));
-                    };
-                    history_changes.push(EntryComponentChange {
-                        component_type: component_type.clone(),
-                        action: EntryComponentHistoryAction::Set,
-                        data: Some(data.clone()),
-                        schema_version: Some(schema_version),
-                    });
-                }
-                EntryComponentMutation::Set {
-                    component_type,
-                    expected_version: Some(expected_version),
-                    schema_version,
-                    data,
-                } => {
-                    let schema_version = sqlx::query_file_scalar!(
-                        "sql/entries/update_component.sql",
-                        entry_id,
-                        component_type,
-                        expected_version,
-                        data,
-                        schema_version.as_ref()
-                    )
-                    .fetch_optional(&mut **db)
-                    .await?;
-                    let Some(schema_version) = schema_version else {
-                        return Err(ModelError::Conflict("EntryComponent".to_string()));
-                    };
-                    history_changes.push(EntryComponentChange {
-                        component_type: component_type.clone(),
-                        action: EntryComponentHistoryAction::Set,
-                        data: Some(data.clone()),
-                        schema_version: Some(schema_version),
-                    });
+                    validate_component_precondition(current.as_ref(), *expected_version)?;
+                    if let EntryComponentPayloadInput::Asset { asset_id } = payload {
+                        validate_asset_component(db, component_type, *asset_id).await?;
+                        let valid = sqlx::query_file_scalar!(
+                            "sql/entries/validate_component_asset.sql",
+                            entry_id,
+                            asset_id,
+                        )
+                        .fetch_one(&mut **db)
+                        .await?;
+                        if !valid {
+                            return Err(ModelError::NotFound("Asset"));
+                        }
+                    }
+                    if current.is_some() {
+                        sqlx::query_file!(
+                            "sql/entries/remove_component.sql",
+                            entry_id,
+                            component_type,
+                        )
+                        .execute(&mut **db)
+                        .await?;
+                    }
+
+                    match payload {
+                        EntryComponentPayloadInput::Json {
+                            schema_version,
+                            data,
+                        } => {
+                            let schema_version = schema_version.or_else(|| {
+                                current.as_ref().and_then(|current| {
+                                    current_has_json_payload
+                                        .then_some(current.schema_version)
+                                        .flatten()
+                                })
+                            });
+                            let schema_version = sqlx::query_file_scalar!(
+                                "sql/entries/insert_json_component.sql",
+                                entry_id,
+                                component_type,
+                                data,
+                                schema_version.as_ref(),
+                            )
+                            .fetch_one(&mut **db)
+                            .await?;
+                            history_changes.push(EntryComponentHistoryChange::set(
+                                component_type,
+                                json_component_history_payload(data, schema_version),
+                            ));
+                        }
+                        EntryComponentPayloadInput::Asset { asset_id } => {
+                            let inserted = sqlx::query_file_scalar!(
+                                "sql/entries/insert_asset_component.sql",
+                                entry_id,
+                                component_type,
+                                asset_id,
+                            )
+                            .fetch_optional(&mut **db)
+                            .await?;
+                            if inserted.is_none() {
+                                return Err(ModelError::NotFound("Asset"));
+                            }
+                            history_changes.push(EntryComponentHistoryChange::set(
+                                component_type,
+                                asset_component_history_payload(*asset_id),
+                            ));
+                        }
+                    }
                 }
                 EntryComponentMutation::Remove {
                     component_type,
                     expected_version,
                 } => {
+                    validate_component_precondition(current.as_ref(), *expected_version)?;
+                    if current.is_none() {
+                        return Err(ModelError::Conflict("EntryComponent".to_string()));
+                    }
                     let result = sqlx::query_file!(
                         "sql/entries/remove_component.sql",
                         entry_id,
                         component_type,
-                        expected_version
                     )
                     .execute(&mut **db)
                     .await?;
                     if result.rows_affected() == 0 {
                         return Err(ModelError::Conflict("EntryComponent".to_string()));
                     }
-                    history_changes.push(EntryComponentChange {
-                        component_type: component_type.clone(),
-                        action: EntryComponentHistoryAction::Remove,
-                        data: None,
-                        schema_version: None,
-                    });
+                    history_changes.push(EntryComponentHistoryChange::remove(component_type));
                 }
             }
         }
-        Ok(history_changes)
+        Ok(EntryComponentMutationResult { history_changes })
     }
 }
 
@@ -746,23 +1178,42 @@ impl EntryComponentHistoryAction {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct EntryComponentChange {
-    pub component_type: String,
+pub struct EntryComponentHistoryChange {
+    pub component_type: CompactString,
     pub action: EntryComponentHistoryAction,
-    pub data: Option<serde_json::Value>,
-    pub schema_version: Option<i32>,
+    pub payload: Option<Value>,
 }
 
-pub fn components_as_set_changes(
+impl EntryComponentHistoryChange {
+    fn set(component_type: &str, payload: Value) -> Self {
+        Self {
+            component_type: CompactString::new(component_type),
+            action: EntryComponentHistoryAction::Set,
+            payload: Some(payload),
+        }
+    }
+
+    fn remove(component_type: &str) -> Self {
+        Self {
+            component_type: CompactString::new(component_type),
+            action: EntryComponentHistoryAction::Remove,
+            payload: None,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct EntryComponentMutationResult {
+    pub history_changes: Vec<EntryComponentHistoryChange>,
+}
+
+pub fn components_as_set_history_changes(
     components: &BTreeMap<String, EntryComponent>,
-) -> Vec<EntryComponentChange> {
+) -> Vec<EntryComponentHistoryChange> {
     components
         .iter()
-        .map(|(component_type, component)| EntryComponentChange {
-            component_type: component_type.clone(),
-            action: EntryComponentHistoryAction::Set,
-            data: Some(component.data.clone()),
-            schema_version: Some(component.schema_version),
+        .map(|(component_type, component)| {
+            EntryComponentHistoryChange::set(component_type, component.history_payload())
         })
         .collect()
 }
@@ -777,8 +1228,7 @@ pub struct EntryComponentHistory {
     pub key: String,
     pub component_type: String,
     pub action: EntryComponentHistoryAction,
-    pub data: Option<serde_json::Value>,
-    pub schema_version: Option<i32>,
+    pub payload: Option<Value>,
     pub created: DateTime<Utc>,
 }
 
@@ -789,7 +1239,7 @@ impl EntryComponentHistory {
         entry_effect_id: Uuid,
         entry_id: Uuid,
         key: &str,
-        changes: &[EntryComponentChange],
+        changes: &[EntryComponentHistoryChange],
     ) -> Result<(), ModelError> {
         let key = normalize_ident(key)?.to_lowercase();
         for change in changes {
@@ -798,10 +1248,9 @@ impl EntryComponentHistory {
                 entry_effect_id,
                 entry_id,
                 key,
-                change.component_type,
+                &change.component_type,
                 change.action.as_str(),
-                change.data,
-                change.schema_version,
+                change.payload,
             )
             .execute(&mut **db)
             .await?;
@@ -872,6 +1321,9 @@ pub struct EntryEffectHistory {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::assets::{Asset, AssetPolicy};
+    use crate::characters::Character;
+    use crate::media::models::Media;
     use crate::notes::Note;
     use crate::scopes::models::{Scope, ScopeKind};
     use crate::spaces::{AccessPolicy, Space};
@@ -881,10 +1333,15 @@ mod tests {
 
     fn components<const N: usize>(
         values: [(&str, serde_json::Value); N],
-    ) -> BTreeMap<String, serde_json::Value> {
+    ) -> BTreeMap<String, EntryComponentPayloadInput> {
         values
             .into_iter()
-            .map(|(component_type, data)| (component_type.to_string(), data))
+            .map(|(component_type, data)| {
+                (
+                    component_type.to_string(),
+                    EntryComponentPayloadInput::json(data),
+                )
+            })
             .collect()
     }
 
@@ -936,6 +1393,525 @@ mod tests {
             Ok(())
         );
         assert!(validate_component_type(&format!("example/{}", "a".repeat(193))).is_err());
+        assert!(
+            validate_component_payload(
+                CORE_PORTRAIT_COMPONENT_TYPE,
+                &EntryComponentPayloadInput::json(json!({})),
+            )
+            .is_err()
+        );
+    }
+
+    #[sqlx::test(migrator = "crate::db::MIGRATOR")]
+    async fn db_test_portrait_component_validation_and_enumeration(pool: sqlx::PgPool) {
+        let user = user(&pool).await;
+        let space = Space::create(
+            &pool,
+            format!("portrait_{}", &Uuid::new_v4().simple().to_string()[..8]),
+            &user.id,
+            "Portrait component test".to_string(),
+            None,
+            Some("d20"),
+        )
+        .await
+        .expect("create space failed");
+        let image_media = Media::create(
+            &pool,
+            &Uuid::now_v7(),
+            "image/webp",
+            user.id,
+            "portrait.webp",
+            "portrait.webp",
+            "portrait".to_string(),
+            1024,
+            "test",
+        )
+        .await
+        .expect("create image media failed");
+        let audio_media = Media::create(
+            &pool,
+            &Uuid::now_v7(),
+            "audio/ogg",
+            user.id,
+            "portrait.ogg",
+            "portrait.ogg",
+            "audio".to_string(),
+            1024,
+            "test",
+        )
+        .await
+        .expect("create audio media failed");
+
+        let mut transaction = pool.begin().await.expect("begin failed");
+        let image_asset = Asset::create(
+            &mut transaction,
+            space.id,
+            image_media.id,
+            user.id,
+            "Portrait",
+            AssetPolicy::Unlisted,
+        )
+        .await
+        .expect("create image Asset failed");
+        let audio_asset = Asset::create(
+            &mut transaction,
+            space.id,
+            audio_media.id,
+            user.id,
+            "Not a portrait",
+            AssetPolicy::Unlisted,
+        )
+        .await
+        .expect("create audio Asset failed");
+        let character = Character::create(
+            &mut transaction,
+            space.id,
+            user.id,
+            "Portrait Character",
+            "portrait_character",
+            Vec::new(),
+            "",
+            "",
+            AccessPolicy::Personal,
+            None,
+            Vec::new(),
+        )
+        .await
+        .expect("create Character failed");
+        let portrait_components = |asset_id| {
+            BTreeMap::from([(
+                CORE_PORTRAIT_COMPONENT_TYPE.to_string(),
+                EntryComponentPayloadInput::Asset { asset_id },
+            )])
+        };
+        assert!(
+            Entry::create(
+                &mut transaction,
+                character.scope_id,
+                "invalid_portrait".to_string(),
+                Vec::new(),
+                "Invalid portrait".to_string(),
+                None,
+                portrait_components(audio_asset.id),
+                Vec::new(),
+                None,
+            )
+            .await
+            .is_err()
+        );
+        let portrait = Entry::create(
+            &mut transaction,
+            character.scope_id,
+            "portrait".to_string(),
+            Vec::new(),
+            "Portrait".to_string(),
+            None,
+            portrait_components(image_asset.id),
+            Vec::new(),
+            None,
+        )
+        .await
+        .expect("create portrait Entry failed");
+        let invalid_before_entry = Entry::create(
+            &mut transaction,
+            character.scope_id,
+            "invalid_before_portrait".to_string(),
+            Vec::new(),
+            "Invalid before Portrait".to_string(),
+            None,
+            portrait_components(image_asset.id),
+            Vec::new(),
+            Some(Uuid::now_v7()),
+        )
+        .await;
+        assert!(matches!(
+            invalid_before_entry,
+            Err(ModelError::NotFound("Entry"))
+        ));
+        let initially_main = Entry::create(
+            &mut transaction,
+            character.scope_id,
+            "initially_main_portrait".to_string(),
+            Vec::new(),
+            "Initially main Portrait".to_string(),
+            None,
+            portrait_components(image_asset.id),
+            Vec::new(),
+            Some(portrait.id),
+        )
+        .await
+        .expect("create Portrait before existing Entry failed");
+        let invalid_move = Entry::move_before(
+            &mut transaction,
+            character.scope_id,
+            portrait.id,
+            portrait.metadata_version,
+            Some(Uuid::now_v7()),
+        )
+        .await;
+        assert!(matches!(
+            invalid_move,
+            Err(ModelError::NotFound("Entry"))
+        ));
+        let portrait = Entry::move_before(
+            &mut transaction,
+            character.scope_id,
+            portrait.id,
+            portrait.metadata_version,
+            Some(initially_main.id),
+        )
+        .await
+        .expect("move Portrait failed")
+        .expect("Portrait metadata version should match");
+        transaction.commit().await.expect("commit failed");
+
+        let matches =
+            Entry::list_by_component(&pool, character.scope_id, CORE_PORTRAIT_COMPONENT_TYPE)
+                .await
+                .expect("list portrait Components failed");
+        assert_eq!(matches.len(), 2);
+        assert_eq!(matches[0].metadata.id, portrait.id);
+        assert!(matches!(
+            matches[0].component,
+            EntryComponent::Asset { asset_id, .. } if asset_id == image_asset.id
+        ));
+        assert_eq!(
+            Entry::first_asset_by_component(
+                &pool,
+                character.scope_id,
+                CORE_PORTRAIT_COMPONENT_TYPE,
+            )
+            .await
+            .expect("resolve main Portrait failed"),
+            Some(image_asset.id),
+        );
+
+        let mut transaction = pool.begin().await.expect("begin delete failed");
+        assert!(
+            Entry::delete(
+                &mut transaction,
+                portrait.scope_id,
+                portrait.id,
+                portrait.metadata_version,
+            )
+            .await
+            .expect("delete portrait Entry failed")
+        );
+        transaction.commit().await.expect("commit delete failed");
+    }
+
+    #[sqlx::test(migrator = "crate::db::MIGRATOR")]
+    async fn db_test_entry_positions_leave_gaps_when_appending(pool: sqlx::PgPool) {
+        let user = user(&pool).await;
+        let space = Space::create(
+            &pool,
+            format!("positions_{}", &Uuid::new_v4().simple().to_string()[..8]),
+            &user.id,
+            "Entry position test".to_string(),
+            None,
+            Some("d20"),
+        )
+        .await
+        .expect("create space failed");
+
+        let mut transaction = pool.begin().await.expect("begin failed");
+        let first = Entry::create(
+            &mut transaction,
+            space.scope_id,
+            "first".to_string(),
+            Vec::new(),
+            "First".to_string(),
+            None,
+            BTreeMap::new(),
+            Vec::new(),
+            None,
+        )
+        .await
+        .expect("create first Entry failed");
+        let second = Entry::create(
+            &mut transaction,
+            space.scope_id,
+            "second".to_string(),
+            Vec::new(),
+            "Second".to_string(),
+            None,
+            BTreeMap::new(),
+            Vec::new(),
+            None,
+        )
+        .await
+        .expect("create second Entry failed");
+
+        assert_eq!((first.pos_p, first.pos_q), (1024, 1));
+        assert_eq!((second.pos_p, second.pos_q), (2048, 1));
+
+        let between = Entry::create(
+            &mut transaction,
+            space.scope_id,
+            "between".to_string(),
+            Vec::new(),
+            "Between".to_string(),
+            None,
+            BTreeMap::new(),
+            Vec::new(),
+            Some(second.id),
+        )
+        .await
+        .expect("insert Entry into gap failed");
+        assert!(first.pos < between.pos && between.pos < second.pos);
+
+        let moved = Entry::move_before(
+            &mut transaction,
+            space.scope_id,
+            first.id,
+            first.metadata_version,
+            None,
+        )
+        .await
+        .expect("move Entry failed")
+        .expect("Entry metadata version should match");
+        assert_eq!((moved.pos_p, moved.pos_q), (3072, 1));
+
+        transaction.commit().await.expect("commit failed");
+    }
+
+    #[sqlx::test(migrator = "crate::db::MIGRATOR")]
+    async fn db_test_entry_component_payload_variants_and_orphan_repair(pool: sqlx::PgPool) {
+        let user = user(&pool).await;
+        let space = Space::create(
+            &pool,
+            format!("component_{}", &Uuid::new_v4().simple().to_string()[..8]),
+            &user.id,
+            "Component test".to_string(),
+            None,
+            Some("d20"),
+        )
+        .await
+        .expect("create space failed");
+        let media_id = Uuid::now_v7();
+        Media::create(
+            &pool,
+            &media_id,
+            "image/webp",
+            user.id,
+            "component.webp",
+            "component.webp",
+            Uuid::new_v4().simple().to_string(),
+            1024,
+            "test",
+        )
+        .await
+        .expect("create media failed");
+
+        let mut transaction = pool.begin().await.expect("begin failed");
+        let asset = Asset::create(
+            &mut transaction,
+            space.id,
+            media_id,
+            user.id,
+            "Component asset",
+            AssetPolicy::Unlisted,
+        )
+        .await
+        .expect("create asset failed");
+        let entry = Entry::create(
+            &mut transaction,
+            space.scope_id,
+            "illustration".to_string(),
+            Vec::new(),
+            "Illustration".to_string(),
+            None,
+            BTreeMap::from([(
+                "example/thumbnail".to_string(),
+                EntryComponentPayloadInput::Asset { asset_id: asset.id },
+            )]),
+            Vec::new(),
+            None,
+        )
+        .await
+        .expect("create entry failed");
+        let history = Entry::apply_component_mutations(
+            &mut transaction,
+            entry.id,
+            &[EntryComponentMutation::Set {
+                component_type: "example/illustration".to_string(),
+                expected_version: None,
+                payload: EntryComponentPayloadInput::Asset { asset_id: asset.id },
+            }],
+        )
+        .await
+        .expect("set Asset Component failed");
+        assert_eq!(history.history_changes.len(), 1);
+        assert_eq!(
+            history.history_changes[0].payload,
+            Some(json!({"payloadType": "ASSET", "assetId": asset.id}))
+        );
+        let effect = EntryEffect::create(&mut transaction, space.id, space.scope_id, user.id)
+            .await
+            .expect("create Asset Component effect failed");
+        EntryComponentHistory::record(
+            &mut transaction,
+            effect.id,
+            entry.id,
+            &entry.key,
+            &history.history_changes,
+        )
+        .await
+        .expect("record Asset Component history failed");
+        transaction.commit().await.expect("commit failed");
+
+        let recorded_history =
+            EntryComponentHistory::list_by_entry(&pool, space.scope_id, entry.id)
+                .await
+                .expect("load Asset Component history failed");
+        assert_eq!(recorded_history.len(), 1);
+        assert_eq!(
+            recorded_history[0].payload,
+            Some(json!({"payloadType": "ASSET", "assetId": asset.id}))
+        );
+
+        let entry = Entry::get_by_id(&pool, space.scope_id, entry.id)
+            .await
+            .expect("load entry failed")
+            .expect("entry missing");
+        let EntryComponent::Asset {
+            asset_id, version, ..
+        } = entry.components["example/illustration"]
+        else {
+            panic!("expected Asset Component");
+        };
+        assert_eq!(asset_id, asset.id);
+        assert!(matches!(
+            entry.components.get("example/thumbnail"),
+            Some(EntryComponent::Asset { asset_id, .. }) if *asset_id == asset.id
+        ));
+        let cached = CachedEntryComponents::load(&pool, entry.id)
+            .await
+            .expect("load cached Components failed")
+            .to_response();
+        assert!(matches!(
+            cached.get("example/illustration"),
+            Some(EntryComponent::Asset { asset_id, .. }) if *asset_id == asset.id
+        ));
+        let mut delete_transaction = pool.begin().await.expect("begin failed");
+        let delete_error = Asset::delete(&mut delete_transaction, asset.id)
+            .await
+            .expect_err("referenced Asset must not be deleted");
+        assert!(matches!(delete_error, ModelError::Conflict(_)));
+        delete_transaction
+            .rollback()
+            .await
+            .expect("rollback failed");
+
+        let mut transaction = pool.begin().await.expect("begin failed");
+        let history = Entry::apply_component_mutations(
+            &mut transaction,
+            entry.id,
+            &[EntryComponentMutation::Set {
+                component_type: "example/illustration".to_string(),
+                expected_version: Some(version),
+                payload: EntryComponentPayloadInput::json_with_schema(
+                    json!({"replaced": true}),
+                    Some(2),
+                ),
+            }],
+        )
+        .await
+        .expect("replace Asset Component failed");
+        assert_eq!(history.history_changes.len(), 1);
+        assert_eq!(
+            history.history_changes[0].action,
+            EntryComponentHistoryAction::Set
+        );
+        transaction.commit().await.expect("commit failed");
+
+        let other_space = Space::create(
+            &pool,
+            format!("component_{}", &Uuid::new_v4().simple().to_string()[..8]),
+            &user.id,
+            "Other component test".to_string(),
+            None,
+            Some("d20"),
+        )
+        .await
+        .expect("create other space failed");
+        let mut transaction = pool.begin().await.expect("begin failed");
+        let foreign_asset = Asset::create(
+            &mut transaction,
+            other_space.id,
+            media_id,
+            user.id,
+            "Foreign component asset",
+            AssetPolicy::Unlisted,
+        )
+        .await
+        .expect("create foreign asset failed");
+        transaction.commit().await.expect("commit failed");
+        let current = Entry::get_by_id(&pool, space.scope_id, entry.id)
+            .await
+            .expect("load current entry failed")
+            .expect("entry missing");
+        let current_version = current.components["example/illustration"].version();
+        let mut transaction = pool.begin().await.expect("begin failed");
+        let foreign_asset_result = Entry::apply_component_mutations(
+            &mut transaction,
+            entry.id,
+            &[EntryComponentMutation::Set {
+                component_type: "example/illustration".to_string(),
+                expected_version: Some(current_version),
+                payload: EntryComponentPayloadInput::Asset {
+                    asset_id: foreign_asset.id,
+                },
+            }],
+        )
+        .await;
+        assert!(matches!(
+            foreign_asset_result,
+            Err(ModelError::NotFound("Asset"))
+        ));
+        transaction.rollback().await.expect("rollback failed");
+
+        sqlx::query(
+            "INSERT INTO entry_components (entry_id, component_type, payload_type) VALUES ($1, $2, 'Json')",
+        )
+        .bind(entry.id)
+        .bind("core/orphan")
+        .execute(&pool)
+        .await
+        .expect("create orphan parent failed");
+        let entry_with_orphan = Entry::get_by_id(&pool, space.scope_id, entry.id)
+            .await
+            .expect("load entry with orphan failed")
+            .expect("entry missing");
+        assert!(!entry_with_orphan.components.contains_key("core/orphan"));
+        let cached_with_orphan = CachedEntryComponents::load(&pool, entry.id)
+            .await
+            .expect("load cached Components with orphan failed")
+            .to_response();
+        assert!(!cached_with_orphan.contains_key("core/orphan"));
+
+        let mut transaction = pool.begin().await.expect("begin failed");
+        let history = Entry::apply_component_mutations(
+            &mut transaction,
+            entry.id,
+            &[EntryComponentMutation::Set {
+                component_type: "core/orphan".to_string(),
+                expected_version: None,
+                payload: EntryComponentPayloadInput::json(json!({"repaired": true})),
+            }],
+        )
+        .await
+        .expect("repair orphan failed");
+        assert_eq!(history.history_changes.len(), 1);
+        transaction.commit().await.expect("commit failed");
+        let repaired = Entry::get_by_id(&pool, space.scope_id, entry.id)
+            .await
+            .expect("load repaired entry failed")
+            .expect("entry missing");
+        assert_eq!(
+            repaired.components["core/orphan"].json_data(),
+            json!({"repaired": true})
+        );
     }
 
     #[sqlx::test(migrator = "crate::db::MIGRATOR")]
@@ -990,7 +1966,7 @@ mod tests {
             Some(note.id),
             components([("core/counter", json!({"value": 10}))]),
             vec![" Resource ".to_string(), "resource".to_string()],
-            0,
+            None,
         )
         .await
         .expect("create entry failed");
@@ -1021,18 +1997,17 @@ mod tests {
             create_effect.id,
             entry.id,
             &entry.key,
-            &components_as_set_changes(&entry.components),
+            &components_as_set_history_changes(&entry.components),
         )
         .await
         .expect("create history failed");
         transaction.commit().await.expect("commit failed");
 
         let invalid_component = sqlx::query(
-            "INSERT INTO entry_components (entry_id, component_type, data) VALUES ($1, $2, $3)",
+            "INSERT INTO entry_components (entry_id, component_type, payload_type) VALUES ($1, $2, 'Json')",
         )
         .bind(entry.id)
         .bind("Invalid/type")
-        .bind(json!({}))
         .execute(&pool)
         .await;
         assert!(
@@ -1050,7 +2025,7 @@ mod tests {
             None,
             components([("core/counter", json!({"value": 1}))]),
             vec![],
-            1,
+            None,
         )
         .await;
         assert!(matches!(conflict, Err(ModelError::Conflict(_))));
@@ -1067,7 +2042,6 @@ mod tests {
             entry.display_name.to_string(),
             entry.reference_note_id,
             entry.tags.iter().map(ToString::to_string).collect(),
-            entry.sort,
         )
         .await
         .expect("stale update failed");
@@ -1085,7 +2059,6 @@ mod tests {
             entry.display_name.to_string(),
             entry.reference_note_id,
             vec!["State".to_string()],
-            entry.sort,
         )
         .await
         .expect("update failed")
@@ -1093,14 +2066,14 @@ mod tests {
         transaction.commit().await.expect("commit failed");
         assert_ne!(updated.metadata_version, entry.metadata_version);
         assert_eq!(
-            updated.components["core/counter"].data,
+            updated.components["core/counter"].json_data(),
             json!({"value": 10})
         );
-        assert_eq!(updated.components["core/counter"].schema_version, 1);
+        assert_eq!(updated.components["core/counter"].schema_version(), 1);
         assert_eq!(updated.tags.as_ref(), [CompactString::new("State")]);
 
         let metadata_version = updated.metadata_version;
-        let core_version = updated.components["core/counter"].version;
+        let core_version = updated.components["core/counter"].version();
         let mut transaction = pool.begin().await.expect("begin failed");
         let effect = EntryEffect::create(&mut transaction, space.id, space_scope.id, user.id)
             .await
@@ -1112,12 +2085,14 @@ mod tests {
                 EntryComponentMutation::Set {
                     component_type: "example/custom".to_string(),
                     expected_version: None,
-                    schema_version: Some(2),
-                    data: json!({"anything": true}),
+                    payload: EntryComponentPayloadInput::json_with_schema(
+                        json!({"anything": true}),
+                        Some(2),
+                    ),
                 },
                 EntryComponentMutation::Remove {
                     component_type: "core/counter".to_string(),
-                    expected_version: core_version,
+                    expected_version: Some(core_version),
                 },
             ],
         )
@@ -1128,7 +2103,7 @@ mod tests {
             effect.id,
             updated.id,
             &updated.key,
-            &changes,
+            &changes.history_changes,
         )
         .await
         .expect("record component batch failed");
@@ -1141,11 +2116,11 @@ mod tests {
         assert_eq!(updated.metadata_version, metadata_version);
         assert!(!updated.components.contains_key("core/counter"));
         assert_eq!(
-            updated.components["example/custom"].data,
+            updated.components["example/custom"].json_data(),
             json!({"anything": true})
         );
-        assert_eq!(updated.components["example/custom"].schema_version, 2);
-        let custom_version = updated.components["example/custom"].version;
+        assert_eq!(updated.components["example/custom"].schema_version(), 2);
+        let custom_version = updated.components["example/custom"].version();
 
         let mut transaction = pool.begin().await.expect("begin failed");
         let changes = Entry::apply_component_mutations(
@@ -1154,8 +2129,7 @@ mod tests {
             &[EntryComponentMutation::Set {
                 component_type: "example/custom".to_string(),
                 expected_version: Some(custom_version),
-                schema_version: None,
-                data: json!({"anything": "updated"}),
+                payload: EntryComponentPayloadInput::json(json!({"anything": "updated"})),
             }],
         )
         .await
@@ -1169,7 +2143,7 @@ mod tests {
             update_effect.id,
             updated.id,
             &updated.key,
-            &changes,
+            &changes.history_changes,
         )
         .await
         .expect("record component update failed");
@@ -1180,7 +2154,8 @@ mod tests {
             .expect("entry lookup failed")
             .expect("entry missing");
         assert_eq!(
-            after_component_update.components["example/custom"].schema_version, 2,
+            after_component_update.components["example/custom"].schema_version(),
+            2,
             "omitting schemaVersion must preserve the stored format version"
         );
         let mut transaction = pool.begin().await.expect("begin failed");
@@ -1191,14 +2166,16 @@ mod tests {
                 EntryComponentMutation::Set {
                     component_type: "example/custom".to_string(),
                     expected_version: Some(
-                        after_component_update.components["example/custom"].version,
+                        after_component_update.components["example/custom"].version(),
                     ),
-                    schema_version: Some(3),
-                    data: json!({"anything": false}),
+                    payload: EntryComponentPayloadInput::json_with_schema(
+                        json!({"anything": false}),
+                        Some(3),
+                    ),
                 },
                 EntryComponentMutation::Remove {
                     component_type: "example/missing".to_string(),
-                    expected_version: Uuid::new_v4(),
+                    expected_version: Some(Uuid::new_v4()),
                 },
             ],
         )
@@ -1210,12 +2187,12 @@ mod tests {
             .expect("entry lookup failed")
             .expect("entry missing");
         assert_eq!(
-            after_rollback.components["example/custom"].data,
+            after_rollback.components["example/custom"].json_data(),
             json!({"anything": "updated"})
         );
         assert_eq!(
-            after_rollback.components["example/custom"].version,
-            after_component_update.components["example/custom"].version,
+            after_rollback.components["example/custom"].version(),
+            after_component_update.components["example/custom"].version(),
             "a conflict must roll back the whole component batch"
         );
 
@@ -1243,7 +2220,6 @@ mod tests {
             detached.display_name.to_string(),
             detached.reference_note_id,
             detached.tags.iter().map(ToString::to_string).collect(),
-            detached.sort,
         )
         .await
         .expect("rename failed")
@@ -1322,7 +2298,7 @@ mod tests {
             None,
             components([("core/counter", json!({"value": 12}))]),
             Vec::new(),
-            0,
+            None,
         )
         .await
         .expect("create replacement failed");
@@ -1344,7 +2320,7 @@ mod tests {
             replacement_effect.id,
             replacement.id,
             &replacement.key,
-            &components_as_set_changes(&replacement.components),
+            &components_as_set_history_changes(&replacement.components),
         )
         .await
         .expect("record replacement history failed");
@@ -1378,20 +2354,27 @@ mod tests {
         assert!(history.iter().any(|row| {
             row.component_type == "core/counter"
                 && row.action == EntryComponentHistoryAction::Set
-                && row.data == Some(json!({"value": 10}))
-                && row.schema_version == Some(1)
+                && row.payload
+                    == Some(json!({
+                        "payloadType": "JSON",
+                        "schemaVersion": 1,
+                        "data": {"value": 10}
+                    }))
         }));
         assert!(history.iter().any(|row| {
             row.component_type == "core/counter"
                 && row.action == EntryComponentHistoryAction::Remove
-                && row.data.is_none()
-                && row.schema_version.is_none()
+                && row.payload.is_none()
         }));
         assert!(history.iter().any(|row| {
             row.component_type == "example/custom"
                 && row.action == EntryComponentHistoryAction::Set
-                && row.data == Some(json!({"anything": "updated"}))
-                && row.schema_version == Some(2)
+                && row.payload
+                    == Some(json!({
+                        "payloadType": "JSON",
+                        "schemaVersion": 2,
+                        "data": {"anything": "updated"}
+                    }))
         }));
 
         let entry_history = EntryHistory::list_by_scope(&pool, space_scope.id, None)

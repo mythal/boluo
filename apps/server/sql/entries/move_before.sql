@@ -1,31 +1,31 @@
-INSERT INTO entries (
-    id,
-    scope_id,
-    display_name,
-    reference_note_id,
-    tags,
-    pos_p,
-    pos_q
-)
 WITH target_scope AS MATERIALIZED (
     SELECT id
     FROM scopes
-    WHERE id = $2
+    WHERE id = $1
     FOR UPDATE
+),
+target AS MATERIALIZED (
+    SELECT entry.id
+    FROM entries entry
+    JOIN target_scope ON target_scope.id = entry.scope_id
+    WHERE entry.id = $2
+      AND entry.metadata_version = $3
+    FOR UPDATE OF entry
 ),
 upper_bound AS (
     SELECT entry.pos_p, entry.pos_q
     FROM entries entry
     JOIN target_scope ON target_scope.id = entry.scope_id
-    WHERE entry.id = $6
+    WHERE entry.id = $4
+      AND entry.id <> $2
 ),
 lower_bound AS (
     SELECT entry.pos_p, entry.pos_q
     FROM entries entry
     JOIN target_scope ON target_scope.id = entry.scope_id
-    WHERE entry.id <> $1
+    WHERE entry.id <> $2
       AND (
-          $6::uuid IS NULL
+          $4::uuid IS NULL
           OR entry.pos < (SELECT pos_p::double precision / pos_q FROM upper_bound)
       )
     ORDER BY entry.pos DESC
@@ -38,7 +38,7 @@ position AS (
             + 1024
         )::integer AS p,
         1::integer AS q
-    WHERE $6::uuid IS NULL
+    WHERE $4::uuid IS NULL
 
     UNION ALL
 
@@ -49,9 +49,17 @@ position AS (
         (SELECT pos_p FROM upper_bound),
         (SELECT pos_q FROM upper_bound)
     ) intermediate
-    WHERE $6::uuid IS NOT NULL
+    WHERE $4::uuid IS NOT NULL
       AND EXISTS (SELECT 1 FROM upper_bound)
+),
+updated AS (
+    UPDATE entries entry
+    SET pos_p = position.p,
+        pos_q = position.q,
+        metadata_version = uuidv7(),
+        modified = now()
+    FROM target, position
+    WHERE entry.id = target.id
+    RETURNING entry.id
 )
-SELECT $1, target_scope.id, $3, $4, $5, position.p, position.q
-FROM target_scope
-CROSS JOIN position;
+SELECT id FROM updated;

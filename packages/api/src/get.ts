@@ -11,6 +11,7 @@ import type {
   CheckUsernameExists,
   Character,
   Entry,
+  EntryComponentMatch,
   EntryMetadata,
   EntryComponentHistory,
   EntryComponentHistoryQuery,
@@ -20,6 +21,7 @@ import type {
   Export,
   GetMessagesByChannel,
   ListCharacters,
+  ListEntriesByComponent,
   ListAssets,
   ListEntries,
   ListNotes,
@@ -90,6 +92,10 @@ export interface Get {
   '/notes/content_revisions': { query: QueryNote; result: NoteContentRevision[] };
   // entries
   '/entries/by_scope': { query: ListEntries; result: EntryMetadata[] };
+  '/entries/by_component': {
+    query: ListEntriesByComponent;
+    result: EntryComponentMatch[];
+  };
   '/entries/query': { query: QueryEntry; result: Entry };
   '/entries/history': { query: EntryHistoryQuery; result: EntryHistory[] };
   '/entries/component_history': {

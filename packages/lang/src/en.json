@@ -131,6 +131,9 @@
   "56x7wR": {
     "message": "verify it"
   },
+  "58VJY/": {
+    "message": "A character can have up to {maxCount} portraits."
+  },
   "5HUwAy": {
     "message": "Only letters, numbers, and underscores are allowed."
   },
@@ -970,6 +973,9 @@
   },
   "e+eb5F": {
     "message": "Broadcast has been turned off"
+  },
+  "e08nsD": {
+    "message": "Up to {maxCount} portraits."
   },
   "e3Ttmb": {
     "message": "In Game"

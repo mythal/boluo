@@ -2,6 +2,8 @@ import type { EntryComponent, EntryComponentMatch } from '@boluo/api';
 import { ENTRY_DISPLAY_NAME_MAX_LENGTH, truncateUnicode } from './entry-metadata';
 
 export const PORTRAIT_COMPONENT_TYPE = 'core/portrait';
+// Keep this aligned with the server's core/portrait Component limit.
+export const MAX_PORTRAIT_COUNT = 6;
 
 const PORTRAIT_KEY_RANDOM_LENGTH = 6;
 const ASSET_NAME_MAX_LENGTH = 100;

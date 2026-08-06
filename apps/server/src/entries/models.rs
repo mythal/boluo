@@ -10,6 +10,10 @@ use crate::characters::{normalize_aliases, normalize_ident};
 use crate::error::{ModelError, ValidationFailed};
 
 pub(crate) const CORE_PORTRAIT_COMPONENT_TYPE: &str = "core/portrait";
+// This is intentionally a soft limit. A rare concurrent overage is acceptable.
+const MAX_PORTRAIT_COMPONENTS_PER_SCOPE: i64 = 6;
+const PORTRAIT_COMPONENT_LIMIT_ERROR: &str =
+    "A Scope may contain at most 6 core/portrait Components.";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, sqlx::Type)]
 #[sqlx(type_name = "entry_component_payload_type", rename_all = "PascalCase")]
@@ -81,6 +85,10 @@ impl EntryComponentForUpdateRow {
 
     fn has_json_payload(&self) -> bool {
         self.payload_type == EntryComponentPayloadType::Json && self.json_exists
+    }
+
+    fn has_asset_payload(&self) -> bool {
+        self.payload_type == EntryComponentPayloadType::Asset && self.asset_exists
     }
 }
 
@@ -511,22 +519,53 @@ async fn validate_asset_component(
     if component_type != CORE_PORTRAIT_COMPONENT_TYPE {
         return Ok(());
     }
-    let mime_type = sqlx::query_scalar::<_, String>(
-        r#"
-        SELECT media.mime_type
-        FROM assets asset
-        JOIN media ON media.id = asset.media_id
-        WHERE asset.id = $1
-        "#,
-    )
-    .bind(asset_id)
-    .fetch_optional(&mut **db)
-    .await?
-    .ok_or(ModelError::NotFound("Asset"))?;
+    let mime_type =
+        sqlx::query_file_scalar!("sql/entries/get_portrait_asset_mime_type.sql", asset_id,)
+            .fetch_optional(&mut **db)
+            .await?
+            .ok_or(ModelError::NotFound("Asset"))?;
     if !mime_type.starts_with("image/") {
         return Err(
             ValidationFailed("A core/portrait Component must reference an image Asset.").into(),
         );
+    }
+    Ok(())
+}
+
+async fn validate_portrait_capacity(
+    db: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    scope_id: Uuid,
+) -> Result<(), ModelError> {
+    let has_capacity = sqlx::query_file_scalar!(
+        "sql/entries/validate_portrait_capacity.sql",
+        scope_id,
+        MAX_PORTRAIT_COMPONENTS_PER_SCOPE,
+        CORE_PORTRAIT_COMPONENT_TYPE,
+    )
+    .fetch_optional(&mut **db)
+    .await?
+    .ok_or(ModelError::NotFound("Scope"))?;
+    if !has_capacity {
+        return Err(ValidationFailed(PORTRAIT_COMPONENT_LIMIT_ERROR).into());
+    }
+    Ok(())
+}
+
+async fn validate_portrait_capacity_by_entry(
+    db: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    entry_id: Uuid,
+) -> Result<(), ModelError> {
+    let has_capacity = sqlx::query_file_scalar!(
+        "sql/entries/validate_portrait_capacity_by_entry.sql",
+        entry_id,
+        MAX_PORTRAIT_COMPONENTS_PER_SCOPE,
+        CORE_PORTRAIT_COMPONENT_TYPE,
+    )
+    .fetch_optional(&mut **db)
+    .await?
+    .ok_or(ModelError::NotFound("Entry"))?;
+    if !has_capacity {
+        return Err(ValidationFailed(PORTRAIT_COMPONENT_LIMIT_ERROR).into());
     }
     Ok(())
 }
@@ -675,6 +714,9 @@ impl Entry {
             if let EntryComponentPayloadInput::Asset { asset_id } = payload {
                 validate_asset_component(db, component_type, *asset_id).await?;
             }
+        }
+        if components.contains_key(CORE_PORTRAIT_COMPONENT_TYPE) {
+            validate_portrait_capacity(db, scope_id).await?;
         }
         let tags = crate::validators::normalize_tags(tags)?;
         validate_reference_note(db, scope_id, reference_note_id).await?;
@@ -1079,6 +1121,13 @@ impl Entry {
                     payload,
                 } => {
                     validate_component_precondition(current.as_ref(), *expected_version)?;
+                    if component_type == CORE_PORTRAIT_COMPONENT_TYPE
+                        && !current
+                            .as_ref()
+                            .is_some_and(EntryComponentForUpdateRow::has_asset_payload)
+                    {
+                        validate_portrait_capacity_by_entry(db, entry_id).await?;
+                    }
                     if let EntryComponentPayloadInput::Asset { asset_id } = payload {
                         validate_asset_component(db, component_type, *asset_id).await?;
                         let valid = sqlx::query_file_scalar!(
@@ -1583,13 +1632,93 @@ mod tests {
         .await
         .expect("move Portrait failed")
         .expect("Portrait metadata version should match");
+
+        for index in 3..=MAX_PORTRAIT_COMPONENTS_PER_SCOPE {
+            Entry::create(
+                &mut transaction,
+                character.scope_id,
+                format!("portrait_{index}"),
+                Vec::new(),
+                format!("Portrait {index}"),
+                None,
+                portrait_components(image_asset.id),
+                Vec::new(),
+                None,
+            )
+            .await
+            .expect("create portrait within limit failed");
+        }
+        let empty_entry = Entry::create(
+            &mut transaction,
+            character.scope_id,
+            "portrait_limit_candidate".to_string(),
+            Vec::new(),
+            "Portrait limit candidate".to_string(),
+            None,
+            BTreeMap::new(),
+            Vec::new(),
+            None,
+        )
+        .await
+        .expect("create empty Entry failed");
+        let create_over_limit = Entry::create(
+            &mut transaction,
+            character.scope_id,
+            "portrait_7".to_string(),
+            Vec::new(),
+            "Portrait 7".to_string(),
+            None,
+            portrait_components(image_asset.id),
+            Vec::new(),
+            None,
+        )
+        .await;
+        assert!(matches!(
+            create_over_limit,
+            Err(ModelError::Validation(ValidationFailed(
+                PORTRAIT_COMPONENT_LIMIT_ERROR
+            )))
+        ));
+        let set_over_limit = Entry::apply_component_mutations(
+            &mut transaction,
+            empty_entry.id,
+            &[EntryComponentMutation::Set {
+                component_type: CORE_PORTRAIT_COMPONENT_TYPE.to_string(),
+                expected_version: None,
+                payload: EntryComponentPayloadInput::Asset {
+                    asset_id: image_asset.id,
+                },
+            }],
+        )
+        .await;
+        assert!(matches!(
+            set_over_limit,
+            Err(ModelError::Validation(ValidationFailed(
+                PORTRAIT_COMPONENT_LIMIT_ERROR
+            )))
+        ));
+        let initially_main_version =
+            initially_main.components[CORE_PORTRAIT_COMPONENT_TYPE].version();
+        Entry::apply_component_mutations(
+            &mut transaction,
+            initially_main.id,
+            &[EntryComponentMutation::Set {
+                component_type: CORE_PORTRAIT_COMPONENT_TYPE.to_string(),
+                expected_version: Some(initially_main_version),
+                payload: EntryComponentPayloadInput::Asset {
+                    asset_id: image_asset.id,
+                },
+            }],
+        )
+        .await
+        .expect("replacing a portrait at the limit should succeed");
         transaction.commit().await.expect("commit failed");
 
         let matches =
             Entry::list_by_component(&pool, character.scope_id, CORE_PORTRAIT_COMPONENT_TYPE)
                 .await
                 .expect("list portrait Components failed");
-        assert_eq!(matches.len(), 2);
+        assert_eq!(matches.len(), MAX_PORTRAIT_COMPONENTS_PER_SCOPE as usize);
         assert_eq!(matches[0].metadata.id, portrait.id);
         assert!(matches!(
             matches[0].component,

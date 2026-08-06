@@ -59,6 +59,9 @@
   "198Skw": {
     "message": "Customization"
   },
+  "1QosTr": {
+    "message": "Used by"
+  },
   "1iEPTM": {
     "message": "General"
   },
@@ -140,9 +143,6 @@
   "5zHF5n": {
     "message": "Open New Pane"
   },
-  "60KMrS": {
-    "message": "As Default"
-  },
   "62nsdy": {
     "message": "Retry"
   },
@@ -178,6 +178,9 @@
   },
   "6q3tCn": {
     "message": "Connecting"
+  },
+  "6yXGic": {
+    "message": "Set Default"
   },
   "70Tngj": {
     "message": "Close the pane"
@@ -233,6 +236,9 @@
   "98c0D6": {
     "message": "Include out-of-game messages"
   },
+  "9DYjeh": {
+    "message": "Current character"
+  },
   "9NDg1Z": {
     "message": "(Whisper)"
   },
@@ -275,6 +281,12 @@
   "BEbOqj": {
     "message": "Oops!"
   },
+  "BTp/5U": {
+    "message": "No characters yet."
+  },
+  "BfE7dl": {
+    "message": "Character name"
+  },
   "Bm9rWe": {
     "message": "Failed to delete the message"
   },
@@ -289,6 +301,9 @@
   },
   "CNLipo": {
     "message": "Verification failed. Please try again or contact support."
+  },
+  "CW4O0j": {
+    "message": "Character"
   },
   "CW7jWC": {
     "message": "(me)"
@@ -346,6 +361,9 @@
   },
   "GMPXuF": {
     "message": "Everyone can join this space"
+  },
+  "GV6GZ6": {
+    "message": "This character is currently used by {usageCount, plural, one {# member} other {# members}}. Archiving it will unbind it from their channels. Are you sure?"
   },
   "GaOcCS": {
     "message": "To use this app, please upgrade your iOS/iPadOS version to 16 or above."
@@ -458,6 +476,9 @@
   "KhLK4z": {
     "message": "You do not have permission to view this space."
   },
+  "KjWmVd": {
+    "message": "Characters could not be loaded."
+  },
   "Kp8wZw": {
     "message": "Have not set a bio yet"
   },
@@ -490,6 +511,9 @@
   },
   "LtEjKk": {
     "message": "Focus Next"
+  },
+  "LtJqeU": {
+    "message": "Use a valid color value."
   },
   "Lzb4s2": {
     "message": "Move failed"
@@ -581,11 +605,17 @@
   "PpzpBO": {
     "message": "Click to view"
   },
+  "PqQcvG": {
+    "message": "Toggle character details"
+  },
   "PwaN2o": {
     "message": "Welcome"
   },
   "PxOtYI": {
     "message": "Editing; Show original"
+  },
+  "PypaKS": {
+    "message": "Recent characters"
   },
   "Q+Af6H": {
     "message": "Out of Game"
@@ -875,6 +905,9 @@
   "cpFKi9": {
     "message": "Topics can be used to record and remind you of what you are currently focused on."
   },
+  "cyR7Kh": {
+    "message": "Back"
+  },
   "cyeEx0": {
     "message": "Midnight"
   },
@@ -947,11 +980,17 @@
   "fnihsY": {
     "message": "Leave"
   },
+  "ftDYZo": {
+    "message": "Unarchive"
+  },
   "ftsMiH": {
     "message": "Toggle In Game"
   },
   "fxvXUy": {
     "message": "Reveal"
+  },
+  "g7UZYd": {
+    "message": "Archiving this character will unbind it from any channels where it is currently in use. Are you sure?"
   },
   "gEes7R": {
     "message": "You need to {loginLink} to accept the invitation."
@@ -961,6 +1000,9 @@
   },
   "gduNan": {
     "message": "In Light Mode"
+  },
+  "gk+yeE": {
+    "message": "Failed to query character"
   },
   "hCMGkK": {
     "message": "You are not logged in"
@@ -991,6 +1033,9 @@
   },
   "huqwHp": {
     "message": "{start} Modified {updated}"
+  },
+  "hw9PdM": {
+    "message": "Inherits your default color."
   },
   "iATkrL": {
     "message": "The pane has crashed"
@@ -1046,11 +1091,17 @@
   "kMogDE": {
     "message": "Must be a valid email address."
   },
+  "kP8cI1": {
+    "message": "Create character"
+  },
   "kdRsn5": {
     "message": "The message you were editing was deleted. Your edits have been saved as a draft."
   },
   "kh4wt0": {
     "message": "Toggle Sidebar"
+  },
+  "ku+mDU": {
+    "message": "State"
   },
   "l+qC1C": {
     "message": "Include Names"
@@ -1060,6 +1111,9 @@
   },
   "lKv8ex": {
     "message": "Default"
+  },
+  "lo1ANX": {
+    "message": "Failed to query character states"
   },
   "lx+ssX": {
     "message": "Leave Space"
@@ -1082,6 +1136,9 @@
   "n9f3pm": {
     "message": "Limit exceeded."
   },
+  "nCAM1K": {
+    "message": "No description yet."
+  },
   "nE9tn4": {
     "message": "Open in New Window"
   },
@@ -1090,6 +1147,9 @@
   },
   "nmSKJK": {
     "message": "Can't be empty."
+  },
+  "o0OcU0": {
+    "message": "As this name"
   },
   "oGBmRj": {
     "message": "Failed to query the channel members"
@@ -1115,8 +1175,14 @@
   "p556q3": {
     "message": "Copied"
   },
+  "p5LNtB": {
+    "message": "Not set"
+  },
   "pBQ5bd": {
     "message": "Editing"
+  },
+  "pFK6bJ": {
+    "message": "View all"
   },
   "pJ78jg": {
     "message": "OOC"
@@ -1135,6 +1201,9 @@
   },
   "qOH6mx": {
     "message": "Serif"
+  },
+  "qObHlo": {
+    "message": "All characters"
   },
   "qQ4pEa": {
     "message": "Whisper to {targets}"
@@ -1220,8 +1289,17 @@
   "taJuye": {
     "message": "We recommend using the latest version of {chromeLink}, {firefoxLink}, or {edgeLink} to use this application."
   },
+  "tcCPK0": {
+    "message": "As character"
+  },
   "tiLDlf": {
     "message": "Dusha Green"
+  },
+  "uMhpKe": {
+    "message": "Color"
+  },
+  "ufBuw4": {
+    "message": "No states have been added yet."
   },
   "ug01Mk": {
     "message": "Time"
@@ -1274,6 +1352,9 @@
   "wb3MSp": {
     "message": "This username is already taken."
   },
+  "wrxYAn": {
+    "message": "Unsupported component: {types}"
+  },
   "x82IOl": {
     "message": "Mute"
   },
@@ -1312,6 +1393,9 @@
   },
   "z/ipXX": {
     "message": "Oops"
+  },
+  "z16Lmv": {
+    "message": "Character usage could not be loaded."
   },
   "z9LRLa": {
     "message": "Edited at"

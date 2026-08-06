@@ -2,13 +2,21 @@ use serde::Deserialize;
 use std::collections::BTreeMap;
 use uuid::Uuid;
 
-use super::models::EntryComponentMutation;
+use super::models::{EntryComponentMutation, EntryComponentPayloadInput};
 
 #[derive(Debug, Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct ListEntries {
     pub space_id: Uuid,
     pub scope_id: Uuid,
+}
+
+#[derive(Debug, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct ListEntriesByComponent {
+    pub space_id: Uuid,
+    pub scope_id: Uuid,
+    pub component_type: String,
 }
 
 #[derive(Debug, Deserialize, specta::Type)]
@@ -41,9 +49,9 @@ pub struct EntryComponentHistoryQuery {
 
 #[derive(Debug, Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
-pub struct QueryEntryEffects {
+pub struct QueryEntryEffectsByMessages {
     pub space_id: Uuid,
-    pub entry_effect_ids: Vec<Uuid>,
+    pub message_ids: Vec<Uuid>,
 }
 
 #[derive(Debug, Deserialize, specta::Type)]
@@ -65,10 +73,11 @@ pub struct CreateEntry {
     pub display_name: String,
     pub reference_note_id: Option<Uuid>,
     #[serde(default)]
-    pub components: BTreeMap<String, serde_json::Value>,
+    pub components: BTreeMap<String, EntryComponentPayloadInput>,
     #[serde(default)]
     pub tags: Vec<String>,
-    pub sort: i32,
+    #[serde(default)]
+    pub before_entry_id: Option<Uuid>,
     pub message_id: Option<Uuid>,
 }
 
@@ -85,7 +94,18 @@ pub struct EditEntry {
     pub display_name: String,
     pub reference_note_id: Option<Uuid>,
     pub tags: Vec<String>,
-    pub sort: i32,
+}
+
+#[derive(Debug, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct MoveEntry {
+    pub space_id: Uuid,
+    pub scope_id: Uuid,
+    pub entry_id: Uuid,
+    pub expected_metadata_version: Uuid,
+    /// Omit or set to `null` to move the Entry to the end.
+    #[serde(default)]
+    pub before_entry_id: Option<Uuid>,
 }
 
 #[derive(Debug, Deserialize, specta::Type)]
@@ -95,6 +115,11 @@ pub struct EditEntryComponents {
     pub scope_id: Uuid,
     pub entry_id: Uuid,
     pub message_id: Option<Uuid>,
+    #[serde(default)]
+    pub skip_record_history: bool,
+    /// Keep the Entry when the mutations leave it with no Components.
+    #[serde(default)]
+    pub keep_empty_entry: bool,
     pub changes: Vec<EntryComponentMutation>,
 }
 
@@ -123,5 +148,27 @@ mod tests {
         assert_eq!(payload.space_id, space_id);
         assert_eq!(payload.scope_id, scope_id);
         assert_eq!(payload.identifier, "health points");
+    }
+
+    #[test]
+    fn edit_components_records_history_by_default() {
+        let json = serde_json::json!({
+            "spaceId": Uuid::now_v7(),
+            "scopeId": Uuid::now_v7(),
+            "entryId": Uuid::now_v7(),
+            "messageId": null,
+            "changes": [{
+                "action": "SET",
+                "componentType": "example/counter",
+                "expectedVersion": null,
+                "payloadType": "JSON",
+                "data": {"value": 1}
+            }]
+        });
+        let payload: EditEntryComponents = sonic_rs::from_slice(json.to_string().as_bytes())
+            .expect("component mutation should decode");
+
+        assert!(!payload.skip_record_history);
+        assert!(!payload.keep_empty_entry);
     }
 }

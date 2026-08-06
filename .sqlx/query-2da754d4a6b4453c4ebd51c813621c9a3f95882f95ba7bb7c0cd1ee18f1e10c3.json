@@ -1,0 +1,19 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO entry_component_history (\n    entry_effect_id,\n    entry_id,\n    key,\n    component_type,\n    action,\n    payload\n)\nVALUES (\n    $1,\n    $2,\n    $3,\n    $4,\n    ($5::text)::entry_component_history_action,\n    $6\n);\n",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Text",
+        "Text",
+        "Text",
+        "Jsonb"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "2da754d4a6b4453c4ebd51c813621c9a3f95882f95ba7bb7c0cd1ee18f1e10c3"
+}

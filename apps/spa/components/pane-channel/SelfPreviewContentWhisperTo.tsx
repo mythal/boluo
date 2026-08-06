@@ -21,6 +21,7 @@ import { ButtonInline } from '@boluo/ui/ButtonInline';
 import { FloatingBox } from '@boluo/ui/FloatingBox';
 import { useFloatingSetters } from '@boluo/ui/hooks/useFloatingSetters';
 import { useMember } from '../../hooks/useMember';
+import { useChannelCharacterName } from '../../hooks/useChannelCharacter';
 
 interface Props {
   inGame: boolean;
@@ -202,7 +203,8 @@ const MemberItem: FC<{
   add: (username: string) => void;
   mediaUrl?: string | null | undefined;
 }> = ({ member, add, inGame, mediaUrl }) => {
-  const characterName: ReactNode = member.channel.characterName || (
+  const resolvedCharacterName = useChannelCharacterName(member);
+  const characterName: ReactNode = resolvedCharacterName || (
     <span className="font-pixel text-text-muted text-[12.5px]">[empty]</span>
   );
   const mainName: ReactNode = inGame ? characterName : member.user.nickname;

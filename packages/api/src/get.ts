@@ -10,7 +10,9 @@ import type {
   CheckEntryIdentifier,
   CheckUsernameExists,
   Character,
+  CharacterUsage,
   Entry,
+  EntryComponentMatch,
   EntryMetadata,
   EntryComponentHistory,
   EntryComponentHistoryQuery,
@@ -20,6 +22,7 @@ import type {
   Export,
   GetMessagesByChannel,
   ListCharacters,
+  ListEntriesByComponent,
   ListAssets,
   ListEntries,
   ListNotes,
@@ -90,6 +93,10 @@ export interface Get {
   '/notes/content_revisions': { query: QueryNote; result: NoteContentRevision[] };
   // entries
   '/entries/by_scope': { query: ListEntries; result: EntryMetadata[] };
+  '/entries/by_component': {
+    query: ListEntriesByComponent;
+    result: EntryComponentMatch[];
+  };
   '/entries/query': { query: QueryEntry; result: Entry };
   '/entries/history': { query: EntryHistoryQuery; result: EntryHistory[] };
   '/entries/component_history': {
@@ -100,6 +107,7 @@ export interface Get {
   // characters
   '/characters/query': { query: QueryCharacter; result: Character };
   '/characters/by_space': { query: ListCharacters; result: Character[] };
+  '/characters/usages': { query: QueryCharacter; result: CharacterUsage[] };
   '/characters/check_identifier': { query: CheckCharacterIdentifier; result: boolean };
   // updates (formerly known as events)
   '/updates/token': { query: MakeToken; result: { token: string; issuedAt: number } };

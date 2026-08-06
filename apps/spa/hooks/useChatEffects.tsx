@@ -5,6 +5,11 @@ import type { ChannelMembers, UserStatus } from '@boluo/api';
 import { chatAtom, chatEffectsAtom } from '../state/chat.atoms';
 import type { ChatEffect } from '../state/chat.types';
 
+const swrKeyStartsWith =
+  (...prefix: unknown[]) =>
+  (key: unknown): boolean =>
+    Array.isArray(key) && prefix.every((value, index) => key[index] === value);
+
 const applyEffect = async (
   effect: ChatEffect,
   mutate: ReturnType<typeof useSWRConfig>['mutate'],
@@ -38,12 +43,23 @@ const applyEffect = async (
           return { ...channelMembers, members: effect.members };
         }
       });
+      await mutate(swrKeyStartsWith('/characters/usages'));
       return;
     case 'STATUS_UPDATED':
       await mutate<Record<string, UserStatus | undefined>>(
         ['/spaces/users_status', effect.spaceId],
         effect.statusMap,
       );
+      return;
+    case 'CHARACTER_CHANGED':
+      await mutate(swrKeyStartsWith('/characters/by_space', effect.spaceId));
+      await mutate(['/characters/query', effect.spaceId, effect.characterId]);
+      await mutate(['/characters/usages', effect.spaceId, effect.characterId]);
+      return;
+    case 'ENTRY_CHANGED':
+      await mutate(['/entries/by_scope', effect.spaceId, effect.scopeId]);
+      await mutate(['/entries/query', effect.spaceId, effect.scopeId, effect.entryId]);
+      await mutate(swrKeyStartsWith('/entries/by_component', effect.spaceId, effect.scopeId));
       return;
   }
 };

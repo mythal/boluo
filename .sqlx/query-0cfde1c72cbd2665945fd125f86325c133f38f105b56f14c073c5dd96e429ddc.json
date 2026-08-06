@@ -1,0 +1,89 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n    id,\n    space_id,\n    scope_id,\n    operator_id,\n    created,\n    message_id\nFROM entry_effects\nWHERE space_id = $1\n  AND id = ANY($2)\nORDER BY created DESC, id DESC;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "entry_effects",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "space_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "entry_effects",
+            "name": "space_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "scope_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "entry_effects",
+            "name": "scope_id"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "operator_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "entry_effects",
+            "name": "operator_id"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "created",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "entry_effects",
+            "name": "created"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "message_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "entry_effects",
+            "name": "message_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "UuidArray"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      false,
+      true
+    ]
+  },
+  "hash": "0cfde1c72cbd2665945fd125f86325c133f38f105b56f14c073c5dd96e429ddc"
+}

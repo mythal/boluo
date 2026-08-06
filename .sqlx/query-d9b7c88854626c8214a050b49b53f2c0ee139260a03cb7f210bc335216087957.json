@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT asset_component.asset_id\nFROM entries entry\nJOIN entry_components component\n  ON component.entry_id = entry.id\n AND component.component_type = $2\n AND component.payload_type = 'Asset'\nJOIN entry_components_asset asset_component\n  ON asset_component.entry_id = component.entry_id\n AND asset_component.component_type = component.component_type\n AND asset_component.payload_type = component.payload_type\nWHERE entry.scope_id = $1\nORDER BY entry.pos, entry.id\nLIMIT 1;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "asset_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "entry_components_asset",
+            "name": "asset_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "d9b7c88854626c8214a050b49b53f2c0ee139260a03cb7f210bc335216087957"
+}

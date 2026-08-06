@@ -1726,7 +1726,11 @@ impl SpaceStore {
                 .flat_map(PersistentMap::values)
                 .cloned()
                 .collect();
-            entries.sort_unstable_by_key(|entry| (entry.sort, entry.id));
+            entries.sort_unstable_by(|left, right| {
+                left.pos
+                    .total_cmp(&right.pos)
+                    .then_with(|| left.id.cmp(&right.id))
+            });
             return Ok(entries);
         }
         metrics::counter!("boluo_server_space_runtime_read_total", "result" => "fallback")
@@ -1784,7 +1788,7 @@ impl SpaceStore {
             return Ok(Some(
                 current_entry
                     .clone()
-                    .with_components(components.decode_for_response()?),
+                    .with_components(components.to_response()),
             ));
         }
         metrics::counter!("boluo_server_entry_component_cache_read_total", "result" => "fallback")
@@ -2173,7 +2177,7 @@ mod tests {
         let (_owner, space, _) = create_space(&pool).await;
         let mut transaction = pool.begin().await.expect("failed to begin transaction");
         let mut expected_order = Vec::new();
-        for (key, sort) in [("ä", 1), ("Z", 0), ("a", 1)] {
+        for key in ["ä", "Z", "a"] {
             let entry = Entry::create(
                 &mut transaction,
                 space.scope_id,
@@ -2183,19 +2187,18 @@ mod tests {
                 None,
                 BTreeMap::new(),
                 Vec::new(),
-                sort,
+                None,
             )
             .await
             .expect("failed to create Entry");
-            expected_order.push((sort, entry.id));
+            expected_order.push(entry.id);
         }
         transaction
             .commit()
             .await
             .expect("failed to commit Entries");
 
-        expected_order.sort_unstable();
-        let expected_ids: Vec<_> = expected_order.into_iter().map(|(_, id)| id).collect();
+        let expected_ids = expected_order;
         let database_ids: Vec<_> = EntryMetadata::list_by_scope(&pool, space.scope_id)
             .await
             .expect("failed to list database Entries")
@@ -2227,9 +2230,12 @@ mod tests {
             Vec::new(),
             "Hit Points".to_string(),
             None,
-            BTreeMap::from([("core/counter".to_string(), json!({"value": 10}))]),
+            BTreeMap::from([(
+                "core/counter".to_string(),
+                crate::entries::models::EntryComponentPayloadInput::json(json!({"value": 10})),
+            )]),
             Vec::new(),
-            0,
+            None,
         )
         .await
         .expect("failed to create Entry");
@@ -2278,11 +2284,11 @@ mod tests {
             .expect("failed to resolve Entry")
             .expect("Entry is missing");
         assert_eq!(
-            resolved.components["core/counter"].data,
+            resolved.components["core/counter"].json_data(),
             json!({"value": 10})
         );
-        assert_eq!(resolved.components["core/counter"].schema_version, 1);
-        let component_version = resolved.components["core/counter"].version;
+        assert_eq!(resolved.components["core/counter"].schema_version(), 1);
+        let component_version = resolved.components["core/counter"].version();
         assert_eq!(ctx.space_store.entry_component_cache_len(), 1);
 
         drop(snapshot);
@@ -2300,7 +2306,7 @@ mod tests {
             .expect("failed to resolve Entry after Runtime eviction")
             .expect("Entry is missing after Runtime eviction");
         assert_eq!(
-            resolved.components["core/counter"].data,
+            resolved.components["core/counter"].json_data(),
             json!({"value": 10})
         );
         assert_eq!(ctx.space_store.entry_component_cache_len(), 1);
@@ -2321,8 +2327,9 @@ mod tests {
             &[EntryComponentMutation::Set {
                 component_type: "core/counter".to_string(),
                 expected_version: Some(component_version),
-                schema_version: None,
-                data: json!({"value": 7}),
+                payload: crate::entries::models::EntryComponentPayloadInput::json(json!({
+                    "value": 7
+                })),
             }],
         )
         .await
@@ -2343,10 +2350,10 @@ mod tests {
             .expect("failed to resolve updated Entry")
             .expect("updated Entry is missing");
         assert_eq!(
-            resolved.components["core/counter"].data,
+            resolved.components["core/counter"].json_data(),
             json!({"value": 7})
         );
-        assert_eq!(resolved.components["core/counter"].schema_version, 1);
+        assert_eq!(resolved.components["core/counter"].schema_version(), 1);
 
         let mutation = ctx
             .space_store
@@ -2368,7 +2375,6 @@ mod tests {
             "Stamina".to_string(),
             current.reference_note_id,
             Vec::new(),
-            current.sort,
         )
         .await
         .expect("failed to update Entry metadata")
@@ -2396,7 +2402,7 @@ mod tests {
             .expect("renamed Entry is missing");
         assert_eq!(resolved.key, "stamina");
         assert_eq!(
-            resolved.components["core/counter"].data,
+            resolved.components["core/counter"].json_data(),
             json!({"value": 7})
         );
 
@@ -2821,7 +2827,6 @@ mod tests {
             AccessPolicy::Secret,
             None,
             vec![],
-            vec![],
         )
         .await
         .expect("failed to create Character");
@@ -2874,9 +2879,12 @@ mod tests {
             vec![],
             "Hit Points".to_string(),
             None,
-            BTreeMap::from([("core/counter".to_string(), json!({"value": 10}))]),
+            BTreeMap::from([(
+                "core/counter".to_string(),
+                crate::entries::models::EntryComponentPayloadInput::json(json!({"value": 10})),
+            )]),
             vec![],
-            0,
+            None,
         )
         .await
         .expect("failed to create Character Entry");

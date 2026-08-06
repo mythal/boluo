@@ -343,6 +343,15 @@ impl ChannelMember {
             .await
     }
 
+    pub async fn unbind_character<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
+        character_id: Uuid,
+    ) -> Result<Vec<ChannelMember>, sqlx::Error> {
+        sqlx::query_file_scalar!("sql/channels/unbind_character.sql", character_id)
+            .fetch_all(db)
+            .await
+    }
+
     pub async fn get_by_channel<'c, T: sqlx::PgExecutor<'c>>(
         db: T,
         channel: &Uuid,
@@ -932,7 +941,6 @@ mod tests {
             "#112233",
             AccessPolicy::Personal,
             None,
-            Vec::new(),
             Vec::new(),
         )
         .await

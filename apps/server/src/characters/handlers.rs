@@ -1,8 +1,9 @@
 use super::api::{
-    ArchiveCharacter, CheckCharacterIdentifier, CreateCharacter, EditCharacter, ListCharacters,
-    QueryCharacter, RestoreCharacter,
+    ArchiveCharacter, CharacterUsage, CheckCharacterIdentifier, CreateCharacter, EditCharacter,
+    ListCharacters, QueryCharacter, RestoreCharacter,
 };
 use super::models::Character;
+use crate::channels::{ChannelMember, handlers::push_refreshed_members};
 use crate::committed_changes::CommittedChanges;
 use crate::csrf::{authenticate, authenticate_optional};
 use crate::error::{AppError, Find};
@@ -11,6 +12,7 @@ use crate::scopes::models::Scope;
 use crate::spaces::{SpaceMember, resolve_resource_access_context, resolve_space_access};
 use hyper::Request;
 use hyper::body::Body;
+use std::collections::HashSet;
 use uuid::Uuid;
 
 pub(crate) async fn can_view_character_in_space(
@@ -104,6 +106,7 @@ async fn by_space(
     let ListCharacters {
         space_id,
         include_archived,
+        portrayable_only,
     } = parse_query(req.uri())?;
     let mut characters = if let Some(snapshot) =
         ctx.space_store.loaded_snapshot_maybe_stale(space_id)
@@ -128,11 +131,43 @@ async fn by_space(
     }
     let mut visible = Vec::with_capacity(characters.len());
     for character in characters {
-        if can_view_character_in_space(ctx, &character, user_id).await? {
-            visible.push(character);
+        if !can_view_character_in_space(ctx, &character, user_id).await? {
+            continue;
         }
+        if portrayable_only {
+            let Some(user_id) = user_id else {
+                continue;
+            };
+            if !can_edit_character_in_space(ctx, &character, user_id).await? {
+                continue;
+            }
+        }
+        visible.push(character);
     }
     Ok(visible)
+}
+
+async fn usages(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<Vec<CharacterUsage>, AppError> {
+    let session = authenticate_optional(&req).await?;
+    let QueryCharacter {
+        space_id,
+        character_id,
+    } = parse_query(req.uri())?;
+    let character = ctx
+        .space_store
+        .resolve_character(space_id, character_id)
+        .await?
+        .or_not_found()?;
+    let user_id = session.map(|session| session.user_id);
+    if !can_view_character_in_space(ctx, &character, user_id).await? {
+        return Err(AppError::NoPermission(
+            "You don't have permission to view this character".to_string(),
+        ));
+    }
+    Ok(Character::list_usages(&ctx.db, character_id, space_id, user_id).await?)
 }
 
 async fn check_identifier(
@@ -175,7 +210,6 @@ async fn create(
         access_policy,
         access_channel_id,
         tags,
-        asset_ids,
     } = parse_body(req).await?;
     let mutation = ctx.space_store.acquire_mutation(space_id).await?;
     let mut trans = ctx.db.begin().await?;
@@ -208,7 +242,6 @@ async fn create(
         access_policy,
         access_channel_id,
         tags,
-        asset_ids,
     )
     .await?;
     let scope = Scope::get_by_id(&mut *trans, character.scope_id)
@@ -240,7 +273,6 @@ async fn edit(
         access_policy,
         access_channel_id,
         tags,
-        asset_ids,
     } = parse_body(req).await?;
     let mutation = ctx.space_store.acquire_mutation(space_id).await?;
     let mut trans = ctx.db.begin().await?;
@@ -281,7 +313,6 @@ async fn edit(
         access_policy,
         access_channel_id,
         tags,
-        asset_ids,
     )
     .await?
     .ok_or_else(|| AppError::Conflict("Character version is stale".to_string()))?;
@@ -320,10 +351,26 @@ async fn set_archived(
     let updated = Character::set_archived(&mut trans, &character_id, expected_version, archived)
         .await?
         .ok_or_else(|| AppError::Conflict("Character version is stale".to_string()))?;
+    let unbound_members = if archived {
+        ChannelMember::unbind_character(&mut *trans, character_id).await?
+    } else {
+        Vec::new()
+    };
+    let affected_channel_ids: HashSet<_> = unbound_members
+        .iter()
+        .map(|member| member.channel_id)
+        .collect();
     let mutation = mutation.commit(trans).await?;
     let mut changes = CommittedChanges::default();
     changes.character_updated(&updated);
-    changes.apply_with_mutation(ctx, &mutation).await;
+    for member in &unbound_members {
+        changes.channel_member_changed(space_id, member);
+    }
+    let mut applied = changes.apply_with_mutation(ctx, &mutation).await;
+    for channel_id in affected_channel_ids {
+        let members = applied.take_channel_members(space_id, channel_id);
+        push_refreshed_members(ctx, space_id, channel_id, members).await;
+    }
     Ok(updated)
 }
 
@@ -379,6 +426,7 @@ pub async fn router(
     match (path, req.method().clone()) {
         ("/query", Method::GET) => response(query(ctx, req).await).await,
         ("/by_space", Method::GET) => response(by_space(ctx, req).await).await,
+        ("/usages", Method::GET) => response(usages(ctx, req).await).await,
         ("/check_identifier", Method::GET) => response(check_identifier(ctx, req).await).await,
         ("/create", Method::POST) => response(create(ctx, req).await).await,
         ("/edit", Method::PUT) => response(edit(ctx, req).await).await,
@@ -391,6 +439,7 @@ pub async fn router(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::channels::{Channel, ChannelMember, ChannelType};
     use crate::spaces::{AccessPolicy, Space, SpaceMember};
     use crate::users::User;
 
@@ -408,9 +457,7 @@ mod tests {
     }
 
     #[sqlx::test(migrator = "crate::db::MIGRATOR")]
-    async fn db_test_character_portrayal_requires_edit_access_and_active_character(
-        pool: sqlx::PgPool,
-    ) {
+    async fn db_test_character_usage_archive_unbinding_and_portrayal_access(pool: sqlx::PgPool) {
         let owner = create_user(&pool, "portray_owner").await;
         let other = create_user(&pool, "portray_other").await;
         let space = Space::create(
@@ -443,7 +490,6 @@ mod tests {
             AccessPolicy::Personal,
             None,
             Vec::new(),
-            Vec::new(),
         )
         .await
         .expect("failed to create Character");
@@ -451,6 +497,66 @@ mod tests {
             .commit()
             .await
             .expect("failed to commit Character");
+
+        let channel = Channel::create(
+            &pool,
+            &space.id,
+            "Portrayal Channel",
+            true,
+            Some("d20"),
+            ChannelType::InGame,
+        )
+        .await
+        .expect("failed to create Channel");
+        ChannelMember::add_user_with_character(
+            &pool,
+            owner.id,
+            channel.id,
+            &character.name,
+            Some(character.id),
+            false,
+        )
+        .await
+        .expect("failed to bind Character");
+
+        let private_channel = Channel::create(
+            &pool,
+            &space.id,
+            "Private Portrayal Channel",
+            false,
+            Some("d20"),
+            ChannelType::InGame,
+        )
+        .await
+        .expect("failed to create private Channel");
+        ChannelMember::add_user_with_character(
+            &pool,
+            other.id,
+            private_channel.id,
+            &character.name,
+            Some(character.id),
+            false,
+        )
+        .await
+        .expect("failed to bind Character in private Channel");
+
+        let usages = Character::list_usages(&pool, character.id, space.id, Some(owner.id))
+            .await
+            .expect("failed to list Character usages");
+        assert_eq!(usages.len(), 2);
+        assert!(
+            usages.iter().any(|usage| {
+                usage.member.user_id == owner.id && usage.channel.id == channel.id
+            })
+        );
+        assert!(usages.iter().any(|usage| {
+            usage.member.user_id == other.id && usage.channel.id == private_channel.id
+        }));
+        let guest_usages = Character::list_usages(&pool, character.id, space.id, None)
+            .await
+            .expect("failed to list public Character usages");
+        assert_eq!(guest_usages.len(), 1);
+        assert_eq!(guest_usages[0].channel.id, channel.id);
 
         let ctx = crate::context::AppContext::new(pool.clone(), None);
         let resolved = resolve_character_for_portrayal(&ctx, space.id, character.id, owner.id)
@@ -462,19 +568,56 @@ mod tests {
             Err(AppError::NoPermission(_))
         ));
 
-        let mut transaction = pool.begin().await.expect("failed to begin archive");
-        Character::set_archived(&mut transaction, &character.id, character.version, true)
-            .await
-            .expect("failed to archive Character")
-            .expect("Character version should match");
-        transaction
-            .commit()
-            .await
-            .expect("failed to commit archive");
+        let archived_character = set_archived(
+            &ctx,
+            owner.id,
+            space.id,
+            character.id,
+            character.version,
+            true,
+        )
+        .await
+        .expect("failed to archive Character");
+        let (unbound_member, _) =
+            ChannelMember::get_with_space_member(&pool, owner.id, channel.id, &space.id)
+                .await
+                .expect("failed to query unbound member")
+                .expect("channel member should exist");
+        assert_eq!(unbound_member.character_id, None);
+        assert_eq!(unbound_member.character_name, character.name);
+        let (private_unbound_member, _) =
+            ChannelMember::get_with_space_member(&pool, other.id, private_channel.id, &space.id)
+                .await
+                .expect("failed to query private unbound member")
+                .expect("private channel member should exist");
+        assert_eq!(private_unbound_member.character_id, None);
+        assert_eq!(private_unbound_member.character_name, character.name);
+        assert!(
+            Character::list_usages(&pool, character.id, space.id, Some(owner.id))
+                .await
+                .expect("failed to list Character usages after archive")
+                .is_empty()
+        );
         let fresh_ctx = crate::context::AppContext::new(pool.clone(), None);
         assert!(matches!(
             resolve_character_for_portrayal(&fresh_ctx, space.id, character.id, owner.id).await,
             Err(AppError::BadRequest(_))
         ));
+        set_archived(
+            &fresh_ctx,
+            owner.id,
+            space.id,
+            character.id,
+            archived_character.version,
+            false,
+        )
+        .await
+        .expect("failed to restore Character");
+        let (member_after_restore, _) =
+            ChannelMember::get_with_space_member(&pool, owner.id, channel.id, &space.id)
+                .await
+                .expect("failed to query member after restore")
+                .expect("channel member should exist after restore");
+        assert_eq!(member_after_restore.character_id, None);
     }
 }

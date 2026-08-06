@@ -7,6 +7,12 @@ export interface ChannelPane {
   channelId: string;
 }
 
+export interface CharacterPane {
+  type: 'CHARACTER';
+  spaceId: string;
+  characterId: string;
+}
+
 export interface SettingsPane {
   type: 'SETTINGS';
 }
@@ -82,6 +88,7 @@ export interface ProfilePane {
 export type PaneData =
   | SpacePane
   | ChannelPane
+  | CharacterPane
   | EmptyPane
   | SettingsPane
   | HelpPane

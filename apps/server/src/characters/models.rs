@@ -5,8 +5,11 @@ use std::collections::HashSet;
 use unicode_normalization::UnicodeNormalization;
 use uuid::Uuid;
 
+use super::api::CharacterUsage;
+use crate::channels::{Channel, ChannelMember};
 use crate::error::{ModelError, ValidationFailed};
 use crate::spaces::{AccessPolicy, ResourceAccessContext, validate_access_channel};
+use crate::users::User;
 
 const IDENTIFIER_ALIAS_MAX_COUNT: usize = 16;
 
@@ -66,7 +69,6 @@ pub struct Character {
     pub archived_at: Option<DateTime<Utc>>,
     #[specta(type = Vec<String>)]
     pub tags: Vec<CompactString>,
-    pub asset_ids: Vec<Uuid>,
     pub created: DateTime<Utc>,
     pub modified: DateTime<Utc>,
     pub version: Uuid,
@@ -85,7 +87,6 @@ impl Character {
         access_policy: AccessPolicy,
         access_channel_id: Option<Uuid>,
         tags: Vec<String>,
-        asset_ids: Vec<Uuid>,
     ) -> Result<Character, ModelError> {
         use crate::validators;
 
@@ -94,7 +95,7 @@ impl Character {
         validators::DESCRIPTION.run(description)?;
         let color = color.trim();
         if !color.is_empty() {
-            validators::HEX_COLOR.run(color)?;
+            validators::GAME_COLOR.run(color)?;
         }
         let key = normalize_ident(key)?;
         let aliases = normalize_aliases(aliases, Some(&key))?;
@@ -127,8 +128,6 @@ impl Character {
         .await
         .map_err(ModelError::from)?;
         insert_character_identifiers(&mut **db, space_id, character_id, &key, &aliases).await?;
-        crate::assets::models::replace_character_assets(db, space_id, character_id, &asset_ids)
-            .await?;
         Self::get_by_id(&mut **db, &character_id)
             .await?
             .ok_or(ModelError::NotFound("Character"))
@@ -164,6 +163,23 @@ impl Character {
         Ok(characters)
     }
 
+    pub async fn list_usages<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
+        character_id: Uuid,
+        space_id: Uuid,
+        viewer_id: Option<Uuid>,
+    ) -> Result<Vec<CharacterUsage>, sqlx::Error> {
+        sqlx::query_file_as!(
+            CharacterUsage,
+            "sql/characters/list_usages.sql",
+            character_id,
+            space_id,
+            viewer_id,
+        )
+        .fetch_all(db)
+        .await
+    }
+
     pub fn can_view(&self, user_id: Option<Uuid>, context: ResourceAccessContext) -> bool {
         self.access_policy.can_view(self.owner_id, user_id, context)
     }
@@ -185,7 +201,6 @@ impl Character {
         access_policy: AccessPolicy,
         access_channel_id: Option<Uuid>,
         tags: Vec<String>,
-        asset_ids: Vec<Uuid>,
     ) -> Result<Option<Character>, ModelError> {
         use crate::validators;
 
@@ -194,7 +209,7 @@ impl Character {
         validators::DESCRIPTION.run(&description)?;
         let color = color.trim().to_string();
         if !color.is_empty() {
-            validators::HEX_COLOR.run(&color)?;
+            validators::GAME_COLOR.run(&color)?;
         }
         let key = normalize_ident(&key)?;
         let aliases = normalize_aliases(aliases, Some(&key))?;
@@ -228,16 +243,32 @@ impl Character {
         };
         replace_character_identifiers(&mut **db, target.space_id, *character_id, &key, &aliases)
             .await?;
-        crate::assets::models::replace_character_assets(
-            db,
-            target.space_id,
-            *character_id,
-            &asset_ids,
-        )
-        .await?;
         Self::get_by_id(&mut **db, character_id)
             .await
             .map_err(Into::into)
+    }
+
+    pub async fn touch(
+        db: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+        character_id: Uuid,
+        expected_version: Uuid,
+    ) -> Result<Option<Character>, sqlx::Error> {
+        let updated_id = sqlx::query_scalar::<_, Uuid>(
+            r#"
+            UPDATE characters
+            SET version = uuidv7(), modified = now()
+            WHERE id = $1 AND version = $2
+            RETURNING id
+            "#,
+        )
+        .bind(character_id)
+        .bind(expected_version)
+        .fetch_optional(&mut **db)
+        .await?;
+        let Some(updated_id) = updated_id else {
+            return Ok(None);
+        };
+        Self::get_by_id(&mut **db, &updated_id).await
     }
 
     pub async fn delete<'c, T: sqlx::PgExecutor<'c>>(
@@ -441,7 +472,6 @@ mod tests {
             AccessPolicy::Secret,
             None,
             vec![],
-            vec![],
         )
         .await
         .expect("failed to create test character");
@@ -569,7 +599,6 @@ mod tests {
             AccessPolicy::Secret,
             None,
             vec![],
-            vec![],
         )
         .await;
         assert!(
@@ -596,7 +625,6 @@ mod tests {
                 "player".to_string(),
                 String::new(),
             ],
-            vec![],
         )
         .await
         .expect("update failed")
@@ -638,7 +666,6 @@ mod tests {
             updated.access_policy,
             updated.access_channel_id,
             updated.tags.iter().map(ToString::to_string).collect(),
-            updated.asset_ids.clone(),
         )
         .await
         .expect("stale update query failed");
@@ -665,7 +692,6 @@ mod tests {
             updated.access_policy,
             updated.access_channel_id,
             updated.tags.iter().map(ToString::to_string).collect(),
-            updated.asset_ids.clone(),
         )
         .await
         .expect("stale Scope update query failed");

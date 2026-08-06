@@ -163,7 +163,7 @@ pub struct Message {
     #[serde(default)]
     pub portrait_id: ::std::option::Option<::uuid::Uuid>,
     #[serde(default)]
-    pub entry_effect_id: ::std::option::Option<::uuid::Uuid>,
+    pub has_entry_effects: bool,
 }
 
 #[allow(deprecated, non_camel_case_types, non_snake_case)]

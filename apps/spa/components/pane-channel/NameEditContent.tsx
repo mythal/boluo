@@ -9,11 +9,17 @@ import { type MemberWithUser } from '@boluo/api';
 import { type ChannelState } from '../../state/channel.reducer';
 import { backwards, last } from 'list';
 import { NameEditContentNameHistory } from './NameEditContentNameHistory';
+import { CharacterPicker } from './CharacterPicker';
+import { useQueryCharacters } from '@boluo/hooks/useQueryCharacters';
+import { useChannelCharacterName } from '../../hooks/useChannelCharacter';
 
 interface Props {
   member: MemberWithUser;
   dismiss: () => void;
+  onViewAllCharacters: () => void;
 }
+
+const RECENT_CHARACTER_LIMIT = 5;
 
 const searchChannelForNames = (
   names: string[],
@@ -68,7 +74,7 @@ const chatStateToNameList = (
   return names;
 };
 
-export const NameEditContent: FC<Props> = ({ member, dismiss }) => {
+export const NameEditContent: FC<Props> = ({ member, dismiss, onViewAllCharacters }) => {
   const { inGameAtom, composeAtom } = useChannelAtoms();
   const dispatch = useSetAtom(composeAtom);
   const inGame = useAtomValue(inGameAtom);
@@ -76,11 +82,31 @@ export const NameEditContent: FC<Props> = ({ member, dismiss }) => {
   const store = useStore();
   const myId = member.user.id;
   const channelId = member.channel.channelId;
-  const defaultCharacterName = member.channel.characterName;
+  const defaultCharacterName = useChannelCharacterName(member);
+  const {
+    data: characters,
+    error: charactersError,
+    isLoading: charactersLoading,
+  } = useQueryCharacters({
+    spaceId: member.space.spaceId,
+    includeArchived: true,
+    portrayableOnly: true,
+  });
+  const activeCharacters = useMemo(
+    () => characters?.filter((character) => character.archivedAt == null),
+    [characters],
+  );
+  const characterNames = useMemo(
+    () => new Set(activeCharacters?.map((character) => character.name) ?? []),
+    [activeCharacters],
+  );
   const nameHistory = useMemo(
     // In this case, we don't need to use `useAtom` hooks.
-    () => chatStateToNameList(store.get(chatAtom), channelId, myId, defaultCharacterName),
-    [channelId, defaultCharacterName, myId, store],
+    () =>
+      chatStateToNameList(store.get(chatAtom), channelId, myId, defaultCharacterName).filter(
+        (name) => !characterNames.has(name),
+      ),
+    [characterNames, channelId, defaultCharacterName, myId, store],
   );
   const id = {
     inputName: baseId + 'input-name',
@@ -102,7 +128,10 @@ export const NameEditContent: FC<Props> = ({ member, dismiss }) => {
     dismiss();
   };
   return (
-    <form onSubmit={handleSubmit} className="grid w-52 grid-cols-[auto_auto] gap-x-1 gap-y-2">
+    <form
+      onSubmit={handleSubmit}
+      className="grid w-52 grid-cols-[auto_minmax(0,1fr)] gap-x-1 gap-y-2"
+    >
       <div>
         <input
           id={id.inputName}
@@ -115,14 +144,26 @@ export const NameEditContent: FC<Props> = ({ member, dismiss }) => {
           }}
         />
       </div>
-      <div onFocus={switchToInGame} className="flex flex-col gap-1">
+      <div onFocus={switchToInGame} className="flex min-w-0 flex-col gap-1">
         <label htmlFor={id.inputName} className="block cursor-pointer select-none">
           <FormattedMessage defaultMessage="As the character of …" />
         </label>
-        <NameEditInput channelId={member.channel.channelId} defaultName={defaultCharacterName} />
+        <NameEditInput
+          channelId={member.channel.channelId}
+          defaultName={defaultCharacterName}
+          characterId={member.channel.characterId}
+        />
         <NameEditContentNameHistory
           names={nameHistory}
           defaultCharacterName={defaultCharacterName}
+        />
+        <CharacterPicker
+          member={member}
+          characters={activeCharacters?.slice(0, RECENT_CHARACTER_LIMIT)}
+          suggestionCharacters={characters}
+          error={charactersError}
+          isLoading={charactersLoading}
+          onViewAll={onViewAllCharacters}
         />
       </div>
 

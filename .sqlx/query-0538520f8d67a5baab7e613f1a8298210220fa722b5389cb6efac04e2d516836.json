@@ -1,0 +1,30 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH target AS (\n    SELECT entry.scope_id, scope.space_id, asset.id AS asset_id\n    FROM entries entry\n    JOIN scopes scope ON scope.id = entry.scope_id\n    JOIN assets asset ON asset.id = $3 AND asset.space_id = scope.space_id\n    WHERE entry.id = $1\n), component AS (\n    INSERT INTO entry_components (entry_id, component_type, payload_type)\n    SELECT $1, $2, 'Asset'\n    FROM target\n    RETURNING entry_id, component_type, payload_type\n)\nINSERT INTO entry_components_asset (\n    entry_id,\n    component_type,\n    payload_type,\n    scope_id,\n    space_id,\n    asset_id\n)\nSELECT\n    component.entry_id,\n    component.component_type,\n    component.payload_type,\n    target.scope_id,\n    target.space_id,\n    target.asset_id\nFROM component\nJOIN target ON true\nRETURNING asset_id;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "asset_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "entry_components_asset",
+            "name": "asset_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "0538520f8d67a5baab7e613f1a8298210220fa722b5389cb6efac04e2d516836"
+}

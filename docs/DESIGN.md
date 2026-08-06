@@ -1,5 +1,7 @@
 # System Design
 
+> **Maintenance note:** Only document design intent, non-obvious constraints, and tradeoffs that cannot be learned directly from the code. Do NOT duplicate behavior, data structures, or implementation details that the code or schema already makes clear.
+
 This document records some of the design concepts and decisions behind Boluo. It intentionally avoids design details and contains only high-level guiding principles.
 
 ## Design Principles
@@ -37,6 +39,8 @@ An Entry represents an entity in the game and is inspired by an Entity in ECS. I
 
 An Entry can have multiple Components. A Component represents one piece of an Entry's state and is inspired by, well, a Component in ECS. For example, an HP Entry may have a Counter Component, with its actual data stored in that Component. An Entry can currently have at most one Component of each type. Component types use namespaced identifiers such as `core/counter` or `dnd5e/spell-slot`.
 
+Components describe what an Entry can do, not what it is. For example, an Entry with both `core/portrait` and `core/counter` appears as a portrait in one view and a game variable in another.
+
 For example, a simplified HP Entry could be represented as:
 
 ```json
@@ -54,17 +58,21 @@ For example, a simplified HP Entry could be represented as:
 
 (This is only an example, not the actual shape.)
 
-To allow flexible extensions, the server does not constrain the internal structure of Component data. It treats the data as a dynamic structure and leaves interpretation to the client.
+Open-ended Component payloads use JSON. Dedicated payload types are reserved for data that benefits from relational constraints or specialized queries. The [Shared Primary Key representation](https://www.parsonsmatt.org/2019/03/19/sum_types_in_sql.html) favors extensibility over enforcing that every Component has a payload; readers therefore omit and report incomplete Components instead of rejecting the whole Entry.
 
-Some changes produce history records to help players understand what happened during the game. These records are not intended to reconstruct or roll back state.
+Component history is just a player-facing record. It stores a JSON projection so historical presentation does not depend on the live payload type or referenced resources.
 
 #### Scopes and Characters
 
 A Scope is a container for Entries within a Space. It defines an access-control and identifier boundary. A Space has a shared Scope, and each Character has a required main Character Scope. Additional Character Scopes can be associated through named purposes. A Character's HP, for example, belongs to its main Character Scope.
 
+The first valid Portrait in Entry order is the Character's main portrait. Deriving it from order avoids a separate pointer that could become inconsistent.
+
 Entries do not have their own access control. Access is controlled through their Scope's access policy, using the same policy model as Notes. A Character may use additional named Scopes for state that needs different access. Scopes do not inherit permissions from other Scopes.
 
 An Entry's key and aliases are unique within the same Scope. Entries in different Scopes may use the same name. This supports command parsing and references in chat.
+
+Entry order uses fractional positions so inserting or moving one Entry does not renumber unrelated Entries.
 
 #### Concurrency
 

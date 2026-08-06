@@ -43,8 +43,11 @@ export const makeDesiredPreview = ({
     inGame: parsedInGame,
     characterName: parsedCharacterName,
   } = parsed;
-  const inGame = parsedCharacterName ? true : (parsedInGame ?? defaultInGame);
-  const inGameName = parsedCharacterName || defaultCharacterName;
+  const editingWithCharacter =
+    compose.editingAttribution?.characterId != null ? compose.editingAttribution : null;
+  const inGame =
+    editingWithCharacter?.inGame ?? (parsedCharacterName ? true : (parsedInGame ?? defaultInGame));
+  const inGameName = editingWithCharacter?.name ?? (parsedCharacterName || defaultCharacterName);
   const shouldHideContent = !broadcast || whisperToUsernames != null;
   const clearedPreview = isClearedPreviewContent(parsed);
   const text: string | null = clearedPreview ? '' : shouldHideContent ? null : parsed.text;

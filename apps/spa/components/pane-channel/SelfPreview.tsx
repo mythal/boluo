@@ -23,17 +23,19 @@ import { useSortable } from '@dnd-kit/sortable';
 import { useScrollerRef } from '../../hooks/useScrollerRef';
 import { useVirtuosoRef } from '../../hooks/useVirtuosoRef';
 import { useMember } from '../../hooks/useMember';
+import { useChannelCharacter } from '../../hooks/useChannelCharacter';
+import { Name } from './Name';
 
-type ComposeDrived = Pick<ComposeState, 'media'> & {
+type ComposeDrived = Pick<ComposeState, 'media' | 'editingAttribution'> & {
   editMode: boolean;
 };
 
 const isEqual = (a: ComposeDrived, b: ComposeDrived) =>
-  a.editMode === b.editMode && a.media === b.media;
+  a.editMode === b.editMode && a.media === b.media && a.editingAttribution === b.editingAttribution;
 
-const selector = ({ edit, media }: ComposeState): ComposeDrived => {
+const selector = ({ edit, editingAttribution, media }: ComposeState): ComposeDrived => {
   const editMode = edit != null;
-  return { editMode, media };
+  return { editMode, editingAttribution, media };
 };
 
 // Keep the self preview fully visible when its own height or the scroller height changes.
@@ -154,20 +156,53 @@ export const SelfPreview: FC<Props> = ({ preview, isLast, displayIndex }) => {
     useMemo(() => selectAtom(composeAtom, selector, isEqual), [composeAtom]),
   );
   const isAction = useAtomValue(isActionAtom);
-  const inGame = useAtomValue(inGameAtom);
+  const composeInGame = useAtomValue(inGameAtom);
   const parsed = useAtomValue(parsedAtom);
-  const { editMode, media } = compose;
-  const color = useMessageColor(member.user.id, inGame, null);
+  const { editingAttribution, editMode, media } = compose;
+  const editingWithCharacter = editingAttribution?.characterId != null ? editingAttribution : null;
+  const inGame = editingWithCharacter?.inGame ?? composeInGame;
+  const shouldResolveChannelCharacter =
+    editingWithCharacter == null && inGame && parsed.characterName === '';
+  const { character, name: channelCharacterName } = useChannelCharacter(
+    member,
+    shouldResolveChannelCharacter,
+  );
+  const messageColor = editingWithCharacter?.color ?? character?.color;
+  const colorSeed = editingWithCharacter?.characterId ?? character?.id;
+  const color = useMessageColor(member.user.id, inGame, messageColor, colorSeed);
   const name = useMemo(() => {
+    if (editingWithCharacter != null) {
+      return editingWithCharacter.name;
+    }
     if (!inGame) {
       return member.user.nickname;
     }
     if (parsed.characterName) {
       return parsed.characterName;
     }
-    return member.channel.characterName;
-  }, [inGame, member.channel.characterName, member.user.nickname, parsed.characterName]);
+    return channelCharacterName;
+  }, [
+    editingWithCharacter,
+    channelCharacterName,
+    inGame,
+    member.user.nickname,
+    parsed.characterName,
+  ]);
   const nameNode = useMemo(() => {
+    if (editingWithCharacter != null) {
+      return (
+        <Name
+          inGame={inGame}
+          name={name}
+          isMaster={isMaster}
+          self
+          userId={member.user.id}
+          messageColor={messageColor}
+          colorSeed={colorSeed}
+          isPreview
+        />
+      );
+    }
     return (
       <NameEditable
         inGame={inGame}
@@ -179,7 +214,7 @@ export const SelfPreview: FC<Props> = ({ preview, isLast, displayIndex }) => {
         self
       />
     );
-  }, [color, inGame, isMaster, member, name]);
+  }, [editingWithCharacter, color, colorSeed, inGame, isMaster, member, messageColor, name]);
   const { onDrop } = useMediaDrop();
   const mediaNode = useMemo(() => {
     if (media == null) return null;

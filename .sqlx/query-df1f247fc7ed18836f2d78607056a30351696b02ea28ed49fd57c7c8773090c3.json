@@ -1,0 +1,187 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n    channel AS \"channel!: Channel\",\n    member AS \"member!: ChannelMember\",\n    bound_user AS \"user!: User\"\nFROM channel_members member\nJOIN channels channel\n    ON channel.id = member.channel_id\nJOIN users bound_user\n    ON bound_user.id = member.user_id\nJOIN spaces space\n    ON space.id = channel.space_id\nLEFT JOIN channel_members viewer_member\n    ON viewer_member.channel_id = channel.id\n    AND viewer_member.user_id = $3\n    AND viewer_member.is_joined\nLEFT JOIN space_members viewer_space_member\n    ON viewer_space_member.space_id = channel.space_id\n    AND viewer_space_member.user_id = $3\nWHERE member.character_id = $1\n    AND channel.space_id = $2\n    AND member.is_joined\n    AND NOT channel.deleted\n    AND (\n        channel.is_public\n        OR viewer_member.is_joined\n        OR viewer_space_member.is_admin\n        OR space.owner_id = $3\n    )\nORDER BY member.join_date, member.user_id, channel.id;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "channel!: Channel",
+        "type_info": {
+          "Custom": {
+            "name": "channels",
+            "kind": {
+              "Composite": [
+                [
+                  "id",
+                  "Uuid"
+                ],
+                [
+                  "name",
+                  "Text"
+                ],
+                [
+                  "topic",
+                  "Text"
+                ],
+                [
+                  "space_id",
+                  "Uuid"
+                ],
+                [
+                  "created",
+                  "Timestamptz"
+                ],
+                [
+                  "is_public",
+                  "Bool"
+                ],
+                [
+                  "deleted",
+                  "Bool"
+                ],
+                [
+                  "default_dice_type",
+                  "Text"
+                ],
+                [
+                  "default_roll_command",
+                  "Text"
+                ],
+                [
+                  "is_document",
+                  "Bool"
+                ],
+                [
+                  "old_name",
+                  "Text"
+                ],
+                [
+                  "type",
+                  "Text"
+                ],
+                [
+                  "is_archived",
+                  "Bool"
+                ]
+              ]
+            }
+          }
+        },
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "member!: ChannelMember",
+        "type_info": {
+          "Custom": {
+            "name": "channel_members",
+            "kind": {
+              "Composite": [
+                [
+                  "user_id",
+                  "Uuid"
+                ],
+                [
+                  "channel_id",
+                  "Uuid"
+                ],
+                [
+                  "join_date",
+                  "Timestamptz"
+                ],
+                [
+                  "character_name",
+                  "Text"
+                ],
+                [
+                  "text_color",
+                  "Text"
+                ],
+                [
+                  "is_joined",
+                  "Bool"
+                ],
+                [
+                  "is_master",
+                  "Bool"
+                ],
+                [
+                  "character_id",
+                  "Uuid"
+                ]
+              ]
+            }
+          }
+        },
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "user!: User",
+        "type_info": {
+          "Custom": {
+            "name": "users",
+            "kind": {
+              "Composite": [
+                [
+                  "id",
+                  "Uuid"
+                ],
+                [
+                  "email",
+                  "Text"
+                ],
+                [
+                  "username",
+                  "Text"
+                ],
+                [
+                  "nickname",
+                  "Text"
+                ],
+                [
+                  "password",
+                  "Text"
+                ],
+                [
+                  "bio",
+                  "Text"
+                ],
+                [
+                  "joined",
+                  "Timestamptz"
+                ],
+                [
+                  "deactivated",
+                  "Bool"
+                ],
+                [
+                  "avatar_id",
+                  "Uuid"
+                ],
+                [
+                  "default_color",
+                  "Text"
+                ]
+              ]
+            }
+          }
+        },
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "df1f247fc7ed18836f2d78607056a30351696b02ea28ed49fd57c7c8773090c3"
+}

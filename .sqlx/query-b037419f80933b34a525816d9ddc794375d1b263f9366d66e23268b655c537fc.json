@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT EXISTS (\n    SELECT 1\n    FROM entries entry\n    JOIN scopes scope ON scope.id = entry.scope_id\n    JOIN assets asset ON asset.id = $2 AND asset.space_id = scope.space_id\n    WHERE entry.id = $1\n) AS \"valid!\";\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "valid!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "b037419f80933b34a525816d9ddc794375d1b263f9366d66e23268b655c537fc"
+}

@@ -1,7 +1,7 @@
 import clsx from 'clsx';
 import ChevronDown from '@boluo/icons/ChevronDown';
 import TriangleAlert from '@boluo/icons/TriangleAlert';
-import { useEffect, useMemo, type FC, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type FC, type ReactNode } from 'react';
 import { FormattedMessage } from 'react-intl';
 import {
   FloatingPortal,
@@ -24,6 +24,8 @@ import { useFloatingSetters } from '@boluo/ui/hooks/useFloatingSetters';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { atom, useAtom, useAtomValue, useStore } from 'jotai';
 import { useVirtualKeybroadChange } from '../../hooks/useVirtualKeybroadChange';
+import { CharacterPopover } from './CharacterPopover';
+import { useResolvedTheme } from '../../hooks/useResolvedTheme';
 
 interface Props {
   name: string | undefined | null;
@@ -36,10 +38,12 @@ interface Props {
 }
 
 export const NameEditable: FC<Props> = ({ name, inGame, color, member }) => {
+  const theme = useResolvedTheme();
   const store = useStore();
   const { composeFocusedAtom, selfPreviewNamePanelOpenAtom, isComposeEmptyAtom } =
     useChannelAtoms();
   const [isOpen, setIsOpen] = useAtom(selfPreviewNamePanelOpenAtom);
+  const [content, setContent] = useState<'name' | 'characters'>('name');
   const isEmptyName = name === '' || name == null;
   const shouldForceOpenAtom = useMemo(
     () =>
@@ -72,7 +76,10 @@ export const NameEditable: FC<Props> = ({ name, inGame, color, member }) => {
 
   const { refs, floatingStyles, context, update } = useFloating({
     open: isOpen,
-    onOpenChange: setIsOpen,
+    onOpenChange: (open) => {
+      setIsOpen(open);
+      if (!open) setContent('name');
+    },
     placement: 'top-end',
     // The hide middleware will cause the keyboard flickering in Android
     middleware: [
@@ -97,6 +104,8 @@ export const NameEditable: FC<Props> = ({ name, inGame, color, member }) => {
         interactive
         pressed={isOpen}
         color={color}
+        theme={theme}
+        inGame={inGame}
         ref={setReference}
         icon={icon}
         {...getReferenceProps()}
@@ -123,7 +132,18 @@ export const NameEditable: FC<Props> = ({ name, inGame, color, member }) => {
             style={floatingStyles}
             {...getFloatingProps()}
           >
-            <NameEditContent member={member} dismiss={() => setIsOpen(false)} />
+            {content === 'name' ? (
+              <NameEditContent
+                member={member}
+                dismiss={() => {
+                  setContent('name');
+                  setIsOpen(false);
+                }}
+                onViewAllCharacters={() => setContent('characters')}
+              />
+            ) : (
+              <CharacterPopover member={member} onBack={() => setContent('name')} />
+            )}
           </div>
         </FloatingPortal>
       )}

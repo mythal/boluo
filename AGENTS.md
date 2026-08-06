@@ -1,5 +1,7 @@
 This project is an open‑source chat tool designed for playing traditional tabletop RPGs (e.g., D&D, CoC). It is structured as a Rust + TypeScript monorepo managed with Turborepo. The repository consists of a Rust backend and multiple Next.js frontend applications.
 
+Important design decisions are documented in `docs/DESIGN.md`. However, you should not modify it; only propose changes when truly necessary.
+
 ## General Notes
 
 - The language of the codebase is English. However, you should respond to the user in the language they used.

@@ -5,6 +5,7 @@ import { useQueryCharacter } from '@boluo/hooks/useQueryCharacter';
 import { useQueryCurrentUser } from '@boluo/hooks/useQueryCurrentUser';
 import { useQueryEntriesByComponent } from '@boluo/hooks/useQueryEntriesByComponent';
 import Archive from '@boluo/icons/Archive';
+import ChevronLeft from '@boluo/icons/ChevronLeft';
 import Edit from '@boluo/icons/Edit';
 import HatGlasses from '@boluo/icons/HatGlasses';
 import { classifyLightOrDark } from '@boluo/theme';
@@ -21,13 +22,22 @@ import { PaneBox } from '../PaneBox';
 import { PaneHeaderBox } from '../PaneHeaderBox';
 import { CharacterEditForm, type CharacterEditDraft } from './CharacterEditForm';
 import { CharacterEntryList } from './CharacterEntryList';
+import { CharacterPortraitEditor } from './CharacterPortraitEditor';
+import { CharacterPortraitGallery } from './CharacterPortraitGallery';
 import { CharacterUsageList } from './CharacterUsageList';
+import { useCanEditCharacter } from './character-permissions';
 import { COUNTER_COMPONENT_TYPE } from './entry-components';
+import { PORTRAIT_COMPONENT_TYPE } from './portrait';
 
 interface Props {
   spaceId: string;
   characterId: string;
 }
+
+type CharacterPaneState =
+  | { type: 'VIEW' }
+  | { type: 'EDIT_CHARACTER' }
+  | { type: 'EDIT_PORTRAITS'; returnTo: 'VIEW' | 'EDIT_CHARACTER' };
 
 const errorMessage = (cause: unknown): string => {
   if (cause instanceof Error) return cause.message;
@@ -56,11 +66,17 @@ const PaneCharacter: FC<Props> = ({ spaceId, characterId }) => {
     error: entriesError,
     isLoading: entriesLoading,
   } = useQueryEntriesByComponent(spaceId, character?.scopeId, COUNTER_COMPONENT_TYPE);
+  const {
+    data: portraitEntries,
+    error: portraitEntriesError,
+    isLoading: portraitEntriesLoading,
+  } = useQueryEntriesByComponent(spaceId, character?.scopeId, PORTRAIT_COMPONENT_TYPE);
   const { data: currentUser } = useQueryCurrentUser();
+  const mayEditCharacter = useCanEditCharacter(character);
   const { mutate } = useSWRConfig();
   const resolvedTheme = useResolvedTheme();
   const lightOrDark = classifyLightOrDark(resolvedTheme);
-  const [isEditing, setIsEditing] = useState(false);
+  const [paneState, setPaneState] = useState<CharacterPaneState>({ type: 'VIEW' });
 
   if (characterLoading || character == null) {
     return (
@@ -91,7 +107,8 @@ const PaneCharacter: FC<Props> = ({ spaceId, characterId }) => {
         ? undefined
         : computeColors(currentUser.id, parseGameColor(currentUser.defaultColor))[lightOrDark]
       : computeColors(character.id, parseGameColor(character.color))[lightOrDark];
-
+  const openPortraitEditor = (returnTo: 'VIEW' | 'EDIT_CHARACTER') =>
+    setPaneState({ type: 'EDIT_PORTRAITS', returnTo });
   const updateCharacterCaches = async (updatedCharacter: Character) => {
     await mutate(['/characters/query', spaceId, character.id], updatedCharacter, false);
     await Promise.all([
@@ -138,41 +155,95 @@ const PaneCharacter: FC<Props> = ({ spaceId, characterId }) => {
     }
   };
 
-  const operators = (
-    <PaneHeaderButton
-      active={isEditing}
-      onClick={() => setIsEditing((editing) => !editing)}
-      title="Edit character"
-    >
-      <Edit />
-      <span className="hidden text-xs @md:inline">
-        <FormattedMessage defaultMessage="Edit" />
-      </span>
-    </PaneHeaderButton>
-  );
+  const operators =
+    paneState.type === 'EDIT_PORTRAITS' ? (
+      <PaneHeaderButton onClick={() => setPaneState({ type: paneState.returnTo })} title="Back">
+        <ChevronLeft />
+        <span className="hidden text-xs @md:inline">
+          <FormattedMessage defaultMessage="Back" />
+        </span>
+      </PaneHeaderButton>
+    ) : mayEditCharacter ? (
+      <PaneHeaderButton
+        active={paneState.type === 'EDIT_CHARACTER'}
+        onClick={() =>
+          setPaneState((current) => ({
+            type: current.type === 'VIEW' ? 'EDIT_CHARACTER' : 'VIEW',
+          }))
+        }
+        title="Edit character"
+      >
+        <Edit />
+        <span className="hidden text-xs @md:inline">
+          <FormattedMessage defaultMessage="Edit" />
+        </span>
+      </PaneHeaderButton>
+    ) : null;
 
   return (
     <PaneBox
       initSizeLevel={1}
       header={
-        <PaneHeaderBox operators={operators} icon={isEditing ? <Edit /> : <HatGlasses />}>
+        <PaneHeaderBox
+          operators={operators}
+          icon={paneState.type === 'VIEW' ? <HatGlasses /> : <Edit />}
+        >
           {character.name}
         </PaneHeaderBox>
       }
     >
       <div className="space-y-3">
-        {isEditing ? (
-          <CharacterEditForm
-            character={character}
-            fallbackColor={currentUser?.defaultColor}
-            fallbackColorSeed={currentUser?.id}
-            onCancel={() => setIsEditing(false)}
-            onSave={saveCharacter}
-            onSetArchived={setCharacterArchived}
-          />
+        {paneState.type !== 'VIEW' ? (
+          <>
+            {paneState.type === 'EDIT_PORTRAITS' && (
+              <CharacterPortraitEditor
+                spaceId={spaceId}
+                scopeId={character.scopeId}
+                characterName={character.name}
+                portraitEntries={portraitEntries}
+                portraitQueryFailed={portraitEntriesError != null}
+                portraitQueryLoading={portraitEntriesLoading}
+              />
+            )}
+            {(paneState.type === 'EDIT_CHARACTER' ||
+              (paneState.type === 'EDIT_PORTRAITS' && paneState.returnTo === 'EDIT_CHARACTER')) && (
+              <div className={paneState.type === 'EDIT_PORTRAITS' ? 'hidden' : undefined}>
+                <section className="p-pane border-border-subtle border-b">
+                  <h3 className="text-text-secondary mb-2 text-sm">
+                    <FormattedMessage defaultMessage="Portraits" />
+                  </h3>
+                  <CharacterPortraitGallery
+                    spaceId={spaceId}
+                    characterName={character.name}
+                    portraitEntries={portraitEntries}
+                    isLoading={portraitEntriesLoading}
+                    failed={portraitEntriesError != null}
+                    onEdit={() => openPortraitEditor('EDIT_CHARACTER')}
+                    editButtonMode="always"
+                  />
+                </section>
+                <CharacterEditForm
+                  character={character}
+                  fallbackColor={currentUser?.defaultColor}
+                  fallbackColorSeed={currentUser?.id}
+                  onCancel={() => setPaneState({ type: 'VIEW' })}
+                  onSave={saveCharacter}
+                  onSetArchived={setCharacterArchived}
+                />
+              </div>
+            )}
+          </>
         ) : (
-          <div className="p-pane space-y-3">
-            <div className="space-y-3">
+          <div className="p-pane space-y-4">
+            <CharacterPortraitGallery
+              spaceId={spaceId}
+              characterName={character.name}
+              portraitEntries={portraitEntries}
+              isLoading={portraitEntriesLoading}
+              failed={portraitEntriesError != null}
+              onEdit={mayEditCharacter ? () => openPortraitEditor('VIEW') : undefined}
+            />
+            <div className="min-w-0 space-y-3">
               {character.archivedAt != null && <ArchivedStatus />}
               <h2
                 className="stroke-name text-xl font-bold"
@@ -201,12 +272,16 @@ const PaneCharacter: FC<Props> = ({ spaceId, characterId }) => {
             </div>
           </div>
         )}
-        <CharacterUsageList spaceId={spaceId} characterId={character.id} />
-        <CharacterEntryList
-          entries={counterEntries}
-          isLoading={entriesLoading}
-          errorCode={entriesError?.code}
-        />
+        {paneState.type !== 'EDIT_PORTRAITS' && (
+          <>
+            <CharacterUsageList spaceId={spaceId} characterId={character.id} />
+            <CharacterEntryList
+              entries={counterEntries}
+              isLoading={entriesLoading}
+              errorCode={entriesError?.code}
+            />
+          </>
+        )}
       </div>
     </PaneBox>
   );

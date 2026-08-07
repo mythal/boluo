@@ -165,11 +165,6 @@ jobs:
         working-directory: apps/site
         run: npm --prefix ../.. run build:site && npx --yes @opennextjs/cloudflare build --skipNextBuild
 
-      - name: Deploy site to production
-        run: nix run --quiet --no-update-lock-file .#deploy-site-production
-        env:
-          FLY_API_TOKEN: ${{ secrets.FLY_IO_TOKEN }}
-
       - name: Deploy server to production
         run: nix run --quiet --no-update-lock-file .#deploy-server-production
         env:

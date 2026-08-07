@@ -1,0 +1,19 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE entries\nSET display_name = $4,\n    reference_note_id = $5,\n    tags = $6,\n    metadata_version = uuidv7(),\n    modified = now()\nWHERE scope_id = $1\n  AND id = $2\n  AND metadata_version = $3;\n",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Uuid",
+        "Text",
+        "Uuid",
+        "TextArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "b3eff8ea92741da7e502361f9b2be31c306ddd32d07a7022b40075c7219af769"
+}

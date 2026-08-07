@@ -29,6 +29,9 @@ const isSamePane = (pane: PaneData, target: PaneData) => {
   if (pane.type === 'SPACE_MEMBERS' && target.type === 'SPACE_MEMBERS') {
     return pane.spaceId === target.spaceId;
   }
+  if (pane.type === 'CHARACTER' && target.type === 'CHARACTER') {
+    return pane.spaceId === target.spaceId && pane.characterId === target.characterId;
+  }
   if (pane.type === 'SPACE_SETTINGS' && target.type === 'SPACE_SETTINGS') {
     return pane.spaceId === target.spaceId;
   }
@@ -72,7 +75,7 @@ export const usePaneToggle = (props?: Props) => {
             });
             return nextPanes;
           }
-          if (currentPane.child && currentPane.child.pane.type === pane.type) {
+          if (currentPane.child && isSamePane(currentPane.child.pane, pane)) {
             nextPanes[index] = { ...currentPane, child: undefined };
           } else {
             nextPanes[index] = { ...currentPane, child: { pane, ratio: child } };
@@ -91,7 +94,12 @@ export const usePaneToggle = (props?: Props) => {
           if (existingPane.isChild) {
             nextPanes[existingPane.index] = { ...nextPanes[existingPane.index]!, child: undefined };
           } else {
-            nextPanes.splice(existingPane.index, 1);
+            const existing = nextPanes[existingPane.index]!;
+            if (existing.child) {
+              nextPanes[existingPane.index] = { ...existing.child.pane, key: existing.key };
+            } else {
+              nextPanes.splice(existingPane.index, 1);
+            }
           }
           return nextPanes;
         }

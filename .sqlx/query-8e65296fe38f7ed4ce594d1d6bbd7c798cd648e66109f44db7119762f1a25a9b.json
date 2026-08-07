@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH target_scopes AS MATERIALIZED (\n    SELECT character.main_scope_id AS scope_id\n    FROM characters character\n    WHERE character.id = $1\n    UNION ALL\n    SELECT binding.scope_id\n    FROM character_scopes binding\n    WHERE binding.character_id = $1\n),\ndeleted_character AS (\n    DELETE FROM characters\n    WHERE id = $1\n    RETURNING id\n)\nDELETE FROM scopes scope\nUSING target_scopes, deleted_character\nWHERE scope.id = target_scopes.scope_id\nRETURNING scope.id AS \"scope_id!\";\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "scope_id!",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "scopes",
+            "name": "id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "8e65296fe38f7ed4ce594d1d6bbd7c798cd648e66109f44db7119762f1a25a9b"
+}

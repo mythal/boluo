@@ -134,7 +134,7 @@ const handleUpdate = (
     }
     nextCursor = update.id;
   }
-  const updateEffects: ChatEffect[] = (() => {
+  const updateEffects: ChatEffect[] | null | undefined = (() => {
     switch (update.body.type) {
       case 'CHANNEL_DELETED':
         return [
@@ -190,6 +190,27 @@ const handleUpdate = (
             dedupeKey: `status:${update.body.spaceId}`,
           },
         ];
+      case 'CHARACTER_CHANGED':
+        return [
+          {
+            type: 'CHARACTER_CHANGED',
+            id: createEffectId(),
+            spaceId: update.mailbox,
+            characterId: update.body.characterId,
+            dedupeKey: `character:${update.mailbox}:${update.body.characterId}`,
+          },
+        ];
+      case 'ENTRY_CHANGED':
+        return [
+          {
+            type: 'ENTRY_CHANGED',
+            id: createEffectId(),
+            spaceId: update.mailbox,
+            scopeId: update.body.scopeId,
+            entryId: update.body.entryId,
+            dedupeKey: `entry:${update.mailbox}:${update.body.scopeId}:${update.body.entryId}`,
+          },
+        ];
       case 'ERROR':
       case 'NEW_MESSAGE':
       case 'MESSAGE_DELETED':
@@ -198,6 +219,7 @@ const handleUpdate = (
       case 'INITIALIZED':
       case 'DIFF':
       case 'APP_INFO':
+      case 'NOTE_CHANGED':
       case 'APP_UPDATED':
         return [];
     }
@@ -205,7 +227,7 @@ const handleUpdate = (
   const chatAction = toChatAction(update);
   if (chatAction == null) {
     const nextState = shouldAdvanceCursor ? { ...state, cursor: nextCursor } : state;
-    return updateEffects.length === 0
+    return updateEffects == null || updateEffects.length === 0
       ? nextState
       : { ...nextState, effects: mergeEffects(nextState.effects, updateEffects) };
   }
@@ -214,7 +236,7 @@ const handleUpdate = (
     ...nextState,
     cursor: nextCursor,
     effects:
-      updateEffects.length === 0
+      updateEffects == null || updateEffects.length === 0
         ? nextState.effects
         : mergeEffects(nextState.effects, updateEffects),
   };

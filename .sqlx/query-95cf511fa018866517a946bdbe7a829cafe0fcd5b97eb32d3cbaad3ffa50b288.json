@@ -106,6 +106,18 @@
                 [
                   "rev",
                   "Int4"
+                ],
+                [
+                  "character_id",
+                  "Uuid"
+                ],
+                [
+                  "portrait_id",
+                  "Uuid"
+                ],
+                [
+                  "has_entry_effects",
+                  "Bool"
                 ]
               ]
             }

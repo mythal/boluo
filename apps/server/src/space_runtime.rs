@@ -6,12 +6,15 @@ use std::time::{Duration, Instant};
 
 use arc_swap::ArcSwap;
 use chrono::{DateTime, TimeZone, Utc};
-use tokio::sync::{mpsc, oneshot};
+use tokio::sync::{OnceCell, mpsc, oneshot};
 use uuid::Uuid;
 
 use crate::channels::models::Member;
 use crate::channels::{Channel, ChannelMember};
 use crate::characters::Character;
+use crate::entries::models::{CachedEntryComponents, Entry, EntryMetadata};
+use crate::notes::NoteMetadata;
+use crate::scopes::models::Scope;
 use crate::spaces::{Space, SpaceMember};
 
 type PersistentMap<K, V> = rpds::HashTrieMapSync<K, V>;
@@ -32,6 +35,9 @@ pub(crate) struct SpaceSnapshot {
     pub(crate) settings: serde_json::Value,
     pub(crate) channels: PersistentMap<Uuid, Channel>,
     pub(crate) characters: PersistentMap<Uuid, Character>,
+    pub(crate) notes: PersistentMap<Uuid, NoteMetadata>,
+    pub(crate) scopes: PersistentMap<Uuid, Scope>,
+    pub(crate) entries: PersistentMap<Uuid, PersistentMap<Uuid, EntryMetadata>>,
     pub(crate) space_members: PersistentMap<Uuid, SpaceMember>,
     pub(crate) channel_members: PersistentMap<Uuid, PersistentMap<Uuid, ChannelMember>>,
 }
@@ -42,6 +48,9 @@ struct SnapshotPayloadMismatch {
     settings: bool,
     channels: bool,
     characters: bool,
+    notes: bool,
+    scopes: bool,
+    entries: bool,
     space_members: bool,
     channel_members: bool,
 }
@@ -52,6 +61,9 @@ impl SnapshotPayloadMismatch {
             || self.settings
             || self.channels
             || self.characters
+            || self.notes
+            || self.scopes
+            || self.entries
             || self.space_members
             || self.channel_members
     }
@@ -66,6 +78,14 @@ pub(crate) enum SpaceDelta {
     ChannelDeleted(Uuid),
     CharacterUpserted(Character),
     CharacterDeleted(Uuid),
+    NoteUpserted(NoteMetadata),
+    ScopeUpserted(Scope),
+    ScopeDeleted(Uuid),
+    EntryUpserted(EntryMetadata),
+    EntryDeleted {
+        scope_id: Uuid,
+        entry_id: Uuid,
+    },
     SpaceMemberUpserted(SpaceMember),
     SpaceMemberRemoved {
         user_id: Uuid,
@@ -126,6 +146,9 @@ impl SpaceSnapshot {
             settings: self.settings != reloaded.settings,
             channels: self.channels != reloaded.channels,
             characters: self.characters != reloaded.characters,
+            notes: self.notes != reloaded.notes,
+            scopes: self.scopes != reloaded.scopes,
+            entries: self.entries != reloaded.entries,
             space_members: self.space_members != reloaded.space_members,
             channel_members: self.channel_members != reloaded.channel_members,
         }
@@ -151,6 +174,36 @@ impl SpaceSnapshot {
                 }
                 SpaceDelta::CharacterDeleted(character_id) => {
                     next.characters.remove_mut(&character_id);
+                }
+                SpaceDelta::NoteUpserted(note) => {
+                    next.notes.insert_mut(note.id, note);
+                }
+                SpaceDelta::ScopeUpserted(scope) => {
+                    next.scopes.insert_mut(scope.id, scope);
+                }
+                SpaceDelta::ScopeDeleted(scope_id) => {
+                    next.scopes.remove_mut(&scope_id);
+                    next.entries.remove_mut(&scope_id);
+                }
+                SpaceDelta::EntryUpserted(entry) => {
+                    let scope_id = entry.scope_id;
+                    let mut entries = next
+                        .entries
+                        .get(&scope_id)
+                        .cloned()
+                        .unwrap_or_else(PersistentMap::new_sync);
+                    entries.insert_mut(entry.id, entry);
+                    next.entries.insert_mut(scope_id, entries);
+                }
+                SpaceDelta::EntryDeleted { scope_id, entry_id } => {
+                    if let Some(mut entries) = next.entries.get(&scope_id).cloned() {
+                        entries.remove_mut(&entry_id);
+                        if entries.size() == 0 {
+                            next.entries.remove_mut(&scope_id);
+                        } else {
+                            next.entries.insert_mut(scope_id, entries);
+                        }
+                    }
                 }
                 SpaceDelta::SpaceMemberUpserted(member) => {
                     next.space_members.insert_mut(member.user_id, member);
@@ -221,6 +274,8 @@ pub(crate) enum SpaceRuntimeError {
     NotFound,
     #[error(transparent)]
     Database(#[from] sqlx::Error),
+    #[error(transparent)]
+    ComponentDecode(#[from] serde_json::Error),
     #[error("space runtime control queue is closed")]
     Closed,
     #[error("space runtime mutation queue is full")]
@@ -235,6 +290,8 @@ pub(crate) struct SpaceRuntime {
     space_id: Uuid,
     db: sqlx::PgPool,
     snapshot: ArcSwap<SpaceSnapshot>,
+    entry_components:
+        papaya::HashMap<Uuid, Arc<OnceCell<CachedEntryComponents>>, ahash::RandomState>,
     dirty: AtomicBool,
     next_ticket: AtomicU64,
     reconciliation_pending: AtomicBool,
@@ -258,6 +315,11 @@ impl SpaceRuntime {
             space_id,
             db: db.clone(),
             snapshot: ArcSwap::from_pointee(snapshot),
+            entry_components: papaya::HashMap::builder()
+                .capacity(16)
+                .hasher(ahash::RandomState::new())
+                .resize_mode(papaya::ResizeMode::Blocking)
+                .build(),
             dirty: AtomicBool::new(false),
             next_ticket: AtomicU64::new(0),
             reconciliation_pending: AtomicBool::new(false),
@@ -290,9 +352,10 @@ impl SpaceRuntime {
         let channels = sqlx::query_file_scalar!("sql/channels/get_by_space.sql", space_id)
             .fetch_all(&mut *transaction)
             .await?;
-        let characters = sqlx::query_file_scalar!("sql/characters/list_by_space.sql", space_id)
-            .fetch_all(&mut *transaction)
-            .await?;
+        let characters = Character::list_by_space(&mut *transaction, &space_id).await?;
+        let notes = NoteMetadata::list_by_space(&mut *transaction, space_id, true).await?;
+        let scopes = Scope::list_by_space(&mut transaction, space_id).await?;
+        let entries = EntryMetadata::list_by_space(&mut transaction, space_id).await?;
         let space_members =
             sqlx::query_file_scalar!("sql/spaces/get_members_by_space.sql", space_id)
                 .fetch_all(&mut *transaction)
@@ -311,6 +374,21 @@ impl SpaceRuntime {
             .into_iter()
             .map(|character: Character| (character.id, character))
             .collect();
+        let notes: PersistentMap<_, _> = notes.into_iter().map(|note| (note.id, note)).collect();
+        let scopes: PersistentMap<_, _> = scopes
+            .into_iter()
+            .map(|scope: Scope| (scope.id, scope))
+            .collect();
+        let mut entries_by_scope: HashMap<Uuid, PersistentMap<Uuid, EntryMetadata>> =
+            HashMap::new();
+        for entry in entries {
+            let scope_id = entry.scope_id;
+            entries_by_scope
+                .entry(scope_id)
+                .or_insert_with(PersistentMap::new_sync)
+                .insert_mut(entry.id, entry);
+        }
+        let entries = entries_by_scope.into_iter().collect();
         let space_members: PersistentMap<_, _> = space_members
             .into_iter()
             .map(|member: SpaceMember| (member.user_id, member))
@@ -341,6 +419,9 @@ impl SpaceRuntime {
             settings,
             channels,
             characters,
+            notes,
+            scopes,
+            entries,
             space_members,
             channel_members,
         })
@@ -352,6 +433,46 @@ impl SpaceRuntime {
 
     pub(crate) fn snapshot(&self) -> Arc<SpaceSnapshot> {
         self.snapshot.load_full()
+    }
+
+    fn entry_component_cell(&self, entry_id: Uuid) -> Arc<OnceCell<CachedEntryComponents>> {
+        self.entry_components
+            .pin()
+            .get_or_insert_with(entry_id, || Arc::new(OnceCell::new()))
+            .clone()
+    }
+
+    fn is_current_component_cell(
+        &self,
+        entry_id: Uuid,
+        expected: &Arc<OnceCell<CachedEntryComponents>>,
+    ) -> bool {
+        self.entry_components
+            .pin()
+            .get(&entry_id)
+            .is_some_and(|current| Arc::ptr_eq(current, expected))
+    }
+
+    fn invalidate_entry_components(&self, snapshot: &SpaceSnapshot, deltas: &[SpaceDelta]) {
+        let components = self.entry_components.pin();
+        for delta in deltas {
+            match delta {
+                SpaceDelta::ScopeDeleted(scope_id) => {
+                    if let Some(entries) = snapshot.entries.get(scope_id) {
+                        for entry_id in entries.keys() {
+                            components.remove(entry_id);
+                        }
+                    }
+                }
+                SpaceDelta::EntryUpserted(entry) => {
+                    components.remove(&entry.id);
+                }
+                SpaceDelta::EntryDeleted { entry_id, .. } => {
+                    components.remove(entry_id);
+                }
+                _ => {}
+            }
+        }
     }
 
     fn record_latest_activity(&self, update_time: DateTime<Utc>) {
@@ -869,6 +990,7 @@ impl SpaceRuntime {
         });
         if can_apply_delta {
             let ticket = runtime.reserve_generation();
+            runtime.invalidate_entry_components(&current, &deltas);
             let next = current.apply_deltas(ticket, deltas);
             runtime.snapshot.store(Arc::new(next));
             let mut prepared_at = None;
@@ -976,6 +1098,15 @@ impl SpaceRuntime {
                     .set(snapshot.channels.size() as f64);
                 metrics::gauge!("boluo_server_space_runtime_snapshot_characters")
                     .set(snapshot.characters.size() as f64);
+                metrics::gauge!("boluo_server_space_runtime_snapshot_scopes")
+                    .set(snapshot.scopes.size() as f64);
+                metrics::gauge!("boluo_server_space_runtime_snapshot_entries").set(
+                    snapshot
+                        .entries
+                        .values()
+                        .map(PersistentMap::size)
+                        .sum::<usize>() as f64,
+                );
                 metrics::gauge!("boluo_server_space_runtime_snapshot_space_members")
                     .set(snapshot.space_members.size() as f64);
                 metrics::gauge!("boluo_server_space_runtime_snapshot_channel_members").set(
@@ -1001,6 +1132,8 @@ impl SpaceRuntime {
                             settings_mismatch = mismatch.settings,
                             channels_mismatch = mismatch.channels,
                             characters_mismatch = mismatch.characters,
+                            scopes_mismatch = mismatch.scopes,
+                            entries_mismatch = mismatch.entries,
                             space_members_mismatch = mismatch.space_members,
                             channel_members_mismatch = mismatch.channel_members,
                             "Space runtime reconciliation detected a snapshot mismatch"
@@ -1014,6 +1147,7 @@ impl SpaceRuntime {
                 );
                 snapshot.latest_activity_us = current_activity_us;
                 if current.revision <= ticket {
+                    runtime.entry_components.pin().clear();
                     runtime.snapshot.store(Arc::new(snapshot));
                 }
                 runtime.update_dirty(state);
@@ -1182,33 +1316,33 @@ pub(crate) struct SpaceStore {
 
 struct SpaceStoreInner {
     db: sqlx::PgPool,
-    runtimes: papaya::HashMap<Uuid, Arc<SpaceRuntimeSlot>, ahash::RandomState>,
+    runtimes: papaya::HashMap<Uuid, Arc<SpaceRuntimeHandle>, ahash::RandomState>,
     reconciliation_permits: Arc<tokio::sync::Semaphore>,
     reconciliation_cursor: AtomicU64,
     #[cfg(test)]
     load_count: std::sync::atomic::AtomicUsize,
 }
 
-struct SpaceRuntimeSlot {
+struct SpaceRuntimeHandle {
     runtime: tokio::sync::OnceCell<Arc<SpaceRuntime>>,
-    state: std::sync::Mutex<SpaceRuntimeSlotState>,
+    state: std::sync::Mutex<SpaceRuntimeHandleState>,
 }
 
-struct SpaceRuntimeSlotState {
+struct SpaceRuntimeHandleState {
     last_touched: Instant,
     leases: u64,
     evicting: bool,
 }
 
-struct SpaceRuntimeSlotLease {
-    slot: Arc<SpaceRuntimeSlot>,
+struct SpaceRuntimeLease {
+    handle: Arc<SpaceRuntimeHandle>,
 }
 
-impl SpaceRuntimeSlot {
+impl SpaceRuntimeHandle {
     fn new() -> Self {
         Self {
             runtime: tokio::sync::OnceCell::new(),
-            state: std::sync::Mutex::new(SpaceRuntimeSlotState {
+            state: std::sync::Mutex::new(SpaceRuntimeHandleState {
                 last_touched: Instant::now(),
                 leases: 0,
                 evicting: false,
@@ -1216,24 +1350,26 @@ impl SpaceRuntimeSlot {
         }
     }
 
-    fn acquire(slot: &Arc<Self>) -> Option<SpaceRuntimeSlotLease> {
-        let mut state = slot
+    fn acquire(handle: &Arc<Self>) -> Option<SpaceRuntimeLease> {
+        let mut state = handle
             .state
             .lock()
-            .expect("Space runtime slot state mutex poisoned");
+            .expect("Space runtime handle state mutex poisoned");
         if state.evicting {
             return None;
         }
         state.last_touched = Instant::now();
         state.leases += 1;
         drop(state);
-        Some(SpaceRuntimeSlotLease { slot: slot.clone() })
+        Some(SpaceRuntimeLease {
+            handle: handle.clone(),
+        })
     }
 
     fn is_idle(&self, max_idle: Duration) -> bool {
         self.state
             .lock()
-            .expect("Space runtime slot state mutex poisoned")
+            .expect("Space runtime handle state mutex poisoned")
             .last_touched
             .elapsed()
             >= max_idle
@@ -1243,7 +1379,7 @@ impl SpaceRuntimeSlot {
         let mut state = self
             .state
             .lock()
-            .expect("Space runtime slot state mutex poisoned");
+            .expect("Space runtime handle state mutex poisoned");
         if state.evicting || state.leases != 0 || state.last_touched.elapsed() < max_idle {
             return false;
         }
@@ -1259,7 +1395,7 @@ impl SpaceRuntimeSlot {
     fn mark_removed(&self) {
         self.state
             .lock()
-            .expect("Space runtime slot state mutex poisoned")
+            .expect("Space runtime handle state mutex poisoned")
             .evicting = true;
     }
 
@@ -1267,7 +1403,7 @@ impl SpaceRuntimeSlot {
         let mut state = self
             .state
             .lock()
-            .expect("Space runtime slot state mutex poisoned");
+            .expect("Space runtime handle state mutex poisoned");
         if state.evicting {
             return None;
         }
@@ -1279,7 +1415,7 @@ impl SpaceRuntimeSlot {
         let state = self
             .state
             .lock()
-            .expect("Space runtime slot state mutex poisoned");
+            .expect("Space runtime handle state mutex poisoned");
         if state.evicting {
             return None;
         }
@@ -1287,17 +1423,17 @@ impl SpaceRuntimeSlot {
     }
 }
 
-impl Drop for SpaceRuntimeSlotLease {
+impl Drop for SpaceRuntimeLease {
     fn drop(&mut self) {
         let mut state = self
-            .slot
+            .handle
             .state
             .lock()
-            .expect("Space runtime slot state mutex poisoned");
+            .expect("Space runtime handle state mutex poisoned");
         state.leases = state
             .leases
             .checked_sub(1)
-            .expect("Space runtime slot lease count underflow");
+            .expect("Space runtime lease count underflow");
     }
 }
 
@@ -1338,25 +1474,25 @@ impl SpaceStore {
     }
 
     pub(crate) fn get(&self, space_id: &Uuid) -> Option<Arc<SpaceRuntime>> {
-        let slot = self.inner.runtimes.pin().get(space_id).cloned()?;
-        // Cloning the Runtime while holding the slot lock prevents idle eviction
-        // after the lock is released, without a separate short-lived slot lease.
-        slot.touch_runtime_if_active()
+        let handle = self.inner.runtimes.pin().get(space_id).cloned()?;
+        // Cloning the Runtime while holding the handle lock prevents idle eviction
+        // after the lock is released, without a separate short-lived lease.
+        handle.touch_runtime_if_active()
     }
 
     #[cfg(test)]
     async fn get_with_hook<F>(
         &self,
         space_id: &Uuid,
-        after_slot_acquire: F,
+        after_handle_acquire: F,
     ) -> Option<Arc<SpaceRuntime>>
     where
         F: Future<Output = ()>,
     {
-        let slot = self.inner.runtimes.pin().get(space_id).cloned()?;
-        let _lease = SpaceRuntimeSlot::acquire(&slot)?;
-        after_slot_acquire.await;
-        slot.runtime_if_active()
+        let handle = self.inner.runtimes.pin().get(space_id).cloned()?;
+        let _lease = SpaceRuntimeHandle::acquire(&handle)?;
+        after_handle_acquire.await;
+        handle.runtime_if_active()
     }
 
     pub(crate) async fn get_or_load(
@@ -1504,6 +1640,164 @@ impl SpaceStore {
             .map_err(Into::into)
     }
 
+    pub(crate) async fn resolve_note_metadata(
+        &self,
+        space_id: Uuid,
+        note_id: Uuid,
+    ) -> Result<Option<NoteMetadata>, SpaceRuntimeError> {
+        let runtime = self.get_or_load(space_id).await?;
+        if let Some(snapshot) = runtime.authoritative_snapshot_after_wait().await {
+            metrics::counter!("boluo_server_space_runtime_read_total", "result" => "hit")
+                .increment(1);
+            return Ok(snapshot.notes.get(&note_id).cloned());
+        }
+
+        metrics::counter!("boluo_server_space_runtime_read_total", "result" => "fallback")
+            .increment(1);
+        NoteMetadata::get_by_id(&self.inner.db, space_id, note_id)
+            .await
+            .map_err(Into::into)
+    }
+
+    pub(crate) async fn list_note_metadata(
+        &self,
+        space_id: Uuid,
+        include_archived: bool,
+    ) -> Result<Vec<NoteMetadata>, SpaceRuntimeError> {
+        let runtime = self.get_or_load(space_id).await?;
+        if let Some(snapshot) = runtime.authoritative_snapshot_after_wait().await {
+            metrics::counter!("boluo_server_space_runtime_read_total", "result" => "hit")
+                .increment(1);
+            let mut notes: Vec<_> = snapshot
+                .notes
+                .values()
+                .filter(|note| include_archived || note.archived_at.is_none())
+                .cloned()
+                .collect();
+            notes.sort_unstable_by(|left, right| {
+                right
+                    .modified
+                    .cmp(&left.modified)
+                    .then_with(|| right.id.cmp(&left.id))
+            });
+            return Ok(notes);
+        }
+
+        metrics::counter!("boluo_server_space_runtime_read_total", "result" => "fallback")
+            .increment(1);
+        NoteMetadata::list_by_space(&self.inner.db, space_id, include_archived)
+            .await
+            .map_err(Into::into)
+    }
+
+    pub(crate) async fn resolve_scope(
+        &self,
+        space_id: Uuid,
+        scope_id: Uuid,
+    ) -> Result<Option<Scope>, SpaceRuntimeError> {
+        let runtime = self.get_or_load(space_id).await?;
+        if let Some(snapshot) = runtime.authoritative_snapshot_after_wait().await {
+            metrics::counter!("boluo_server_space_runtime_read_total", "result" => "hit")
+                .increment(1);
+            return Ok(snapshot.scopes.get(&scope_id).cloned());
+        }
+
+        metrics::counter!("boluo_server_space_runtime_read_total", "result" => "fallback")
+            .increment(1);
+        Scope::get_by_id(&self.inner.db, scope_id)
+            .await
+            .map(|scope| scope.filter(|scope| scope.space_id == space_id))
+            .map_err(Into::into)
+    }
+
+    pub(crate) async fn list_entry_metadata(
+        &self,
+        space_id: Uuid,
+        scope_id: Uuid,
+    ) -> Result<Vec<EntryMetadata>, SpaceRuntimeError> {
+        let runtime = self.get_or_load(space_id).await?;
+        if let Some(snapshot) = runtime.authoritative_snapshot_after_wait().await {
+            metrics::counter!("boluo_server_space_runtime_read_total", "result" => "hit")
+                .increment(1);
+            let mut entries: Vec<_> = snapshot
+                .entries
+                .get(&scope_id)
+                .into_iter()
+                .flat_map(PersistentMap::values)
+                .cloned()
+                .collect();
+            entries.sort_unstable_by(|left, right| {
+                left.pos
+                    .total_cmp(&right.pos)
+                    .then_with(|| left.id.cmp(&right.id))
+            });
+            return Ok(entries);
+        }
+        metrics::counter!("boluo_server_space_runtime_read_total", "result" => "fallback")
+            .increment(1);
+        EntryMetadata::list_by_scope(&self.inner.db, scope_id)
+            .await
+            .map_err(Into::into)
+    }
+
+    pub(crate) async fn resolve_entry(
+        &self,
+        space_id: Uuid,
+        scope_id: Uuid,
+        entry_id: Uuid,
+    ) -> Result<Option<Entry>, SpaceRuntimeError> {
+        let runtime = self.get_or_load(space_id).await?;
+        for _ in 0..2 {
+            let Some(snapshot) = runtime.authoritative_snapshot_after_wait().await else {
+                break;
+            };
+            if snapshot
+                .entries
+                .get(&scope_id)
+                .and_then(|entries| entries.get(&entry_id))
+                .is_none()
+            {
+                return Ok(None);
+            }
+            let component_cell = runtime.entry_component_cell(entry_id);
+            let was_cached = component_cell.get().is_some();
+            let db = self.inner.db.clone();
+            let components = component_cell
+                .get_or_try_init(|| async move { CachedEntryComponents::load(&db, entry_id).await })
+                .await?;
+            let Some(current) = runtime.authoritative_snapshot_after_wait().await else {
+                continue;
+            };
+            // An Entry write or deletion removes the old cell. Identity checking
+            // prevents an in-flight load from publishing stale data.
+            if !runtime.is_current_component_cell(entry_id, &component_cell) {
+                continue;
+            }
+            let Some(current_entry) = current
+                .entries
+                .get(&scope_id)
+                .and_then(|entries| entries.get(&entry_id))
+            else {
+                return Ok(None);
+            };
+            metrics::counter!(
+                "boluo_server_entry_component_cache_read_total",
+                "result" => if was_cached { "hit" } else { "load" }
+            )
+            .increment(1);
+            return Ok(Some(
+                current_entry
+                    .clone()
+                    .with_components(components.to_response()),
+            ));
+        }
+        metrics::counter!("boluo_server_entry_component_cache_read_total", "result" => "fallback")
+            .increment(1);
+        Entry::get_by_id(&self.inner.db, scope_id, entry_id)
+            .await
+            .map_err(Into::into)
+    }
+
     pub(crate) async fn resolve_channel_member(
         &self,
         space_id: Uuid,
@@ -1545,20 +1839,21 @@ impl SpaceStore {
         if let Some(runtime) = self.get(&space_id) {
             return Ok(runtime);
         }
-        let (slot, _lease) = loop {
-            let slot = self
+        let (handle, _lease) = loop {
+            let handle = self
                 .inner
                 .runtimes
                 .pin()
-                .get_or_insert_with(space_id, || Arc::new(SpaceRuntimeSlot::new()))
+                .get_or_insert_with(space_id, || Arc::new(SpaceRuntimeHandle::new()))
                 .clone();
-            if let Some(lease) = SpaceRuntimeSlot::acquire(&slot) {
-                break (slot, lease);
+            if let Some(lease) = SpaceRuntimeHandle::acquire(&handle) {
+                break (handle, lease);
             }
             tokio::task::yield_now().await;
         };
         after_miss.await;
-        slot.runtime
+        handle
+            .runtime
             .get_or_try_init(|| async {
                 #[cfg(test)]
                 self.inner
@@ -1567,7 +1862,9 @@ impl SpaceStore {
                 SpaceRuntime::load(&self.inner.db, space_id).await
             })
             .await?;
-        slot.runtime_if_active().ok_or(SpaceRuntimeError::NotFound)
+        handle
+            .runtime_if_active()
+            .ok_or(SpaceRuntimeError::NotFound)
     }
 
     /// Refreshes an existing runtime without loading a cold Space as a write side effect.
@@ -1615,8 +1912,8 @@ impl SpaceStore {
     }
 
     pub(crate) fn remove(&self, space_id: Uuid) {
-        let _ = self.inner.runtimes.pin().remove_if(&space_id, |_, slot| {
-            slot.mark_removed();
+        let _ = self.inner.runtimes.pin().remove_if(&space_id, |_, handle| {
+            handle.mark_removed();
             true
         });
     }
@@ -1627,17 +1924,17 @@ impl SpaceStore {
             .runtimes
             .pin()
             .iter()
-            .filter(|(_, slot)| slot.is_idle(max_idle))
-            .map(|(space_id, slot)| (*space_id, slot.clone()))
+            .filter(|(_, handle)| handle.is_idle(max_idle))
+            .map(|(space_id, handle)| (*space_id, handle.clone()))
             .collect();
         let mut evicted = 0;
-        for (space_id, expected_slot) in candidates {
+        for (space_id, expected_handle) in candidates {
             let pinned = self.inner.runtimes.pin();
-            let result = pinned.remove_if(&space_id, |_, current_slot| {
-                if !Arc::ptr_eq(current_slot, &expected_slot) {
+            let result = pinned.remove_if(&space_id, |_, current_handle| {
+                if !Arc::ptr_eq(current_handle, &expected_handle) {
                     return false;
                 }
-                current_slot.mark_evicting_if_idle(max_idle)
+                current_handle.mark_evicting_if_idle(max_idle)
             });
             if matches!(result, Ok(Some(_))) {
                 evicted += 1;
@@ -1653,7 +1950,7 @@ impl SpaceStore {
             .runtimes
             .pin()
             .iter()
-            .filter_map(|(_, slot)| slot.runtime_if_active())
+            .filter_map(|(_, handle)| handle.runtime_if_active())
             .filter(|runtime| runtime.needs_reconciliation(max_age))
             .collect();
         if runtimes.is_empty() {
@@ -1700,16 +1997,32 @@ impl SpaceStore {
             .load_count
             .load(std::sync::atomic::Ordering::Relaxed)
     }
+
+    #[cfg(test)]
+    fn entry_component_cache_len(&self) -> usize {
+        self.inner
+            .runtimes
+            .pin()
+            .iter()
+            .filter_map(|(_, handle)| handle.runtime.get())
+            .map(|runtime| runtime.entry_components.pin().len())
+            .sum()
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::channels::ChannelType;
-    use crate::characters::CharacterVisibility;
     use crate::committed_changes::CommittedChanges;
     use crate::context::AppContext;
+    use crate::entries::models::{Entry, EntryComponentMutation, EntryMetadata};
+    use crate::notes::Note;
+    use crate::spaces::AccessPolicy;
     use crate::users::User;
+    use serde_json::json;
+    use shared_types::messages::Entities;
+    use std::collections::BTreeMap;
 
     async fn create_space(pool: &sqlx::PgPool) -> (User, Space, Channel) {
         let suffix = Uuid::new_v4().simple().to_string();
@@ -1857,6 +2170,368 @@ mod tests {
                 .is_none(),
             "member refresh created mailbox state"
         );
+    }
+
+    #[sqlx::test(migrator = "crate::db::MIGRATOR")]
+    async fn db_test_runtime_entry_order_matches_database(pool: sqlx::PgPool) {
+        let (_owner, space, _) = create_space(&pool).await;
+        let mut transaction = pool.begin().await.expect("failed to begin transaction");
+        let mut expected_order = Vec::new();
+        for key in ["ä", "Z", "a"] {
+            let entry = Entry::create(
+                &mut transaction,
+                space.scope_id,
+                key.to_string(),
+                Vec::new(),
+                format!("{key} Entry"),
+                None,
+                BTreeMap::new(),
+                Vec::new(),
+                None,
+            )
+            .await
+            .expect("failed to create Entry");
+            expected_order.push(entry.id);
+        }
+        transaction
+            .commit()
+            .await
+            .expect("failed to commit Entries");
+
+        let expected_ids = expected_order;
+        let database_ids: Vec<_> = EntryMetadata::list_by_scope(&pool, space.scope_id)
+            .await
+            .expect("failed to list database Entries")
+            .into_iter()
+            .map(|entry| entry.id)
+            .collect();
+        let ctx = AppContext::new(pool, None);
+        let runtime_ids: Vec<_> = ctx
+            .space_store
+            .list_entry_metadata(space.id, space.scope_id)
+            .await
+            .expect("failed to list runtime Entries")
+            .into_iter()
+            .map(|entry| entry.id)
+            .collect();
+
+        assert_eq!(database_ids, expected_ids);
+        assert_eq!(runtime_ids, database_ids);
+    }
+
+    #[sqlx::test(migrator = "crate::db::MIGRATOR")]
+    async fn db_test_entries_are_resident_and_components_load_lazily(pool: sqlx::PgPool) {
+        let (_owner, space, _) = create_space(&pool).await;
+        let mut transaction = pool.begin().await.expect("failed to begin transaction");
+        let entry = Entry::create(
+            &mut transaction,
+            space.scope_id,
+            "hp".to_string(),
+            Vec::new(),
+            "Hit Points".to_string(),
+            None,
+            BTreeMap::from([(
+                "core/counter".to_string(),
+                crate::entries::models::EntryComponentPayloadInput::json(json!({"value": 10})),
+            )]),
+            Vec::new(),
+            None,
+        )
+        .await
+        .expect("failed to create Entry");
+        transaction.commit().await.expect("failed to commit Entry");
+
+        let ctx = AppContext::new(pool.clone(), None);
+        let runtime = ctx
+            .space_store
+            .get_or_load(space.id)
+            .await
+            .expect("failed to load Space runtime");
+        let snapshot = runtime
+            .authoritative_snapshot()
+            .expect("runtime snapshot is dirty");
+        assert_eq!(
+            snapshot
+                .scopes
+                .get(&space.scope_id)
+                .expect("Space Scope is not resident"),
+            &Scope::get_by_id(&pool, space.scope_id)
+                .await
+                .expect("failed to load Space Scope")
+                .expect("Space Scope is missing")
+        );
+        assert!(
+            snapshot
+                .entries
+                .get(&space.scope_id)
+                .is_some_and(|entries| entries.contains_key(&entry.id))
+        );
+        assert_eq!(ctx.space_store.entry_component_cache_len(), 0);
+
+        let metadata = ctx
+            .space_store
+            .list_entry_metadata(space.id, space.scope_id)
+            .await
+            .expect("failed to list Entry metadata");
+        assert_eq!(metadata.len(), 1);
+        assert_eq!(metadata[0].key, "hp");
+        assert_eq!(ctx.space_store.entry_component_cache_len(), 0);
+
+        let resolved = ctx
+            .space_store
+            .resolve_entry(space.id, space.scope_id, entry.id)
+            .await
+            .expect("failed to resolve Entry")
+            .expect("Entry is missing");
+        assert_eq!(
+            resolved.components["core/counter"].json_data(),
+            json!({"value": 10})
+        );
+        assert_eq!(resolved.components["core/counter"].schema_version(), 1);
+        let component_version = resolved.components["core/counter"].version();
+        assert_eq!(ctx.space_store.entry_component_cache_len(), 1);
+
+        drop(snapshot);
+        drop(runtime);
+        assert_eq!(ctx.space_store.evict_idle(Duration::ZERO), 1);
+        assert_eq!(
+            ctx.space_store.entry_component_cache_len(),
+            0,
+            "evicting a Space runtime retained its Component cache"
+        );
+        let resolved = ctx
+            .space_store
+            .resolve_entry(space.id, space.scope_id, entry.id)
+            .await
+            .expect("failed to resolve Entry after Runtime eviction")
+            .expect("Entry is missing after Runtime eviction");
+        assert_eq!(
+            resolved.components["core/counter"].json_data(),
+            json!({"value": 10})
+        );
+        assert_eq!(ctx.space_store.entry_component_cache_len(), 1);
+
+        let mutation = ctx
+            .space_store
+            .acquire_mutation(space.id)
+            .await
+            .expect("failed to acquire Entry mutation");
+        let mut transaction = pool.begin().await.expect("failed to begin transaction");
+        let locked = EntryMetadata::get_by_id_for_update(&mut transaction, entry.id)
+            .await
+            .expect("failed to lock Entry")
+            .expect("Entry is missing");
+        Entry::apply_component_mutations(
+            &mut transaction,
+            entry.id,
+            &[EntryComponentMutation::Set {
+                component_type: "core/counter".to_string(),
+                expected_version: Some(component_version),
+                payload: crate::entries::models::EntryComponentPayloadInput::json(json!({
+                    "value": 7
+                })),
+            }],
+        )
+        .await
+        .expect("failed to update Entry Component");
+        let mutation = mutation
+            .commit(transaction)
+            .await
+            .expect("failed to commit Entry mutation");
+        let mut changes = CommittedChanges::default();
+        changes.entry_updated(space.id, &locked);
+        changes.apply_with_mutation(&ctx, &mutation).await;
+        drop(mutation);
+
+        let resolved = ctx
+            .space_store
+            .resolve_entry(space.id, space.scope_id, entry.id)
+            .await
+            .expect("failed to resolve updated Entry")
+            .expect("updated Entry is missing");
+        assert_eq!(
+            resolved.components["core/counter"].json_data(),
+            json!({"value": 7})
+        );
+        assert_eq!(resolved.components["core/counter"].schema_version(), 1);
+
+        let mutation = ctx
+            .space_store
+            .acquire_mutation(space.id)
+            .await
+            .expect("failed to acquire Entry metadata mutation");
+        let mut transaction = pool.begin().await.expect("failed to begin transaction");
+        let current = EntryMetadata::get_by_id_for_update(&mut transaction, entry.id)
+            .await
+            .expect("failed to lock Entry")
+            .expect("Entry is missing");
+        let updated = Entry::update(
+            &mut transaction,
+            current.scope_id,
+            current.id,
+            current.metadata_version,
+            "stamina".to_string(),
+            Vec::new(),
+            "Stamina".to_string(),
+            current.reference_note_id,
+            Vec::new(),
+        )
+        .await
+        .expect("failed to update Entry metadata")
+        .expect("Entry metadata version is stale");
+        let mutation = mutation
+            .commit(transaction)
+            .await
+            .expect("failed to commit Entry metadata mutation");
+        let mut changes = CommittedChanges::default();
+        changes.entry_updated(space.id, &updated.metadata);
+        changes.apply_with_mutation(&ctx, &mutation).await;
+        drop(mutation);
+
+        let metadata = ctx
+            .space_store
+            .list_entry_metadata(space.id, space.scope_id)
+            .await
+            .expect("failed to list updated Entry metadata");
+        assert_eq!(metadata[0].key, "stamina");
+        let resolved = ctx
+            .space_store
+            .resolve_entry(space.id, space.scope_id, entry.id)
+            .await
+            .expect("failed to resolve renamed Entry")
+            .expect("renamed Entry is missing");
+        assert_eq!(resolved.key, "stamina");
+        assert_eq!(
+            resolved.components["core/counter"].json_data(),
+            json!({"value": 7})
+        );
+
+        let mutation = ctx
+            .space_store
+            .acquire_mutation(space.id)
+            .await
+            .expect("failed to acquire Entry deletion mutation");
+        let mut transaction = pool.begin().await.expect("failed to begin transaction");
+        assert!(
+            Entry::delete(
+                &mut transaction,
+                updated.scope_id,
+                updated.id,
+                updated.metadata_version,
+            )
+            .await
+            .expect("failed to delete Entry")
+        );
+        let mutation = mutation
+            .commit(transaction)
+            .await
+            .expect("failed to commit Entry deletion");
+        let mut changes = CommittedChanges::default();
+        changes.entry_deleted(space.id, updated.scope_id, updated.id);
+        changes.apply_with_mutation(&ctx, &mutation).await;
+
+        assert_eq!(
+            ctx.space_store.entry_component_cache_len(),
+            0,
+            "deleting an Entry retained its Component cache"
+        );
+
+        assert!(
+            ctx.space_store
+                .list_entry_metadata(space.id, space.scope_id)
+                .await
+                .expect("failed to list Entries after deletion")
+                .is_empty()
+        );
+        assert!(
+            ctx.space_store
+                .resolve_entry(space.id, space.scope_id, entry.id)
+                .await
+                .expect("failed to resolve deleted Entry")
+                .is_none()
+        );
+    }
+
+    #[sqlx::test(migrator = "crate::db::MIGRATOR")]
+    async fn db_test_note_metadata_is_resident_and_updates_with_runtime(pool: sqlx::PgPool) {
+        let (owner, space, _) = create_space(&pool).await;
+        let mut transaction = pool.begin().await.expect("failed to begin transaction");
+        let note = Note::create(
+            &mut transaction,
+            space.id,
+            "Rules".to_string(),
+            vec!["rules".to_string()],
+            vec!["Reference".to_string()],
+            owner.id,
+            "Initial content".to_string(),
+            Entities::default(),
+            AccessPolicy::Public,
+            None,
+        )
+        .await
+        .expect("failed to create Note");
+        transaction.commit().await.expect("failed to commit Note");
+
+        let ctx = AppContext::new(pool.clone(), None);
+        let runtime = ctx
+            .space_store
+            .get_or_load(space.id)
+            .await
+            .expect("failed to load Space runtime");
+        assert_eq!(
+            runtime
+                .authoritative_snapshot()
+                .expect("runtime snapshot is dirty")
+                .notes
+                .get(&note.id),
+            Some(&note.metadata)
+        );
+
+        let mutation = ctx
+            .space_store
+            .acquire_mutation(space.id)
+            .await
+            .expect("failed to acquire Note mutation");
+        let mut transaction = pool.begin().await.expect("failed to begin transaction");
+        let updated = Note::update(
+            &mut transaction,
+            space.id,
+            note.id,
+            note.revision,
+            "Updated Rules".to_string(),
+            vec!["rules".to_string()],
+            vec!["Reference".to_string()],
+            "Updated content".to_string(),
+            Entities::default(),
+            AccessPolicy::Public,
+            None,
+            owner.id,
+        )
+        .await
+        .expect("failed to update Note")
+        .expect("Note revision is stale");
+        let mutation = mutation
+            .commit(transaction)
+            .await
+            .expect("failed to commit Note mutation");
+        let mut changes = CommittedChanges::default();
+        changes.note_updated(&updated.metadata);
+        changes.apply_with_mutation(&ctx, &mutation).await;
+
+        let resolved = ctx
+            .space_store
+            .resolve_note_metadata(space.id, note.id)
+            .await
+            .expect("failed to resolve Note metadata")
+            .expect("Note metadata is missing");
+        assert_eq!(resolved.title, "Updated Rules");
+        assert_eq!(resolved.revision, 2);
+        let full = Note::get_by_id(&pool, space.id, note.id)
+            .await
+            .expect("failed to query full Note")
+            .expect("full Note is missing");
+        assert_eq!(full.text, "Updated content");
+        assert!(full.entities.0.is_empty());
     }
 
     #[sqlx::test(migrator = "crate::db::MIGRATOR")]
@@ -2141,26 +2816,31 @@ mod tests {
             .expect("failed to acquire Character creation mutation");
         let mut transaction = pool.begin().await.expect("failed to begin transaction");
         let character = Character::create(
-            &mut *transaction,
+            &mut transaction,
             space.id,
             owner.id,
             "Runtime Character",
+            "runtime_character",
+            vec![],
             "",
             "",
+            AccessPolicy::Secret,
             None,
-            None,
-            CharacterVisibility::Private,
-            false,
-            serde_json::json!({}),
+            vec![],
         )
         .await
         .expect("failed to create Character");
+        let character_scope = Scope::get_by_id(&mut *transaction, character.scope_id)
+            .await
+            .expect("failed to load Character Scope")
+            .expect("Character Scope is missing");
         let mutation = mutation
             .commit(transaction)
             .await
             .expect("failed to commit Character creation");
         let mut changes = CommittedChanges::default();
         changes.character_updated(&character);
+        changes.scope_updated(&character_scope);
         changes.apply_with_mutation(&ctx, &mutation).await;
         drop(mutation);
         assert_eq!(
@@ -2170,6 +2850,13 @@ mod tests {
                 .characters[&character.id]
                 .name,
             "Runtime Character"
+        );
+        assert_eq!(
+            runtime
+                .authoritative_snapshot()
+                .expect("runtime remained dirty after Scope creation")
+                .scopes[&character.scope_id],
+            character_scope
         );
         assert!(
             ctx.space_store
@@ -2183,24 +2870,71 @@ mod tests {
             .space_store
             .acquire_mutation(space.id)
             .await
+            .expect("failed to acquire Entry creation mutation");
+        let mut transaction = pool.begin().await.expect("failed to begin transaction");
+        let entry = Entry::create(
+            &mut transaction,
+            character.scope_id,
+            "hp".to_string(),
+            vec![],
+            "Hit Points".to_string(),
+            None,
+            BTreeMap::from([(
+                "core/counter".to_string(),
+                crate::entries::models::EntryComponentPayloadInput::json(json!({"value": 10})),
+            )]),
+            vec![],
+            None,
+        )
+        .await
+        .expect("failed to create Character Entry");
+        let mutation = mutation
+            .commit(transaction)
+            .await
+            .expect("failed to commit Entry creation");
+        let mut changes = CommittedChanges::default();
+        changes.entry_updated(space.id, &entry.metadata);
+        changes.apply_with_mutation(&ctx, &mutation).await;
+        drop(mutation);
+        assert!(
+            ctx.space_store
+                .resolve_entry(space.id, character.scope_id, entry.id)
+                .await
+                .expect("failed to resolve Character Entry")
+                .is_some()
+        );
+        assert_eq!(ctx.space_store.entry_component_cache_len(), 1);
+
+        let mutation = ctx
+            .space_store
+            .acquire_mutation(space.id)
+            .await
             .expect("failed to acquire Character deletion mutation");
         let mut transaction = pool.begin().await.expect("failed to begin transaction");
-        Character::delete(&mut *transaction, &character.id)
+        let deleted_scope_ids = Character::delete(&mut *transaction, &character.id)
             .await
             .expect("failed to delete Character");
+        assert_eq!(deleted_scope_ids, vec![character.scope_id]);
         let mutation = mutation
             .commit(transaction)
             .await
             .expect("failed to commit Character deletion");
         let mut changes = CommittedChanges::default();
-        changes.character_deleted(space.id, character.id);
+        changes.character_deleted(space.id, character.id, deleted_scope_ids);
         changes.apply_with_mutation(&ctx, &mutation).await;
+        let snapshot = runtime
+            .authoritative_snapshot()
+            .expect("runtime remained dirty after Character deletion");
+        assert!(!snapshot.characters.contains_key(&character.id));
+        assert!(!snapshot.scopes.contains_key(&character.scope_id));
+        assert!(!snapshot.entries.contains_key(&character.scope_id));
+        assert_eq!(ctx.space_store.entry_component_cache_len(), 0);
         assert!(
-            !runtime
-                .authoritative_snapshot()
-                .expect("runtime remained dirty after Character deletion")
-                .characters
-                .contains_key(&character.id)
+            ctx.space_store
+                .resolve_entry(space.id, character.scope_id, entry.id)
+                .await
+                .expect("failed to resolve deleted Character Entry")
+                .is_none()
         );
     }
 
@@ -2290,24 +3024,24 @@ mod tests {
                 .expect("failed to load Space runtime"),
         );
 
-        let (slot_cloned_tx, slot_cloned_rx) = oneshot::channel();
+        let (handle_cloned_tx, handle_cloned_rx) = oneshot::channel();
         let (resume_get_tx, resume_get_rx) = oneshot::channel();
         let get_task = {
             let store = store.clone();
             tokio::spawn(async move {
                 store
                     .get_with_hook(&space.id, async move {
-                        slot_cloned_tx
+                        handle_cloned_tx
                             .send(())
-                            .expect("slot clone receiver was dropped");
+                            .expect("handle clone receiver was dropped");
                         resume_get_rx.await.expect("get resume sender was dropped");
                     })
                     .await
             })
         };
-        slot_cloned_rx
+        handle_cloned_rx
             .await
-            .expect("get did not clone the runtime slot");
+            .expect("get did not clone the Runtime handle");
 
         let evicted = store.evict_idle(Duration::ZERO);
         resume_get_tx.send(()).expect("paused get task was dropped");
@@ -2315,7 +3049,7 @@ mod tests {
 
         assert_eq!(
             evicted, 0,
-            "idle eviction removed a slot while get was acquiring its Runtime"
+            "idle eviction removed a handle while get was acquiring its Runtime"
         );
         assert!(fetched.is_some(), "the paused get lost its Runtime");
         assert!(
@@ -2325,7 +3059,7 @@ mod tests {
     }
 
     #[sqlx::test]
-    async fn db_test_removed_slot_is_not_returned_by_in_flight_get(pool: sqlx::PgPool) {
+    async fn db_test_removed_handle_is_not_returned_by_in_flight_get(pool: sqlx::PgPool) {
         let (_, space, _) = create_space(&pool).await;
         let store = SpaceStore::new(pool);
         drop(
@@ -2335,24 +3069,24 @@ mod tests {
                 .expect("failed to load Space runtime"),
         );
 
-        let (slot_acquired_tx, slot_acquired_rx) = oneshot::channel();
+        let (handle_acquired_tx, handle_acquired_rx) = oneshot::channel();
         let (resume_get_tx, resume_get_rx) = oneshot::channel();
         let get_task = {
             let store = store.clone();
             tokio::spawn(async move {
                 store
                     .get_with_hook(&space.id, async move {
-                        slot_acquired_tx
+                        handle_acquired_tx
                             .send(())
-                            .expect("slot acquire receiver was dropped");
+                            .expect("handle acquire receiver was dropped");
                         resume_get_rx.await.expect("get resume sender was dropped");
                     })
                     .await
             })
         };
-        slot_acquired_rx
+        handle_acquired_rx
             .await
-            .expect("get did not acquire the runtime slot");
+            .expect("get did not acquire the Runtime handle");
 
         store.remove(space.id);
         resume_get_tx.send(()).expect("paused get task was dropped");
@@ -2360,7 +3094,7 @@ mod tests {
 
         assert!(
             fetched.is_none(),
-            "an in-flight get returned a Runtime after its slot was removed"
+            "an in-flight get returned a Runtime after its handle was removed"
         );
         assert!(store.get(&space.id).is_none());
     }

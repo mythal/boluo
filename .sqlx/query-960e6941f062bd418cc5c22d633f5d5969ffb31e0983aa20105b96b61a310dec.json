@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT EXISTS(\n            SELECT 1 FROM scopes WHERE access_channel_id = $1\n            UNION ALL\n            SELECT 1 FROM notes WHERE access_channel_id = $1\n        ) AS \"referenced!\"\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "referenced!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "960e6941f062bd418cc5c22d633f5d5969ffb31e0983aa20105b96b61a310dec"
+}

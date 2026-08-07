@@ -1,0 +1,31 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH component AS (\n    INSERT INTO entry_components (entry_id, component_type, payload_type)\n    VALUES ($1, $2, 'Json')\n    RETURNING entry_id, component_type, payload_type\n)\nINSERT INTO entry_components_json (\n    entry_id,\n    component_type,\n    payload_type,\n    data,\n    schema_version\n)\nSELECT entry_id, component_type, payload_type, $3, COALESCE($4, 1)\nFROM component\nRETURNING schema_version;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "schema_version",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "entry_components_json",
+            "name": "schema_version"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Jsonb",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "98ca8d532c361db9099e4509fd2ebe82b5d3c8f4f38d841723a40e1566bc250c"
+}

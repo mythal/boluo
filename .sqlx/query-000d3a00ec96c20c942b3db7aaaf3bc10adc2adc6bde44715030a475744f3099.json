@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO character_identifiers (space_id, character_id, value, kind)\nSELECT\n    $1,\n    $2,\n    identifier.value,\n    CASE identifier.ordinality\n        WHEN 1 THEN 'Primary'::identifier_kind\n        ELSE 'Alias'::identifier_kind\n    END\nFROM unnest($3::text[]) WITH ORDINALITY AS identifier(value, ordinality);\n",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "TextArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "000d3a00ec96c20c942b3db7aaaf3bc10adc2adc6bde44715030a475744f3099"
+}

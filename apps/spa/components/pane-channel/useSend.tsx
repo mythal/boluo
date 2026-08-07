@@ -19,6 +19,7 @@ import { useSetBanner } from '../../hooks/useBanner';
 import { useMember } from '../../hooks/useMember';
 import { findMessage } from '../../state/channel.reducer';
 import { saveDraftInWorker } from '../../state/compose-backup.worker-client';
+import { useChannelCharacterName } from '../../hooks/useChannelCharacter';
 
 const SEND_TIMEOUT = 8000;
 
@@ -30,6 +31,7 @@ export const useSend = () => {
   const store = useStore();
 
   const myMember = useMember();
+  const channelCharacterName = useChannelCharacterName(myMember);
   const { data: queryChannelMembers } = useQueryChannelMembers(channelId, myMember?.space.spaceId);
   const channelMembersMap: Map<string, MemberWithUser> = useMemo(() => {
     if (queryChannelMembers == null) return new Map<string, MemberWithUser>();
@@ -103,14 +105,22 @@ export const useSend = () => {
       parsedCharacterNameForSend || parsedPreview.characterName
     ).trim();
     const parsedInGame = parsedPreview.inGame ?? parsedForSend.inGame ?? null;
-    const inGame = effectiveCharacterName ? true : (parsedInGame ?? defaultInGame);
-    if (inGame) {
+    const editingWithCharacter =
+      composeState.editingAttribution?.characterId != null ? composeState.editingAttribution : null;
+    const inGame =
+      editingWithCharacter?.inGame ??
+      (effectiveCharacterName ? true : (parsedInGame ?? defaultInGame));
+    if (editingWithCharacter != null) {
+      name = editingWithCharacter.name;
+    } else if (inGame) {
       if (effectiveCharacterName !== '') {
         name = effectiveCharacterName;
       } else {
-        name = myMember.channel.characterName;
+        name = channelCharacterName;
       }
     }
+    const characterId =
+      inGame && effectiveCharacterName === '' ? myMember.channel.characterId : null;
     let payload:
       { type: 'NEW'; newMessage: NewMessage } | { type: 'EDIT'; editMessage: EditMessage };
     if (composeState.edit == null) {
@@ -132,6 +142,7 @@ export const useSend = () => {
           channelId,
           spaceId: myMember.space.spaceId,
           name,
+          characterId,
           text,
           entities,
           inGame,
@@ -162,7 +173,7 @@ export const useSend = () => {
           inGame,
           isAction: parsedPreview.isAction,
           mediaId: typeof composeState.media === 'string' ? composeState.media : null,
-          color: '',
+          color: editingWithCharacter?.color ?? '',
           expectModified: composeState.edit.time,
         },
       };
@@ -261,6 +272,7 @@ export const useSend = () => {
     }
   }, [
     myMember,
+    channelCharacterName,
     store,
     composeAtom,
     parsedAtom,

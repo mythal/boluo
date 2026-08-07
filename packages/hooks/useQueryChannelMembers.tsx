@@ -5,11 +5,11 @@ import { sleep } from '@boluo/utils/async';
 import { unwrap } from '@boluo/utils/result';
 
 export const useQueryChannelMembers = (
-  channelId: string,
+  channelId: string | null | undefined,
   spaceId?: string,
   config?: SWRConfiguration<ChannelMembers, ApiError>,
 ): SWRResponse<ChannelMembers, ApiError> => {
-  const key = ['/channels/members' as const, channelId] as const;
+  const key = channelId ? (['/channels/members' as const, channelId] as const) : null;
   return useSWR<ChannelMembers, ApiError, typeof key>(
     key,
     async ([path, id]) => {

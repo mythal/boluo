@@ -38,6 +38,10 @@
                 [
                   "is_master",
                   "Bool"
+                ],
+                [
+                  "character_id",
+                  "Uuid"
                 ]
               ]
             }
@@ -68,6 +72,10 @@
                 [
                   "join_date",
                   "Timestamptz"
+                ],
+                [
+                  "is_game_master",
+                  "Bool"
                 ]
               ]
             }

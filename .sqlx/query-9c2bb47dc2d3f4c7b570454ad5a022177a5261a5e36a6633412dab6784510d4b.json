@@ -1,0 +1,19 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO entries (\n    id,\n    scope_id,\n    display_name,\n    reference_note_id,\n    tags,\n    pos_p,\n    pos_q\n)\nWITH target_scope AS MATERIALIZED (\n    SELECT id\n    FROM scopes\n    WHERE id = $2\n    FOR UPDATE\n),\nupper_bound AS (\n    SELECT entry.pos_p, entry.pos_q\n    FROM entries entry\n    JOIN target_scope ON target_scope.id = entry.scope_id\n    WHERE entry.id = $6\n),\nlower_bound AS (\n    SELECT entry.pos_p, entry.pos_q\n    FROM entries entry\n    JOIN target_scope ON target_scope.id = entry.scope_id\n    WHERE entry.id <> $1\n      AND (\n          $6::uuid IS NULL\n          OR entry.pos < (SELECT pos_p::double precision / pos_q FROM upper_bound)\n      )\n    ORDER BY entry.pos DESC\n    LIMIT 1\n),\nposition AS (\n    SELECT\n        (\n            COALESCE((SELECT pos_p::bigint / pos_q FROM lower_bound), 0)\n            + 1024\n        )::integer AS p,\n        1::integer AS q\n    WHERE $6::uuid IS NULL\n\n    UNION ALL\n\n    SELECT intermediate.p, intermediate.q\n    FROM find_intermediate(\n        COALESCE((SELECT pos_p FROM lower_bound), 0),\n        COALESCE((SELECT pos_q FROM lower_bound), 1),\n        (SELECT pos_p FROM upper_bound),\n        (SELECT pos_q FROM upper_bound)\n    ) intermediate\n    WHERE $6::uuid IS NOT NULL\n      AND EXISTS (SELECT 1 FROM upper_bound)\n)\nSELECT $1, target_scope.id, $3, $4, $5, position.p, position.q\nFROM target_scope\nCROSS JOIN position;\n",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Text",
+        "Uuid",
+        "TextArray",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "9c2bb47dc2d3f4c7b570454ad5a022177a5261a5e36a6633412dab6784510d4b"
+}

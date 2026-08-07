@@ -1,0 +1,223 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n    character.id,\n    character.name AS \"name!: CompactString\",\n    primary_identifier.value::text AS \"key!: CompactString\",\n    ARRAY(\n        SELECT identifier.value::text\n        FROM character_identifiers identifier\n        WHERE identifier.character_id = character.id\n          AND identifier.kind = 'Alias'\n        ORDER BY identifier.value\n    ) AS \"aliases!: Vec<CompactString>\",\n    character.description,\n    character.color AS \"color!: CompactString\",\n    character.space_id,\n    character.main_scope_id AS scope_id,\n    scope.owner_id,\n    scope.access_policy AS \"access_policy!: AccessPolicy\",\n    scope.access_channel_id,\n    scope.version AS scope_version,\n    character.archived_at,\n    character.tags AS \"tags!: Vec<CompactString>\",\n    character.created,\n    character.modified,\n    character.version\nFROM characters character\nJOIN scopes scope ON scope.id = character.main_scope_id\nJOIN character_identifiers primary_identifier\n  ON primary_identifier.character_id = character.id\n AND primary_identifier.kind = 'Primary'\nWHERE character.id = $1;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "characters",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "name!: CompactString",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "characters",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "key!: CompactString",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "aliases!: Vec<CompactString>",
+        "type_info": "TextArray",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "description",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "characters",
+            "name": "description"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "color!: CompactString",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "characters",
+            "name": "color"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "space_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "characters",
+            "name": "space_id"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "scope_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "characters",
+            "name": "main_scope_id"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "owner_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "scopes",
+            "name": "owner_id"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "access_policy!: AccessPolicy",
+        "type_info": {
+          "Custom": {
+            "name": "access_policy",
+            "kind": {
+              "Enum": [
+                "Public",
+                "Collaborative",
+                "Personal",
+                "Secret",
+                "GameMaster"
+              ]
+            }
+          }
+        },
+        "origin": {
+          "Table": {
+            "table": "scopes",
+            "name": "access_policy"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "access_channel_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "scopes",
+            "name": "access_channel_id"
+          }
+        }
+      },
+      {
+        "ordinal": 11,
+        "name": "scope_version",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "scopes",
+            "name": "version"
+          }
+        }
+      },
+      {
+        "ordinal": 12,
+        "name": "archived_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "characters",
+            "name": "archived_at"
+          }
+        }
+      },
+      {
+        "ordinal": 13,
+        "name": "tags!: Vec<CompactString>",
+        "type_info": "TextArray",
+        "origin": {
+          "Table": {
+            "table": "characters",
+            "name": "tags"
+          }
+        }
+      },
+      {
+        "ordinal": 14,
+        "name": "created",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "characters",
+            "name": "created"
+          }
+        }
+      },
+      {
+        "ordinal": 15,
+        "name": "modified",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "characters",
+            "name": "modified"
+          }
+        }
+      },
+      {
+        "ordinal": 16,
+        "name": "version",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "characters",
+            "name": "version"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      null,
+      null,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      true,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "ea32f2205769925126c2894c5ba219a126ef28a98715d45e5810bec9174a80dc"
+}

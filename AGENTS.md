@@ -1,19 +1,21 @@
 This project is an open‑source chat tool designed for playing traditional tabletop RPGs (e.g., D&D, CoC). It is structured as a Rust + TypeScript monorepo managed with Turborepo. The repository consists of a Rust backend and multiple Next.js frontend applications.
 
+Important design decisions are documented in `docs/DESIGN.md`. However, you should not modify it; only propose changes when truly necessary.
+
 ## General Notes
 
 - The language of the codebase is English. However, you should respond to the user in the language they used.
 - Before making changes, ensure you understand the relevant parts of the codebase.
-- After making changes, provide 2-3 concise possible commit messages as options to summarize your work using the conventional commit format, with the package name as the scope.
+- After making changes, provide 2-3 concise possible commit messages as options to summarize all uncommitted work using the conventional commit format, with the package name as the scope.
 - Temporary files created during development can be placed in the `.tmp/` directory, which is ignored.
 
 ---
 
 ## Backend (`apps/server`)
 
-The backend is written in Rust using **hyper** and **tokio**. PostgreSQL is accessed through **sqlx**.
+The backend is written in Rust using **hyper** and **tokio**. PostgreSQL 18 is accessed through **sqlx**.
 
-The standalone database schema is located in `apps/db/schema.sql`. Migrations are in `apps/db/migrations`.
+The standalone database schema is located in `apps/db/schema.sql`. Migrations are in `apps/server/migrations`.
 
 While multi-node support is planned, currently only single-node deployment is available.
 

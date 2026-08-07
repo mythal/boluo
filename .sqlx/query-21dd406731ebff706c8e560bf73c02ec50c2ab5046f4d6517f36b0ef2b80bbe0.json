@@ -1,0 +1,174 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n    note.id,\n    note.space_id,\n    note.title AS \"title!: CompactString\",\n    note.keywords AS \"keywords!: Vec<CompactString>\",\n    note.tags AS \"tags!: Vec<CompactString>\",\n    note.creator_id,\n    note.access_policy AS \"access_policy!: AccessPolicy\",\n    note.access_channel_id,\n    note.revision,\n    note.archived_at,\n    note.created,\n    note.modified\nFROM notes note\nWHERE note.space_id = $1\n  AND ($2 OR note.archived_at IS NULL)\nORDER BY note.modified DESC, note.id DESC;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "notes",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "space_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "notes",
+            "name": "space_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "title!: CompactString",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "notes",
+            "name": "title"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "keywords!: Vec<CompactString>",
+        "type_info": "TextArray",
+        "origin": {
+          "Table": {
+            "table": "notes",
+            "name": "keywords"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "tags!: Vec<CompactString>",
+        "type_info": "TextArray",
+        "origin": {
+          "Table": {
+            "table": "notes",
+            "name": "tags"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "creator_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "notes",
+            "name": "creator_id"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "access_policy!: AccessPolicy",
+        "type_info": {
+          "Custom": {
+            "name": "access_policy",
+            "kind": {
+              "Enum": [
+                "Public",
+                "Collaborative",
+                "Personal",
+                "Secret",
+                "GameMaster"
+              ]
+            }
+          }
+        },
+        "origin": {
+          "Table": {
+            "table": "notes",
+            "name": "access_policy"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "access_channel_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "notes",
+            "name": "access_channel_id"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "revision",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "notes",
+            "name": "revision"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "archived_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "notes",
+            "name": "archived_at"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "created",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "notes",
+            "name": "created"
+          }
+        }
+      },
+      {
+        "ordinal": 11,
+        "name": "modified",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "notes",
+            "name": "modified"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Bool"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      true,
+      false,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "21dd406731ebff706c8e560bf73c02ec50c2ab5046f4d6517f36b0ef2b80bbe0"
+}

@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE notes\nSET archived_at = now(),\n    modified = now()\nWHERE space_id = $1\n  AND id = $2\n  AND revision = $3\n  AND archived_at IS NULL;\n",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "8f7fd288168035f0938f2b69f052d8b2aa8591ad2af554a44cb76e1a80ced00e"
+}

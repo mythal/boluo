@@ -26,6 +26,26 @@ use std::collections::HashMap;
 use std::sync::LazyLock;
 use uuid::Uuid;
 
+async fn resolve_channel_character(
+    ctx: &crate::context::AppContext,
+    space_id: Uuid,
+    user_id: Uuid,
+    character_name: String,
+    character_id: Option<Uuid>,
+) -> Result<(String, Option<Uuid>), AppError> {
+    let Some(character_id) = character_id else {
+        return Ok((character_name, None));
+    };
+    let character = crate::characters::handlers::resolve_character_for_portrayal(
+        ctx,
+        space_id,
+        character_id,
+        user_id,
+    )
+    .await?;
+    Ok((character.name.to_string(), Some(character.id)))
+}
+
 static CREATE_CHANNEL_LIMITER: LazyLock<DefaultKeyedRateLimiter<Uuid>> = LazyLock::new(|| {
     RateLimiter::keyed(rate_limit::per_hour(
         rate_limit::CREATE_CHANNEL_USER_PER_HOUR,
@@ -92,7 +112,7 @@ async fn query_channel(
     Ok(resolved.channel)
 }
 
-async fn push_refreshed_members(
+pub(crate) async fn push_refreshed_members(
     ctx: &crate::context::AppContext,
     space_id: Uuid,
     channel_id: Uuid,
@@ -311,6 +331,7 @@ where
         space_id,
         name,
         character_name,
+        character_id,
         default_dice_type,
         is_public,
         _type,
@@ -323,6 +344,9 @@ where
         .ok_or_else(|| AppError::BadRequest("The space not found".to_string()))?;
     admin_only(&mut *trans, &user_id, &space_id).await?;
 
+    let (character_name, character_id) =
+        resolve_channel_character(ctx, space_id, user_id, character_name, character_id).await?;
+
     let channel = Channel::create(
         &mut *trans,
         &space_id,
@@ -332,8 +356,15 @@ where
         _type.unwrap_or(ChannelType::InGame),
     )
     .await?;
-    let channel_member =
-        ChannelMember::add_user(&mut *trans, user_id, channel.id, &character_name, true).await?;
+    let channel_member = ChannelMember::add_user_with_character(
+        &mut *trans,
+        user_id,
+        channel.id,
+        &character_name,
+        character_id,
+        true,
+    )
+    .await?;
     before_commit.await;
     let mutation = mutation.commit(trans).await?;
     let mut changes = CommittedChanges::default();
@@ -571,6 +602,7 @@ async fn add_member(
         channel_id,
         user_id,
         character_name,
+        character_id,
     } = parse_body(req).await?;
     let mutation_space_id = Channel::resolve_owning_space_id(&ctx.db, &channel_id)
         .await
@@ -586,8 +618,19 @@ async fn add_member(
         .await
         .or_not_found()?;
 
-    let member =
-        ChannelMember::add_user(&mut *trans, user_id, channel_id, &character_name, false).await?;
+    let (character_name, character_id) =
+        resolve_channel_character(ctx, channel.space_id, user_id, character_name, character_id)
+            .await?;
+
+    let member = ChannelMember::add_user_with_character(
+        &mut *trans,
+        user_id,
+        channel_id,
+        &character_name,
+        character_id,
+        false,
+    )
+    .await?;
     let mutation = mutation.commit(trans).await?;
     let mut changes = CommittedChanges::default();
     changes.channel_member_added(channel.space_id, &member);
@@ -605,6 +648,7 @@ async fn edit_member(
     let EditChannelMember {
         channel_id,
         character_name,
+        character_id,
         text_color,
     } = interface::parse_body(req).await?;
     let space_id = Channel::resolve_owning_space_id(&ctx.db, &channel_id)
@@ -622,14 +666,30 @@ async fn edit_member(
         .await
         .or_not_found()?;
 
+    let character_name = match character_id {
+        Some(character_id) => Some(
+            crate::characters::handlers::resolve_character_for_portrayal(
+                ctx,
+                space_id,
+                character_id,
+                session.user_id,
+            )
+            .await?
+            .name
+            .to_string(),
+        ),
+        None => character_name,
+    };
     let character_name = character_name.as_deref();
     let text_color = text_color.as_deref();
-    let channel_member = ChannelMember::edit(
+    let channel_member = ChannelMember::edit_with_character(
         &mut *trans,
         session.user_id,
         channel_id,
         character_name,
         text_color,
+        true,
+        character_id,
     )
     .await?
     .or_not_found();
@@ -667,6 +727,7 @@ async fn join(
     let JoinChannel {
         channel_id,
         character_name,
+        character_id,
     } = parse_body(req).await?;
     let mutation_space_id = Channel::resolve_owning_space_id(&ctx.db, &channel_id)
         .await
@@ -697,11 +758,20 @@ async fn join(
     SpaceMember::get(&mut *trans, &session.user_id, &channel.space_id)
         .await
         .or_no_permission()?;
-    let member = ChannelMember::add_user(
+    let (character_name, character_id) = resolve_channel_character(
+        ctx,
+        channel.space_id,
+        session.user_id,
+        character_name,
+        character_id,
+    )
+    .await?;
+    let member = ChannelMember::add_user_with_character(
         &mut *trans,
         session.user_id,
         channel.id,
         &character_name,
+        character_id,
         false,
     )
     .await?;
@@ -789,6 +859,39 @@ async fn resolve_channel_mutation_space(
     Ok(owning_space_id)
 }
 
+async fn ensure_channel_not_referenced(
+    db: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    channel_id: Uuid,
+) -> Result<(), AppError> {
+    // Resource creation and updates take the same lock while validating their
+    // access Channel, so no new reference can race with this check.
+    sqlx::query_scalar!(
+        "SELECT id FROM channels WHERE id = $1 AND deleted = FALSE FOR UPDATE",
+        channel_id,
+    )
+    .fetch_optional(&mut **db)
+    .await?
+    .ok_or(AppError::NotFound("channel"))?;
+    let referenced = sqlx::query_scalar!(
+        r#"
+        SELECT EXISTS(
+            SELECT 1 FROM scopes WHERE access_channel_id = $1
+            UNION ALL
+            SELECT 1 FROM notes WHERE access_channel_id = $1
+        ) AS "referenced!"
+        "#,
+        channel_id,
+    )
+    .fetch_one(&mut **db)
+    .await?;
+    if referenced {
+        return Err(AppError::Conflict(
+            "Channel is still used as a resource access context".to_string(),
+        ));
+    }
+    Ok(())
+}
+
 async fn delete(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
@@ -805,6 +908,7 @@ async fn delete(
     let channel = Channel::get_by_id(&mut *trans, &id).await.or_not_found()?;
 
     admin_only(&mut *trans, &session.user_id, &channel.space_id).await?;
+    ensure_channel_not_referenced(&mut trans, id).await?;
 
     if !Channel::delete(&mut trans, &id).await? {
         return Err(AppError::NotFound("channel"));
@@ -1001,6 +1105,71 @@ mod tests {
     }
 
     #[sqlx::test(migrator = "crate::db::MIGRATOR")]
+    async fn db_test_referenced_access_channel_cannot_be_deleted(pool: sqlx::PgPool) {
+        let owner = create_test_user(&pool).await;
+        let space = create_test_space(&pool, &owner).await;
+        let channel = Channel::create(
+            &pool,
+            &space.id,
+            "Access Context",
+            false,
+            Some("d20"),
+            ChannelType::InGame,
+        )
+        .await
+        .expect("failed to create Channel");
+
+        let mut transaction = pool.begin().await.expect("failed to begin transaction");
+        ensure_channel_not_referenced(&mut transaction, channel.id)
+            .await
+            .expect("unused Channel was treated as referenced");
+        transaction
+            .rollback()
+            .await
+            .expect("failed to roll back unused check");
+
+        sqlx::query!(
+            "UPDATE scopes SET access_channel_id = $1 WHERE id = $2",
+            channel.id,
+            space.scope_id,
+        )
+        .execute(&pool)
+        .await
+        .expect("failed to bind Space Scope to Channel");
+        let mut transaction = pool.begin().await.expect("failed to begin transaction");
+        assert!(matches!(
+            ensure_channel_not_referenced(&mut transaction, channel.id).await,
+            Err(AppError::Conflict(_))
+        ));
+        transaction
+            .rollback()
+            .await
+            .expect("failed to roll back Scope reference check");
+
+        sqlx::query!(
+            "UPDATE scopes SET access_channel_id = NULL WHERE id = $1",
+            space.scope_id,
+        )
+        .execute(&pool)
+        .await
+        .expect("failed to unbind Space Scope");
+        sqlx::query!(
+            "INSERT INTO notes (space_id, creator_id, access_channel_id) VALUES ($1, $2, $3)",
+            space.id,
+            owner.id,
+            channel.id,
+        )
+        .execute(&pool)
+        .await
+        .expect("failed to create referenced Note");
+        let mut transaction = pool.begin().await.expect("failed to begin transaction");
+        assert!(matches!(
+            ensure_channel_not_referenced(&mut transaction, channel.id).await,
+            Err(AppError::Conflict(_))
+        ));
+    }
+
+    #[sqlx::test(migrator = "crate::db::MIGRATOR")]
     async fn db_test_query_channel_without_space_hint(pool: sqlx::PgPool) {
         let owner = create_test_user(&pool).await;
         let space = create_test_space(&pool, &owner).await;
@@ -1112,6 +1281,7 @@ mod tests {
             space_id: space.id,
             name: "Visible after commit".to_string(),
             character_name: "GM".to_string(),
+            character_id: None,
             default_dice_type: Some("d20".to_string()),
             is_public: true,
             _type: Some(ChannelType::InGame),

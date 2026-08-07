@@ -1,15 +1,33 @@
-UPDATE characters
-SET name = COALESCE($2, name),
-    description = COALESCE($3, description),
-    color = COALESCE($4, color),
-    alias = CASE
-        WHEN $5::text IS NULL THEN alias
-        ELSE NULLIF($5::text, '')
-    END,
-    image_id = COALESCE($6, image_id),
-    visibility = COALESCE(($7::text)::character_visibility, visibility),
-    is_archived = COALESCE($8, is_archived),
-    metadata = COALESCE($9, metadata),
-    modified = now()
-WHERE id = $1
-RETURNING characters as "character!: Character";
+WITH target_character AS MATERIALIZED (
+    SELECT character.id, character.space_id, character.main_scope_id AS scope_id
+    FROM characters character
+    WHERE character.id = $1
+      AND character.version = $2
+    FOR UPDATE OF character
+),
+updated_scope AS MATERIALIZED (
+    UPDATE scopes scope
+    SET access_policy = ($8::text)::access_policy,
+        access_channel_id = $9,
+        version = uuidv7(),
+        modified = now()
+    FROM target_character character
+    WHERE scope.id = character.scope_id
+      AND scope.version = $3
+    RETURNING scope.id
+),
+updated_character AS (
+    UPDATE characters character
+    SET name = $4,
+        description = $5,
+        color = $6,
+        tags = $7,
+        version = uuidv7(),
+        modified = now()
+    FROM target_character target, updated_scope scope
+    WHERE character.id = target.id
+      AND scope.id = target.scope_id
+    RETURNING character.space_id
+)
+SELECT space_id
+FROM updated_character;

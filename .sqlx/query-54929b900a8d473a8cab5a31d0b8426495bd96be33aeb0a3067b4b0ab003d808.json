@@ -104,6 +104,10 @@
                 [
                   "is_master",
                   "Bool"
+                ],
+                [
+                  "character_id",
+                  "Uuid"
                 ]
               ]
             }

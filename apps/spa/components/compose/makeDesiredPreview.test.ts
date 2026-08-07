@@ -124,3 +124,34 @@ test('hides non-broadcast content in the preview payload', () => {
   assert.equal(desired?.preview.text, null);
   assert.deepEqual(desired?.preview.entities, []);
 });
+
+test('preserves a bound character identity while editing', () => {
+  const compose = {
+    ...makeInitialComposeState(),
+    previewId: 'message-id',
+    source: 'edited text',
+    edit: { time: '2026-08-06T00:00:00Z', p: 1, q: 1 },
+    editingAttribution: {
+      characterId: 'character-a',
+      name: 'Character A',
+      color: 'seed:character-a',
+      inGame: true,
+    },
+  };
+  const parsed = {
+    ...parse(compose.source),
+    source: compose.source,
+  };
+
+  const desired = makeDesiredPreview({
+    channelId: 'channel',
+    nickname: 'Alice',
+    defaultCharacterName: 'Character B',
+    defaultInGame: false,
+    compose,
+    parsed,
+  });
+
+  assert.equal(desired?.preview.name, 'Character A');
+  assert.equal(desired?.preview.inGame, true);
+});

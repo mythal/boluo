@@ -186,9 +186,19 @@ const ChatItemMessageComponent: FC<Props> = ({
         isMaster={isMaster ?? false}
         self={sendBySelf}
         userId={message.senderId}
+        messageColor={message.color}
+        colorSeed={message.characterId}
       />
     ),
-    [message.inGame, message.name, isMaster, sendBySelf, message.senderId],
+    [
+      message.characterId,
+      message.color,
+      message.inGame,
+      message.name,
+      isMaster,
+      sendBySelf,
+      message.senderId,
+    ],
   );
 
   const parsed: ParseResult = useMemo(

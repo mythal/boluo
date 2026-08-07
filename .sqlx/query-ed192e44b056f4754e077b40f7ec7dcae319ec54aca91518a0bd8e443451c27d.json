@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT main_scope_id FROM characters WHERE id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "main_scope_id",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "characters",
+            "name": "main_scope_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "ed192e44b056f4754e077b40f7ec7dcae319ec54aca91518a0bd8e443451c27d"
+}

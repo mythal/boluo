@@ -32,6 +32,9 @@
   "/jxJyw": {
     "message": "The position you are trying to place the message is changed."
   },
+  "03KVTC": {
+    "message": "Choose portrait image"
+  },
   "0Azlrb": {
     "message": "Manage"
   },
@@ -53,11 +56,20 @@
   "0eanrB": {
     "message": "Include archived messages"
   },
+  "0pHoT3": {
+    "message": "Loading portrait"
+  },
   "0pT/2d": {
     "message": "No Character Name"
   },
   "198Skw": {
     "message": "Customization"
+  },
+  "1QosTr": {
+    "message": "Used by"
+  },
+  "1eF8/3": {
+    "message": "Save metadata"
   },
   "1iEPTM": {
     "message": "General"
@@ -119,6 +131,9 @@
   "56x7wR": {
     "message": "verify it"
   },
+  "58VJY/": {
+    "message": "A character can have up to {maxCount} portraits."
+  },
   "5HUwAy": {
     "message": "Only letters, numbers, and underscores are allowed."
   },
@@ -139,9 +154,6 @@
   },
   "5zHF5n": {
     "message": "Open New Pane"
-  },
-  "60KMrS": {
-    "message": "As Default"
   },
   "62nsdy": {
     "message": "Retry"
@@ -178,6 +190,9 @@
   },
   "6q3tCn": {
     "message": "Connecting"
+  },
+  "6yXGic": {
+    "message": "Set Default"
   },
   "70Tngj": {
     "message": "Close the pane"
@@ -233,6 +248,9 @@
   "98c0D6": {
     "message": "Include out-of-game messages"
   },
+  "9DYjeh": {
+    "message": "Current character"
+  },
   "9NDg1Z": {
     "message": "(Whisper)"
   },
@@ -272,8 +290,17 @@
   "B+xqKy": {
     "message": "Failed to load app resources"
   },
+  "BAE6ka": {
+    "message": "Portraits"
+  },
   "BEbOqj": {
     "message": "Oops!"
+  },
+  "BTp/5U": {
+    "message": "No characters yet."
+  },
+  "BfE7dl": {
+    "message": "Character name"
   },
   "Bm9rWe": {
     "message": "Failed to delete the message"
@@ -289,6 +316,9 @@
   },
   "CNLipo": {
     "message": "Verification failed. Please try again or contact support."
+  },
+  "CW4O0j": {
+    "message": "Character"
   },
   "CW7jWC": {
     "message": "(me)"
@@ -335,17 +365,26 @@
   "FN6jdd": {
     "message": "Hi, {username}!"
   },
+  "Far9+n": {
+    "message": "Portraits could not be loaded."
+  },
   "FazwRl": {
     "message": "Try again"
   },
   "FqI37D": {
     "message": "Oldest First"
   },
+  "G/yZLu": {
+    "message": "Remove"
+  },
   "GEhexi": {
     "message": "In Dark Mode"
   },
   "GMPXuF": {
     "message": "Everyone can join this space"
+  },
+  "GV6GZ6": {
+    "message": "This character is currently used by {usageCount, plural, one {# member} other {# members}}. Archiving it will unbind it from their channels. Are you sure?"
   },
   "GaOcCS": {
     "message": "To use this app, please upgrade your iOS/iPadOS version to 16 or above."
@@ -379,6 +418,9 @@
   },
   "HpyhN3": {
     "message": "Boluo"
+  },
+  "Hvp+/6": {
+    "message": "Replace"
   },
   "I5NMJ8": {
     "message": "More"
@@ -458,6 +500,9 @@
   "KhLK4z": {
     "message": "You do not have permission to view this space."
   },
+  "KjWmVd": {
+    "message": "Characters could not be loaded."
+  },
   "Kp8wZw": {
     "message": "Have not set a bio yet"
   },
@@ -490,6 +535,9 @@
   },
   "LtEjKk": {
     "message": "Focus Next"
+  },
+  "LtJqeU": {
+    "message": "Use a valid color value."
   },
   "Lzb4s2": {
     "message": "Move failed"
@@ -536,6 +584,9 @@
   "NZyhSX": {
     "message": "News"
   },
+  "Nk36gs": {
+    "message": "Select and reorder portrait {number}"
+  },
   "No0obH": {
     "message": "Switch to serif font for In-Game messages."
   },
@@ -581,11 +632,17 @@
   "PpzpBO": {
     "message": "Click to view"
   },
+  "PqQcvG": {
+    "message": "Toggle character details"
+  },
   "PwaN2o": {
     "message": "Welcome"
   },
   "PxOtYI": {
     "message": "Editing; Show original"
+  },
+  "PypaKS": {
+    "message": "Recent characters"
   },
   "Q+Af6H": {
     "message": "Out of Game"
@@ -626,6 +683,9 @@
   "R5iTJ0": {
     "message": "If you see this text, please try to swipe down ↓ to display the content."
   },
+  "RZme30": {
+    "message": "Entry key"
+  },
   "RraqCg": {
     "message": "Username and password do not match"
   },
@@ -665,6 +725,9 @@
   "StUScz": {
     "message": "{count} members"
   },
+  "Swo2Kd": {
+    "message": "No portrait"
+  },
   "TAyWna": {
     "message": "You have been invited to the space"
   },
@@ -676,6 +739,9 @@
   },
   "TThIOM": {
     "message": "Not found"
+  },
+  "TZbufw": {
+    "message": "Portrait gallery"
   },
   "TdbPNK": {
     "message": "Me"
@@ -812,6 +878,9 @@
   "ZgsEsn": {
     "message": "No permission"
   },
+  "Zs4hlI": {
+    "message": "Edit portraits"
+  },
   "ZsZAvL": {
     "message": "Drag to Move Child Pane"
   },
@@ -875,11 +944,17 @@
   "cpFKi9": {
     "message": "Topics can be used to record and remind you of what you are currently focused on."
   },
+  "cyR7Kh": {
+    "message": "Back"
+  },
   "cyeEx0": {
     "message": "Midnight"
   },
   "dMEGZV": {
     "message": "Split pane"
+  },
+  "dOQCL8": {
+    "message": "Display name"
   },
   "dVoumD": {
     "message": "My Character Name in the Channel (Optional)"
@@ -898,6 +973,9 @@
   },
   "e+eb5F": {
     "message": "Broadcast has been turned off"
+  },
+  "e08nsD": {
+    "message": "Up to {maxCount} portraits."
   },
   "e3Ttmb": {
     "message": "In Game"
@@ -947,11 +1025,17 @@
   "fnihsY": {
     "message": "Leave"
   },
+  "ftDYZo": {
+    "message": "Unarchive"
+  },
   "ftsMiH": {
     "message": "Toggle In Game"
   },
   "fxvXUy": {
     "message": "Reveal"
+  },
+  "g7UZYd": {
+    "message": "Archiving this character will unbind it from any channels where it is currently in use. Are you sure?"
   },
   "gEes7R": {
     "message": "You need to {loginLink} to accept the invitation."
@@ -961,6 +1045,9 @@
   },
   "gduNan": {
     "message": "In Light Mode"
+  },
+  "gk+yeE": {
+    "message": "Failed to query character"
   },
   "hCMGkK": {
     "message": "You are not logged in"
@@ -992,6 +1079,9 @@
   "huqwHp": {
     "message": "{start} Modified {updated}"
   },
+  "hw9PdM": {
+    "message": "Inherits your default color."
+  },
   "iATkrL": {
     "message": "The pane has crashed"
   },
@@ -1007,6 +1097,9 @@
   "iU6/rV": {
     "message": "Move Pane"
   },
+  "ihr8Vi": {
+    "message": "Select and reorder main portrait"
+  },
   "itPgxd": {
     "message": "Profile"
   },
@@ -1021,6 +1114,12 @@
   },
   "jd7fUZ": {
     "message": "Resend in {countdown} seconds"
+  },
+  "jm/spn": {
+    "message": "Reset"
+  },
+  "jrUpl0": {
+    "message": "Add portrait"
   },
   "jsy7pk": {
     "message": "Try Again"
@@ -1043,14 +1142,29 @@
   "kIUNDX": {
     "message": "Default Dice"
   },
+  "kLjOdv": {
+    "message": "Use 2–32 characters."
+  },
   "kMogDE": {
     "message": "Must be a valid email address."
+  },
+  "kP8cI1": {
+    "message": "Create character"
+  },
+  "kWRZBe": {
+    "message": "Entry metadata"
   },
   "kdRsn5": {
     "message": "The message you were editing was deleted. Your edits have been saved as a draft."
   },
   "kh4wt0": {
     "message": "Toggle Sidebar"
+  },
+  "knwSYE": {
+    "message": "Use 1–64 letters, numbers, emoji, or supported punctuation, without spaces."
+  },
+  "ku+mDU": {
+    "message": "State"
   },
   "l+qC1C": {
     "message": "Include Names"
@@ -1060,6 +1174,9 @@
   },
   "lKv8ex": {
     "message": "Default"
+  },
+  "lo1ANX": {
+    "message": "Failed to query character states"
   },
   "lx+ssX": {
     "message": "Leave Space"
@@ -1082,6 +1199,9 @@
   "n9f3pm": {
     "message": "Limit exceeded."
   },
+  "nCAM1K": {
+    "message": "No description yet."
+  },
   "nE9tn4": {
     "message": "Open in New Window"
   },
@@ -1090,6 +1210,9 @@
   },
   "nmSKJK": {
     "message": "Can't be empty."
+  },
+  "o0OcU0": {
+    "message": "As this name"
   },
   "oGBmRj": {
     "message": "Failed to query the channel members"
@@ -1115,8 +1238,14 @@
   "p556q3": {
     "message": "Copied"
   },
+  "p5LNtB": {
+    "message": "Not set"
+  },
   "pBQ5bd": {
     "message": "Editing"
+  },
+  "pFK6bJ": {
+    "message": "View all"
   },
   "pJ78jg": {
     "message": "OOC"
@@ -1136,11 +1265,17 @@
   "qOH6mx": {
     "message": "Serif"
   },
+  "qObHlo": {
+    "message": "All characters"
+  },
   "qQ4pEa": {
     "message": "Whisper to {targets}"
   },
   "qbB8pg": {
     "message": "Space Description"
+  },
+  "qcVx98": {
+    "message": "Portrait of {characterName}"
   },
   "qj1uhz": {
     "message": "Disconnect"
@@ -1150,6 +1285,9 @@
   },
   "qoUUiA": {
     "message": "Allow Spectator"
+  },
+  "qp37dR": {
+    "message": "The image could not be uploaded."
   },
   "qvc9uM": {
     "message": "This cannot be undone."
@@ -1180,6 +1318,9 @@
   },
   "ro9oGh": {
     "message": "Verifying your email..."
+  },
+  "ruIdSD": {
+    "message": "The image upload timed out."
   },
   "ruZw+F": {
     "message": "All searched"
@@ -1217,11 +1358,23 @@
   "t5xj3B": {
     "message": "New Space"
   },
+  "tLEjBS": {
+    "message": "PNG, JPEG, GIF, or WebP. Up to {sizeLimit} MB."
+  },
   "taJuye": {
     "message": "We recommend using the latest version of {chromeLink}, {firefoxLink}, or {edgeLink} to use this application."
   },
+  "tcCPK0": {
+    "message": "As character"
+  },
   "tiLDlf": {
     "message": "Dusha Green"
+  },
+  "uMhpKe": {
+    "message": "Color"
+  },
+  "ufBuw4": {
+    "message": "No states have been added yet."
   },
   "ug01Mk": {
     "message": "Time"
@@ -1274,6 +1427,9 @@
   "wb3MSp": {
     "message": "This username is already taken."
   },
+  "wrxYAn": {
+    "message": "Unsupported component: {types}"
+  },
   "x82IOl": {
     "message": "Mute"
   },
@@ -1310,8 +1466,14 @@
   "yy3DLJ": {
     "message": "Without rich-text information"
   },
+  "yyEekH": {
+    "message": "Portrait could not be loaded."
+  },
   "z/ipXX": {
     "message": "Oops"
+  },
+  "z16Lmv": {
+    "message": "Character usage could not be loaded."
   },
   "z9LRLa": {
     "message": "Edited at"

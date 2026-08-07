@@ -24,3 +24,8 @@ psql --username ... --host ... --dbname boluo --file boluo-$(date +%Y%m%d).dump
 2. Enabled `pg_stat_statements`.
 3. Modified `pg_hba.conf`.
 4. Enabled `io_uring`.
+
+## Metrics
+
+Fly scrapes the combined endpoint on port 9187. It merges PostgreSQL metrics
+from port 9188 with `pgbackrest_*` metrics from port 9854.

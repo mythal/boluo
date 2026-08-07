@@ -120,6 +120,8 @@ const newMessageOptimisticItem = (
     senderId: preview.senderId,
     parentMessageId: preview.parentMessageId,
     name: newMessage.name,
+    characterId: newMessage.characterId,
+    portraitId: newMessage.portraitId,
     mediaId: newMessage.mediaId,
     inGame: newMessage.inGame,
     seed: [],

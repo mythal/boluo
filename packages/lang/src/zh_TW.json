@@ -32,6 +32,9 @@
   "/jxJyw": {
     "message": "試圖放置訊息的位置發生了改變。"
   },
+  "03KVTC": {
+    "message": "選擇肖像圖片"
+  },
   "0Azlrb": {
     "message": "管理"
   },
@@ -53,11 +56,20 @@
   "0eanrB": {
     "message": "包括已歸檔的訊息"
   },
+  "0pHoT3": {
+    "message": "正在載入肖像"
+  },
   "0pT/2d": {
     "message": "無角色名"
   },
   "198Skw": {
     "message": "客製化"
+  },
+  "1QosTr": {
+    "message": "使用者"
+  },
+  "1eF8/3": {
+    "message": "儲存中繼資料"
   },
   "1iEPTM": {
     "message": "通用"
@@ -119,6 +131,9 @@
   "56x7wR": {
     "message": "驗證"
   },
+  "58VJY/": {
+    "message": "每個角色最多可以有 {maxCount} 張肖像。"
+  },
   "5HUwAy": {
     "message": "只允許字母，數字和下劃線。"
   },
@@ -179,11 +194,17 @@
   "6q3tCn": {
     "message": "正在連接"
   },
+  "6yXGic": {
+    "message": "設為預設"
+  },
   "70Tngj": {
     "message": "關閉窗格"
   },
   "72vKlS": {
     "message": "載入位面失敗"
+  },
+  "77x9YH": {
+    "message": "在你送出編輯前，這則訊息已在其他地方被編輯。你的修改已儲存為草稿。"
   },
   "7KDJn8": {
     "message": "Loading user information..."
@@ -230,6 +251,9 @@
   "98c0D6": {
     "message": "包括遊戲外訊息"
   },
+  "9DYjeh": {
+    "message": "目前角色"
+  },
   "9NDg1Z": {
     "message": "(悄悄話)"
   },
@@ -269,8 +293,17 @@
   "B+xqKy": {
     "message": "Failed to load app resources"
   },
+  "BAE6ka": {
+    "message": "肖像"
+  },
   "BEbOqj": {
     "message": "糟糕！"
+  },
+  "BTp/5U": {
+    "message": "目前沒有角色。"
+  },
+  "BfE7dl": {
+    "message": "角色名稱"
   },
   "Bm9rWe": {
     "message": "刪除訊息失敗"
@@ -286,6 +319,9 @@
   },
   "CNLipo": {
     "message": "驗證失敗。請重試或聯繫開發者。"
+  },
+  "CW4O0j": {
+    "message": "角色"
   },
   "CW7jWC": {
     "message": "(自己)"
@@ -332,17 +368,26 @@
   "FN6jdd": {
     "message": "貴安, {username}!"
   },
+  "Far9+n": {
+    "message": "無法載入肖像。"
+  },
   "FazwRl": {
     "message": "再試一次"
   },
   "FqI37D": {
     "message": "由舊至新"
   },
+  "G/yZLu": {
+    "message": "移除"
+  },
   "GEhexi": {
     "message": "在暗色模式"
   },
   "GMPXuF": {
     "message": "每個人都可以加入這個位面"
+  },
+  "GV6GZ6": {
+    "message": "此角色目前正由 {usageCount, plural, one {# 位成員} other {# 位成員}} 使用。歸檔會將其從對應頻道中解除綁定。確定要歸檔嗎？"
   },
   "GaOcCS": {
     "message": "若要使用此應用程式，請將您的 iOS/iPadOS 版本更新到16或更高版本。"
@@ -376,6 +421,9 @@
   },
   "HpyhN3": {
     "message": "菠蘿"
+  },
+  "Hvp+/6": {
+    "message": "取代"
   },
   "I5NMJ8": {
     "message": "更多"
@@ -455,6 +503,9 @@
   "KhLK4z": {
     "message": "您沒有權限查看此位面。"
   },
+  "KjWmVd": {
+    "message": "無法載入角色。"
+  },
   "Kp8wZw": {
     "message": "還沒有設定簡介"
   },
@@ -487,6 +538,9 @@
   },
   "LtEjKk": {
     "message": "Focus Next"
+  },
+  "LtJqeU": {
+    "message": "請輸入有效的顏色值。"
   },
   "Lzb4s2": {
     "message": "移動失敗"
@@ -533,6 +587,9 @@
   "NZyhSX": {
     "message": "新聞"
   },
+  "Nk36gs": {
+    "message": "選擇並重新排序第 {number} 張肖像"
+  },
   "No0obH": {
     "message": "Switch to serif font for In-Game messages."
   },
@@ -578,11 +635,17 @@
   "PpzpBO": {
     "message": "點擊查看"
   },
+  "PqQcvG": {
+    "message": "切換角色詳細資料"
+  },
   "PwaN2o": {
     "message": "歡迎"
   },
   "PxOtYI": {
     "message": "Editing; Show original"
+  },
+  "PypaKS": {
+    "message": "最近使用的角色"
   },
   "Q+Af6H": {
     "message": "遊戲外"
@@ -623,6 +686,9 @@
   "R5iTJ0": {
     "message": "如果您看到這個文本，為了顯示內容請嘗試向下滑動 ↓ 。"
   },
+  "RZme30": {
+    "message": "條目鍵"
+  },
   "RraqCg": {
     "message": "賬號和密碼不匹配"
   },
@@ -662,6 +728,9 @@
   "StUScz": {
     "message": "{count} 位成員"
   },
+  "Swo2Kd": {
+    "message": "目前沒有肖像"
+  },
   "TAyWna": {
     "message": "邀請你到此位面"
   },
@@ -673,6 +742,9 @@
   },
   "TThIOM": {
     "message": "未找到"
+  },
+  "TZbufw": {
+    "message": "肖像圖庫"
   },
   "TdbPNK": {
     "message": "自己"
@@ -809,6 +881,9 @@
   "ZgsEsn": {
     "message": "沒有權限"
   },
+  "Zs4hlI": {
+    "message": "編輯肖像"
+  },
   "ZsZAvL": {
     "message": "Drag to Move Child Pane"
   },
@@ -872,11 +947,17 @@
   "cpFKi9": {
     "message": "主題可以用來記錄和提醒您當前關注的內容。"
   },
+  "cyR7Kh": {
+    "message": "返回"
+  },
   "cyeEx0": {
     "message": "午夜藍"
   },
   "dMEGZV": {
     "message": "拆分窗格"
+  },
+  "dOQCL8": {
+    "message": "顯示名稱"
   },
   "dVoumD": {
     "message": "我在頻道中的角色名（可選）"
@@ -895,6 +976,9 @@
   },
   "e+eb5F": {
     "message": "廣播已關閉"
+  },
+  "e08nsD": {
+    "message": "最多 {maxCount} 張肖像。"
   },
   "e3Ttmb": {
     "message": "遊戲內"
@@ -944,11 +1028,17 @@
   "fnihsY": {
     "message": "離開"
   },
+  "ftDYZo": {
+    "message": "取消歸檔"
+  },
   "ftsMiH": {
     "message": "遊戲內/外"
   },
   "fxvXUy": {
     "message": "揭示"
+  },
+  "g7UZYd": {
+    "message": "歸檔此角色會將其從目前正在使用的所有頻道中解除綁定。確定要歸檔嗎？"
   },
   "gEes7R": {
     "message": "為了接受邀請，你需要先 {loginLink}。"
@@ -958,6 +1048,9 @@
   },
   "gduNan": {
     "message": "在亮色模式"
+  },
+  "gk+yeE": {
+    "message": "無法查詢角色"
   },
   "hCMGkK": {
     "message": "您尚未登入"
@@ -989,6 +1082,9 @@
   "huqwHp": {
     "message": "{start} 最新改於 {updated}"
   },
+  "hw9PdM": {
+    "message": "繼承你的預設顏色。"
+  },
   "iATkrL": {
     "message": "窗格崩潰了"
   },
@@ -1004,6 +1100,9 @@
   "iU6/rV": {
     "message": "Move Pane"
   },
+  "ihr8Vi": {
+    "message": "選擇並重新排序主肖像"
+  },
   "itPgxd": {
     "message": "個人資料"
   },
@@ -1018,6 +1117,12 @@
   },
   "jd7fUZ": {
     "message": "在{countdown}秒後可以重發"
+  },
+  "jm/spn": {
+    "message": "重設"
+  },
+  "jrUpl0": {
+    "message": "新增肖像"
   },
   "jsy7pk": {
     "message": "再試一次"
@@ -1040,14 +1145,29 @@
   "kIUNDX": {
     "message": "預設使用的骰子"
   },
+  "kLjOdv": {
+    "message": "請使用 2–32 個字元。"
+  },
   "kMogDE": {
     "message": "請輸入有效的郵箱地址。"
+  },
+  "kP8cI1": {
+    "message": "建立角色"
+  },
+  "kWRZBe": {
+    "message": "條目中繼資料"
   },
   "kdRsn5": {
     "message": "The message you were editing was deleted. Your edits have been saved as a draft."
   },
   "kh4wt0": {
     "message": "切換側邊欄"
+  },
+  "knwSYE": {
+    "message": "請使用 1–64 個字母、數字、表情符號或支援的標點符號，且不含空格。"
+  },
+  "ku+mDU": {
+    "message": "狀態"
   },
   "l+qC1C": {
     "message": "Include Names"
@@ -1057,6 +1177,9 @@
   },
   "lKv8ex": {
     "message": "預設"
+  },
+  "lo1ANX": {
+    "message": "無法查詢角色狀態"
   },
   "lx+ssX": {
     "message": "離開位面"
@@ -1079,6 +1202,9 @@
   "n9f3pm": {
     "message": "超出限額"
   },
+  "nCAM1K": {
+    "message": "目前沒有描述。"
+  },
   "nE9tn4": {
     "message": "Open in New Window"
   },
@@ -1087,6 +1213,9 @@
   },
   "nmSKJK": {
     "message": "不能為空。"
+  },
+  "o0OcU0": {
+    "message": "使用此名稱"
   },
   "oGBmRj": {
     "message": "查詢頻道成員失敗"
@@ -1112,8 +1241,14 @@
   "p556q3": {
     "message": "已拷貝"
   },
+  "p5LNtB": {
+    "message": "未設定"
+  },
   "pBQ5bd": {
     "message": "編輯中"
+  },
+  "pFK6bJ": {
+    "message": "查看全部"
   },
   "pJ78jg": {
     "message": "遊戲外"
@@ -1133,11 +1268,17 @@
   "qOH6mx": {
     "message": "襯線體"
   },
+  "qObHlo": {
+    "message": "所有角色"
+  },
   "qQ4pEa": {
     "message": "對 {targets} 悄悄話"
   },
   "qbB8pg": {
     "message": "位面描述"
+  },
+  "qcVx98": {
+    "message": "{characterName} 的肖像"
   },
   "qj1uhz": {
     "message": "斷開連結"
@@ -1147,6 +1288,9 @@
   },
   "qoUUiA": {
     "message": "允許旁觀者"
+  },
+  "qp37dR": {
+    "message": "圖片上傳失敗。"
   },
   "qvc9uM": {
     "message": "此操作不可撤銷。"
@@ -1177,6 +1321,9 @@
   },
   "ro9oGh": {
     "message": "正在驗證您的電子郵件…"
+  },
+  "ruIdSD": {
+    "message": "圖片上傳逾時。"
   },
   "ruZw+F": {
     "message": "All searched"
@@ -1214,11 +1361,23 @@
   "t5xj3B": {
     "message": "新位面"
   },
+  "tLEjBS": {
+    "message": "PNG、JPEG、GIF 或 WebP，最大 {sizeLimit} MB。"
+  },
   "taJuye": {
     "message": "為了使用本應用，推薦使用最新版本的 {chromeLink}，{firefoxLink} 或 {edgeLink}。"
   },
+  "tcCPK0": {
+    "message": "以角色身分"
+  },
   "tiLDlf": {
     "message": "豆沙綠"
+  },
+  "uMhpKe": {
+    "message": "顏色"
+  },
+  "ufBuw4": {
+    "message": "目前沒有狀態。"
   },
   "ug01Mk": {
     "message": "時間"
@@ -1271,6 +1430,9 @@
   "wb3MSp": {
     "message": "此用戶名已被佔用。"
   },
+  "wrxYAn": {
+    "message": "不支援的元件：{types}"
+  },
   "x82IOl": {
     "message": "不廣播"
   },
@@ -1307,8 +1469,14 @@
   "yy3DLJ": {
     "message": "不帶豐富文字訊息"
   },
+  "yyEekH": {
+    "message": "無法載入肖像。"
+  },
   "z/ipXX": {
     "message": "糟糕！"
+  },
+  "z16Lmv": {
+    "message": "無法載入角色使用情況。"
   },
   "z9LRLa": {
     "message": "修改於"

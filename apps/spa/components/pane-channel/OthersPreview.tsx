@@ -73,11 +73,21 @@ export const OthersPreview: FC<Props> = ({ preview, isLast }) => {
         name={original != null ? original.name : name}
         isMaster={(original != null ? original.isMaster : isMaster) ?? false}
         userId={preview.senderId}
+        messageColor={preview.original?.color}
+        colorSeed={preview.original?.characterId}
         isPreview
         self
       />
     );
-  }, [original, isMaster, name, preview.inGame, preview.senderId]);
+  }, [
+    original,
+    isMaster,
+    name,
+    preview.inGame,
+    preview.original?.characterId,
+    preview.original?.color,
+    preview.senderId,
+  ]);
 
   const { text: source, entities } = useDeferredValue(parsed);
   const isInGameChannel = useIsInGameChannel();

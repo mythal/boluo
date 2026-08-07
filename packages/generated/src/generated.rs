@@ -34,6 +34,7 @@ pub struct ChannelMember {
     pub character_name: ::std::string::String,
     pub text_color: ::std::option::Option<::std::string::String>,
     pub is_master: bool,
+    pub character_id: ::std::option::Option<::uuid::Uuid>,
 }
 
 #[allow(deprecated, non_camel_case_types, non_snake_case)]
@@ -157,6 +158,12 @@ pub struct Message {
     pub color: ::std::string::String,
     #[serde(default)]
     pub rev: i32,
+    #[serde(default)]
+    pub character_id: ::std::option::Option<::uuid::Uuid>,
+    #[serde(default)]
+    pub portrait_id: ::std::option::Option<::uuid::Uuid>,
+    #[serde(default)]
+    pub has_entry_effects: bool,
 }
 
 #[allow(deprecated, non_camel_case_types, non_snake_case)]
@@ -171,6 +178,10 @@ pub struct NewMessage {
     #[serde(default)]
     pub space_id: ::std::option::Option<::uuid::Uuid>,
     pub name: ::std::string::String,
+    #[serde(default)]
+    pub character_id: ::std::option::Option<::uuid::Uuid>,
+    #[serde(default)]
+    pub portrait_id: ::std::option::Option<::uuid::Uuid>,
     pub text: ::std::string::String,
     #[serde(default)]
     pub entities: shared_types::messages::Entities,
@@ -203,6 +214,7 @@ pub struct Space {
     pub explorable: bool,
     pub allow_spectator: bool,
     pub latest_activity: ::chrono::DateTime<::chrono::Utc>,
+    pub scope_id: ::uuid::Uuid,
 }
 
 #[allow(deprecated, non_camel_case_types, non_snake_case)]
@@ -213,6 +225,7 @@ pub struct SpaceMember {
     pub space_id: ::uuid::Uuid,
     pub is_admin: bool,
     pub join_date: ::chrono::DateTime<::chrono::Utc>,
+    pub is_game_master: bool,
 }
 
 #[allow(deprecated, non_camel_case_types, non_snake_case)]
@@ -332,6 +345,20 @@ pub enum UpdateBody {
     SpaceUpdated {
         #[serde(rename = "spaceWithRelated")]
         space_with_related: SpaceWithRelated,
+    },
+    EntryChanged {
+        #[serde(rename = "scopeId")]
+        scope_id: ::uuid::Uuid,
+        #[serde(rename = "entryId")]
+        entry_id: ::uuid::Uuid,
+    },
+    CharacterChanged {
+        #[serde(rename = "characterId")]
+        character_id: ::uuid::Uuid,
+    },
+    NoteChanged {
+        #[serde(rename = "noteId")]
+        note_id: ::uuid::Uuid,
     },
     Error {
         code: ConnectionError,

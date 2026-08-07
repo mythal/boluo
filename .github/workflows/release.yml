@@ -195,3 +195,8 @@ jobs:
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+      - name: Import Grafana resources
+        run: npm run import --workspace=@boluo/grafana -- --yes
+        env:
+          GRAFANA_TOKEN: ${{ secrets.GRAFANA_TOKEN }}

@@ -24,6 +24,8 @@ pub struct CreateChannel {
     pub name: String,
     #[serde(default)]
     pub character_name: String,
+    #[serde(default)]
+    pub character_id: Option<Uuid>,
     pub default_dice_type: Option<String>,
     pub is_public: bool,
     #[serde(rename = "type")]
@@ -83,6 +85,7 @@ pub struct CheckChannelName {
 pub struct EditChannelMember {
     pub channel_id: Uuid,
     pub character_name: Option<String>,
+    pub character_id: Option<Uuid>,
     pub text_color: Option<String>,
 }
 
@@ -144,6 +147,8 @@ pub struct JoinChannel {
     pub channel_id: Uuid,
     #[serde(default)]
     pub character_name: String,
+    #[serde(default)]
+    pub character_id: Option<Uuid>,
 }
 
 #[derive(Deserialize, Debug, specta::Type)]
@@ -161,6 +166,8 @@ pub struct AddChannelMember {
     pub user_id: Uuid,
     #[serde(default)]
     pub character_name: String,
+    #[serde(default)]
+    pub character_id: Option<Uuid>,
 }
 
 #[derive(Deserialize, Debug, specta::Type)]

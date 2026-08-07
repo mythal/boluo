@@ -38,7 +38,6 @@ enum StoredUpdateMeta {
     MessageWithPreview {
         key: ChannelUserId,
         preview_id: Option<Uuid>,
-        channel_id: Uuid,
         message_id: Uuid,
     },
     ChannelDeleted {
@@ -91,7 +90,6 @@ impl StoredUpdateMeta {
             } => StoredUpdateMeta::MessageWithPreview {
                 key: ChannelUserId::new(*channel_id, message.sender_id),
                 preview_id: *preview_id,
-                channel_id: *channel_id,
                 message_id: message.id,
             },
             MessageDeleted {
@@ -136,7 +134,7 @@ impl StoredUpdate {
     fn channel_id(&self) -> Option<Uuid> {
         match &self.meta {
             StoredUpdateMeta::MessageEdited { channel_id, .. } => Some(*channel_id),
-            StoredUpdateMeta::MessageWithPreview { channel_id, .. } => Some(*channel_id),
+            StoredUpdateMeta::MessageWithPreview { key, .. } => Some(key.channel_id),
             StoredUpdateMeta::ChannelDeleted { channel_id } => Some(*channel_id),
             StoredUpdateMeta::ChannelAndMessage { channel_id, .. } => Some(*channel_id),
             StoredUpdateMeta::Other { channel_id, .. } => *channel_id,
@@ -1515,7 +1513,6 @@ mod tests {
                 meta: StoredUpdateMeta::MessageWithPreview {
                     key,
                     preview_id: Some(preview_id),
-                    channel_id,
                     message_id,
                 },
             },

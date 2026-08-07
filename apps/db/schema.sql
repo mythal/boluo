@@ -330,6 +330,7 @@ CREATE TABLE public.entries (
     pos_p integer NOT NULL,
     pos_q integer NOT NULL,
     pos double precision GENERATED ALWAYS AS (((pos_p)::double precision / (pos_q)::double precision)) STORED,
+    components_version uuid DEFAULT uuidv7() NOT NULL,
     CONSTRAINT entry_position_valid CHECK (((pos_p >= 0) AND (pos_q > 0)))
 );
 

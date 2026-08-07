@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT\n    entry.id,\n    entry.scope_id,\n    primary_identifier.value::text AS \"key!: CompactString\",\n    ARRAY(\n        SELECT identifier.value::text\n        FROM entry_identifiers identifier\n        WHERE identifier.entry_id = entry.id\n          AND identifier.kind = 'Alias'\n        ORDER BY identifier.value\n    ) AS \"aliases!: Vec<CompactString>\",\n    entry.display_name AS \"display_name!: CompactString\",\n    entry.reference_note_id,\n    entry.tags AS \"tags!: Vec<CompactString>\",\n    entry.pos_p,\n    entry.pos_q,\n    entry.pos AS \"pos!\",\n    entry.metadata_version AS \"metadata_version!\",\n    entry.created,\n    entry.modified\nFROM entries entry\nJOIN entry_identifiers primary_identifier\n  ON primary_identifier.entry_id = entry.id\n AND primary_identifier.kind = 'Primary'\nWHERE entry.scope_id = $1\nORDER BY entry.pos, entry.id;\n",
+  "query": "SELECT\n    entry.id,\n    entry.scope_id,\n    primary_identifier.value::text AS \"key!: CompactString\",\n    ARRAY(\n        SELECT identifier.value::text\n        FROM entry_identifiers identifier\n        WHERE identifier.entry_id = entry.id\n          AND identifier.kind = 'Alias'\n        ORDER BY identifier.value\n    ) AS \"aliases!: Vec<CompactString>\",\n    entry.display_name AS \"display_name!: CompactString\",\n    entry.reference_note_id,\n    entry.tags AS \"tags!: Vec<CompactString>\",\n    entry.pos_p,\n    entry.pos_q,\n    entry.pos AS \"pos!\",\n    entry.metadata_version AS \"metadata_version!\",\n    entry.components_version AS \"components_version!\",\n    entry.created,\n    entry.modified\nFROM entries entry\nJOIN scopes scope ON scope.id = entry.scope_id\nJOIN entry_identifiers primary_identifier\n  ON primary_identifier.entry_id = entry.id\n AND primary_identifier.kind = 'Primary'\nWHERE scope.space_id = $1\nORDER BY entry.scope_id, entry.pos, entry.id;\n",
   "describe": {
     "columns": [
       {
@@ -116,6 +116,17 @@
       },
       {
         "ordinal": 11,
+        "name": "components_version!",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "entries",
+            "name": "components_version"
+          }
+        }
+      },
+      {
+        "ordinal": 12,
         "name": "created",
         "type_info": "Timestamptz",
         "origin": {
@@ -126,7 +137,7 @@
         }
       },
       {
-        "ordinal": 12,
+        "ordinal": 13,
         "name": "modified",
         "type_info": "Timestamptz",
         "origin": {
@@ -155,8 +166,9 @@
       true,
       false,
       false,
+      false,
       false
     ]
   },
-  "hash": "5aa7fb7c8e6842616e9205633c4260bedb4b140103254a7146bba1e9295826c7"
+  "hash": "19d169e331030deceeac06304d379151b084c54463e8ae86c09a17cf3cb492af"
 }

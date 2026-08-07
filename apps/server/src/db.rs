@@ -527,6 +527,7 @@ pub async fn check(pool: &sqlx::Pool<sqlx::Postgres>) {
         pos_p: i32,
         pos_q: i32,
         pos: f64,
+        components_version: uuid::Uuid,
     })
     .expect("Cannot decode entries composite row");
     check_composite_row!(&mut *trans, "entry_effects", {

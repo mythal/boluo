@@ -7,6 +7,7 @@
 
 use std::env;
 use std::net::{IpAddr, SocketAddr};
+use std::path::PathBuf;
 
 use clap::Parser;
 use futures::pin_mut;
@@ -37,6 +38,7 @@ mod context;
 mod cors;
 mod csrf;
 mod db;
+mod disk_cache;
 mod entries;
 mod events;
 mod info;
@@ -251,6 +253,48 @@ struct Args {
     check: bool,
     #[clap(long, help = "export typescript types", default_value = "false")]
     types: bool,
+    #[clap(long, env = "DISK_CACHE_PATH", help = "redb disk cache path")]
+    disk_cache_path: Option<PathBuf>,
+    #[clap(
+        long,
+        env = "DISK_CACHE_DISABLED",
+        default_value_t = false,
+        help = "disable the redb disk cache"
+    )]
+    disable_disk_cache: bool,
+    #[clap(
+        long,
+        env = "DISK_CACHE_MEMORY_MB",
+        default_value_t = 16,
+        help = "redb disk cache memory in MiB"
+    )]
+    disk_cache_memory_mb: usize,
+    #[clap(
+        long,
+        env = "DISK_CACHE_MAX_FILE_MB",
+        default_value_t = 4096,
+        help = "redb disk cache maximum file size in MiB"
+    )]
+    disk_cache_max_file_mb: u64,
+}
+
+fn disk_cache_config(args: &Args) -> Option<disk_cache::Config> {
+    if args.disable_disk_cache {
+        return None;
+    }
+    let path = args
+        .disk_cache_path
+        .clone()
+        .unwrap_or_else(|| env::temp_dir().join("boluo-cache.redb"));
+    if path.as_os_str().is_empty() {
+        return None;
+    }
+
+    Some(disk_cache::Config {
+        path,
+        cache_size: args.disk_cache_memory_mb.saturating_mul(1024 * 1024),
+        max_file_size: args.disk_cache_max_file_mb.saturating_mul(1024 * 1024),
+    })
 }
 
 #[tokio::main(worker_threads = 5)]
@@ -345,6 +389,7 @@ async fn main() {
                 .describe_and_run(),
         );
     }
+    disk_cache::init(disk_cache_config(&args));
     // https://tokio.rs/tokio/topics/shutdown
     let mut terminate_stream =
         tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
@@ -376,6 +421,7 @@ async fn main() {
     }
     shutdown::SHUTDOWN.notify_waiters();
     tokio::time::sleep(std::time::Duration::from_secs(4)).await;
+    disk_cache::shutdown().await;
     tracing::info!("Shutting down");
 }
 

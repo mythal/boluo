@@ -227,7 +227,7 @@ fn run_worker(receiver: Receiver<Command>, config: Config, database: Database) {
 fn run_worker_inner(
     receiver: &Receiver<Command>,
     config: &Config,
-    database: Database,
+    mut database: Database,
 ) -> Result<(), CacheError> {
     metrics::gauge!("boluo_server_disk_cache_up").set(1.0);
 
@@ -280,10 +280,7 @@ fn run_worker_inner(
                 if !pending.is_empty() {
                     flush_mutations(&database, &mut pending)?;
                 }
-                let high_watermark = config.max_file_size.saturating_mul(9) / 10;
-                if file_size(&config.path) >= high_watermark {
-                    stop_accepting_writes();
-                }
+                maybe_compact(&mut database, config)?;
             }
             command => {
                 if handle_barrier(command, &database)? {
@@ -356,6 +353,30 @@ fn flush_mutations(
     metrics::histogram!("boluo_server_disk_cache_batch_operations").record(operation_count as f64);
     metrics::histogram!("boluo_server_disk_cache_commit_duration_ms")
         .record(start.elapsed().as_secs_f64() * 1000.0);
+    Ok(())
+}
+
+fn maybe_compact(database: &mut Database, config: &Config) -> Result<(), CacheError> {
+    let high_watermark = config.max_file_size.saturating_mul(9) / 10;
+    if file_size(&config.path) < high_watermark {
+        return Ok(());
+    }
+
+    metrics::counter!("boluo_server_disk_cache_compaction_attempts_total").increment(1);
+    let start = Instant::now();
+    let compacted = database.compact().map_err(storage_error)?;
+    metrics::histogram!("boluo_server_disk_cache_compaction_duration_ms")
+        .record(start.elapsed().as_secs_f64() * 1000.0);
+
+    let file_bytes = file_size(&config.path);
+    metrics::gauge!("boluo_server_disk_cache_file_bytes").set(file_bytes as f64);
+    if compacted {
+        metrics::counter!("boluo_server_disk_cache_compactions_total").increment(1);
+        tracing::info!(file_bytes, "Compacted redb disk cache");
+    }
+    if file_bytes >= high_watermark {
+        stop_accepting_writes();
+    }
     Ok(())
 }
 

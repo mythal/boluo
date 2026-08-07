@@ -16,7 +16,7 @@ fn build_response(bytes: Vec<u8>, status: StatusCode) -> hyper::Response<Vec<u8>
 
 pub fn err_response(e: AppError) -> hyper::Response<Vec<u8>> {
     let status = e.status_code();
-    serde_json::to_vec(&WebResult::<()>::err(e))
+    sonic_rs::to_vec(&WebResult::<()>::err(e))
         .map(|bytes| build_response(bytes, status))
         .unwrap_or_else(|e| {
             tracing::error!("Failed to serialize error: {}", e);
@@ -32,7 +32,7 @@ pub fn err_response(e: AppError) -> hyper::Response<Vec<u8>> {
 }
 
 pub fn ok_response<T: Serialize>(value: T) -> hyper::Response<Vec<u8>> {
-    serde_json::to_vec(&WebResult::ok(value))
+    sonic_rs::to_vec(&WebResult::ok(value))
         .map(|bytes| build_response(bytes, hyper::StatusCode::OK))
         .map_err(AppError::Serialize)
         .unwrap_or_else(err_response)

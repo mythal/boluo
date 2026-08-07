@@ -13,7 +13,7 @@ async fn query(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<Asset, AppError> {
-    let session = authenticate_optional(&req).await?;
+    let session = authenticate_optional(ctx, &req).await?;
     let QueryAsset { space_id, asset_id } = parse_query(req.uri())?;
     let asset = Asset::get_by_id_in_space(&ctx.db, space_id, asset_id)
         .await
@@ -33,7 +33,7 @@ async fn by_creator(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<Vec<Asset>, AppError> {
-    let session = authenticate(&req).await?;
+    let session = authenticate(ctx, &req).await?;
     Asset::list_by_creator(&ctx.db, session.user_id)
         .await
         .map_err(Into::into)
@@ -43,7 +43,7 @@ async fn by_space(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<Vec<Asset>, AppError> {
-    let session = authenticate_optional(&req).await?;
+    let session = authenticate_optional(ctx, &req).await?;
     let ListAssets { space_id } = parse_query(req.uri())?;
     let access =
         resolve_space_access(ctx, space_id, session.map(|session| session.user_id)).await?;
@@ -61,7 +61,7 @@ async fn create(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<Asset, AppError> {
-    let session = authenticate(&req).await?;
+    let session = authenticate(ctx, &req).await?;
     let CreateAsset {
         space_id,
         media_id,
@@ -97,7 +97,7 @@ async fn update(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<Asset, AppError> {
-    let session = authenticate(&req).await?;
+    let session = authenticate(ctx, &req).await?;
     let UpdateAsset {
         asset_id,
         name,
@@ -131,7 +131,7 @@ async fn delete(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<Asset, AppError> {
-    let session = authenticate(&req).await?;
+    let session = authenticate(ctx, &req).await?;
     let DeleteAsset { asset_id } = parse_body(req).await?;
     let mut transaction = ctx.db.begin().await?;
     let asset = Asset::get_by_id_for_update(&mut transaction, asset_id)

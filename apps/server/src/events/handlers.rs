@@ -422,7 +422,7 @@ async fn connect(ctx: &crate::context::AppContext, req: hyper::Request<Incoming>
     let session = if let Some(token) = token {
         super::token::TOKEN_STORE.get_session(token)
     } else {
-        match authenticate_optional(&req).await {
+        match authenticate_optional(ctx, &req).await {
             Ok(Some(session)) => Ok(session),
             Ok(None) => Err(SessionError::Invalid),
             Err(AppError::Unauthenticated(AuthenticateFail::Guest)) => Err(SessionError::Invalid),
@@ -609,9 +609,12 @@ async fn connect(ctx: &crate::context::AppContext, req: hyper::Request<Incoming>
     })
 }
 
-pub async fn token(req: Request<impl Body>) -> Result<Token, AppError> {
+pub async fn token(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<Token, AppError> {
     let MakeToken { space_id, user_id } = parse_query::<MakeToken>(req.uri()).unwrap_or_default();
-    let session = authenticate_optional(&req).await?;
+    let session = authenticate_optional(ctx, &req).await?;
     match (session, user_id) {
         (Some(session), Some(user_id)) => {
             if session.user_id != user_id {
@@ -677,7 +680,7 @@ async fn sse(ctx: &crate::context::AppContext, req: Request<Incoming>) -> Respon
         user_id,
     } = query;
 
-    let session = match authenticate_optional(&req).await {
+    let session = match authenticate_optional(ctx, &req).await {
         Ok(s) => s,
         Err(e) => return err_response(e),
     };
@@ -736,7 +739,7 @@ async fn receive_events(ctx: &crate::context::AppContext, req: Request<Incoming>
     };
     let mailbox = query.mailbox;
 
-    let session = match authenticate_optional(&req).await {
+    let session = match authenticate_optional(ctx, &req).await {
         Ok(s) => s,
         Err(e) => return err_response(e),
     };
@@ -780,7 +783,7 @@ pub async fn router(
         ("/connect", Method::GET) => Ok(connect(ctx, req).await),
         ("/sse", Method::GET) => Ok(sse(ctx, req).await),
         ("/sse/receive", Method::POST) => Ok(receive_events(ctx, req).await),
-        ("/token", Method::GET) => token(req).await.map(ok_response),
+        ("/token", Method::GET) => token(ctx, req).await.map(ok_response),
         _ => missing(),
     }
 }

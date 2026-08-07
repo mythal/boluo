@@ -16,6 +16,7 @@ SELECT
     entry.pos_q,
     entry.pos AS "pos!",
     entry.metadata_version AS "metadata_version!",
+    entry.components_version AS "components_version!",
     entry.created,
     entry.modified AS entry_modified,
     component.component_type AS "component_type!: CompactString",

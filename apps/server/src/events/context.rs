@@ -3,7 +3,7 @@ use crate::events::status::StatusAction;
 use crate::events::types::{ChannelUserId, Seq, UpdateBody, UpdateLifetime};
 use crate::events::{StatusMap, Update};
 use crate::utils::timestamp;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::sync::OnceLock as OnceCell;
 use std::time::Instant;
 use tokio::sync::mpsc::error::TrySendError;
@@ -56,9 +56,12 @@ enum StoredUpdateMeta {
 
 #[derive(Debug, Clone)]
 struct StoredUpdate {
-    encoded: Utf8Bytes,
+    encoded: Result<Utf8Bytes, Offloaded>,
     meta: StoredUpdateMeta,
 }
+
+#[derive(Debug, Clone, Copy)]
+struct Offloaded;
 
 #[derive(Debug, Clone)]
 struct StoredPreview {
@@ -125,7 +128,7 @@ impl StoredUpdate {
     fn from_encoded_update(encoded_update: EncodedUpdate) -> Self {
         let meta = StoredUpdateMeta::from_persistent_body(&encoded_update.update.body);
         StoredUpdate {
-            encoded: encoded_update.encoded,
+            encoded: Ok(encoded_update.encoded),
             meta,
         }
     }
@@ -171,7 +174,8 @@ pub enum Action {
         after: Option<i64>,
         seq: Option<Seq>,
         node: Option<u16>,
-        respond_to: tokio::sync::oneshot::Sender<CachedUpdates>,
+        respond_to:
+            tokio::sync::oneshot::Sender<Result<CachedUpdates, crate::disk_cache::CacheError>>,
     },
     Update {
         body: UpdateBody,
@@ -242,7 +246,10 @@ impl MailboxManager {
         after: Option<i64>,
         seq: Option<Seq>,
         node: Option<u16>,
-    ) -> Result<tokio::sync::oneshot::Receiver<CachedUpdates>, MailboxManageError> {
+    ) -> Result<
+        tokio::sync::oneshot::Receiver<Result<CachedUpdates, crate::disk_cache::CacheError>>,
+        MailboxManageError,
+    > {
         let (tx, rx) = tokio::sync::oneshot::channel();
         let action = Action::Query {
             after,
@@ -457,7 +464,7 @@ fn on_update(
         }
         body => {
             let stored = StoredUpdate {
-                encoded,
+                encoded: Ok(encoded),
                 meta: StoredUpdateMeta::from_persistent_body(&body),
             };
             match &stored.meta {
@@ -616,14 +623,14 @@ fn should_include_update(
     }
 }
 
-fn collect_cached_updates(
+fn collect_memory_cached_updates(
     persistent_updates: &BTreeMap<EventId, StoredUpdate>,
     preview_map: &PreviewMap,
     diff_map: &DiffMap,
     after: Option<i64>,
     seq: Option<Seq>,
     node: Option<u16>,
-) -> Vec<Utf8Bytes> {
+) -> Vec<(EventId, Utf8Bytes)> {
     let node = node.unwrap_or(0);
     let mut response_updates: Vec<(EventId, Utf8Bytes)> =
         Vec::with_capacity(persistent_updates.len() + preview_map.len() + diff_map.len());
@@ -631,7 +638,13 @@ fn collect_cached_updates(
         persistent_updates
             .iter()
             .filter(|&(event_id, _)| should_include_update(*event_id, after, seq, node))
-            .map(|(event_id, update)| (*event_id, update.encoded.clone())),
+            .filter_map(|(event_id, update)| {
+                update
+                    .encoded
+                    .as_ref()
+                    .ok()
+                    .map(|encoded| (*event_id, encoded.clone()))
+            }),
     );
     response_updates.extend(
         preview_map
@@ -647,9 +660,85 @@ fn collect_cached_updates(
     );
     response_updates.sort_unstable_by_key(|(event_id, _)| *event_id);
     response_updates
+}
+
+async fn collect_cached_updates_with_storage(
+    mailbox_id: Uuid,
+    persistent_updates: &BTreeMap<EventId, StoredUpdate>,
+    preview_map: &PreviewMap,
+    diff_map: &DiffMap,
+    after: Option<i64>,
+    seq: Option<Seq>,
+    node: Option<u16>,
+) -> Result<Vec<Utf8Bytes>, crate::disk_cache::CacheError> {
+    let node_id = node.unwrap_or(0);
+    let disk_event_ids = persistent_updates
+        .iter()
+        .filter(|(event_id, update)| {
+            update.encoded.is_err() && should_include_update(**event_id, after, seq, node_id)
+        })
+        .map(|(event_id, _)| *event_id)
+        .collect::<Vec<_>>();
+    let mut response_updates =
+        collect_memory_cached_updates(persistent_updates, preview_map, diff_map, after, seq, node);
+    if !disk_event_ids.is_empty() {
+        response_updates.extend(crate::disk_cache::read_mailbox(mailbox_id, disk_event_ids).await?);
+    }
+    response_updates.sort_unstable_by_key(|(event_id, _)| *event_id);
+    Ok(response_updates
         .into_iter()
         .map(|(_, encoded)| encoded)
-        .collect()
+        .collect())
+}
+
+fn offload_persistent_mutation(
+    mailbox_id: Uuid,
+    update_id: EventId,
+    before_event_ids: &BTreeSet<EventId>,
+    persistent_updates: &mut BTreeMap<EventId, StoredUpdate>,
+) {
+    let after_event_ids = persistent_updates.keys().copied().collect::<BTreeSet<_>>();
+    let deletes = before_event_ids
+        .difference(&after_event_ids)
+        .copied()
+        .collect::<Vec<_>>();
+    let puts = persistent_updates
+        .get(&update_id)
+        .and_then(|update| update.encoded.as_ref().ok().cloned())
+        .map(|encoded| vec![(update_id, encoded)])
+        .unwrap_or_default();
+    if puts.is_empty() && deletes.is_empty() {
+        return;
+    }
+    let has_put = !puts.is_empty();
+    let mutation = crate::disk_cache::MailboxMutationBatch {
+        mailbox_id,
+        puts,
+        deletes,
+    };
+    match crate::disk_cache::try_mutate_mailbox(mutation) {
+        Ok(()) if has_put => {
+            if let Some(update) = persistent_updates.get_mut(&update_id) {
+                update.encoded = Err(Offloaded);
+            }
+        }
+        Ok(()) => {}
+        Err(_) => {
+            metrics::counter!("boluo_server_mailbox_cache_memory_fallback_total").increment(1);
+        }
+    }
+}
+
+fn delete_persistent_payloads(mailbox_id: Uuid, event_ids: impl IntoIterator<Item = EventId>) {
+    let deletes = event_ids.into_iter().collect::<Vec<_>>();
+    if deletes.is_empty() {
+        return;
+    }
+    let _ = crate::disk_cache::try_mutate_mailbox(crate::disk_cache::MailboxMutationBatch {
+        mailbox_id,
+        puts: Vec::new(),
+        deletes,
+    });
 }
 
 impl MailBoxState {
@@ -680,25 +769,47 @@ impl MailBoxState {
                         let start = std::time::Instant::now();
                         match action {
                             Action::Query { after, seq, node, respond_to } => {
-                                let response_updates = collect_cached_updates(
+                                let response_updates = collect_cached_updates_with_storage(
+                                    id,
                                     &persistent_updates,
                                     &preview_map,
                                     &diff_map,
                                     after,
                                     seq,
                                     node,
-                                );
-                                respond_to.send(CachedUpdates {
-                                    updates: response_updates,
-                                    start_at: cached_updates_start_at(
-                                        &persistent_updates,
-                                        cursor_floor,
-                                    ),
-                                    cursor_floor,
-                                }).ok();
+                                ).await;
+                                match response_updates {
+                                    Ok(response_updates) => {
+                                        let _ = respond_to.send(Ok(CachedUpdates {
+                                            updates: response_updates,
+                                            start_at: cached_updates_start_at(
+                                                &persistent_updates,
+                                                cursor_floor,
+                                            ),
+                                            cursor_floor,
+                                        }));
+                                    }
+                                    Err(err) => {
+                                        metrics::counter!("boluo_server_mailbox_cache_query_failures_total")
+                                            .increment(1);
+                                        tracing::error!(
+                                            error = %err,
+                                            mailbox_id = %id,
+                                            "Failed to load mailbox updates from disk cache"
+                                        );
+                                        let _ = respond_to.send(Err(err));
+                                    }
+                                }
                             }
                             Action::Update { body, live } => {
                                 last_event_at = Some(Instant::now());
+                                let before_event_ids = matches!(live, UpdateLifetime::Persistent)
+                                    .then(|| {
+                                        persistent_updates
+                                            .keys()
+                                            .copied()
+                                            .collect::<BTreeSet<_>>()
+                                    });
                                 let mut body = body;
                                 let stale_edited_event_id =
                                     prepare_message_edited_old_pos(&persistent_updates, &mut body);
@@ -713,6 +824,7 @@ impl MailBoxState {
                                     persistent_updates.remove(&stale_edited_event_id);
                                 }
                                 let update_name = encoded_update.update.name();
+                                let update_id = encoded_update.update.id;
                                 let encoded_for_broadcast = encoded_update.encoded.clone();
                                 let should_broadcast = on_update(
                                     &mut persistent_updates,
@@ -720,6 +832,14 @@ impl MailBoxState {
                                     &mut diff_map,
                                     encoded_update,
                                 );
+                                if let Some(before_event_ids) = before_event_ids {
+                                    offload_persistent_mutation(
+                                        id,
+                                        update_id,
+                                        &before_event_ids,
+                                        &mut persistent_updates,
+                                    );
+                                }
                                 let elapsed = start.elapsed();
                                 action_duration_histogram.record(elapsed.as_millis() as f64);
                                 if elapsed > std::time::Duration::from_millis(25) {
@@ -747,16 +867,25 @@ impl MailBoxState {
                         }
                         let last_activity_at = last_event_at.unwrap_or(created_at);
                         if last_activity_at.elapsed() > std::time::Duration::from_secs(60 * 60 * 2) {
+                            delete_persistent_payloads(id, persistent_updates.keys().copied());
                             store().remove(id);
                             tracing::info!(mailbox_id = %id, "Mailbox state is idle, shutting down");
                             break;
                         } else {
                             let before_size = persistent_updates.len() + preview_map.len() + diff_map.len();
+                            let before_event_ids =
+                                persistent_updates.keys().copied().collect::<BTreeSet<_>>();
                             if let Some(new_floor) =
                                 cleanup(&mut persistent_updates, &mut preview_map, &mut diff_map)
                             {
                                 cursor_floor = cursor_floor.max(new_floor);
                             }
+                            let after_event_ids =
+                                persistent_updates.keys().copied().collect::<BTreeSet<_>>();
+                            delete_persistent_payloads(
+                                id,
+                                before_event_ids.difference(&after_event_ids).copied(),
+                            );
                             let after_size = persistent_updates.len() + preview_map.len() + diff_map.len();
                             if after_size != before_size {
                                 tracing::info!(mailbox_id = %id, "Cleaned up {} updates", before_size - after_size);
@@ -937,7 +1066,8 @@ mod tests {
             .await
             .expect("query should be enqueued")
             .await
-            .expect("mailbox should answer the query");
+            .expect("mailbox should answer the query")
+            .expect("disk cache query should succeed");
         let update_types = cached
             .updates
             .iter()
@@ -998,7 +1128,7 @@ mod tests {
 
         let expected = vec![
             preview.encoded.clone(),
-            update.encoded.clone(),
+            update.encoded.clone().expect("test update is in memory"),
             diff.encoded.clone(),
         ];
 
@@ -1012,14 +1142,17 @@ mod tests {
         let mut diff_map = DiffMap::with_hasher(ahash::RandomState::new());
         diff_map.insert(ChannelUserId::new(Uuid::nil(), Uuid::from_u128(1)), diff);
 
-        let actual = collect_cached_updates(
+        let actual = collect_memory_cached_updates(
             &persistent_updates,
             &preview_map,
             &diff_map,
             Some(10),
             Some(20),
             Some(1),
-        );
+        )
+        .into_iter()
+        .map(|(_, encoded)| encoded)
+        .collect::<Vec<_>>();
         assert_eq!(actual, expected);
     }
 
@@ -1378,7 +1511,7 @@ mod tests {
         persistent_updates.insert(
             message_event_id,
             StoredUpdate {
-                encoded: Utf8Bytes::from_static("{\"type\":\"NEW_MESSAGE\"}"),
+                encoded: Ok(Utf8Bytes::from_static("{\"type\":\"NEW_MESSAGE\"}")),
                 meta: StoredUpdateMeta::MessageWithPreview {
                     key,
                     preview_id: Some(preview_id),
@@ -1440,7 +1573,7 @@ mod tests {
         persistent_updates.insert(
             first_persistent_id,
             StoredUpdate {
-                encoded: Utf8Bytes::from_static("{\"type\":\"PERSISTENT\"}"),
+                encoded: Ok(Utf8Bytes::from_static("{\"type\":\"PERSISTENT\"}")),
                 meta: StoredUpdateMeta::Other {
                     channel_id: Some(Uuid::nil()),
                     message_id: None,
@@ -1453,7 +1586,7 @@ mod tests {
             persistent_updates.insert(
                 id,
                 StoredUpdate {
-                    encoded: Utf8Bytes::from_static("{\"type\":\"PERSISTENT\"}"),
+                    encoded: Ok(Utf8Bytes::from_static("{\"type\":\"PERSISTENT\"}")),
                     meta: StoredUpdateMeta::Other {
                         channel_id: Some(Uuid::nil()),
                         message_id: None,
@@ -1498,7 +1631,7 @@ mod tests {
         persistent_updates.insert(
             removed_persistent_id,
             StoredUpdate {
-                encoded: Utf8Bytes::from_static("{\"type\":\"PERSISTENT_OLD\"}"),
+                encoded: Ok(Utf8Bytes::from_static("{\"type\":\"PERSISTENT_OLD\"}")),
                 meta: StoredUpdateMeta::Other {
                     channel_id: Some(Uuid::nil()),
                     message_id: None,
@@ -1511,7 +1644,7 @@ mod tests {
             persistent_updates.insert(
                 id,
                 StoredUpdate {
-                    encoded: Utf8Bytes::from_static("{\"type\":\"PERSISTENT\"}"),
+                    encoded: Ok(Utf8Bytes::from_static("{\"type\":\"PERSISTENT\"}")),
                     meta: StoredUpdateMeta::Other {
                         channel_id: Some(Uuid::nil()),
                         message_id: None,
@@ -1612,7 +1745,7 @@ mod tests {
         persistent_updates.insert(
             persistent_a,
             StoredUpdate {
-                encoded: Utf8Bytes::from_static("{\"type\":\"PERSISTENT_A\"}"),
+                encoded: Ok(Utf8Bytes::from_static("{\"type\":\"PERSISTENT_A\"}")),
                 meta: StoredUpdateMeta::Other {
                     channel_id: Some(channel_a),
                     message_id: Some(Uuid::from_u128(67)),
@@ -1622,7 +1755,7 @@ mod tests {
         persistent_updates.insert(
             persistent_b,
             StoredUpdate {
-                encoded: Utf8Bytes::from_static("{\"type\":\"PERSISTENT_B\"}"),
+                encoded: Ok(Utf8Bytes::from_static("{\"type\":\"PERSISTENT_B\"}")),
                 meta: StoredUpdateMeta::Other {
                     channel_id: Some(channel_b),
                     message_id: Some(Uuid::from_u128(68)),

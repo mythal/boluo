@@ -475,7 +475,11 @@ impl Update {
             start_at,
             cursor_floor,
         } = match updates_receiver.await {
-            Ok(updates) => updates,
+            Ok(Ok(updates)) => updates,
+            Ok(Err(err)) => {
+                tracing::error!(error = %err, "Failed to load cached updates for mailbox {}", mailbox_id);
+                return Err(GetFromStateError::FailedToQuery);
+            }
             Err(err) => {
                 tracing::error!(error = ?err, "Failed to receive updates for mailbox {}", mailbox_id);
                 return Err(GetFromStateError::FailedToQuery);

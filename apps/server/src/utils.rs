@@ -53,6 +53,33 @@ pub fn not_whitespace_only<T: AsRef<str>>(s: &T) -> bool {
     !whitespace_only(s)
 }
 
+/// Estimates the heap memory retained by a `serde_json::Value` tree.
+///
+/// The result is intentionally approximate: allocator overhead and the exact
+/// capacity of `serde_json::Map` are not observable through its public API.
+pub fn estimated_json_value_size(value: &serde_json::Value) -> usize {
+    std::mem::size_of::<serde_json::Value>()
+        + match value {
+            serde_json::Value::Null | serde_json::Value::Bool(_) | serde_json::Value::Number(_) => {
+                0
+            }
+            serde_json::Value::String(value) => value.capacity(),
+            serde_json::Value::Array(values) => {
+                values.capacity() * std::mem::size_of::<serde_json::Value>()
+                    + values.iter().map(estimated_json_value_size).sum::<usize>()
+            }
+            serde_json::Value::Object(values) => values
+                .iter()
+                .map(|(key, value)| {
+                    std::mem::size_of::<String>()
+                        + key.capacity()
+                        + std::mem::size_of::<usize>() * 3
+                        + estimated_json_value_size(value)
+                })
+                .sum(),
+        }
+}
+
 pub fn sign(message: &str) -> hmac::Tag {
     hmac::sign(key(), message.as_bytes())
 }

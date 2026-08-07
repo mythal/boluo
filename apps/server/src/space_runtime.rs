@@ -6,13 +6,14 @@ use std::time::{Duration, Instant};
 
 use arc_swap::ArcSwap;
 use chrono::{DateTime, TimeZone, Utc};
-use tokio::sync::{OnceCell, mpsc, oneshot};
+use tokio::sync::{mpsc, oneshot};
 use uuid::Uuid;
 
 use crate::channels::models::Member;
 use crate::channels::{Channel, ChannelMember};
 use crate::characters::Character;
-use crate::entries::models::{CachedEntryComponents, Entry, EntryMetadata};
+use crate::entries::component_cache::EntryComponentMemoryCache;
+use crate::entries::models::{Entry, EntryMetadata};
 use crate::notes::NoteMetadata;
 use crate::scopes::models::Scope;
 use crate::spaces::{Space, SpaceMember};
@@ -274,8 +275,6 @@ pub(crate) enum SpaceRuntimeError {
     NotFound,
     #[error(transparent)]
     Database(#[from] sqlx::Error),
-    #[error(transparent)]
-    ComponentDecode(#[from] serde_json::Error),
     #[error("space runtime control queue is closed")]
     Closed,
     #[error("space runtime mutation queue is full")]
@@ -290,8 +289,6 @@ pub(crate) struct SpaceRuntime {
     space_id: Uuid,
     db: sqlx::PgPool,
     snapshot: ArcSwap<SpaceSnapshot>,
-    entry_components:
-        papaya::HashMap<Uuid, Arc<OnceCell<CachedEntryComponents>>, ahash::RandomState>,
     dirty: AtomicBool,
     next_ticket: AtomicU64,
     reconciliation_pending: AtomicBool,
@@ -315,11 +312,6 @@ impl SpaceRuntime {
             space_id,
             db: db.clone(),
             snapshot: ArcSwap::from_pointee(snapshot),
-            entry_components: papaya::HashMap::builder()
-                .capacity(16)
-                .hasher(ahash::RandomState::new())
-                .resize_mode(papaya::ResizeMode::Blocking)
-                .build(),
             dirty: AtomicBool::new(false),
             next_ticket: AtomicU64::new(0),
             reconciliation_pending: AtomicBool::new(false),
@@ -433,46 +425,6 @@ impl SpaceRuntime {
 
     pub(crate) fn snapshot(&self) -> Arc<SpaceSnapshot> {
         self.snapshot.load_full()
-    }
-
-    fn entry_component_cell(&self, entry_id: Uuid) -> Arc<OnceCell<CachedEntryComponents>> {
-        self.entry_components
-            .pin()
-            .get_or_insert_with(entry_id, || Arc::new(OnceCell::new()))
-            .clone()
-    }
-
-    fn is_current_component_cell(
-        &self,
-        entry_id: Uuid,
-        expected: &Arc<OnceCell<CachedEntryComponents>>,
-    ) -> bool {
-        self.entry_components
-            .pin()
-            .get(&entry_id)
-            .is_some_and(|current| Arc::ptr_eq(current, expected))
-    }
-
-    fn invalidate_entry_components(&self, snapshot: &SpaceSnapshot, deltas: &[SpaceDelta]) {
-        let components = self.entry_components.pin();
-        for delta in deltas {
-            match delta {
-                SpaceDelta::ScopeDeleted(scope_id) => {
-                    if let Some(entries) = snapshot.entries.get(scope_id) {
-                        for entry_id in entries.keys() {
-                            components.remove(entry_id);
-                        }
-                    }
-                }
-                SpaceDelta::EntryUpserted(entry) => {
-                    components.remove(&entry.id);
-                }
-                SpaceDelta::EntryDeleted { entry_id, .. } => {
-                    components.remove(entry_id);
-                }
-                _ => {}
-            }
-        }
     }
 
     fn record_latest_activity(&self, update_time: DateTime<Utc>) {
@@ -990,7 +942,6 @@ impl SpaceRuntime {
         });
         if can_apply_delta {
             let ticket = runtime.reserve_generation();
-            runtime.invalidate_entry_components(&current, &deltas);
             let next = current.apply_deltas(ticket, deltas);
             runtime.snapshot.store(Arc::new(next));
             let mut prepared_at = None;
@@ -1147,7 +1098,6 @@ impl SpaceRuntime {
                 );
                 snapshot.latest_activity_us = current_activity_us;
                 if current.revision <= ticket {
-                    runtime.entry_components.pin().clear();
                     runtime.snapshot.store(Arc::new(snapshot));
                 }
                 runtime.update_dirty(state);
@@ -1317,6 +1267,7 @@ pub(crate) struct SpaceStore {
 struct SpaceStoreInner {
     db: sqlx::PgPool,
     runtimes: papaya::HashMap<Uuid, Arc<SpaceRuntimeHandle>, ahash::RandomState>,
+    entry_component_memory_cache: Arc<EntryComponentMemoryCache>,
     reconciliation_permits: Arc<tokio::sync::Semaphore>,
     reconciliation_cursor: AtomicU64,
     #[cfg(test)]
@@ -1447,6 +1398,7 @@ impl SpaceStore {
                     .hasher(ahash::RandomState::new())
                     .resize_mode(papaya::ResizeMode::Blocking)
                     .build(),
+                entry_component_memory_cache: Arc::new(EntryComponentMemoryCache::new()),
                 reconciliation_permits: Arc::new(tokio::sync::Semaphore::new(
                     MAX_CONCURRENT_RECONCILIATIONS,
                 )),
@@ -1747,55 +1699,46 @@ impl SpaceStore {
         entry_id: Uuid,
     ) -> Result<Option<Entry>, SpaceRuntimeError> {
         let runtime = self.get_or_load(space_id).await?;
-        for _ in 0..2 {
-            let Some(snapshot) = runtime.authoritative_snapshot_after_wait().await else {
-                break;
-            };
-            if snapshot
-                .entries
-                .get(&scope_id)
-                .and_then(|entries| entries.get(&entry_id))
-                .is_none()
-            {
-                return Ok(None);
-            }
-            let component_cell = runtime.entry_component_cell(entry_id);
-            let was_cached = component_cell.get().is_some();
-            let db = self.inner.db.clone();
-            let components = component_cell
-                .get_or_try_init(|| async move { CachedEntryComponents::load(&db, entry_id).await })
-                .await?;
-            let Some(current) = runtime.authoritative_snapshot_after_wait().await else {
-                continue;
-            };
-            // An Entry write or deletion removes the old cell. Identity checking
-            // prevents an in-flight load from publishing stale data.
-            if !runtime.is_current_component_cell(entry_id, &component_cell) {
-                continue;
-            }
-            let Some(current_entry) = current
-                .entries
-                .get(&scope_id)
-                .and_then(|entries| entries.get(&entry_id))
-            else {
-                return Ok(None);
-            };
-            metrics::counter!(
-                "boluo_server_entry_component_cache_read_total",
-                "result" => if was_cached { "hit" } else { "load" }
-            )
-            .increment(1);
-            return Ok(Some(
-                current_entry
-                    .clone()
-                    .with_components(components.to_response()),
-            ));
+        let Some(snapshot) = runtime.authoritative_snapshot_after_wait().await else {
+            return Entry::get_by_id(&self.inner.db, scope_id, entry_id)
+                .await
+                .map_err(Into::into);
+        };
+        let Some(expected_entry) = snapshot
+            .entries
+            .get(&scope_id)
+            .and_then(|entries| entries.get(&entry_id))
+        else {
+            return Ok(None);
+        };
+        let expected_version = expected_entry.components_version;
+        let components = self
+            .inner
+            .entry_component_memory_cache
+            .get_or_load(&self.inner.db, entry_id, expected_version)
+            .await?;
+        let Some(current) = runtime.authoritative_snapshot_after_wait().await else {
+            return Entry::get_by_id(&self.inner.db, scope_id, entry_id)
+                .await
+                .map_err(Into::into);
+        };
+        let Some(current_entry) = current
+            .entries
+            .get(&scope_id)
+            .and_then(|entries| entries.get(&entry_id))
+        else {
+            return Ok(None);
+        };
+        if current_entry.components_version != expected_version {
+            return Entry::get_by_id(&self.inner.db, scope_id, entry_id)
+                .await
+                .map_err(Into::into);
         }
-        metrics::counter!("boluo_server_entry_component_cache_read_total", "result" => "fallback")
-            .increment(1);
-        Entry::get_by_id(&self.inner.db, scope_id, entry_id)
-            .await
-            .map_err(Into::into)
+        return Ok(Some(
+            current_entry
+                .clone()
+                .with_components(components.to_response()),
+        ));
     }
 
     pub(crate) async fn resolve_channel_member(
@@ -1999,14 +1942,8 @@ impl SpaceStore {
     }
 
     #[cfg(test)]
-    fn entry_component_cache_len(&self) -> usize {
-        self.inner
-            .runtimes
-            .pin()
-            .iter()
-            .filter_map(|(_, handle)| handle.runtime.get())
-            .map(|runtime| runtime.entry_components.pin().len())
-            .sum()
+    fn entry_component_memory_cache_len(&self) -> usize {
+        self.inner.entry_component_memory_cache.len()
     }
 }
 
@@ -2266,8 +2203,6 @@ mod tests {
                 .get(&space.scope_id)
                 .is_some_and(|entries| entries.contains_key(&entry.id))
         );
-        assert_eq!(ctx.space_store.entry_component_cache_len(), 0);
-
         let metadata = ctx
             .space_store
             .list_entry_metadata(space.id, space.scope_id)
@@ -2275,8 +2210,6 @@ mod tests {
             .expect("failed to list Entry metadata");
         assert_eq!(metadata.len(), 1);
         assert_eq!(metadata[0].key, "hp");
-        assert_eq!(ctx.space_store.entry_component_cache_len(), 0);
-
         let resolved = ctx
             .space_store
             .resolve_entry(space.id, space.scope_id, entry.id)
@@ -2289,16 +2222,9 @@ mod tests {
         );
         assert_eq!(resolved.components["core/counter"].schema_version(), 1);
         let component_version = resolved.components["core/counter"].version();
-        assert_eq!(ctx.space_store.entry_component_cache_len(), 1);
-
         drop(snapshot);
         drop(runtime);
         assert_eq!(ctx.space_store.evict_idle(Duration::ZERO), 1);
-        assert_eq!(
-            ctx.space_store.entry_component_cache_len(),
-            0,
-            "evicting a Space runtime retained its Component cache"
-        );
         let resolved = ctx
             .space_store
             .resolve_entry(space.id, space.scope_id, entry.id)
@@ -2309,15 +2235,13 @@ mod tests {
             resolved.components["core/counter"].json_data(),
             json!({"value": 10})
         );
-        assert_eq!(ctx.space_store.entry_component_cache_len(), 1);
-
         let mutation = ctx
             .space_store
             .acquire_mutation(space.id)
             .await
             .expect("failed to acquire Entry mutation");
         let mut transaction = pool.begin().await.expect("failed to begin transaction");
-        let locked = EntryMetadata::get_by_id_for_update(&mut transaction, entry.id)
+        EntryMetadata::get_by_id_for_update(&mut transaction, entry.id)
             .await
             .expect("failed to lock Entry")
             .expect("Entry is missing");
@@ -2334,12 +2258,16 @@ mod tests {
         )
         .await
         .expect("failed to update Entry Component");
+        let updated_metadata = EntryMetadata::get_by_id_for_update(&mut transaction, entry.id)
+            .await
+            .expect("failed to reload Entry metadata")
+            .expect("Entry is missing after Component update");
         let mutation = mutation
             .commit(transaction)
             .await
             .expect("failed to commit Entry mutation");
         let mut changes = CommittedChanges::default();
-        changes.entry_updated(space.id, &locked);
+        changes.entry_updated(space.id, &updated_metadata);
         changes.apply_with_mutation(&ctx, &mutation).await;
         drop(mutation);
 
@@ -2429,12 +2357,6 @@ mod tests {
         let mut changes = CommittedChanges::default();
         changes.entry_deleted(space.id, updated.scope_id, updated.id);
         changes.apply_with_mutation(&ctx, &mutation).await;
-
-        assert_eq!(
-            ctx.space_store.entry_component_cache_len(),
-            0,
-            "deleting an Entry retained its Component cache"
-        );
 
         assert!(
             ctx.space_store
@@ -2903,8 +2825,6 @@ mod tests {
                 .expect("failed to resolve Character Entry")
                 .is_some()
         );
-        assert_eq!(ctx.space_store.entry_component_cache_len(), 1);
-
         let mutation = ctx
             .space_store
             .acquire_mutation(space.id)
@@ -2928,7 +2848,6 @@ mod tests {
         assert!(!snapshot.characters.contains_key(&character.id));
         assert!(!snapshot.scopes.contains_key(&character.scope_id));
         assert!(!snapshot.entries.contains_key(&character.scope_id));
-        assert_eq!(ctx.space_store.entry_component_cache_len(), 0);
         assert!(
             ctx.space_store
                 .resolve_entry(space.id, character.scope_id, entry.id)

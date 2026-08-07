@@ -18,9 +18,6 @@ use crate::spaces::{Space, SpaceMember};
 ///
 /// Construct this value only after `Transaction::commit` succeeds. Database model writes must not
 /// mutate shared state themselves.
-///
-/// This currently coordinates only process-local Space runtimes and cache entries. Before adding
-/// multi-node deployment, broadcast runtime changes and cache invalidations across server nodes.
 #[derive(Default)]
 pub(crate) struct CommittedChanges {
     space_deltas: HashMap<Uuid, Vec<SpaceDelta>>,

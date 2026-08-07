@@ -61,7 +61,7 @@ async fn create(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<Note, AppError> {
-    let session = authenticate(&req).await?;
+    let session = authenticate(ctx, &req).await?;
     let payload: CreateNote = parse_body(req).await?;
     let mutation = ctx.space_store.acquire_mutation(payload.space_id).await?;
     let access = resolve_space_access(ctx, payload.space_id, Some(session.user_id)).await?;
@@ -107,7 +107,7 @@ async fn create(
 }
 
 async fn edit(ctx: &crate::context::AppContext, req: Request<impl Body>) -> Result<Note, AppError> {
-    let session = authenticate(&req).await?;
+    let session = authenticate(ctx, &req).await?;
     let payload: EditNote = parse_body(req).await?;
     let mutation = ctx.space_store.acquire_mutation(payload.space_id).await?;
     let note = ctx
@@ -163,7 +163,7 @@ async fn archive(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<bool, AppError> {
-    let session = authenticate(&req).await?;
+    let session = authenticate(ctx, &req).await?;
     let payload: ArchiveNote = parse_body(req).await?;
     let mutation = ctx.space_store.acquire_mutation(payload.space_id).await?;
     let note = ctx
@@ -201,7 +201,7 @@ async fn restore(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<bool, AppError> {
-    let session = authenticate(&req).await?;
+    let session = authenticate(ctx, &req).await?;
     let payload: RestoreNote = parse_body(req).await?;
     let mutation = ctx.space_store.acquire_mutation(payload.space_id).await?;
     let note = ctx
@@ -241,7 +241,7 @@ async fn query(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<Note, AppError> {
-    let session = authenticate_optional(&req).await?;
+    let session = authenticate_optional(ctx, &req).await?;
     let QueryNote { space_id, note_id } = parse_query(req.uri())?;
     let note = Note::get_by_id(&ctx.db, space_id, note_id)
         .await?
@@ -259,7 +259,7 @@ async fn by_space(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<Vec<NoteMetadata>, AppError> {
-    let session = authenticate_optional(&req).await?;
+    let session = authenticate_optional(ctx, &req).await?;
     let ListNotes {
         space_id,
         include_archived,
@@ -288,7 +288,7 @@ async fn content_revisions(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<Vec<NoteContentRevision>, AppError> {
-    let session = authenticate_optional(&req).await?;
+    let session = authenticate_optional(ctx, &req).await?;
     let QueryNote { space_id, note_id } = parse_query(req.uri())?;
     let note = ctx
         .space_store

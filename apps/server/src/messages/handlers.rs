@@ -41,7 +41,7 @@ async fn send(
     req: Request<impl Body>,
 ) -> Result<Message, AppError> {
     let start_time = std::time::Instant::now();
-    let session = authenticate(&req).await?;
+    let session = authenticate(ctx, &req).await?;
     SEND_MESSAGE_LIMITER
         .check_key(&session.user_id)
         .map_err(|_| AppError::LimitExceeded("Too many messages, please try again later."))?;
@@ -166,7 +166,7 @@ async fn edit(
     req: Request<impl Body>,
 ) -> Result<Message, AppError> {
     let start_time = std::time::Instant::now();
-    let session = authenticate(&req).await?;
+    let session = authenticate(ctx, &req).await?;
     let edit_message = interface::parse_large_body::<EditMessage>(req).await?;
     let EditMessage {
         message_id,
@@ -223,7 +223,7 @@ async fn move_between(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<bool, AppError> {
-    let session = authenticate(&req).await?;
+    let session = authenticate(ctx, &req).await?;
     let MoveMessageBetween {
         message_id,
         channel_id,
@@ -286,7 +286,10 @@ async fn query(
     req: Request<impl Body>,
 ) -> Result<Message, AppError> {
     let interface::IdQuery { id } = interface::parse_query(req.uri())?;
-    let user_id = authenticate(&req).await.ok().map(|session| session.user_id);
+    let user_id = authenticate(ctx, &req)
+        .await
+        .ok()
+        .map(|session| session.user_id);
     Message::get(&ctx.db, &id, user_id.as_ref())
         .await
         .or_not_found()
@@ -355,7 +358,7 @@ async fn delete(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<Message, AppError> {
-    let session = authenticate(&req).await?;
+    let session = authenticate(ctx, &req).await?;
     let MessageIdQuery { id, space_id } = interface::parse_query(req.uri())?;
     let message = Message::get(&ctx.db, &id, Some(&session.user_id))
         .await
@@ -377,7 +380,7 @@ async fn toggle_fold(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<Message, AppError> {
-    let session = authenticate(&req).await?;
+    let session = authenticate(ctx, &req).await?;
     let MessageIdQuery { id, space_id } = interface::parse_query(req.uri())?;
     let message = Message::get(&ctx.db, &id, Some(&session.user_id))
         .await
@@ -409,7 +412,7 @@ async fn by_channel(
         before,
     } = parse_query(req.uri())?;
 
-    let session = authenticate(&req).await;
+    let session = authenticate(ctx, &req).await;
     let current_user_id = session.as_ref().ok().map(|session| session.user_id);
     let resolved = ctx
         .space_store
@@ -480,7 +483,7 @@ async fn search(
     }
     const WINDOW_SIZE: i64 = 200;
 
-    let session = authenticate(&req).await;
+    let session = authenticate(ctx, &req).await;
     let current_user_id = session.as_ref().ok().map(|session| session.user_id);
     let resolved = ctx
         .space_store

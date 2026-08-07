@@ -1,9 +1,58 @@
-use std::env;
-use std::sync::LazyLock;
-
-use std::sync::OnceLock as OnceCell;
-
 use crate::error::AppError;
+use ring::hmac;
+use std::sync::Arc;
+
+#[derive(Clone)]
+pub struct Signer(Arc<hmac::Key>);
+
+impl Signer {
+    pub(crate) fn new(secret: &str) -> Self {
+        use ring::digest;
+
+        let digest = digest::digest(&digest::SHA256, secret.as_bytes());
+        Self(Arc::new(hmac::Key::new(hmac::HMAC_SHA256, digest.as_ref())))
+    }
+
+    pub fn sign(&self, message: &str) -> hmac::Tag {
+        hmac::sign(&self.0, message.as_bytes())
+    }
+
+    pub fn verify(&self, message: &str, signature: &str) -> Result<(), anyhow::Error> {
+        use anyhow::Context;
+        use base64::{Engine as _, engine::general_purpose};
+
+        let signature = signature.trim();
+        let signature = general_purpose::URL_SAFE_NO_PAD
+            .decode(signature)
+            .or_else(|_| general_purpose::URL_SAFE.decode(signature))
+            .or_else(|_| general_purpose::STANDARD_NO_PAD.decode(signature))
+            .or_else(|_| general_purpose::STANDARD.decode(signature))
+            .context("Failed to decode signature")?;
+        hmac::verify(&self.0, message.as_bytes(), &signature)
+            .map_err(|_| anyhow::anyhow!("Failed to verify signature of message {}", message))
+    }
+}
+
+#[derive(Clone, Default)]
+pub struct AppConfig {
+    pub ci: bool,
+    pub debug: bool,
+    pub public_media_url: Option<String>,
+    pub app_url: Option<String>,
+    pub site_url: Option<String>,
+    pub sentry_dsn: Option<String>,
+    pub sentry_host: String,
+    pub sentry_project_ids: Vec<String>,
+    pub discourse_sso_secret: Option<String>,
+    pub secret: Option<String>,
+}
+
+pub(crate) struct SpaceList {
+    pub(crate) spaces: Vec<crate::spaces::Space>,
+    pub(crate) instant: std::time::Instant,
+}
+
+pub(crate) type SpaceListCache = tokio::sync::OnceCell<arc_swap::ArcSwap<SpaceList>>;
 
 /// Shared application context that holds commonly used resources
 #[derive(Clone)]
@@ -14,6 +63,10 @@ pub struct AppContext {
     pub redis: Option<redis::aio::ConnectionManager>,
     /// Lazily loaded, node-local Space runtimes.
     pub(crate) space_store: crate::space_runtime::SpaceStore,
+    pub(crate) space_list_cache: Arc<SpaceListCache>,
+    pub(crate) storage: Arc<crate::s3::Storage>,
+    pub(crate) signer: Signer,
+    pub config: AppConfig,
 }
 
 impl AppContext {
@@ -22,59 +75,72 @@ impl AppContext {
         db: sqlx::Pool<sqlx::Postgres>,
         redis: Option<redis::aio::ConnectionManager>,
     ) -> Self {
+        Self::with_config(
+            db,
+            redis,
+            AppConfig::default(),
+            Arc::new(crate::s3::Storage::disabled()),
+        )
+    }
+
+    pub fn with_config(
+        db: sqlx::Pool<sqlx::Postgres>,
+        redis: Option<redis::aio::ConnectionManager>,
+        config: AppConfig,
+        storage: Arc<crate::s3::Storage>,
+    ) -> Self {
+        let secret = config.secret.as_deref().unwrap_or_else(|| {
+            if cfg!(test) {
+                "just a test"
+            } else {
+                panic!("environment variable `SECRET` not present")
+            }
+        });
+        let signer = Signer::new(secret);
         let space_store = crate::space_runtime::SpaceStore::new(db.clone());
         Self {
             db,
             redis,
             space_store,
+            space_list_cache: Arc::new(tokio::sync::OnceCell::const_new()),
+            storage,
+            signer,
+            config,
         }
     }
-}
 
-static DEBUG: OnceCell<bool> = OnceCell::new();
-static SECRET: OnceCell<String> = OnceCell::new();
+    pub fn ci(&self) -> bool {
+        self.config.ci
+    }
 
-fn env_bool<T: AsRef<str>>(s: T) -> bool {
-    let s = s.as_ref().trim();
-    !(s.is_empty() || s == "0" || s.eq_ignore_ascii_case("false"))
-}
+    pub fn debug(&self) -> bool {
+        self.config.debug
+    }
 
-pub fn ci() -> bool {
-    env::var("CI").map(env_bool).unwrap_or(false)
-}
+    pub fn media_public_url(&self) -> &str {
+        self.config
+            .public_media_url
+            .as_deref()
+            .unwrap_or_default()
+            .trim_end_matches('/')
+    }
 
-pub fn debug() -> bool {
-    *DEBUG.get_or_init(|| env::var("BOLUO_DEBUG").map(env_bool).unwrap_or(false))
-}
+    pub fn get_site_url(&self) -> Result<&str, AppError> {
+        self.config
+            .site_url
+            .as_deref()
+            .ok_or(AppError::Unexpected(anyhow::anyhow!("site_url not set")))
+    }
 
-pub fn media_public_url() -> &'static str {
-    static MEDIA_PUBLIC_URL: OnceCell<String> = OnceCell::new();
-    MEDIA_PUBLIC_URL.get_or_init(|| {
-        let url = env::var("PUBLIC_MEDIA_URL").unwrap_or_default();
-        url.trim_end_matches('/').to_owned()
-    })
-}
+    pub fn secret(&self) -> Option<&str> {
+        self.config.secret.as_deref()
+    }
 
-pub static PUBLIC_MEDIA_URL: LazyLock<Option<String>> =
-    LazyLock::new(|| env::var("PUBLIC_MEDIA_URL").ok());
+    pub(crate) fn signer(&self) -> &Signer {
+        &self.signer
+    }
 
-pub static APP_URL: LazyLock<Option<String>> = LazyLock::new(|| env::var("APP_URL").ok());
-
-pub static SITE_URL: LazyLock<Option<String>> = LazyLock::new(|| env::var("SITE_URL").ok());
-
-pub static SENTRY_DSN: LazyLock<Option<String>> = LazyLock::new(|| env::var("SENTRY_DSN").ok());
-
-pub fn get_site_url() -> Result<&'static str, AppError> {
-    SITE_URL
-        .as_deref()
-        .ok_or(AppError::Unexpected(anyhow::anyhow!("site_url not set")))
-}
-
-pub fn secret() -> &'static str {
-    let secret_string = if cfg!(test) {
-        "just a test".to_string()
-    } else {
-        env::var("SECRET").expect("environment variable `SECRET` not present")
-    };
-    SECRET.get_or_init(|| secret_string)
+    pub(crate) fn storage(&self) -> &crate::s3::Storage {
+        &self.storage
+    }
 }

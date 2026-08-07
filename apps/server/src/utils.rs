@@ -1,6 +1,4 @@
-use anyhow::Context;
 use chrono::prelude::*;
-use ring::hmac;
 use ring::rand::SecureRandom;
 use std::sync::OnceLock as OnceCell;
 use uuid::Uuid;
@@ -33,16 +31,6 @@ pub fn id() -> Uuid {
         now.timestamp_subsec_nanos(),
     );
     Uuid::new_v1(timestamp, node_id)
-}
-
-fn key() -> &'static hmac::Key {
-    use crate::context::secret;
-    use ring::digest;
-    static KEY: OnceCell<hmac::Key> = OnceCell::new();
-    KEY.get_or_init(|| {
-        let digest = digest::digest(&digest::SHA256, secret().as_bytes());
-        hmac::Key::new(hmac::HMAC_SHA256, digest.as_ref())
-    })
 }
 
 pub fn whitespace_only<T: AsRef<str>>(s: &T) -> bool {
@@ -80,10 +68,6 @@ pub fn estimated_json_value_size(value: &serde_json::Value) -> usize {
         }
 }
 
-pub fn sign(message: &str) -> hmac::Tag {
-    hmac::sign(key(), message.as_bytes())
-}
-
 pub fn sha1(data: &[u8]) -> ring::digest::Digest {
     ring::digest::digest(&ring::digest::SHA1_FOR_LEGACY_USE_ONLY, data)
 }
@@ -99,21 +83,6 @@ pub fn url_percent_encode(s: &str) -> String {
         .add(b'&')
         .add(b'=');
     utf8_percent_encode(s, QUERY).to_string()
-}
-
-pub fn verify(message: &str, signature: &str) -> Result<(), anyhow::Error> {
-    use base64::{Engine as _, engine::general_purpose};
-
-    let signature = signature.trim();
-
-    let signature = general_purpose::URL_SAFE_NO_PAD
-        .decode(signature)
-        .or_else(|_| general_purpose::URL_SAFE.decode(signature))
-        .or_else(|_| general_purpose::STANDARD_NO_PAD.decode(signature))
-        .or_else(|_| general_purpose::STANDARD.decode(signature))
-        .context("Failed to decode signature")?;
-    hmac::verify(key(), message.as_bytes(), &signature)
-        .map_err(|_| anyhow::anyhow!("Failed to verify signature of message {}", message))
 }
 
 pub fn timestamp() -> i64 {
@@ -162,18 +131,20 @@ pub fn is_true(v: &bool) -> bool {
 fn test_sign() {
     use base64::{Engine as _, engine::general_purpose::STANDARD as base64_engine};
 
+    let signer = crate::context::Signer::new("just a test");
     let message = "hello, world";
-    let signature = sign(message);
+    let signature = signer.sign(message);
     let signature = base64_engine.encode(signature);
-    verify(message, &signature).unwrap();
+    signer.verify(message, &signature).unwrap();
 }
 
 #[test]
 fn test_verify_url_safe_base64() {
     use base64::{Engine as _, engine::general_purpose};
 
+    let signer = crate::context::Signer::new("just a test");
     let message = "hello, world";
-    let signature = sign(message);
+    let signature = signer.sign(message);
 
     // Test all supported base64 formats
     let formats = vec![
@@ -185,7 +156,7 @@ fn test_verify_url_safe_base64() {
 
     for (format_name, encoder) in formats {
         let encoded_signature = encoder.encode(signature.as_ref());
-        let result = verify(message, &encoded_signature);
+        let result = signer.verify(message, &encoded_signature);
         assert!(
             result.is_ok(),
             "Verification failed for format {}: {}",
@@ -199,13 +170,14 @@ fn test_verify_url_safe_base64() {
 fn test_verify_mixed_base64_formats() {
     use base64::{Engine as _, engine::general_purpose};
 
+    let signer = crate::context::Signer::new("just a test");
     let message = "test.message.1234567890";
-    let signature = sign(message);
+    let signature = signer.sign(message);
 
     // Test that URL_SAFE format works (this is what email verification uses)
     let url_safe_signature = general_purpose::URL_SAFE_NO_PAD.encode(signature.as_ref());
     assert!(
-        verify(message, &url_safe_signature).is_ok(),
+        signer.verify(message, &url_safe_signature).is_ok(),
         "URL_SAFE_NO_PAD format should work"
     );
 
@@ -226,11 +198,12 @@ fn test_verify_mixed_base64_formats() {
 
 #[test]
 fn test_verify_invalid_base64() {
+    let signer = crate::context::Signer::new("just a test");
     let message = "hello, world";
     let invalid_signatures = vec!["invalid-base64!", "=invalid=", "inv@lid#sig", ""];
 
     for invalid_sig in invalid_signatures {
-        let result = verify(message, invalid_sig);
+        let result = signer.verify(message, invalid_sig);
         assert!(
             result.is_err(),
             "Invalid signature '{}' should fail verification",

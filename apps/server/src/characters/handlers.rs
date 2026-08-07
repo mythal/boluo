@@ -73,7 +73,7 @@ async fn query(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<Character, AppError> {
-    let session = authenticate_optional(&req).await?;
+    let session = authenticate_optional(ctx, &req).await?;
     let QueryCharacter {
         space_id,
         character_id,
@@ -102,7 +102,7 @@ async fn by_space(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<Vec<Character>, AppError> {
-    let session = authenticate_optional(&req).await?;
+    let session = authenticate_optional(ctx, &req).await?;
     let ListCharacters {
         space_id,
         include_archived,
@@ -151,7 +151,7 @@ async fn usages(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<Vec<CharacterUsage>, AppError> {
-    let session = authenticate_optional(&req).await?;
+    let session = authenticate_optional(ctx, &req).await?;
     let QueryCharacter {
         space_id,
         character_id,
@@ -174,7 +174,7 @@ async fn check_identifier(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<bool, AppError> {
-    let session = authenticate(&req).await?;
+    let session = authenticate(ctx, &req).await?;
     let CheckCharacterIdentifier {
         space_id,
         identifier,
@@ -199,7 +199,7 @@ async fn create(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<Character, AppError> {
-    let session = authenticate(&req).await?;
+    let session = authenticate(ctx, &req).await?;
     let CreateCharacter {
         space_id,
         name,
@@ -259,7 +259,7 @@ async fn edit(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<Character, AppError> {
-    let session = authenticate(&req).await?;
+    let session = authenticate(ctx, &req).await?;
     let EditCharacter {
         space_id,
         character_id,
@@ -378,7 +378,7 @@ async fn archive(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<Character, AppError> {
-    let session = authenticate(&req).await?;
+    let session = authenticate(ctx, &req).await?;
     let ArchiveCharacter {
         space_id,
         character_id,
@@ -399,7 +399,7 @@ async fn restore(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<Character, AppError> {
-    let session = authenticate(&req).await?;
+    let session = authenticate(ctx, &req).await?;
     let RestoreCharacter {
         space_id,
         character_id,

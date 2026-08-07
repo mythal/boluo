@@ -1,30 +1,15 @@
 //! Sentry tunnel handler.
 //!
 //! [Documentation](https://docs.sentry.io/platforms/javascript/troubleshooting/#using-the-tunnel-option)
-use std::collections::HashSet;
-use std::env;
-use std::sync::LazyLock;
-
 use anyhow::anyhow;
 use hyper::body::Incoming;
 use hyper::{Method, Request};
 use serde_json::Value;
 
+use crate::context::AppContext;
 use crate::error::AppError;
 
-static SENTRY_HOST: LazyLock<String> =
-    LazyLock::new(|| env::var("SENTRY_HOST").unwrap_or_else(|_| "sentry.mythal.net".to_string()));
-
-static KNOWN_PROJECT_IDS: LazyLock<HashSet<String>> = LazyLock::new(|| {
-    env::var("SENTRY_PROJECT_IDS")
-        .unwrap_or_default()
-        .split(',')
-        .filter(|s| !s.trim().is_empty())
-        .map(|s| s.trim().to_string())
-        .collect()
-});
-
-pub async fn handler(req: Request<Incoming>) -> crate::interface::Response {
+pub async fn handler(ctx: &AppContext, req: Request<Incoming>) -> crate::interface::Response {
     fn error(e: AppError) -> crate::interface::Response {
         let status = e.status_code();
         let body = if let Ok(bytes) = serde_json::to_vec(&serde_json::json!({
@@ -95,7 +80,7 @@ pub async fn handler(req: Request<Incoming>) -> crate::interface::Response {
     };
 
     let dsn_host = dsn_url.host_str().unwrap_or("");
-    if !dsn_host.eq_ignore_ascii_case(&SENTRY_HOST) {
+    if !dsn_host.eq_ignore_ascii_case(&ctx.config.sentry_host) {
         return error(AppError::BadRequest("DSN host not allowed".to_string()));
     }
 
@@ -105,14 +90,19 @@ pub async fn handler(req: Request<Incoming>) -> crate::interface::Response {
         .trim_end_matches('/')
         .to_string();
 
-    if KNOWN_PROJECT_IDS.is_empty() {
+    if ctx.config.sentry_project_ids.is_empty() {
         tracing::warn!("SENTRY_PROJECT_IDS not configured, rejecting tunnel request");
         return error(AppError::BadRequest(
             "Sentry tunnel not configured".to_string(),
         ));
     }
 
-    if !KNOWN_PROJECT_IDS.contains(&project_id) {
+    if !ctx
+        .config
+        .sentry_project_ids
+        .iter()
+        .any(|id| id == &project_id)
+    {
         tracing::warn!("Unknown project ID: {}", project_id);
         return error(AppError::BadRequest("Project ID not allowed".to_string()));
     }

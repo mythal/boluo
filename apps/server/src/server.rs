@@ -103,7 +103,7 @@ async fn router(
         return csrf::get_csrf_token(ctx, req).await.map(ok_response);
     }
     if path.starts_with("/api/tunnel") {
-        return Ok(sentry_tunnel::handler(req).await);
+        return Ok(sentry_tunnel::handler(ctx, req).await);
     }
     table!("/api/info", info::router);
     table!("/api/assets", assets::router);
@@ -227,18 +227,21 @@ async fn handler(
     .await
 }
 
-#[tracing::instrument]
-async fn storage_check() {
+#[tracing::instrument(skip(storage))]
+async fn storage_check(storage: &s3::Storage, ci: bool) {
     // Skip in CI
-    if context::ci() {
+    if ci {
         return;
     }
-    let mut action = s3::get_bucket().put_object(Some(s3::get_credentials()), "check");
+    let mut action = storage
+        .bucket()
+        .put_object(Some(storage.credentials()), "check");
     action
         .headers_mut()
         .insert("content-type", "application/octet-stream");
     let url = action.sign(std::time::Duration::from_secs(60));
-    s3::get_http_client()
+    storage
+        .client()
         .put(url.as_str())
         .header("content-type", "application/octet-stream")
         .body(Vec::<u8>::new())
@@ -249,6 +252,34 @@ async fn storage_check() {
 }
 #[derive(Parser)]
 struct Args {
+    #[clap(long, env = "CI", default_value_t = false)]
+    ci: bool,
+    #[clap(long, env = "BOLUO_DEBUG", default_value_t = false)]
+    debug: bool,
+    #[clap(long, env = "PUBLIC_MEDIA_URL")]
+    public_media_url: Option<String>,
+    #[clap(long, env = "APP_URL")]
+    app_url: Option<String>,
+    #[clap(long, env = "SITE_URL")]
+    site_url: Option<String>,
+    #[clap(long, env = "SENTRY_DSN")]
+    sentry_dsn: Option<String>,
+    #[clap(long, env = "SENTRY_HOST", default_value = "sentry.mythal.net")]
+    sentry_host: String,
+    #[clap(long, env = "SENTRY_PROJECT_IDS", value_delimiter = ',')]
+    sentry_project_ids: Vec<String>,
+    #[clap(long, env = "DISCOURSE_SSO_SECRET")]
+    discourse_sso_secret: Option<String>,
+    #[clap(long, env = "SECRET")]
+    secret: Option<String>,
+    #[clap(long, env = "S3_ENDPOINT_URL")]
+    s3_endpoint_url: Option<String>,
+    #[clap(long, env = "S3_BUCKET_NAME")]
+    s3_bucket_name: Option<String>,
+    #[clap(long, env = "S3_ACCESS_KEY_ID")]
+    s3_access_key_id: Option<String>,
+    #[clap(long, env = "S3_SECRET_ACCESS_KEY")]
+    s3_secret_access_key: Option<String>,
     #[clap(long, help = "check only", default_value = "false")]
     check: bool,
     #[clap(long, help = "export typescript types", default_value = "false")]
@@ -301,12 +332,12 @@ fn disk_cache_config(args: &Args) -> Option<disk_cache::Config> {
 async fn main() {
     use tracing_subscriber::filter::{EnvFilter, LevelFilter};
 
+    config::load();
     let args = Args::parse();
     if args.types {
         typegen::prepare();
     }
 
-    config::load();
     let filter = EnvFilter::builder()
         .with_default_directive(LevelFilter::INFO.into())
         .from_env_lossy();
@@ -317,11 +348,18 @@ async fn main() {
         return;
     }
 
+    let storage = std::sync::Arc::new(s3::Storage::new(s3::StorageConfig {
+        endpoint_url: args.s3_endpoint_url.clone(),
+        bucket_name: args.s3_bucket_name.clone(),
+        access_key_id: args.s3_access_key_id.clone(),
+        secret_access_key: args.s3_secret_access_key.clone(),
+    }));
+
     let port: u16 = env::var("PORT")
         .unwrap_or("3000".to_string())
         .parse()
         .expect("PORT must be a number");
-    storage_check().await;
+    storage_check(&storage, args.ci).await;
 
     let ip_addr: IpAddr = {
         let host_env = env::var("HOST").unwrap_or("127.0.0.1".to_string());
@@ -353,13 +391,37 @@ async fn main() {
     redis::check(redis_conn.as_mut()).await;
     tracing::info!("Redis is ready");
 
-    if context::SITE_URL.is_none() {
+    let ctx_config = context::AppConfig {
+        ci: args.ci,
+        debug: args.debug,
+        public_media_url: args.public_media_url.clone(),
+        app_url: args.app_url.clone(),
+        site_url: args.site_url.clone(),
+        sentry_dsn: args.sentry_dsn.clone(),
+        sentry_host: args.sentry_host.clone(),
+        sentry_project_ids: args
+            .sentry_project_ids
+            .iter()
+            .map(|id| id.trim().to_owned())
+            .filter(|id| !id.is_empty())
+            .collect(),
+        discourse_sso_secret: args.discourse_sso_secret.clone(),
+        secret: args.secret.clone(),
+    };
+    let ctx = std::sync::Arc::new(context::AppContext::with_config(
+        pool.clone(),
+        redis_conn,
+        ctx_config,
+        storage,
+    ));
+
+    if ctx.config.site_url.is_none() {
         tracing::error!("SITE_URL is not set");
     }
-    if context::APP_URL.is_none() {
+    if ctx.config.app_url.is_none() {
         tracing::error!("APP_URL is not set");
     }
-    if context::PUBLIC_MEDIA_URL.is_none() {
+    if ctx.config.public_media_url.is_none() {
         tracing::error!("PUBLIC_MEDIA_URL is not set");
     }
 
@@ -369,8 +431,6 @@ async fn main() {
         return;
     }
 
-    // Initialize AppContext
-    let ctx = std::sync::Arc::new(context::AppContext::new(pool.clone(), redis_conn));
     tracing::info!("AppContext initialized");
 
     if let Ok(exporter_listen) = std::env::var("PROMETHEUS_EXPORTER") {

@@ -159,7 +159,7 @@ async fn members<B: Body>(
             .cloned()
             .ok_or(AppError::NotFound("channel"))?;
     }
-    let current_user_id = authenticate_optional(&req)
+    let current_user_id = authenticate_optional(ctx, &req)
         .await?
         .map(|session| session.user_id);
     if !channel.is_public && current_user_id.is_none() {
@@ -251,7 +251,7 @@ async fn query_with_related(
     req: Request<impl Body>,
 ) -> Result<ChannelWithRelated, AppError> {
     let QueryChannel { id, space_id } = parse_query(req.uri())?;
-    let session = authenticate(&req).await.ok();
+    let session = authenticate(ctx, &req).await.ok();
 
     let resolved = ctx
         .space_store
@@ -381,7 +381,7 @@ async fn create(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<ChannelWithMember, AppError> {
-    let session = authenticate(&req).await?;
+    let session = authenticate(ctx, &req).await?;
     CREATE_CHANNEL_LIMITER
         .check_key(&session.user_id)
         .map_err(|_| AppError::LimitExceeded("Too many channels, please try again later."))?;
@@ -397,7 +397,7 @@ async fn edit(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<Channel, AppError> {
-    let session = authenticate(&req).await?;
+    let session = authenticate(ctx, &req).await?;
     let EditChannel {
         channel_id,
         name,
@@ -487,7 +487,7 @@ async fn edit_topic(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<Channel, AppError> {
-    let session = authenticate(&req).await?;
+    let session = authenticate(ctx, &req).await?;
     let EditChannelTopic { channel_id, topic } = interface::parse_body(req).await?;
 
     let mutation_space_id = Channel::resolve_owning_space_id(&ctx.db, &channel_id)
@@ -549,7 +549,7 @@ async fn edit_masters(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<bool, AppError> {
-    let session = authenticate(&req).await?;
+    let session = authenticate(ctx, &req).await?;
     let GrantOrRemoveChannelMaster {
         channel_id,
         grant_or_revoke,
@@ -597,7 +597,7 @@ async fn add_member(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<ChannelWithMember, AppError> {
-    let session = authenticate(&req).await?;
+    let session = authenticate(ctx, &req).await?;
     let AddChannelMember {
         channel_id,
         user_id,
@@ -644,7 +644,7 @@ async fn edit_member(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<ChannelMember, AppError> {
-    let session = authenticate(&req).await?;
+    let session = authenticate(ctx, &req).await?;
     let EditChannelMember {
         channel_id,
         character_name,
@@ -723,7 +723,7 @@ async fn join(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<ChannelWithMember, AppError> {
-    let session = authenticate(&req).await?;
+    let session = authenticate(ctx, &req).await?;
     let JoinChannel {
         channel_id,
         character_name,
@@ -788,7 +788,7 @@ async fn leave(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<bool, AppError> {
-    let session = authenticate(&req).await?;
+    let session = authenticate(ctx, &req).await?;
     let IdQuery { id } = parse_query(req.uri())?;
     let space_id = Channel::resolve_owning_space_id(&ctx.db, &id)
         .await
@@ -807,7 +807,7 @@ async fn leave(
 }
 
 async fn kick(ctx: &crate::context::AppContext, req: Request<impl Body>) -> Result<bool, AppError> {
-    let session = authenticate(&req).await?;
+    let session = authenticate(ctx, &req).await?;
     let KickFromChannel {
         space_id,
         channel_id,
@@ -896,7 +896,7 @@ async fn delete(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<bool, AppError> {
-    let session = authenticate(&req).await?;
+    let session = authenticate(ctx, &req).await?;
     let IdQuery { id } = parse_query(req.uri())?;
 
     let mutation_space_id = Channel::resolve_owning_space_id(&ctx.db, &id)
@@ -928,7 +928,7 @@ async fn by_space(
     req: Request<impl Body>,
 ) -> Result<Vec<ChannelWithMaybeMember>, AppError> {
     let IdQuery { id: space_id } = parse_query(req.uri())?;
-    let session = authenticate(&req).await.ok();
+    let session = authenticate(ctx, &req).await.ok();
     // This may extend access to old visible data, but cannot expose newer protected data.
     if let Some(snapshot) = ctx.space_store.loaded_snapshot_maybe_stale(space_id) {
         metrics::counter!("boluo_server_space_runtime_read_total", "result" => "hit").increment(1);
@@ -979,7 +979,7 @@ async fn export(
         space_id,
         after,
     } = parse_query(req.uri())?;
-    let session = authenticate(&req).await?;
+    let session = authenticate(ctx, &req).await?;
 
     let resolved = ctx
         .space_store

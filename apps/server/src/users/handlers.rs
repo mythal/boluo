@@ -5,7 +5,6 @@ use super::api::{
 };
 use super::models::User;
 use crate::channels::Channel;
-use crate::context::get_site_url;
 use crate::error::{AppError, Find, ValidationFailed};
 use crate::interface::{self, response};
 use crate::interface::{missing, ok_response, parse_body, parse_query};
@@ -93,7 +92,7 @@ async fn register(
     metrics::counter!("boluo_server_users_total").increment(1);
 
     // Send email verification
-    send_email_verification(&user.email, &user.id, None).await?;
+    send_email_verification(ctx, &user.email, &user.id, None).await?;
 
     tracing::info!(
         username = %user.username,
@@ -115,7 +114,7 @@ pub async fn query_user(
     let id = if let Some(id) = id {
         id
     } else {
-        match authenticate(&req).await {
+        match authenticate(ctx, &req).await {
             Ok(session) => session.user_id,
             Err(AppError::Unauthenticated(_)) => return Ok(None),
             Err(e) => return Err(e),
@@ -134,7 +133,7 @@ pub async fn query_self(
 ) -> Result<Option<User>, AppError> {
     use crate::session::authenticate;
 
-    let session = authenticate(&req).await;
+    let session = authenticate(ctx, &req).await;
     match session {
         Ok(session) => Ok(Some(
             User::get_by_id_with_cache(&ctx.db, &session.user_id)
@@ -151,7 +150,7 @@ pub async fn query_settings(
     req: Request<impl Body>,
 ) -> Result<serde_json::Value, AppError> {
     use crate::session::authenticate;
-    let Ok(session) = authenticate(&req).await else {
+    let Ok(session) = authenticate(ctx, &req).await else {
         return Ok(serde_json::json!({}));
     };
 
@@ -219,7 +218,7 @@ pub async fn login<B: Body>(
     let user_id = user.id;
     drop(conn);
     let session = session::start(user_id).await?;
-    let token: String = session::token(&session.id);
+    let token: String = session::token(ctx.signer(), &session.id);
     let token = if form.with_token { Some(token) } else { None };
     let my_spaces = Space::get_by_user_with_cache(&ctx.db, user_id).await?;
     let mut conn = ctx.db.acquire().await?;
@@ -239,7 +238,13 @@ pub async fn login<B: Body>(
     let headers = response.headers_mut();
     add_settings_cookie(origin.as_deref(), &settings, headers);
     if !form.with_token {
-        add_session_cookie(origin.as_deref(), &session.id, is_debug, headers);
+        add_session_cookie(
+            ctx.signer(),
+            origin.as_deref(),
+            &session.id,
+            is_debug,
+            headers,
+        );
     }
     Ok(response)
 }
@@ -250,7 +255,7 @@ pub async fn logout(
 ) -> Result<Response<Vec<u8>>, AppError> {
     use crate::session::authenticate;
 
-    if let Ok(session) = authenticate(&req).await {
+    if let Ok(session) = authenticate(ctx, &req).await {
         revoke_session(&ctx.db, session.id).await?;
     }
     let mut response = ok_response(true);
@@ -263,7 +268,7 @@ pub async fn edit(
     req: Request<impl Body>,
 ) -> Result<User, AppError> {
     use crate::csrf::authenticate;
-    let session = authenticate(&req).await?;
+    let session = authenticate(ctx, &req).await?;
     let EditUser {
         nickname,
         bio,
@@ -296,7 +301,7 @@ pub async fn update_settings(
     req: Request<impl Body>,
 ) -> Result<serde_json::Value, AppError> {
     use crate::csrf::authenticate;
-    let session = authenticate(&req).await?;
+    let session = authenticate(ctx, &req).await?;
     let settings: serde_json::Value = parse_body(req).await?;
     let user_ext = UserExt::update_settings(&ctx.db, session.user_id, settings).await?;
     Ok(user_ext.settings)
@@ -307,7 +312,7 @@ pub async fn partial_update_settings(
     req: Request<impl Body>,
 ) -> Result<serde_json::Value, AppError> {
     use crate::csrf::authenticate;
-    let session = authenticate(&req).await?;
+    let session = authenticate(ctx, &req).await?;
     let settings: serde_json::Value = parse_body(req).await?;
     let user_ext = UserExt::partial_update_settings(&ctx.db, session.user_id, settings).await?;
     Ok(user_ext.settings)
@@ -318,14 +323,14 @@ pub async fn edit_avatar(
     req: Request<Incoming>,
 ) -> Result<User, AppError> {
     use crate::csrf::authenticate;
-    let session = authenticate(&req).await?;
+    let session = authenticate(ctx, &req).await?;
     check_upload_rate_limit(&session.user_id)?;
     let params = upload_params(req.uri())?;
     if !is_image(&params.mime_type) {
         return Err(ValidationFailed("Incorrect File Format").into());
     }
     let media_id = id();
-    let media = upload(req, media_id, params, 1024 * 1024).await?;
+    let media = upload(ctx.storage(), req, media_id, params, 1024 * 1024).await?;
     let mut conn = ctx.db.acquire().await?;
     let media = media.create(&mut *conn, session.user_id, "avatar").await?;
     User::edit(
@@ -345,7 +350,7 @@ pub async fn remove_avatar(
     req: Request<impl Body>,
 ) -> Result<User, AppError> {
     use crate::csrf::authenticate;
-    let session = authenticate(&req).await?;
+    let session = authenticate(ctx, &req).await?;
 
     User::remove_avatar(&ctx.db, &session.user_id)
         .await
@@ -413,7 +418,7 @@ pub async fn reset_password(
             .to_string()
     };
 
-    let site_url = get_site_url()?;
+    let site_url = ctx.get_site_url()?;
 
     let lang = lang.as_deref().unwrap_or("en");
     match lang {
@@ -494,14 +499,15 @@ pub async fn reset_password_confirm(
 }
 
 async fn send_email_verification(
+    ctx: &crate::context::AppContext,
     email: &str,
     user_id: &Uuid,
     lang: Option<&str>,
 ) -> Result<(), AppError> {
-    let token = User::generate_email_verification_token(user_id);
+    let token = User::generate_email_verification_token(ctx.signer(), user_id);
     let lang = lang.unwrap_or("en");
 
-    let site_url = get_site_url()?;
+    let site_url = ctx.get_site_url()?;
 
     match lang {
         "zh" | "zh-CN" | "zh_CN" => {
@@ -559,7 +565,7 @@ pub async fn verify_email(
     use crate::users::api::VerifyEmail;
     let VerifyEmail { token } = parse_query(req.uri())?;
 
-    let user_id = User::verify_email_verification_token(&token)
+    let user_id = User::verify_email_verification_token(ctx.signer(), &token)
         .map_err(|e| AppError::BadRequest(format!("Invalid verification token: {}", e)))?;
 
     User::verify_email(&ctx.db, &user_id).await?;
@@ -579,7 +585,7 @@ pub async fn resend_email_verification(
     use crate::session::authenticate;
     use crate::users::api::ResendEmailVerification;
 
-    let session = authenticate(&req).await?;
+    let session = authenticate(ctx, &req).await?;
     let ResendEmailVerification { lang } = parse_body(req).await?;
 
     let user = User::get_by_id_with_cache(&ctx.db, &session.user_id)
@@ -601,7 +607,7 @@ pub async fn resend_email_verification(
         email = %user.email,
         "Resending email verification"
     );
-    send_email_verification(&user.email, &user.id, lang.as_deref()).await?;
+    send_email_verification(ctx, &user.email, &user.id, lang.as_deref()).await?;
 
     tracing::info!(
         user_id = %user.id,
@@ -618,21 +624,22 @@ pub async fn check_email_verification_status(
 ) -> Result<EmailVerificationStatus, AppError> {
     use crate::session::authenticate;
 
-    let session = authenticate(&req).await?;
+    let session = authenticate(ctx, &req).await?;
     let is_verified = UserExt::is_email_verified(&ctx.db, session.user_id).await?;
 
     Ok(EmailVerificationStatus { is_verified })
 }
 
 async fn send_email_change_verification(
+    ctx: &crate::context::AppContext,
     new_email: &str,
     user_id: &Uuid,
     lang: Option<&str>,
 ) -> Result<(), AppError> {
-    let token = User::generate_email_change_token(user_id, new_email);
+    let token = User::generate_email_change_token(ctx.signer(), user_id, new_email);
     let lang = lang.unwrap_or("en");
 
-    let site_url = get_site_url()?;
+    let site_url = ctx.get_site_url()?;
 
     match lang {
         "zh" | "zh-CN" | "zh_CN" => {
@@ -690,7 +697,7 @@ pub async fn request_email_change(
     use crate::session::authenticate;
     use crate::users::api::RequestEmailChange;
 
-    let session = authenticate(&req).await?;
+    let session = authenticate(ctx, &req).await?;
     let RequestEmailChange { new_email, lang } = parse_body(req).await?;
 
     let new_email = new_email.trim().to_lowercase();
@@ -720,7 +727,7 @@ pub async fn request_email_change(
         .check_key(&new_email)
         .map_err(|_| AppError::LimitExceeded("This email is requested too many times."))?;
 
-    send_email_change_verification(&new_email, &session.user_id, lang.as_deref()).await?;
+    send_email_change_verification(ctx, &new_email, &session.user_id, lang.as_deref()).await?;
 
     tracing::info!(
         user_id = %session.user_id,
@@ -740,7 +747,7 @@ pub async fn confirm_email_change(
 
     let ConfirmEmailChange { token } = parse_body(req).await?;
 
-    let (user_id, new_email) = User::verify_email_change_token(&token)
+    let (user_id, new_email) = User::verify_email_change_token(ctx.signer(), &token)
         .map_err(|e| AppError::BadRequest(format!("Invalid email change token: {}", e)))?;
 
     let current_user = User::get_by_id_with_cache(&ctx.db, &user_id)
@@ -770,7 +777,6 @@ pub async fn discourse_login(
     req: Request<impl Body>,
 ) -> Result<Response<Vec<u8>>, AppError> {
     use super::api::{DiscourseConnect, DiscoursePayload, DiscourseResponse};
-    use crate::context::media_public_url;
     use crate::session::authenticate;
 
     let current_url = req.uri().to_string();
@@ -782,12 +788,13 @@ pub async fn discourse_login(
 
     tracing::info!("Starting DiscourseConnect SSO authentication");
 
-    // Get the SSO secret from environment
-    static DISCOURSE_SSO_SECRET: LazyLock<Option<String>> =
-        LazyLock::new(|| std::env::var("DISCOURSE_SSO_SECRET").ok());
-    let sso_secret = DISCOURSE_SSO_SECRET.as_ref().ok_or(AppError::BadRequest(
-        "DISCOURSE_SSO_SECRET not configured".to_string(),
-    ))?;
+    let sso_secret = ctx
+        .config
+        .discourse_sso_secret
+        .as_deref()
+        .ok_or(AppError::BadRequest(
+            "DISCOURSE_SSO_SECRET not configured".to_string(),
+        ))?;
 
     // Verify the signature
     let key = hmac::Key::new(hmac::HMAC_SHA256, sso_secret.as_bytes());
@@ -807,10 +814,10 @@ pub async fn discourse_login(
     let payload: DiscoursePayload = serde_urlencoded::from_str(&payload_str)
         .map_err(|_| AppError::BadRequest("Invalid payload format".to_string()))?;
 
-    let site_url = get_site_url()?;
+    let site_url = ctx.get_site_url()?;
 
     // Authenticate the user
-    let session = match authenticate(&req).await {
+    let session = match authenticate(ctx, &req).await {
         Ok(session) => session,
         Err(AppError::Unauthenticated(_)) => {
             // User not authenticated, redirect to login with next parameter
@@ -871,7 +878,7 @@ pub async fn discourse_login(
     // Build avatar URL if user has avatar
     let avatar_url = user
         .avatar_id
-        .map(|avatar_id| format!("{}/{}", media_public_url().trim_end_matches('/'), avatar_id));
+        .map(|avatar_id| format!("{}/{}", ctx.media_public_url(), avatar_id));
 
     // Create response payload
     let response_data = DiscourseResponse {

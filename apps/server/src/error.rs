@@ -19,7 +19,7 @@ pub enum AppError {
     #[error("An unexpected error occurred")]
     Unexpected(anyhow::Error),
     #[error("An unexpected serialize error occurred")]
-    Serialize(serde_json::Error),
+    Serialize(sonic_rs::Error),
     #[error("Bad request: {0}")]
     BadRequest(String),
     #[error("Method not allowed")]

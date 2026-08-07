@@ -230,6 +230,9 @@ fn run_worker_inner(
     mut database: Database,
 ) -> Result<(), CacheError> {
     metrics::gauge!("boluo_server_disk_cache_up").set(1.0);
+    metrics::gauge!("boluo_server_disk_cache_max_file_bytes").set(config.max_file_size as f64);
+    metrics::gauge!("boluo_server_disk_cache_high_watermark_bytes")
+        .set(config.max_file_size.saturating_mul(9) as f64 / 10.0);
 
     let mut pending = Vec::new();
     loop {

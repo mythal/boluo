@@ -7,11 +7,11 @@ use crate::events::preview::{Preview, PreviewDiff, PreviewDiffPost, PreviewPost}
 use crate::info::BasicInfo;
 use crate::messages::Message;
 use crate::spaces::api::SpaceWithRelated;
-use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use std::sync::OnceLock;
 use std::sync::atomic::AtomicU32;
 use thiserror::Error;
+use time::OffsetDateTime;
 use tokio::spawn;
 use tokio_tungstenite::tungstenite::{self, Utf8Bytes};
 use tracing::Instrument as _;
@@ -475,7 +475,11 @@ impl Update {
             start_at,
             cursor_floor,
         } = match updates_receiver.await {
-            Ok(updates) => updates,
+            Ok(Ok(updates)) => updates,
+            Ok(Err(err)) => {
+                tracing::error!(error = %err, "Failed to load cached updates for mailbox {}", mailbox_id);
+                return Err(GetFromStateError::FailedToQuery);
+            }
             Err(err) => {
                 tracing::error!(error = ?err, "Failed to receive updates for mailbox {}", mailbox_id);
                 return Err(GetFromStateError::FailedToQuery);
@@ -730,13 +734,9 @@ struct StartupInfo {
     private_ip: String,
 }
 
-pub async fn initialize_startup_id() -> u16 {
+async fn allocate_startup_id(redis: &mut redis::aio::ConnectionManager) -> u16 {
     use redis::AsyncCommands;
 
-    let Some(mut redis) = crate::redis::conn().await else {
-        tracing::info!("Redis is not available, assuming single node environment");
-        return 0;
-    };
     const NODE_ID_KEY: &str = "node:startup";
     let node_id_string: String = redis
         .incr(NODE_ID_KEY, 1)
@@ -770,7 +770,7 @@ pub async fn initialize_startup_id() -> u16 {
     let node_info = StartupInfo {
         startup: startup_id,
         version: std::env::var("VERSION").unwrap_or_default(),
-        timestamp: Utc::now().timestamp_millis(),
+        timestamp: OffsetDateTime::now_utc().unix_timestamp_nanos() as i64 / 1_000_000,
         machine_id: std::env::var("FLY_MACHINE_ID").unwrap_or_default(),
         private_ip: std::env::var("FLY_PRIVATE_IP").unwrap_or_default(),
     };
@@ -784,23 +784,28 @@ pub async fn initialize_startup_id() -> u16 {
     startup_id
 }
 
-pub fn startup_id() -> u16 {
-    *STARTUP_ID.get_or_init(|| {
-        if cfg!(test) {
-            return 0;
+pub async fn initialize_startup_id(redis: Option<&mut redis::aio::ConnectionManager>) -> u16 {
+    let startup_id = match redis {
+        Some(redis) => allocate_startup_id(redis).await,
+        None => {
+            tracing::info!("Redis is not available, assuming single node environment");
+            0
         }
+    };
+    assert!(
+        STARTUP_ID.set(startup_id).is_ok(),
+        "Startup ID must only be initialized once"
+    );
+    startup_id
+}
 
-        match tokio::runtime::Handle::try_current() {
-            Ok(handle) => tokio::task::block_in_place(|| handle.block_on(initialize_startup_id())),
-            Err(_) => {
-                let rt = tokio::runtime::Builder::new_current_thread()
-                    .enable_all()
-                    .build()
-                    .expect("Failed to create Tokio runtime");
-                rt.block_on(initialize_startup_id())
-            }
-        }
-    })
+pub fn startup_id() -> u16 {
+    if cfg!(test) {
+        return 0;
+    }
+    *STARTUP_ID
+        .get()
+        .expect("Startup ID must be initialized before creating events")
 }
 
 #[derive(
@@ -830,8 +835,8 @@ impl EventId {
         static SEQUENCE: AtomicU32 = AtomicU32::new(Seq::MAX / 2);
         static PREV_TIMESTAMP: AtomicI64 = AtomicI64::new(0);
 
-        let now = Utc::now();
-        let mut timestamp = now.timestamp_millis();
+        let now = OffsetDateTime::now_utc();
+        let mut timestamp = now.unix_timestamp_nanos() as i64 / 1_000_000;
         let seq = SEQUENCE.fetch_add(1, Ordering::Relaxed);
 
         if seq < Seq::MAX / 2 {

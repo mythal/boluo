@@ -1,7 +1,6 @@
 use crate::cache::{CACHE, CacheType};
 use crate::error::AppError;
 use crate::ttl::{Lifespan, fetch_entry, hour};
-use crate::utils::{self, sign};
 use anyhow::Context;
 use hyper::HeaderMap;
 use hyper::header::AUTHORIZATION;
@@ -17,7 +16,7 @@ pub const SESSION_COOKIE_KEY: &str = "boluo-session-v3";
 pub struct Session {
     pub user_id: Uuid,
     pub id: Uuid,
-    pub created: chrono::DateTime<chrono::Utc>,
+    pub created: time::OffsetDateTime,
 }
 
 impl Lifespan for Session {
@@ -40,25 +39,25 @@ pub enum AuthenticateFail {
     Expired,
 }
 
-pub fn token(session_id: &Uuid) -> String {
+pub fn token(signer: &crate::context::Signer, session_id: &Uuid) -> String {
     use base64::{Engine as _, engine::general_purpose::STANDARD_NO_PAD as base64_engine};
     // [body (base64)].[sign]
     let mut buffer = String::with_capacity(64);
     base64_engine.encode_string(session_id.as_bytes(), &mut buffer);
-    let signature = sign(&buffer);
+    let signature = signer.sign(&buffer);
     buffer.push('.');
     base64_engine.encode_string(signature, &mut buffer);
     buffer
 }
 
-pub fn token_verify(token: &str) -> Result<Uuid, anyhow::Error> {
+pub fn token_verify(signer: &crate::context::Signer, token: &str) -> Result<Uuid, anyhow::Error> {
     use base64::{Engine as _, engine::general_purpose};
 
     let mut iter = token.split('.');
     let parse_failed = || anyhow::anyhow!("Failed to parse token: {}", token);
     let session_id_str = iter.next().ok_or_else(parse_failed)?;
     let signature = iter.next().ok_or_else(parse_failed)?;
-    utils::verify(session_id_str, signature)?;
+    signer.verify(session_id_str, signature)?;
     let session_id_byte = general_purpose::STANDARD_NO_PAD
         .decode(session_id_str)
         .or_else(|_| general_purpose::STANDARD.decode(session_id_str))
@@ -67,30 +66,38 @@ pub fn token_verify(token: &str) -> Result<Uuid, anyhow::Error> {
         .context("Failed to convert session bytes data to UUID.")
 }
 
-pub async fn revoke_session(pool: &sqlx::PgPool, session_id: Uuid) -> Result<(), sqlx::Error> {
+pub async fn revoke_session(
+    pool: &sqlx::PgPool,
+    redis: Option<&redis::aio::ConnectionManager>,
+    session_id: Uuid,
+) -> Result<(), sqlx::Error> {
     {
         let mut conn = pool.acquire().await?;
         sqlx::query_file!("sql/users/session_revoke.sql", session_id)
             .execute(&mut *conn)
             .await?;
     }
-    CACHE.invalidate(CacheType::Session, session_id).await;
+    CACHE
+        .invalidate(redis, CacheType::Session, session_id)
+        .await;
     Ok(())
 }
 
 #[test]
 fn test_session_sign() {
-    let session = utils::id();
-    assert!(token_verify("").is_err());
-    let session_2 = token_verify(&token(&session)).unwrap();
+    let signer = crate::context::Signer::new("just a test");
+    let session = crate::utils::id();
+    assert!(token_verify(&signer, "").is_err());
+    let session_2 = token_verify(&signer, &token(&signer, &session)).unwrap();
     assert_eq!(session, session_2);
 }
 
 pub async fn start_with_session_id(
+    pool: &sqlx::PgPool,
     user_id: Uuid,
     session_id: Uuid,
 ) -> Result<Session, sqlx::Error> {
-    let mut conn = crate::db::get().await.acquire().await?;
+    let mut conn = pool.acquire().await?;
     sqlx::query_file_as!(
         Session,
         "sql/users/session_start.sql",
@@ -100,9 +107,9 @@ pub async fn start_with_session_id(
     .fetch_one(&mut *conn)
     .await
 }
-pub async fn start(user_id: Uuid) -> Result<Session, sqlx::Error> {
+pub async fn start(pool: &sqlx::PgPool, user_id: Uuid) -> Result<Session, sqlx::Error> {
     let session_id = Uuid::new_v4();
-    let session = start_with_session_id(user_id, session_id).await?;
+    let session = start_with_session_id(pool, user_id, session_id).await?;
     CACHE.Session.insert(session_id, session.into());
     Ok(session)
 }
@@ -126,6 +133,7 @@ fn cookie_domain_from_origin(origin: Option<&str>) -> Option<&'static str> {
 }
 
 pub fn add_session_cookie(
+    signer: &crate::context::Signer,
     origin: Option<&str>,
     session: &Uuid,
     is_debug: bool,
@@ -135,7 +143,7 @@ pub fn add_session_cookie(
     use cookie::{CookieBuilder, SameSite};
     use hyper::header::SET_COOKIE;
 
-    let token = token(session);
+    let token = token(signer, session);
     let mut builder = CookieBuilder::new(SESSION_COOKIE_KEY, token)
         .same_site(SameSite::Lax)
         .secure(!is_debug)
@@ -279,8 +287,8 @@ fn parse_cookie(value: &hyper::header::HeaderValue) -> Option<&str> {
 }
 
 #[tracing::instrument]
-async fn get_session_from_db(session_id: Uuid) -> Result<Session, AppError> {
-    let mut conn = crate::db::get().await.acquire().await?;
+async fn get_session_from_db(pool: &sqlx::PgPool, session_id: Uuid) -> Result<Session, AppError> {
+    let mut conn = pool.acquire().await?;
     let session = sqlx::query_file_as!(Session, "sql/users/session_fetch.sql", session_id)
         .fetch_optional(&mut *conn)
         .await
@@ -291,9 +299,13 @@ async fn get_session_from_db(session_id: Uuid) -> Result<Session, AppError> {
     session.ok_or(AuthenticateFail::NoSessionFound.into())
 }
 
-async fn get_session_from_token(token: &str) -> Result<Session, AppError> {
+async fn get_session_from_token(
+    ctx: &crate::context::AppContext,
+    token: &str,
+) -> Result<Session, AppError> {
     let token = token.to_string();
-    let session_id = tokio::task::spawn_blocking(move || token_verify(&token))
+    let signer = ctx.signer().clone();
+    let session_id = tokio::task::spawn_blocking(move || token_verify(&signer, &token))
         .await
         .map_err(|err| AppError::Unexpected(err.into()))?
         .map_err(|err| {
@@ -302,21 +314,23 @@ async fn get_session_from_token(token: &str) -> Result<Session, AppError> {
         })?;
 
     fetch_entry(&CACHE.Session, session_id, async {
-        get_session_from_db(session_id).await
+        get_session_from_db(&ctx.db, session_id).await
     })
     .await
 }
 
 pub async fn authenticate_with_cookie(
+    ctx: &crate::context::AppContext,
     headers: &HeaderMap<HeaderValue>,
 ) -> Result<Session, AppError> {
     let cookie = headers.get(COOKIE).ok_or(AuthenticateFail::Guest)?;
     let token = parse_cookie(cookie).ok_or(AuthenticateFail::Guest)?;
-    let session = get_session_from_token(token).await?;
+    let session = get_session_from_token(ctx, token).await?;
     Ok(session)
 }
 
 pub async fn authenticate(
+    ctx: &crate::context::AppContext,
     req: &hyper::Request<impl hyper::body::Body>,
 ) -> Result<Session, AppError> {
     let headers = req.headers();
@@ -325,7 +339,7 @@ pub async fn authenticate(
     let session = if let Some(header_value) = headers.get(AUTHORIZATION) {
         if let Ok(authorization) = header_value.to_str() {
             let token = authorization.trim_start_matches("Bearer ").trim();
-            let session = get_session_from_token(token).await;
+            let session = get_session_from_token(ctx, token).await;
             match session {
                 Ok(session) => {
                     span.record("auth_method", "bearer_token");
@@ -333,25 +347,27 @@ pub async fn authenticate(
                 }
                 Err(e) => {
                     // TODO: check if this fallback is needed
-                    authenticate_with_cookie(headers).await.inspect(|session| {
-                        span.record("auth_method", "cookie");
-                        tracing::warn!(
-                            user_id = %session.user_id,
-                            token = %token,
-                            token_error = %e,
-                            "Failed to authenticate with bearer token, fallback to cookie"
-                        );
-                    })
+                    authenticate_with_cookie(ctx, headers)
+                        .await
+                        .inspect(|session| {
+                            span.record("auth_method", "cookie");
+                            tracing::warn!(
+                                user_id = %session.user_id,
+                                token = %token,
+                                token_error = %e,
+                                "Failed to authenticate with bearer token, fallback to cookie"
+                            );
+                        })
                 }
             }
         } else {
             tracing::warn!("Failed to convert header value to string, fallback to cookie");
-            authenticate_with_cookie(headers).await.inspect(|_| {
+            authenticate_with_cookie(ctx, headers).await.inspect(|_| {
                 span.record("auth_method", "cookie");
             })
         }
     } else {
-        authenticate_with_cookie(headers).await
+        authenticate_with_cookie(ctx, headers).await
     };
     let session = session?;
     span.record("user_id", tracing::field::display(session.user_id));

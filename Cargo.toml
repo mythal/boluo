@@ -19,7 +19,7 @@ opt-level = 3
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["raw_value"] }
 specta = { version = "2.0.0-rc.26", features = [
-  "chrono",
+  "time",
   "collect",
   "derive",
   "serde_json",

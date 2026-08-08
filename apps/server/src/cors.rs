@@ -1,6 +1,4 @@
 //! Make server allow all origins for development.
-use std::sync::OnceLock;
-
 use bytes::Bytes;
 use http_body_util::Full;
 use hyper::body::Incoming;
@@ -12,8 +10,6 @@ use hyper::header::{
 use hyper::{Request, Response};
 
 pub fn is_allowed_origin(origin: &str) -> bool {
-    static DOMAIN_SUFFIX: OnceLock<String> = OnceLock::new();
-
     // TODO: do not hardcode the domain
     let end = [
         ".boluo.chat",
@@ -26,7 +22,6 @@ pub fn is_allowed_origin(origin: &str) -> bool {
         return true;
     }
 
-    static ALLOWED_ORIGIN: OnceLock<String> = OnceLock::new();
     let start = [
         "https://boluo.chat",
         "https://boluochat.com",

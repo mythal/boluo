@@ -21,9 +21,9 @@ While multi-node support is planned, currently only single-node deployment is av
 
 ### Development Notes
 
-- When modifying SQL statements or RESTful APIs, run: `cargo run -p server -- --types` to regenerate types.
+- When modifying SQL statements or RESTful APIs, run: `cargo run -p server -- types` to regenerate types.
 - You should run `cargo check` after modifying any Rust code.
-- Run tests: `cargo nextest run`
+- Run tests by cargo-nextest
 - Database-related tests:
   - Use `sqlx::test`
   - Test function names must start with `db_test_`

@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE entries\nSET components_version = uuidv7()\nWHERE id = $1\nRETURNING components_version;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "components_version",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "entries",
+            "name": "components_version"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "f7a1ea22a8b556a433c1b60ec129a28c2e90709635fc9bc99510c2d98cdc8a0e"
+}

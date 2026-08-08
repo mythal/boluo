@@ -1,9 +1,9 @@
-use chrono::{DateTime, Utc};
 use compact_str::CompactString;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::BTreeMap;
 use std::ops::Deref;
+use time::OffsetDateTime;
 use uuid::Uuid;
 
 use crate::characters::{normalize_aliases, normalize_ident};
@@ -39,7 +39,7 @@ struct EntryComponentJoinedRow {
     json_schema_version: Option<i32>,
     asset_id: Option<Uuid>,
     version: Uuid,
-    modified: DateTime<Utc>,
+    modified: OffsetDateTime,
 }
 
 #[derive(Debug, Clone, sqlx::FromRow)]
@@ -55,15 +55,16 @@ struct EntryComponentMatchRow {
     pos_q: i32,
     pos: f64,
     metadata_version: Uuid,
-    created: DateTime<Utc>,
-    entry_modified: DateTime<Utc>,
+    components_version: Uuid,
+    created: OffsetDateTime,
+    entry_modified: OffsetDateTime,
     component_type: CompactString,
     payload_type: EntryComponentPayloadType,
     json_data: Option<Value>,
     json_schema_version: Option<i32>,
     asset_id: Option<Uuid>,
     component_version: Uuid,
-    component_modified: DateTime<Utc>,
+    component_modified: OffsetDateTime,
 }
 
 #[derive(Debug, Clone, sqlx::FromRow)]
@@ -97,7 +98,8 @@ impl EntryComponentForUpdateRow {
 pub struct Entry {
     #[serde(flatten)]
     pub metadata: EntryMetadata,
-    pub components: BTreeMap<String, EntryComponent>,
+    #[specta(type = std::collections::BTreeMap<String, EntryComponent>)]
+    pub components: BTreeMap<CompactString, EntryComponent>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, specta::Type)]
@@ -128,13 +130,30 @@ pub struct EntryMetadata {
     pub pos_q: i32,
     pub pos: f64,
     pub metadata_version: Uuid,
-    pub created: DateTime<Utc>,
-    pub modified: DateTime<Utc>,
+    #[serde(skip)]
+    pub(crate) components_version: Uuid,
+    pub created: OffsetDateTime,
+    pub modified: OffsetDateTime,
 }
 
-#[derive(Debug)]
-pub(crate) struct CachedEntryComponents {
+#[derive(Debug, Clone)]
+pub(crate) struct EntryComponentsSnapshot {
     components: Box<[(CompactString, EntryComponent)]>,
+}
+
+impl EntryComponentsSnapshot {
+    pub(crate) fn estimated_memory_bytes(&self) -> usize {
+        std::mem::size_of_val(self.components.as_ref())
+            + self
+                .components
+                .iter()
+                .map(|(component_type, component)| {
+                    std::mem::size_of_val(component_type)
+                        + component_type.len()
+                        + component.estimated_memory_bytes()
+                })
+                .sum::<usize>()
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, specta::Type)]
@@ -148,16 +167,24 @@ pub enum EntryComponent {
         data: Value,
         schema_version: i32,
         version: Uuid,
-        modified: DateTime<Utc>,
+        modified: OffsetDateTime,
     },
     Asset {
         asset_id: Uuid,
         version: Uuid,
-        modified: DateTime<Utc>,
+        modified: OffsetDateTime,
     },
 }
 
 impl EntryComponent {
+    fn estimated_memory_bytes(&self) -> usize {
+        std::mem::size_of::<Self>()
+            + match self {
+                Self::Json { data, .. } => crate::utils::estimated_json_value_size(data),
+                Self::Asset { .. } => 0,
+            }
+    }
+
     fn history_payload(&self) -> Value {
         match self {
             Self::Json {
@@ -215,7 +242,7 @@ pub struct EntryEffect {
     pub space_id: Uuid,
     pub scope_id: Uuid,
     pub operator_id: Option<Uuid>,
-    pub created: DateTime<Utc>,
+    pub created: OffsetDateTime,
     pub message_id: Option<Uuid>,
 }
 
@@ -280,7 +307,10 @@ impl Deref for Entry {
 }
 
 impl EntryMetadata {
-    pub(crate) fn with_components(self, components: BTreeMap<String, EntryComponent>) -> Entry {
+    pub(crate) fn with_components(
+        self,
+        components: BTreeMap<CompactString, EntryComponent>,
+    ) -> Entry {
         Entry {
             metadata: self,
             components,
@@ -381,6 +411,7 @@ impl EntryComponentMatchRow {
                 pos_q: self.pos_q,
                 pos: self.pos,
                 metadata_version: self.metadata_version,
+                components_version: self.components_version,
                 created: self.created,
                 modified: self.entry_modified,
             },
@@ -390,7 +421,7 @@ impl EntryComponentMatchRow {
     }
 }
 
-impl CachedEntryComponents {
+impl EntryComponentsSnapshot {
     pub(crate) async fn load(db: &sqlx::PgPool, entry_id: Uuid) -> Result<Self, sqlx::Error> {
         let rows = sqlx::query_file_as!(
             EntryComponentJoinedRow,
@@ -406,10 +437,10 @@ impl CachedEntryComponents {
         Ok(Self { components })
     }
 
-    pub(crate) fn to_response(&self) -> BTreeMap<String, EntryComponent> {
+    pub(crate) fn to_response(&self) -> BTreeMap<CompactString, EntryComponent> {
         self.components
             .iter()
-            .map(|(component_type, component)| (component_type.to_string(), component.clone()))
+            .map(|(component_type, component)| (component_type.clone(), component.clone()))
             .collect()
     }
 }
@@ -447,10 +478,10 @@ fn validate_component_type(component_type: &str) -> Result<(), ValidationFailed>
 fn components_from_rows(
     entry_id: Uuid,
     rows: impl IntoIterator<Item = EntryComponentJoinedRow>,
-) -> BTreeMap<String, EntryComponent> {
+) -> BTreeMap<CompactString, EntryComponent> {
     rows.into_iter()
         .filter_map(|row| row.into_response(entry_id))
-        .map(|(component_type, component)| (component_type.to_string(), component))
+        .map(|(component_type, component)| (component_type, component))
         .collect()
 }
 
@@ -894,7 +925,7 @@ pub struct EntryHistory {
     pub key: String,
     pub previous_key: Option<String>,
     pub action: EntryHistoryAction,
-    pub created: DateTime<Utc>,
+    pub created: OffsetDateTime,
 }
 
 impl EntryHistory {
@@ -1218,6 +1249,9 @@ impl Entry {
                 }
             }
         }
+        sqlx::query_file_scalar!("sql/entries/bump_components_version.sql", entry_id)
+            .fetch_one(&mut **db)
+            .await?;
         Ok(EntryComponentMutationResult { history_changes })
     }
 }
@@ -1273,7 +1307,7 @@ pub struct EntryComponentMutationResult {
 }
 
 pub fn components_as_set_history_changes(
-    components: &BTreeMap<String, EntryComponent>,
+    components: &BTreeMap<CompactString, EntryComponent>,
 ) -> Vec<EntryComponentHistoryChange> {
     components
         .iter()
@@ -1294,7 +1328,7 @@ pub struct EntryComponentHistory {
     pub component_type: String,
     pub action: EntryComponentHistoryAction,
     pub payload: Option<Value>,
-    pub created: DateTime<Utc>,
+    pub created: OffsetDateTime,
 }
 
 impl EntryComponentHistory {
@@ -1934,7 +1968,7 @@ mod tests {
             entry.components.get("example/thumbnail"),
             Some(EntryComponent::Asset { asset_id, .. }) if *asset_id == asset.id
         ));
-        let cached = CachedEntryComponents::load(&pool, entry.id)
+        let cached = EntryComponentsSnapshot::load(&pool, entry.id)
             .await
             .expect("load cached Components failed")
             .to_response();
@@ -2033,7 +2067,7 @@ mod tests {
             .expect("load entry with orphan failed")
             .expect("entry missing");
         assert!(!entry_with_orphan.components.contains_key("core/orphan"));
-        let cached_with_orphan = CachedEntryComponents::load(&pool, entry.id)
+        let cached_with_orphan = EntryComponentsSnapshot::load(&pool, entry.id)
             .await
             .expect("load cached Components with orphan failed")
             .to_response();
@@ -2215,6 +2249,10 @@ mod tests {
         transaction.commit().await.expect("commit failed");
         assert_ne!(updated.metadata_version, entry.metadata_version);
         assert_eq!(
+            updated.components_version, entry.components_version,
+            "metadata-only updates must preserve the Components version"
+        );
+        assert_eq!(
             updated.components["core/counter"].json_data(),
             json!({"value": 10})
         );
@@ -2222,6 +2260,7 @@ mod tests {
         assert_eq!(updated.tags.as_ref(), [CompactString::new("State")]);
 
         let metadata_version = updated.metadata_version;
+        let components_version = updated.components_version;
         let core_version = updated.components["core/counter"].version();
         let mut transaction = pool.begin().await.expect("begin failed");
         let effect = EntryEffect::create(&mut transaction, space.id, space_scope.id, user.id)
@@ -2263,6 +2302,10 @@ mod tests {
             .expect("entry lookup failed")
             .expect("entry missing");
         assert_eq!(updated.metadata_version, metadata_version);
+        assert_ne!(
+            updated.components_version, components_version,
+            "a Component batch must advance the aggregate Components version"
+        );
         assert!(!updated.components.contains_key("core/counter"));
         assert_eq!(
             updated.components["example/custom"].json_data(),

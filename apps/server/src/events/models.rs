@@ -1,6 +1,6 @@
-use chrono::prelude::*;
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
+use time::OffsetDateTime;
 use uuid::Uuid;
 
 use super::status::StatusMap;
@@ -19,7 +19,7 @@ pub struct DbEvent {
     pub space_id: Option<Uuid>,
     pub receiver_id: Option<Uuid>,
     pub payload: JsonValue,
-    pub created: DateTime<Utc>,
+    pub created: OffsetDateTime,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, specta::Type)]

@@ -7,8 +7,9 @@
 
 use std::env;
 use std::net::{IpAddr, SocketAddr};
+use std::path::PathBuf;
 
-use clap::Parser;
+use clap::{Args as ClapArgs, Parser, Subcommand};
 use futures::pin_mut;
 use http_body_util::Full;
 use hyper::body::Incoming;
@@ -37,6 +38,7 @@ mod context;
 mod cors;
 mod csrf;
 mod db;
+mod disk_cache;
 mod entries;
 mod events;
 mod info;
@@ -101,7 +103,7 @@ async fn router(
         return csrf::get_csrf_token(ctx, req).await.map(ok_response);
     }
     if path.starts_with("/api/tunnel") {
-        return Ok(sentry_tunnel::handler(req).await);
+        return Ok(sentry_tunnel::handler(ctx, req).await);
     }
     table!("/api/info", info::router);
     table!("/api/assets", assets::router);
@@ -225,18 +227,21 @@ async fn handler(
     .await
 }
 
-#[tracing::instrument]
-async fn storage_check() {
+#[tracing::instrument(skip(storage))]
+async fn storage_check(storage: &s3::Storage, ci: bool) {
     // Skip in CI
-    if context::ci() {
+    if ci {
         return;
     }
-    let mut action = s3::get_bucket().put_object(Some(s3::get_credentials()), "check");
+    let mut action = storage
+        .bucket()
+        .put_object(Some(storage.credentials()), "check");
     action
         .headers_mut()
         .insert("content-type", "application/octet-stream");
     let url = action.sign(std::time::Duration::from_secs(60));
-    s3::get_http_client()
+    storage
+        .client()
         .put(url.as_str())
         .header("content-type", "application/octet-stream")
         .body(Vec::<u8>::new())
@@ -246,45 +251,151 @@ async fn storage_check() {
     tracing::info!("Object Storage is ready");
 }
 #[derive(Parser)]
-struct Args {
+struct Cli {
+    #[clap(subcommand)]
+    command: Command,
+}
+
+#[derive(Subcommand)]
+enum Command {
+    /// Run the HTTP server
+    Serve(ServeArgs),
+    /// Export TypeScript types
+    Types,
+}
+
+#[derive(ClapArgs)]
+struct ServeArgs {
+    #[clap(long, env = "HOST", default_value = "127.0.0.1")]
+    host: IpAddr,
+    #[clap(long, env = "PORT", default_value_t = 3000)]
+    port: u16,
+    #[clap(long, env = "PROMETHEUS_EXPORTER")]
+    prometheus_exporter: Option<SocketAddr>,
+    #[clap(long, env = "DATABASE_URL")]
+    database_url: String,
+    #[clap(long, env = "REDIS_URL")]
+    redis_url: Option<String>,
+    #[clap(long, env = "CI", default_value_t = false)]
+    ci: bool,
+    #[clap(long, env = "BOLUO_DEBUG", default_value_t = false)]
+    debug: bool,
+    #[clap(long, env = "PUBLIC_MEDIA_URL")]
+    public_media_url: Option<String>,
+    #[clap(long, env = "APP_URL")]
+    app_url: Option<String>,
+    #[clap(long, env = "SITE_URL")]
+    site_url: Option<String>,
+    #[clap(long, env = "SENTRY_DSN")]
+    sentry_dsn: Option<String>,
+    #[clap(long, env = "SENTRY_HOST", default_value = "sentry.mythal.net")]
+    sentry_host: String,
+    #[clap(long, env = "SENTRY_PROJECT_IDS", value_delimiter = ',')]
+    sentry_project_ids: Vec<String>,
+    #[clap(long, env = "DISCOURSE_SSO_SECRET")]
+    discourse_sso_secret: Option<String>,
+    #[clap(long, env = "SECRET")]
+    secret: String,
+    #[clap(long, env = "MAILGUN_DOMAIN", requires = "mailgun_api_key")]
+    mailgun_domain: Option<String>,
+    #[clap(long, env = "MAILGUN_API_KEY", requires = "mailgun_domain")]
+    mailgun_api_key: Option<String>,
+    #[clap(long, env = "S3_ENDPOINT_URL")]
+    s3_endpoint_url: Option<String>,
+    #[clap(long, env = "S3_BUCKET_NAME")]
+    s3_bucket_name: Option<String>,
+    #[clap(long, env = "S3_ACCESS_KEY_ID")]
+    s3_access_key_id: Option<String>,
+    #[clap(long, env = "S3_SECRET_ACCESS_KEY")]
+    s3_secret_access_key: Option<String>,
     #[clap(long, help = "check only", default_value = "false")]
     check: bool,
-    #[clap(long, help = "export typescript types", default_value = "false")]
-    types: bool,
+    #[clap(long, env = "DISK_CACHE_PATH", help = "redb disk cache path")]
+    disk_cache_path: Option<PathBuf>,
+    #[clap(
+        long,
+        env = "DISK_CACHE_DISABLED",
+        default_value_t = false,
+        help = "disable the redb disk cache"
+    )]
+    disable_disk_cache: bool,
+    #[clap(
+        long,
+        env = "DISK_CACHE_MEMORY_MB",
+        default_value_t = 16,
+        help = "redb disk cache memory in MiB"
+    )]
+    disk_cache_memory_mb: usize,
+    #[clap(
+        long,
+        env = "DISK_CACHE_MAX_FILE_MB",
+        default_value_t = 4096,
+        help = "redb disk cache maximum file size in MiB"
+    )]
+    disk_cache_max_file_mb: u64,
+    #[clap(
+        long,
+        env = "ENTRY_COMPONENT_CACHE_MB",
+        default_value_t = 16,
+        help = "entry component memory cache size in MiB"
+    )]
+    entry_component_cache_mb: u64,
+}
+
+fn disk_cache_config(args: &ServeArgs) -> Option<disk_cache::Config> {
+    if args.disable_disk_cache {
+        return None;
+    }
+    let path = args
+        .disk_cache_path
+        .clone()
+        .unwrap_or_else(|| env::temp_dir().join("boluo-cache.redb"));
+    if path.as_os_str().is_empty() {
+        return None;
+    }
+
+    Some(disk_cache::Config {
+        path,
+        cache_size: args.disk_cache_memory_mb.saturating_mul(1024 * 1024),
+        max_file_size: args.disk_cache_max_file_mb.saturating_mul(1024 * 1024),
+    })
 }
 
 #[tokio::main(worker_threads = 5)]
 async fn main() {
     use tracing_subscriber::filter::{EnvFilter, LevelFilter};
 
-    let args = Args::parse();
-    if args.types {
-        typegen::prepare();
+    let wants_help = std::env::args()
+        .skip(1)
+        .any(|arg| matches!(arg.as_str(), "--help" | "-h" | "--version" | "-V"));
+    if !wants_help {
+        config::load();
     }
+    let command = Cli::parse().command;
+    let args = match command {
+        Command::Serve(args) => args,
+        Command::Types => {
+            typegen::prepare();
+            typegen::run();
+            return;
+        }
+    };
 
-    config::load();
     let filter = EnvFilter::builder()
         .with_default_directive(LevelFilter::INFO.into())
         .from_env_lossy();
     tracing_subscriber::fmt().with_env_filter(filter).init();
 
-    if args.types {
-        typegen::run();
-        return;
-    }
+    let storage = std::sync::Arc::new(s3::Storage::new(s3::StorageConfig {
+        endpoint_url: args.s3_endpoint_url.clone(),
+        bucket_name: args.s3_bucket_name.clone(),
+        access_key_id: args.s3_access_key_id.clone(),
+        secret_access_key: args.s3_secret_access_key.clone(),
+    }));
 
-    let port: u16 = env::var("PORT")
-        .unwrap_or("3000".to_string())
-        .parse()
-        .expect("PORT must be a number");
-    storage_check().await;
+    storage_check(&storage, args.ci).await;
 
-    let ip_addr: IpAddr = {
-        let host_env = env::var("HOST").unwrap_or("127.0.0.1".to_string());
-        host_env.parse().expect("HOST must be a valid IP address")
-    };
-
-    let socket = SocketAddr::new(ip_addr, port);
+    let socket = SocketAddr::new(args.host, args.port);
 
     let listener = TcpListener::bind(socket)
         .await
@@ -292,11 +403,11 @@ async fn main() {
 
     tracing::info!("Server listening on: {}", socket);
 
-    db::check_db_host().await;
+    db::check_db_host(&args.database_url).await;
 
     let pool = {
         // Database Migrations
-        let pool = db::get().await;
+        let pool = db::connect(&args.database_url).await;
         MIGRATOR
             .run(&pool)
             .await
@@ -305,17 +416,47 @@ async fn main() {
     };
     db::check(&pool).await;
     tracing::info!("Database is ready");
-    let mut redis_conn = redis::conn().await;
+    let mut redis_conn = redis::connect(args.redis_url.as_deref()).await;
     redis::check(redis_conn.as_mut()).await;
+    let startup_id = events::initialize_startup_id(redis_conn.as_mut()).await;
     tracing::info!("Redis is ready");
 
-    if context::SITE_URL.is_none() {
+    let ctx_config = context::AppConfig {
+        ci: args.ci,
+        debug: args.debug,
+        public_media_url: args.public_media_url.clone(),
+        app_url: args.app_url.clone(),
+        site_url: args.site_url.clone(),
+        sentry_dsn: args.sentry_dsn.clone(),
+        sentry_host: args.sentry_host.clone(),
+        sentry_project_ids: args
+            .sentry_project_ids
+            .iter()
+            .map(|id| id.trim().to_owned())
+            .filter(|id| !id.is_empty())
+            .collect(),
+        discourse_sso_secret: args.discourse_sso_secret.clone(),
+        secret: args.secret.clone(),
+        mail: mail::Config {
+            domain: args.mailgun_domain.clone(),
+            api_key: args.mailgun_api_key.clone(),
+        },
+        entry_component_cache_capacity: args.entry_component_cache_mb.saturating_mul(1024 * 1024),
+    };
+    let ctx = std::sync::Arc::new(context::AppContext::with_config(
+        pool.clone(),
+        redis_conn,
+        ctx_config,
+        storage,
+    ));
+
+    if ctx.config.site_url.is_none() {
         tracing::error!("SITE_URL is not set");
     }
-    if context::APP_URL.is_none() {
+    if ctx.config.app_url.is_none() {
         tracing::error!("APP_URL is not set");
     }
-    if context::PUBLIC_MEDIA_URL.is_none() {
+    if ctx.config.public_media_url.is_none() {
         tracing::error!("PUBLIC_MEDIA_URL is not set");
     }
 
@@ -325,14 +466,9 @@ async fn main() {
         return;
     }
 
-    // Initialize AppContext
-    let ctx = std::sync::Arc::new(context::AppContext::new(pool.clone(), redis_conn));
     tracing::info!("AppContext initialized");
 
-    if let Ok(exporter_listen) = std::env::var("PROMETHEUS_EXPORTER") {
-        let addr = exporter_listen
-            .parse::<SocketAddr>()
-            .expect("Invalid address for Prometheus exporter");
+    if let Some(addr) = args.prometheus_exporter {
         metrics_exporter_prometheus::PrometheusBuilder::new()
             .with_http_listener(addr)
             .install()
@@ -345,13 +481,14 @@ async fn main() {
                 .describe_and_run(),
         );
     }
+    disk_cache::init(disk_cache_config(&args));
     // https://tokio.rs/tokio/topics/shutdown
     let mut terminate_stream =
         tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
             .expect("Failed to create signal stream");
 
     server_metrics::start_update_metrics(pool.clone(), ctx.redis.clone());
-    tracing::info!("Startup ID: {}", events::startup_id());
+    tracing::info!("Startup ID: {startup_id}");
 
     cache::start_expiry_task();
     cache::start_log_cache_stats();
@@ -376,6 +513,7 @@ async fn main() {
     }
     shutdown::SHUTDOWN.notify_waiters();
     tokio::time::sleep(std::time::Duration::from_secs(4)).await;
+    disk_cache::shutdown().await;
     tracing::info!("Shutting down");
 }
 

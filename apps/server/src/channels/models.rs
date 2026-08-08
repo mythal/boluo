@@ -1,6 +1,6 @@
-use chrono::prelude::*;
 use compact_str::CompactString;
 use serde::{Deserialize, Serialize};
+use time::OffsetDateTime;
 use uuid::Uuid;
 
 use crate::channels::api::{ChannelMemberWithUser, ChannelWithMaybeMember, ChannelWithMember};
@@ -58,7 +58,7 @@ pub struct Channel {
     pub name: CompactString,
     pub topic: String,
     pub space_id: Uuid,
-    pub created: DateTime<Utc>,
+    pub created: OffsetDateTime,
     pub is_public: bool,
     #[serde(skip)]
     pub deleted: bool,
@@ -268,7 +268,7 @@ impl Channel {
 pub struct ChannelMember {
     pub user_id: Uuid,
     pub channel_id: Uuid,
-    pub join_date: DateTime<Utc>,
+    pub join_date: OffsetDateTime,
     #[specta(type = String)]
     pub character_name: CompactString,
     #[specta(type = Option<String>)]

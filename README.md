@@ -101,7 +101,7 @@ sqlx migrate add <migration_name> -r --source apps/server/migrations
 Generate TypeScript bindings and type-safe query definitions using:
 
 ```
-cargo run -p server -- --types
+cargo run -p server -- types
 ```
 
 ## Credits

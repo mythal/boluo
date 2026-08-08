@@ -4,8 +4,8 @@ use uuid::fmt::Hyphenated;
 use crate::utils::not_whitespace_only;
 
 /// Get redis database connection.
-pub async fn conn() -> Option<redis::aio::ConnectionManager> {
-    let Some(redis_url) = std::env::var("REDIS_URL").ok().filter(not_whitespace_only) else {
+pub async fn connect(redis_url: Option<&str>) -> Option<redis::aio::ConnectionManager> {
+    let Some(redis_url) = redis_url.filter(|url| not_whitespace_only(url)) else {
         tracing::warn!("REDIS_URL not set, disabling redis");
         return None;
     };

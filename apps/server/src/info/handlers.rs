@@ -169,10 +169,8 @@ pub fn basic_info() -> Response {
         .expect("Unexpected failture in build version response")
 }
 
-pub fn settings() -> Response {
-    use std::sync::LazyLock;
-    static SETTINGS: LazyLock<Response> = LazyLock::new(|| ok_response(AppSettings::new()));
-    SETTINGS.clone()
+pub fn settings(ctx: &crate::context::AppContext) -> Response {
+    ok_response(AppSettings::new(ctx))
 }
 
 pub fn echo(req: Request<Incoming>) -> Response {
@@ -190,7 +188,7 @@ pub async fn router(
 ) -> Result<Response, AppError> {
     match (path, req.method().clone()) {
         ("/proxies", Method::GET) => proxies(ctx).await,
-        ("/settings", Method::GET) => Ok(settings()),
+        ("/settings", Method::GET) => Ok(settings(ctx)),
         ("/echo", Method::GET) => Ok(echo(req)),
         _ => Ok(basic_info()),
     }

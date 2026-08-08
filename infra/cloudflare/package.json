@@ -1,0 +1,17 @@
+{
+  "name": "@boluo/cloudflare",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "@pulumi/cloudflare": "^6.19.0",
+    "@pulumi/pulumi": "^3.256.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.1",
+    "typescript": "^6"
+  },
+  "scripts": {
+    "check": "tsc --noEmit"
+  },
+  "type": "module"
+}

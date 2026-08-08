@@ -67,6 +67,7 @@
                 (unfilteredRoot + "/apps/site")
                 (unfilteredRoot + "/apps/spa")
                 (unfilteredRoot + "/apps/storybook")
+                (unfilteredRoot + "/infra/cloudflare")
               ];
             };
 
@@ -314,7 +315,10 @@
               };
               config = {
                 Env = [ versionEnv ];
-                Cmd = [ "/bin/server" "serve" ];
+                Cmd = [
+                  "/bin/server"
+                  "serve"
+                ];
                 Labels = imageLabel;
               };
             };
@@ -580,6 +584,7 @@
                 flyctl
                 cargo-nextest
                 postgresql
+                (pulumi.withPackages (pulumiPackages: [ pulumiPackages.pulumi-nodejs ]))
                 python3
                 gh
               ]

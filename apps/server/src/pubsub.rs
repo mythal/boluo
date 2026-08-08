@@ -1,6 +1,7 @@
 use std::{borrow::Cow, sync::OnceLock};
 
 use serde::{Deserialize, Serialize};
+use time::OffsetDateTime;
 use uuid::Uuid;
 
 fn node_id() -> &'static str {
@@ -28,13 +29,13 @@ pub enum PubSubMessage {
 
 impl PubSubMessage {
     pub fn invalidate(topic: Cow<'static, str>, key: Uuid) -> Self {
-        let now = chrono::Utc::now();
+        let now = OffsetDateTime::now_utc();
         PubSubMessage::Invalidation {
             topic,
             key,
             node: node_id().into(),
             metadata: None,
-            ts: now.timestamp_millis(),
+            ts: now.unix_timestamp_nanos() as i64 / 1_000_000,
         }
     }
 }

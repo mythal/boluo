@@ -1,9 +1,9 @@
-use chrono::{DateTime, Utc};
 use compact_str::CompactString;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::BTreeMap;
 use std::ops::Deref;
+use time::OffsetDateTime;
 use uuid::Uuid;
 
 use crate::characters::{normalize_aliases, normalize_ident};
@@ -39,7 +39,7 @@ struct EntryComponentJoinedRow {
     json_schema_version: Option<i32>,
     asset_id: Option<Uuid>,
     version: Uuid,
-    modified: DateTime<Utc>,
+    modified: OffsetDateTime,
 }
 
 #[derive(Debug, Clone, sqlx::FromRow)]
@@ -56,15 +56,15 @@ struct EntryComponentMatchRow {
     pos: f64,
     metadata_version: Uuid,
     components_version: Uuid,
-    created: DateTime<Utc>,
-    entry_modified: DateTime<Utc>,
+    created: OffsetDateTime,
+    entry_modified: OffsetDateTime,
     component_type: CompactString,
     payload_type: EntryComponentPayloadType,
     json_data: Option<Value>,
     json_schema_version: Option<i32>,
     asset_id: Option<Uuid>,
     component_version: Uuid,
-    component_modified: DateTime<Utc>,
+    component_modified: OffsetDateTime,
 }
 
 #[derive(Debug, Clone, sqlx::FromRow)]
@@ -132,8 +132,8 @@ pub struct EntryMetadata {
     pub metadata_version: Uuid,
     #[serde(skip)]
     pub(crate) components_version: Uuid,
-    pub created: DateTime<Utc>,
-    pub modified: DateTime<Utc>,
+    pub created: OffsetDateTime,
+    pub modified: OffsetDateTime,
 }
 
 #[derive(Debug, Clone)]
@@ -167,12 +167,12 @@ pub enum EntryComponent {
         data: Value,
         schema_version: i32,
         version: Uuid,
-        modified: DateTime<Utc>,
+        modified: OffsetDateTime,
     },
     Asset {
         asset_id: Uuid,
         version: Uuid,
-        modified: DateTime<Utc>,
+        modified: OffsetDateTime,
     },
 }
 
@@ -242,7 +242,7 @@ pub struct EntryEffect {
     pub space_id: Uuid,
     pub scope_id: Uuid,
     pub operator_id: Option<Uuid>,
-    pub created: DateTime<Utc>,
+    pub created: OffsetDateTime,
     pub message_id: Option<Uuid>,
 }
 
@@ -925,7 +925,7 @@ pub struct EntryHistory {
     pub key: String,
     pub previous_key: Option<String>,
     pub action: EntryHistoryAction,
-    pub created: DateTime<Utc>,
+    pub created: OffsetDateTime,
 }
 
 impl EntryHistory {
@@ -1328,7 +1328,7 @@ pub struct EntryComponentHistory {
     pub component_type: String,
     pub action: EntryComponentHistoryAction,
     pub payload: Option<Value>,
-    pub created: DateTime<Utc>,
+    pub created: OffsetDateTime,
 }
 
 impl EntryComponentHistory {

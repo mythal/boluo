@@ -1,5 +1,5 @@
-use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use time::OffsetDateTime;
 use uuid::Uuid;
 
 use crate::spaces::AccessPolicy;
@@ -14,8 +14,8 @@ pub struct Scope {
     pub access_policy: AccessPolicy,
     pub access_channel_id: Option<Uuid>,
     pub version: Uuid,
-    pub created: DateTime<Utc>,
-    pub modified: DateTime<Utc>,
+    pub created: OffsetDateTime,
+    pub modified: OffsetDateTime,
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, specta::Type, sqlx::Type)]

@@ -1,5 +1,5 @@
-use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use time::OffsetDateTime;
 use uuid::Uuid;
 
 use super::Message;
@@ -25,7 +25,7 @@ pub struct EditMessage {
     pub color: String,
     /// The `modified` timestamp of the message at the time the client started editing it.
     #[serde(default)]
-    pub expect_modified: Option<DateTime<Utc>>,
+    pub expect_modified: Option<OffsetDateTime>,
 }
 
 #[derive(Deserialize, Debug, specta::Type)]

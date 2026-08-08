@@ -332,11 +332,11 @@ pub async fn router(
 mod tests {
     use super::*;
     use crate::spaces::AccessPolicy;
-    use chrono::Utc;
     use compact_str::CompactString;
+    use time::OffsetDateTime;
 
     fn note(creator_id: Uuid, access_policy: AccessPolicy) -> NoteMetadata {
-        let now = Utc::now();
+        let now = OffsetDateTime::now_utc();
         NoteMetadata {
             id: Uuid::now_v7(),
             space_id: Uuid::now_v7(),

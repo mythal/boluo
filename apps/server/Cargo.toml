@@ -27,7 +27,7 @@ rusty-s3 = { version = "0.10", default-features = false, features = [
 base64 = "0.23.1"
 bytes = "1"
 compact_str = { version = "0.10", features = ["serde", "sqlx-postgres"] }
-chrono = { version = "0.4", features = ["serde"] }
+time = { version = "0.3", features = ["serde", "serde-human-readable", "parsing", "formatting"] }
 clap = { version = "4.4.12", features = ["derive", "env"] }
 cookie = "0.18"
 dotenvy = "0.15"
@@ -58,7 +58,7 @@ sqlx = { version = "0.9.0", features = [
   "tls-rustls",
   "postgres",
   "uuid",
-  "chrono",
+  "time",
   "json",
   "sqlx-toml",
 ] }
@@ -128,7 +128,7 @@ features = [
 
 [dependencies.tracing-subscriber]
 version = "0.3"
-features = ["env-filter", "time", "fmt", "chrono"]
+features = ["env-filter", "time", "fmt"]
 
 [dependencies.num-rational]
 version = "0.4.2"

@@ -1,7 +1,7 @@
-use chrono::prelude::*;
 use compact_str::CompactString;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
+use time::OffsetDateTime;
 use unicode_normalization::UnicodeNormalization;
 use uuid::Uuid;
 
@@ -66,11 +66,11 @@ pub struct Character {
     pub access_policy: AccessPolicy,
     pub access_channel_id: Option<Uuid>,
     pub scope_version: Uuid,
-    pub archived_at: Option<DateTime<Utc>>,
+    pub archived_at: Option<OffsetDateTime>,
     #[specta(type = Vec<String>)]
     pub tags: Vec<CompactString>,
-    pub created: DateTime<Utc>,
-    pub modified: DateTime<Utc>,
+    pub created: OffsetDateTime,
+    pub modified: OffsetDateTime,
     pub version: Uuid,
 }
 

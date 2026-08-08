@@ -337,7 +337,8 @@ export function buildBoluoDashboard(
       timeSeriesPanel({
         id: 20,
         title: 'Disk cache health',
-        description: 'The file size high-water mark is configured on the server; a zero up value means the worker is unavailable.',
+        description:
+          'The file size high-water mark is configured on the server; a zero up value means the worker is unavailable.',
         datasourceUid,
         tooltipMode: TooltipDisplayMode.Multi,
         targets: [

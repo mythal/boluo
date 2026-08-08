@@ -33,7 +33,7 @@ impl Signer {
     }
 }
 
-#[derive(Clone, Default)]
+#[derive(Clone)]
 pub struct AppConfig {
     pub ci: bool,
     pub debug: bool,
@@ -44,7 +44,29 @@ pub struct AppConfig {
     pub sentry_host: String,
     pub sentry_project_ids: Vec<String>,
     pub discourse_sso_secret: Option<String>,
-    pub secret: Option<String>,
+    pub secret: String,
+    pub mail: crate::mail::Config,
+    pub entry_component_cache_capacity: u64,
+}
+
+#[cfg(test)]
+impl Default for AppConfig {
+    fn default() -> Self {
+        Self {
+            ci: false,
+            debug: false,
+            public_media_url: None,
+            app_url: None,
+            site_url: None,
+            sentry_dsn: None,
+            sentry_host: String::new(),
+            sentry_project_ids: Vec::new(),
+            discourse_sso_secret: None,
+            secret: "just a test".to_owned(),
+            mail: crate::mail::Config::default(),
+            entry_component_cache_capacity: crate::entries::component_cache::DEFAULT_CACHE_BYTES,
+        }
+    }
 }
 
 pub(crate) struct SpaceList {
@@ -63,6 +85,7 @@ pub struct AppContext {
     pub redis: Option<redis::aio::ConnectionManager>,
     /// Lazily loaded, node-local Space runtimes.
     pub(crate) space_store: crate::space_runtime::SpaceStore,
+    pub(crate) space_activity_notifier: crate::notify::SpaceActivityNotifier,
     pub(crate) space_list_cache: Arc<SpaceListCache>,
     pub(crate) storage: Arc<crate::s3::Storage>,
     pub(crate) signer: Signer,
@@ -71,6 +94,7 @@ pub struct AppContext {
 
 impl AppContext {
     /// Create a new AppContext with the given database pool and redis connection
+    #[cfg(test)]
     pub fn new(
         db: sqlx::Pool<sqlx::Postgres>,
         redis: Option<redis::aio::ConnectionManager>,
@@ -89,19 +113,17 @@ impl AppContext {
         config: AppConfig,
         storage: Arc<crate::s3::Storage>,
     ) -> Self {
-        let secret = config.secret.as_deref().unwrap_or_else(|| {
-            if cfg!(test) {
-                "just a test"
-            } else {
-                panic!("environment variable `SECRET` not present")
-            }
-        });
-        let signer = Signer::new(secret);
-        let space_store = crate::space_runtime::SpaceStore::new(db.clone());
+        let signer = Signer::new(&config.secret);
+        let space_store = crate::space_runtime::SpaceStore::with_entry_component_cache_capacity(
+            db.clone(),
+            config.entry_component_cache_capacity,
+        );
+        let space_activity_notifier = crate::notify::SpaceActivityNotifier::new(db.clone());
         Self {
             db,
             redis,
             space_store,
+            space_activity_notifier,
             space_list_cache: Arc::new(tokio::sync::OnceCell::const_new()),
             storage,
             signer,
@@ -132,8 +154,8 @@ impl AppContext {
             .ok_or(AppError::Unexpected(anyhow::anyhow!("site_url not set")))
     }
 
-    pub fn secret(&self) -> Option<&str> {
-        self.config.secret.as_deref()
+    pub fn secret(&self) -> &str {
+        &self.config.secret
     }
 
     pub(crate) fn signer(&self) -> &Signer {

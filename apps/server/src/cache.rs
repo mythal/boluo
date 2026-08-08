@@ -80,9 +80,14 @@ macro_rules! define_caches {
                 }
             }
 
-            pub async fn invalidate(&self, cache_type: CacheType, key: Uuid) {
+            pub async fn invalidate(
+                &self,
+                redis: Option<&redis::aio::ConnectionManager>,
+                cache_type: CacheType,
+                key: Uuid,
+            ) {
                 self.invalidate_local(cache_type, key);
-                self.notify_invalidate(cache_type, key).await;
+                self.notify_invalidate(redis, cache_type, key).await;
             }
 
             fn expiry(&self) {
@@ -133,10 +138,15 @@ macro_rules! define_caches {
 }
 
 impl CacheStore {
-    async fn notify_invalidate(&self, cache_type: CacheType, key: Uuid) {
+    async fn notify_invalidate(
+        &self,
+        redis: Option<&redis::aio::ConnectionManager>,
+        cache_type: CacheType,
+        key: Uuid,
+    ) {
         use redis::AsyncCommands as _;
 
-        let Some(mut redis) = crate::redis::conn().await else {
+        let Some(mut redis) = redis.cloned() else {
             return;
         };
         let topic = cache_type.to_str();

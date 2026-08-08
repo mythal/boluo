@@ -1,4 +1,15 @@
-pub async fn send(to: &str, subject: &str, html: &str) -> Result<(), anyhow::Error> {
+#[derive(Clone, Default)]
+pub struct Config {
+    pub domain: Option<String>,
+    pub api_key: Option<String>,
+}
+
+pub async fn send(
+    config: &Config,
+    to: &str,
+    subject: &str,
+    html: &str,
+) -> Result<(), anyhow::Error> {
     use std::sync::LazyLock;
     use std::time::Duration;
 
@@ -10,11 +21,10 @@ pub async fn send(to: &str, subject: &str, html: &str) -> Result<(), anyhow::Err
             .expect("Failed to build mail HTTP client")
     });
     tracing::info!("Sending email to {to}");
-    let domain = std::env::var("MAILGUN_DOMAIN").ok();
 
-    let Some(domain) = domain else {
+    let Some(domain) = config.domain.as_deref() else {
         tracing::info!(
-            "MAILGUN_DOMAIN is not set, maybe you are running in local, skipping email sending and print the email content"
+            "Mailgun is not configured, maybe you are running locally; skipping email delivery and printing the email content"
         );
 
         println!("To: {to}");
@@ -24,8 +34,8 @@ pub async fn send(to: &str, subject: &str, html: &str) -> Result<(), anyhow::Err
         return Ok(());
     };
 
-    let Ok(api_key) = std::env::var("MAILGUN_API_KEY") else {
-        tracing::error!("MAILGUN_API_KEY is not set");
+    let Some(api_key) = config.api_key.as_deref() else {
+        tracing::error!("Mailgun API key is not configured");
         return Err(anyhow::anyhow!(
             "The server is not configured to send emails"
         ));
@@ -42,7 +52,7 @@ pub async fn send(to: &str, subject: &str, html: &str) -> Result<(), anyhow::Err
 
     let mut url = reqwest::Url::parse(&url)?;
     url.set_username("api").unwrap();
-    url.set_password(Some(&*api_key)).unwrap();
+    url.set_password(Some(api_key)).unwrap();
     let res = CLIENT.post(url).form(&params).send().await?;
     if !res.status().is_success() {
         let error = res.text().await?;

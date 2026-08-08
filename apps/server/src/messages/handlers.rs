@@ -152,7 +152,7 @@ async fn send(
     .inspect_err(|_| {
         metrics::counter!("boluo_server_messages_created_failed_total").increment(1);
     })?;
-    notify::space_activity(&ctx.space_store, channel.space_id, Some(message.created));
+    notify::space_activity(ctx, channel.space_id, Some(message.created));
     Update::new_message(space_member.space_id, message.clone(), preview_id).await;
 
     metrics::counter!("boluo_server_messages_created_total").increment(1);

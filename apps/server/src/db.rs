@@ -1,5 +1,3 @@
-use std::sync::OnceLock;
-
 use crate::channels::ChannelType;
 
 pub static MIGRATOR: sqlx::migrate::Migrator = sqlx::migrate!("./migrations");
@@ -25,51 +23,40 @@ macro_rules! check_composite_row {
     }};
 }
 
-pub fn get_postgres_url() -> String {
-    std::env::var("DATABASE_URL").expect("Failed to load Postgres connect URL")
-}
-
-pub async fn get() -> sqlx::Pool<sqlx::Postgres> {
-    static POOL: OnceLock<sqlx::Pool<sqlx::Postgres>> = OnceLock::new();
+pub async fn connect(database_url: &str) -> sqlx::Pool<sqlx::Postgres> {
     const LIFETIME: std::time::Duration = std::time::Duration::from_secs(60 * 60);
     const IDLE_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(60 * 5);
     const ACQUIRE_SLOW_THRESHOLD: std::time::Duration = std::time::Duration::from_millis(800);
     const ACQUIRE_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(10);
-    if let Some(pool) = POOL.get() {
-        pool.clone()
-    } else {
-        let pool = sqlx::postgres::PgPoolOptions::new()
-            .after_connect(|conn, _meta| {
-                Box::pin(async move {
-                    use sqlx::Executor;
-                    conn.execute(
-                        "SET application_name = 'boluo-server';
-                         SET statement_timeout = 20000;
-                         SET TIME ZONE 'UTC';",
-                    )
-                    .await?;
+    sqlx::postgres::PgPoolOptions::new()
+        .after_connect(|conn, _meta| {
+            Box::pin(async move {
+                use sqlx::Executor;
+                conn.execute(
+                    "SET application_name = 'boluo-server';
+                     SET statement_timeout = 20000;
+                     SET TIME ZONE 'UTC';",
+                )
+                .await?;
 
-                    Ok(())
-                })
+                Ok(())
             })
-            .max_connections(32)
-            .min_connections(16)
-            .acquire_slow_threshold(ACQUIRE_SLOW_THRESHOLD)
-            .acquire_timeout(ACQUIRE_TIMEOUT)
-            .max_lifetime(Some(LIFETIME))
-            .idle_timeout(Some(IDLE_TIMEOUT))
-            .connect(&get_postgres_url())
-            .await
-            .expect("Cannot connect to database");
-
-        POOL.get_or_init(move || pool).clone()
-    }
+        })
+        .max_connections(32)
+        .min_connections(16)
+        .acquire_slow_threshold(ACQUIRE_SLOW_THRESHOLD)
+        .acquire_timeout(ACQUIRE_TIMEOUT)
+        .max_lifetime(Some(LIFETIME))
+        .idle_timeout(Some(IDLE_TIMEOUT))
+        .connect(database_url)
+        .await
+        .expect("Cannot connect to database")
 }
 
-pub async fn check_db_host() {
+pub async fn check_db_host(database_url: &str) {
     use std::str::FromStr;
 
-    let options = sqlx::postgres::PgConnectOptions::from_str(&get_postgres_url())
+    let options = sqlx::postgres::PgConnectOptions::from_str(database_url)
         .expect("Cannot parse Postgres connect URL");
 
     tracing::info!(
@@ -590,7 +577,7 @@ pub async fn check(pool: &sqlx::Pool<sqlx::Postgres>) {
     .expect("Cannot decode entry_component_history composite row");
 
     if let Some(real_user_id) = real_user_id {
-        let _session = crate::session::start(real_user_id)
+        let _session = crate::session::start(pool, real_user_id)
             .await
             .expect("Cannot create session");
         let _reset_token = crate::users::User::generate_reset_token(&mut *trans, real_user_id)

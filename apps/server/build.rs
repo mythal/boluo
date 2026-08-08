@@ -1,20 +1,32 @@
-use std::net::{TcpStream, ToSocketAddrs};
-use std::path::{Path, PathBuf};
-use std::str::FromStr;
+use std::path::Path;
+use std::time::Duration;
 
-use sqlx_postgres::PgConnectOptions;
+use sqlx::migrate::Migrator;
+use sqlx::postgres::PgConnection;
+use sqlx::{Connection, Row};
+
+const DATABASE_CHECK_TIMEOUT: Duration = Duration::from_secs(1);
 
 fn main() {
-    dotenvy::from_filename(".env.local").ok();
-    dotenvy::dotenv().ok();
+    let workspace_dir = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(Path::parent)
+        .expect("server package must be nested in the workspace");
+    let env_local = workspace_dir.join(".env.local");
+    let env_file = workspace_dir.join(".env");
+    let migrations_dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("migrations");
 
-    println!("cargo:rerun-if-changed=.env.local");
+    dotenvy::from_path(&env_local).ok();
+    dotenvy::from_path(&env_file).ok();
+
+    println!("cargo:rerun-if-changed={}", env_local.display());
+    println!("cargo:rerun-if-changed={}", env_file.display());
     println!("cargo:rerun-if-env-changed=DATABASE_URL");
     println!("cargo:rerun-if-env-changed=SQLX_OFFLINE");
+    println!("cargo:rerun-if-changed={}", migrations_dir.display());
 
     if let Ok(url) = std::env::var("DATABASE_URL") {
         println!("cargo::rustc-env=DATABASE_URL={url}");
-        println!("cargo:rerun-if-changed=migrations");
     }
 
     if std::env::var("PROFILE").as_deref() == Ok("release") {
@@ -25,70 +37,82 @@ fn main() {
         return;
     }
 
-    // Auto-detect: try to TCP-connect to the database
-    let reachable = std::env::var("DATABASE_URL")
-        .ok()
-        .as_deref()
-        .and_then(parse_db_target)
-        .map(|target| target.is_reachable())
-        .unwrap_or(false);
+    let offline_reason = match std::env::var("DATABASE_URL") {
+        Ok(url) => database_latest_migration_status(&url, &migrations_dir).err(),
+        Err(_) => Some("DATABASE_URL is not set".to_owned()),
+    };
 
-    if !reachable {
+    if let Some(reason) = offline_reason {
+        println!("cargo::warning=using SQLx offline mode: {reason}");
         println!("cargo::rustc-env=SQLX_OFFLINE=true");
     }
 }
 
-enum DbTarget {
-    Tcp { host: String, port: u16 },
-    UnixSocket(PathBuf),
-}
+fn database_latest_migration_status(
+    database_url: &str,
+    migrations_dir: &Path,
+) -> Result<(), String> {
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .map_err(|error| format!("failed to initialize async runtime: {error}"))?;
 
-impl DbTarget {
-    fn is_reachable(&self) -> bool {
-        match self {
-            Self::Tcp { host, port } => (host.as_str(), *port)
-                .to_socket_addrs()
-                .map(|addrs| {
-                    addrs.into_iter().any(|addr| {
-                        TcpStream::connect_timeout(&addr, std::time::Duration::from_millis(500))
-                            .is_ok()
-                    })
-                })
-                .unwrap_or(false),
-            Self::UnixSocket(path) => connect_unix_socket(path),
+    runtime.block_on(async {
+        let migrator = Migrator::new(migrations_dir)
+            .await
+            .map_err(|error| format!("failed to load local migrations: {error}"))?;
+        let latest = migrator
+            .iter()
+            .filter(|migration| migration.migration_type.is_up_migration())
+            .max_by_key(|migration| migration.version)
+            .ok_or_else(|| "no local migrations found".to_owned())?;
+
+        let mut connection =
+            tokio::time::timeout(DATABASE_CHECK_TIMEOUT, PgConnection::connect(database_url))
+                .await
+                .map_err(|_| "database connection timed out".to_owned())?
+                .map_err(|error| format!("failed to connect to database: {error}"))?;
+
+        let row = tokio::time::timeout(
+            DATABASE_CHECK_TIMEOUT,
+            sqlx::query(
+                "SELECT version, success, checksum \
+                     FROM _sqlx_migrations \
+                     ORDER BY version DESC \
+                     LIMIT 1",
+            )
+            .fetch_optional(&mut connection),
+        )
+        .await
+        .map_err(|_| "migration status query timed out".to_owned())?
+        .map_err(|error| format!("failed to query _sqlx_migrations: {error}"))?
+        .ok_or_else(|| "_sqlx_migrations has no applied migrations".to_owned())?;
+
+        let version: i64 = row
+            .try_get("version")
+            .map_err(|error| format!("failed to decode migration version: {error}"))?;
+        let success: bool = row
+            .try_get("success")
+            .map_err(|error| format!("failed to decode migration status: {error}"))?;
+        let checksum: Vec<u8> = row
+            .try_get("checksum")
+            .map_err(|error| format!("failed to decode migration checksum: {error}"))?;
+
+        if !success {
+            return Err(format!(
+                "database migration {version} is marked unsuccessful"
+            ));
         }
-    }
-}
+        if version != latest.version {
+            return Err(format!(
+                "database migration version {version} does not match local version {}",
+                latest.version
+            ));
+        }
+        if checksum.as_slice() != latest.checksum.as_ref() {
+            return Err(format!("migration {version} checksum does not match"));
+        }
 
-fn parse_db_target(url: &str) -> Option<DbTarget> {
-    let options = PgConnectOptions::from_str(url).ok()?;
-    let port = options.get_port();
-
-    if let Some(socket_dir) = options.get_socket() {
-        return Some(DbTarget::UnixSocket(postgres_socket_path(socket_dir, port)));
-    }
-
-    let host = options.get_host();
-    if host.starts_with('/') {
-        return Some(DbTarget::UnixSocket(postgres_socket_path(host, port)));
-    }
-
-    Some(DbTarget::Tcp {
-        host: host.to_owned(),
-        port,
+        Ok(())
     })
-}
-
-fn postgres_socket_path(socket_dir: impl AsRef<Path>, port: u16) -> PathBuf {
-    socket_dir.as_ref().join(format!(".s.PGSQL.{port}"))
-}
-
-#[cfg(unix)]
-fn connect_unix_socket(path: &Path) -> bool {
-    std::os::unix::net::UnixStream::connect(path).is_ok()
-}
-
-#[cfg(not(unix))]
-fn connect_unix_socket(_path: &Path) -> bool {
-    false
 }

@@ -217,7 +217,7 @@ pub async fn login<B: Body>(
         .or_no_permission()?;
     let user_id = user.id;
     drop(conn);
-    let session = session::start(user_id).await?;
+    let session = session::start(&ctx.db, user_id).await?;
     let token: String = session::token(ctx.signer(), &session.id);
     let token = if form.with_token { Some(token) } else { None };
     let my_spaces = Space::get_by_user_with_cache(&ctx.db, user_id).await?;
@@ -256,7 +256,7 @@ pub async fn logout(
     use crate::session::authenticate;
 
     if let Ok(session) = authenticate(ctx, &req).await {
-        revoke_session(&ctx.db, session.id).await?;
+        revoke_session(&ctx.db, ctx.redis.as_ref(), session.id).await?;
     }
     let mut response = ok_response(true);
     remove_session_cookie(response.headers_mut());
@@ -381,11 +381,16 @@ pub fn token_key(token: &str) -> Vec<u8> {
     key
 }
 
-async fn send_limited_mail(to: &str, subject: &str, html: &str) -> Result<(), AppError> {
+async fn send_limited_mail(
+    ctx: &crate::context::AppContext,
+    to: &str,
+    subject: &str,
+    html: &str,
+) -> Result<(), AppError> {
     MAIL_GLOBAL_LIMITER
         .check()
         .map_err(|_| AppError::LimitExceeded("Too many emails, please try again later."))?;
-    mail::send(to, subject, html)
+    mail::send(&ctx.config.mail, to, subject, html)
         .await
         .map_err(AppError::Unexpected)
 }
@@ -424,6 +429,7 @@ pub async fn reset_password(
     match lang {
         "zh" | "zh-CN" | "zh_CN" => {
             send_limited_mail(
+                ctx,
                 &email,
                 include_str!("../../text/reset-password/title.zh-CN.txt").trim(),
                 &format!(
@@ -435,6 +441,7 @@ pub async fn reset_password(
         }
         "zh-TW" | "zh_TW" => {
             send_limited_mail(
+                ctx,
                 &email,
                 include_str!("../../text/reset-password/title.zh-TW.txt").trim(),
                 &format!(
@@ -446,6 +453,7 @@ pub async fn reset_password(
         }
         "ja" => {
             send_limited_mail(
+                ctx,
                 &email,
                 include_str!("../../text/reset-password/title.ja.txt").trim(),
                 &format!(
@@ -457,6 +465,7 @@ pub async fn reset_password(
         }
         _ => {
             send_limited_mail(
+                ctx,
                 &email,
                 include_str!("../../text/reset-password/title.en.txt").trim(),
                 &format!(
@@ -494,7 +503,7 @@ pub async fn reset_password_confirm(
     let token = token
         .parse::<Uuid>()
         .map_err(|_| AppError::BadRequest("Invalid token".to_string()))?;
-    User::reset_password(&ctx.db, token, &password).await?;
+    User::reset_password(&ctx.db, ctx.redis.as_ref(), token, &password).await?;
     Ok(())
 }
 
@@ -512,6 +521,7 @@ async fn send_email_verification(
     match lang {
         "zh" | "zh-CN" | "zh_CN" => {
             send_limited_mail(
+                ctx,
                 email,
                 include_str!("../../text/email-verification/title.zh-CN.txt").trim(),
                 &format!(
@@ -523,6 +533,7 @@ async fn send_email_verification(
         }
         "zh-TW" | "zh_TW" => {
             send_limited_mail(
+                ctx,
                 email,
                 include_str!("../../text/email-verification/title.zh-TW.txt").trim(),
                 &format!(
@@ -534,6 +545,7 @@ async fn send_email_verification(
         }
         "ja" => {
             send_limited_mail(
+                ctx,
                 email,
                 include_str!("../../text/email-verification/title.ja.txt").trim(),
                 &format!(
@@ -545,6 +557,7 @@ async fn send_email_verification(
         }
         _ => {
             send_limited_mail(
+                ctx,
                 email,
                 include_str!("../../text/email-verification/title.en.txt").trim(),
                 &format!(
@@ -568,7 +581,7 @@ pub async fn verify_email(
     let user_id = User::verify_email_verification_token(ctx.signer(), &token)
         .map_err(|e| AppError::BadRequest(format!("Invalid verification token: {}", e)))?;
 
-    User::verify_email(&ctx.db, &user_id).await?;
+    User::verify_email(&ctx.db, ctx.redis.as_ref(), &user_id).await?;
 
     tracing::info!(
         user_id = %user_id,
@@ -644,6 +657,7 @@ async fn send_email_change_verification(
     match lang {
         "zh" | "zh-CN" | "zh_CN" => {
             send_limited_mail(
+                ctx,
                 new_email,
                 include_str!("../../text/email-change/title.zh-CN.txt").trim(),
                 &format!(
@@ -655,6 +669,7 @@ async fn send_email_change_verification(
         }
         "zh-TW" | "zh_TW" => {
             send_limited_mail(
+                ctx,
                 new_email,
                 include_str!("../../text/email-change/title.zh-TW.txt").trim(),
                 &format!(
@@ -666,6 +681,7 @@ async fn send_email_change_verification(
         }
         "ja" => {
             send_limited_mail(
+                ctx,
                 new_email,
                 include_str!("../../text/email-change/title.ja.txt").trim(),
                 &format!(
@@ -677,6 +693,7 @@ async fn send_email_change_verification(
         }
         _ => {
             send_limited_mail(
+                ctx,
                 new_email,
                 include_str!("../../text/email-change/title.en.txt").trim(),
                 &format!(
@@ -759,7 +776,7 @@ pub async fn confirm_email_change(
     };
 
     // Mark the new email as verified since user confirmed the change via email
-    User::mark_email_verified(&ctx.db, &user_id).await?;
+    User::mark_email_verified(&ctx.db, ctx.redis.as_ref(), &user_id).await?;
 
     tracing::info!(
         user_id = %user_id,

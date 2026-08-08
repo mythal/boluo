@@ -1,10 +1,11 @@
-use std::{collections::HashMap, sync::LazyLock};
+use std::collections::HashMap;
 
 use time::OffsetDateTime;
 use tracing::Instrument as _;
 use uuid::Uuid;
 
-use crate::db;
+use crate::context::AppContext;
+#[cfg(test)]
 use crate::space_runtime::SpaceStore;
 
 async fn persist_space_activity_batch(
@@ -39,78 +40,89 @@ async fn apply_space_activity(
         .map(|_| ())
 }
 
-static NOTIFY_SPACE_ACTIVITY: LazyLock<tokio::sync::mpsc::Sender<(Uuid, OffsetDateTime)>> =
-    LazyLock::new(|| {
-        let (tx, mut rx) = tokio::sync::mpsc::channel::<(Uuid, OffsetDateTime)>(64);
-        let span = tracing::info_span!(parent: None, "space_activity");
-        tokio::spawn(async move {
-            let mut map: HashMap<Uuid, OffsetDateTime, _> =
-                HashMap::with_hasher(ahash::RandomState::new());
+#[derive(Clone)]
+pub(crate) struct SpaceActivityNotifier {
+    sender: tokio::sync::mpsc::Sender<(Uuid, OffsetDateTime)>,
+}
 
-            let pool = db::get().await;
-            let mut interval = crate::utils::cleaner_interval(6);
-            loop {
-                tokio::select! {
-                    Some((space_id, update_time)) = rx.recv() => {
-                        map.entry(space_id)
-                            .and_modify(|current| *current = (*current).max(update_time))
-                            .or_insert(update_time);
-                    }
-                    _ = crate::shutdown::SHUTDOWN.notified() => {
-                        break;
-                    }
-                    _ = interval.tick() => {
-                        if !map.is_empty() {
-                            let mut taken_map = HashMap::with_capacity_and_hasher(map.len(), ahash::RandomState::new());
-                            std::mem::swap(&mut map, &mut taken_map);
-                            let update_count = taken_map.len();
-                            if let Err(err) =
-                                persist_space_activity_batch(
-                                    &pool,
-                                    taken_map.iter().map(|(&space_id, &update_time)| {
-                                        (space_id, update_time)
-                                    }),
-                                )
-                                .await
-                            {
-                                tracing::error!(
-                                    error = %err,
-                                    update_count,
-                                    "Failed to update Space activity batch"
-                                );
-                                for (space_id, update_time) in taken_map {
-                                    map.entry(space_id)
-                                        .and_modify(|current| *current = (*current).max(update_time))
-                                        .or_insert(update_time);
+impl SpaceActivityNotifier {
+    pub(crate) fn new(pool: sqlx::PgPool) -> Self {
+        let (sender, mut receiver) = tokio::sync::mpsc::channel::<(Uuid, OffsetDateTime)>(64);
+        let span = tracing::info_span!(parent: None, "space_activity");
+        tokio::spawn(
+            async move {
+                let mut map: HashMap<Uuid, OffsetDateTime, _> =
+                    HashMap::with_hasher(ahash::RandomState::new());
+
+                let mut interval = crate::utils::cleaner_interval(6);
+                loop {
+                    tokio::select! {
+                        update = receiver.recv() => {
+                            let Some((space_id, update_time)) = update else {
+                                tracing::debug!("Channel closed, exiting space activity task");
+                                break;
+                            };
+                            map.entry(space_id)
+                                .and_modify(|current| *current = (*current).max(update_time))
+                                .or_insert(update_time);
+                        }
+                        _ = crate::shutdown::SHUTDOWN.notified() => {
+                            break;
+                        }
+                        _ = interval.tick() => {
+                            if !map.is_empty() {
+                                let mut taken_map = HashMap::with_capacity_and_hasher(map.len(), ahash::RandomState::new());
+                                std::mem::swap(&mut map, &mut taken_map);
+                                let update_count = taken_map.len();
+                                if let Err(err) =
+                                    persist_space_activity_batch(
+                                        &pool,
+                                        taken_map.iter().map(|(&space_id, &update_time)| {
+                                            (space_id, update_time)
+                                        }),
+                                    )
+                                    .await
+                                {
+                                    tracing::error!(
+                                        error = %err,
+                                        update_count,
+                                        "Failed to update Space activity batch"
+                                    );
+                                    for (space_id, update_time) in taken_map {
+                                        map.entry(space_id)
+                                            .and_modify(|current| *current = (*current).max(update_time))
+                                            .or_insert(update_time);
+                                    }
                                 }
                             }
                         }
                     }
-
-                    else => {
-                        tracing::warn!("Channel closed, exiting space activity task");
-                        break;
-                    }
                 }
             }
-        }.instrument(span));
-        tx
-    });
+            .instrument(span),
+        );
+        Self { sender }
+    }
+
+    fn notify(&self, space_id: Uuid, update_time: OffsetDateTime) {
+        if let Err(_err) = self.sender.try_send((space_id, update_time)) {
+            tracing::info!(
+                "Failed to send space activity notification: {}, tokio channel is full",
+                space_id
+            );
+        }
+    }
+}
 
 pub(crate) fn space_activity(
-    space_store: &SpaceStore,
+    ctx: &AppContext,
     space_id: Uuid,
     update_time: Option<OffsetDateTime>,
 ) {
     let update_time = update_time.unwrap_or_else(OffsetDateTime::now_utc);
-    space_store.record_latest_activity_if_loaded(space_id, update_time);
-    let tx = NOTIFY_SPACE_ACTIVITY.clone();
-    if let Err(_err) = tx.try_send((space_id, update_time)) {
-        tracing::info!(
-            "Failed to send space activity notification: {}, tokio channel is full",
-            space_id
-        );
-    }
+    ctx.space_store
+        .record_latest_activity_if_loaded(space_id, update_time);
+    ctx.space_activity_notifier.notify(space_id, update_time);
 }
 
 #[cfg(test)]

@@ -2947,7 +2947,6 @@ dependencies = [
  "specta-serde",
  "specta-typescript",
  "sqlx",
- "sqlx-postgres",
  "thiserror 2.0.20",
  "time",
  "tokio",

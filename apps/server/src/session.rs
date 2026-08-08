@@ -66,14 +66,20 @@ pub fn token_verify(signer: &crate::context::Signer, token: &str) -> Result<Uuid
         .context("Failed to convert session bytes data to UUID.")
 }
 
-pub async fn revoke_session(pool: &sqlx::PgPool, session_id: Uuid) -> Result<(), sqlx::Error> {
+pub async fn revoke_session(
+    pool: &sqlx::PgPool,
+    redis: Option<&redis::aio::ConnectionManager>,
+    session_id: Uuid,
+) -> Result<(), sqlx::Error> {
     {
         let mut conn = pool.acquire().await?;
         sqlx::query_file!("sql/users/session_revoke.sql", session_id)
             .execute(&mut *conn)
             .await?;
     }
-    CACHE.invalidate(CacheType::Session, session_id).await;
+    CACHE
+        .invalidate(redis, CacheType::Session, session_id)
+        .await;
     Ok(())
 }
 
@@ -87,10 +93,11 @@ fn test_session_sign() {
 }
 
 pub async fn start_with_session_id(
+    pool: &sqlx::PgPool,
     user_id: Uuid,
     session_id: Uuid,
 ) -> Result<Session, sqlx::Error> {
-    let mut conn = crate::db::get().await.acquire().await?;
+    let mut conn = pool.acquire().await?;
     sqlx::query_file_as!(
         Session,
         "sql/users/session_start.sql",
@@ -100,9 +107,9 @@ pub async fn start_with_session_id(
     .fetch_one(&mut *conn)
     .await
 }
-pub async fn start(user_id: Uuid) -> Result<Session, sqlx::Error> {
+pub async fn start(pool: &sqlx::PgPool, user_id: Uuid) -> Result<Session, sqlx::Error> {
     let session_id = Uuid::new_v4();
-    let session = start_with_session_id(user_id, session_id).await?;
+    let session = start_with_session_id(pool, user_id, session_id).await?;
     CACHE.Session.insert(session_id, session.into());
     Ok(session)
 }
@@ -280,8 +287,8 @@ fn parse_cookie(value: &hyper::header::HeaderValue) -> Option<&str> {
 }
 
 #[tracing::instrument]
-async fn get_session_from_db(session_id: Uuid) -> Result<Session, AppError> {
-    let mut conn = crate::db::get().await.acquire().await?;
+async fn get_session_from_db(pool: &sqlx::PgPool, session_id: Uuid) -> Result<Session, AppError> {
+    let mut conn = pool.acquire().await?;
     let session = sqlx::query_file_as!(Session, "sql/users/session_fetch.sql", session_id)
         .fetch_optional(&mut *conn)
         .await
@@ -293,11 +300,11 @@ async fn get_session_from_db(session_id: Uuid) -> Result<Session, AppError> {
 }
 
 async fn get_session_from_token(
-    signer: &crate::context::Signer,
+    ctx: &crate::context::AppContext,
     token: &str,
 ) -> Result<Session, AppError> {
     let token = token.to_string();
-    let signer = signer.clone();
+    let signer = ctx.signer().clone();
     let session_id = tokio::task::spawn_blocking(move || token_verify(&signer, &token))
         .await
         .map_err(|err| AppError::Unexpected(err.into()))?
@@ -307,7 +314,7 @@ async fn get_session_from_token(
         })?;
 
     fetch_entry(&CACHE.Session, session_id, async {
-        get_session_from_db(session_id).await
+        get_session_from_db(&ctx.db, session_id).await
     })
     .await
 }
@@ -318,7 +325,7 @@ pub async fn authenticate_with_cookie(
 ) -> Result<Session, AppError> {
     let cookie = headers.get(COOKIE).ok_or(AuthenticateFail::Guest)?;
     let token = parse_cookie(cookie).ok_or(AuthenticateFail::Guest)?;
-    let session = get_session_from_token(ctx.signer(), token).await?;
+    let session = get_session_from_token(ctx, token).await?;
     Ok(session)
 }
 
@@ -332,7 +339,7 @@ pub async fn authenticate(
     let session = if let Some(header_value) = headers.get(AUTHORIZATION) {
         if let Ok(authorization) = header_value.to_str() {
             let token = authorization.trim_start_matches("Bearer ").trim();
-            let session = get_session_from_token(ctx.signer(), token).await;
+            let session = get_session_from_token(ctx, token).await;
             match session {
                 Ok(session) => {
                     span.record("auth_method", "bearer_token");

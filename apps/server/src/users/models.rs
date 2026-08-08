@@ -223,6 +223,7 @@ impl User {
 
     pub async fn reset_password(
         db: &sqlx::PgPool,
+        redis: Option<&redis::aio::ConnectionManager>,
         token: Uuid,
         password: &str,
     ) -> Result<(), ModelError> {
@@ -262,16 +263,20 @@ impl User {
             .await?;
         transaction.commit().await?;
 
-        CACHE.invalidate(CacheType::User, id).await;
+        CACHE.invalidate(redis, CacheType::User, id).await;
         Ok(())
     }
 
-    pub async fn deactivated(pool: &sqlx::PgPool, id: &Uuid) -> Result<u64, sqlx::Error> {
+    pub async fn deactivated(
+        pool: &sqlx::PgPool,
+        redis: Option<&redis::aio::ConnectionManager>,
+        id: &Uuid,
+    ) -> Result<u64, sqlx::Error> {
         let affected = sqlx::query_file!("sql/users/deactivated.sql", id)
             .execute(pool)
             .await?
             .rows_affected();
-        CACHE.invalidate(CacheType::User, *id).await;
+        CACHE.invalidate(redis, CacheType::User, *id).await;
         Ok(affected)
     }
 
@@ -379,7 +384,11 @@ impl User {
         Uuid::from_slice(&user_id_bytes).context("Failed to convert user ID bytes to UUID")
     }
 
-    pub async fn verify_email(pool: &sqlx::PgPool, user_id: &Uuid) -> Result<User, ModelError> {
+    pub async fn verify_email(
+        pool: &sqlx::PgPool,
+        redis: Option<&redis::aio::ConnectionManager>,
+        user_id: &Uuid,
+    ) -> Result<User, ModelError> {
         let user = {
             let mut db = pool.acquire().await?;
             // Update email_verified_at in users_extension table
@@ -399,7 +408,7 @@ impl User {
         };
 
         CACHE.User.insert(user.id, user.clone().into());
-        CACHE.invalidate(CacheType::UserExt, *user_id).await;
+        CACHE.invalidate(redis, CacheType::UserExt, *user_id).await;
 
         Ok(user)
     }
@@ -507,6 +516,7 @@ impl User {
 
     pub async fn mark_email_verified(
         pool: &sqlx::PgPool,
+        redis: Option<&redis::aio::ConnectionManager>,
         user_id: &Uuid,
     ) -> Result<(), sqlx::Error> {
         sqlx::query!(
@@ -519,7 +529,7 @@ impl User {
         .execute(pool)
         .await?;
 
-        CACHE.invalidate(CacheType::UserExt, *user_id).await;
+        CACHE.invalidate(redis, CacheType::UserExt, *user_id).await;
         Ok(())
     }
 }
@@ -724,7 +734,7 @@ mod tests {
             .expect("fetch by reset token failed");
         assert_eq!(token_user.id, user.id);
 
-        User::reset_password(&pool, token, new_password)
+        User::reset_password(&pool, None, token, new_password)
             .await
             .expect("reset password failed");
 
@@ -746,7 +756,7 @@ mod tests {
             User::get_by_reset_token(&pool, token).await.is_err(),
             "used token must no longer be valid"
         );
-        let reused_token_error = User::reset_password(&pool, token, "ResetPass789!")
+        let reused_token_error = User::reset_password(&pool, None, token, "ResetPass789!")
             .await
             .expect_err("used token must not be reusable");
         assert!(
@@ -786,7 +796,7 @@ mod tests {
             User::get_by_reset_token(&pool, token).await.is_err(),
             "expired token must fail validation"
         );
-        let expired_token_error = User::reset_password(&pool, token, "ResetPass456!")
+        let expired_token_error = User::reset_password(&pool, None, token, "ResetPass456!")
             .await
             .expect_err("expired token must not reset the password");
         assert!(
@@ -824,8 +834,8 @@ mod tests {
         let first_pool = pool.clone();
         let second_pool = pool.clone();
         let (first, second) = tokio::join!(
-            User::reset_password(&first_pool, token, "ResetPass456!"),
-            User::reset_password(&second_pool, token, "ResetPass789!")
+            User::reset_password(&first_pool, None, token, "ResetPass456!"),
+            User::reset_password(&second_pool, None, token, "ResetPass789!")
         );
 
         assert_eq!(

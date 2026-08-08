@@ -314,7 +314,7 @@
               };
               config = {
                 Env = [ versionEnv ];
-                Cmd = [ "/bin/server" ];
+                Cmd = [ "/bin/server" "serve" ];
                 Labels = imageLabel;
               };
             };

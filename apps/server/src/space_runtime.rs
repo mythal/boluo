@@ -1393,6 +1393,16 @@ impl Drop for SpaceRuntimeLease {
 
 impl SpaceStore {
     pub(crate) fn new(db: sqlx::PgPool) -> Self {
+        Self::with_entry_component_cache_capacity(
+            db,
+            crate::entries::component_cache::DEFAULT_CACHE_BYTES,
+        )
+    }
+
+    pub(crate) fn with_entry_component_cache_capacity(
+        db: sqlx::PgPool,
+        entry_component_cache_capacity: u64,
+    ) -> Self {
         let store = Self {
             inner: Arc::new(SpaceStoreInner {
                 db,
@@ -1401,7 +1411,9 @@ impl SpaceStore {
                     .hasher(ahash::RandomState::new())
                     .resize_mode(papaya::ResizeMode::Blocking)
                     .build(),
-                entry_component_memory_cache: Arc::new(EntryComponentMemoryCache::new()),
+                entry_component_memory_cache: Arc::new(EntryComponentMemoryCache::new(
+                    entry_component_cache_capacity,
+                )),
                 reconciliation_permits: Arc::new(tokio::sync::Semaphore::new(
                     MAX_CONCURRENT_RECONCILIATIONS,
                 )),

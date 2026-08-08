@@ -4,7 +4,7 @@ use uuid::Uuid;
 
 use super::models::EntryComponentsSnapshot;
 
-const DEFAULT_CACHE_BYTES: usize = 16 * 1024 * 1024;
+pub(crate) const DEFAULT_CACHE_BYTES: u64 = 16 * 1024 * 1024;
 const ESTIMATED_CACHE_ITEMS: usize = 4096;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -35,12 +35,7 @@ pub(crate) struct EntryComponentMemoryCache {
 }
 
 impl EntryComponentMemoryCache {
-    pub(crate) fn new() -> Self {
-        let capacity = std::env::var("ENTRY_COMPONENT_CACHE_MB")
-            .ok()
-            .and_then(|value| value.parse::<u64>().ok())
-            .and_then(|value| value.checked_mul(1024 * 1024))
-            .unwrap_or(DEFAULT_CACHE_BYTES as u64);
+    pub(crate) fn new(capacity: u64) -> Self {
         Self {
             cache: MemoryCache::with_weighter(ESTIMATED_CACHE_ITEMS, capacity, CacheWeighter),
         }

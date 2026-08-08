@@ -9,7 +9,7 @@ use std::env;
 use std::net::{IpAddr, SocketAddr};
 use std::path::PathBuf;
 
-use clap::Parser;
+use clap::{Args as ClapArgs, Parser, Subcommand};
 use futures::pin_mut;
 use http_body_util::Full;
 use hyper::body::Incoming;
@@ -251,7 +251,31 @@ async fn storage_check(storage: &s3::Storage, ci: bool) {
     tracing::info!("Object Storage is ready");
 }
 #[derive(Parser)]
-struct Args {
+struct Cli {
+    #[clap(subcommand)]
+    command: Command,
+}
+
+#[derive(Subcommand)]
+enum Command {
+    /// Run the HTTP server
+    Serve(ServeArgs),
+    /// Export TypeScript types
+    Types,
+}
+
+#[derive(ClapArgs)]
+struct ServeArgs {
+    #[clap(long, env = "HOST", default_value = "127.0.0.1")]
+    host: IpAddr,
+    #[clap(long, env = "PORT", default_value_t = 3000)]
+    port: u16,
+    #[clap(long, env = "PROMETHEUS_EXPORTER")]
+    prometheus_exporter: Option<SocketAddr>,
+    #[clap(long, env = "DATABASE_URL")]
+    database_url: String,
+    #[clap(long, env = "REDIS_URL")]
+    redis_url: Option<String>,
     #[clap(long, env = "CI", default_value_t = false)]
     ci: bool,
     #[clap(long, env = "BOLUO_DEBUG", default_value_t = false)]
@@ -271,7 +295,11 @@ struct Args {
     #[clap(long, env = "DISCOURSE_SSO_SECRET")]
     discourse_sso_secret: Option<String>,
     #[clap(long, env = "SECRET")]
-    secret: Option<String>,
+    secret: String,
+    #[clap(long, env = "MAILGUN_DOMAIN", requires = "mailgun_api_key")]
+    mailgun_domain: Option<String>,
+    #[clap(long, env = "MAILGUN_API_KEY", requires = "mailgun_domain")]
+    mailgun_api_key: Option<String>,
     #[clap(long, env = "S3_ENDPOINT_URL")]
     s3_endpoint_url: Option<String>,
     #[clap(long, env = "S3_BUCKET_NAME")]
@@ -282,8 +310,6 @@ struct Args {
     s3_secret_access_key: Option<String>,
     #[clap(long, help = "check only", default_value = "false")]
     check: bool,
-    #[clap(long, help = "export typescript types", default_value = "false")]
-    types: bool,
     #[clap(long, env = "DISK_CACHE_PATH", help = "redb disk cache path")]
     disk_cache_path: Option<PathBuf>,
     #[clap(
@@ -307,9 +333,16 @@ struct Args {
         help = "redb disk cache maximum file size in MiB"
     )]
     disk_cache_max_file_mb: u64,
+    #[clap(
+        long,
+        env = "ENTRY_COMPONENT_CACHE_MB",
+        default_value_t = 16,
+        help = "entry component memory cache size in MiB"
+    )]
+    entry_component_cache_mb: u64,
 }
 
-fn disk_cache_config(args: &Args) -> Option<disk_cache::Config> {
+fn disk_cache_config(args: &ServeArgs) -> Option<disk_cache::Config> {
     if args.disable_disk_cache {
         return None;
     }
@@ -332,21 +365,26 @@ fn disk_cache_config(args: &Args) -> Option<disk_cache::Config> {
 async fn main() {
     use tracing_subscriber::filter::{EnvFilter, LevelFilter};
 
-    config::load();
-    let args = Args::parse();
-    if args.types {
-        typegen::prepare();
+    let wants_help = std::env::args()
+        .skip(1)
+        .any(|arg| matches!(arg.as_str(), "--help" | "-h" | "--version" | "-V"));
+    if !wants_help {
+        config::load();
     }
+    let command = Cli::parse().command;
+    let args = match command {
+        Command::Serve(args) => args,
+        Command::Types => {
+            typegen::prepare();
+            typegen::run();
+            return;
+        }
+    };
 
     let filter = EnvFilter::builder()
         .with_default_directive(LevelFilter::INFO.into())
         .from_env_lossy();
     tracing_subscriber::fmt().with_env_filter(filter).init();
-
-    if args.types {
-        typegen::run();
-        return;
-    }
 
     let storage = std::sync::Arc::new(s3::Storage::new(s3::StorageConfig {
         endpoint_url: args.s3_endpoint_url.clone(),
@@ -355,18 +393,9 @@ async fn main() {
         secret_access_key: args.s3_secret_access_key.clone(),
     }));
 
-    let port: u16 = env::var("PORT")
-        .unwrap_or("3000".to_string())
-        .parse()
-        .expect("PORT must be a number");
     storage_check(&storage, args.ci).await;
 
-    let ip_addr: IpAddr = {
-        let host_env = env::var("HOST").unwrap_or("127.0.0.1".to_string());
-        host_env.parse().expect("HOST must be a valid IP address")
-    };
-
-    let socket = SocketAddr::new(ip_addr, port);
+    let socket = SocketAddr::new(args.host, args.port);
 
     let listener = TcpListener::bind(socket)
         .await
@@ -374,11 +403,11 @@ async fn main() {
 
     tracing::info!("Server listening on: {}", socket);
 
-    db::check_db_host().await;
+    db::check_db_host(&args.database_url).await;
 
     let pool = {
         // Database Migrations
-        let pool = db::get().await;
+        let pool = db::connect(&args.database_url).await;
         MIGRATOR
             .run(&pool)
             .await
@@ -387,8 +416,9 @@ async fn main() {
     };
     db::check(&pool).await;
     tracing::info!("Database is ready");
-    let mut redis_conn = redis::conn().await;
+    let mut redis_conn = redis::connect(args.redis_url.as_deref()).await;
     redis::check(redis_conn.as_mut()).await;
+    let startup_id = events::initialize_startup_id(redis_conn.as_mut()).await;
     tracing::info!("Redis is ready");
 
     let ctx_config = context::AppConfig {
@@ -407,6 +437,11 @@ async fn main() {
             .collect(),
         discourse_sso_secret: args.discourse_sso_secret.clone(),
         secret: args.secret.clone(),
+        mail: mail::Config {
+            domain: args.mailgun_domain.clone(),
+            api_key: args.mailgun_api_key.clone(),
+        },
+        entry_component_cache_capacity: args.entry_component_cache_mb.saturating_mul(1024 * 1024),
     };
     let ctx = std::sync::Arc::new(context::AppContext::with_config(
         pool.clone(),
@@ -433,10 +468,7 @@ async fn main() {
 
     tracing::info!("AppContext initialized");
 
-    if let Ok(exporter_listen) = std::env::var("PROMETHEUS_EXPORTER") {
-        let addr = exporter_listen
-            .parse::<SocketAddr>()
-            .expect("Invalid address for Prometheus exporter");
+    if let Some(addr) = args.prometheus_exporter {
         metrics_exporter_prometheus::PrometheusBuilder::new()
             .with_http_listener(addr)
             .install()
@@ -456,7 +488,7 @@ async fn main() {
             .expect("Failed to create signal stream");
 
     server_metrics::start_update_metrics(pool.clone(), ctx.redis.clone());
-    tracing::info!("Startup ID: {}", events::startup_id());
+    tracing::info!("Startup ID: {startup_id}");
 
     cache::start_expiry_task();
     cache::start_log_cache_stats();

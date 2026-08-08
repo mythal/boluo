@@ -734,13 +734,9 @@ struct StartupInfo {
     private_ip: String,
 }
 
-pub async fn initialize_startup_id() -> u16 {
+async fn allocate_startup_id(redis: &mut redis::aio::ConnectionManager) -> u16 {
     use redis::AsyncCommands;
 
-    let Some(mut redis) = crate::redis::conn().await else {
-        tracing::info!("Redis is not available, assuming single node environment");
-        return 0;
-    };
     const NODE_ID_KEY: &str = "node:startup";
     let node_id_string: String = redis
         .incr(NODE_ID_KEY, 1)
@@ -788,23 +784,28 @@ pub async fn initialize_startup_id() -> u16 {
     startup_id
 }
 
-pub fn startup_id() -> u16 {
-    *STARTUP_ID.get_or_init(|| {
-        if cfg!(test) {
-            return 0;
+pub async fn initialize_startup_id(redis: Option<&mut redis::aio::ConnectionManager>) -> u16 {
+    let startup_id = match redis {
+        Some(redis) => allocate_startup_id(redis).await,
+        None => {
+            tracing::info!("Redis is not available, assuming single node environment");
+            0
         }
+    };
+    assert!(
+        STARTUP_ID.set(startup_id).is_ok(),
+        "Startup ID must only be initialized once"
+    );
+    startup_id
+}
 
-        match tokio::runtime::Handle::try_current() {
-            Ok(handle) => tokio::task::block_in_place(|| handle.block_on(initialize_startup_id())),
-            Err(_) => {
-                let rt = tokio::runtime::Builder::new_current_thread()
-                    .enable_all()
-                    .build()
-                    .expect("Failed to create Tokio runtime");
-                rt.block_on(initialize_startup_id())
-            }
-        }
-    })
+pub fn startup_id() -> u16 {
+    if cfg!(test) {
+        return 0;
+    }
+    *STARTUP_ID
+        .get()
+        .expect("Startup ID must be initialized before creating events")
 }
 
 #[derive(

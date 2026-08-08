@@ -24,7 +24,7 @@ anyhow = "1"
 rusty-s3 = { version = "0.10", default-features = false, features = [
   "rustcrypto",
 ] }
-base64 = "0.22"
+base64 = "0.23.1"
 bytes = "1"
 compact_str = { version = "0.10", features = ["serde", "sqlx-postgres"] }
 chrono = { version = "0.4", features = ["serde"] }
@@ -50,7 +50,7 @@ url = "2.5"
 thiserror = "2.0"
 unicode-normalization = "0.1"
 tokio-stream = "0.1"
-tokio-tungstenite = "0.29.0"
+tokio-tungstenite = "0.30.0"
 brotli = "8.0.2"
 flate2 = "1.1.5"
 sqlx = { version = "0.9.0", features = [

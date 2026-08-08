@@ -4,9 +4,9 @@ use super::{
 };
 use crate::spaces::Space;
 use crate::users::User;
-use chrono::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use time::OffsetDateTime;
 use uuid::Uuid;
 
 #[derive(Debug, Serialize, Clone, specta::Type)]
@@ -177,5 +177,5 @@ pub struct Export {
     #[serde(default)]
     pub space_id: Option<Uuid>,
     #[serde(default)]
-    pub after: Option<DateTime<Utc>>,
+    pub after: Option<OffsetDateTime>,
 }

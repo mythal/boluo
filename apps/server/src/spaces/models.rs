@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
-use chrono::prelude::*;
 use serde::{Deserialize, Serialize};
 use sqlx::query_file_scalar;
+use time::OffsetDateTime;
 use uuid::Uuid;
 
 use crate::cache::CACHE;
@@ -31,8 +31,8 @@ pub struct Space {
     pub id: Uuid,
     pub name: String,
     pub description: String,
-    pub created: DateTime<Utc>,
-    pub modified: DateTime<Utc>,
+    pub created: OffsetDateTime,
+    pub modified: OffsetDateTime,
     pub owner_id: Uuid,
     pub is_public: bool,
     #[serde(skip)]
@@ -45,7 +45,7 @@ pub struct Space {
     #[serde(skip)]
     pub invite_token: Uuid,
     pub allow_spectator: bool,
-    pub latest_activity: DateTime<Utc>,
+    pub latest_activity: OffsetDateTime,
     pub scope_id: Uuid,
 }
 
@@ -597,7 +597,7 @@ pub struct SpaceMember {
     pub user_id: Uuid,
     pub space_id: Uuid,
     pub is_admin: bool,
-    pub join_date: DateTime<Utc>,
+    pub join_date: OffsetDateTime,
     pub is_game_master: bool,
 }
 
@@ -769,7 +769,7 @@ impl SpaceMemberWithUser {
 //     pub space_id: Uuid,
 //     pub blocked: bool,
 //     pub muted: bool,
-//     pub restrained_date: DateTime<Utc>,
+//     pub restrained_date: OffsetDateTime,
 //     pub operator_id: Option<Uuid>,
 // }
 

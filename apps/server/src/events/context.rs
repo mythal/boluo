@@ -107,7 +107,7 @@ impl StoredUpdateMeta {
             } => StoredUpdateMeta::MessageEdited {
                 channel_id: *channel_id,
                 message_id: message.id,
-                modified_us: message.modified.timestamp_micros(),
+                modified_us: message.modified.unix_timestamp_nanos() as i64 / 1_000,
                 rev: message.rev,
                 old_pos: *old_pos,
             },
@@ -346,7 +346,7 @@ fn prepare_message_edited_old_pos(
 
     let channel_id = *channel_id;
     let message_id = message.id;
-    let modified_us = message.modified.timestamp_micros();
+    let modified_us = message.modified.unix_timestamp_nanos() as i64 / 1_000;
     let rev = message.rev;
 
     let mut prev_event_id_and_old_pos: Option<(EventId, f64)> = None;
@@ -962,7 +962,7 @@ mod tests {
     use super::*;
     use crate::events::preview::{Preview, PreviewDiff, PreviewDiffPost};
     use crate::messages::{Entities, Message};
-    use chrono::TimeZone;
+    use time::OffsetDateTime;
 
     fn event_id(timestamp: i64, node: u16, seq: Seq) -> EventId {
         EventId {
@@ -986,7 +986,7 @@ mod tests {
     }
 
     fn message(id: Uuid, channel_id: Uuid, pos: f64, rev: i32) -> Message {
-        let time = chrono::Utc.timestamp_micros(1_000_000).unwrap();
+        let time = OffsetDateTime::from_unix_timestamp(1).unwrap();
         Message {
             id,
             sender_id: Uuid::from_u128(101),

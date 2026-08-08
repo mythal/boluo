@@ -1,5 +1,5 @@
-use chrono::prelude::*;
 use compact_str::CompactString;
+use time::OffsetDateTime;
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
@@ -45,8 +45,8 @@ pub struct Message {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub whisper_to_users: Option<Vec<Uuid>>,
     pub entities: Entities,
-    pub created: DateTime<Utc>,
-    pub modified: DateTime<Utc>,
+    pub created: OffsetDateTime,
+    pub modified: OffsetDateTime,
     pub pos_p: i32,
     pub pos_q: i32,
     pub pos: f64,
@@ -152,7 +152,7 @@ impl Message {
         db: T,
         channel_id: &Uuid,
         _hide: bool,
-        after: Option<DateTime<Utc>>,
+        after: Option<OffsetDateTime>,
     ) -> Result<Vec<Message>, sqlx::Error> {
         use futures::TryStreamExt as _;
 
@@ -607,7 +607,7 @@ impl Message {
         is_action: bool,
         media_id: Option<Uuid>,
         color: String,
-        expect_modified: Option<DateTime<Utc>>,
+        expect_modified: Option<OffsetDateTime>,
     ) -> Result<MessageEditOutcome, ModelError> {
         let entities = serde_json::to_value(entities).unwrap_or(JsonValue::Array(vec![]));
         let name = merge_blank(name);

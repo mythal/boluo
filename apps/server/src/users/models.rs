@@ -1,7 +1,7 @@
-use chrono::prelude::*;
 use serde::Serialize;
 use sqlx::{query_file_scalar, query_scalar};
 use std::collections::HashMap;
+use time::OffsetDateTime;
 use uuid::Uuid;
 
 use crate::cache::{CACHE, CacheType};
@@ -23,7 +23,7 @@ pub struct User {
     #[serde(skip)]
     pub password: String,
     pub bio: String,
-    pub joined: DateTime<Utc>,
+    pub joined: OffsetDateTime,
     #[serde(skip)]
     pub deactivated: bool,
     pub avatar_id: Option<Uuid>,
@@ -321,11 +321,11 @@ impl User {
         user_id: &Uuid,
     ) -> String {
         use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD as base64_engine};
-        use chrono::Utc;
+        use time::OffsetDateTime;
 
         // Token expires in 24 hours
         let expire_sec = 60 * 60 * 24;
-        let timestamp = Utc::now().timestamp() + expire_sec;
+        let timestamp = OffsetDateTime::now_utc().unix_timestamp() + expire_sec;
 
         // Format: user_id.timestamp.signature
         let mut buffer = String::with_capacity(128);
@@ -345,7 +345,7 @@ impl User {
     ) -> Result<Uuid, anyhow::Error> {
         use anyhow::Context;
         use base64::{Engine as _, engine::general_purpose};
-        use chrono::Utc;
+        use time::OffsetDateTime;
 
         let mut iter = token.split('.');
         let parse_failed =
@@ -363,7 +363,7 @@ impl User {
         let timestamp: i64 = timestamp_str
             .parse()
             .context("Failed to parse timestamp in email verification token")?;
-        let now = Utc::now().timestamp();
+        let now = OffsetDateTime::now_utc().unix_timestamp();
         if now > timestamp {
             return Err(anyhow::anyhow!("Email verification token has expired"));
         }
@@ -410,11 +410,11 @@ impl User {
         new_email: &str,
     ) -> String {
         use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD as base64_engine};
-        use chrono::Utc;
+        use time::OffsetDateTime;
 
         // Token expires in 24 hours
         let expire_sec = 60 * 60 * 24;
-        let timestamp = Utc::now().timestamp() + expire_sec;
+        let timestamp = OffsetDateTime::now_utc().unix_timestamp() + expire_sec;
 
         // Format: user_id.new_email.timestamp.signature
         let mut buffer = String::with_capacity(256);
@@ -436,7 +436,7 @@ impl User {
     ) -> Result<(Uuid, String), anyhow::Error> {
         use anyhow::Context;
         use base64::{Engine as _, engine::general_purpose};
-        use chrono::Utc;
+        use time::OffsetDateTime;
 
         let mut iter = token.split('.');
         let parse_failed = || anyhow::anyhow!("Failed to parse email change token: {}", token);
@@ -454,7 +454,7 @@ impl User {
         let timestamp: i64 = timestamp_str
             .parse()
             .context("Failed to parse timestamp in email change token")?;
-        let now = Utc::now().timestamp();
+        let now = OffsetDateTime::now_utc().unix_timestamp();
         if now > timestamp {
             return Err(anyhow::anyhow!("Email change token has expired"));
         }
@@ -530,7 +530,7 @@ impl User {
 pub struct UserExt {
     pub user_id: Uuid,
     pub settings: serde_json::Value,
-    pub email_verified_at: Option<DateTime<Utc>>,
+    pub email_verified_at: Option<OffsetDateTime>,
 }
 
 impl Lifespan for UserExt {
@@ -600,7 +600,7 @@ impl UserExt {
     pub async fn get_email_verified_at<'c, T: sqlx::PgExecutor<'c>>(
         db: T,
         user_id: Uuid,
-    ) -> Result<Option<DateTime<Utc>>, sqlx::Error> {
+    ) -> Result<Option<OffsetDateTime>, sqlx::Error> {
         let result = sqlx::query_scalar!(
             "SELECT email_verified_at FROM users_extension WHERE user_id = $1",
             user_id
@@ -969,12 +969,12 @@ mod tests {
     #[test]
     fn test_email_verification_token_expired() {
         use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD as base64_engine};
-        use chrono::Utc;
+        use time::OffsetDateTime;
 
         let user_id = Uuid::new_v4();
 
         // Create an expired token (timestamp in the past)
-        let expired_timestamp = Utc::now().timestamp() - 60; // 1 minute ago
+        let expired_timestamp = OffsetDateTime::now_utc().unix_timestamp() - 60; // 1 minute ago
         let mut buffer = String::with_capacity(128);
         base64_engine.encode_string(user_id.as_bytes(), &mut buffer);
         buffer.push('.');
@@ -1178,13 +1178,13 @@ mod tests {
     #[test]
     fn test_email_change_token_expired() {
         use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD as base64_engine};
-        use chrono::Utc;
+        use time::OffsetDateTime;
 
         let user_id = Uuid::new_v4();
         let new_email = "expired@example.com";
 
         // Create an expired token (timestamp in the past)
-        let expired_timestamp = Utc::now().timestamp() - 60; // 1 minute ago
+        let expired_timestamp = OffsetDateTime::now_utc().unix_timestamp() - 60; // 1 minute ago
         let mut buffer = String::with_capacity(256);
         base64_engine.encode_string(user_id.as_bytes(), &mut buffer);
         buffer.push('.');

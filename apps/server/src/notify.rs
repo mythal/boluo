@@ -1,6 +1,6 @@
 use std::{collections::HashMap, sync::LazyLock};
 
-use chrono::{DateTime, Utc};
+use time::OffsetDateTime;
 use tracing::Instrument as _;
 use uuid::Uuid;
 
@@ -9,7 +9,7 @@ use crate::space_runtime::SpaceStore;
 
 async fn persist_space_activity_batch(
     pool: &sqlx::PgPool,
-    updates: impl IntoIterator<Item = (Uuid, DateTime<Utc>)>,
+    updates: impl IntoIterator<Item = (Uuid, OffsetDateTime)>,
 ) -> Result<u64, sqlx::Error> {
     let (space_ids, update_times): (Vec<_>, Vec<_>) = updates.into_iter().unzip();
     if space_ids.is_empty() {
@@ -31,7 +31,7 @@ async fn apply_space_activity(
     pool: &sqlx::PgPool,
     space_store: &SpaceStore,
     space_id: Uuid,
-    update_time: DateTime<Utc>,
+    update_time: OffsetDateTime,
 ) -> Result<(), sqlx::Error> {
     space_store.record_latest_activity_if_loaded(space_id, update_time);
     persist_space_activity_batch(pool, [(space_id, update_time)])
@@ -39,12 +39,12 @@ async fn apply_space_activity(
         .map(|_| ())
 }
 
-static NOTIFY_SPACE_ACTIVITY: LazyLock<tokio::sync::mpsc::Sender<(Uuid, DateTime<Utc>)>> =
+static NOTIFY_SPACE_ACTIVITY: LazyLock<tokio::sync::mpsc::Sender<(Uuid, OffsetDateTime)>> =
     LazyLock::new(|| {
-        let (tx, mut rx) = tokio::sync::mpsc::channel::<(Uuid, DateTime<Utc>)>(64);
+        let (tx, mut rx) = tokio::sync::mpsc::channel::<(Uuid, OffsetDateTime)>(64);
         let span = tracing::info_span!(parent: None, "space_activity");
         tokio::spawn(async move {
-            let mut map: HashMap<Uuid, DateTime<Utc>, _> =
+            let mut map: HashMap<Uuid, OffsetDateTime, _> =
                 HashMap::with_hasher(ahash::RandomState::new());
 
             let pool = db::get().await;
@@ -100,9 +100,9 @@ static NOTIFY_SPACE_ACTIVITY: LazyLock<tokio::sync::mpsc::Sender<(Uuid, DateTime
 pub(crate) fn space_activity(
     space_store: &SpaceStore,
     space_id: Uuid,
-    update_time: Option<DateTime<Utc>>,
+    update_time: Option<OffsetDateTime>,
 ) {
-    let update_time = update_time.unwrap_or_else(Utc::now);
+    let update_time = update_time.unwrap_or_else(OffsetDateTime::now_utc);
     space_store.record_latest_activity_if_loaded(space_id, update_time);
     let tx = NOTIFY_SPACE_ACTIVITY.clone();
     if let Err(_err) = tx.try_send((space_id, update_time)) {
@@ -148,7 +148,7 @@ mod tests {
             .get_or_load(space.id)
             .await
             .expect("failed to load Space runtime");
-        let update_time = space.latest_activity + chrono::Duration::seconds(30);
+        let update_time = space.latest_activity + time::Duration::seconds(30);
 
         apply_space_activity(&pool, &ctx.space_store, space.id, update_time)
             .await
@@ -169,7 +169,7 @@ mod tests {
             "the loaded Space runtime remained authoritative with stale activity"
         );
 
-        let pending_write_time = update_time + chrono::Duration::seconds(30);
+        let pending_write_time = update_time + time::Duration::seconds(30);
         ctx.space_store
             .record_latest_activity_if_loaded(space.id, pending_write_time);
         ctx.space_store
@@ -221,9 +221,9 @@ mod tests {
         .await
         .expect("failed to create second activity batch test Space");
 
-        let first_update = first_space.latest_activity + chrono::Duration::seconds(30);
-        let latest_first_update = first_update + chrono::Duration::seconds(30);
-        let second_update = second_space.latest_activity + chrono::Duration::seconds(45);
+        let first_update = first_space.latest_activity + time::Duration::seconds(30);
+        let latest_first_update = first_update + time::Duration::seconds(30);
+        let second_update = second_space.latest_activity + time::Duration::seconds(45);
         let affected = persist_space_activity_batch(
             &pool,
             [
@@ -254,11 +254,11 @@ mod tests {
             [
                 (
                     first_space.id,
-                    first_space.latest_activity - chrono::Duration::seconds(30),
+                    first_space.latest_activity - time::Duration::seconds(30),
                 ),
                 (
                     second_space.id,
-                    second_space.latest_activity - chrono::Duration::seconds(30),
+                    second_space.latest_activity - time::Duration::seconds(30),
                 ),
             ],
         )

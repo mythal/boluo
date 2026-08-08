@@ -1,6 +1,6 @@
-use chrono::prelude::*;
 use ring::rand::SecureRandom;
 use std::sync::OnceLock as OnceCell;
+use time::OffsetDateTime;
 use uuid::Uuid;
 
 macro_rules! regex {
@@ -23,13 +23,9 @@ pub fn id() -> Uuid {
         rng.fill(&mut id).unwrap();
         id
     });
-    let now = Utc::now();
+    let now = OffsetDateTime::now_utc();
     static CONTEXT: UuidContext = UuidContext::new(0);
-    let timestamp = Timestamp::from_unix(
-        &CONTEXT,
-        now.timestamp() as u64,
-        now.timestamp_subsec_nanos(),
-    );
+    let timestamp = Timestamp::from_unix(&CONTEXT, now.unix_timestamp() as u64, now.nanosecond());
     Uuid::new_v1(timestamp, node_id)
 }
 
@@ -86,7 +82,7 @@ pub fn url_percent_encode(s: &str) -> String {
 }
 
 pub fn timestamp() -> i64 {
-    Utc::now().timestamp_millis()
+    OffsetDateTime::now_utc().unix_timestamp_nanos() as i64 / 1_000_000
 }
 
 /// Create a tokio interval for periodic cleaners/maintenance.

@@ -16,7 +16,7 @@ pub const SESSION_COOKIE_KEY: &str = "boluo-session-v3";
 pub struct Session {
     pub user_id: Uuid,
     pub id: Uuid,
-    pub created: chrono::DateTime<chrono::Utc>,
+    pub created: time::OffsetDateTime,
 }
 
 impl Lifespan for Session {

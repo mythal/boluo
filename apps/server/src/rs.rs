@@ -23,7 +23,7 @@ pub fn export() {
         .derive("serde::Deserialize")
         // Specta maps these to a string for other languages; keep the Rust identity.
         .inline_as("uuid::Uuid", "::uuid::Uuid")
-        .inline_as("chrono::DateTime", "::chrono::DateTime<::chrono::Utc>")
+        .inline_as("time::OffsetDateTime", "::time::OffsetDateTime")
         .opaque_type(|reference| {
             reference
                 .downcast_ref::<Opaque>()

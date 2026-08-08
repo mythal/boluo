@@ -5,7 +5,7 @@ use std::sync::{Arc, Weak};
 use std::time::{Duration, Instant};
 
 use arc_swap::ArcSwap;
-use chrono::{DateTime, TimeZone, Utc};
+use time::OffsetDateTime;
 use tokio::sync::{mpsc, oneshot};
 use uuid::Uuid;
 
@@ -102,10 +102,10 @@ pub(crate) enum SpaceDelta {
 impl SpaceSnapshot {
     pub(crate) fn space(&self) -> Space {
         let mut space = self.space.clone();
-        space.latest_activity = Utc
-            .timestamp_micros(self.latest_activity_us.load(Ordering::Relaxed))
-            .single()
-            .expect("Space latest_activity must be a valid UTC timestamp");
+        space.latest_activity = OffsetDateTime::from_unix_timestamp_nanos(
+            self.latest_activity_us.load(Ordering::Relaxed) as i128 * 1_000,
+        )
+        .expect("Space latest_activity must be a valid UTC timestamp");
         space
     }
 
@@ -407,7 +407,9 @@ impl SpaceRuntime {
             revision,
             verified_at: Instant::now(),
             space,
-            latest_activity_us: Arc::new(AtomicI64::new(latest_activity.timestamp_micros())),
+            latest_activity_us: Arc::new(AtomicI64::new(
+                latest_activity.unix_timestamp_nanos() as i64 / 1_000,
+            )),
             settings,
             channels,
             characters,
@@ -427,10 +429,11 @@ impl SpaceRuntime {
         self.snapshot.load_full()
     }
 
-    fn record_latest_activity(&self, update_time: DateTime<Utc>) {
-        self.snapshot()
-            .latest_activity_us
-            .fetch_max(update_time.timestamp_micros(), Ordering::Relaxed);
+    fn record_latest_activity(&self, update_time: OffsetDateTime) {
+        self.snapshot().latest_activity_us.fetch_max(
+            update_time.unix_timestamp_nanos() as i64 / 1_000,
+            Ordering::Relaxed,
+        );
     }
 
     /// Returns a snapshot only while it is known to include every queued committed change.
@@ -1093,7 +1096,7 @@ impl SpaceRuntime {
                 }
                 let current_activity_us = current.latest_activity_us.clone();
                 current_activity_us.fetch_max(
-                    snapshot.space.latest_activity.timestamp_micros(),
+                    snapshot.space.latest_activity.unix_timestamp_nanos() as i64 / 1_000,
                     Ordering::Relaxed,
                 );
                 snapshot.latest_activity_us = current_activity_us;
@@ -1506,7 +1509,7 @@ impl SpaceStore {
     pub(crate) fn record_latest_activity_if_loaded(
         &self,
         space_id: Uuid,
-        update_time: DateTime<Utc>,
+        update_time: OffsetDateTime,
     ) {
         if let Some(runtime) = self.get(&space_id) {
             runtime.record_latest_activity(update_time);

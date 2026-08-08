@@ -445,10 +445,10 @@ pub async fn check(pool: &sqlx::Pool<sqlx::Postgres>) {
         color: String,
         space_id: uuid::Uuid,
         main_scope_id: uuid::Uuid,
-        archived_at: Option<chrono::DateTime<chrono::Utc>>,
+        archived_at: Option<time::OffsetDateTime>,
         tags: Vec<String>,
-        created: chrono::DateTime<chrono::Utc>,
-        modified: chrono::DateTime<chrono::Utc>,
+        created: time::OffsetDateTime,
+        modified: time::OffsetDateTime,
         version: uuid::Uuid,
     })
     .expect("Cannot decode characters composite row");
@@ -466,7 +466,7 @@ pub async fn check(pool: &sqlx::Pool<sqlx::Postgres>) {
         creator_id: Option<uuid::Uuid>,
         name: String,
         policy: crate::assets::AssetPolicy,
-        created: chrono::DateTime<chrono::Utc>,
+        created: time::OffsetDateTime,
     })
     .expect("Cannot decode assets composite row");
     check_composite_row!(&mut *trans, "notes", {
@@ -481,9 +481,9 @@ pub async fn check(pool: &sqlx::Pool<sqlx::Postgres>) {
         access_policy: AccessPolicy,
         access_channel_id: Option<uuid::Uuid>,
         revision: i64,
-        archived_at: Option<chrono::DateTime<chrono::Utc>>,
-        created: chrono::DateTime<chrono::Utc>,
-        modified: chrono::DateTime<chrono::Utc>,
+        archived_at: Option<time::OffsetDateTime>,
+        created: time::OffsetDateTime,
+        modified: time::OffsetDateTime,
     })
     .expect("Cannot decode notes composite row");
     check_composite_row!(&mut *trans, "note_content_revisions", {
@@ -493,7 +493,7 @@ pub async fn check(pool: &sqlx::Pool<sqlx::Postgres>) {
         title: String,
         text: String,
         entities: serde_json::Value,
-        created: chrono::DateTime<chrono::Utc>,
+        created: time::OffsetDateTime,
     })
     .expect("Cannot decode note_content_revisions composite row");
     check_composite_row!(&mut *trans, "scopes", {
@@ -504,8 +504,8 @@ pub async fn check(pool: &sqlx::Pool<sqlx::Postgres>) {
         access_policy: AccessPolicy,
         access_channel_id: Option<uuid::Uuid>,
         version: uuid::Uuid,
-        created: chrono::DateTime<chrono::Utc>,
-        modified: chrono::DateTime<chrono::Utc>,
+        created: time::OffsetDateTime,
+        modified: time::OffsetDateTime,
     })
     .expect("Cannot decode scopes composite row");
     check_composite_row!(&mut *trans, "character_scopes", {
@@ -522,8 +522,8 @@ pub async fn check(pool: &sqlx::Pool<sqlx::Postgres>) {
         reference_note_id: Option<uuid::Uuid>,
         tags: Vec<String>,
         metadata_version: uuid::Uuid,
-        created: chrono::DateTime<chrono::Utc>,
-        modified: chrono::DateTime<chrono::Utc>,
+        created: time::OffsetDateTime,
+        modified: time::OffsetDateTime,
         pos_p: i32,
         pos_q: i32,
         pos: f64,
@@ -535,7 +535,7 @@ pub async fn check(pool: &sqlx::Pool<sqlx::Postgres>) {
         space_id: uuid::Uuid,
         scope_id: uuid::Uuid,
         operator_id: Option<uuid::Uuid>,
-        created: chrono::DateTime<chrono::Utc>,
+        created: time::OffsetDateTime,
         message_id: Option<uuid::Uuid>,
     })
     .expect("Cannot decode entry_effects composite row");
@@ -559,7 +559,7 @@ pub async fn check(pool: &sqlx::Pool<sqlx::Postgres>) {
         component_type: String,
         payload_type: EntryComponentPayloadType,
         version: uuid::Uuid,
-        modified: chrono::DateTime<chrono::Utc>,
+        modified: time::OffsetDateTime,
     })
     .expect("Cannot decode entry_components composite row");
     check_composite_row!(&mut *trans, "entry_components_json", {

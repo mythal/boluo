@@ -7,11 +7,11 @@ use crate::events::preview::{Preview, PreviewDiff, PreviewDiffPost, PreviewPost}
 use crate::info::BasicInfo;
 use crate::messages::Message;
 use crate::spaces::api::SpaceWithRelated;
-use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use std::sync::OnceLock;
 use std::sync::atomic::AtomicU32;
 use thiserror::Error;
+use time::OffsetDateTime;
 use tokio::spawn;
 use tokio_tungstenite::tungstenite::{self, Utf8Bytes};
 use tracing::Instrument as _;
@@ -774,7 +774,7 @@ pub async fn initialize_startup_id() -> u16 {
     let node_info = StartupInfo {
         startup: startup_id,
         version: std::env::var("VERSION").unwrap_or_default(),
-        timestamp: Utc::now().timestamp_millis(),
+        timestamp: OffsetDateTime::now_utc().unix_timestamp_nanos() as i64 / 1_000_000,
         machine_id: std::env::var("FLY_MACHINE_ID").unwrap_or_default(),
         private_ip: std::env::var("FLY_PRIVATE_IP").unwrap_or_default(),
     };
@@ -834,8 +834,8 @@ impl EventId {
         static SEQUENCE: AtomicU32 = AtomicU32::new(Seq::MAX / 2);
         static PREV_TIMESTAMP: AtomicI64 = AtomicI64::new(0);
 
-        let now = Utc::now();
-        let mut timestamp = now.timestamp_millis();
+        let now = OffsetDateTime::now_utc();
+        let mut timestamp = now.unix_timestamp_nanos() as i64 / 1_000_000;
         let seq = SEQUENCE.fetch_add(1, Ordering::Relaxed);
 
         if seq < Seq::MAX / 2 {

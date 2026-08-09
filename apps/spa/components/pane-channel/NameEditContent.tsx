@@ -12,6 +12,7 @@ import { NameEditContentNameHistory } from './NameEditContentNameHistory';
 import { CharacterPicker } from './CharacterPicker';
 import { useQueryCharacters } from '@boluo/hooks/useQueryCharacters';
 import { useChannelCharacterName } from '../../hooks/useChannelCharacter';
+import { recentCharacterIdsAtomFamily, selectRecentCharacters } from './recentCharacters';
 
 interface Props {
   member: MemberWithUser;
@@ -81,20 +82,35 @@ export const NameEditContent: FC<Props> = ({ member, dismiss, onViewAllCharacter
   const baseId = useId();
   const store = useStore();
   const myId = member.user.id;
+  const spaceId = member.space.spaceId;
   const channelId = member.channel.channelId;
+  const recentCharacterIdsAtom = recentCharacterIdsAtomFamily({ spaceId, userId: myId });
+  const recentCharacterIds = useAtomValue(recentCharacterIdsAtom);
   const defaultCharacterName = useChannelCharacterName(member);
   const {
     data: characters,
     error: charactersError,
     isLoading: charactersLoading,
   } = useQueryCharacters({
-    spaceId: member.space.spaceId,
+    spaceId,
     includeArchived: true,
     portrayableOnly: true,
   });
   const activeCharacters = useMemo(
     () => characters?.filter((character) => character.archivedAt == null),
     [characters],
+  );
+  const recentCharacters = useMemo(
+    () =>
+      activeCharacters == null
+        ? undefined
+        : selectRecentCharacters(
+            activeCharacters,
+            myId,
+            recentCharacterIds,
+            RECENT_CHARACTER_LIMIT,
+          ),
+    [activeCharacters, myId, recentCharacterIds],
   );
   const characterNames = useMemo(
     () => new Set(activeCharacters?.map((character) => character.name) ?? []),
@@ -118,7 +134,6 @@ export const NameEditContent: FC<Props> = ({ member, dismiss, onViewAllCharacter
   const switchToOutOfGame = () => {
     dispatch({ type: 'setInGame', payload: { inGame: false } });
   };
-
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const compose = store.get(composeAtom);
@@ -159,7 +174,7 @@ export const NameEditContent: FC<Props> = ({ member, dismiss, onViewAllCharacter
         />
         <CharacterPicker
           member={member}
-          characters={activeCharacters?.slice(0, RECENT_CHARACTER_LIMIT)}
+          characters={recentCharacters}
           suggestionCharacters={characters}
           error={charactersError}
           isLoading={charactersLoading}

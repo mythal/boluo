@@ -15,6 +15,7 @@ import { useResolvedTheme } from '../../hooks/useResolvedTheme';
 import { panesAtom } from '../../state/view.atoms';
 import { CharacterSelectorItem } from './CharacterSelectorItem';
 import { InlineCharacterCreate } from './InlineCharacterCreate';
+import { recentCharacterIdsAtomFamily } from './recentCharacters';
 
 interface Props {
   member: MemberWithUser;
@@ -45,6 +46,7 @@ export const CharacterPicker: FC<Props> = ({
   onViewAll,
 }) => {
   const spaceId = member.space.spaceId;
+  const userId = member.user.id;
   const channelId = member.channel.channelId;
   const lightOrDark = classifyLightOrDark(useResolvedTheme());
   const { trigger: bindCharacter, isMutating: isBinding } = useEditChannelCharacterName(channelId);
@@ -59,6 +61,7 @@ export const CharacterPicker: FC<Props> = ({
     existingName ||
     (suggestionCharacters?.some((character) => character.name === defaultName) ? '' : defaultName);
   const dispatch = useSetAtom(composeAtom);
+  const recordCharacterUse = useSetAtom(recentCharacterIdsAtomFamily({ spaceId, userId }));
   const [bindError, setBindError] = useState<string | null>(null);
 
   const isCharacterPaneOpen = (characterId: string): boolean =>
@@ -85,6 +88,7 @@ export const CharacterPicker: FC<Props> = ({
     setBindError(null);
     try {
       await bindCharacter({ characterId: character.id, characterName: character.name });
+      recordCharacterUse(character.id);
       await mutate(['/channels/members', channelId]);
       dispatch({ type: 'setCharacterName', payload: { name: '', setInGame: true } });
     } catch (cause) {

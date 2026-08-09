@@ -61,6 +61,7 @@
                 (maybeMissing (unfilteredRoot + "/package-lock.json"))
                 (maybeMissing (unfilteredRoot + "/turbo.json"))
                 (unfilteredRoot + "/packages")
+                (unfilteredRoot + "/apps/avatars")
                 (unfilteredRoot + "/apps/interpreter-cli")
                 (unfilteredRoot + "/apps/grafana")
                 (unfilteredRoot + "/apps/legacy")

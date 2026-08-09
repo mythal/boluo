@@ -1,0 +1,10 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "boluo-avatars",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-01",
+  "preview_urls": true,
+  "observability": {
+    "enabled": true,
+  },
+}

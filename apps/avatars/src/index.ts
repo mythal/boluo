@@ -1,22 +1,11 @@
-import Avatar from 'boring-avatars';
-import { createElement, type ComponentProps } from 'react';
+import { GeneratedAvatar } from '@boluo/avatar';
+import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server.edge';
 
-const DEFAULT_COLORS = ['#92A1C6', '#146A7C', '#F0AB3D', '#C271B4', '#C20D90'];
 const DEFAULT_SIZE = 256;
 const MAX_NAME_LENGTH = 128;
+const STYLE_CACHE_VERSION = '9';
 const SIZE_PATTERN = /^\d{1,4}$/;
-
-type AvatarVariant = NonNullable<ComponentProps<typeof Avatar>['variant']>;
-
-const AVATAR_VARIANTS = [
-  'marble',
-  'beam',
-  'pixel',
-  'sunset',
-  'ring',
-  'bauhaus',
-] as const satisfies readonly AvatarVariant[];
 
 function errorResponse(message: string, status: number, headers?: HeadersInit): Response {
   return new Response(message, {
@@ -42,6 +31,7 @@ function getCacheRequest(url: URL, size: number): Request {
   const cacheUrl = new URL(url);
   cacheUrl.search = '';
   cacheUrl.searchParams.set('size', String(size));
+  cacheUrl.searchParams.set('style', STYLE_CACHE_VERSION);
   return new Request(cacheUrl.toString(), { method: 'GET' });
 }
 
@@ -53,19 +43,8 @@ function withoutBody(response: Response): Response {
   });
 }
 
-async function createAvatarResponse(name: string, size: number): Promise<Response> {
-  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(name));
-  const seed = new DataView(digest).getUint32(0);
-  const variant = AVATAR_VARIANTS[seed % AVATAR_VARIANTS.length] ?? 'marble';
-  const svg = renderToStaticMarkup(
-    createElement(Avatar, {
-      colors: DEFAULT_COLORS,
-      name,
-      size,
-      square: true,
-      variant,
-    }),
-  );
+function createAvatarResponse(name: string, size: number): Response {
+  const svg = renderToStaticMarkup(createElement(GeneratedAvatar, { name, size }));
 
   return new Response(svg, {
     headers: {
@@ -99,7 +78,7 @@ export default {
       return request.method === 'HEAD' ? withoutBody(cachedResponse) : cachedResponse;
     }
 
-    const response = await createAvatarResponse(name, size);
+    const response = createAvatarResponse(name, size);
     ctx.waitUntil(caches.default.put(cacheRequest, response.clone()));
     return request.method === 'HEAD' ? withoutBody(response) : response;
   },

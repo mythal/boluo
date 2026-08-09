@@ -19,7 +19,7 @@ describe('avatar worker', () => {
     expect(await response.text()).toBe('');
   });
 
-  it('renders a deterministic square SVG', async () => {
+  it('renders a deterministic SVG', async () => {
     const url = 'https://avatars.example.com/alice?size=96';
     const firstResponse = await avatarWorker.fetch(url);
     const secondResponse = await avatarWorker.fetch(url);
@@ -34,6 +34,31 @@ describe('avatar worker', () => {
     expect(firstSvg).toMatch(/^<svg /);
     expect(firstSvg).toContain('width="96"');
     expect(firstSvg).toContain('height="96"');
+  });
+
+  it('varies palettes while keeping avatars square', async () => {
+    const svgs = await Promise.all(
+      Array.from({ length: 32 }, async (_, index) => {
+        const response = await avatarWorker.fetch(`https://avatars.example.com/diversity-${index}`);
+        return response.text();
+      }),
+    );
+    const colors = new Set(
+      svgs.flatMap((svg) => Array.from(svg.matchAll(/#[0-9A-F]{6}/g), ([color]) => color)),
+    );
+    const maskRectAttributes = svgs.map(
+      (svg) => svg.match(/<mask[^>]*>\s*<rect([^>]*)>/)?.[1] ?? '',
+    );
+
+    expect(new Set(svgs).size).toBeGreaterThanOrEqual(Math.floor(svgs.length * 0.9));
+    expect(colors.size).toBeGreaterThan(10);
+    expect(maskRectAttributes.every((attributes) => !attributes.includes('rx='))).toBe(true);
+    const symbolSvg = svgs.find((svg) => svg.includes('data-avatar-kind="symbol"'));
+    expect(symbolSvg).toContain('<path');
+    expect(symbolSvg).toMatch(
+      /<path[^>]+transform="translate\([^)]*\) rotate\([^)]* 50 50\) translate\(50 50\) scale\([^)]*\) translate\(-50 -50\)"/,
+    );
+    expect(symbolSvg).not.toContain('<text');
   });
 
   it('uses the default size when the query is invalid', async () => {

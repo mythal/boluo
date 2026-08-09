@@ -1,0 +1,25 @@
+{
+  "name": "@boluo/avatar",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "boring-avatars": "^2.0.4"
+  },
+  "devDependencies": {
+    "@boluo/typescript-config": "0.0.0",
+    "@types/react": "^19.2.17",
+    "react": "^19.2.7",
+    "typescript": "^6"
+  },
+  "exports": {
+    ".": "./src/index.tsx"
+  },
+  "peerDependencies": {
+    "react": "^19.2.7"
+  },
+  "scripts": {
+    "check": "tsc --noEmit"
+  },
+  "sideEffects": false,
+  "type": "module"
+}

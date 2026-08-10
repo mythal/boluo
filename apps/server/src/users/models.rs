@@ -1,7 +1,7 @@
-use chrono::prelude::*;
 use serde::Serialize;
 use sqlx::{query_file_scalar, query_scalar};
 use std::collections::HashMap;
+use time::OffsetDateTime;
 use uuid::Uuid;
 
 use crate::cache::{CACHE, CacheType};
@@ -23,7 +23,7 @@ pub struct User {
     #[serde(skip)]
     pub password: String,
     pub bio: String,
-    pub joined: DateTime<Utc>,
+    pub joined: OffsetDateTime,
     #[serde(skip)]
     pub deactivated: bool,
     pub avatar_id: Option<Uuid>,
@@ -223,6 +223,7 @@ impl User {
 
     pub async fn reset_password(
         db: &sqlx::PgPool,
+        redis: Option<&redis::aio::ConnectionManager>,
         token: Uuid,
         password: &str,
     ) -> Result<(), ModelError> {
@@ -262,16 +263,20 @@ impl User {
             .await?;
         transaction.commit().await?;
 
-        CACHE.invalidate(CacheType::User, id).await;
+        CACHE.invalidate(redis, CacheType::User, id).await;
         Ok(())
     }
 
-    pub async fn deactivated(pool: &sqlx::PgPool, id: &Uuid) -> Result<u64, sqlx::Error> {
+    pub async fn deactivated(
+        pool: &sqlx::PgPool,
+        redis: Option<&redis::aio::ConnectionManager>,
+        id: &Uuid,
+    ) -> Result<u64, sqlx::Error> {
         let affected = sqlx::query_file!("sql/users/deactivated.sql", id)
             .execute(pool)
             .await?
             .rows_affected();
-        CACHE.invalidate(CacheType::User, *id).await;
+        CACHE.invalidate(redis, CacheType::User, *id).await;
         Ok(affected)
     }
 
@@ -316,14 +321,16 @@ impl User {
         Ok(user)
     }
 
-    pub fn generate_email_verification_token(user_id: &Uuid) -> String {
-        use crate::utils::sign;
+    pub fn generate_email_verification_token(
+        signer: &crate::context::Signer,
+        user_id: &Uuid,
+    ) -> String {
         use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD as base64_engine};
-        use chrono::Utc;
+        use time::OffsetDateTime;
 
         // Token expires in 24 hours
         let expire_sec = 60 * 60 * 24;
-        let timestamp = Utc::now().timestamp() + expire_sec;
+        let timestamp = OffsetDateTime::now_utc().unix_timestamp() + expire_sec;
 
         // Format: user_id.timestamp.signature
         let mut buffer = String::with_capacity(128);
@@ -331,17 +338,19 @@ impl User {
         buffer.push('.');
         buffer.push_str(&timestamp.to_string());
 
-        let signature = sign(&buffer);
+        let signature = signer.sign(&buffer);
         buffer.push('.');
         base64_engine.encode_string(signature, &mut buffer);
         buffer
     }
 
-    pub fn verify_email_verification_token(token: &str) -> Result<Uuid, anyhow::Error> {
-        use crate::utils::verify;
+    pub fn verify_email_verification_token(
+        signer: &crate::context::Signer,
+        token: &str,
+    ) -> Result<Uuid, anyhow::Error> {
         use anyhow::Context;
         use base64::{Engine as _, engine::general_purpose};
-        use chrono::Utc;
+        use time::OffsetDateTime;
 
         let mut iter = token.split('.');
         let parse_failed =
@@ -353,13 +362,13 @@ impl User {
 
         // Verify signature
         let message = format!("{}.{}", user_id_str, timestamp_str);
-        verify(&message, signature)?;
+        signer.verify(&message, signature)?;
 
         // Check expiration
         let timestamp: i64 = timestamp_str
             .parse()
             .context("Failed to parse timestamp in email verification token")?;
-        let now = Utc::now().timestamp();
+        let now = OffsetDateTime::now_utc().unix_timestamp();
         if now > timestamp {
             return Err(anyhow::anyhow!("Email verification token has expired"));
         }
@@ -375,7 +384,11 @@ impl User {
         Uuid::from_slice(&user_id_bytes).context("Failed to convert user ID bytes to UUID")
     }
 
-    pub async fn verify_email(pool: &sqlx::PgPool, user_id: &Uuid) -> Result<User, ModelError> {
+    pub async fn verify_email(
+        pool: &sqlx::PgPool,
+        redis: Option<&redis::aio::ConnectionManager>,
+        user_id: &Uuid,
+    ) -> Result<User, ModelError> {
         let user = {
             let mut db = pool.acquire().await?;
             // Update email_verified_at in users_extension table
@@ -395,19 +408,22 @@ impl User {
         };
 
         CACHE.User.insert(user.id, user.clone().into());
-        CACHE.invalidate(CacheType::UserExt, *user_id).await;
+        CACHE.invalidate(redis, CacheType::UserExt, *user_id).await;
 
         Ok(user)
     }
 
-    pub fn generate_email_change_token(user_id: &Uuid, new_email: &str) -> String {
-        use crate::utils::sign;
+    pub fn generate_email_change_token(
+        signer: &crate::context::Signer,
+        user_id: &Uuid,
+        new_email: &str,
+    ) -> String {
         use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD as base64_engine};
-        use chrono::Utc;
+        use time::OffsetDateTime;
 
         // Token expires in 24 hours
         let expire_sec = 60 * 60 * 24;
-        let timestamp = Utc::now().timestamp() + expire_sec;
+        let timestamp = OffsetDateTime::now_utc().unix_timestamp() + expire_sec;
 
         // Format: user_id.new_email.timestamp.signature
         let mut buffer = String::with_capacity(256);
@@ -417,17 +433,19 @@ impl User {
         buffer.push('.');
         buffer.push_str(&timestamp.to_string());
 
-        let signature = sign(&buffer);
+        let signature = signer.sign(&buffer);
         buffer.push('.');
         base64_engine.encode_string(signature, &mut buffer);
         buffer
     }
 
-    pub fn verify_email_change_token(token: &str) -> Result<(Uuid, String), anyhow::Error> {
-        use crate::utils::verify;
+    pub fn verify_email_change_token(
+        signer: &crate::context::Signer,
+        token: &str,
+    ) -> Result<(Uuid, String), anyhow::Error> {
         use anyhow::Context;
         use base64::{Engine as _, engine::general_purpose};
-        use chrono::Utc;
+        use time::OffsetDateTime;
 
         let mut iter = token.split('.');
         let parse_failed = || anyhow::anyhow!("Failed to parse email change token: {}", token);
@@ -439,13 +457,13 @@ impl User {
 
         // Verify signature
         let message = format!("{}.{}.{}", user_id_str, new_email_str, timestamp_str);
-        verify(&message, signature)?;
+        signer.verify(&message, signature)?;
 
         // Check expiration
         let timestamp: i64 = timestamp_str
             .parse()
             .context("Failed to parse timestamp in email change token")?;
-        let now = Utc::now().timestamp();
+        let now = OffsetDateTime::now_utc().unix_timestamp();
         if now > timestamp {
             return Err(anyhow::anyhow!("Email change token has expired"));
         }
@@ -498,6 +516,7 @@ impl User {
 
     pub async fn mark_email_verified(
         pool: &sqlx::PgPool,
+        redis: Option<&redis::aio::ConnectionManager>,
         user_id: &Uuid,
     ) -> Result<(), sqlx::Error> {
         sqlx::query!(
@@ -510,7 +529,7 @@ impl User {
         .execute(pool)
         .await?;
 
-        CACHE.invalidate(CacheType::UserExt, *user_id).await;
+        CACHE.invalidate(redis, CacheType::UserExt, *user_id).await;
         Ok(())
     }
 }
@@ -521,7 +540,7 @@ impl User {
 pub struct UserExt {
     pub user_id: Uuid,
     pub settings: serde_json::Value,
-    pub email_verified_at: Option<DateTime<Utc>>,
+    pub email_verified_at: Option<OffsetDateTime>,
 }
 
 impl Lifespan for UserExt {
@@ -591,7 +610,7 @@ impl UserExt {
     pub async fn get_email_verified_at<'c, T: sqlx::PgExecutor<'c>>(
         db: T,
         user_id: Uuid,
-    ) -> Result<Option<DateTime<Utc>>, sqlx::Error> {
+    ) -> Result<Option<OffsetDateTime>, sqlx::Error> {
         let result = sqlx::query_scalar!(
             "SELECT email_verified_at FROM users_extension WHERE user_id = $1",
             user_id
@@ -607,6 +626,10 @@ impl UserExt {
 mod tests {
     use super::*;
     use uuid::Uuid;
+
+    fn signer() -> crate::context::Signer {
+        crate::context::Signer::new("just a test")
+    }
 
     fn unique_identity(email_prefix: &str, username_prefix: &str) -> (String, String) {
         let raw = Uuid::new_v4().simple().to_string();
@@ -711,7 +734,7 @@ mod tests {
             .expect("fetch by reset token failed");
         assert_eq!(token_user.id, user.id);
 
-        User::reset_password(&pool, token, new_password)
+        User::reset_password(&pool, None, token, new_password)
             .await
             .expect("reset password failed");
 
@@ -733,7 +756,7 @@ mod tests {
             User::get_by_reset_token(&pool, token).await.is_err(),
             "used token must no longer be valid"
         );
-        let reused_token_error = User::reset_password(&pool, token, "ResetPass789!")
+        let reused_token_error = User::reset_password(&pool, None, token, "ResetPass789!")
             .await
             .expect_err("used token must not be reusable");
         assert!(
@@ -773,7 +796,7 @@ mod tests {
             User::get_by_reset_token(&pool, token).await.is_err(),
             "expired token must fail validation"
         );
-        let expired_token_error = User::reset_password(&pool, token, "ResetPass456!")
+        let expired_token_error = User::reset_password(&pool, None, token, "ResetPass456!")
             .await
             .expect_err("expired token must not reset the password");
         assert!(
@@ -811,8 +834,8 @@ mod tests {
         let first_pool = pool.clone();
         let second_pool = pool.clone();
         let (first, second) = tokio::join!(
-            User::reset_password(&first_pool, token, "ResetPass456!"),
-            User::reset_password(&second_pool, token, "ResetPass789!")
+            User::reset_password(&first_pool, None, token, "ResetPass456!"),
+            User::reset_password(&second_pool, None, token, "ResetPass789!")
         );
 
         assert_eq!(
@@ -904,10 +927,10 @@ mod tests {
         let user_id = Uuid::new_v4();
 
         // Generate token
-        let token = User::generate_email_verification_token(&user_id);
+        let token = User::generate_email_verification_token(&signer(), &user_id);
 
         // Verify token should succeed
-        let verified_user_id = User::verify_email_verification_token(&token)
+        let verified_user_id = User::verify_email_verification_token(&signer(), &token)
             .expect("Token verification should succeed");
 
         // Should return the same user ID
@@ -926,7 +949,7 @@ mod tests {
         ];
 
         for invalid_token in invalid_tokens {
-            let result = User::verify_email_verification_token(invalid_token);
+            let result = User::verify_email_verification_token(&signer(), invalid_token);
             assert!(
                 result.is_err(),
                 "Invalid token '{}' should fail verification",
@@ -938,7 +961,7 @@ mod tests {
     #[test]
     fn test_email_verification_token_invalid_signature() {
         let user_id = Uuid::new_v4();
-        let token = User::generate_email_verification_token(&user_id);
+        let token = User::generate_email_verification_token(&signer(), &user_id);
 
         // Tamper with the signature
         let mut parts: Vec<&str> = token.split('.').collect();
@@ -946,7 +969,7 @@ mod tests {
         parts[2] = "invalid_signature";
         let tampered_token = parts.join(".");
 
-        let result = User::verify_email_verification_token(&tampered_token);
+        let result = User::verify_email_verification_token(&signer(), &tampered_token);
         assert!(
             result.is_err(),
             "Token with invalid signature should fail verification"
@@ -955,24 +978,23 @@ mod tests {
 
     #[test]
     fn test_email_verification_token_expired() {
-        use crate::utils::sign;
         use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD as base64_engine};
-        use chrono::Utc;
+        use time::OffsetDateTime;
 
         let user_id = Uuid::new_v4();
 
         // Create an expired token (timestamp in the past)
-        let expired_timestamp = Utc::now().timestamp() - 60; // 1 minute ago
+        let expired_timestamp = OffsetDateTime::now_utc().unix_timestamp() - 60; // 1 minute ago
         let mut buffer = String::with_capacity(128);
         base64_engine.encode_string(user_id.as_bytes(), &mut buffer);
         buffer.push('.');
         buffer.push_str(&expired_timestamp.to_string());
 
-        let signature = sign(&buffer);
+        let signature = signer().sign(&buffer);
         buffer.push('.');
         base64_engine.encode_string(signature, &mut buffer);
 
-        let result = User::verify_email_verification_token(&buffer);
+        let result = User::verify_email_verification_token(&signer(), &buffer);
         assert!(result.is_err(), "Expired token should fail verification");
 
         // Check that the error message mentions expiration
@@ -988,7 +1010,7 @@ mod tests {
         use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
 
         let user_id = Uuid::new_v4();
-        let token = User::generate_email_verification_token(&user_id);
+        let token = User::generate_email_verification_token(&signer(), &user_id);
 
         // Split the token into parts
         let parts: Vec<&str> = token.split('.').collect();
@@ -1037,15 +1059,15 @@ mod tests {
         let user_id1 = Uuid::new_v4();
         let user_id2 = Uuid::new_v4();
 
-        let token1 = User::generate_email_verification_token(&user_id1);
-        let token2 = User::generate_email_verification_token(&user_id2);
+        let token1 = User::generate_email_verification_token(&signer(), &user_id1);
+        let token2 = User::generate_email_verification_token(&signer(), &user_id2);
 
         // Tokens should be different
         assert_ne!(token1, token2);
 
         // Each token should verify to its respective user
-        let verified_id1 = User::verify_email_verification_token(&token1).unwrap();
-        let verified_id2 = User::verify_email_verification_token(&token2).unwrap();
+        let verified_id1 = User::verify_email_verification_token(&signer(), &token1).unwrap();
+        let verified_id2 = User::verify_email_verification_token(&signer(), &token2).unwrap();
 
         assert_eq!(user_id1, verified_id1);
         assert_eq!(user_id2, verified_id2);
@@ -1100,7 +1122,7 @@ mod tests {
         println!("All parts are valid format");
 
         // Now test the actual verification (this should fail due to wrong secret/expired)
-        let result = User::verify_email_verification_token(problematic_token);
+        let result = User::verify_email_verification_token(&signer(), problematic_token);
         println!("Verification result: {:?}", result);
         // We expect this to fail because it's likely expired or signed with different secret
     }
@@ -1111,11 +1133,11 @@ mod tests {
         let new_email = "new@example.com";
 
         // Generate token
-        let token = User::generate_email_change_token(&user_id, new_email);
+        let token = User::generate_email_change_token(&signer(), &user_id, new_email);
 
         // Verify token should succeed
-        let (verified_user_id, verified_email) =
-            User::verify_email_change_token(&token).expect("Token verification should succeed");
+        let (verified_user_id, verified_email) = User::verify_email_change_token(&signer(), &token)
+            .expect("Token verification should succeed");
 
         // Should return the same user ID and email
         assert_eq!(user_id, verified_user_id);
@@ -1135,7 +1157,7 @@ mod tests {
         ];
 
         for invalid_token in invalid_tokens {
-            let result = User::verify_email_change_token(invalid_token);
+            let result = User::verify_email_change_token(&signer(), invalid_token);
             assert!(
                 result.is_err(),
                 "Invalid token '{}' should fail verification",
@@ -1148,7 +1170,7 @@ mod tests {
     fn test_email_change_token_invalid_signature() {
         let user_id = Uuid::new_v4();
         let new_email = "test@example.com";
-        let token = User::generate_email_change_token(&user_id, new_email);
+        let token = User::generate_email_change_token(&signer(), &user_id, new_email);
 
         // Tamper with the signature
         let mut parts: Vec<&str> = token.split('.').collect();
@@ -1156,7 +1178,7 @@ mod tests {
         parts[3] = "invalid_signature";
         let tampered_token = parts.join(".");
 
-        let result = User::verify_email_change_token(&tampered_token);
+        let result = User::verify_email_change_token(&signer(), &tampered_token);
         assert!(
             result.is_err(),
             "Token with invalid signature should fail verification"
@@ -1165,15 +1187,14 @@ mod tests {
 
     #[test]
     fn test_email_change_token_expired() {
-        use crate::utils::sign;
         use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD as base64_engine};
-        use chrono::Utc;
+        use time::OffsetDateTime;
 
         let user_id = Uuid::new_v4();
         let new_email = "expired@example.com";
 
         // Create an expired token (timestamp in the past)
-        let expired_timestamp = Utc::now().timestamp() - 60; // 1 minute ago
+        let expired_timestamp = OffsetDateTime::now_utc().unix_timestamp() - 60; // 1 minute ago
         let mut buffer = String::with_capacity(256);
         base64_engine.encode_string(user_id.as_bytes(), &mut buffer);
         buffer.push('.');
@@ -1181,11 +1202,11 @@ mod tests {
         buffer.push('.');
         buffer.push_str(&expired_timestamp.to_string());
 
-        let signature = sign(&buffer);
+        let signature = signer().sign(&buffer);
         buffer.push('.');
         base64_engine.encode_string(signature, &mut buffer);
 
-        let result = User::verify_email_change_token(&buffer);
+        let result = User::verify_email_change_token(&signer(), &buffer);
         assert!(result.is_err(), "Expired token should fail verification");
 
         // Check that the error message mentions expiration
@@ -1202,15 +1223,17 @@ mod tests {
         let email1 = "test1@example.com";
         let email2 = "test2@example.com";
 
-        let token1 = User::generate_email_change_token(&user_id, email1);
-        let token2 = User::generate_email_change_token(&user_id, email2);
+        let token1 = User::generate_email_change_token(&signer(), &user_id, email1);
+        let token2 = User::generate_email_change_token(&signer(), &user_id, email2);
 
         // Tokens should be different
         assert_ne!(token1, token2);
 
         // Each token should verify to its respective email
-        let (verified_id1, verified_email1) = User::verify_email_change_token(&token1).unwrap();
-        let (verified_id2, verified_email2) = User::verify_email_change_token(&token2).unwrap();
+        let (verified_id1, verified_email1) =
+            User::verify_email_change_token(&signer(), &token1).unwrap();
+        let (verified_id2, verified_email2) =
+            User::verify_email_change_token(&signer(), &token2).unwrap();
 
         assert_eq!(user_id, verified_id1);
         assert_eq!(user_id, verified_id2);
@@ -1225,7 +1248,7 @@ mod tests {
 
         let user_id = Uuid::new_v4();
         let new_email = "test+special@example.com"; // Email with special characters
-        let token = User::generate_email_change_token(&user_id, new_email);
+        let token = User::generate_email_change_token(&signer(), &user_id, new_email);
 
         // Split the token into parts
         let parts: Vec<&str> = token.split('.').collect();

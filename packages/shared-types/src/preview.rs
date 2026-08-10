@@ -1,5 +1,5 @@
-use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use time::OffsetDateTime;
 use uuid::Uuid;
 
 use crate::entities::Entity;
@@ -112,7 +112,7 @@ pub struct Preview {
     pub entities: Entities,
     pub pos: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub edit_for: Option<DateTime<Utc>>,
+    pub edit_for: Option<OffsetDateTime>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub edit: Option<PreviewEdit>,
 }
@@ -120,7 +120,7 @@ pub struct Preview {
 #[derive(Debug, Serialize, Deserialize, Clone, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct PreviewEdit {
-    pub time: DateTime<Utc>,
+    pub time: OffsetDateTime,
     pub p: i32,
     pub q: i32,
 }
@@ -143,7 +143,7 @@ pub struct PreviewPost {
     pub clear: bool,
     pub entities: Entities,
     #[serde(default)]
-    pub edit_for: Option<DateTime<Utc>>,
+    pub edit_for: Option<OffsetDateTime>,
     #[serde(default)]
     pub edit: Option<PreviewEdit>,
 }

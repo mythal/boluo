@@ -1,8 +1,6 @@
-use anyhow::Context;
-use chrono::prelude::*;
-use ring::hmac;
 use ring::rand::SecureRandom;
 use std::sync::OnceLock as OnceCell;
+use time::OffsetDateTime;
 use uuid::Uuid;
 
 macro_rules! regex {
@@ -25,24 +23,10 @@ pub fn id() -> Uuid {
         rng.fill(&mut id).unwrap();
         id
     });
-    let now = Utc::now();
+    let now = OffsetDateTime::now_utc();
     static CONTEXT: UuidContext = UuidContext::new(0);
-    let timestamp = Timestamp::from_unix(
-        &CONTEXT,
-        now.timestamp() as u64,
-        now.timestamp_subsec_nanos(),
-    );
+    let timestamp = Timestamp::from_unix(&CONTEXT, now.unix_timestamp() as u64, now.nanosecond());
     Uuid::new_v1(timestamp, node_id)
-}
-
-fn key() -> &'static hmac::Key {
-    use crate::context::secret;
-    use ring::digest;
-    static KEY: OnceCell<hmac::Key> = OnceCell::new();
-    KEY.get_or_init(|| {
-        let digest = digest::digest(&digest::SHA256, secret().as_bytes());
-        hmac::Key::new(hmac::HMAC_SHA256, digest.as_ref())
-    })
 }
 
 pub fn whitespace_only<T: AsRef<str>>(s: &T) -> bool {
@@ -53,8 +37,31 @@ pub fn not_whitespace_only<T: AsRef<str>>(s: &T) -> bool {
     !whitespace_only(s)
 }
 
-pub fn sign(message: &str) -> hmac::Tag {
-    hmac::sign(key(), message.as_bytes())
+/// Estimates the heap memory retained by a `serde_json::Value` tree.
+///
+/// The result is intentionally approximate: allocator overhead and the exact
+/// capacity of `serde_json::Map` are not observable through its public API.
+pub fn estimated_json_value_size(value: &serde_json::Value) -> usize {
+    std::mem::size_of::<serde_json::Value>()
+        + match value {
+            serde_json::Value::Null | serde_json::Value::Bool(_) | serde_json::Value::Number(_) => {
+                0
+            }
+            serde_json::Value::String(value) => value.capacity(),
+            serde_json::Value::Array(values) => {
+                values.capacity() * std::mem::size_of::<serde_json::Value>()
+                    + values.iter().map(estimated_json_value_size).sum::<usize>()
+            }
+            serde_json::Value::Object(values) => values
+                .iter()
+                .map(|(key, value)| {
+                    std::mem::size_of::<String>()
+                        + key.capacity()
+                        + std::mem::size_of::<usize>() * 3
+                        + estimated_json_value_size(value)
+                })
+                .sum(),
+        }
 }
 
 pub fn sha1(data: &[u8]) -> ring::digest::Digest {
@@ -74,23 +81,8 @@ pub fn url_percent_encode(s: &str) -> String {
     utf8_percent_encode(s, QUERY).to_string()
 }
 
-pub fn verify(message: &str, signature: &str) -> Result<(), anyhow::Error> {
-    use base64::{Engine as _, engine::general_purpose};
-
-    let signature = signature.trim();
-
-    let signature = general_purpose::URL_SAFE_NO_PAD
-        .decode(signature)
-        .or_else(|_| general_purpose::URL_SAFE.decode(signature))
-        .or_else(|_| general_purpose::STANDARD_NO_PAD.decode(signature))
-        .or_else(|_| general_purpose::STANDARD.decode(signature))
-        .context("Failed to decode signature")?;
-    hmac::verify(key(), message.as_bytes(), &signature)
-        .map_err(|_| anyhow::anyhow!("Failed to verify signature of message {}", message))
-}
-
 pub fn timestamp() -> i64 {
-    Utc::now().timestamp_millis()
+    OffsetDateTime::now_utc().unix_timestamp_nanos() as i64 / 1_000_000
 }
 
 /// Create a tokio interval for periodic cleaners/maintenance.
@@ -135,18 +127,20 @@ pub fn is_true(v: &bool) -> bool {
 fn test_sign() {
     use base64::{Engine as _, engine::general_purpose::STANDARD as base64_engine};
 
+    let signer = crate::context::Signer::new("just a test");
     let message = "hello, world";
-    let signature = sign(message);
+    let signature = signer.sign(message);
     let signature = base64_engine.encode(signature);
-    verify(message, &signature).unwrap();
+    signer.verify(message, &signature).unwrap();
 }
 
 #[test]
 fn test_verify_url_safe_base64() {
     use base64::{Engine as _, engine::general_purpose};
 
+    let signer = crate::context::Signer::new("just a test");
     let message = "hello, world";
-    let signature = sign(message);
+    let signature = signer.sign(message);
 
     // Test all supported base64 formats
     let formats = vec![
@@ -158,7 +152,7 @@ fn test_verify_url_safe_base64() {
 
     for (format_name, encoder) in formats {
         let encoded_signature = encoder.encode(signature.as_ref());
-        let result = verify(message, &encoded_signature);
+        let result = signer.verify(message, &encoded_signature);
         assert!(
             result.is_ok(),
             "Verification failed for format {}: {}",
@@ -172,13 +166,14 @@ fn test_verify_url_safe_base64() {
 fn test_verify_mixed_base64_formats() {
     use base64::{Engine as _, engine::general_purpose};
 
+    let signer = crate::context::Signer::new("just a test");
     let message = "test.message.1234567890";
-    let signature = sign(message);
+    let signature = signer.sign(message);
 
     // Test that URL_SAFE format works (this is what email verification uses)
     let url_safe_signature = general_purpose::URL_SAFE_NO_PAD.encode(signature.as_ref());
     assert!(
-        verify(message, &url_safe_signature).is_ok(),
+        signer.verify(message, &url_safe_signature).is_ok(),
         "URL_SAFE_NO_PAD format should work"
     );
 
@@ -199,11 +194,12 @@ fn test_verify_mixed_base64_formats() {
 
 #[test]
 fn test_verify_invalid_base64() {
+    let signer = crate::context::Signer::new("just a test");
     let message = "hello, world";
     let invalid_signatures = vec!["invalid-base64!", "=invalid=", "inv@lid#sig", ""];
 
     for invalid_sig in invalid_signatures {
-        let result = verify(message, invalid_sig);
+        let result = signer.verify(message, invalid_sig);
         assert!(
             result.is_err(),
             "Invalid signature '{}' should fail verification",

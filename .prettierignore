@@ -4,6 +4,9 @@ packages/react-virtuoso/src
 
 packages/lang/src/*.json
 
+apps/avatars/src/worker-configuration.d.ts
+
 package-lock.json
 flake.lock
+packages/avatar/src/glyphs.json
 .sqlx

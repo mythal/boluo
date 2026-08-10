@@ -1,5 +1,5 @@
-use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use time::OffsetDateTime;
 use unicode_normalization::UnicodeNormalization;
 use uuid::Uuid;
 
@@ -47,7 +47,7 @@ pub struct Asset {
     pub name: String,
     pub policy: AssetPolicy,
     pub mime_type: String,
-    pub created: DateTime<Utc>,
+    pub created: OffsetDateTime,
 }
 
 impl Asset {

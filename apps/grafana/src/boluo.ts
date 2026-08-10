@@ -34,6 +34,9 @@ const panels = {
   cacheCapacityUtilization: 'panel-19',
   messages: 'panel-9',
   messageLatency: 'panel-16',
+  diskCacheHealth: 'panel-20',
+  diskCacheIo: 'panel-21',
+  diskCacheLatency: 'panel-22',
 } as const;
 
 const messageRateMetrics = [
@@ -329,6 +332,117 @@ export function buildBoluoDashboard(
         ],
       }),
     )
+    .element(
+      panels.diskCacheHealth,
+      timeSeriesPanel({
+        id: 20,
+        title: 'Disk cache health',
+        description:
+          'The file size high-water mark is configured on the server; a zero up value means the worker is unavailable.',
+        datasourceUid,
+        tooltipMode: TooltipDisplayMode.Multi,
+        targets: [
+          {
+            refId: 'file-size',
+            editorMode: QueryEditorMode.Code,
+            expr: `boluo_server_disk_cache_file_bytes{app="${APP}"} / 1024 / 1024 / 1024`,
+            legendFormat: 'file size (GiB)',
+          },
+          {
+            refId: 'high-watermark',
+            editorMode: QueryEditorMode.Code,
+            expr: `boluo_server_disk_cache_high_watermark_bytes{app="${APP}"} / 1024 / 1024 / 1024`,
+            legendFormat: 'high watermark (GiB)',
+          },
+          {
+            refId: 'max-file-size',
+            editorMode: QueryEditorMode.Code,
+            expr: `boluo_server_disk_cache_max_file_bytes{app="${APP}"} / 1024 / 1024 / 1024`,
+            legendFormat: 'max file size (GiB)',
+          },
+          {
+            refId: 'queue-depth',
+            editorMode: QueryEditorMode.Code,
+            expr: `boluo_server_disk_cache_queue_depth{app="${APP}"}`,
+            legendFormat: 'queue depth',
+          },
+          {
+            refId: 'up',
+            editorMode: QueryEditorMode.Code,
+            expr: `boluo_server_disk_cache_up{app="${APP}"}`,
+            legendFormat: 'worker up',
+          },
+        ],
+      }),
+    )
+    .element(
+      panels.diskCacheIo,
+      timeSeriesPanel({
+        id: 21,
+        title: 'Disk cache I/O',
+        description: 'Rates and p95 latency for redb reads, writes, and compaction.',
+        datasourceUid,
+        unit: 'ops',
+        tooltipMode: TooltipDisplayMode.Multi,
+        targets: [
+          {
+            refId: 'reads',
+            editorMode: QueryEditorMode.Code,
+            expr: `rate(boluo_server_mailbox_cache_read_operations_total{app="${APP}"}[${RATE_INTERVAL}])`,
+            legendFormat: 'reads',
+          },
+          {
+            refId: 'writes',
+            editorMode: QueryEditorMode.Code,
+            expr: `rate(boluo_server_disk_cache_write_operations_total{app="${APP}"}[${RATE_INTERVAL}])`,
+            legendFormat: 'writes',
+          },
+          {
+            refId: 'queue-full',
+            editorMode: QueryEditorMode.Code,
+            expr: `rate(boluo_server_disk_cache_queue_full_total{app="${APP}"}[${RATE_INTERVAL}])`,
+            legendFormat: 'queue full',
+          },
+          {
+            refId: 'capacity-rejections',
+            editorMode: QueryEditorMode.Code,
+            expr: `rate(boluo_server_disk_cache_capacity_rejections_total{app="${APP}"}[${RATE_INTERVAL}])`,
+            legendFormat: 'high-watermark rejections',
+          },
+        ],
+      }),
+    )
+    .element(
+      panels.diskCacheLatency,
+      timeSeriesPanel({
+        id: 22,
+        title: 'Disk cache latency',
+        description: 'p95 latency for redb reads, writes, and compaction.',
+        datasourceUid,
+        unit: 'ms',
+        tooltipMode: TooltipDisplayMode.Multi,
+        targets: [
+          {
+            refId: 'read-p95',
+            editorMode: QueryEditorMode.Code,
+            expr: histogramQuantile(0.95, 'boluo_server_mailbox_cache_read_duration_ms'),
+            legendFormat: 'read p95 (ms)',
+          },
+          {
+            refId: 'write-p95',
+            editorMode: QueryEditorMode.Code,
+            expr: histogramQuantile(0.95, 'boluo_server_disk_cache_commit_duration_ms'),
+            legendFormat: 'write p95 (ms)',
+          },
+          {
+            refId: 'compact-p95',
+            editorMode: QueryEditorMode.Code,
+            expr: histogramQuantile(0.95, 'boluo_server_disk_cache_compaction_duration_ms'),
+            legendFormat: 'compact p95 (ms)',
+          },
+        ],
+      }),
+    )
     .layout(
       new GridBuilder().items([
         gridItem(panels.httpTraffic).x(0).y(0).width(12).height(6),
@@ -342,6 +456,9 @@ export function buildBoluoDashboard(
         gridItem(panels.cacheCapacityUtilization).x(12).y(22).width(12).height(8),
         gridItem(panels.messages).x(0).y(30).width(12).height(8),
         gridItem(panels.messageLatency).x(12).y(30).width(12).height(8),
+        gridItem(panels.diskCacheHealth).x(0).y(38).width(8).height(8),
+        gridItem(panels.diskCacheIo).x(8).y(38).width(8).height(8),
+        gridItem(panels.diskCacheLatency).x(16).y(38).width(8).height(8),
       ]),
     )
     .links([])

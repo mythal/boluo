@@ -110,7 +110,7 @@ async fn list_entries(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<Vec<EntryMetadata>, AppError> {
-    let session = authenticate_optional(&req).await?;
+    let session = authenticate_optional(ctx, &req).await?;
     let ListEntries { space_id, scope_id } = parse_query(req.uri())?;
     let scope = resolve_scope(ctx, space_id, scope_id).await?;
     if !can_view_scope(ctx, &scope, session.map(|session| session.user_id)).await? {
@@ -128,7 +128,7 @@ async fn list_entries_by_component(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<Vec<EntryComponentMatch>, AppError> {
-    let session = authenticate_optional(&req).await?;
+    let session = authenticate_optional(ctx, &req).await?;
     let ListEntriesByComponent {
         space_id,
         scope_id,
@@ -149,7 +149,7 @@ async fn query_entry(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<Entry, AppError> {
-    let session = authenticate_optional(&req).await?;
+    let session = authenticate_optional(ctx, &req).await?;
     let QueryEntry {
         space_id,
         scope_id,
@@ -171,7 +171,7 @@ async fn create_entry(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<Entry, AppError> {
-    let session = authenticate(&req).await?;
+    let session = authenticate(ctx, &req).await?;
     let payload: CreateEntry = parse_body(req).await?;
     let mutation = ctx.space_store.acquire_mutation(payload.space_id).await?;
     let scope = resolve_scope(ctx, payload.space_id, payload.scope_id).await?;
@@ -236,7 +236,7 @@ async fn edit_entry(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<Entry, AppError> {
-    let session = authenticate(&req).await?;
+    let session = authenticate(ctx, &req).await?;
     let payload: EditEntry = parse_body(req).await?;
     let mutation = ctx.space_store.acquire_mutation(payload.space_id).await?;
     let scope = resolve_scope(ctx, payload.space_id, payload.scope_id).await?;
@@ -313,7 +313,7 @@ async fn move_entry(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<Entry, AppError> {
-    let session = authenticate(&req).await?;
+    let session = authenticate(ctx, &req).await?;
     let payload: MoveEntry = parse_body(req).await?;
     let mutation = ctx.space_store.acquire_mutation(payload.space_id).await?;
     let scope = resolve_scope(ctx, payload.space_id, payload.scope_id).await?;
@@ -343,7 +343,7 @@ async fn edit_entry_components(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<Option<Entry>, AppError> {
-    let session = authenticate(&req).await?;
+    let session = authenticate(ctx, &req).await?;
     let payload: EditEntryComponents = parse_body(req).await?;
     let mutation = ctx.space_store.acquire_mutation(payload.space_id).await?;
     let scope = resolve_scope(ctx, payload.space_id, payload.scope_id).await?;
@@ -434,7 +434,7 @@ async fn delete_entry(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<bool, AppError> {
-    let session = authenticate(&req).await?;
+    let session = authenticate(ctx, &req).await?;
     let payload: DeleteEntry = parse_body(req).await?;
     let mutation = ctx.space_store.acquire_mutation(payload.space_id).await?;
     let scope = resolve_scope(ctx, payload.space_id, payload.scope_id).await?;
@@ -551,7 +551,7 @@ async fn effects_by_messages(
 ) -> Result<Vec<MessageEntryEffects>, AppError> {
     const MAX_MESSAGES: usize = 256;
 
-    let session = authenticate_optional(&req).await?;
+    let session = authenticate_optional(ctx, &req).await?;
     let payload: QueryEntryEffectsByMessages = parse_body(req).await?;
     if payload.message_ids.is_empty() || payload.message_ids.len() > MAX_MESSAGES {
         return Err(AppError::BadRequest(format!(
@@ -593,7 +593,7 @@ async fn history(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<Vec<EntryHistory>, AppError> {
-    let session = authenticate_optional(&req).await?;
+    let session = authenticate_optional(ctx, &req).await?;
     let EntryHistoryQuery {
         space_id,
         scope_id,
@@ -614,7 +614,7 @@ async fn component_history(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<Vec<EntryComponentHistory>, AppError> {
-    let session = authenticate_optional(&req).await?;
+    let session = authenticate_optional(ctx, &req).await?;
     let EntryComponentHistoryQuery {
         space_id,
         scope_id,
@@ -644,7 +644,7 @@ async fn check_identifier(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<bool, AppError> {
-    let session = authenticate_optional(&req).await?;
+    let session = authenticate_optional(ctx, &req).await?;
     let payload: CheckEntryIdentifier = parse_query(req.uri())?;
     let scope = resolve_scope(ctx, payload.space_id, payload.scope_id).await?;
     if !can_view_scope(ctx, &scope, session.map(|session| session.user_id)).await? {

@@ -1,8 +1,8 @@
-use chrono::prelude::*;
 use compact_str::CompactString;
 use serde::{Deserialize, Serialize};
 use shared_types::messages::Entities;
 use std::ops::Deref;
+use time::OffsetDateTime;
 use unicode_normalization::UnicodeNormalization;
 use uuid::Uuid;
 
@@ -46,9 +46,9 @@ pub struct NoteMetadata {
     pub access_channel_id: Option<Uuid>,
     #[specta(type = f64)]
     pub revision: i64,
-    pub archived_at: Option<DateTime<Utc>>,
-    pub created: DateTime<Utc>,
-    pub modified: DateTime<Utc>,
+    pub archived_at: Option<OffsetDateTime>,
+    pub created: OffsetDateTime,
+    pub modified: OffsetDateTime,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, specta::Type)]
@@ -298,7 +298,7 @@ pub struct NoteContentRevision {
     pub title: CompactString,
     pub text: String,
     pub entities: Entities,
-    pub created: DateTime<Utc>,
+    pub created: OffsetDateTime,
 }
 
 impl NoteContentRevision {

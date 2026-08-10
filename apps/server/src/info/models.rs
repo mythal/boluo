@@ -37,11 +37,11 @@ pub struct AppSettings {
 }
 
 impl AppSettings {
-    pub fn new() -> Self {
-        let media_url = crate::context::PUBLIC_MEDIA_URL.clone();
-        let app_url = crate::context::APP_URL.clone();
-        let site_url = crate::context::SITE_URL.clone();
-        let sentry_dsn = crate::context::SENTRY_DSN.clone();
+    pub fn new(ctx: &crate::context::AppContext) -> Self {
+        let media_url = ctx.config.public_media_url.clone();
+        let app_url = ctx.config.app_url.clone();
+        let site_url = ctx.config.site_url.clone();
+        let sentry_dsn = ctx.config.sentry_dsn.clone();
         AppSettings {
             media_url,
             app_url,

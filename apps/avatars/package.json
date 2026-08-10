@@ -1,0 +1,29 @@
+{
+  "name": "@boluo/avatars",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "@boluo/avatar": "0.0.0",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7"
+  },
+  "devDependencies": {
+    "@boluo/typescript-config": "0.0.0",
+    "@cloudflare/vitest-pool-workers": "^0.20.3",
+    "@cloudflare/workers-types": "5",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "typescript": "^6",
+    "vitest": "^4.1.10",
+    "wrangler": "^4.113.0"
+  },
+  "scripts": {
+    "build": "wrangler deploy --dry-run --outdir dist",
+    "check": "wrangler types src/worker-configuration.d.ts --include-runtime=false --check && tsc --noEmit && tsc --noEmit --project test/tsconfig.json",
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev",
+    "test": "vitest run",
+    "types": "wrangler types src/worker-configuration.d.ts --include-runtime=false"
+  },
+  "type": "module"
+}

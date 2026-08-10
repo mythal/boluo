@@ -1,6 +1,5 @@
 use super::api::Upload;
 use super::models::Media;
-use crate::context::media_public_url;
 use crate::csrf::authenticate;
 use crate::error::{AppError, Find, ValidationFailed};
 use crate::interface::{Response, missing, ok_response, parse_query};
@@ -78,6 +77,7 @@ fn check_size(size: usize, max_size: usize) -> Result<(), AppError> {
 }
 
 pub async fn upload(
+    storage: &crate::s3::Storage,
     req: Request<Incoming>,
     id: Uuid,
     params: Upload,
@@ -96,8 +96,7 @@ pub async fn upload(
     check_size(size, max_size)?;
     let body = req.into_body();
     put_object(
-        crate::s3::get_bucket(),
-        crate::s3::get_credentials(),
+        storage,
         &id.as_hyphenated().to_string(),
         body,
         &mime_type,
@@ -120,11 +119,11 @@ async fn media_upload(
     ctx: &crate::context::AppContext,
     req: Request<Incoming>,
 ) -> Result<Media, AppError> {
-    let session = authenticate(&req).await?;
+    let session = authenticate(ctx, &req).await?;
     check_upload_rate_limit(&session.user_id)?;
     let params = upload_params(req.uri())?;
     let media_id = id();
-    let media_file = upload(req, media_id, params, 1024 * 1024 * 16).await?;
+    let media_file = upload(ctx.storage(), req, media_id, params, 1024 * 1024 * 16).await?;
     media_file
         .create(&ctx.db, session.user_id, "")
         .await
@@ -157,7 +156,7 @@ async fn get(
         AppError::BadRequest("Filename or media id must be specified.".to_string())
     })?;
 
-    let url = format!("{}/{}", media_public_url().trim_end_matches('/'), media.id);
+    let url = format!("{}/{}", ctx.media_public_url(), media.id);
     let response = hyper::Response::builder()
         .status(hyper::StatusCode::MOVED_PERMANENTLY)
         .header(header::LOCATION, url)
@@ -167,8 +166,7 @@ async fn get(
 }
 
 async fn put_object(
-    bucket: &rusty_s3::Bucket,
-    credentials: &rusty_s3::Credentials,
+    storage: &crate::s3::Storage,
     key: &str,
     body: hyper::body::Incoming,
     content_type: &str,
@@ -180,11 +178,14 @@ async fn put_object(
         .map_err(error_unexpected!("Failed to read request body"))?
         .to_bytes();
 
-    let mut action = bucket.put_object(Some(credentials), key);
+    let mut action = storage
+        .bucket()
+        .put_object(Some(storage.credentials()), key);
     action.headers_mut().insert("content-type", content_type);
     let url = action.sign(std::time::Duration::from_secs(60));
 
-    let response = crate::s3::get_http_client()
+    let response = storage
+        .client()
         .put(url.as_str())
         .header("content-type", content_type)
         .header("content-length", content_length)
@@ -202,13 +203,14 @@ async fn put_object(
 }
 
 fn put_object_presigned(
-    bucket: &rusty_s3::Bucket,
-    credentials: &rusty_s3::Credentials,
+    storage: &crate::s3::Storage,
     key: &str,
     expires_in: u64,
     content_type: &str,
 ) -> String {
-    let mut action = bucket.put_object(Some(credentials), key);
+    let mut action = storage
+        .bucket()
+        .put_object(Some(storage.credentials()), key);
     action.headers_mut().insert("content-type", content_type);
     action
         .sign(std::time::Duration::from_secs(expires_in))
@@ -220,8 +222,7 @@ async fn presigned(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<PreSignResult, AppError> {
-    use crate::s3;
-    let session = authenticate(&req).await?;
+    let session = authenticate(ctx, &req).await?;
     let PreSign {
         filename,
         mime_type,
@@ -251,8 +252,7 @@ async fn presigned(
     )
     .await?;
     let uri = put_object_presigned(
-        s3::get_bucket(),
-        s3::get_credentials(),
+        ctx.storage(),
         &media.id.as_hyphenated().to_string(),
         EXPIRES_IN_SEC,
         &mime_type,

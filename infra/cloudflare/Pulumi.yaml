@@ -1,0 +1,6 @@
+name: boluo-cloudflare
+description: Cloudflare infrastructure for Boluo
+runtime:
+  name: nodejs
+  options:
+    packagemanager: npm

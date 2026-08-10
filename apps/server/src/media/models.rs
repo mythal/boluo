@@ -1,5 +1,5 @@
-use chrono::prelude::*;
 use serde::{Deserialize, Serialize};
+use time::OffsetDateTime;
 use uuid::Uuid;
 
 pub struct MediaFile {
@@ -140,7 +140,7 @@ pub struct Media {
     pub size: i32,
     pub description: String,
     pub source: String,
-    pub created: DateTime<Utc>,
+    pub created: OffsetDateTime,
 }
 
 impl Media {

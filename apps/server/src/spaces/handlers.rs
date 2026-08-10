@@ -5,6 +5,7 @@ use super::{Space, SpaceMember};
 use crate::channels::models::Member;
 use crate::channels::{Channel, ChannelMember, ChannelType};
 use crate::committed_changes::CommittedChanges;
+use crate::context::SpaceList;
 use crate::csrf::authenticate;
 use crate::error::{AppError, Find};
 use crate::events::models::space_users_status;
@@ -40,10 +41,6 @@ async fn list(
     ctx: &crate::context::AppContext,
     _req: Request<impl Body>,
 ) -> Result<Vec<Space>, AppError> {
-    struct SpaceList {
-        spaces: Vec<Space>,
-        instant: std::time::Instant,
-    }
     async fn init_spaces(ctx: &crate::context::AppContext) -> ArcSwap<SpaceList> {
         let spaces = Space::all(&ctx.db).await.unwrap_or_default();
         ArcSwap::new(std::sync::Arc::new(SpaceList {
@@ -55,8 +52,7 @@ async fn list(
     // Intentional short-window local cache for `/spaces/list`.
     // We do not actively invalidate this on create/edit/delete; callers can
     // observe up to ~10s staleness in exchange for lower read pressure.
-    static CACHE: tokio::sync::OnceCell<ArcSwap<SpaceList>> = tokio::sync::OnceCell::const_new();
-    let space_list_lock = CACHE.get_or_init(|| init_spaces(ctx)).await;
+    let space_list_lock = ctx.space_list_cache.get_or_init(|| init_spaces(ctx)).await;
 
     {
         let space_list = space_list_lock.load();
@@ -100,7 +96,7 @@ async fn query(
             return Ok(space);
         }
     }
-    let session = authenticate(&req).await?;
+    let session = authenticate(ctx, &req).await?;
     let is_member = if let Some(snapshot) = snapshot {
         snapshot.space_members.contains_key(&session.user_id)
     } else {
@@ -207,7 +203,7 @@ async fn token(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<Uuid, AppError> {
-    let session = authenticate(&req).await?;
+    let session = authenticate(ctx, &req).await?;
     let IdQuery { id } = parse_query(req.uri())?;
     if let Some(snapshot) = ctx
         .space_store
@@ -247,7 +243,7 @@ async fn refresh_token(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<Uuid, AppError> {
-    let session = authenticate(&req).await?;
+    let session = authenticate(ctx, &req).await?;
     let IdQuery { id } = parse_query(req.uri())?;
     let mutation = ctx.space_store.acquire_mutation(id).await?;
     let mut trans = ctx.db.begin().await?;
@@ -277,7 +273,7 @@ async fn my_spaces(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<Vec<SpaceWithMember>, AppError> {
-    let session = authenticate(&req).await?;
+    let session = authenticate(ctx, &req).await?;
     let members = SpaceMember::get_by_user_with_cache(&ctx.db, session.user_id).await?;
     let Some(user) = User::get_by_id_with_cache(&ctx.db, &session.user_id).await? else {
         return Ok(Vec::new());
@@ -387,7 +383,7 @@ async fn create(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<SpaceWithMember, AppError> {
-    let session = authenticate(&req).await?;
+    let session = authenticate(ctx, &req).await?;
     CREATE_SPACE_LIMITER
         .check_key(&session.user_id)
         .map_err(|_| AppError::LimitExceeded("Too many spaces, please try again later."))?;
@@ -399,7 +395,7 @@ async fn edit(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<Space, AppError> {
-    let session = authenticate(&req).await?;
+    let session = authenticate(ctx, &req).await?;
     let EditSpace {
         space_id,
         name,
@@ -496,7 +492,7 @@ async fn join(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<SpaceWithMember, AppError> {
-    let session = authenticate(&req).await?;
+    let session = authenticate(ctx, &req).await?;
     let JoinSpace { space_id, token } = parse_query(req.uri())?;
     let user_id = &session.user_id;
     let user = User::get_by_id_with_cache(&ctx.db, user_id)
@@ -540,7 +536,7 @@ async fn leave(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<bool, AppError> {
-    let session = authenticate(&req).await?;
+    let session = authenticate(ctx, &req).await?;
     let IdQuery { id } = parse_query(req.uri())?;
 
     let mutation = ctx.space_store.acquire_mutation(id).await?;
@@ -558,7 +554,7 @@ async fn kick(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<HashMap<Uuid, SpaceMemberWithUser>, AppError> {
-    let session = authenticate(&req).await?;
+    let session = authenticate(ctx, &req).await?;
     let KickFromSpace { space_id, user_id } = parse_query(req.uri())?;
 
     let mutation = ctx.space_store.acquire_mutation(space_id).await?;
@@ -598,7 +594,7 @@ async fn my_space_member(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<Option<SpaceMember>, AppError> {
-    let session = if let Ok(session) = authenticate(&req).await {
+    let session = if let Ok(session) = authenticate(ctx, &req).await {
         session
     } else {
         return Ok(None);
@@ -655,7 +651,7 @@ async fn delete(
     req: Request<impl Body>,
 ) -> Result<Space, AppError> {
     let IdQuery { id } = parse_query(req.uri())?;
-    let session = authenticate(&req).await?;
+    let session = authenticate(ctx, &req).await?;
     let mutation = ctx.space_store.acquire_mutation(id).await?;
     let mut trans = ctx.db.begin().await?;
     let space = Space::get_by_id(&mut *trans, &id).await.or_not_found()?;
@@ -697,7 +693,7 @@ async fn update_settings(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<serde_json::Value, AppError> {
-    let session = authenticate(&req).await?;
+    let session = authenticate(ctx, &req).await?;
     let IdQuery { id } = parse_query(req.uri())?;
     let settings: serde_json::Value = interface::parse_body(req).await?;
     if !settings.is_object() {

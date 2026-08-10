@@ -9,6 +9,7 @@
     "prettier-plugin-tailwindcss": "^0.8.0",
     "turbo": "^2.10.4",
     "typescript": "^6",
+    "vitest": "^4.1.10",
     "wrangler": "^4.113.0"
   },
   "engines": {
@@ -44,6 +45,7 @@
   },
   "workspaces": [
     "apps/*",
+    "infra/*",
     "packages/*"
   ]
 }

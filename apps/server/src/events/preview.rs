@@ -4,7 +4,7 @@ use crate::error::Find;
 use crate::events::Update;
 use crate::messages::Entities;
 use crate::spaces::SpaceMember;
-use chrono::prelude::*;
+use time::OffsetDateTime;
 use uuid::Uuid;
 
 pub use shared_types::preview::{Preview, PreviewDiff, PreviewDiffPost, PreviewEdit, PreviewPost};
@@ -33,7 +33,7 @@ fn is_cleared_preview_content(text: &Option<String>, entities: &Entities) -> boo
 fn should_cancel_preview_position(
     text: &Option<String>,
     entities: &Entities,
-    edit_for: &Option<DateTime<Utc>>,
+    edit_for: &Option<OffsetDateTime>,
     edit: &Option<PreviewEdit>,
 ) -> bool {
     is_cleared_preview_content(text, entities) && edit_for.is_none() && edit.is_none()
@@ -157,8 +157,8 @@ pub async fn broadcast_preview_post(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use chrono::TimeZone;
     use shared_types::entities::{Entity, Span};
+    use time::OffsetDateTime;
 
     fn text_entities(len: i32) -> Entities {
         Entities(vec![Entity::Text(Span { start: 0, len })])
@@ -166,7 +166,7 @@ mod tests {
 
     fn edit() -> PreviewEdit {
         PreviewEdit {
-            time: Utc.timestamp_opt(1, 0).single().unwrap(),
+            time: OffsetDateTime::from_unix_timestamp(1).unwrap(),
             p: 42,
             q: 1,
         }
@@ -203,7 +203,7 @@ mod tests {
         assert!(!should_cancel_preview_position(
             &Some(String::new()),
             &Entities(vec![]),
-            &Some(Utc.timestamp_opt(1, 0).single().unwrap()),
+            &Some(OffsetDateTime::from_unix_timestamp(1).unwrap()),
             &None,
         ));
     }

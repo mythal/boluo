@@ -61,12 +61,14 @@
                 (maybeMissing (unfilteredRoot + "/package-lock.json"))
                 (maybeMissing (unfilteredRoot + "/turbo.json"))
                 (unfilteredRoot + "/packages")
+                (unfilteredRoot + "/apps/avatars")
                 (unfilteredRoot + "/apps/interpreter-cli")
                 (unfilteredRoot + "/apps/grafana")
                 (unfilteredRoot + "/apps/legacy")
                 (unfilteredRoot + "/apps/site")
                 (unfilteredRoot + "/apps/spa")
                 (unfilteredRoot + "/apps/storybook")
+                (unfilteredRoot + "/infra/cloudflare")
               ];
             };
 
@@ -314,7 +316,10 @@
               };
               config = {
                 Env = [ versionEnv ];
-                Cmd = [ "/bin/server" ];
+                Cmd = [
+                  "/bin/server"
+                  "serve"
+                ];
                 Labels = imageLabel;
               };
             };
@@ -555,9 +560,6 @@
               ${pkgs.flyctl}/bin/flyctl deploy --config ${apps/site/fly.toml} --image ghcr.io/mythal/boluo/site:v${self.rev} --remote-only
             '';
 
-            deploy-site-production = pkgs.writeShellScriptBin "deploy-site-production" ''
-              ${pkgs.flyctl}/bin/flyctl deploy --config ${apps/site/production/fly.toml} --image ghcr.io/mythal/boluo/site:v${self.rev} --remote-only
-            '';
           };
 
           checks = {
@@ -583,6 +585,7 @@
                 flyctl
                 cargo-nextest
                 postgresql
+                (pulumi.withPackages (pulumiPackages: [ pulumiPackages.pulumi-nodejs ]))
                 python3
                 gh
               ]

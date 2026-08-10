@@ -21,24 +21,24 @@ jobs:
       contents: read
     if: github.ref == 'refs/heads/production'
     outputs:
-      infra: ${{ steps.changes.outputs.infra }}
+      cloudflare: ${{ steps.changes.outputs.cloudflare }}
     steps:
       - name: Check out the repo
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
-      - name: Detect infrastructure changes
+      - name: Detect Cloudflare changes
         id: changes
         env:
           AFTER_SHA: ${{ github.sha }}
           BEFORE_SHA: ${{ github.event.before }}
         run: |
           if git cat-file -e "${BEFORE_SHA}^{commit}" 2>/dev/null && \
-            git diff --quiet "$BEFORE_SHA" "$AFTER_SHA" -- infra/; then
-            echo "infra=false" >> "$GITHUB_OUTPUT"
+            git diff --quiet "$BEFORE_SHA" "$AFTER_SHA" -- infra/cloudflare/; then
+            echo "cloudflare=false" >> "$GITHUB_OUTPUT"
           else
-            echo "infra=true" >> "$GITHUB_OUTPUT"
+            echo "cloudflare=true" >> "$GITHUB_OUTPUT"
           fi
 
   images:
@@ -85,15 +85,19 @@ jobs:
             chmod -R u+rwX,go+rX /tmp/sccache
           fi
 
-  infrastructure:
+  cloudflare:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
       contents: read
-    needs: changes
-    if: needs.changes.outputs.infra == 'true'
+    needs:
+      - changes
+      - production
+    if: >-
+      needs.production.result == 'success' &&
+      needs.changes.outputs.cloudflare == 'true'
     environment:
-      name: infrastructure
+      name: production
     steps:
       - name: Check out the repo
         uses: actions/checkout@v7
@@ -197,14 +201,11 @@ jobs:
     needs:
       - changes
       - images
-      - infrastructure
     if: >-
       always() &&
       github.ref == 'refs/heads/production' &&
       needs.changes.result == 'success' &&
-      needs.images.result == 'success' &&
-      (needs.infrastructure.result == 'success' ||
-      needs.infrastructure.result == 'skipped')
+      needs.images.result == 'success'
     environment:
       name: production
       deployment: false

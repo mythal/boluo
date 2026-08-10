@@ -66,10 +66,16 @@ pub struct Character {
     pub access_policy: AccessPolicy,
     pub access_channel_id: Option<Uuid>,
     pub scope_version: Uuid,
+    #[specta(type = Option<String>)]
+    #[serde(with = "time::serde::rfc3339::option")]
     pub archived_at: Option<OffsetDateTime>,
     #[specta(type = Vec<String>)]
     pub tags: Vec<CompactString>,
+    #[specta(type = String)]
+    #[serde(with = "time::serde::rfc3339")]
     pub created: OffsetDateTime,
+    #[specta(type = String)]
+    #[serde(with = "time::serde::rfc3339")]
     pub modified: OffsetDateTime,
     pub version: Uuid,
 }

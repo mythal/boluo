@@ -25,6 +25,8 @@ pub struct EditMessage {
     pub color: String,
     /// The `modified` timestamp of the message at the time the client started editing it.
     #[serde(default)]
+    #[specta(type = Option<String>)]
+    #[serde(with = "time::serde::rfc3339::option")]
     pub expect_modified: Option<OffsetDateTime>,
 }
 

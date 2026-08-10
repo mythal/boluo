@@ -31,7 +31,11 @@ pub struct Space {
     pub id: Uuid,
     pub name: String,
     pub description: String,
+    #[specta(type = String)]
+    #[serde(with = "time::serde::rfc3339")]
     pub created: OffsetDateTime,
+    #[specta(type = String)]
+    #[serde(with = "time::serde::rfc3339")]
     pub modified: OffsetDateTime,
     pub owner_id: Uuid,
     pub is_public: bool,
@@ -45,6 +49,8 @@ pub struct Space {
     #[serde(skip)]
     pub invite_token: Uuid,
     pub allow_spectator: bool,
+    #[specta(type = String)]
+    #[serde(with = "time::serde::rfc3339")]
     pub latest_activity: OffsetDateTime,
     pub scope_id: Uuid,
 }
@@ -597,6 +603,8 @@ pub struct SpaceMember {
     pub user_id: Uuid,
     pub space_id: Uuid,
     pub is_admin: bool,
+    #[specta(type = String)]
+    #[serde(with = "time::serde::rfc3339")]
     pub join_date: OffsetDateTime,
     pub is_game_master: bool,
 }

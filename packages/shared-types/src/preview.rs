@@ -112,6 +112,8 @@ pub struct Preview {
     pub entities: Entities,
     pub pos: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[specta(type = Option<String>)]
+    #[serde(with = "time::serde::rfc3339::option")]
     pub edit_for: Option<OffsetDateTime>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub edit: Option<PreviewEdit>,
@@ -120,6 +122,8 @@ pub struct Preview {
 #[derive(Debug, Serialize, Deserialize, Clone, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct PreviewEdit {
+    #[specta(type = String)]
+    #[serde(with = "time::serde::rfc3339")]
     pub time: OffsetDateTime,
     pub p: i32,
     pub q: i32,
@@ -143,6 +147,8 @@ pub struct PreviewPost {
     pub clear: bool,
     pub entities: Entities,
     #[serde(default)]
+    #[specta(type = Option<String>)]
+    #[serde(with = "time::serde::rfc3339::option")]
     pub edit_for: Option<OffsetDateTime>,
     #[serde(default)]
     pub edit: Option<PreviewEdit>,

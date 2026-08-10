@@ -132,7 +132,11 @@ pub struct EntryMetadata {
     pub metadata_version: Uuid,
     #[serde(skip)]
     pub(crate) components_version: Uuid,
+    #[specta(type = String)]
+    #[serde(with = "time::serde::rfc3339")]
     pub created: OffsetDateTime,
+    #[specta(type = String)]
+    #[serde(with = "time::serde::rfc3339")]
     pub modified: OffsetDateTime,
 }
 
@@ -242,6 +246,8 @@ pub struct EntryEffect {
     pub space_id: Uuid,
     pub scope_id: Uuid,
     pub operator_id: Option<Uuid>,
+    #[specta(type = String)]
+    #[serde(with = "time::serde::rfc3339")]
     pub created: OffsetDateTime,
     pub message_id: Option<Uuid>,
 }
@@ -925,6 +931,8 @@ pub struct EntryHistory {
     pub key: String,
     pub previous_key: Option<String>,
     pub action: EntryHistoryAction,
+    #[specta(type = String)]
+    #[serde(with = "time::serde::rfc3339")]
     pub created: OffsetDateTime,
 }
 
@@ -1328,6 +1336,8 @@ pub struct EntryComponentHistory {
     pub component_type: String,
     pub action: EntryComponentHistoryAction,
     pub payload: Option<Value>,
+    #[specta(type = String)]
+    #[serde(with = "time::serde::rfc3339")]
     pub created: OffsetDateTime,
 }
 

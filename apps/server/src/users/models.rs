@@ -23,6 +23,8 @@ pub struct User {
     #[serde(skip)]
     pub password: String,
     pub bio: String,
+    #[specta(type = String)]
+    #[serde(with = "time::serde::rfc3339")]
     pub joined: OffsetDateTime,
     #[serde(skip)]
     pub deactivated: bool,
@@ -540,6 +542,7 @@ impl User {
 pub struct UserExt {
     pub user_id: Uuid,
     pub settings: serde_json::Value,
+    #[serde(with = "time::serde::rfc3339::option")]
     pub email_verified_at: Option<OffsetDateTime>,
 }
 

@@ -140,6 +140,8 @@ pub struct Media {
     pub size: i32,
     pub description: String,
     pub source: String,
+    #[specta(type = String)]
+    #[serde(with = "time::serde::rfc3339")]
     pub created: OffsetDateTime,
 }
 

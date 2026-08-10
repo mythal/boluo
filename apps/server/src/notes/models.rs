@@ -46,8 +46,14 @@ pub struct NoteMetadata {
     pub access_channel_id: Option<Uuid>,
     #[specta(type = f64)]
     pub revision: i64,
+    #[specta(type = Option<String>)]
+    #[serde(with = "time::serde::rfc3339::option")]
     pub archived_at: Option<OffsetDateTime>,
+    #[specta(type = String)]
+    #[serde(with = "time::serde::rfc3339")]
     pub created: OffsetDateTime,
+    #[specta(type = String)]
+    #[serde(with = "time::serde::rfc3339")]
     pub modified: OffsetDateTime,
 }
 
@@ -298,6 +304,8 @@ pub struct NoteContentRevision {
     pub title: CompactString,
     pub text: String,
     pub entities: Entities,
+    #[specta(type = String)]
+    #[serde(with = "time::serde::rfc3339")]
     pub created: OffsetDateTime,
 }
 

@@ -177,5 +177,7 @@ pub struct Export {
     #[serde(default)]
     pub space_id: Option<Uuid>,
     #[serde(default)]
+    #[specta(type = Option<String>)]
+    #[serde(with = "time::serde::rfc3339::option")]
     pub after: Option<OffsetDateTime>,
 }

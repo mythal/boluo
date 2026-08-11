@@ -63,11 +63,11 @@
                 (unfilteredRoot + "/packages")
                 (unfilteredRoot + "/apps/avatars")
                 (unfilteredRoot + "/apps/interpreter-cli")
-                (unfilteredRoot + "/apps/grafana")
                 (unfilteredRoot + "/apps/legacy")
                 (unfilteredRoot + "/apps/site")
                 (unfilteredRoot + "/apps/spa")
                 (unfilteredRoot + "/apps/storybook")
+                (unfilteredRoot + "/infra/grafana")
                 (unfilteredRoot + "/infra/cloudflare")
               ];
             };

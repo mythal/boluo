@@ -427,10 +427,10 @@ fn mailbox_key(mailbox_id: Uuid, event_id: EventId) -> [u8; 30] {
 fn record_database_metrics(database: &Database, path: &Path) {
     let stats = database.cache_stats();
     metrics::gauge!("boluo_server_disk_cache_memory_bytes").set(stats.used_bytes() as f64);
-    metrics::gauge!("boluo_server_disk_cache_read_hits").set(stats.read_hits() as f64);
-    metrics::gauge!("boluo_server_disk_cache_read_misses").set(stats.read_misses() as f64);
-    metrics::gauge!("boluo_server_disk_cache_write_hits").set(stats.write_hits() as f64);
-    metrics::gauge!("boluo_server_disk_cache_write_misses").set(stats.write_misses() as f64);
+    metrics::counter!("boluo_server_disk_cache_read_hits").absolute(stats.read_hits());
+    metrics::counter!("boluo_server_disk_cache_read_misses").absolute(stats.read_misses());
+    metrics::counter!("boluo_server_disk_cache_write_hits").absolute(stats.write_hits());
+    metrics::counter!("boluo_server_disk_cache_write_misses").absolute(stats.write_misses());
     metrics::gauge!("boluo_server_disk_cache_file_bytes").set(file_size(path) as f64);
     metrics::gauge!("boluo_server_disk_cache_queue_depth").set(queue_depth() as f64);
 }

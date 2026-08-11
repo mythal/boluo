@@ -38,6 +38,8 @@ import {
   SortOrder,
   StackingConfigBuilder,
   StackingMode,
+  TableCellDisplayMode,
+  TableCellHeight,
   TooltipDisplayMode,
   VisibilityMode,
   VizLegendOptionsBuilder,
@@ -47,6 +49,7 @@ import {
 import { QueryEditorMode, QueryV2Builder } from '@grafana/grafana-foundation-sdk/prometheus';
 import { VisualizationV2Builder } from '@grafana/grafana-foundation-sdk/timeseries';
 import { VisualizationV2Builder as StatVisualizationBuilder } from '@grafana/grafana-foundation-sdk/stat';
+import { VisualizationV2Builder as TableVisualizationBuilder } from '@grafana/grafana-foundation-sdk/table';
 
 export const GRAFANA_PLUGIN_VERSION = '12.4.2';
 
@@ -90,6 +93,7 @@ interface StatPanelOptions {
   description?: string;
   datasourceUid: string;
   targets: PrometheusTarget[];
+  unit?: string;
   mappings?: ValueMapping[];
 }
 
@@ -301,6 +305,62 @@ export function healthStatPanel(options: StatPanelOptions): PanelBuilder {
             instant: true,
             range: false,
           }),
+        ),
+      ),
+    )
+    .visualization(versionedVisualization(visualization));
+  if (options.description !== undefined) {
+    panel.description(options.description);
+  }
+  return panel;
+}
+
+export function statPanel(options: StatPanelOptions): PanelBuilder {
+  const visualization = new StatVisualizationBuilder()
+    .colorMode(BigValueColorMode.Value)
+    .graphMode(BigValueGraphMode.Area)
+    .justifyMode(BigValueJustifyMode.Center)
+    .textMode(BigValueTextMode.ValueAndName)
+    .wideLayout(false)
+    .reduceOptions(new ReduceDataOptionsBuilder().values(false).calcs(['lastNotNull']));
+
+  if (options.unit !== undefined) {
+    visualization.unit(options.unit);
+  }
+
+  const panel = new PanelBuilder()
+    .id(options.id)
+    .title(options.title)
+    .data(
+      new QueryGroupBuilder().targets(
+        options.targets.map((target) => prometheusTarget(options.datasourceUid, target)),
+      ),
+    )
+    .visualization(versionedVisualization(visualization));
+  if (options.description !== undefined) {
+    panel.description(options.description);
+  }
+  return panel;
+}
+
+export function tablePanel(options: StatPanelOptions): PanelBuilder {
+  const visualization = new TableVisualizationBuilder()
+    .showHeader(true)
+    .showTypeIcons(false)
+    .cellHeight(TableCellHeight.Sm)
+    .displayMode(TableCellDisplayMode.Auto)
+    .filterable(true);
+  if (options.unit !== undefined) {
+    visualization.unit(options.unit);
+  }
+
+  const panel = new PanelBuilder()
+    .id(options.id)
+    .title(options.title)
+    .data(
+      new QueryGroupBuilder().targets(
+        options.targets.map((target) =>
+          prometheusTarget(options.datasourceUid, { ...target, instant: true, range: false }),
         ),
       ),
     )

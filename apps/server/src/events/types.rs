@@ -554,9 +554,16 @@ impl Update {
 
     pub(super) async fn send(mailbox: Uuid, update_encoded: Utf8Bytes) {
         let table = crate::events::get_broadcast_table().pin();
-        if let Some(tx) = table.get(&mailbox) {
-            tx.send(update_encoded).ok();
-        }
+        let result = if let Some(tx) = table.get(&mailbox) {
+            if tx.send(update_encoded).is_ok() {
+                "delivered"
+            } else {
+                "no_receivers"
+            }
+        } else {
+            "no_receivers"
+        };
+        metrics::counter!("boluo_server_events_broadcast_total", "result" => result).increment(1);
     }
 
     async fn fire_members(

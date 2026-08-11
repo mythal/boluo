@@ -280,6 +280,7 @@ impl CommittedChanges {
         ctx: &crate::context::AppContext,
         mutation: Option<SpaceMutationProof>,
     ) -> AppliedChanges {
+        let started = std::time::Instant::now();
         let space_deltas = std::mem::take(&mut self.space_deltas);
         let channel_member_refreshes = std::mem::take(&mut self.channel_member_refreshes);
         let entry_invalidations = std::mem::take(&mut self.entry_invalidations);
@@ -389,6 +390,13 @@ impl CommittedChanges {
         for (space_id, note_id) in note_invalidations {
             Update::note_changed(space_id, note_id);
         }
+        metrics::counter!(
+            "boluo_server_post_commit_effect_total",
+            "result" => "success"
+        )
+        .increment(1);
+        metrics::histogram!("boluo_server_post_commit_effect_duration_seconds")
+            .record(started.elapsed().as_secs_f64());
         applied
     }
 }

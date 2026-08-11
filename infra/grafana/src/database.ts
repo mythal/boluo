@@ -9,6 +9,8 @@ import {
   TooltipDisplayMode,
   dashboardTimeSettings,
   defaultAnnotations,
+  statPanel,
+  tablePanel,
   timeSeriesPanel,
 } from './lib.js';
 import {
@@ -41,8 +43,6 @@ const LOCK_MODES = [
   'ExclusiveLock',
   'AccessExclusiveLock',
 ];
-const BACKUP_TYPES = ['full', 'diff'];
-
 const panels = {
   connections: 'panel-4',
   transactions: 'panel-5',
@@ -55,6 +55,7 @@ const panels = {
   databaseAndWalSize: 'panel-12',
   tableSizes: 'panel-13',
   deadTuples: 'panel-14',
+  deadTupleCounts: 'panel-16',
   scanRate: 'panel-15',
   backupDuration: 'panel-17',
   backupSize: 'panel-18',
@@ -264,13 +265,12 @@ export function buildDatabaseDashboard(datasourceUid: string): DashboardBuilder 
     )
     .element(
       panels.tableSizes,
-      timeSeriesPanel({
+      tablePanel({
         id: 13,
         title: 'Largest tables',
         description: 'Includes indexes and TOAST data.',
         datasourceUid,
         unit: 'bytes',
-        tooltipMode: TooltipDisplayMode.Multi,
         targets: [
           {
             refId: 'tables',
@@ -296,7 +296,25 @@ export function buildDatabaseDashboard(datasourceUid: string): DashboardBuilder 
           {
             refId: 'dead-tuple-ratio',
             editorMode: QueryEditorMode.Code,
-            expr: `topk(10, pg_stat_user_tables_n_dead_tup{app="${DATABASE_APP}",datname="${DATABASE_NAME}"} / clamp_min(pg_stat_user_tables_n_live_tup{app="${DATABASE_APP}",datname="${DATABASE_NAME}"} + pg_stat_user_tables_n_dead_tup{app="${DATABASE_APP}",datname="${DATABASE_NAME}"}, 1))`,
+            expr: `topk(10, (pg_stat_user_tables_n_dead_tup{app="${DATABASE_APP}",datname="${DATABASE_NAME}"} / clamp_min(pg_stat_user_tables_n_live_tup{app="${DATABASE_APP}",datname="${DATABASE_NAME}"} + pg_stat_user_tables_n_dead_tup{app="${DATABASE_APP}",datname="${DATABASE_NAME}"}, 1)) and (pg_stat_user_tables_n_live_tup{app="${DATABASE_APP}",datname="${DATABASE_NAME}"} + pg_stat_user_tables_n_dead_tup{app="${DATABASE_APP}",datname="${DATABASE_NAME}"} > 1000))`,
+            legendFormat: '{{schemaname}}.{{relname}}',
+          },
+        ],
+      }),
+    )
+    .element(
+      panels.deadTupleCounts,
+      tablePanel({
+        id: 16,
+        title: 'Tables with the most dead tuples',
+        description: 'Estimated dead rows; tables with fewer than 1,000 total rows are excluded.',
+        datasourceUid,
+        unit: 'short',
+        targets: [
+          {
+            refId: 'dead-tuples',
+            editorMode: QueryEditorMode.Code,
+            expr: `topk(10, pg_stat_user_tables_n_dead_tup{app="${DATABASE_APP}",datname="${DATABASE_NAME}"} and (pg_stat_user_tables_n_live_tup{app="${DATABASE_APP}",datname="${DATABASE_NAME}"} + pg_stat_user_tables_n_dead_tup{app="${DATABASE_APP}",datname="${DATABASE_NAME}"} > 1000))`,
             legendFormat: '{{schemaname}}.{{relname}}',
           },
         ],
@@ -328,12 +346,11 @@ export function buildDatabaseDashboard(datasourceUid: string): DashboardBuilder 
     )
     .element(
       panels.backupDuration,
-      timeSeriesPanel({
+      statPanel({
         id: 17,
         title: 'Last backup duration',
         datasourceUid,
         unit: 's',
-        seriesNames: BACKUP_TYPES,
         targets: [
           {
             refId: 'duration',
@@ -346,13 +363,12 @@ export function buildDatabaseDashboard(datasourceUid: string): DashboardBuilder 
     )
     .element(
       panels.backupSize,
-      timeSeriesPanel({
+      statPanel({
         id: 18,
         title: 'Last backup repository size',
         description: 'Compressed bytes written by the latest backup.',
         datasourceUid,
         unit: 'bytes',
-        seriesNames: BACKUP_TYPES,
         targets: [
           {
             refId: 'size',
@@ -459,8 +475,9 @@ export function buildDatabaseDashboard(datasourceUid: string): DashboardBuilder 
         gridItem(panels.walArchiving).x(16).y(22).width(8).height(8),
         gridItem(panels.tableSizes).x(0).y(30).width(12).height(8),
         gridItem(panels.deadTuples).x(12).y(30).width(12).height(8),
-        gridItem(panels.backupDuration).x(0).y(38).width(12).height(8),
-        gridItem(panels.backupSize).x(12).y(38).width(12).height(8),
+        gridItem(panels.deadTupleCounts).x(0).y(38).width(8).height(8),
+        gridItem(panels.backupDuration).x(8).y(38).width(8).height(8),
+        gridItem(panels.backupSize).x(16).y(38).width(8).height(8),
         gridItem(panels.cpuUtilization).x(0).y(46).width(8).height(8),
         gridItem(panels.memoryUtilization).x(8).y(46).width(8).height(8),
         gridItem(panels.filesystemUtilization).x(16).y(46).width(8).height(8),

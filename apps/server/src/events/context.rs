@@ -183,6 +183,19 @@ pub enum Action {
     TouchActivity,
 }
 
+impl Action {
+    fn name(&self) -> &'static str {
+        match self {
+            Self::Query { .. } => "query",
+            Self::Update { .. } => "update",
+            Self::Status(super::status::StatusAction::Query(_)) => "status_query",
+            Self::Status(super::status::StatusAction::Update(_, _)) => "status_update",
+            Self::Status(super::status::StatusAction::Broadcast) => "status_broadcast",
+            Self::TouchActivity => "touch_activity",
+        }
+    }
+}
+
 const MAILBOX_STATE_WRITE_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(16);
 const MAILBOX_STATE_READ_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(2);
 
@@ -198,9 +211,26 @@ impl MailboxManager {
     }
 
     async fn send_read_action(&self, action: Action) -> Result<(), MailboxManageError> {
+        let action_name = action.name();
         let action = match self.sender.try_send(action) {
-            Ok(_) => return Ok(()),
-            Err(TrySendError::Closed(_)) => return Err(MailboxManageError::Closed),
+            Ok(_) => {
+                metrics::counter!(
+                    "boluo_server_events_mailbox_actions_total",
+                    "action" => action_name,
+                    "result" => "immediate"
+                )
+                .increment(1);
+                return Ok(());
+            }
+            Err(TrySendError::Closed(_)) => {
+                metrics::counter!(
+                    "boluo_server_events_mailbox_actions_total",
+                    "action" => action_name,
+                    "result" => "closed"
+                )
+                .increment(1);
+                return Err(MailboxManageError::Closed);
+            }
             Err(TrySendError::Full(action)) => {
                 tracing::info!("MailboxManager::send_read_action: full");
                 action
@@ -210,18 +240,54 @@ impl MailboxManager {
             .await
             .map_err(|_| {
                 tracing::warn!("MailboxManager::send_read_action: timeout");
+                metrics::counter!(
+                    "boluo_server_events_mailbox_actions_total",
+                    "action" => action_name,
+                    "result" => "timeout"
+                )
+                .increment(1);
                 MailboxManageError::TimeOut
             })?
             .map_err(|_| {
                 tracing::warn!("MailboxManager::send_read_action: closed");
+                metrics::counter!(
+                    "boluo_server_events_mailbox_actions_total",
+                    "action" => action_name,
+                    "result" => "closed"
+                )
+                .increment(1);
                 MailboxManageError::Closed
-            })
+            })?;
+        metrics::counter!(
+            "boluo_server_events_mailbox_actions_total",
+            "action" => action_name,
+            "result" => "waited"
+        )
+        .increment(1);
+        Ok(())
     }
 
     async fn send_write_action(&self, action: Action) -> Result<(), MailboxManageError> {
+        let action_name = action.name();
         let action = match self.sender.try_send(action) {
-            Ok(_) => return Ok(()),
-            Err(TrySendError::Closed(_)) => return Err(MailboxManageError::Closed),
+            Ok(_) => {
+                metrics::counter!(
+                    "boluo_server_events_mailbox_actions_total",
+                    "action" => action_name,
+                    "result" => "immediate"
+                )
+                .increment(1);
+                return Ok(());
+            }
+            Err(TrySendError::Closed(_)) => {
+                metrics::counter!(
+                    "boluo_server_events_mailbox_actions_total",
+                    "action" => action_name,
+                    "result" => "closed"
+                )
+                .increment(1);
+                return Err(MailboxManageError::Closed);
+            }
             Err(TrySendError::Full(action)) => {
                 tracing::info!("MailboxManager::send_write_action: full");
                 action
@@ -231,12 +297,31 @@ impl MailboxManager {
             .await
             .map_err(|_| {
                 tracing::warn!("MailboxManager::send_write_action: timeout");
+                metrics::counter!(
+                    "boluo_server_events_mailbox_actions_total",
+                    "action" => action_name,
+                    "result" => "timeout"
+                )
+                .increment(1);
                 MailboxManageError::TimeOut
             })?
             .map_err(|_| {
                 tracing::warn!("MailboxManager::send_write_action: closed");
+                metrics::counter!(
+                    "boluo_server_events_mailbox_actions_total",
+                    "action" => action_name,
+                    "result" => "closed"
+                )
+                .increment(1);
                 MailboxManageError::Closed
-            })
+            })?;
+        metrics::counter!(
+            "boluo_server_events_mailbox_actions_total",
+            "action" => action_name,
+            "result" => "waited"
+        )
+        .increment(1);
+        Ok(())
     }
 
     pub async fn query_encoded_updates(
@@ -291,8 +376,24 @@ impl MailboxManager {
         let action = Action::TouchActivity;
         match self.sender.try_send(action) {
             Ok(_) => Ok(()),
-            Err(TrySendError::Closed(_)) => Err(MailboxManageError::Closed),
-            Err(TrySendError::Full(_)) => Ok(()),
+            Err(TrySendError::Closed(_)) => {
+                metrics::counter!(
+                    "boluo_server_events_mailbox_actions_total",
+                    "action" => "touch_activity",
+                    "result" => "closed"
+                )
+                .increment(1);
+                Err(MailboxManageError::Closed)
+            }
+            Err(TrySendError::Full(_)) => {
+                metrics::counter!(
+                    "boluo_server_events_mailbox_actions_total",
+                    "action" => "touch_activity",
+                    "result" => "full_dropped"
+                )
+                .increment(1);
+                Ok(())
+            }
         }
     }
 }
@@ -955,6 +1056,15 @@ pub fn store() -> &'static Store {
 
 pub fn mailbox_count() -> usize {
     store().mailbox_count()
+}
+
+pub fn mailbox_action_queue_depth() -> usize {
+    store()
+        .mailboxes
+        .pin()
+        .iter()
+        .map(|(_, state)| state.manager.sender.max_capacity() - state.manager.sender.capacity())
+        .sum()
 }
 
 #[cfg(test)]

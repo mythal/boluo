@@ -154,7 +154,23 @@ impl CacheStore {
         let Ok(msg) = sonic_rs::to_string(&msg) else {
             return;
         };
-        let _sent: u32 = redis.publish(topic, msg).await.unwrap_or_default();
+        match redis.publish::<_, _, u32>(topic, msg).await {
+            Ok(_) => {
+                metrics::counter!(
+                    "boluo_server_cache_invalidation_publish_total",
+                    "result" => "success"
+                )
+                .increment(1);
+            }
+            Err(error) => {
+                metrics::counter!(
+                    "boluo_server_cache_invalidation_publish_total",
+                    "result" => "error"
+                )
+                .increment(1);
+                tracing::warn!(%error, cache = topic, "Failed to publish cache invalidation");
+            }
+        }
     }
 }
 

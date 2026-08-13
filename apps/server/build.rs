@@ -19,7 +19,9 @@ fn main() {
     dotenvy::from_path(&env_local).ok();
     dotenvy::from_path(&env_file).ok();
 
-    println!("cargo:rerun-if-changed={}", env_local.display());
+    if env_local.exists() {
+        println!("cargo:rerun-if-changed={}", env_local.display());
+    }
     println!("cargo:rerun-if-changed={}", env_file.display());
     println!("cargo:rerun-if-env-changed=DATABASE_URL");
     println!("cargo:rerun-if-env-changed=SQLX_OFFLINE");

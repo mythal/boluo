@@ -2,10 +2,12 @@ import { type Message } from '@boluo/api';
 import { type Empty } from '@boluo/types';
 import { type MakeAction } from './actions';
 import type { ComposeState } from './compose.reducer';
+import type { CharacterPortraitSelection } from './characterPortraitSelection';
 
 export type ComposeActionMap = {
   setSource: { channelId: string; source: string };
   setCharacterName: { name: string; setInGame?: boolean };
+  selectCharacterPortrait: CharacterPortraitSelection | null;
   toggleInGame: { defaultInGame: boolean };
   setInGame: { inGame: boolean };
   toggleBroadcast: Empty;

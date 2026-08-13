@@ -20,6 +20,7 @@ import { useMember } from '../../hooks/useMember';
 import { findMessage } from '../../state/channel.reducer';
 import { saveDraftInWorker } from '../../state/compose-backup.worker-client';
 import { useChannelCharacterName } from '../../hooks/useChannelCharacter';
+import { selectedPortraitIdForCharacter } from '../../state/characterPortraitSelection';
 
 const SEND_TIMEOUT = 8000;
 
@@ -143,6 +144,10 @@ export const useSend = () => {
           spaceId: myMember.space.spaceId,
           name,
           characterId,
+          portraitId: selectedPortraitIdForCharacter(
+            characterId,
+            composeState.selectedCharacterPortrait,
+          ),
           text,
           entities,
           inGame,

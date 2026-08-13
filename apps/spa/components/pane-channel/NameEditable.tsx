@@ -16,6 +16,7 @@ import {
 } from '@floating-ui/react';
 import { NameBox } from '@boluo/ui/chat/NameBox';
 import { NameEditContent } from './NameEditContent';
+import { SelectedCharacterPortraitPreview } from './SelectedCharacterPortraitPreview';
 import { type MemberWithUser } from '@boluo/api';
 import Icon from '@boluo/ui/Icon';
 import { Delay } from '@boluo/ui/Delay';
@@ -132,6 +133,10 @@ export const NameEditable: FC<Props> = ({ name, inGame, color, member }) => {
             style={floatingStyles}
             {...getFloatingProps()}
           >
+            <SelectedCharacterPortraitPreview
+              spaceId={member.space.spaceId}
+              characterId={member.channel.characterId}
+            />
             {content === 'name' ? (
               <NameEditContent
                 member={member}

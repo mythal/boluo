@@ -23,7 +23,7 @@ interface Props {
   spaceId: string;
   characterName: string;
   source: CharacterPortraitSource;
-  size?: 'main' | 'gallery' | 'card';
+  size?: 'main' | 'gallery' | 'card' | 'popover';
   loading?: 'eager' | 'lazy';
 }
 
@@ -31,6 +31,7 @@ export const characterPortraitSizeClassName = {
   main: 'w-[clamp(9rem,36cqw,15rem)]',
   gallery: 'w-[clamp(7rem,27cqw,11rem)]',
   card: 'w-20',
+  popover: 'w-18',
 } as const satisfies Record<NonNullable<Props['size']>, string>;
 
 export const portraitSourceFromEntry = (entry: EntryComponentMatch): CharacterPortraitSource => {
@@ -44,7 +45,7 @@ const PortraitFrame: FC<{ children: ReactNode; size: NonNullable<Props['size']> 
 }) => (
   <div
     className={clsx(
-      'bg-surface-default border-border-default relative aspect-[3/4] shrink-0 overflow-hidden rounded-md border',
+      'bg-surface-default border-border-default relative aspect-3/4 shrink-0 overflow-hidden rounded-md border',
       characterPortraitSizeClassName[size],
     )}
   >

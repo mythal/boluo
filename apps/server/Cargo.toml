@@ -11,10 +11,6 @@ edition = "2024"
 name = "server"
 path = "src/server.rs"
 
-[[bin]]
-name = "init"
-path = "src/init.rs"
-
 [build-dependencies]
 dotenvy = "0.15"
 sqlx = { version = "0.9.0", default-features = false, features = [

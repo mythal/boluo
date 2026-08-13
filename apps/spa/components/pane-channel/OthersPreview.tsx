@@ -75,6 +75,8 @@ export const OthersPreview: FC<Props> = ({ preview, isLast }) => {
         userId={preview.senderId}
         messageColor={preview.original?.color}
         colorSeed={preview.original?.characterId}
+        characterId={preview.original?.characterId}
+        portraitId={preview.original?.portraitId}
         isPreview
         self
       />
@@ -85,6 +87,7 @@ export const OthersPreview: FC<Props> = ({ preview, isLast }) => {
     name,
     preview.inGame,
     preview.original?.characterId,
+    preview.original?.portraitId,
     preview.original?.color,
     preview.senderId,
   ]);

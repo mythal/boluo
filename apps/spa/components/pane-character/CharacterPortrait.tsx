@@ -23,13 +23,14 @@ interface Props {
   spaceId: string;
   characterName: string;
   source: CharacterPortraitSource;
-  size?: 'main' | 'gallery';
+  size?: 'main' | 'gallery' | 'card';
   loading?: 'eager' | 'lazy';
 }
 
 export const characterPortraitSizeClassName = {
   main: 'w-[clamp(9rem,36cqw,15rem)]',
   gallery: 'w-[clamp(7rem,27cqw,11rem)]',
+  card: 'w-20',
 } as const satisfies Record<NonNullable<Props['size']>, string>;
 
 export const portraitSourceFromEntry = (entry: EntryComponentMatch): CharacterPortraitSource => {

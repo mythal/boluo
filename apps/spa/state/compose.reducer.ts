@@ -10,6 +10,7 @@ export type ComposeRange = [number, number];
 
 export interface EditingAttribution {
   characterId: string | null;
+  portraitId: string | null;
   name: string;
   color: string;
   inGame: boolean;
@@ -198,6 +199,7 @@ const handleEditMessage = (
     edit: { time: modified, p: posP, q: posQ },
     editingAttribution: {
       characterId: message.characterId ?? null,
+      portraitId: message.portraitId ?? null,
       name: message.name,
       color: message.color,
       inGame: message.inGame ?? false,

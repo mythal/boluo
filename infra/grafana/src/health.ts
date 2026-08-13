@@ -44,15 +44,19 @@ const panels = {
   dependencyLatency: 'panel-5',
   databaseVolume: 'panel-6',
   cpuBudget: 'panel-7',
-  backupAge: 'panel-8',
 } as const;
 
 function withMissingAsDown(expression: string): string {
   return `(${expression}) or vector(0)`;
 }
 
-function serverRate(metric: string): string {
-  return `rate(${metric}{app="${SERVER_APP}"}[${RATE_INTERVAL}])`;
+function serverRate(metric: string, extraLabels = ''): string {
+  const labels = extraLabels ? `,${extraLabels}` : '';
+  return `rate(${metric}{app="${SERVER_APP}"${labels}}[${RATE_INTERVAL}])`;
+}
+
+function summaryQuantile(quantile: number, metric: string): string {
+  return `${metric}{app="${SERVER_APP}",quantile="${quantile}"}`;
 }
 
 function mascotPanel(): PanelBuilder {
@@ -237,7 +241,7 @@ export function buildHealthDashboard(datasourceUid: string): DashboardBuilder {
           {
             refId: 'http-5xx',
             editorMode: QueryEditorMode.Code,
-            expr: `sum(rate(fly_app_http_responses_count{app="${SERVER_APP}",status=~"5.."}[${RATE_INTERVAL}]))`,
+            expr: `(sum(rate(fly_app_http_responses_count{app="${SERVER_APP}",status=~"5.."}[${RATE_INTERVAL}]))) or vector(0)`,
             legendFormat: 'HTTP 5xx',
           },
           {
@@ -257,6 +261,30 @@ export function buildHealthDashboard(datasourceUid: string): DashboardBuilder {
             editorMode: QueryEditorMode.Code,
             expr: `sum(${serverRate('boluo_server_space_runtime_load_failed_total')})`,
             legendFormat: 'runtime load',
+          },
+          {
+            refId: 'runtime-refresh',
+            editorMode: QueryEditorMode.Code,
+            expr: `sum(${serverRate('boluo_server_space_runtime_refresh_failed_total')})`,
+            legendFormat: 'runtime refresh',
+          },
+          {
+            refId: 'post-commit',
+            editorMode: QueryEditorMode.Code,
+            expr: `sum(${serverRate('boluo_server_post_commit_effect_failed_total')})`,
+            legendFormat: 'post-commit effect',
+          },
+          {
+            refId: 'broadcast-lagged',
+            editorMode: QueryEditorMode.Code,
+            expr: `sum(${serverRate('boluo_server_events_broadcast_lagged_total')})`,
+            legendFormat: 'event broadcast lag',
+          },
+          {
+            refId: 'activity-flush',
+            editorMode: QueryEditorMode.Code,
+            expr: `sum(${serverRate('boluo_server_space_activity_flush_total', 'result="error"')})`,
+            legendFormat: 'activity flush',
           },
         ],
       }),
@@ -281,6 +309,12 @@ export function buildHealthDashboard(datasourceUid: string): DashboardBuilder {
             editorMode: QueryEditorMode.Code,
             expr: `max by(instance) (boluo_server_redis_probe_rtt_ms{app="${SERVER_APP}"})`,
             legendFormat: '{{instance}} redis',
+          },
+          {
+            refId: 'database-pool-acquire',
+            editorMode: QueryEditorMode.Code,
+            expr: `${summaryQuantile(0.95, 'boluo_server_db_pool_probe_acquire_duration_seconds')} * 1000`,
+            legendFormat: '{{instance}} database pool acquire p95',
           },
         ],
       }),
@@ -330,30 +364,6 @@ export function buildHealthDashboard(datasourceUid: string): DashboardBuilder {
         ],
       }),
     )
-    .element(
-      panels.backupAge,
-      timeSeriesPanel({
-        id: 8,
-        title: 'Backup age',
-        datasourceUid,
-        unit: 's',
-        tooltipMode: TooltipDisplayMode.Multi,
-        targets: [
-          {
-            refId: 'daily',
-            editorMode: QueryEditorMode.Code,
-            expr: `max(${backupMetric('pgbackrest_backup_since_last_completion_seconds', 'backup_type="diff"')})`,
-            legendFormat: 'daily/differential',
-          },
-          {
-            refId: 'full',
-            editorMode: QueryEditorMode.Code,
-            expr: `max(${backupMetric('pgbackrest_backup_since_last_completion_seconds', 'backup_type="full"')})`,
-            legendFormat: 'full',
-          },
-        ],
-      }),
-    )
     .layout(
       new GridBuilder().items([
         gridItem(panels.mascot).x(0).y(0).width(4).height(8),
@@ -362,9 +372,8 @@ export function buildHealthDashboard(datasourceUid: string): DashboardBuilder {
         gridItem(panels.exporters).x(0).y(8).width(8).height(8),
         gridItem(panels.criticalErrors).x(8).y(8).width(8).height(8),
         gridItem(panels.databaseVolume).x(16).y(8).width(8).height(8),
-        gridItem(panels.dependencyLatency).x(0).y(16).width(8).height(8),
-        gridItem(panels.cpuBudget).x(8).y(16).width(8).height(8),
-        gridItem(panels.backupAge).x(16).y(16).width(8).height(8),
+        gridItem(panels.dependencyLatency).x(0).y(16).width(12).height(8),
+        gridItem(panels.cpuBudget).x(12).y(16).width(12).height(8),
       ]),
     )
     .links([])

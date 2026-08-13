@@ -48,6 +48,7 @@ pub(crate) struct SpaceActivityNotifier {
 impl SpaceActivityNotifier {
     pub(crate) fn new(pool: sqlx::PgPool) -> Self {
         let (sender, mut receiver) = tokio::sync::mpsc::channel::<(Uuid, OffsetDateTime)>(64);
+        let metrics_sender = sender.clone();
         let span = tracing::info_span!(parent: None, "space_activity");
         tokio::spawn(
             async move {
@@ -70,10 +71,14 @@ impl SpaceActivityNotifier {
                             break;
                         }
                         _ = interval.tick() => {
+                            metrics::gauge!("boluo_server_space_activity_queue_depth").set(
+                                (metrics_sender.max_capacity() - metrics_sender.capacity()) as f64,
+                            );
                             if !map.is_empty() {
                                 let mut taken_map = HashMap::with_capacity_and_hasher(map.len(), ahash::RandomState::new());
                                 std::mem::swap(&mut map, &mut taken_map);
                                 let update_count = taken_map.len();
+                                let started = std::time::Instant::now();
                                 if let Err(err) =
                                     persist_space_activity_batch(
                                         &pool,
@@ -83,6 +88,11 @@ impl SpaceActivityNotifier {
                                     )
                                     .await
                                 {
+                                    metrics::counter!(
+                                        "boluo_server_space_activity_flush_total",
+                                        "result" => "error"
+                                    )
+                                    .increment(1);
                                     tracing::error!(
                                         error = %err,
                                         update_count,
@@ -94,6 +104,17 @@ impl SpaceActivityNotifier {
                                             .or_insert(update_time);
                                     }
                                 }
+                                else {
+                                    metrics::counter!(
+                                        "boluo_server_space_activity_flush_total",
+                                        "result" => "success"
+                                    )
+                                    .increment(1);
+                                }
+                                metrics::histogram!("boluo_server_space_activity_flush_duration_seconds")
+                                    .record(started.elapsed().as_secs_f64());
+                                metrics::histogram!("boluo_server_space_activity_flush_batch_size")
+                                    .record(update_count as f64);
                             }
                         }
                     }
@@ -105,7 +126,11 @@ impl SpaceActivityNotifier {
     }
 
     fn notify(&self, space_id: Uuid, update_time: OffsetDateTime) {
+        metrics::gauge!("boluo_server_space_activity_queue_depth")
+            .set((self.sender.max_capacity() - self.sender.capacity()) as f64);
         if let Err(_err) = self.sender.try_send((space_id, update_time)) {
+            metrics::counter!("boluo_server_space_activity_notifications_dropped_total")
+                .increment(1);
             tracing::info!(
                 "Failed to send space activity notification: {}, tokio channel is full",
                 space_id

@@ -188,10 +188,13 @@ const ChatItemMessageComponent: FC<Props> = ({
         userId={message.senderId}
         messageColor={message.color}
         colorSeed={message.characterId}
+        characterId={message.characterId}
+        portraitId={message.portraitId}
       />
     ),
     [
       message.characterId,
+      message.portraitId,
       message.color,
       message.inGame,
       message.name,

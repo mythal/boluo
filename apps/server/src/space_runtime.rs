@@ -295,6 +295,8 @@ pub(crate) struct SpaceRuntime {
     authoritative_notify: tokio::sync::Notify,
     control_tx: mpsc::Sender<ControlCommand>,
     active_mutations: AtomicU64,
+    control_queue_depth: AtomicU64,
+    mutation_queue_depth: AtomicU64,
 }
 
 impl SpaceRuntime {
@@ -318,6 +320,8 @@ impl SpaceRuntime {
             authoritative_notify: tokio::sync::Notify::new(),
             control_tx,
             active_mutations: AtomicU64::new(0),
+            control_queue_depth: AtomicU64::new(0),
+            mutation_queue_depth: AtomicU64::new(0),
         });
         tokio::spawn(Self::run_control(Arc::downgrade(&runtime), control_rx));
         Ok(runtime)
@@ -678,13 +682,17 @@ impl SpaceRuntime {
             let Some(runtime) = runtime.upgrade() else {
                 break;
             };
-            metrics::gauge!("boluo_server_space_runtime_control_queue_depth")
-                .set(control_rx.len() as f64);
+            runtime
+                .control_queue_depth
+                .store(control_rx.len() as u64, Ordering::Release);
             match command {
                 ControlCommand::BeginMutation { queued_at, granted } => {
                     state
                         .pending_mutations
                         .push_back(PendingMutation { queued_at, granted });
+                    runtime
+                        .mutation_queue_depth
+                        .store(state.pending_mutations.len() as u64, Ordering::Release);
                     Self::grant_next_mutation(&runtime, &mut state).await;
                 }
                 ControlCommand::PrepareMutation {
@@ -806,8 +814,9 @@ impl SpaceRuntime {
             };
             metrics::histogram!("boluo_server_space_runtime_mutation_queue_wait_seconds")
                 .record(command.queued_at.elapsed().as_secs_f64());
-            metrics::gauge!("boluo_server_space_runtime_mutation_queue_depth")
-                .set(state.pending_mutations.len() as f64);
+            runtime
+                .mutation_queue_depth
+                .store(state.pending_mutations.len() as u64, Ordering::Release);
             state.next_mutation_token += 1;
             let mutation_token = state.next_mutation_token;
             state.active_mutation = Some(ActiveMutation {
@@ -1048,28 +1057,6 @@ impl SpaceRuntime {
 
         match result {
             Ok(mut snapshot) => {
-                metrics::gauge!("boluo_server_space_runtime_snapshot_channels")
-                    .set(snapshot.channels.size() as f64);
-                metrics::gauge!("boluo_server_space_runtime_snapshot_characters")
-                    .set(snapshot.characters.size() as f64);
-                metrics::gauge!("boluo_server_space_runtime_snapshot_scopes")
-                    .set(snapshot.scopes.size() as f64);
-                metrics::gauge!("boluo_server_space_runtime_snapshot_entries").set(
-                    snapshot
-                        .entries
-                        .values()
-                        .map(PersistentMap::size)
-                        .sum::<usize>() as f64,
-                );
-                metrics::gauge!("boluo_server_space_runtime_snapshot_space_members")
-                    .set(snapshot.space_members.size() as f64);
-                metrics::gauge!("boluo_server_space_runtime_snapshot_channel_members").set(
-                    snapshot
-                        .channel_members
-                        .values()
-                        .map(PersistentMap::size)
-                        .sum::<usize>() as f64,
-                );
                 let current = runtime.snapshot();
                 if matches!(reason, SnapshotReloadReason::Reconciliation)
                     && current.revision <= ticket
@@ -1460,6 +1447,33 @@ impl SpaceStore {
         let _lease = SpaceRuntimeHandle::acquire(&handle)?;
         after_handle_acquire.await;
         handle.runtime_if_active()
+    }
+
+    pub(crate) fn update_metrics(&self) {
+        let mut loaded = 0_u64;
+        let mut dirty = 0_u64;
+        let mut mutations_in_flight = 0_u64;
+        let mut control_queue_depth = 0_u64;
+        let mut mutation_queue_depth = 0_u64;
+        for (_, handle) in self.inner.runtimes.pin().iter() {
+            let Some(runtime) = handle.runtime_if_active() else {
+                continue;
+            };
+            loaded += 1;
+            dirty += runtime.dirty.load(Ordering::Acquire) as u64;
+            mutations_in_flight += runtime.active_mutations.load(Ordering::Acquire);
+            control_queue_depth += runtime.control_queue_depth.load(Ordering::Acquire);
+            mutation_queue_depth += runtime.mutation_queue_depth.load(Ordering::Acquire);
+        }
+
+        metrics::gauge!("boluo_server_space_runtime_loaded").set(loaded as f64);
+        metrics::gauge!("boluo_server_space_runtime_dirty").set(dirty as f64);
+        metrics::gauge!("boluo_server_space_runtime_mutations_in_flight")
+            .set(mutations_in_flight as f64);
+        metrics::gauge!("boluo_server_space_runtime_control_queue_depth")
+            .set(control_queue_depth as f64);
+        metrics::gauge!("boluo_server_space_runtime_mutation_queue_depth")
+            .set(mutation_queue_depth as f64);
     }
 
     pub(crate) async fn get_or_load(

@@ -59,6 +59,15 @@ pub async fn check_db_host(database_url: &str) {
     let options = sqlx::postgres::PgConnectOptions::from_str(database_url)
         .expect("Cannot parse Postgres connect URL");
 
+    if let Some(socket) = options.get_socket() {
+        tracing::info!(
+            "Connecting to database via Unix socket at {}:{}",
+            socket.display(),
+            options.get_port()
+        );
+        return;
+    }
+
     tracing::info!(
         "Connecting to database at {}:{}",
         options.get_host(),

@@ -12,12 +12,13 @@ interface Props {
 }
 
 export const CharacterPopover: FC<Props> = ({ member, onBack }) => {
+  const spaceId = member.space.spaceId;
   const {
     data: characters,
     error,
     isLoading,
   } = useQueryCharacters({
-    spaceId: member.space.spaceId,
+    spaceId,
     includeArchived: true,
     portrayableOnly: true,
   });

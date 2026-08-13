@@ -139,6 +139,16 @@ jobs:
         with:
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
 
+      - name: Deploy site to staging
+        run: nix run --quiet --no-update-lock-file .#deploy-site-staging
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_IO_TOKEN }}
+
+      - name: Deploy server to staging
+        run: nix run --quiet --no-update-lock-file .#deploy-server-staging
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_IO_TOKEN }}
+
       - name: Node.js Setup
         uses: ./.github/actions/node-setup
 
@@ -154,16 +164,6 @@ jobs:
       - name: Build site Worker
         working-directory: apps/site
         run: npm --prefix ../.. run build:site && npx --yes @opennextjs/cloudflare build --skipNextBuild
-
-      - name: Deploy site to staging
-        run: nix run --quiet --no-update-lock-file .#deploy-site-staging
-        env:
-          FLY_API_TOKEN: ${{ secrets.FLY_IO_TOKEN }}
-
-      - name: Deploy server to staging
-        run: nix run --quiet --no-update-lock-file .#deploy-server-staging
-        env:
-          FLY_API_TOKEN: ${{ secrets.FLY_IO_TOKEN }}
 
       - name: Deploy legacy to staging
         working-directory: apps/legacy
@@ -218,6 +218,11 @@ jobs:
         with:
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
 
+      - name: Deploy server to production
+        run: nix run --quiet --no-update-lock-file .#deploy-server-production
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_IO_TOKEN }}
+
       - name: Node.js Setup
         uses: ./.github/actions/node-setup
 
@@ -230,11 +235,6 @@ jobs:
       - name: Build site Worker
         working-directory: apps/site
         run: npm --prefix ../.. run build:site && npx --yes @opennextjs/cloudflare build --skipNextBuild
-
-      - name: Deploy server to production
-        run: nix run --quiet --no-update-lock-file .#deploy-server-production
-        env:
-          FLY_API_TOKEN: ${{ secrets.FLY_IO_TOKEN }}
 
       - name: Deploy legacy to production
         working-directory: apps/legacy

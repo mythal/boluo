@@ -489,6 +489,8 @@ async fn connect(ctx: &crate::context::AppContext, req: hyper::Request<Incoming>
 
     let ctx = ctx.clone();
     establish_web_socket(req, move |ws_stream| async move {
+        let event_connections_active = metrics::gauge!("boluo_server_events_connections_active");
+        event_connections_active.increment(1);
         let (mut outgoing, incoming) = ws_stream.split();
         let (error_sender, error_receiver) = tokio::sync::mpsc::channel(1);
 
@@ -515,6 +517,13 @@ async fn connect(ctx: &crate::context::AppContext, req: hyper::Request<Incoming>
                     metrics::counter!("boluo_server_events_push_updates_connection_closed_total")
                         .increment(1);
                     tracing::debug!("Connection closed")
+                }
+                Err(PushUpdatesError::RecvError(
+                    tokio::sync::broadcast::error::RecvError::Lagged(count),
+                )) => {
+                    metrics::counter!("boluo_server_events_broadcast_lagged_total")
+                        .increment(count);
+                    tracing::warn!(count, "Event broadcast receiver lagged");
                 }
                 Err(e) => tracing::warn!(error = %e, "Failed to push updates"),
             }
@@ -606,6 +615,7 @@ async fn connect(ctx: &crate::context::AppContext, req: hyper::Request<Incoming>
                 }
             }
         }
+        event_connections_active.decrement(1);
     })
 }
 

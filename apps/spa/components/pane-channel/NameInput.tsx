@@ -20,6 +20,7 @@ export const NameEditInput: FC<{
   const { mutate } = useSWRConfig();
   const [localName, setLocalName] = useState(characterName);
   const [prevCharacterName, setPrevCharacterName] = useState(characterName);
+  const hasTemporaryName = characterName.trim() !== '';
   const dispatch = useSetAtom(composeAtom);
   if (prevCharacterName !== characterName) {
     setPrevCharacterName(characterName);
@@ -53,9 +54,9 @@ export const NameEditInput: FC<{
           onChange={handleChange}
         />
       </div>
-      <div className="text-text-muted flex items-center justify-end gap-1 pb-2 text-xs">
+      <div className="text-text-muted flex h-7 items-center justify-end gap-1 pt-1 pb-2 text-xs">
         <span>
-          {characterName.trim() !== '' || (characterId == null && defaultName.trim() !== '') ? (
+          {hasTemporaryName || (characterId == null && defaultName.trim() !== '') ? (
             <FormattedMessage defaultMessage="As this name" />
           ) : characterId != null ? (
             <FormattedMessage defaultMessage="As character" />
@@ -63,7 +64,7 @@ export const NameEditInput: FC<{
             <FormattedMessage defaultMessage="Not set" />
           )}
         </span>
-        {characterName.trim() !== '' && (
+        {hasTemporaryName && (
           <ButtonInline
             disabled={isMutating}
             onClick={() => void handleSetDefault()}

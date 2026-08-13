@@ -89,7 +89,7 @@ async fn register(
         .map_err(|_| AppError::LimitExceeded("This email is requested too many times."))?;
 
     let user = User::register(&ctx.db, &normalized_email, &username, &nickname, &password).await?;
-    metrics::counter!("boluo_server_users_total").increment(1);
+    metrics::gauge!("boluo_server_users_current").increment(1.0);
 
     // Send email verification
     send_email_verification(ctx, &user.email, &user.id, None).await?;

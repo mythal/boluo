@@ -56,7 +56,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
     "preview": "vite preview",
-    "test": "tsx --test \"src/**/*.test.ts\""
+    "test": "node --import tsx --test \"src/**/*.test.ts\""
   },
   "type": "module"
 }

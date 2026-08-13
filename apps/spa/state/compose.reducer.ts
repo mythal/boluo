@@ -3,6 +3,7 @@ import { type Modifier, parseModifiers } from '@boluo/interpreter';
 import { type MediaError, validateMedia } from '../media';
 import { type ComposeAction, type ComposeActionUnion } from './compose.actions';
 import { type PreviewEdit } from '@boluo/api';
+import type { CharacterPortraitSelection } from './characterPortraitSelection';
 
 export type ComposeError = 'TEXT_EMPTY' | 'NO_NAME' | MediaError;
 
@@ -10,6 +11,7 @@ export type ComposeRange = [number, number];
 
 export interface EditingAttribution {
   characterId: string | null;
+  portraitId: string | null;
   name: string;
   color: string;
   inGame: boolean;
@@ -31,6 +33,7 @@ export interface ComposeState {
   composingAt: number | null;
   backup?: ComposeState;
   edit: PreviewEdit | null;
+  selectedCharacterPortrait: CharacterPortraitSelection | null;
   editingAttribution?: EditingAttribution;
 }
 
@@ -43,6 +46,7 @@ export const makeInitialComposeState = (): ComposeState => ({
   composingAt: null,
   whisperTo: undefined,
   edit: null,
+  selectedCharacterPortrait: null,
 });
 
 export const clearBackup = (state: ComposeState): ComposeState =>
@@ -198,6 +202,7 @@ const handleEditMessage = (
     edit: { time: modified, p: posP, q: posQ },
     editingAttribution: {
       characterId: message.characterId ?? null,
+      portraitId: message.portraitId ?? null,
       name: message.name,
       color: message.color,
       inGame: message.inGame ?? false,
@@ -268,6 +273,11 @@ const handleSetCharacterName = (
   }
   return nextState;
 };
+
+const handleSelectCharacterPortrait = (
+  state: ComposeState,
+  { payload }: ComposeAction<'selectCharacterPortrait'>,
+): ComposeState => ({ ...state, selectedCharacterPortrait: payload });
 
 const toggleModifier = (
   state: ComposeState,
@@ -447,6 +457,8 @@ export const composeReducer = (state: ComposeState, action: ComposeActionUnion):
       return handleSetComposeSource(state, action);
     case 'setCharacterName':
       return handleSetCharacterName(state, action);
+    case 'selectCharacterPortrait':
+      return handleSelectCharacterPortrait(state, action);
     case 'toggleInGame':
       return handleToggleInGame(state, action);
     case 'setInGame':

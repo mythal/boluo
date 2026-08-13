@@ -10,11 +10,11 @@ import { FormattedMessage } from 'react-intl';
 import { useSWRConfig } from 'swr';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { useEditChannelCharacterName } from '../../hooks/useEditChannelCharacterName';
-import { usePaneToggle } from '../../hooks/usePaneToggle';
 import { useResolvedTheme } from '../../hooks/useResolvedTheme';
-import { panesAtom } from '../../state/view.atoms';
+import { useToggleCharacterPane } from '../../hooks/useToggleCharacterPane';
 import { CharacterSelectorItem } from './CharacterSelectorItem';
 import { InlineCharacterCreate } from './InlineCharacterCreate';
+import { recentCharacterIdsAtomFamily } from './recentCharacters';
 
 interface Props {
   member: MemberWithUser;
@@ -45,13 +45,12 @@ export const CharacterPicker: FC<Props> = ({
   onViewAll,
 }) => {
   const spaceId = member.space.spaceId;
+  const userId = member.user.id;
   const channelId = member.channel.channelId;
   const lightOrDark = classifyLightOrDark(useResolvedTheme());
   const { trigger: bindCharacter, isMutating: isBinding } = useEditChannelCharacterName(channelId);
   const { mutate } = useSWRConfig();
-  const toggleCharacterPane = usePaneToggle();
-  const toggleCharacterChildPane = usePaneToggle({ child: '1/3' });
-  const panes = useAtomValue(panesAtom);
+  const { isCharacterPaneOpen, toggleCharacterDetails } = useToggleCharacterPane(spaceId);
   const { composeAtom, characterNameAtom } = useChannelAtoms();
   const existingName = useAtomValue(characterNameAtom).trim();
   const defaultName = member.channel.characterName;
@@ -59,32 +58,14 @@ export const CharacterPicker: FC<Props> = ({
     existingName ||
     (suggestionCharacters?.some((character) => character.name === defaultName) ? '' : defaultName);
   const dispatch = useSetAtom(composeAtom);
+  const recordCharacterUse = useSetAtom(recentCharacterIdsAtomFamily({ spaceId, userId }));
   const [bindError, setBindError] = useState<string | null>(null);
-
-  const isCharacterPaneOpen = (characterId: string): boolean =>
-    panes.some((pane) => {
-      const matches = (candidate: typeof pane | typeof pane.child) => {
-        const data = candidate && 'pane' in candidate ? candidate.pane : candidate;
-        return (
-          data?.type === 'CHARACTER' && data.spaceId === spaceId && data.characterId === characterId
-        );
-      };
-      return matches(pane) || matches(pane.child);
-    });
-
-  const toggleCharacterDetails = (character: Character) => {
-    const pane = { type: 'CHARACTER' as const, spaceId, characterId: character.id };
-    if (isCharacterPaneOpen(character.id)) {
-      toggleCharacterPane(pane);
-    } else {
-      toggleCharacterChildPane(pane);
-    }
-  };
 
   const selectCharacter = async (character: Character) => {
     setBindError(null);
     try {
       await bindCharacter({ characterId: character.id, characterName: character.name });
+      recordCharacterUse(character.id);
       await mutate(['/channels/members', channelId]);
       dispatch({ type: 'setCharacterName', payload: { name: '', setInGame: true } });
     } catch (cause) {
@@ -112,7 +93,11 @@ export const CharacterPicker: FC<Props> = ({
   };
 
   return (
-    <div className={variant === 'recent' ? 'mt-2 space-y-2 border-t pt-2' : 'space-y-2'}>
+    <div
+      className={
+        variant === 'recent' ? 'border-border-default mt-2 space-y-2 border-t pt-2' : 'space-y-2'
+      }
+    >
       {variant === 'recent' && (
         <div className="flex items-center justify-between gap-2">
           <div className="text-sm">
@@ -146,7 +131,7 @@ export const CharacterPicker: FC<Props> = ({
             }
             current={member.channel.characterId === character.id && existingName === ''}
             onSelect={(selected) => void selectCharacter(selected)}
-            onToggleDetails={toggleCharacterDetails}
+            onToggleDetails={(selected) => toggleCharacterDetails(selected.id)}
             detailsOpen={isCharacterPaneOpen(character.id)}
             disabled={isBinding || character.archivedAt != null}
           />

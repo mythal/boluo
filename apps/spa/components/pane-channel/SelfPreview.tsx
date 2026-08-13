@@ -199,6 +199,8 @@ export const SelfPreview: FC<Props> = ({ preview, isLast, displayIndex }) => {
           userId={member.user.id}
           messageColor={messageColor}
           colorSeed={colorSeed}
+          characterId={editingWithCharacter.characterId}
+          portraitId={editingWithCharacter.portraitId}
           isPreview
         />
       );

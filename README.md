@@ -60,7 +60,7 @@ docker-compose up -d
 You need to set up the `DATABASE_URL` environment variable correctly in `.env.local`. Then initialize the database with fixtures:
 
 ```bash
-cargo run --bin init -- --fixtures
+cargo run -p server -- init --fixtures
 ```
 
 You can find testing users in [`apps/server/fixtures/0-users.sql`](https://github.com/mythal/boluo/blob/master/apps/server/fixtures/0-users.sql).

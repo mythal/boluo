@@ -191,6 +191,27 @@ test('parse .as without name acts as in-game', () => {
   assert.strictEqual(modifiers.characterName, '');
   assert.strictEqual(modifiers.inGame && modifiers.inGame.type, 'As');
   assert.strictEqual(modifiers.rest.trimStart(), 'some text');
+
+  const newlineBody = parseModifiers('.as\n写一些话\n换行继续写');
+  assert.strictEqual(newlineBody.characterName, '');
+  assert.strictEqual(newlineBody.inGame && newlineBody.inGame.type, 'As');
+  assert.strictEqual(newlineBody.rest, '写一些话\n换行继续写');
+
+  const spacedNewlineBody = parseModifiers('.as   \n写一些话');
+  assert.strictEqual(spacedNewlineBody.characterName, '');
+  assert.strictEqual(spacedNewlineBody.rest, '写一些话');
+});
+
+test('an overlong .as name is treated as message text', () => {
+  const longText = 'a'.repeat(33);
+  const modifiers = parseModifiers(`.as ${longText}\n换行继续写`);
+  assert.strictEqual(modifiers.characterName, '');
+  assert.strictEqual(modifiers.inGame && modifiers.inGame.type, 'As');
+  assert.strictEqual(modifiers.rest, `${longText}\n换行继续写`);
+
+  const delimited = parseModifiers(`.as ${longText}; 正文`);
+  assert.strictEqual(delimited.characterName, '');
+  assert.strictEqual(delimited.rest, `${longText}; 正文`);
 });
 
 test('parse roll', () => {

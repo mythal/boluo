@@ -260,8 +260,21 @@ struct Cli {
 enum Command {
     /// Run the HTTP server
     Serve(ServeArgs),
+    /// Initialize the database
+    Init(InitArgs),
     /// Export TypeScript types
     Types,
+}
+
+#[derive(ClapArgs)]
+struct InitArgs {
+    /// Database URL
+    #[clap(long, env = "DATABASE_URL")]
+    database_url: String,
+
+    /// Whether to load fixtures
+    #[clap(long, default_value_t = false)]
+    fixtures: bool,
 }
 
 #[derive(ClapArgs)]
@@ -361,6 +374,33 @@ fn disk_cache_config(args: &ServeArgs) -> Option<disk_cache::Config> {
     })
 }
 
+async fn init_database(args: InitArgs) {
+    let pool = sqlx::postgres::PgPoolOptions::new()
+        .max_connections(1)
+        .connect(&args.database_url)
+        .await
+        .expect("Cannot connect to database");
+    sqlx::migrate!("./migrations")
+        .run(&pool)
+        .await
+        .expect("Failed to run database migrations");
+
+    if args.fixtures {
+        let mut paths: Vec<std::fs::DirEntry> = std::fs::read_dir("./apps/server/fixtures")
+            .expect("Cannot read fixtures directory")
+            .map(|res| res.expect("Cannot read fixture file"))
+            .collect();
+        paths.sort_by_key(|entry| entry.file_name());
+        for path in paths {
+            let sql = std::fs::read_to_string(path.path()).expect("Cannot read fixture file");
+            sqlx::raw_sql(sqlx::AssertSqlSafe(sql))
+                .execute(&pool)
+                .await
+                .expect("Failed to execute fixture SQL");
+        }
+    }
+}
+
 #[tokio::main(worker_threads = 5)]
 async fn main() {
     use tracing_subscriber::filter::{EnvFilter, LevelFilter};
@@ -374,6 +414,10 @@ async fn main() {
     let command = Cli::parse().command;
     let args = match command {
         Command::Serve(args) => args,
+        Command::Init(args) => {
+            init_database(args).await;
+            return;
+        }
         Command::Types => {
             typegen::prepare();
             typegen::run();

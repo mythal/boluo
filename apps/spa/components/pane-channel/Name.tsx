@@ -22,6 +22,8 @@ import { FallbackIcon } from '@boluo/ui/FallbackIcon';
 import { useFloatingSetters } from '@boluo/ui/hooks/useFloatingSetters';
 import { NameUserPanel } from './NameUserPanel';
 import { useResolvedTheme } from '../../hooks/useResolvedTheme';
+import { useMember } from '../../hooks/useMember';
+import { NameCharacterPanel } from './NameCharacterPanel';
 
 interface Props {
   name: string | undefined | null;
@@ -32,12 +34,24 @@ interface Props {
   isPreview?: boolean;
   messageColor?: string | null | undefined;
   colorSeed?: string | null;
+  characterId?: string | null;
+  portraitId?: string | null;
 }
 
-export const Name: FC<Props> = ({ name, isMaster, inGame, userId, messageColor, colorSeed }) => {
+export const Name: FC<Props> = ({
+  name,
+  isMaster,
+  inGame,
+  userId,
+  messageColor,
+  colorSeed,
+  characterId,
+  portraitId,
+}) => {
+  const member = useMember();
   const theme = useResolvedTheme();
   const [isOpen, setIsOpen] = useState(false);
-  const { refs, floatingStyles, middlewareData, context } = useFloating({
+  const { refs, floatingStyles, middlewareData, placement, context } = useFloating({
     open: isOpen,
     onOpenChange: setIsOpen,
     placement: 'top-start',
@@ -87,10 +101,22 @@ export const Name: FC<Props> = ({ name, isMaster, inGame, userId, messageColor, 
           <div
             ref={setFloating}
             style={floatingStyles}
-            {...getFloatingProps()}
+            {...getFloatingProps({
+              onPointerDown: (event) => event.stopPropagation(),
+            })}
             className={middlewareData.hide?.referenceHidden === true ? 'hidden' : ''}
           >
-            <NameUserPanel userId={userId} />
+            {characterId != null && member != null ? (
+              <NameCharacterPanel
+                characterId={characterId}
+                spaceId={member.space.spaceId}
+                userId={userId}
+                portraitId={portraitId}
+                playerDetailsPosition={placement.startsWith('top') ? 'before' : 'after'}
+              />
+            ) : (
+              <NameUserPanel userId={userId} />
+            )}
           </div>
         </FloatingPortal>
       )}

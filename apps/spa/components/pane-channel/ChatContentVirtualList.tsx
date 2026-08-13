@@ -18,6 +18,7 @@ import { ChatItemMessage } from './ChatItemMessage';
 import { SelfPreview } from './SelfPreview';
 import { OthersPreview } from './OthersPreview';
 import { virtualChatItemKey } from '../../hooks/useChatList';
+import { isContinuousMessage } from './isContinuousMessage';
 
 interface Props {
   firstItemIndex: number;
@@ -37,21 +38,6 @@ export interface VirtualListContext {
   alignToBottom: boolean;
   toggleAlignToBottom: () => void;
 }
-
-const isContinuous = (a: ChatItem | null | undefined, b: ChatItem | null | undefined): boolean => {
-  return !(
-    a == null ||
-    b == null ||
-    a.type !== 'MESSAGE' ||
-    b.type !== 'MESSAGE' || // type
-    a.senderId !== b.senderId ||
-    a.name !== b.name || // sender
-    a.folded ||
-    b.folded ||
-    a.whisperToUsers ||
-    b.whisperToUsers // other
-  );
-};
 
 export const ChatContentVirtualList: FC<Props> = (props) => {
   const settings = useSettings();
@@ -93,7 +79,7 @@ export const ChatContentVirtualList: FC<Props> = (props) => {
   const itemContent = (logicalIndex: number, item: ChatItem) => {
     const displayIndex = logicalIndex - firstItemIndex;
     const isLast = totalCount - 1 === displayIndex;
-    const continuous = isContinuous(chatList[displayIndex - 1], item);
+    const continuous = isContinuousMessage(chatList[displayIndex - 1], item);
 
     switch (item.type) {
       case 'MESSAGE':

@@ -133,6 +133,7 @@ test('preserves a bound character identity while editing', () => {
     edit: { time: '2026-08-06T00:00:00Z', p: 1, q: 1 },
     editingAttribution: {
       characterId: 'character-a',
+      portraitId: null,
       name: 'Character A',
       color: 'seed:character-a',
       inGame: true,

@@ -22,7 +22,7 @@
   "scripts": {
     "check": "tsc --noEmit",
     "lint": "eslint .",
-    "test": "tsx --test src/**/*.test.ts"
+    "test": "node --import tsx --test src/**/*.test.ts"
   },
   "sideEffects": false,
   "type": "module"

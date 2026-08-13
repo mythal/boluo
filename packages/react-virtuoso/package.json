@@ -35,7 +35,7 @@
   },
   "scripts": {
     "check": "tsc --noEmit",
-    "test": "tsx --test src/**/*.test.ts"
+    "test": "node --import tsx --test src/**/*.test.ts"
   },
   "sideEffects": false,
   "source": "src/index.tsx",

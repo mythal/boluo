@@ -914,8 +914,9 @@ const asModifier: P<Modifier> = new P(({ text, rest }) => {
   const prefix = rest.match(/^[.。]as\b/i);
   if (!prefix) return null;
   const afterPrefix = rest.slice(prefix[0].length);
-  const matchName = afterPrefix.match(/^\s*([^;；\r\n]+?)\s*?(?:[;；]|\r?\n)/);
-  if (!matchName) {
+  const matchName = afterPrefix.match(/^[^\S\r\n]*([^;；\r\n]+?)[^\S\r\n]*?(?:[;；]|\r?\n)/);
+  const characterName = matchName?.[1]?.trim() ?? '';
+  if (!matchName || characterName === '' || characterName.length > MAX_CHARACTER_NAME_LENGTH) {
     const consumedLen = prefix[0].length;
     const modifier: AsModifier = {
       type: 'As',
@@ -932,9 +933,6 @@ const asModifier: P<Modifier> = new P(({ text, rest }) => {
       },
     ];
   }
-  const [, name = ''] = matchName;
-  const characterName = name.trim().slice(0, MAX_CHARACTER_NAME_LENGTH);
-  if (characterName === '') return null;
   const consumedLen = prefix[0].length + matchName[0].length;
   const modifier: AsModifier = {
     type: 'As',

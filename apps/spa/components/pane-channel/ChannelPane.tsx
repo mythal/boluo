@@ -67,6 +67,7 @@ const ChatPaneChannelView: FC<{
   );
   useSendPreview(
     channel.id,
+    member?.space.spaceId,
     nickname,
     defaultCharacterName,
     atoms.composeAtom,

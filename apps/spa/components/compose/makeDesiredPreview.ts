@@ -23,6 +23,7 @@ interface MakeDesiredPreviewOptions {
   defaultInGame: boolean;
   compose: ComposeState;
   parsed: ComposeParseResult;
+  characterNameForIdentifier?: (identifier: string) => string | null;
 }
 
 export const makeDesiredPreview = ({
@@ -32,22 +33,43 @@ export const makeDesiredPreview = ({
   defaultInGame,
   compose,
   parsed,
+  characterNameForIdentifier,
 }: MakeDesiredPreviewOptions): DesiredPreview | null => {
   if (parsed.source !== compose.source) return null;
 
   const { previewId, edit } = compose;
-  const {
-    isAction,
-    broadcast,
-    whisperToUsernames,
-    inGame: parsedInGame,
-    characterName: parsedCharacterName,
-  } = parsed;
-  const editingWithCharacter =
-    compose.editingAttribution?.characterId != null ? compose.editingAttribution : null;
+  const { isAction, broadcast, whisperToUsernames, inGame: parsedInGame, asTarget } = parsed;
+  const referencedCharacterName =
+    asTarget?.type === 'CharacterReference'
+      ? (characterNameForIdentifier?.(asTarget.identifier) ?? null)
+      : null;
+  if (asTarget?.type === 'CharacterReference' && referencedCharacterName == null) {
+    return {
+      preview: {
+        id: previewId,
+        channelId,
+        name: '',
+        mediaId: null,
+        inGame: true,
+        isAction,
+        text: '',
+        clear: true,
+        entities: [],
+        editFor: null,
+        edit,
+      },
+    };
+  }
+  const asTargetName =
+    asTarget?.type === 'CharacterReference'
+      ? referencedCharacterName
+      : asTarget?.type === 'TemporaryName'
+        ? asTarget.name
+        : undefined;
+  const editingAttribution = compose.editingAttribution ?? null;
   const inGame =
-    editingWithCharacter?.inGame ?? (parsedCharacterName ? true : (parsedInGame ?? defaultInGame));
-  const inGameName = editingWithCharacter?.name ?? (parsedCharacterName || defaultCharacterName);
+    editingAttribution?.inGame ?? (asTarget != null ? true : (parsedInGame ?? defaultInGame));
+  const inGameName = editingAttribution?.name ?? (asTargetName || defaultCharacterName);
   const shouldHideContent = !broadcast || whisperToUsernames != null;
   const clearedPreview = isClearedPreviewContent(parsed);
   const text: string | null = clearedPreview ? '' : shouldHideContent ? null : parsed.text;

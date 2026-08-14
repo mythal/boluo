@@ -2,7 +2,12 @@ import { type Atom, atom, type PrimitiveAtom, type WritableAtom } from 'jotai';
 import { atomWithStorage, selectAtom, unwrap } from 'jotai/utils';
 import { createContext, use, useLayoutEffect, useMemo, useRef } from 'react';
 import { asyncParse } from '../interpreter/async-parse';
-import { composeInitialParseResult, parseModifiers, type ParseResult } from '@boluo/interpreter';
+import {
+  composeInitialParseResult,
+  parseModifiers,
+  type AsTarget,
+  type ParseResult,
+} from '@boluo/interpreter';
 import type { ComposeActionUnion } from '../state/compose.actions';
 import { checkCompose, type ComposeError, type ComposeState } from '../state/compose.reducer';
 import { usePaneKey } from './usePaneKey';
@@ -39,7 +44,8 @@ export interface ChannelAtoms {
   selfPreviewVisibleAtom: Atom<boolean>;
   isComposeEmptyAtom: Atom<boolean>;
   broadcastAtom: Atom<boolean>;
-  characterNameAtom: Atom<string>;
+  asTargetTextAtom: Atom<string>;
+  asTargetAtom: Atom<AsTarget | null>;
   isWhisperAtom: Atom<boolean>;
   lastWhisperTargetsAtom: PrimitiveAtom<string[] | null>;
   inGameAtom: Atom<boolean>;
@@ -106,12 +112,18 @@ export const useMakeChannelAtoms = (
       return cachedParseResultRef.current;
     });
     /* eslint-enable react-hooks/refs */
-    const characterNameAtom = selectAtom(composeAtom, ({ source }) => {
+    const asTargetAtom = selectAtom(composeAtom, ({ source }) => {
       try {
-        return parseModifiers(source).characterName;
+        return parseModifiers(source).asTarget;
       } catch {
-        return '';
+        return null;
       }
+    });
+    const asTargetTextAtom = atom((get) => {
+      const target = get(asTargetAtom);
+      if (target == null) return '';
+      if (target.type === 'CharacterReference') return `@${target.identifier}`;
+      return target.type === 'DefaultCharacter' ? '@' : target.name;
     });
     const broadcastAtom = selectAtom(parsedAtom, ({ broadcast }) => broadcast);
     const isActionAtom = selectAtom(parsedAtom, ({ isAction }) => isAction);
@@ -152,7 +164,8 @@ export const useMakeChannelAtoms = (
       composeAtom,
       parsedAtom,
       isActionAtom,
-      characterNameAtom,
+      asTargetTextAtom,
+      asTargetAtom,
       hasMediaAtom,
       broadcastAtom,
       isWhisperAtom,
@@ -180,7 +193,7 @@ export const useMakeChannelAtoms = (
     () =>
       atom((read) => {
         const parsed = read(atoms.parsedAtom);
-        if (parsed.characterName) return true;
+        if (parsed.asTarget != null) return true;
         if (parsed.inGame == null) {
           return defaultInGame;
         }

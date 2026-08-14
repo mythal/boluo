@@ -81,6 +81,42 @@ test('makes a preview when the parse result matches the current source', () => {
   assert.equal(desired?.preview.text, 'current source');
 });
 
+test('uses the resolved character name for a character-reference preview', () => {
+  const source = '.as @alice; hello';
+  const compose = { ...makeInitialComposeState(), source };
+  const parsed = { ...parse(source), source };
+  const desired = makeDesiredPreview({
+    channelId: 'channel',
+    nickname: 'Player',
+    defaultCharacterName: '',
+    defaultInGame: false,
+    compose,
+    parsed,
+    characterNameForIdentifier: (identifier) => (identifier === 'alice' ? 'Alice' : null),
+  });
+
+  assert.equal(desired?.preview.name, 'Alice');
+  assert.equal(desired?.preview.clear, false);
+});
+
+test('clears a character-reference preview until the character resolves', () => {
+  const source = '.as @alice; hello';
+  const compose = { ...makeInitialComposeState(), source };
+  const parsed = { ...parse(source), source };
+  const desired = makeDesiredPreview({
+    channelId: 'channel',
+    nickname: 'Player',
+    defaultCharacterName: '',
+    defaultInGame: false,
+    compose,
+    parsed,
+    characterNameForIdentifier: () => null,
+  });
+
+  assert.equal(desired?.preview.clear, true);
+  assert.equal(desired?.preview.text, '');
+});
+
 test('makes a cleared preview for the initial empty parse result', () => {
   const compose = makeInitialComposeState();
   const parsed = {
@@ -154,5 +190,31 @@ test('preserves a bound character identity while editing', () => {
   });
 
   assert.equal(desired?.preview.name, 'Character A');
+  assert.equal(desired?.preview.inGame, true);
+});
+
+test('preserves a temporary speaker name while editing', () => {
+  const compose = {
+    ...makeInitialComposeState(),
+    source: 'edited text',
+    editingAttribution: {
+      characterId: null,
+      portraitId: null,
+      name: 'Temporary Name',
+      color: '',
+      inGame: true,
+    },
+  };
+  const parsed = { ...parse(compose.source), source: compose.source };
+  const desired = makeDesiredPreview({
+    channelId: 'channel',
+    nickname: 'Player',
+    defaultCharacterName: 'Default Name',
+    defaultInGame: false,
+    compose,
+    parsed,
+  });
+
+  assert.equal(desired?.preview.name, 'Temporary Name');
   assert.equal(desired?.preview.inGame, true);
 });

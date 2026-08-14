@@ -5,16 +5,16 @@ import { classifyLightOrDark } from '@boluo/theme';
 import { ButtonInline } from '@boluo/ui/ButtonInline';
 import { unwrap } from '@boluo/utils/result';
 import { useAtomValue, useSetAtom } from 'jotai';
-import { useState, type FC } from 'react';
+import { type FC, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { useSWRConfig } from 'swr';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
-import { useEditChannelCharacterName } from '../../hooks/useEditChannelCharacterName';
 import { useResolvedTheme } from '../../hooks/useResolvedTheme';
 import { useToggleCharacterPane } from '../../hooks/useToggleCharacterPane';
 import { CharacterSelectorItem } from './CharacterSelectorItem';
 import { InlineCharacterCreate } from './InlineCharacterCreate';
 import { recentCharacterIdsAtomFamily } from './recentCharacters';
+import { createCharacterDirectory, resolveCharacterIdentifier } from '../../characters/directory';
 
 interface Props {
   member: MemberWithUser;
@@ -29,7 +29,7 @@ interface Props {
 const makeKey = (name: string): string => {
   const key = name
     .trim()
-    .toLocaleLowerCase()
+    .toLowerCase()
     .replace(/[^\p{Letter}\p{Number}]+/gu, '_')
     .replace(/^_+|_+$/g, '');
   return key || 'character';
@@ -46,31 +46,36 @@ export const CharacterPicker: FC<Props> = ({
 }) => {
   const spaceId = member.space.spaceId;
   const userId = member.user.id;
-  const channelId = member.channel.channelId;
   const lightOrDark = classifyLightOrDark(useResolvedTheme());
-  const { trigger: bindCharacter, isMutating: isBinding } = useEditChannelCharacterName(channelId);
   const { mutate } = useSWRConfig();
   const { isCharacterPaneOpen, toggleCharacterDetails } = useToggleCharacterPane(spaceId);
-  const { composeAtom, characterNameAtom } = useChannelAtoms();
-  const existingName = useAtomValue(characterNameAtom).trim();
+  const { composeAtom, asTargetAtom, asTargetTextAtom } = useChannelAtoms();
+  const asTarget = useAtomValue(asTargetAtom);
+  const existingName = useAtomValue(asTargetTextAtom).trim();
   const defaultName = member.channel.characterName;
   const suggestedName =
     existingName ||
     (suggestionCharacters?.some((character) => character.name === defaultName) ? '' : defaultName);
   const dispatch = useSetAtom(composeAtom);
   const recordCharacterUse = useSetAtom(recentCharacterIdsAtomFamily({ spaceId, userId }));
-  const [bindError, setBindError] = useState<string | null>(null);
+  const characterDirectory = useMemo(
+    () => (suggestionCharacters ? createCharacterDirectory(suggestionCharacters) : null),
+    [suggestionCharacters],
+  );
+  const selectedReference =
+    asTarget?.type === 'CharacterReference' && characterDirectory != null
+      ? resolveCharacterIdentifier(asTarget.identifier, characterDirectory)
+      : null;
+  const selectedCharacterId =
+    selectedReference?.id ??
+    (asTarget == null || asTarget.type === 'DefaultCharacter' ? member.channel.characterId : null);
 
-  const selectCharacter = async (character: Character) => {
-    setBindError(null);
-    try {
-      await bindCharacter({ characterId: character.id, characterName: character.name });
-      recordCharacterUse(character.id);
-      await mutate(['/channels/members', channelId]);
-      dispatch({ type: 'setCharacterName', payload: { name: '', setInGame: true } });
-    } catch (cause) {
-      setBindError(cause instanceof Error ? cause.message : 'Failed to bind character');
-    }
+  const selectCharacter = (character: Character) => {
+    recordCharacterUse(character.id);
+    dispatch({
+      type: 'setAsTargetText',
+      payload: { text: `@${character.key}`, setInGame: true },
+    });
   };
 
   const createCharacter = async (name: string) => {
@@ -89,7 +94,7 @@ export const CharacterPicker: FC<Props> = ({
       mutate(['/characters/by_space', spaceId, true, false]),
       mutate(['/characters/by_space', spaceId, true, true]),
     ]);
-    await selectCharacter(character);
+    selectCharacter(character);
   };
 
   return (
@@ -129,20 +134,15 @@ export const CharacterPicker: FC<Props> = ({
                 ? undefined
                 : computeColors(character.id, parseGameColor(character.color))[lightOrDark]
             }
-            current={member.channel.characterId === character.id && existingName === ''}
-            onSelect={(selected) => void selectCharacter(selected)}
+            current={selectedCharacterId === character.id}
+            onSelect={selectCharacter}
             onToggleDetails={(selected) => toggleCharacterDetails(selected.id)}
             detailsOpen={isCharacterPaneOpen(character.id)}
-            disabled={isBinding || character.archivedAt != null}
+            disabled={character.archivedAt != null}
           />
         ))}
       </div>
-      <InlineCharacterCreate
-        suggestedName={suggestedName}
-        disabled={isBinding}
-        onCreate={createCharacter}
-      />
-      {bindError && <div className="text-state-danger-text text-xs">{bindError}</div>}
+      <InlineCharacterCreate suggestedName={suggestedName} onCreate={createCharacter} />
     </div>
   );
 };

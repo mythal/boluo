@@ -6,7 +6,7 @@ import type { CharacterPortraitSelection } from './characterPortraitSelection';
 
 export type ComposeActionMap = {
   setSource: { channelId: string; source: string };
-  setCharacterName: { name: string; setInGame?: boolean };
+  setAsTargetText: { text: string; setInGame?: boolean };
   selectCharacterPortrait: CharacterPortraitSelection | null;
   toggleInGame: { defaultInGame: boolean };
   setInGame: { inGame: boolean };

@@ -8,7 +8,7 @@ import type {
   PureExprNode,
   PureExprOf,
 } from '@boluo/api';
-import type { ParseResult } from './parse-result';
+import type { AsTarget, ParseResult } from './parse-result';
 
 interface State {
   text: string;
@@ -723,7 +723,8 @@ const mergeTextEntitiesReducer = (entities: Entity[], entity: Entity) => {
 
 export const parse = (source: string, parseExpr = true, env: Env = emptyEnv): ParseResult => {
   const modifiersParseResult = parseModifiers(source, env);
-  const { action, isRoll, mute, whisper, inGame, modifiers, characterName } = modifiersParseResult;
+  const { action, isRoll, mute, whisper, inGame, modifiers, characterName, asTarget } =
+    modifiersParseResult;
   let state: State = { text: modifiersParseResult.text, rest: modifiersParseResult.rest };
 
   const result: [Entity[], State] | null =
@@ -745,6 +746,7 @@ export const parse = (source: string, parseExpr = true, env: Env = emptyEnv): Pa
     isRoll,
     inGame: inGame ? inGame.inGame : null,
     characterName,
+    asTarget,
     isAction: Boolean(action),
     whisperToUsernames: whisper ? whisper.usernames : null,
     broadcast: !mute,
@@ -783,7 +785,7 @@ interface AsModifier {
   start: number;
   len: number;
   inGame: true;
-  characterName: string;
+  target: AsTarget | null;
 }
 
 interface MuteModifier {
@@ -796,6 +798,7 @@ export type Modifier =
   MeModifier | RollModifier | WhisperModifier | MuteModifier | InGameModifier | AsModifier;
 
 const MAX_CHARACTER_NAME_LENGTH = 32;
+export const MAX_CHARACTER_IDENTIFIER_LENGTH = 64;
 
 const meModifier: P<Modifier> = regex(/^[.。]me\b/i).then(([match, { text, rest }]) => {
   const [entire] = match;
@@ -916,14 +919,17 @@ const asModifier: P<Modifier> = new P(({ text, rest }) => {
   const afterPrefix = rest.slice(prefix[0].length);
   const matchName = afterPrefix.match(/^[^\S\r\n]*([^;；\r\n]+?)[^\S\r\n]*?(?:[;；]|\r?\n)/);
   const characterName = matchName?.[1]?.trim() ?? '';
-  if (!matchName || characterName === '' || characterName.length > MAX_CHARACTER_NAME_LENGTH) {
+  const maxLength = characterName.startsWith('@')
+    ? MAX_CHARACTER_IDENTIFIER_LENGTH + 1
+    : MAX_CHARACTER_NAME_LENGTH;
+  if (!matchName || characterName === '' || characterName.length > maxLength) {
     const consumedLen = prefix[0].length;
     const modifier: AsModifier = {
       type: 'As',
       start,
       len: consumedLen,
       inGame: true,
-      characterName: '',
+      target: null,
     };
     return [
       modifier,
@@ -939,7 +945,12 @@ const asModifier: P<Modifier> = new P(({ text, rest }) => {
     start,
     len: consumedLen,
     inGame: true,
-    characterName,
+    target:
+      characterName === '@'
+        ? { type: 'DefaultCharacter' }
+        : characterName.startsWith('@')
+          ? { type: 'CharacterReference', identifier: characterName.slice(1) }
+          : { type: 'TemporaryName', name: characterName },
   };
   return [
     modifier,
@@ -961,6 +972,7 @@ interface ParseModifersResult {
   isWhisper: boolean;
   as: AsModifier | false;
   characterName: string;
+  asTarget: AsTarget | null;
   modifiers: Modifier[];
 }
 
@@ -1007,7 +1019,9 @@ export const parseModifiers = (source: string, env: Env = emptyEnv): ParseModife
     whisper,
     inGame,
     as: asCommand,
-    characterName: asCommand ? asCommand.characterName : '',
+    characterName:
+      asCommand && asCommand.target?.type === 'TemporaryName' ? asCommand.target.name : '',
+    asTarget: asCommand ? asCommand.target : null,
     modifiers,
   };
 };

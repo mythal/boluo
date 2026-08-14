@@ -20,7 +20,9 @@ import { useMember } from '../../hooks/useMember';
 import { findMessage } from '../../state/channel.reducer';
 import { saveDraftInWorker } from '../../state/compose-backup.worker-client';
 import { useChannelCharacterName } from '../../hooks/useChannelCharacter';
+import { usePortrayableCharacters } from '../../hooks/usePortrayableCharacters';
 import { selectedPortraitIdForCharacter } from '../../state/characterPortraitSelection';
+import { resolveSpeaker } from '../../characters/resolveSpeaker';
 
 const SEND_TIMEOUT = 8000;
 
@@ -28,11 +30,12 @@ export const useSend = () => {
   const channelId = useChannelId();
   const defaultInGame = useDefaultInGame();
   const intl = useIntl();
-  const { composeAtom, parsedAtom, checkComposeAtom, defaultDiceFaceRef } = useChannelAtoms();
+  const { composeAtom, checkComposeAtom, defaultDiceFaceRef } = useChannelAtoms();
   const store = useStore();
 
   const myMember = useMember();
   const channelCharacterName = useChannelCharacterName(myMember);
+  const { resolve } = usePortrayableCharacters(myMember?.space.spaceId);
   const { data: queryChannelMembers } = useQueryChannelMembers(channelId, myMember?.space.spaceId);
   const channelMembersMap: Map<string, MemberWithUser> = useMemo(() => {
     if (queryChannelMembers == null) return new Map<string, MemberWithUser>();
@@ -59,7 +62,6 @@ export const useSend = () => {
     }
     const nickname = myMember.user.nickname;
     const composeState = store.get(composeAtom);
-    const parsedPreview = store.get(parsedAtom);
     if (store.get(checkComposeAtom) != null) return;
     const composeDispatch = (action: ComposeActionUnion) => store.set(composeAtom, action);
     const chatDispatch = (action: ChatActionUnion) => store.set(chatAtom, action);
@@ -86,7 +88,6 @@ export const useSend = () => {
       }
     }
 
-    composeDispatch({ type: 'sent', payload: { edit: composeState.edit != null } });
     const parsedForSend = parse(composeState.source, true, {
       defaultDiceFace: defaultDiceFaceRef.current,
       resolveUsername: (username) => {
@@ -95,33 +96,40 @@ export const useSend = () => {
         return member.user.nickname;
       },
     });
-    const {
-      text,
-      entities,
-      whisperToUsernames,
-      characterName: parsedCharacterNameForSend,
-    } = parsedForSend;
-    let name = nickname;
-    const effectiveCharacterName = (
-      parsedCharacterNameForSend || parsedPreview.characterName
-    ).trim();
-    const parsedInGame = parsedPreview.inGame ?? parsedForSend.inGame ?? null;
-    const editingWithCharacter =
-      composeState.editingAttribution?.characterId != null ? composeState.editingAttribution : null;
-    const inGame =
-      editingWithCharacter?.inGame ??
-      (effectiveCharacterName ? true : (parsedInGame ?? defaultInGame));
-    if (editingWithCharacter != null) {
-      name = editingWithCharacter.name;
-    } else if (inGame) {
-      if (effectiveCharacterName !== '') {
-        name = effectiveCharacterName;
-      } else {
-        name = channelCharacterName;
-      }
+    const { text, entities, whisperToUsernames } = parsedForSend;
+    const speaker = resolveSpeaker({
+      nickname,
+      defaultInGame,
+      parsedInGame: parsedForSend.inGame,
+      asTarget: parsedForSend.asTarget,
+      editingAttribution: composeState.editingAttribution,
+      channelCharacterId: myMember.channel.characterId,
+      channelCharacterName,
+      resolveCharacter: resolve,
+    });
+    if (speaker.type === 'InvalidCharacterReference') {
+      const content =
+        speaker.reason === 'Loading'
+          ? intl.formatMessage({
+              defaultMessage: 'Characters are still loading. Please try again.',
+            })
+          : speaker.reason === 'Error'
+            ? intl.formatMessage({ defaultMessage: 'Characters could not be loaded.' })
+            : intl.formatMessage(
+                {
+                  defaultMessage:
+                    'Character “@{identifier}” is unavailable or cannot be portrayed.',
+                },
+                { identifier: speaker.identifier },
+              );
+      setBanner({
+        level: 'ERROR',
+        content,
+      });
+      return;
     }
-    const characterId =
-      inGame && effectiveCharacterName === '' ? myMember.channel.characterId : null;
+    composeDispatch({ type: 'sent', payload: { edit: composeState.edit != null } });
+    const { inGame, name, characterId, color: speakerColor } = speaker;
     let payload:
       { type: 'NEW'; newMessage: NewMessage } | { type: 'EDIT'; editMessage: EditMessage };
     if (composeState.edit == null) {
@@ -151,7 +159,8 @@ export const useSend = () => {
           text,
           entities,
           inGame,
-          isAction: parsedPreview.isAction,
+          isAction: parsedForSend.isAction,
+          color: speakerColor,
           whisperToUsers: whisperToUsernames
             ? usernameListToUserIdList(whisperToUsernames)
             : undefined,
@@ -176,9 +185,9 @@ export const useSend = () => {
           text,
           entities,
           inGame,
-          isAction: parsedPreview.isAction,
+          isAction: parsedForSend.isAction,
           mediaId: typeof composeState.media === 'string' ? composeState.media : null,
-          color: editingWithCharacter?.color ?? '',
+          color: speakerColor ?? '',
           expectModified: composeState.edit.time,
         },
       };
@@ -278,9 +287,9 @@ export const useSend = () => {
   }, [
     myMember,
     channelCharacterName,
+    resolve,
     store,
     composeAtom,
-    parsedAtom,
     checkComposeAtom,
     defaultDiceFaceRef,
     defaultInGame,

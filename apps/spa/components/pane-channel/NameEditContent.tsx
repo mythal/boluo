@@ -10,7 +10,7 @@ import { type ChannelState } from '../../state/channel.reducer';
 import { backwards, last } from 'list';
 import { NameEditContentNameHistory } from './NameEditContentNameHistory';
 import { CharacterPicker } from './CharacterPicker';
-import { useQueryCharacters } from '@boluo/hooks/useQueryCharacters';
+import { usePortrayableCharacters } from '../../hooks/usePortrayableCharacters';
 import { useChannelCharacterName } from '../../hooks/useChannelCharacter';
 import { recentCharacterIdsAtomFamily, selectRecentCharacters } from './recentCharacters';
 
@@ -88,18 +88,11 @@ export const NameEditContent: FC<Props> = ({ member, dismiss, onViewAllCharacter
   const recentCharacterIds = useAtomValue(recentCharacterIdsAtom);
   const defaultCharacterName = useChannelCharacterName(member);
   const {
-    data: characters,
+    characters,
     error: charactersError,
     isLoading: charactersLoading,
-  } = useQueryCharacters({
-    spaceId,
-    includeArchived: true,
-    portrayableOnly: true,
-  });
-  const activeCharacters = useMemo(
-    () => characters?.filter((character) => character.archivedAt == null),
-    [characters],
-  );
+    activeCharacters,
+  } = usePortrayableCharacters(spaceId);
   const recentCharacters = useMemo(
     () =>
       activeCharacters == null
@@ -165,6 +158,7 @@ export const NameEditContent: FC<Props> = ({ member, dismiss, onViewAllCharacter
         </label>
         <NameEditInput
           channelId={member.channel.channelId}
+          spaceId={member.space.spaceId}
           defaultName={defaultCharacterName}
           characterId={member.channel.characterId}
         />

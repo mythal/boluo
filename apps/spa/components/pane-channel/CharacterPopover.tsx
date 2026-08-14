@@ -1,5 +1,5 @@
 import type { MemberWithUser } from '@boluo/api';
-import { useQueryCharacters } from '@boluo/hooks/useQueryCharacters';
+import { usePortrayableCharacters } from '../../hooks/usePortrayableCharacters';
 import ChevronLeft from '@boluo/icons/ChevronLeft';
 import { Button } from '@boluo/ui/Button';
 import type { FC } from 'react';
@@ -13,15 +13,7 @@ interface Props {
 
 export const CharacterPopover: FC<Props> = ({ member, onBack }) => {
   const spaceId = member.space.spaceId;
-  const {
-    data: characters,
-    error,
-    isLoading,
-  } = useQueryCharacters({
-    spaceId,
-    includeArchived: true,
-    portrayableOnly: true,
-  });
+  const { characters, error, isLoading } = usePortrayableCharacters(spaceId);
 
   return (
     <div className="w-52 space-y-3">

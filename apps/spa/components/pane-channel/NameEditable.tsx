@@ -36,9 +36,10 @@ interface Props {
   self: boolean;
   isPreview?: boolean;
   member: MemberWithUser;
+  portraitCharacterId: string | null;
 }
 
-export const NameEditable: FC<Props> = ({ name, inGame, color, member }) => {
+export const NameEditable: FC<Props> = ({ name, inGame, color, member, portraitCharacterId }) => {
   const theme = useResolvedTheme();
   const store = useStore();
   const { composeFocusedAtom, selfPreviewNamePanelOpenAtom, isComposeEmptyAtom } =
@@ -135,7 +136,7 @@ export const NameEditable: FC<Props> = ({ name, inGame, color, member }) => {
           >
             <SelectedCharacterPortraitPreview
               spaceId={member.space.spaceId}
-              characterId={member.channel.characterId}
+              characterId={portraitCharacterId}
             />
             {content === 'name' ? (
               <NameEditContent

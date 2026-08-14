@@ -6,38 +6,53 @@ import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { useEditChannelCharacterName } from '../../hooks/useEditChannelCharacterName';
 import { FormattedMessage } from 'react-intl';
 import { useSWRConfig } from 'swr';
+import { usePortrayableCharacters } from '../../hooks/usePortrayableCharacters';
 
 export const NameEditInput: FC<{
   id?: string;
   channelId: string;
+  spaceId: string;
   setInGame?: boolean;
   defaultName: string;
   characterId: string | null;
-}> = ({ id, channelId, setInGame = false, defaultName, characterId }) => {
-  const { composeAtom, characterNameAtom } = useChannelAtoms();
-  const characterName = useAtomValue(characterNameAtom);
+}> = ({ id, channelId, spaceId, setInGame = false, defaultName, characterId }) => {
+  const { composeAtom, asTargetAtom, asTargetTextAtom } = useChannelAtoms();
+  const asTarget = useAtomValue(asTargetAtom);
+  const targetText = useAtomValue(asTargetTextAtom);
+  const { resolve } = usePortrayableCharacters(spaceId);
+  const referencedCharacter =
+    asTarget?.type === 'CharacterReference' ? resolve(asTarget.identifier) : null;
+  const hasResolvedCharacter = referencedCharacter?.status === 'Found';
+  const usesDefaultCharacter = asTarget?.type === 'DefaultCharacter';
+  const displayValue = hasResolvedCharacter || usesDefaultCharacter ? '' : targetText;
+  const placeholder = hasResolvedCharacter ? referencedCharacter.character.name : defaultName;
   const { trigger: setDefault, isMutating, error } = useEditChannelCharacterName(channelId);
   const { mutate } = useSWRConfig();
-  const [localName, setLocalName] = useState(characterName);
-  const [prevCharacterName, setPrevCharacterName] = useState(characterName);
-  const hasTemporaryName = characterName.trim() !== '';
+  const [localName, setLocalName] = useState(displayValue);
+  const [previousDisplayValue, setPreviousDisplayValue] = useState(displayValue);
+  const hasTemporaryName = asTarget?.type === 'TemporaryName';
+  const hasCharacterReference =
+    asTarget?.type === 'CharacterReference' || asTarget?.type === 'DefaultCharacter';
+  const displaysTemporaryName =
+    hasTemporaryName ||
+    (characterId == null && defaultName.trim() !== '' && !hasCharacterReference);
   const dispatch = useSetAtom(composeAtom);
-  if (prevCharacterName !== characterName) {
-    setPrevCharacterName(characterName);
-    setLocalName(characterName);
+  if (previousDisplayValue !== displayValue) {
+    setPreviousDisplayValue(displayValue);
+    setLocalName(displayValue);
   }
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const next = e.target.value;
     setLocalName(next);
-    dispatch({ type: 'setCharacterName', payload: { name: next, setInGame } });
+    dispatch({ type: 'setAsTargetText', payload: { text: next, setInGame } });
   };
   const handleSetDefault = async () => {
-    const name = characterName.trim();
+    const name = asTarget?.type === 'TemporaryName' ? asTarget.name.trim() : '';
     if (name === '') return;
     try {
       await setDefault({ characterName: name, characterId: null });
       await mutate(['/channels/members', channelId]);
-      dispatch({ type: 'setCharacterName', payload: { name: '', setInGame } });
+      dispatch({ type: 'setAsTargetText', payload: { text: '', setInGame } });
     } catch {
       // The mutation error is rendered next to the status label.
     }
@@ -50,15 +65,15 @@ export const NameEditInput: FC<{
           id={id}
           value={localName}
           className="w-full"
-          placeholder={defaultName}
+          placeholder={placeholder}
           onChange={handleChange}
         />
       </div>
       <div className="text-text-muted flex h-7 items-center justify-end gap-1 pt-1 pb-2 text-xs">
         <span>
-          {hasTemporaryName || (characterId == null && defaultName.trim() !== '') ? (
+          {displaysTemporaryName ? (
             <FormattedMessage defaultMessage="As this name" />
-          ) : characterId != null ? (
+          ) : characterId != null || hasCharacterReference ? (
             <FormattedMessage defaultMessage="As character" />
           ) : (
             <FormattedMessage defaultMessage="Not set" />

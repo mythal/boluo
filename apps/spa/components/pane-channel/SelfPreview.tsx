@@ -25,6 +25,9 @@ import { useVirtuosoRef } from '../../hooks/useVirtuosoRef';
 import { useMember } from '../../hooks/useMember';
 import { useChannelCharacter } from '../../hooks/useChannelCharacter';
 import { Name } from './Name';
+import { usePortrayableCharacters } from '../../hooks/usePortrayableCharacters';
+import { resolveSpeaker } from '../../characters/resolveSpeaker';
+import { useDefaultInGame } from '../../hooks/useDefaultInGame';
 
 type ComposeDrived = Pick<ComposeState, 'media' | 'editingAttribution'> & {
   editMode: boolean;
@@ -148,48 +151,45 @@ export const SelfPreview: FC<Props> = ({ preview, isLast, displayIndex }) => {
   const isFocused = usePaneIsFocus();
   const member = useMember()!;
   const isMaster = member.channel.isMaster;
-  const { composeAtom, isActionAtom, inGameAtom, parsedAtom, selfPreviewHoverAtom } =
-    useChannelAtoms();
+  const { composeAtom, isActionAtom, parsedAtom, selfPreviewHoverAtom } = useChannelAtoms();
   const setSelfPreviewHover = useSetAtom(selfPreviewHoverAtom);
   const { hidePlaceholder, hideToolbox } = useSelfPreviewAutoHide();
   const compose: ComposeDrived = useAtomValue(
     useMemo(() => selectAtom(composeAtom, selector, isEqual), [composeAtom]),
   );
   const isAction = useAtomValue(isActionAtom);
-  const composeInGame = useAtomValue(inGameAtom);
+  const defaultInGame = useDefaultInGame();
   const parsed = useAtomValue(parsedAtom);
+  const { resolve } = usePortrayableCharacters(member.space.spaceId);
   const { editingAttribution, editMode, media } = compose;
-  const editingWithCharacter = editingAttribution?.characterId != null ? editingAttribution : null;
-  const inGame = editingWithCharacter?.inGame ?? composeInGame;
+  const parsedInGame = parsed.asTarget != null ? true : (parsed.inGame ?? defaultInGame);
+  const usesChannelCharacter =
+    parsed.asTarget == null || parsed.asTarget.type === 'DefaultCharacter';
   const shouldResolveChannelCharacter =
-    editingWithCharacter == null && inGame && parsed.characterName === '';
+    editingAttribution == null && parsedInGame && usesChannelCharacter;
   const { character, name: channelCharacterName } = useChannelCharacter(
     member,
     shouldResolveChannelCharacter,
   );
-  const messageColor = editingWithCharacter?.color ?? character?.color;
-  const colorSeed = editingWithCharacter?.characterId ?? character?.id;
-  const color = useMessageColor(member.user.id, inGame, messageColor, colorSeed);
-  const name = useMemo(() => {
-    if (editingWithCharacter != null) {
-      return editingWithCharacter.name;
-    }
-    if (!inGame) {
-      return member.user.nickname;
-    }
-    if (parsed.characterName) {
-      return parsed.characterName;
-    }
-    return channelCharacterName;
-  }, [
-    editingWithCharacter,
+  const speaker = resolveSpeaker({
+    nickname: member.user.nickname,
+    defaultInGame,
+    parsedInGame: parsed.inGame,
+    asTarget: parsed.asTarget,
+    editingAttribution,
+    channelCharacterId: member.channel.characterId,
     channelCharacterName,
-    inGame,
-    member.user.nickname,
-    parsed.characterName,
-  ]);
+    channelCharacter: character,
+    resolveCharacter: resolve,
+  });
+  const inGame = speaker.type === 'Resolved' ? speaker.inGame : true;
+  const messageColor = speaker.type === 'Resolved' ? speaker.color : undefined;
+  const colorSeed = speaker.type === 'Resolved' ? speaker.characterId : undefined;
+  const color = useMessageColor(member.user.id, inGame, messageColor, colorSeed);
+  const name =
+    speaker.type === 'InvalidCharacterReference' ? `@${speaker.identifier}` : speaker.name;
   const nameNode = useMemo(() => {
-    if (editingWithCharacter != null) {
+    if (speaker.type === 'Resolved' && speaker.source === 'Editing') {
       return (
         <Name
           inGame={inGame}
@@ -199,8 +199,8 @@ export const SelfPreview: FC<Props> = ({ preview, isLast, displayIndex }) => {
           userId={member.user.id}
           messageColor={messageColor}
           colorSeed={colorSeed}
-          characterId={editingWithCharacter.characterId}
-          portraitId={editingWithCharacter.portraitId}
+          characterId={speaker.characterId}
+          portraitId={speaker.portraitId}
           isPreview
         />
       );
@@ -214,9 +214,26 @@ export const SelfPreview: FC<Props> = ({ preview, isLast, displayIndex }) => {
         color={color}
         isPreview
         self
+        portraitCharacterId={
+          speaker.type === 'Resolved' && speaker.source === 'Character'
+            ? speaker.characterId
+            : usesChannelCharacter
+              ? member.channel.characterId
+              : null
+        }
       />
     );
-  }, [editingWithCharacter, color, colorSeed, inGame, isMaster, member, messageColor, name]);
+  }, [
+    speaker,
+    color,
+    colorSeed,
+    inGame,
+    isMaster,
+    member,
+    messageColor,
+    name,
+    usesChannelCharacter,
+  ]);
   const { onDrop } = useMediaDrop();
   const mediaNode = useMemo(() => {
     if (media == null) return null;

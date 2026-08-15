@@ -17,7 +17,7 @@ export type ComposeActionMap = {
   recoverState: ComposeState;
   media: { media: File | null };
   editMessage: { message: Message };
-  sent: { edit?: boolean };
+  sent: { edit?: boolean; collapseCharacterReference?: boolean };
   reset: { restore?: boolean };
   focus: Empty;
   blur: Empty;

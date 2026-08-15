@@ -1,9 +1,10 @@
-import { type FC, useState } from 'react';
+import { type FC } from 'react';
 import type { EntityOf } from '@boluo/api';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useFloating, offset, flip, shift, autoUpdate } from '@floating-ui/react';
 import clsx from 'clsx';
 import { TooltipBox } from '../TooltipBox';
+import { useCopyText } from '../hooks/useCopyText';
 import { useFloatingSetters } from '../hooks/useFloatingSetters';
 
 interface Props {
@@ -18,7 +19,7 @@ export const EntityCode: FC<Props> = ({
   },
 }) => {
   const intl = useIntl();
-  const [showCopied, setShowCopied] = useState(false);
+  const { copied: showCopied, copy } = useCopyText();
   const text = source.substring(start, start + len);
 
   const { refs, floatingStyles } = useFloating({
@@ -29,25 +30,6 @@ export const EntityCode: FC<Props> = ({
   });
   const { setReference, setFloating } = useFloatingSetters(refs);
 
-  const onCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(text);
-    } catch {
-      try {
-        const ta = document.createElement('textarea');
-        ta.value = text;
-        document.body.appendChild(ta);
-        ta.select();
-        document.execCommand('copy');
-        document.body.removeChild(ta);
-      } catch {
-        // do nothing
-        return;
-      }
-    }
-    setShowCopied(true);
-    setTimeout(() => setShowCopied(false), 1500);
-  };
   const title = intl.formatMessage({ defaultMessage: 'Click to copy' });
   return (
     <>
@@ -60,12 +42,12 @@ export const EntityCode: FC<Props> = ({
         role="button"
         title={title}
         onClick={() => {
-          void onCopy();
+          void copy(text);
         }}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
-            void onCopy();
+            void copy(text);
           }
         }}
         tabIndex={0}

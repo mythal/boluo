@@ -54,6 +54,7 @@ pub struct RestoreCharacter {
 pub struct CheckCharacterIdentifier {
     pub space_id: Uuid,
     pub identifier: String,
+    pub character_id: Option<Uuid>,
 }
 
 #[derive(Deserialize, Debug, specta::Type)]
@@ -105,5 +106,6 @@ mod tests {
 
         assert_eq!(payload.space_id, space_id);
         assert_eq!(payload.identifier, "investigator one");
+        assert_eq!(payload.character_id, None);
     }
 }

@@ -6,6 +6,7 @@ import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { usePortrayableCharacters } from '../../hooks/usePortrayableCharacters';
 import { autoUpdate, flip, FloatingPortal, offset, shift, useFloating } from '@floating-ui/react';
 import { useFloatingSetters } from '@boluo/ui/hooks/useFloatingSetters';
+import { getShortestCharacterIdentifier } from '../../characters/directory';
 
 interface Props {
   spaceId: string;
@@ -57,7 +58,10 @@ export const AsCharacterPopover: FC<Props> = ({ spaceId, anchorRef }) => {
             onClick={() =>
               dispatch({
                 type: 'setAsTargetText',
-                payload: { text: `@${character.key}`, setInGame: true },
+                payload: {
+                  text: `@${getShortestCharacterIdentifier(character)}`,
+                  setInGame: true,
+                },
               })
             }
             className="text-xs"

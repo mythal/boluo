@@ -108,7 +108,7 @@ export const Compose = ({ member, channelAtoms }: Props) => {
         >
           {fileButton}
           {inGameSwitchButton}
-          <div ref={textAreaAnchorRef} className="min-w-0 flex-1">
+          <div ref={textAreaAnchorRef} className="flex min-w-0 flex-1">
             <DeferredComposeTextArea
               parsedAtom={parsedAtom}
               currentUser={member.user}

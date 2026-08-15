@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import type { AccessPolicy } from '@boluo/api';
-import { canEditCharacter } from './character-permissions';
+import { canEditCharacter, isCharacterAccessSelectionInvalid } from './character-permissions';
 
 const canEdit = (
   accessPolicy: AccessPolicy,
@@ -28,4 +28,27 @@ test('matches server character edit access rules', () => {
   assert.equal(canEdit('GAME_MASTER', { isGameMaster: true }), true);
   assert.equal(canEdit('PUBLIC', { canManageSpace: true, isResourceMember: false }), true);
   assert.equal(canEdit('COLLABORATIVE', { userId: null }), false);
+});
+
+test('target access policy may be stricter than current edit access', () => {
+  const access = {
+    ownerId: 'owner',
+    userId: 'member',
+    isResourceMember: true,
+    isGameMaster: false,
+    canManageSpace: false,
+  };
+
+  assert.equal(canEditCharacter({ ...access, accessPolicy: 'COLLABORATIVE' }), true);
+  assert.equal(canEditCharacter({ ...access, accessPolicy: 'PUBLIC' }), false);
+  assert.equal(canEditCharacter({ ...access, accessPolicy: 'PERSONAL' }), false);
+  assert.equal(canEditCharacter({ ...access, accessPolicy: 'SECRET' }), false);
+  assert.equal(canEditCharacter({ ...access, accessPolicy: 'GAME_MASTER' }), false);
+});
+
+test('only rejects an access selection after authorization data loads successfully', () => {
+  assert.equal(isCharacterAccessSelectionInvalid(true, false, false), false);
+  assert.equal(isCharacterAccessSelectionInvalid(false, true, false), false);
+  assert.equal(isCharacterAccessSelectionInvalid(false, false, false), true);
+  assert.equal(isCharacterAccessSelectionInvalid(false, false, true), false);
 });

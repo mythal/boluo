@@ -327,7 +327,7 @@ const handleToggleAction = (
 
 const handleSent = (
   state: ComposeState,
-  { payload: { edit = false } }: ComposeAction<'sent'>,
+  { payload: { edit = false, collapseCharacterReference = false } }: ComposeAction<'sent'>,
 ): ComposeState => {
   if (edit && state.backup) {
     return state.backup;
@@ -337,11 +337,11 @@ const handleSent = (
   if (modifiers.as) {
     const target = modifiers.as.target;
     const text =
-      target?.type === 'CharacterReference'
+      target?.type === 'CharacterReference' && !collapseCharacterReference
         ? `@${target.identifier}`
-        : target?.type === 'DefaultCharacter'
-          ? '@'
-          : target?.name.trim();
+        : target?.type === 'TemporaryName'
+          ? target.name.trim()
+          : undefined;
     source += text ? `.as ${text}; ` : '.as ';
   } else if (modifiers.inGame) {
     source += modifiers.inGame.inGame ? '.in ' : '.out ';

@@ -1,6 +1,5 @@
-import type { Character } from '@boluo/api';
-import { post, put } from '@boluo/api-browser';
 import { computeColors, parseGameColor } from '@boluo/color';
+import { autoUpdate, flip, offset, shift, useFloating } from '@floating-ui/react';
 import { useQueryCharacter } from '@boluo/hooks/useQueryCharacter';
 import { useQueryCurrentUser } from '@boluo/hooks/useQueryCurrentUser';
 import { useQueryEntriesByComponent } from '@boluo/hooks/useQueryEntriesByComponent';
@@ -9,23 +8,28 @@ import ChevronLeft from '@boluo/icons/ChevronLeft';
 import Edit from '@boluo/icons/Edit';
 import HatGlasses from '@boluo/icons/HatGlasses';
 import { classifyLightOrDark } from '@boluo/theme';
+import { Badge } from '@boluo/ui/Badge';
 import { Failed } from '@boluo/ui/Failed';
 import { Loading } from '@boluo/ui/Loading';
 import { PaneHeaderButton } from '@boluo/ui/PaneHeaderButton';
-import { unwrap } from '@boluo/utils/result';
+import { TooltipBox } from '@boluo/ui/TooltipBox';
+import { useCopyText } from '@boluo/ui/hooks/useCopyText';
+import { useFloatingSetters } from '@boluo/ui/hooks/useFloatingSetters';
 import { useState, type FC } from 'react';
-import { FormattedMessage } from 'react-intl';
-import { useSWRConfig } from 'swr';
+import { FormattedMessage, useIntl } from 'react-intl';
 import { useResolvedTheme } from '../../hooks/useResolvedTheme';
 import { getNameStrokeStyle } from '@boluo/ui/chat/NameBox';
 import { PaneBox } from '../PaneBox';
 import { PaneHeaderBox } from '../PaneHeaderBox';
-import { CharacterEditForm, type CharacterEditDraft } from './CharacterEditForm';
+import { CharacterEditForm } from './CharacterEditForm';
 import { CharacterEntryList } from './CharacterEntryList';
 import { CharacterPortraitEditor } from './CharacterPortraitEditor';
 import { CharacterPortraitGallery } from './CharacterPortraitGallery';
 import { CharacterUsageList } from './CharacterUsageList';
 import { useCanEditCharacter } from './character-permissions';
+import { CharacterAccessSummary } from './CharacterAccessFields';
+import { CharacterArchiveButton } from './CharacterArchiveButton';
+import { useCharacterMutations } from './useCharacterMutations';
 import { COUNTER_COMPONENT_TYPE } from './entry-components';
 import { PORTRAIT_COMPONENT_TYPE } from './portrait';
 
@@ -39,21 +43,40 @@ type CharacterPaneState =
   | { type: 'EDIT_CHARACTER' }
   | { type: 'EDIT_PORTRAITS'; returnTo: 'VIEW' | 'EDIT_CHARACTER' };
 
-const errorMessage = (cause: unknown): string => {
-  if (cause instanceof Error) return cause.message;
-  if (typeof cause === 'object' && cause != null) {
-    if ('message' in cause && typeof cause.message === 'string') return cause.message;
-    if ('code' in cause) return String(cause.code);
-  }
-  return 'Failed to update character';
-};
-
 const ArchivedStatus: FC = () => (
-  <div className="text-text-muted flex items-center gap-1 text-sm font-medium">
+  <div className="text-text-muted flex items-center gap-1 text-xs font-medium">
     <Archive className="h-4 w-4" />
     <FormattedMessage defaultMessage="Archived" />
   </div>
 );
+
+const CharacterAliasBadge: FC<{ alias: string }> = ({ alias }) => {
+  const intl = useIntl();
+  const { copied: showCopied, copy } = useCopyText();
+  const { refs, floatingStyles } = useFloating({
+    open: showCopied,
+    placement: 'top',
+    middleware: [offset(6), flip(), shift({ padding: 8 })],
+    whileElementsMounted: autoUpdate,
+  });
+  const { setReference, setFloating } = useFloatingSetters(refs);
+
+  return (
+    <>
+      <Badge
+        ref={setReference}
+        title={intl.formatMessage({ defaultMessage: 'Click to copy' })}
+        aria-label={intl.formatMessage({ defaultMessage: 'Copy alias {alias}' }, { alias })}
+        onClick={() => void copy(alias)}
+      >
+        {alias}
+      </Badge>
+      <TooltipBox defaultStyle show={showCopied} ref={setFloating} style={floatingStyles}>
+        <FormattedMessage defaultMessage="Copied" />
+      </TooltipBox>
+    </>
+  );
+};
 
 const PaneCharacter: FC<Props> = ({ spaceId, characterId }) => {
   const {
@@ -72,8 +95,8 @@ const PaneCharacter: FC<Props> = ({ spaceId, characterId }) => {
     isLoading: portraitEntriesLoading,
   } = useQueryEntriesByComponent(spaceId, character?.scopeId, PORTRAIT_COMPONENT_TYPE);
   const { data: currentUser } = useQueryCurrentUser();
-  const mayEditCharacter = useCanEditCharacter(character);
-  const { mutate } = useSWRConfig();
+  const canEditCharacter = useCanEditCharacter(character);
+  const { editCharacter, setArchived } = useCharacterMutations(character);
   const resolvedTheme = useResolvedTheme();
   const lightOrDark = classifyLightOrDark(resolvedTheme);
   const [paneState, setPaneState] = useState<CharacterPaneState>({ type: 'VIEW' });
@@ -109,52 +132,6 @@ const PaneCharacter: FC<Props> = ({ spaceId, characterId }) => {
       : computeColors(character.id, parseGameColor(character.color))[lightOrDark];
   const openPortraitEditor = (returnTo: 'VIEW' | 'EDIT_CHARACTER') =>
     setPaneState({ type: 'EDIT_PORTRAITS', returnTo });
-  const updateCharacterCaches = async (updatedCharacter: Character) => {
-    await mutate(['/characters/query', spaceId, character.id], updatedCharacter, false);
-    await Promise.all([
-      mutate(['/characters/by_space', spaceId, false, false]),
-      mutate(['/characters/by_space', spaceId, false, true]),
-      mutate(['/characters/by_space', spaceId, true, false]),
-      mutate(['/characters/by_space', spaceId, true, true]),
-      mutate(['/characters/usages', spaceId, character.id]),
-    ]);
-  };
-
-  const saveCharacter = async (draft: CharacterEditDraft) => {
-    try {
-      const updated = await put('/characters/edit', null, {
-        spaceId,
-        characterId: character.id,
-        expectedVersion: draft.expectedVersion,
-        expectedScopeVersion: draft.expectedScopeVersion,
-        name: draft.name,
-        key: character.key,
-        aliases: character.aliases,
-        description: draft.description,
-        color: draft.color,
-        accessPolicy: character.accessPolicy,
-        accessChannelId: character.accessChannelId,
-        tags: character.tags,
-      }).then(unwrap);
-      await updateCharacterCaches(updated).catch(() => undefined);
-    } catch (cause) {
-      throw new Error(errorMessage(cause), { cause });
-    }
-  };
-
-  const setCharacterArchived = async (archived: boolean) => {
-    try {
-      const updated = await post(archived ? '/characters/archive' : '/characters/restore', null, {
-        spaceId,
-        characterId: character.id,
-        expectedVersion: character.version,
-      }).then(unwrap);
-      await updateCharacterCaches(updated).catch(() => undefined);
-    } catch (cause) {
-      throw new Error(errorMessage(cause), { cause });
-    }
-  };
-
   const operators =
     paneState.type === 'EDIT_PORTRAITS' ? (
       <PaneHeaderButton onClick={() => setPaneState({ type: paneState.returnTo })} title="Back">
@@ -163,21 +140,30 @@ const PaneCharacter: FC<Props> = ({ spaceId, characterId }) => {
           <FormattedMessage defaultMessage="Back" />
         </span>
       </PaneHeaderButton>
-    ) : mayEditCharacter ? (
-      <PaneHeaderButton
-        active={paneState.type === 'EDIT_CHARACTER'}
-        onClick={() =>
-          setPaneState((current) => ({
-            type: current.type === 'VIEW' ? 'EDIT_CHARACTER' : 'VIEW',
-          }))
-        }
-        title="Edit character"
-      >
-        <Edit />
-        <span className="hidden text-xs @md:inline">
-          <FormattedMessage defaultMessage="Edit" />
-        </span>
-      </PaneHeaderButton>
+    ) : canEditCharacter ? (
+      <>
+        <CharacterArchiveButton
+          character={character}
+          onSetArchived={async (archived) => {
+            await setArchived(archived);
+            setPaneState({ type: 'VIEW' });
+          }}
+        />
+        <PaneHeaderButton
+          active={paneState.type === 'EDIT_CHARACTER'}
+          onClick={() =>
+            setPaneState((current) => ({
+              type: current.type === 'VIEW' ? 'EDIT_CHARACTER' : 'VIEW',
+            }))
+          }
+          title="Edit character"
+        >
+          <Edit />
+          <span className="hidden text-xs @md:inline">
+            <FormattedMessage defaultMessage="Edit" />
+          </span>
+        </PaneHeaderButton>
+      </>
     ) : null;
 
   return (
@@ -227,8 +213,7 @@ const PaneCharacter: FC<Props> = ({ spaceId, characterId }) => {
                   fallbackColor={currentUser?.defaultColor}
                   fallbackColorSeed={currentUser?.id}
                   onCancel={() => setPaneState({ type: 'VIEW' })}
-                  onSave={saveCharacter}
-                  onSetArchived={setCharacterArchived}
+                  onSave={editCharacter}
                 />
               </div>
             )}
@@ -241,10 +226,17 @@ const PaneCharacter: FC<Props> = ({ spaceId, characterId }) => {
               portraitEntries={portraitEntries}
               isLoading={portraitEntriesLoading}
               failed={portraitEntriesError != null}
-              onEdit={mayEditCharacter ? () => openPortraitEditor('VIEW') : undefined}
+              onEdit={canEditCharacter ? () => openPortraitEditor('VIEW') : undefined}
             />
             <div className="min-w-0 space-y-3">
-              {character.archivedAt != null && <ArchivedStatus />}
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                {character.archivedAt != null && <ArchivedStatus />}
+                <CharacterAccessSummary
+                  spaceId={spaceId}
+                  accessPolicy={character.accessPolicy}
+                  accessChannelId={character.accessChannelId}
+                />
+              </div>
               <h2
                 className="stroke-name text-xl font-bold"
                 style={
@@ -260,6 +252,16 @@ const PaneCharacter: FC<Props> = ({ spaceId, characterId }) => {
               >
                 {character.name}
               </h2>
+              {character.aliases.length > 0 && (
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="text-text-secondary mr-1 text-sm">
+                    <FormattedMessage defaultMessage="Aliases" />
+                  </span>
+                  {character.aliases.map((alias) => (
+                    <CharacterAliasBadge key={alias} alias={alias} />
+                  ))}
+                </div>
+              )}
               {character.description !== '' ? (
                 <div className="text-text-secondary whitespace-pre-line">
                   {character.description}

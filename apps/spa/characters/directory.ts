@@ -8,6 +8,21 @@ export interface CharacterDirectory {
 export const normalizeCharacterIdentifier = (value: string): string =>
   value.trim().normalize('NFC').toLowerCase();
 
+export const getShortestCharacterIdentifier = (
+  character: Pick<Character, 'key' | 'aliases'>,
+): string => {
+  let shortest = character.key;
+  let shortestLength = shortest.length;
+  for (const alias of character.aliases) {
+    const length = alias.length;
+    if (length < shortestLength) {
+      shortest = alias;
+      shortestLength = length;
+    }
+  }
+  return shortest;
+};
+
 export const createCharacterDirectory = (characters: readonly Character[]): CharacterDirectory => {
   const byIdentifier = new Map<string, Character>();
   const bySuggestionText = new Map<string, Character[]>();

@@ -23,6 +23,7 @@ export const NameEditInput: FC<{
   const referencedCharacter =
     asTarget?.type === 'CharacterReference' ? resolve(asTarget.identifier) : null;
   const hasResolvedCharacter = referencedCharacter?.status === 'Found';
+  const resolvedCharacter = hasResolvedCharacter ? referencedCharacter.character : null;
   const usesDefaultCharacter = asTarget?.type === 'DefaultCharacter';
   const displayValue = hasResolvedCharacter || usesDefaultCharacter ? '' : targetText;
   const placeholder = hasResolvedCharacter ? referencedCharacter.character.name : defaultName;
@@ -36,6 +37,8 @@ export const NameEditInput: FC<{
   const displaysTemporaryName =
     hasTemporaryName ||
     (characterId == null && defaultName.trim() !== '' && !hasCharacterReference);
+  const statusCharacterName =
+    resolvedCharacter?.name ?? (characterId != null ? defaultName : undefined);
   const dispatch = useSetAtom(composeAtom);
   if (previousDisplayValue !== displayValue) {
     setPreviousDisplayValue(displayValue);
@@ -47,10 +50,11 @@ export const NameEditInput: FC<{
     dispatch({ type: 'setAsTargetText', payload: { text: next, setInGame } });
   };
   const handleSetDefault = async () => {
-    const name = asTarget?.type === 'TemporaryName' ? asTarget.name.trim() : '';
+    const name =
+      asTarget?.type === 'TemporaryName' ? asTarget.name.trim() : (resolvedCharacter?.name ?? '');
     if (name === '') return;
     try {
-      await setDefault({ characterName: name, characterId: null });
+      await setDefault({ characterName: name, characterId: resolvedCharacter?.id ?? null });
       await mutate(['/channels/members', channelId]);
       dispatch({ type: 'setAsTargetText', payload: { text: '', setInGame } });
     } catch {
@@ -70,20 +74,31 @@ export const NameEditInput: FC<{
         />
       </div>
       <div className="text-text-muted flex h-7 items-center justify-end gap-1 pt-1 pb-2 text-xs">
-        <span>
+        <span className="min-w-0 truncate text-right" title={statusCharacterName}>
           {displaysTemporaryName ? (
             <FormattedMessage defaultMessage="As this name" />
-          ) : characterId != null || hasCharacterReference ? (
+          ) : resolvedCharacter != null ? (
+            <FormattedMessage
+              defaultMessage="As character “{name}”"
+              values={{ name: resolvedCharacter.name }}
+            />
+          ) : characterId != null ? (
+            <FormattedMessage
+              defaultMessage="As character “{name}”"
+              values={{ name: defaultName }}
+            />
+          ) : hasCharacterReference ? (
             <FormattedMessage defaultMessage="As character" />
           ) : (
             <FormattedMessage defaultMessage="Not set" />
           )}
         </span>
-        {hasTemporaryName && (
+        {(hasTemporaryName ||
+          (resolvedCharacter != null && resolvedCharacter.id !== characterId)) && (
           <ButtonInline
             disabled={isMutating}
             onClick={() => void handleSetDefault()}
-            className="text-xs"
+            className="shrink-0 text-xs"
           >
             <FormattedMessage defaultMessage="Set Default" />
           </ButtonInline>

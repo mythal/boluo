@@ -38,6 +38,9 @@
   "0Azlrb": {
     "message": "管理"
   },
+  "0D1tiC": {
+    "message": "角色“@{identifier}”不可用或无法扮演。"
+  },
   "0EJGBZ": {
     "message": "你确认要踢走 {nickname} ({username}) 吗？"
   },
@@ -74,6 +77,12 @@
   "1iEPTM": {
     "message": "通用"
   },
+  "2J8pRn": {
+    "message": "角色名称不能超过 {maxLength} 个字符。"
+  },
+  "2S+c8D": {
+    "message": "命令使用的主要标识符。"
+  },
   "2mSiu0": {
     "message": "草稿记录 ({count})"
   },
@@ -107,6 +116,9 @@
   "3dRjlT": {
     "message": "这里是新版本的菠萝，仍在活跃开发中。如果你更想回到旧版，请访问"
   },
+  "3hzR9A": {
+    "message": "协作"
+  },
   "3kOdlB": {
     "message": "未设定话题"
   },
@@ -115,6 +127,9 @@
   },
   "47FYwb": {
     "message": "取消"
+  },
+  "4DU2+m": {
+    "message": "选择角色肖像"
   },
   "4FbTT8": {
     "message": "是主持人"
@@ -287,6 +302,9 @@
   "AtML1q": {
     "message": "主持人"
   },
+  "AxUJOS": {
+    "message": "访问范围"
+  },
   "AyGauy": {
     "message": "登录"
   },
@@ -298,6 +316,9 @@
   },
   "BEbOqj": {
     "message": "糟糕！"
+  },
+  "BHk/Of": {
+    "message": "对所有有访问权限的人可见。仅所有者、游戏主持人和位面管理员可以编辑。"
   },
   "BTp/5U": {
     "message": "暂无角色。"
@@ -344,6 +365,9 @@
   "CuNepY": {
     "message": "创建频道"
   },
+  "D2E+9y": {
+    "message": "正在加载角色……"
+  },
   "D3idYv": {
     "message": "设置"
   },
@@ -352,6 +376,9 @@
   },
   "DBP+Od": {
     "message": "Echo"
+  },
+  "EQjIkI": {
+    "message": "无法加载访问选项。请重试请求，或者在不更改权限的情况下保存。"
   },
   "EWw/tK": {
     "message": "应用"
@@ -394,6 +421,9 @@
   },
   "GbWVAh": {
     "message": "是的，踢走"
+  },
+  "GzZ3jc": {
+    "message": "仅游戏主持人可以查看、编辑和扮演。"
   },
   "H2WXs6": {
     "message": "摧毁位面"
@@ -458,6 +488,9 @@
   "IvjoDS": {
     "message": "已连接"
   },
+  "J6vpgG": {
+    "message": "添加别名"
+  },
   "J78glR": {
     "message": "请登录以继续。"
   },
@@ -485,6 +518,9 @@
   "Jxxkva": {
     "message": "可以在设置中更改默认消息颜色。"
   },
+  "JzVsk+": {
+    "message": "更新角色失败"
+  },
   "K3r6DQ": {
     "message": "删除"
   },
@@ -493,6 +529,9 @@
   },
   "K8uxGU": {
     "message": "密码重置邮件已发送。"
+  },
+  "KFfRH2": {
+    "message": "整个位面"
   },
   "KN7zKn": {
     "message": "错误"
@@ -520,6 +559,9 @@
   },
   "L01rMU": {
     "message": "成员默认将作为本人发言。"
+  },
+  "LNrIhY": {
+    "message": "加载角色信息失败。"
   },
   "LQcfcb": {
     "message": "邮箱验证失败"
@@ -572,6 +614,9 @@
   "NA+vcf": {
     "message": "请验证您的邮箱以登录论坛。"
   },
+  "NDx+B0": {
+    "message": "个人"
+  },
   "NNQzoi": {
     "message": "正在搜索…"
   },
@@ -607,6 +652,9 @@
   },
   "OtUXSR": {
     "message": "请输入信息"
+  },
+  "Oz5LRn": {
+    "message": "权限"
   },
   "P57vjw": {
     "message": "频道名称最多不能超过 32 字符。"
@@ -665,6 +713,9 @@
   "QOvY19": {
     "message": "悄悄话给主持人以及"
   },
+  "QQL5LE": {
+    "message": "对所有有访问权限的人可见。范围内的所有成员都可以编辑和扮演。"
+  },
   "QdsAIR": {
     "message": "「{spaceName}」位面成员"
   },
@@ -716,8 +767,14 @@
   "SVwJTM": {
     "message": "导出"
   },
+  "SYLStO": {
+    "message": "描述不能超过 {maxLength} 个字符。"
+  },
   "SaSNIH": {
     "message": "消息显示设置"
+  },
+  "Sni3KR": {
+    "message": "正在检查标识符是否可用……"
   },
   "SpLs8U": {
     "message": "您必须先加入 {space} 才能加入频道。"
@@ -758,6 +815,9 @@
   "U7Z0l+": {
     "message": "请参考<link>源代码</link>，并且欢迎贡献！"
   },
+  "UGMxlG": {
+    "message": "仅所有者可以查看、编辑和扮演。"
+  },
   "UKhyJG": {
     "message": "文件大小不能超过 {sizeLimit}M。"
   },
@@ -773,11 +833,20 @@
   "Ujs8Kg": {
     "message": "来自服务器的消息"
   },
+  "UjxD+u": {
+    "message": "默认角色"
+  },
   "V/JHlm": {
     "message": "忘记密码?"
   },
+  "V512b5": {
+    "message": "此角色已在其他位置更新。请关闭并重新打开编辑器以加载最新版本。"
+  },
   "VA/Z1S": {
     "message": "隐藏"
+  },
+  "VKjzDV": {
+    "message": "以角色“{name}”身份"
   },
   "VeLEVu": {
     "message": "角色名："
@@ -802,6 +871,9 @@
   },
   "WJSlkx": {
     "message": "来自「{name}」的新消息"
+  },
+  "WZlcDP": {
+    "message": "角色键"
   },
   "Wa3nyB": {
     "message": "「{channelName}」频道设置"
@@ -932,6 +1004,9 @@
   "cLIHUg": {
     "message": "困难成功"
   },
+  "cXUE4o": {
+    "message": "基本信息"
+  },
   "ccU6l/": {
     "message": "在线"
   },
@@ -952,6 +1027,9 @@
   },
   "cyeEx0": {
     "message": "午夜蓝"
+  },
+  "dGsoHG": {
+    "message": "游戏主持人"
   },
   "dMEGZV": {
     "message": "拆分窗格"
@@ -995,6 +1073,9 @@
   "eVYdrD": {
     "message": "过去1天"
   },
+  "eWFuvS": {
+    "message": "无法检查标识符是否可用。请重试。"
+  },
   "ea+WlP": {
     "message": "加入私人频道需要邀请"
   },
@@ -1003,6 +1084,9 @@
   },
   "eqOw+7": {
     "message": "开发模式"
+  },
+  "etAoRt": {
+    "message": "访问与权限"
   },
   "f00p/7": {
     "message": "上传失败"
@@ -1015,6 +1099,9 @@
   },
   "f81+gv": {
     "message": "尝试刷新页面。如果问题仍然存在，请清除浏览器缓存或试试换个浏览器。"
+  },
+  "fN3hgg": {
+    "message": "必须填写角色名称。"
   },
   "fNCCY7": {
     "message": "基本"
@@ -1037,6 +1124,9 @@
   "fxvXUy": {
     "message": "揭开"
   },
+  "g4nsRX": {
+    "message": "您不能使用当前权限和访问范围编辑角色。"
+  },
   "g7UZYd": {
     "message": "归档此角色会将其从当前正在使用的所有频道中解绑。确定要归档吗？"
   },
@@ -1045,6 +1135,9 @@
   },
   "gG6Trq": {
     "message": "拖放以添加文件"
+  },
+  "gIq7HF": {
+    "message": "此角色标识符已被占用。"
   },
   "gduNan": {
     "message": "在亮色模式"
@@ -1073,6 +1166,9 @@
   "hh0xW7": {
     "message": "频道名"
   },
+  "hjKHMa": {
+    "message": "正在加载角色信息……"
+  },
   "hmZ3Bz": {
     "message": "媒体"
   },
@@ -1085,6 +1181,9 @@
   "hw9PdM": {
     "message": "继承你的默认颜色。"
   },
+  "i6h/mR": {
+    "message": "频道：{channel}"
+  },
   "iATkrL": {
     "message": "窗格崩溃了"
   },
@@ -1093,6 +1192,9 @@
   },
   "iHN12u": {
     "message": "管理员"
+  },
+  "iHUUFA": {
+    "message": "用于指代此角色的标识符。"
   },
   "iLUQIP": {
     "message": "邀请链接"
@@ -1108,6 +1210,9 @@
   },
   "iySl5e": {
     "message": "你已经加入了该频道。"
+  },
+  "j3v6aj": {
+    "message": "频道范围会使用该频道的成员关系和游戏主持人身份。"
   },
   "j8d+YP": {
     "message": "分数：{score}"
@@ -1178,6 +1283,9 @@
   "lKv8ex": {
     "message": "默认"
   },
+  "lOmCRF": {
+    "message": "仅限某个频道"
+  },
   "lo1ANX": {
     "message": "无法查询角色状态"
   },
@@ -1244,6 +1352,9 @@
   "p5LNtB": {
     "message": "未设置"
   },
+  "pBBbOP": {
+    "message": "有一个匹配的角色可用："
+  },
   "pBQ5bd": {
     "message": "编辑中"
   },
@@ -1274,6 +1385,9 @@
   "qQ4pEa": {
     "message": "对 {targets} 悄悄话"
   },
+  "qXRz37": {
+    "message": "使用第 {number} 张肖像"
+  },
   "qbB8pg": {
     "message": "位面描述"
   },
@@ -1291,6 +1405,9 @@
   },
   "qp37dR": {
     "message": "图片上传失败。"
+  },
+  "qun7iY": {
+    "message": "关闭编辑器"
   },
   "qvc9uM": {
     "message": "此操作不可撤销。"
@@ -1337,8 +1454,14 @@
   "s6Rg3u": {
     "message": "哎呀！出了错，但不是你这边的问题"
   },
+  "sAAAI/": {
+    "message": "复制别名 {alias}"
+  },
   "sNa4oH": {
     "message": "关闭窗格"
+  },
+  "sfFk7R": {
+    "message": "扮演者"
   },
   "sjzLbX": {
     "message": "接受"
@@ -1372,6 +1495,9 @@
   },
   "tiLDlf": {
     "message": "豆沙绿"
+  },
+  "u0Jaxy": {
+    "message": "仅所有者和游戏主持人可以查看、编辑和扮演。"
   },
   "uMhpKe": {
     "message": "颜色"
@@ -1421,6 +1547,9 @@
   "wEQDC6": {
     "message": "编辑"
   },
+  "wLHlL9": {
+    "message": "别名 {number}"
+  },
   "wSL4YI": {
     "message": "悄悄话时始终不会广播。"
   },
@@ -1435,6 +1564,9 @@
   },
   "x82IOl": {
     "message": "不广播"
+  },
+  "xHdSK9": {
+    "message": "别名"
   },
   "xMnH8F": {
     "message": "加载更多"
@@ -1487,11 +1619,17 @@
   "zNnjeF": {
     "message": "确定要删除「{spaceName}」吗？"
   },
+  "zPTBof": {
+    "message": "移除别名 {number}"
+  },
   "zQLEfz": {
     "message": "格式"
   },
   "zQvVDJ": {
     "message": "所有"
+  },
+  "zlIkXt": {
+    "message": "角色仍在加载中。请重试。"
   },
   "zqHxkG": {
     "message": "搜索消息失败"

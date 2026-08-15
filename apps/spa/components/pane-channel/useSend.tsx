@@ -128,7 +128,14 @@ export const useSend = () => {
       });
       return;
     }
-    composeDispatch({ type: 'sent', payload: { edit: composeState.edit != null } });
+    const collapseCharacterReference =
+      parsedForSend.asTarget?.type === 'CharacterReference' &&
+      myMember.channel.characterId != null &&
+      speaker.characterId === myMember.channel.characterId;
+    composeDispatch({
+      type: 'sent',
+      payload: { edit: composeState.edit != null, collapseCharacterReference },
+    });
     const { inGame, name, characterId, color: speakerColor } = speaker;
     let payload:
       { type: 'NEW'; newMessage: NewMessage } | { type: 'EDIT'; editMessage: EditMessage };

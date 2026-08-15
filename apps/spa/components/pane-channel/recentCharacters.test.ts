@@ -74,3 +74,29 @@ test('falls back to server order when there are no used or owned characters', ()
     ['other-newer'],
   );
 });
+
+test('includes the required character without exceeding the recent limit', () => {
+  const characters = [
+    { id: 'recent', ownerId: 'me' },
+    { id: 'default', ownerId: 'someone-else' },
+    { id: 'owned', ownerId: 'me' },
+  ];
+
+  assert.deepEqual(
+    selectRecentCharacters(characters, 'me', ['recent'], 2, 'default').map(({ id }) => id),
+    ['recent', 'default'],
+  );
+});
+
+test('preserves the server-order fallback when the required character is present', () => {
+  const characters = [
+    { id: 'other-newer', ownerId: 'someone-else' },
+    { id: 'default', ownerId: 'someone-else' },
+    { id: 'other-older', ownerId: 'someone-else' },
+  ];
+
+  assert.deepEqual(
+    selectRecentCharacters(characters, 'me', [], 3, 'default').map(({ id }) => id),
+    ['other-newer', 'default', 'other-older'],
+  );
+});

@@ -150,6 +150,7 @@ export type CheckChannelName = {
 export type CheckCharacterIdentifier = {
   spaceId: string;
   identifier: string;
+  characterId: string | null;
 };
 
 export type CheckEmailExists = {

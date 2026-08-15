@@ -1,6 +1,7 @@
 import type { Character } from '@boluo/api';
 import { post, put } from '@boluo/api-browser';
 import { computeColors, parseGameColor } from '@boluo/color';
+import { autoUpdate, flip, offset, shift, useFloating } from '@floating-ui/react';
 import { useQueryCharacter } from '@boluo/hooks/useQueryCharacter';
 import { useQueryCurrentUser } from '@boluo/hooks/useQueryCurrentUser';
 import { useQueryEntriesByComponent } from '@boluo/hooks/useQueryEntriesByComponent';
@@ -9,12 +10,16 @@ import ChevronLeft from '@boluo/icons/ChevronLeft';
 import Edit from '@boluo/icons/Edit';
 import HatGlasses from '@boluo/icons/HatGlasses';
 import { classifyLightOrDark } from '@boluo/theme';
+import { Badge } from '@boluo/ui/Badge';
 import { Failed } from '@boluo/ui/Failed';
 import { Loading } from '@boluo/ui/Loading';
 import { PaneHeaderButton } from '@boluo/ui/PaneHeaderButton';
+import { TooltipBox } from '@boluo/ui/TooltipBox';
+import { useCopyText } from '@boluo/ui/hooks/useCopyText';
+import { useFloatingSetters } from '@boluo/ui/hooks/useFloatingSetters';
 import { unwrap } from '@boluo/utils/result';
 import { useState, type FC } from 'react';
-import { FormattedMessage } from 'react-intl';
+import { FormattedMessage, useIntl } from 'react-intl';
 import { useSWRConfig } from 'swr';
 import { useResolvedTheme } from '../../hooks/useResolvedTheme';
 import { getNameStrokeStyle } from '@boluo/ui/chat/NameBox';
@@ -54,6 +59,34 @@ const ArchivedStatus: FC = () => (
     <FormattedMessage defaultMessage="Archived" />
   </div>
 );
+
+const CharacterAliasBadge: FC<{ alias: string }> = ({ alias }) => {
+  const intl = useIntl();
+  const { copied: showCopied, copy } = useCopyText();
+  const { refs, floatingStyles } = useFloating({
+    open: showCopied,
+    placement: 'top',
+    middleware: [offset(6), flip(), shift({ padding: 8 })],
+    whileElementsMounted: autoUpdate,
+  });
+  const { setReference, setFloating } = useFloatingSetters(refs);
+
+  return (
+    <>
+      <Badge
+        ref={setReference}
+        title={intl.formatMessage({ defaultMessage: 'Click to copy' })}
+        aria-label={intl.formatMessage({ defaultMessage: 'Copy alias {alias}' }, { alias })}
+        onClick={() => void copy(alias)}
+      >
+        {alias}
+      </Badge>
+      <TooltipBox defaultStyle show={showCopied} ref={setFloating} style={floatingStyles}>
+        <FormattedMessage defaultMessage="Copied" />
+      </TooltipBox>
+    </>
+  );
+};
 
 const PaneCharacter: FC<Props> = ({ spaceId, characterId }) => {
   const {
@@ -129,7 +162,7 @@ const PaneCharacter: FC<Props> = ({ spaceId, characterId }) => {
         expectedScopeVersion: draft.expectedScopeVersion,
         name: draft.name,
         key: character.key,
-        aliases: character.aliases,
+        aliases: draft.aliases,
         description: draft.description,
         color: draft.color,
         accessPolicy: character.accessPolicy,
@@ -260,6 +293,16 @@ const PaneCharacter: FC<Props> = ({ spaceId, characterId }) => {
               >
                 {character.name}
               </h2>
+              {character.aliases.length > 0 && (
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="text-text-secondary mr-1 text-sm">
+                    <FormattedMessage defaultMessage="Aliases" />
+                  </span>
+                  {character.aliases.map((alias) => (
+                    <CharacterAliasBadge key={alias} alias={alias} />
+                  ))}
+                </div>
+              )}
               {character.description !== '' ? (
                 <div className="text-text-secondary whitespace-pre-line">
                   {character.description}

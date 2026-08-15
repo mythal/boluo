@@ -38,6 +38,9 @@
   "0Azlrb": {
     "message": "Manage"
   },
+  "0D1tiC": {
+    "message": "Character “@{identifier}” is unavailable or cannot be portrayed."
+  },
   "0EJGBZ": {
     "message": "Are you sure you want to kick {nickname} ({username})?"
   },
@@ -115,6 +118,9 @@
   },
   "47FYwb": {
     "message": "Cancel"
+  },
+  "4DU2+m": {
+    "message": "Choose character portrait"
   },
   "4FbTT8": {
     "message": "Is Master"
@@ -341,6 +347,9 @@
   "CuNepY": {
     "message": "Create Channel"
   },
+  "D2E+9y": {
+    "message": "Loading character…"
+  },
   "D3idYv": {
     "message": "Settings"
   },
@@ -455,6 +464,9 @@
   "IvjoDS": {
     "message": "Connected"
   },
+  "J6vpgG": {
+    "message": "Add alias"
+  },
   "J78glR": {
     "message": "Please log in to continue."
   },
@@ -517,6 +529,9 @@
   },
   "L01rMU": {
     "message": "By default member will speak on their own behalf."
+  },
+  "LNrIhY": {
+    "message": "Failed to load character information."
   },
   "LQcfcb": {
     "message": "Email verification failed"
@@ -1070,6 +1085,9 @@
   "hh0xW7": {
     "message": "Channel Name"
   },
+  "hjKHMa": {
+    "message": "Loading character information..."
+  },
   "hmZ3Bz": {
     "message": "Media"
   },
@@ -1090,6 +1108,9 @@
   },
   "iHN12u": {
     "message": "Admin"
+  },
+  "iHUUFA": {
+    "message": "Identifiers used to refer to this character."
   },
   "iLUQIP": {
     "message": "Invite Link"
@@ -1241,6 +1262,9 @@
   "p5LNtB": {
     "message": "Not set"
   },
+  "pBBbOP": {
+    "message": "A matching character is available:"
+  },
   "pBQ5bd": {
     "message": "Editing"
   },
@@ -1270,6 +1294,9 @@
   },
   "qQ4pEa": {
     "message": "Whisper to {targets}"
+  },
+  "qXRz37": {
+    "message": "Use portrait {number}"
   },
   "qbB8pg": {
     "message": "Space Description"
@@ -1334,8 +1361,14 @@
   "s6Rg3u": {
     "message": "Oops! Something went wrong, but it wasn't your fault"
   },
+  "sAAAI/": {
+    "message": "Copy alias {alias}"
+  },
   "sNa4oH": {
     "message": "Close Pane"
+  },
+  "sfFk7R": {
+    "message": "Played by"
   },
   "sjzLbX": {
     "message": "Accept"
@@ -1418,6 +1451,9 @@
   "wEQDC6": {
     "message": "Edit"
   },
+  "wLHlL9": {
+    "message": "Alias {number}"
+  },
   "wSL4YI": {
     "message": "Will not broadcast when whispering."
   },
@@ -1432,6 +1468,9 @@
   },
   "x82IOl": {
     "message": "Mute"
+  },
+  "xHdSK9": {
+    "message": "Aliases"
   },
   "xMnH8F": {
     "message": "Load More"
@@ -1484,11 +1523,17 @@
   "zNnjeF": {
     "message": "Are you sure you want to delete {spaceName}?"
   },
+  "zPTBof": {
+    "message": "Remove alias {number}"
+  },
   "zQLEfz": {
     "message": "Format"
   },
   "zQvVDJ": {
     "message": "All"
+  },
+  "zlIkXt": {
+    "message": "Characters are still loading. Please try again."
   },
   "zqHxkG": {
     "message": "Failed to search messages"

@@ -5,7 +5,7 @@ import { classifyLightOrDark } from '@boluo/theme';
 import { ButtonInline } from '@boluo/ui/ButtonInline';
 import { unwrap } from '@boluo/utils/result';
 import { useAtomValue, useSetAtom } from 'jotai';
-import { type FC, useMemo } from 'react';
+import { Fragment, type FC, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { useSWRConfig } from 'swr';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
@@ -69,12 +69,26 @@ export const CharacterPicker: FC<Props> = ({
   const selectedCharacterId =
     selectedReference?.id ??
     (asTarget == null || asTarget.type === 'DefaultCharacter' ? member.channel.characterId : null);
+  const charactersWithDefaultFirst = useMemo(() => {
+    if (characters == null || member.channel.characterId == null) return characters;
+    const defaultIndex = characters.findIndex(
+      (character) => character.id === member.channel.characterId,
+    );
+    if (defaultIndex <= 0) return characters;
+    const reordered = [...characters];
+    const [defaultCharacter] = reordered.splice(defaultIndex, 1);
+    if (defaultCharacter != null) reordered.unshift(defaultCharacter);
+    return reordered;
+  }, [characters, member.channel.characterId]);
 
   const selectCharacter = (character: Character) => {
     recordCharacterUse(character.id);
     dispatch({
       type: 'setAsTargetText',
-      payload: { text: `@${character.key}`, setInGame: true },
+      payload: {
+        text: character.id === member.channel.characterId ? '' : `@${character.key}`,
+        setInGame: true,
+      },
     });
   };
 
@@ -125,22 +139,30 @@ export const CharacterPicker: FC<Props> = ({
         </div>
       )}
       <div className="space-y-1">
-        {characters?.map((character) => (
-          <CharacterSelectorItem
-            key={character.id}
-            character={character}
-            displayColor={
-              character.color === ''
-                ? undefined
-                : computeColors(character.id, parseGameColor(character.color))[lightOrDark]
-            }
-            current={selectedCharacterId === character.id}
-            onSelect={selectCharacter}
-            onToggleDetails={(selected) => toggleCharacterDetails(selected.id)}
-            detailsOpen={isCharacterPaneOpen(character.id)}
-            disabled={character.archivedAt != null}
-          />
-        ))}
+        {charactersWithDefaultFirst?.map((character) => {
+          const isDefault = character.id === member.channel.characterId;
+          return (
+            <Fragment key={character.id}>
+              <CharacterSelectorItem
+                character={character}
+                displayColor={
+                  character.color === ''
+                    ? undefined
+                    : computeColors(character.id, parseGameColor(character.color))[lightOrDark]
+                }
+                current={selectedCharacterId === character.id}
+                isDefault={isDefault}
+                onSelect={selectCharacter}
+                onToggleDetails={(selected) => toggleCharacterDetails(selected.id)}
+                detailsOpen={isCharacterPaneOpen(character.id)}
+                disabled={character.archivedAt != null}
+              />
+              {isDefault && charactersWithDefaultFirst.length > 1 && (
+                <div className="border-border-default border-t" />
+              )}
+            </Fragment>
+          );
+        })}
       </div>
       <InlineCharacterCreate suggestedName={suggestedName} onCreate={createCharacter} />
     </div>

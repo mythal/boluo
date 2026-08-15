@@ -85,7 +85,10 @@ export const NameEditContent: FC<Props> = ({ member, dismiss, onViewAllCharacter
   const spaceId = member.space.spaceId;
   const channelId = member.channel.channelId;
   const recentCharacterIdsAtom = recentCharacterIdsAtomFamily({ spaceId, userId: myId });
-  const recentCharacterIds = useAtomValue(recentCharacterIdsAtom);
+  const recentCharacterIds = useMemo(
+    () => store.get(recentCharacterIdsAtom),
+    [recentCharacterIdsAtom, store],
+  );
   const defaultCharacterName = useChannelCharacterName(member);
   const {
     characters,
@@ -102,8 +105,9 @@ export const NameEditContent: FC<Props> = ({ member, dismiss, onViewAllCharacter
             myId,
             recentCharacterIds,
             RECENT_CHARACTER_LIMIT,
+            member.channel.characterId,
           ),
-    [activeCharacters, myId, recentCharacterIds],
+    [activeCharacters, member.channel.characterId, myId, recentCharacterIds],
   );
   const characterNames = useMemo(
     () => new Set(activeCharacters?.map((character) => character.name) ?? []),

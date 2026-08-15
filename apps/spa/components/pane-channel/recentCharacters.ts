@@ -76,6 +76,7 @@ export const recentCharacterIdsAtomFamily = atomFamily(
       storageKey(spaceId, userId),
       [],
       recentCharacterStorage,
+      { getOnInit: true },
     );
     return atom(
       (get) => get(storedAtom),
@@ -92,6 +93,7 @@ export const selectRecentCharacters = <T extends { id: string; ownerId: string |
   userId: string,
   recentIds: readonly string[],
   limit: number,
+  requiredCharacterId?: string | null,
 ): T[] => {
   const charactersById = new Map(characters.map((character) => [character.id, character]));
   const selected: T[] = [];
@@ -110,6 +112,11 @@ export const selectRecentCharacters = <T extends { id: string; ownerId: string |
     selectedIds.add(character.id);
   }
 
-  if (selected.length === 0) return characters.slice(0, limit);
-  return selected.slice(0, limit);
+  const result = selected.length === 0 ? characters.slice(0, limit) : selected.slice(0, limit);
+  if (requiredCharacterId == null || result.some(({ id }) => id === requiredCharacterId)) {
+    return result;
+  }
+  const requiredCharacter = charactersById.get(requiredCharacterId);
+  if (requiredCharacter == null || limit <= 0) return result;
+  return [...result.slice(0, limit - 1), requiredCharacter];
 };

@@ -3,6 +3,7 @@ import test from 'node:test';
 import type { Character } from '@boluo/api';
 import {
   createCharacterDirectory,
+  getShortestCharacterIdentifier,
   resolveCharacterIdentifier,
   suggestCharacters,
 } from './directory';
@@ -26,4 +27,9 @@ test('suggests a character for an exact name, key, or alias match', () => {
   assert.deepStrictEqual(suggestCharacters('Alice', directory), [character]);
   assert.deepStrictEqual(suggestCharacters('alice_pc', directory), [character]);
   assert.deepStrictEqual(suggestCharacters('Ali', directory), []);
+});
+
+test('uses the shortest key or alias as a character reference', () => {
+  assert.equal(getShortestCharacterIdentifier({ key: 'wizard', aliases: ['mage', 'wiz'] }), 'wiz');
+  assert.equal(getShortestCharacterIdentifier({ key: 'hero', aliases: ['mage'] }), 'hero');
 });

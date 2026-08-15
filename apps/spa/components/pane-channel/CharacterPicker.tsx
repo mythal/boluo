@@ -14,7 +14,11 @@ import { useToggleCharacterPane } from '../../hooks/useToggleCharacterPane';
 import { CharacterSelectorItem } from './CharacterSelectorItem';
 import { InlineCharacterCreate } from './InlineCharacterCreate';
 import { recentCharacterIdsAtomFamily } from './recentCharacters';
-import { createCharacterDirectory, resolveCharacterIdentifier } from '../../characters/directory';
+import {
+  createCharacterDirectory,
+  getShortestCharacterIdentifier,
+  resolveCharacterIdentifier,
+} from '../../characters/directory';
 
 interface Props {
   member: MemberWithUser;
@@ -86,7 +90,10 @@ export const CharacterPicker: FC<Props> = ({
     dispatch({
       type: 'setAsTargetText',
       payload: {
-        text: character.id === member.channel.characterId ? '' : `@${character.key}`,
+        text:
+          character.id === member.channel.characterId
+            ? ''
+            : `@${getShortestCharacterIdentifier(character)}`,
         setInGame: true,
       },
     });

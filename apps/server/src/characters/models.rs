@@ -311,6 +311,7 @@ impl Character {
         space_id: Uuid,
         key: Option<&str>,
         aliases: Option<&[String]>,
+        excluding_character_id: Option<Uuid>,
     ) -> Result<bool, ModelError> {
         let key = key.map(normalize_ident).transpose()?;
         let aliases = aliases
@@ -322,7 +323,8 @@ impl Character {
         sqlx::query_file_scalar!(
             "sql/characters/check_identifiers.sql",
             space_id,
-            &identifiers
+            &identifiers,
+            excluding_character_id,
         )
         .fetch_one(db)
         .await
@@ -576,10 +578,15 @@ mod tests {
         assert!(!character.can_edit(admin_id, admin_access));
 
         let exists_by_alias_trimmed =
-            Character::exists_identifier(&pool, space.id, Some(" homu "), None)
+            Character::exists_identifier(&pool, space.id, Some(" homu "), None, None)
                 .await
                 .expect("exists_identifier failed");
         assert!(exists_by_alias_trimmed);
+        let exists_excluding_same_character =
+            Character::exists_identifier(&pool, space.id, Some("homu"), None, Some(character.id))
+                .await
+                .expect("exists_identifier excluding current Character failed");
+        assert!(!exists_excluding_same_character);
 
         let fetched = Character::get_by_id(&pool, &character.id)
             .await
@@ -717,14 +724,15 @@ mod tests {
         assert_eq!(updated.scope_version, updated_scope.version);
 
         let exists_by_key =
-            Character::exists_identifier(&pool, space.id, Some("akemi_homura"), None)
+            Character::exists_identifier(&pool, space.id, Some("akemi_homura"), None, None)
                 .await
                 .expect("exists_identifier failed");
         assert!(exists_by_key);
 
-        let exists_by_alias = Character::exists_identifier(&pool, space.id, Some("homura"), None)
-            .await
-            .expect("exists_identifier failed");
+        let exists_by_alias =
+            Character::exists_identifier(&pool, space.id, Some("homura"), None, None)
+                .await
+                .expect("exists_identifier failed");
         assert!(!exists_by_alias);
 
         let mut archive_transaction = pool.begin().await.expect("failed to begin archive");
@@ -744,7 +752,7 @@ mod tests {
         assert!(archived.archived_at.is_some());
         assert_ne!(archived.version, updated.version);
         assert!(
-            Character::exists_identifier(&pool, space.id, Some("akemi_homura"), None)
+            Character::exists_identifier(&pool, space.id, Some("akemi_homura"), None, None)
                 .await
                 .expect("identifier lookup after archive failed"),
             "archiving must retain the character identifiers"

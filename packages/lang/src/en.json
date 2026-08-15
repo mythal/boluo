@@ -77,6 +77,9 @@
   "1iEPTM": {
     "message": "General"
   },
+  "2S+c8D": {
+    "message": "The primary identifier used by commands."
+  },
   "2mSiu0": {
     "message": "Draft History ({count})"
   },
@@ -109,6 +112,9 @@
   },
   "3dRjlT": {
     "message": "This is the latest version of Boluo, which is still under active development. If you prefer the legacy version, please visit"
+  },
+  "3hzR9A": {
+    "message": "Collaborative"
   },
   "3kOdlB": {
     "message": "No topic set"
@@ -290,6 +296,9 @@
   "AtML1q": {
     "message": "Master"
   },
+  "AxUJOS": {
+    "message": "Access scope"
+  },
   "AyGauy": {
     "message": "Login"
   },
@@ -301,6 +310,9 @@
   },
   "BEbOqj": {
     "message": "Oops!"
+  },
+  "BHk/Of": {
+    "message": "Visible to everyone with access. Only the owner, game masters, and space managers can edit it."
   },
   "BTp/5U": {
     "message": "No characters yet."
@@ -400,6 +412,9 @@
   },
   "GbWVAh": {
     "message": "Yes, Kick"
+  },
+  "GzZ3jc": {
+    "message": "Only game masters can view, edit, and portray it."
   },
   "H2WXs6": {
     "message": "Destroy Space"
@@ -503,6 +518,9 @@
   "K8uxGU": {
     "message": "The password reset email has been sent."
   },
+  "KFfRH2": {
+    "message": "Entire space"
+  },
   "KN7zKn": {
     "message": "Error"
   },
@@ -584,6 +602,9 @@
   "NA+vcf": {
     "message": "Please verify your email to login to the forum."
   },
+  "NDx+B0": {
+    "message": "Personal"
+  },
   "NNQzoi": {
     "message": "Searching..."
   },
@@ -619,6 +640,9 @@
   },
   "OtUXSR": {
     "message": "Type a message"
+  },
+  "Oz5LRn": {
+    "message": "Permission"
   },
   "P57vjw": {
     "message": "Channel name must be at most 32 characters."
@@ -677,6 +701,9 @@
   "QOvY19": {
     "message": "Whisper to the Master and"
   },
+  "QQL5LE": {
+    "message": "Visible to everyone with access. Every member in scope can edit and portray it."
+  },
   "QdsAIR": {
     "message": "Members of \"{spaceName}\" Space"
   },
@@ -731,6 +758,9 @@
   "SaSNIH": {
     "message": "Messages Display Settings"
   },
+  "Sni3KR": {
+    "message": "Checking identifier availability…"
+  },
   "SpLs8U": {
     "message": "You must first join the {space} to join a channel."
   },
@@ -770,6 +800,9 @@
   "U7Z0l+": {
     "message": "See the <link>source</link> for reference — PRs welcome!"
   },
+  "UGMxlG": {
+    "message": "Only the owner can view, edit, and portray it."
+  },
   "UKhyJG": {
     "message": "File size must be less than {sizeLimit}M."
   },
@@ -785,11 +818,17 @@
   "Ujs8Kg": {
     "message": "Message from server"
   },
+  "UjxD+u": {
+    "message": "Default character"
+  },
   "V/JHlm": {
     "message": "Forgot password?"
   },
   "VA/Z1S": {
     "message": "Hide"
+  },
+  "VKjzDV": {
+    "message": "As character “{name}”"
   },
   "VeLEVu": {
     "message": "Character Name:"
@@ -814,6 +853,9 @@
   },
   "WJSlkx": {
     "message": "New message from {name}"
+  },
+  "WZlcDP": {
+    "message": "Character key"
   },
   "Wa3nyB": {
     "message": "Settings of \"{channelName}\" Channel"
@@ -944,6 +986,9 @@
   "cLIHUg": {
     "message": "Hard Success"
   },
+  "cXUE4o": {
+    "message": "Basic information"
+  },
   "ccU6l/": {
     "message": "Online"
   },
@@ -964,6 +1009,9 @@
   },
   "cyeEx0": {
     "message": "Midnight"
+  },
+  "dGsoHG": {
+    "message": "Game masters"
   },
   "dMEGZV": {
     "message": "Split pane"
@@ -1007,6 +1055,9 @@
   "eVYdrD": {
     "message": "Last 1 day"
   },
+  "eWFuvS": {
+    "message": "Could not check identifier availability. Try again."
+  },
   "ea+WlP": {
     "message": "You must be invited to join a private channel."
   },
@@ -1015,6 +1066,9 @@
   },
   "eqOw+7": {
     "message": "Dev Mode"
+  },
+  "etAoRt": {
+    "message": "Access and permissions"
   },
   "f00p/7": {
     "message": "Upload failed"
@@ -1049,6 +1103,9 @@
   "fxvXUy": {
     "message": "Reveal"
   },
+  "g4nsRX": {
+    "message": "You cannot edit a character with this permission and access scope."
+  },
   "g7UZYd": {
     "message": "Archiving this character will unbind it from any channels where it is currently in use. Are you sure?"
   },
@@ -1057,6 +1114,9 @@
   },
   "gG6Trq": {
     "message": "Drop to attach a file"
+  },
+  "gIq7HF": {
+    "message": "This character identifier is already in use."
   },
   "gduNan": {
     "message": "In Light Mode"
@@ -1100,6 +1160,9 @@
   "hw9PdM": {
     "message": "Inherits your default color."
   },
+  "i6h/mR": {
+    "message": "Channel: {channel}"
+  },
   "iATkrL": {
     "message": "The pane has crashed"
   },
@@ -1126,6 +1189,9 @@
   },
   "iySl5e": {
     "message": "You are already a member of this channel."
+  },
+  "j3v6aj": {
+    "message": "A channel scope uses membership and game-master status from that channel."
   },
   "j8d+YP": {
     "message": "Score: {score}"
@@ -1195,6 +1261,9 @@
   },
   "lKv8ex": {
     "message": "Default"
+  },
+  "lOmCRF": {
+    "message": "Restricted to a channel"
   },
   "lo1ANX": {
     "message": "Failed to query character states"
@@ -1402,6 +1471,9 @@
   },
   "tiLDlf": {
     "message": "Dusha Green"
+  },
+  "u0Jaxy": {
+    "message": "Only the owner and game masters can view, edit, and portray it."
   },
   "uMhpKe": {
     "message": "Color"

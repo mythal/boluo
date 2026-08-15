@@ -178,6 +178,7 @@ async fn check_identifier(
     let CheckCharacterIdentifier {
         space_id,
         identifier,
+        character_id,
     } = parse_query(req.uri())?;
     let is_space_member = ctx
         .space_store
@@ -191,7 +192,8 @@ async fn check_identifier(
             .or_no_permission()?;
     }
     let exists =
-        Character::exists_identifier(&mut *conn, space_id, Some(&identifier), None).await?;
+        Character::exists_identifier(&mut *conn, space_id, Some(&identifier), None, character_id)
+            .await?;
     Ok(!exists)
 }
 

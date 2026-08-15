@@ -1,10 +1,12 @@
 import type { AccessPolicy, Character } from '@boluo/api';
+import { useQueryChannelList } from '@boluo/hooks/useQueryChannelList';
 import { useQueryChannelMembers } from '@boluo/hooks/useQueryChannelMembers';
 import { useQueryCurrentUser } from '@boluo/hooks/useQueryCurrentUser';
 import { useMySpaceMember } from '@boluo/hooks/useQueryMySpaceMember';
 import { useQuerySpace } from '@boluo/hooks/useQuerySpace';
+import { useCallback } from 'react';
 
-interface CharacterEditAccess {
+export interface CharacterAccessContext {
   accessPolicy: AccessPolicy;
   ownerId: Character['ownerId'];
   userId: string | null | undefined;
@@ -23,7 +25,7 @@ export const canEditCharacter = ({
   isResourceMember,
   isGameMaster,
   canManageSpace,
-}: CharacterEditAccess): boolean => {
+}: CharacterAccessContext): boolean => {
   if (userId == null) return false;
   const isOwner = isResourceMember && ownerId === userId;
   switch (accessPolicy) {
@@ -68,4 +70,43 @@ export const useCanEditCharacter = (character: Character | undefined): boolean =
     canManageSpace:
       mySpaceMember?.isAdmin === true || (currentUser != null && currentUser.id === space?.ownerId),
   });
+};
+
+export const useCharacterAccessOptions = (character: Character) => {
+  const { data: currentUser, isLoading: currentUserLoading } = useQueryCurrentUser();
+  const { data: space, isLoading: spaceLoading } = useQuerySpace(character.spaceId);
+  const { data: mySpaceMember, isLoading: spaceMemberLoading } = useMySpaceMember(
+    character.spaceId,
+  );
+  const { data: channels, isLoading: channelsLoading } = useQueryChannelList(character.spaceId);
+  const canManageSpace =
+    mySpaceMember?.isAdmin === true || (currentUser != null && currentUser.id === space?.ownerId);
+
+  const canUseAccess = useCallback(
+    (accessPolicy: AccessPolicy, accessChannelId: string | null): boolean => {
+      const channelMember =
+        accessChannelId == null
+          ? null
+          : channels?.find(({ channel }) => channel.id === accessChannelId)?.member;
+      return canEditCharacter({
+        accessPolicy,
+        ownerId: character.ownerId,
+        userId: currentUser?.id,
+        isResourceMember:
+          mySpaceMember != null && (accessChannelId == null || channelMember != null),
+        isGameMaster:
+          accessChannelId == null
+            ? mySpaceMember?.isGameMaster === true
+            : channelMember?.isMaster === true,
+        canManageSpace,
+      });
+    },
+    [canManageSpace, channels, character.ownerId, currentUser?.id, mySpaceMember],
+  );
+
+  return {
+    channels,
+    isLoading: currentUserLoading || spaceLoading || spaceMemberLoading || channelsLoading,
+    canUseAccess,
+  };
 };

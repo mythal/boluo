@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import type { AccessPolicy } from '@boluo/api';
-import { canEditCharacter } from './character-permissions';
+import { canEditCharacter, isCharacterAccessSelectionInvalid } from './character-permissions';
 
 const canEdit = (
   accessPolicy: AccessPolicy,
@@ -44,4 +44,11 @@ test('target access policy may be stricter than current edit access', () => {
   assert.equal(canEditCharacter({ ...access, accessPolicy: 'PERSONAL' }), false);
   assert.equal(canEditCharacter({ ...access, accessPolicy: 'SECRET' }), false);
   assert.equal(canEditCharacter({ ...access, accessPolicy: 'GAME_MASTER' }), false);
+});
+
+test('only rejects an access selection after authorization data loads successfully', () => {
+  assert.equal(isCharacterAccessSelectionInvalid(true, false, false), false);
+  assert.equal(isCharacterAccessSelectionInvalid(false, true, false), false);
+  assert.equal(isCharacterAccessSelectionInvalid(false, false, false), true);
+  assert.equal(isCharacterAccessSelectionInvalid(false, false, true), false);
 });

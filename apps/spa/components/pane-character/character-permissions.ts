@@ -42,6 +42,12 @@ export const canEditCharacter = ({
   }
 };
 
+export const isCharacterAccessSelectionInvalid = (
+  isLoading: boolean,
+  hasError: boolean,
+  isAllowed: boolean,
+): boolean => !isLoading && !hasError && !isAllowed;
+
 export const useCanEditCharacter = (character: Character | undefined): boolean => {
   const { data: currentUser } = useQueryCurrentUser();
   const { data: space } = useQuerySpace(character?.spaceId);
@@ -73,12 +79,28 @@ export const useCanEditCharacter = (character: Character | undefined): boolean =
 };
 
 export const useCharacterAccessOptions = (character: Character) => {
-  const { data: currentUser, isLoading: currentUserLoading } = useQueryCurrentUser();
-  const { data: space, isLoading: spaceLoading } = useQuerySpace(character.spaceId);
-  const { data: mySpaceMember, isLoading: spaceMemberLoading } = useMySpaceMember(
-    character.spaceId,
-  );
-  const { data: channels, isLoading: channelsLoading } = useQueryChannelList(character.spaceId);
+  const currentUserQuery = useQueryCurrentUser();
+  const spaceQuery = useQuerySpace(character.spaceId);
+  const spaceMemberQuery = useMySpaceMember(character.spaceId);
+  const channelsQuery = useQueryChannelList(character.spaceId);
+  const { data: currentUser } = currentUserQuery;
+  const { data: space } = spaceQuery;
+  const { data: mySpaceMember } = spaceMemberQuery;
+  const { data: channels } = channelsQuery;
+  const error =
+    currentUserQuery.error ??
+    spaceQuery.error ??
+    spaceMemberQuery.error ??
+    channelsQuery.error ??
+    null;
+  const retry = useCallback(async (): Promise<void> => {
+    await Promise.allSettled([
+      currentUserQuery.mutate(),
+      spaceQuery.mutate(),
+      spaceMemberQuery.mutate(),
+      channelsQuery.mutate(),
+    ]);
+  }, [channelsQuery, currentUserQuery, spaceMemberQuery, spaceQuery]);
   const canManageSpace =
     mySpaceMember?.isAdmin === true || (currentUser != null && currentUser.id === space?.ownerId);
 
@@ -106,7 +128,18 @@ export const useCharacterAccessOptions = (character: Character) => {
 
   return {
     channels,
-    isLoading: currentUserLoading || spaceLoading || spaceMemberLoading || channelsLoading,
+    error,
+    isLoading:
+      currentUserQuery.isLoading ||
+      spaceQuery.isLoading ||
+      spaceMemberQuery.isLoading ||
+      channelsQuery.isLoading,
+    isRetrying:
+      currentUserQuery.isValidating ||
+      spaceQuery.isValidating ||
+      spaceMemberQuery.isValidating ||
+      channelsQuery.isValidating,
+    retry,
     canUseAccess,
   };
 };

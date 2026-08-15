@@ -13,7 +13,10 @@ import { CharacterAccessFields } from './CharacterAccessFields';
 import { CharacterIdentifierFields } from './CharacterIdentifierFields';
 import type { CharacterEditDraft, CharacterEditValues } from './character-edit-types';
 import { CharacterIdentifierConflictError, CharacterStaleError } from './character-errors';
-import { useCharacterAccessOptions } from './character-permissions';
+import {
+  isCharacterAccessSelectionInvalid,
+  useCharacterAccessOptions,
+} from './character-permissions';
 
 const MAX_CHARACTER_NAME_LENGTH = 32;
 const MAX_CHARACTER_DESCRIPTION_LENGTH = 512;
@@ -81,11 +84,17 @@ export const CharacterEditForm: FC<Props> = ({
   const [mutationError, setMutationError] = useState<string | null>(null);
   const {
     channels,
+    error: accessOptionsError,
     isLoading: accessOptionsLoading,
+    isRetrying: accessOptionsRetrying,
+    retry: retryAccessOptions,
     canUseAccess,
   } = useCharacterAccessOptions(character);
-  const invalidAccess =
-    !accessOptionsLoading && !canUseAccess(accessPolicyField.value, accessChannelIdField.value);
+  const invalidAccess = isCharacterAccessSelectionInvalid(
+    accessOptionsLoading,
+    accessOptionsError != null,
+    canUseAccess(accessPolicyField.value, accessChannelIdField.value),
+  );
   const identifierConflict = errors.root?.identifierConflict?.message;
   const staleError = errors.root?.stale?.message;
   const disabled = isSubmitting;
@@ -255,7 +264,7 @@ export const CharacterEditForm: FC<Props> = ({
           <div>
             <CharacterAccessFields
               channels={channels}
-              isLoading={accessOptionsLoading}
+              isLoading={accessOptionsLoading || accessOptionsError != null}
               accessPolicy={accessPolicyField.value}
               accessChannelId={accessChannelIdField.value}
               disabled={disabled}
@@ -269,6 +278,21 @@ export const CharacterEditForm: FC<Props> = ({
                 accessChannelIdField.onChange(value);
               }}
             />
+            {accessOptionsError != null && (
+              <div className="border-state-warning-border bg-state-warning-bg text-state-warning-text mt-3 space-y-2 rounded border p-3 text-sm">
+                <div>
+                  <FormattedMessage defaultMessage="Could not load access options. Retry the request or save without changing permissions." />
+                </div>
+                <Button
+                  type="button"
+                  small
+                  disabled={accessOptionsRetrying}
+                  onClick={() => void retryAccessOptions()}
+                >
+                  <FormattedMessage defaultMessage="Retry" />
+                </Button>
+              </div>
+            )}
             {invalidAccess && (
               <span className="text-state-danger-text mt-2 block text-xs">
                 <FormattedMessage defaultMessage="You cannot edit a character with this permission and access scope." />

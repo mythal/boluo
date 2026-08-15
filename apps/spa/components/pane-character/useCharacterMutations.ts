@@ -2,20 +2,28 @@ import type { Character } from '@boluo/api';
 import { post, put } from '@boluo/api-browser';
 import { unwrap } from '@boluo/utils/result';
 import { useCallback } from 'react';
+import { useIntl } from 'react-intl';
 import { useSWRConfig } from 'swr';
-import type { CharacterEditDraft } from './CharacterEditForm';
-
-const mutationError = (cause: unknown): Error => {
-  if (cause instanceof Error) return cause;
-  if (typeof cause === 'object' && cause != null) {
-    if ('message' in cause && typeof cause.message === 'string') return new Error(cause.message);
-    if ('code' in cause) return new Error(String(cause.code));
-  }
-  return new Error('Failed to update character');
-};
+import type { CharacterEditDraft } from './character-edit-types';
+import { CharacterStaleError, toCharacterMutationError } from './character-errors';
 
 export const useCharacterMutations = (character: Character | undefined) => {
+  const intl = useIntl();
   const { mutate } = useSWRConfig();
+  const refreshCharacter = useCallback(async () => {
+    if (character == null) return;
+    await mutate(['/characters/query', character.spaceId, character.id]);
+  }, [character, mutate]);
+  const rethrowMutationError = useCallback(
+    async (cause: unknown): Promise<never> => {
+      const error = toCharacterMutationError(intl, cause);
+      if (error instanceof CharacterStaleError) {
+        await refreshCharacter().catch(() => undefined);
+      }
+      throw error;
+    },
+    [intl, refreshCharacter],
+  );
   const updateCaches = useCallback(
     async (updatedCharacter: Character) => {
       if (character == null) throw new Error('Character is not loaded');
@@ -51,10 +59,10 @@ export const useCharacterMutations = (character: Character | undefined) => {
         }).then(unwrap);
         await updateCaches(updated).catch(() => undefined);
       } catch (cause) {
-        throw mutationError(cause);
+        await rethrowMutationError(cause);
       }
     },
-    [character, updateCaches],
+    [character, rethrowMutationError, updateCaches],
   );
 
   const setArchived = useCallback(
@@ -68,10 +76,10 @@ export const useCharacterMutations = (character: Character | undefined) => {
         }).then(unwrap);
         await updateCaches(updated).catch(() => undefined);
       } catch (cause) {
-        throw mutationError(cause);
+        await rethrowMutationError(cause);
       }
     },
-    [character, updateCaches],
+    [character, rethrowMutationError, updateCaches],
   );
 
   return { editCharacter, setArchived };

@@ -77,6 +77,9 @@
   "1iEPTM": {
     "message": "General"
   },
+  "2J8pRn": {
+    "message": "Character name must be at most {maxLength} characters."
+  },
   "2S+c8D": {
     "message": "The primary identifier used by commands."
   },
@@ -509,6 +512,9 @@
   "Jxxkva": {
     "message": "You can change default message color in the Settings."
   },
+  "JzVsk+": {
+    "message": "Failed to update character"
+  },
   "K3r6DQ": {
     "message": "Delete"
   },
@@ -755,6 +761,9 @@
   "SVwJTM": {
     "message": "Export"
   },
+  "SYLStO": {
+    "message": "Description must be at most {maxLength} characters."
+  },
   "SaSNIH": {
     "message": "Messages Display Settings"
   },
@@ -823,6 +832,9 @@
   },
   "V/JHlm": {
     "message": "Forgot password?"
+  },
+  "V512b5": {
+    "message": "This character was updated elsewhere. Close and reopen the editor to load the latest version."
   },
   "VA/Z1S": {
     "message": "Hide"
@@ -1081,6 +1093,9 @@
   },
   "f81+gv": {
     "message": "Try refreshing the page. If the problem persists, clear your browser cache or try another browser."
+  },
+  "fN3hgg": {
+    "message": "Character name is required."
   },
   "fNCCY7": {
     "message": "Basic"
@@ -1384,6 +1399,9 @@
   },
   "qp37dR": {
     "message": "The image could not be uploaded."
+  },
+  "qun7iY": {
+    "message": "Close editor"
   },
   "qvc9uM": {
     "message": "This cannot be undone."

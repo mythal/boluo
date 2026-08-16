@@ -32,8 +32,14 @@
   "/jxJyw": {
     "message": "メッセージを配置しようとしている位置が変更されました。"
   },
+  "03KVTC": {
+    "message": "肖像画像を選択"
+  },
   "0Azlrb": {
     "message": "管理"
+  },
+  "0D1tiC": {
+    "message": "キャラクター「@{identifier}」は利用できないか、演じられません。"
   },
   "0EJGBZ": {
     "message": "{nickname} ({username})をキックしてもよろしいですか？"
@@ -147,13 +153,13 @@
     "message": "もう一度試してください"
   },
   "64owOH": {
-    "message": "Network error. Please retry."
+    "message": "ネットワークエラーです。もう一度お試しください。"
   },
   "64sfSN": {
     "message": "やめる"
   },
   "6CVXeu": {
-    "message": "チャンネルの照会に失敗しました"
+    "message": "チャンネルを取得できませんでした"
   },
   "6DeXXB": {
     "message": "TRPGをプレイするために特別に設計されたチャットアプリ。"
@@ -186,7 +192,7 @@
     "message": "次元の読み込みに失敗しました"
   },
   "7KDJn8": {
-    "message": "ユーザー情報を読み込み中..."
+    "message": "ユーザー情報を読み込み中…"
   },
   "7UOvbT": {
     "message": "オフライン"
@@ -207,13 +213,13 @@
     "message": "このメッセージを削除しますか？"
   },
   "82Y7Sa": {
-    "message": "送信中..."
+    "message": "送信中…"
   },
   "8HQJF3": {
-    "message": "Paste CSS variables or any custom CSS to override the theme."
+    "message": "CSS変数やカスタムCSSを貼り付けると、テーマを上書きできます。"
   },
   "8MYOsd": {
-    "message": "Invalid token. Please retry."
+    "message": "無効なトークンです。もう一度お試しください。"
   },
   "8be59M": {
     "message": "メール確認が成功しました！"
@@ -222,7 +228,7 @@
     "message": "メール確認"
   },
   "8pN86+": {
-    "message": "{name} は入力している…"
+    "message": "{name}が入力中…"
   },
   "973Dls": {
     "message": "招待された人だけがこの次元に参加できます"
@@ -345,7 +351,7 @@
     "message": "誰でもこの次元に参加できます"
   },
   "GaOcCS": {
-    "message": "このアプリを使用するには、iOS/iPadOSのバージョンが16以上は必要です。"
+    "message": "このアプリを使用するには、iOS/iPadOSのバージョン16以上が必要です。"
   },
   "GbWVAh": {
     "message": "キックする"
@@ -366,10 +372,10 @@
     "message": "開発者オプション"
   },
   "HSaR2M": {
-    "message": "これは、秘密のチャンネルですか?"
+    "message": "これは秘密のチャンネルですか？"
   },
   "HTmh5Q": {
-    "message": "target"
+    "message": "対象"
   },
   "HlQPHQ": {
     "message": "次元に参加する"
@@ -402,7 +408,7 @@
     "message": "自動選択"
   },
   "Ibwf8a": {
-    "message": "入力ボックスが崩壊しました。"
+    "message": "入力欄でエラーが発生しました。"
   },
   "IvBid4": {
     "message": "{enter} キーを使ってメッセージを送信する。"
@@ -411,7 +417,7 @@
     "message": "接続されました"
   },
   "J78glR": {
-    "message": "Please log in to continue."
+    "message": "続行するにはログインしてください。"
   },
   "JBWS0c": {
     "message": "リンク"
@@ -426,7 +432,7 @@
     "message": "完了"
   },
   "Jc0JUv": {
-    "message": "入力ボックスが崩壊しました。最後に入力したのは："
+    "message": "入力欄でエラーが発生しました。最後に入力した内容："
   },
   "Jq3FDz": {
     "message": "コンテンツ"
@@ -453,7 +459,7 @@
     "message": "サポートされていないメディアタイプです。"
   },
   "KhLK4z": {
-    "message": "この次元を表示する権限がありません．"
+    "message": "この次元を表示する権限がありません。"
   },
   "Kp8wZw": {
     "message": "バイオはまだ設定していません"
@@ -465,7 +471,7 @@
     "message": "あなたのメールは確認されていません。{verifyEmail}してください。"
   },
   "L/Ows0": {
-    "message": "スキャンされた {scanned}は、 {matched} に一致"
+    "message": "スキャン済み：{scanned}、一致：{matched}"
   },
   "L01rMU": {
     "message": "デフォルトでは、メンバーは自分として話す。"
@@ -495,7 +501,7 @@
     "message": "長押しで垂直分割する"
   },
   "MgRaWS": {
-    "message": "チャンネル名は空になることはできません"
+    "message": "チャンネル名は空欄にできません"
   },
   "MjKIej": {
     "message": "送信失敗"
@@ -519,13 +525,13 @@
     "message": "フォーラムにログインするにはメールを確認してください。"
   },
   "NNQzoi": {
-    "message": "検索中..."
+    "message": "検索中…"
   },
   "NXI/XL": {
     "message": "自動"
   },
   "NXv+Ue": {
-    "message": "通知をオフにしる"
+    "message": "通知をオフにする"
   },
   "NYTPf9": {
     "message": "ゲーム内メッセージを送信するにはキャラクター名が必要です。"
@@ -534,7 +540,7 @@
     "message": "新着情報"
   },
   "No0obH": {
-    "message": "Switch to serif font for In-Game messages."
+    "message": "ゲーム内メッセージを明朝体に切り替える"
   },
   "O5epsB": {
     "message": "取る"
@@ -582,7 +588,7 @@
     "message": "ようこそ"
   },
   "PxOtYI": {
-    "message": "Editing; Show original"
+    "message": "編集中；原文を表示"
   },
   "Q+Af6H": {
     "message": "ゲーム外"
@@ -591,13 +597,13 @@
     "message": "説明"
   },
   "QAF77H": {
-    "message": "You do not have permission to access."
+    "message": "アクセス権限がありません。"
   },
   "QBYqL5": {
-    "message": "位面のメンバー照会に失敗しました"
+    "message": "次元のメンバーを取得できませんでした"
   },
   "QGIvkQ": {
-    "message": "Archived channels are hidden from the list by default."
+    "message": "アーカイブ済みのチャンネルは、デフォルトでは一覧に表示されません。"
   },
   "QOvY19": {
     "message": "マスターにささやき、"
@@ -612,7 +618,7 @@
     "message": "このメールアドレスは登録されていません"
   },
   "Qm8yuu": {
-    "message": "[Unread]"
+    "message": "[未読]"
   },
   "QudmKz": {
     "message": "接続の切り替え"
@@ -684,7 +690,7 @@
     "message": "アカウント"
   },
   "U7Z0l+": {
-    "message": "See the <link>source</link> for reference — PRs welcome!"
+    "message": "<link>ソースコード</link>を参照してください。プルリクエスト歓迎です！"
   },
   "UKhyJG": {
     "message": "ファイルサイズは {sizeLimit}M 以下である必要があります。"
@@ -702,19 +708,19 @@
     "message": "サーバーからのメッセージ"
   },
   "V/JHlm": {
-    "message": "パスワードを忘れましたか?"
+    "message": "パスワードを忘れましたか？"
   },
   "VA/Z1S": {
     "message": "非表示"
   },
   "VeLEVu": {
-    "message": "キャラクター名:"
+    "message": "キャラクター名："
   },
   "Vl357u": {
     "message": "対象期間"
   },
   "VlTrY6": {
-    "message": "チャネルメンバーの照会に失敗しました"
+    "message": "チャンネルメンバーを取得できませんでした"
   },
   "VnXp8Z": {
     "message": "アバター"
@@ -738,7 +744,7 @@
     "message": "本当に「{spaceName}」次元を抜けますか？"
   },
   "Wi3NTK": {
-    "message": "このアプリケーションは多くの最新の機能を必要とします。ただし、ブラウザではサポートされていません。"
+    "message": "このアプリには、お使いのブラウザでサポートされていない最新機能が必要です。"
   },
   "Wj4YzT": {
     "message": "ホームページに戻る"
@@ -759,7 +765,7 @@
     "message": "プレーンテキスト"
   },
   "XPj4VR": {
-    "message": "An unknown error occurred. Please refresh."
+    "message": "不明なエラーが発生しました。ページを更新してください。"
   },
   "XTqS60": {
     "message": "「{errorCode}」をシステム管理者に送信してください。"
@@ -846,7 +852,7 @@
     "message": "メールを確認するために{login}してください。"
   },
   "c1nBz9": {
-    "message": "...のキャラクターとして"
+    "message": "…のキャラクターとして"
   },
   "c65UQI": {
     "message": "チャネル名は最低2文字である必要があります。"
@@ -900,7 +906,7 @@
     "message": "ゲーム内"
   },
   "eHA8Ex": {
-    "message": "... にささやく"
+    "message": "…にささやく"
   },
   "eLCAEP": {
     "message": "添付ファイル"
@@ -987,7 +993,7 @@
     "message": "アーカイブ"
   },
   "huqwHp": {
-    "message": "{start} Modified {updated}"
+    "message": "{start} は {updated} に変更されました"
   },
   "iATkrL": {
     "message": "ペインがクラッシュしました"
@@ -1011,7 +1017,7 @@
     "message": "このチャネルのメンバーは既にいます。"
   },
   "j8d+YP": {
-    "message": "Score: {score}"
+    "message": "スコア：{score}"
   },
   "jRANBd": {
     "message": "メッセージを編集"
@@ -1044,7 +1050,7 @@
     "message": "メールアドレスのフォーマットが不正です。"
   },
   "kdRsn5": {
-    "message": "The message you were editing was deleted. Your edits have been saved as a draft."
+    "message": "編集中のメッセージが削除されました。編集内容は下書きとして保存されています。"
   },
   "kh4wt0": {
     "message": "サイドバーを切り替える"
@@ -1089,7 +1095,7 @@
     "message": "入力必須です。"
   },
   "oGBmRj": {
-    "message": "チャネルメンバーの照会に失敗しました"
+    "message": "チャンネルメンバーを取得できませんでした"
   },
   "oSgCYv": {
     "message": "あなたはこの位面のメンバーではありません"
@@ -1116,7 +1122,7 @@
     "message": "編集中"
   },
   "pJ78jg": {
-    "message": "OOC"
+    "message": "ゲーム外（OOC）"
   },
   "pm/HIR": {
     "message": "チャンネル名が必要です。"
@@ -1128,7 +1134,7 @@
     "message": "設定を変更"
   },
   "qGHWyb": {
-    "message": "{count} filtered messages"
+    "message": "絞り込み済みのメッセージ：{count}件"
   },
   "qOH6mx": {
     "message": "明朝体"
@@ -1176,7 +1182,7 @@
     "message": "チャネルを並べ替え"
   },
   "ro9oGh": {
-    "message": "メールを確認中..."
+    "message": "メールを確認中…"
   },
   "ruZw+F": {
     "message": "すべて検索済み"
@@ -1254,7 +1260,7 @@
     "message": "あなたの冒険を語る"
   },
   "w00UiA": {
-    "message": "お使いのデバイスには通知をサポートしていません。"
+    "message": "お使いのデバイスは通知に対応していません。"
   },
   "wAd2/k": {
     "message": "アクションとしてマーク。"
@@ -1330,5 +1336,305 @@
   },
   "zywf7W": {
     "message": "画面に合わせる"
+  },
+  "0pHoT3": {
+    "message": "肖像を読み込み中"
+  },
+  "1QosTr": {
+    "message": "使用者"
+  },
+  "1eF8/3": {
+    "message": "メタデータを保存"
+  },
+  "2J8pRn": {
+    "message": "キャラクター名は{maxLength}文字以内で入力してください。"
+  },
+  "2S+c8D": {
+    "message": "コマンドで使用する主要な識別子です。"
+  },
+  "3hzR9A": {
+    "message": "共同作業"
+  },
+  "4DU2+m": {
+    "message": "キャラクターの肖像を選択"
+  },
+  "58VJY/": {
+    "message": "各キャラクターには最大{maxCount}枚の肖像を設定できます。"
+  },
+  "6yXGic": {
+    "message": "デフォルトに設定"
+  },
+  "77x9YH": {
+    "message": "このメッセージは、編集を送信する前に別の場所で編集されました。編集内容は下書きとして保存されています。"
+  },
+  "9DYjeh": {
+    "message": "現在のキャラクター"
+  },
+  "AxUJOS": {
+    "message": "アクセス範囲"
+  },
+  "BAE6ka": {
+    "message": "肖像"
+  },
+  "BHk/Of": {
+    "message": "アクセス権を持つ全員が閲覧できます。所有者、ゲームマスター、次元管理者のみが編集できます。"
+  },
+  "BTp/5U": {
+    "message": "キャラクターはまだありません。"
+  },
+  "BfE7dl": {
+    "message": "キャラクター名"
+  },
+  "CW4O0j": {
+    "message": "キャラクター"
+  },
+  "D2E+9y": {
+    "message": "キャラクターを読み込み中…"
+  },
+  "EQjIkI": {
+    "message": "アクセスオプションを読み込めませんでした。リクエストを再試行するか、権限を変更せずに保存してください。"
+  },
+  "Far9+n": {
+    "message": "肖像を読み込めませんでした。"
+  },
+  "G/yZLu": {
+    "message": "削除"
+  },
+  "GV6GZ6": {
+    "message": "現在、{usageCount, plural, one {#人のメンバー} other {#人のメンバー}}がこのキャラクターを使用しています。アーカイブすると、そのメンバーのチャンネルとの紐付けが解除されます。アーカイブしますか？"
+  },
+  "GzZ3jc": {
+    "message": "ゲームマスターのみが閲覧・編集・キャラクターとしての発言を行えます。"
+  },
+  "Hvp+/6": {
+    "message": "置換"
+  },
+  "J6vpgG": {
+    "message": "エイリアスを追加"
+  },
+  "JzVsk+": {
+    "message": "キャラクターの更新に失敗しました"
+  },
+  "KFfRH2": {
+    "message": "次元全体"
+  },
+  "KjWmVd": {
+    "message": "キャラクターを読み込めませんでした。"
+  },
+  "LNrIhY": {
+    "message": "キャラクター情報の読み込みに失敗しました。"
+  },
+  "LtJqeU": {
+    "message": "有効な色の値を使用してください。"
+  },
+  "NDx+B0": {
+    "message": "個人"
+  },
+  "Nk36gs": {
+    "message": "肖像{number}を選択して並べ替え"
+  },
+  "Oz5LRn": {
+    "message": "権限"
+  },
+  "PqQcvG": {
+    "message": "キャラクター詳細の表示を切り替え"
+  },
+  "PypaKS": {
+    "message": "最近使用したキャラクター"
+  },
+  "QQL5LE": {
+    "message": "アクセス権を持つ全員が閲覧できます。範囲内のすべてのメンバーが編集・キャラクターとしての発言を行えます。"
+  },
+  "RZme30": {
+    "message": "エントリーキー"
+  },
+  "SYLStO": {
+    "message": "説明は {maxLength} 文字以内で入力してください。"
+  },
+  "Sni3KR": {
+    "message": "識別子が使用可能か確認中…"
+  },
+  "Swo2Kd": {
+    "message": "肖像なし"
+  },
+  "TZbufw": {
+    "message": "肖像ギャラリー"
+  },
+  "UGMxlG": {
+    "message": "所有者のみが閲覧・編集・キャラクターとしての発言を行えます。"
+  },
+  "UjxD+u": {
+    "message": "デフォルトキャラクター"
+  },
+  "V512b5": {
+    "message": "このキャラクターは別の場所で更新されました。エディターを閉じて再度開き、最新バージョンを読み込んでください。"
+  },
+  "VKjzDV": {
+    "message": "キャラクター「{name}」として"
+  },
+  "WZlcDP": {
+    "message": "キャラクターキー"
+  },
+  "Zs4hlI": {
+    "message": "肖像を編集"
+  },
+  "cXUE4o": {
+    "message": "基本情報"
+  },
+  "cyR7Kh": {
+    "message": "戻る"
+  },
+  "dGsoHG": {
+    "message": "ゲームマスター"
+  },
+  "dOQCL8": {
+    "message": "表示名"
+  },
+  "e08nsD": {
+    "message": "肖像は最大 {maxCount} 枚まで。"
+  },
+  "eWFuvS": {
+    "message": "識別子が使用可能か確認できませんでした。もう一度お試しください。"
+  },
+  "etAoRt": {
+    "message": "アクセスと権限"
+  },
+  "fN3hgg": {
+    "message": "キャラクター名は必須です。"
+  },
+  "ftDYZo": {
+    "message": "アーカイブを解除"
+  },
+  "g4nsRX": {
+    "message": "この権限とアクセス範囲ではキャラクターを編集できません。"
+  },
+  "g7UZYd": {
+    "message": "このキャラクターをアーカイブすると、現在使用中のすべてのチャンネルとの紐付けが解除されます。アーカイブしますか？"
+  },
+  "gIq7HF": {
+    "message": "このキャラクターの識別子はすでに使用されています。"
+  },
+  "gk+yeE": {
+    "message": "キャラクターを取得できませんでした"
+  },
+  "hjKHMa": {
+    "message": "キャラクター情報を読み込み中…"
+  },
+  "hw9PdM": {
+    "message": "デフォルトの色を継承します。"
+  },
+  "i6h/mR": {
+    "message": "チャンネル：{channel}"
+  },
+  "iHUUFA": {
+    "message": "このキャラクターを指すために使用される識別子です。"
+  },
+  "ihr8Vi": {
+    "message": "メインの肖像を選択して並べ替え"
+  },
+  "j3v6aj": {
+    "message": "チャンネル範囲では、そのチャンネルのメンバーシップとゲームマスター権限が適用されます。"
+  },
+  "jm/spn": {
+    "message": "リセット"
+  },
+  "jrUpl0": {
+    "message": "肖像を追加"
+  },
+  "kLjOdv": {
+    "message": "2～32文字を使用してください。"
+  },
+  "kP8cI1": {
+    "message": "キャラクターを作成"
+  },
+  "kWRZBe": {
+    "message": "エントリーメタデータ"
+  },
+  "knwSYE": {
+    "message": "空白を含めず、1～64文字の英字、数字、絵文字、または対応する句読点を使用してください。"
+  },
+  "ku+mDU": {
+    "message": "状態"
+  },
+  "lOmCRF": {
+    "message": "チャンネル限定"
+  },
+  "lo1ANX": {
+    "message": "キャラクターの状態を取得できませんでした"
+  },
+  "nCAM1K": {
+    "message": "説明はまだありません。"
+  },
+  "o0OcU0": {
+    "message": "この名前で"
+  },
+  "p5LNtB": {
+    "message": "未設定"
+  },
+  "pBBbOP": {
+    "message": "一致するキャラクターが利用可能です："
+  },
+  "pFK6bJ": {
+    "message": "すべて表示"
+  },
+  "qObHlo": {
+    "message": "すべてのキャラクター"
+  },
+  "qXRz37": {
+    "message": "肖像{number}を使用"
+  },
+  "qcVx98": {
+    "message": "{characterName} の肖像"
+  },
+  "qp37dR": {
+    "message": "画像をアップロードできませんでした。"
+  },
+  "qun7iY": {
+    "message": "エディターを閉じる"
+  },
+  "ruIdSD": {
+    "message": "画像のアップロードがタイムアウトしました。"
+  },
+  "sAAAI/": {
+    "message": "エイリアス{alias}をコピー"
+  },
+  "sfFk7R": {
+    "message": "プレイヤー"
+  },
+  "tLEjBS": {
+    "message": "PNG、JPEG、GIF、WebP（最大{sizeLimit}MB）。"
+  },
+  "tcCPK0": {
+    "message": "キャラクターとして"
+  },
+  "u0Jaxy": {
+    "message": "所有者とゲームマスターのみが閲覧・編集・キャラクターとしての発言を行えます。"
+  },
+  "uMhpKe": {
+    "message": "色"
+  },
+  "ufBuw4": {
+    "message": "状態はまだ追加されていません。"
+  },
+  "wLHlL9": {
+    "message": "エイリアス{number}"
+  },
+  "wrxYAn": {
+    "message": "サポートされていないコンポーネント：{types}"
+  },
+  "xHdSK9": {
+    "message": "エイリアス"
+  },
+  "yyEekH": {
+    "message": "肖像を読み込めませんでした。"
+  },
+  "z16Lmv": {
+    "message": "キャラクターの使用状況を読み込めませんでした。"
+  },
+  "zPTBof": {
+    "message": "エイリアス{number}を削除"
+  },
+  "zlIkXt": {
+    "message": "キャラクターを読み込み中です。もう一度お試しください。"
   }
 }

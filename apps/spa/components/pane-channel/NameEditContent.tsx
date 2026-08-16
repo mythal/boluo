@@ -10,7 +10,7 @@ import { type ChannelState } from '../../state/channel.reducer';
 import { backwards, last } from 'list';
 import { NameEditContentNameHistory } from './NameEditContentNameHistory';
 import { CharacterPicker } from './CharacterPicker';
-import { useQueryCharacters } from '@boluo/hooks/useQueryCharacters';
+import { usePortrayableCharacters } from '../../hooks/usePortrayableCharacters';
 import { useChannelCharacterName } from '../../hooks/useChannelCharacter';
 import { recentCharacterIdsAtomFamily, selectRecentCharacters } from './recentCharacters';
 
@@ -85,21 +85,17 @@ export const NameEditContent: FC<Props> = ({ member, dismiss, onViewAllCharacter
   const spaceId = member.space.spaceId;
   const channelId = member.channel.channelId;
   const recentCharacterIdsAtom = recentCharacterIdsAtomFamily({ spaceId, userId: myId });
-  const recentCharacterIds = useAtomValue(recentCharacterIdsAtom);
+  const recentCharacterIds = useMemo(
+    () => store.get(recentCharacterIdsAtom),
+    [recentCharacterIdsAtom, store],
+  );
   const defaultCharacterName = useChannelCharacterName(member);
   const {
-    data: characters,
+    characters,
     error: charactersError,
     isLoading: charactersLoading,
-  } = useQueryCharacters({
-    spaceId,
-    includeArchived: true,
-    portrayableOnly: true,
-  });
-  const activeCharacters = useMemo(
-    () => characters?.filter((character) => character.archivedAt == null),
-    [characters],
-  );
+    activeCharacters,
+  } = usePortrayableCharacters(spaceId);
   const recentCharacters = useMemo(
     () =>
       activeCharacters == null
@@ -109,8 +105,9 @@ export const NameEditContent: FC<Props> = ({ member, dismiss, onViewAllCharacter
             myId,
             recentCharacterIds,
             RECENT_CHARACTER_LIMIT,
+            member.channel.characterId,
           ),
-    [activeCharacters, myId, recentCharacterIds],
+    [activeCharacters, member.channel.characterId, myId, recentCharacterIds],
   );
   const characterNames = useMemo(
     () => new Set(activeCharacters?.map((character) => character.name) ?? []),
@@ -165,6 +162,7 @@ export const NameEditContent: FC<Props> = ({ member, dismiss, onViewAllCharacter
         </label>
         <NameEditInput
           channelId={member.channel.channelId}
+          spaceId={member.space.spaceId}
           defaultName={defaultCharacterName}
           characterId={member.channel.characterId}
         />

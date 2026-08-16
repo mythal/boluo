@@ -151,6 +151,7 @@ test('parse modifier', () => {
 test('parse temporary character name modifier', () => {
   const withAs = originalParse('.as Alice; hello world');
   assert.strictEqual(withAs.characterName, 'Alice');
+  assert.deepStrictEqual(withAs.asTarget, { type: 'TemporaryName', name: 'Alice' });
   assert.strictEqual(withAs.inGame, true);
   assert.ok(withAs.modifiers.some((modifier) => modifier.type === 'As'));
 
@@ -181,6 +182,29 @@ test('parse temporary character name modifier', () => {
   const delimiterAndNewlineAndRest = parseModifiers('.as 魔女工艺掌门 玻璃匠薇儿;Magic\n逃跑!');
   assert.strictEqual(delimiterAndNewlineAndRest.characterName, '魔女工艺掌门 玻璃匠薇儿');
   assert.strictEqual(delimiterAndNewlineAndRest.rest.trimStart(), 'Magic\n逃跑!');
+});
+
+test('parse character reference in .as modifier', () => {
+  const parsed = originalParse('.as @alice; hello world');
+  assert.strictEqual(parsed.characterName, '');
+  assert.deepStrictEqual(parsed.asTarget, {
+    type: 'CharacterReference',
+    identifier: 'alice',
+  });
+  assert.strictEqual(parsed.inGame, true);
+
+  const identifier = `@${'a'.repeat(64)}`;
+  assert.deepStrictEqual(parseModifiers(`.as ${identifier}; hello`).asTarget, {
+    type: 'CharacterReference',
+    identifier: 'a'.repeat(64),
+  });
+});
+
+test('parse default character reference in .as modifier', () => {
+  const parsed = originalParse('.as @; hello world');
+  assert.deepStrictEqual(parsed.asTarget, { type: 'DefaultCharacter' });
+  assert.strictEqual(parsed.inGame, true);
+  assert.strictEqual(parseModifiers('.as @; hello world').rest.trimStart(), 'hello world');
 });
 
 test('parse .as without name acts as in-game', () => {

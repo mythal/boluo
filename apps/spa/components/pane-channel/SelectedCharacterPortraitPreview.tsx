@@ -22,8 +22,8 @@ const PORTRAIT_PICKER_GAP_REM = 0.5;
 
 export const SelectedCharacterPortraitPreview: FC<Props> = ({ spaceId, characterId }) => {
   const intl = useIntl();
-  const { composeAtom, characterNameAtom } = useChannelAtoms();
-  const characterName = useAtomValue(characterNameAtom);
+  const { composeAtom, asTargetAtom } = useChannelAtoms();
+  const asTarget = useAtomValue(asTargetAtom);
   const selectedCharacterPortrait = useAtomValue(composeAtom).selectedCharacterPortrait;
   const dispatch = useSetAtom(composeAtom);
   const [expanded, setExpanded] = useState(false);
@@ -58,7 +58,8 @@ export const SelectedCharacterPortraitPreview: FC<Props> = ({ spaceId, character
     }
   }, [characterId, dispatch, portraitEntries, portraits, selectedCharacterPortrait]);
 
-  if (characterName.trim() !== '' || character == null || selectedPortrait == null) return null;
+  if (asTarget?.type === 'TemporaryName' || character == null || selectedPortrait == null)
+    return null;
 
   const portraitOptions = portraits.filter((portrait) => portrait.id !== selectedPortrait.id);
   const multiple = portraitOptions.length > 0;

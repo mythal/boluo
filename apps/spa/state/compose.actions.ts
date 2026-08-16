@@ -6,7 +6,7 @@ import type { CharacterPortraitSelection } from './characterPortraitSelection';
 
 export type ComposeActionMap = {
   setSource: { channelId: string; source: string };
-  setCharacterName: { name: string; setInGame?: boolean };
+  setAsTargetText: { text: string; setInGame?: boolean };
   selectCharacterPortrait: CharacterPortraitSelection | null;
   toggleInGame: { defaultInGame: boolean };
   setInGame: { inGame: boolean };
@@ -17,7 +17,7 @@ export type ComposeActionMap = {
   recoverState: ComposeState;
   media: { media: File | null };
   editMessage: { message: Message };
-  sent: { edit?: boolean };
+  sent: { edit?: boolean; collapseCharacterReference?: boolean };
   reset: { restore?: boolean };
   focus: Empty;
   blur: Empty;

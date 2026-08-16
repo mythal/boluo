@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT EXISTS(\n    SELECT 1\n    FROM character_identifiers\n    WHERE space_id = $1\n      AND value = ANY($2::citext[])\n) AS \"exists!\";\n",
+  "query": "SELECT EXISTS(\n    SELECT 1\n    FROM character_identifiers\n    WHERE space_id = $1\n      AND value = ANY($2::citext[])\n      AND ($3::uuid IS NULL OR character_id <> $3)\n) AS \"exists!\";\n",
   "describe": {
     "columns": [
       {
@@ -25,12 +25,13 @@
               }
             }
           }
-        }
+        },
+        "Uuid"
       ]
     },
     "nullable": [
       null
     ]
   },
-  "hash": "61f0294813fe68847fb7d470011dd74e07f31178c869f5e7c15ed80b9e88b57d"
+  "hash": "404434fc36ec6b3523beb7c52fe8e108983dab3615e89470d1c29e6122af2351"
 }

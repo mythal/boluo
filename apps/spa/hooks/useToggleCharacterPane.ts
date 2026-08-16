@@ -6,7 +6,7 @@ import { usePaneToggle } from './usePaneToggle';
 export const useToggleCharacterPane = (spaceId: string) => {
   const panes = useAtomValue(panesAtom);
   const toggleCharacterPane = usePaneToggle();
-  const toggleCharacterChildPane = usePaneToggle({ child: '1/3' });
+  const toggleCharacterChildPane = usePaneToggle({ child: '1/2' });
 
   const isCharacterPaneOpen = useCallback(
     (characterId: string): boolean =>

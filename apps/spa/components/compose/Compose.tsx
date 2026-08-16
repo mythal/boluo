@@ -20,6 +20,7 @@ import { ComposeFallback } from '@boluo/ui/ComposeFallback';
 import { useBackupCompose } from '../../hooks/useBackupCompose';
 import clsx from 'clsx';
 import { ComposeResizer } from './ComposeResizer';
+import { AsCharacterPopover } from './AsCharacterPopover';
 
 interface Props {
   member: MemberWithUser;
@@ -72,6 +73,7 @@ export const Compose = ({ member, channelAtoms }: Props) => {
     return <EditMessageBanner currentUser={member.user} />;
   }, [isEditing, member.user]);
   const composeContainerRef = useRef<HTMLDivElement>(null);
+  const textAreaAnchorRef = useRef<HTMLDivElement>(null);
   const fileButton = useMemo(() => <FileButton />, []);
   const inGameSwitchButton = useMemo(() => <InGameSwitchButton />, []);
   const addDiceButton = useMemo(() => <AddDiceButton />, []);
@@ -91,6 +93,9 @@ export const Compose = ({ member, channelAtoms }: Props) => {
         <ComposeResizer composeContainerRef={composeContainerRef} />
         {mediaLine}
         {editMessageBanner}
+        {!isEditing && (
+          <AsCharacterPopover spaceId={member.space.spaceId} anchorRef={textAreaAnchorRef} />
+        )}
         <div
           ref={composeContainerRef}
           data-in-game={inGame}
@@ -103,12 +108,14 @@ export const Compose = ({ member, channelAtoms }: Props) => {
         >
           {fileButton}
           {inGameSwitchButton}
-          <DeferredComposeTextArea
-            parsedAtom={parsedAtom}
-            currentUser={member.user}
-            enterSend={enterSend}
-            send={send}
-          />
+          <div ref={textAreaAnchorRef} className="flex min-w-0 flex-1">
+            <DeferredComposeTextArea
+              parsedAtom={parsedAtom}
+              currentUser={member.user}
+              enterSend={enterSend}
+              send={send}
+            />
+          </div>
 
           {addDiceButton}
           {sendButton}

@@ -43,6 +43,7 @@ export interface ValidationFailError {
 export interface ConflictError {
   code: 'CONFLICT';
   message: string;
+  context: unknown;
 }
 
 export interface MethodNotAllowedError {

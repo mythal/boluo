@@ -13,11 +13,13 @@ import {
   makeDesiredPreview,
   selectComposePreviewMetadata,
 } from './makeDesiredPreview';
+import { usePortrayableCharacters } from '../../hooks/usePortrayableCharacters';
 
 const SEND_PREVIEW_DEBOUNCE_MS = 250;
 
 export const useSendPreview = (
   channelId: string,
+  spaceId: string | undefined,
   nickname: string | undefined,
   defaultCharacterName: string,
   composeAtom: ComposeAtom,
@@ -28,6 +30,7 @@ export const useSendPreview = (
   const isFocused = usePaneIsFocus();
   const connectionState = useAtomValue(connectionStateAtom);
   const initialized = useAtomValue(isChatInitializedAtom);
+  const { resolve } = usePortrayableCharacters(spaceId);
   const publisher = useMemo(
     () =>
       createPreviewPublisher<WebSocket, number>({
@@ -93,6 +96,10 @@ export const useSendPreview = (
       defaultInGame,
       compose,
       parsed,
+      characterNameForIdentifier: (identifier) => {
+        const resolution = resolve(identifier);
+        return resolution.status === 'Found' ? resolution.character.name : null;
+      },
     });
     if (desired == null) return;
     publisher.dispatch({
@@ -118,6 +125,7 @@ export const useSendPreview = (
     parsedAtom,
     previewMetadataAtom,
     publisher,
+    resolve,
     store,
   ]);
 

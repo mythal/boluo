@@ -1,10 +1,12 @@
 import type { AccessPolicy, Character } from '@boluo/api';
+import { useQueryChannelList } from '@boluo/hooks/useQueryChannelList';
 import { useQueryChannelMembers } from '@boluo/hooks/useQueryChannelMembers';
 import { useQueryCurrentUser } from '@boluo/hooks/useQueryCurrentUser';
 import { useMySpaceMember } from '@boluo/hooks/useQueryMySpaceMember';
 import { useQuerySpace } from '@boluo/hooks/useQuerySpace';
+import { useCallback } from 'react';
 
-interface CharacterEditAccess {
+export interface CharacterAccessContext {
   accessPolicy: AccessPolicy;
   ownerId: Character['ownerId'];
   userId: string | null | undefined;
@@ -23,7 +25,7 @@ export const canEditCharacter = ({
   isResourceMember,
   isGameMaster,
   canManageSpace,
-}: CharacterEditAccess): boolean => {
+}: CharacterAccessContext): boolean => {
   if (userId == null) return false;
   const isOwner = isResourceMember && ownerId === userId;
   switch (accessPolicy) {
@@ -39,6 +41,12 @@ export const canEditCharacter = ({
       return isGameMaster;
   }
 };
+
+export const isCharacterAccessSelectionInvalid = (
+  isLoading: boolean,
+  hasError: boolean,
+  isAllowed: boolean,
+): boolean => !isLoading && !hasError && !isAllowed;
 
 export const useCanEditCharacter = (character: Character | undefined): boolean => {
   const { data: currentUser } = useQueryCurrentUser();
@@ -68,4 +76,70 @@ export const useCanEditCharacter = (character: Character | undefined): boolean =
     canManageSpace:
       mySpaceMember?.isAdmin === true || (currentUser != null && currentUser.id === space?.ownerId),
   });
+};
+
+export const useCharacterAccessOptions = (character: Character) => {
+  const currentUserQuery = useQueryCurrentUser();
+  const spaceQuery = useQuerySpace(character.spaceId);
+  const spaceMemberQuery = useMySpaceMember(character.spaceId);
+  const channelsQuery = useQueryChannelList(character.spaceId);
+  const { data: currentUser } = currentUserQuery;
+  const { data: space } = spaceQuery;
+  const { data: mySpaceMember } = spaceMemberQuery;
+  const { data: channels } = channelsQuery;
+  const error =
+    currentUserQuery.error ??
+    spaceQuery.error ??
+    spaceMemberQuery.error ??
+    channelsQuery.error ??
+    null;
+  const retry = useCallback(async (): Promise<void> => {
+    await Promise.allSettled([
+      currentUserQuery.mutate(),
+      spaceQuery.mutate(),
+      spaceMemberQuery.mutate(),
+      channelsQuery.mutate(),
+    ]);
+  }, [channelsQuery, currentUserQuery, spaceMemberQuery, spaceQuery]);
+  const canManageSpace =
+    mySpaceMember?.isAdmin === true || (currentUser != null && currentUser.id === space?.ownerId);
+
+  const canUseAccess = useCallback(
+    (accessPolicy: AccessPolicy, accessChannelId: string | null): boolean => {
+      const channelMember =
+        accessChannelId == null
+          ? null
+          : channels?.find(({ channel }) => channel.id === accessChannelId)?.member;
+      return canEditCharacter({
+        accessPolicy,
+        ownerId: character.ownerId,
+        userId: currentUser?.id,
+        isResourceMember:
+          mySpaceMember != null && (accessChannelId == null || channelMember != null),
+        isGameMaster:
+          accessChannelId == null
+            ? mySpaceMember?.isGameMaster === true
+            : channelMember?.isMaster === true,
+        canManageSpace,
+      });
+    },
+    [canManageSpace, channels, character.ownerId, currentUser?.id, mySpaceMember],
+  );
+
+  return {
+    channels,
+    error,
+    isLoading:
+      currentUserQuery.isLoading ||
+      spaceQuery.isLoading ||
+      spaceMemberQuery.isLoading ||
+      channelsQuery.isLoading,
+    isRetrying:
+      currentUserQuery.isValidating ||
+      spaceQuery.isValidating ||
+      spaceMemberQuery.isValidating ||
+      channelsQuery.isValidating,
+    retry,
+    canUseAccess,
+  };
 };

@@ -2,12 +2,14 @@ import type { Character } from '@boluo/api';
 import Archive from '@boluo/icons/Archive';
 import HatGlasses from '@boluo/icons/HatGlasses';
 import { Button } from '@boluo/ui/Button';
+import clsx from 'clsx';
 import type { FC } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 
 interface Props {
   character: Character;
   current: boolean;
+  isDefault: boolean;
   displayColor?: string;
   onSelect: (character: Character) => void;
   onToggleDetails: (character: Character) => void;
@@ -18,6 +20,7 @@ interface Props {
 export const CharacterSelectorItem: FC<Props> = ({
   character,
   current,
+  isDefault,
   displayColor,
   onSelect,
   onToggleDetails,
@@ -37,9 +40,22 @@ export const CharacterSelectorItem: FC<Props> = ({
         className="min-w-0 grow justify-start"
         style={displayColor ? { borderColor: displayColor } : undefined}
       >
-        <span className="min-w-0 flex-1 truncate text-left" title={character.name}>
+        <span className="min-w-0 truncate text-left" title={character.name}>
           {character.name}
         </span>
+        {isDefault && (
+          <span
+            className={clsx(
+              'inline-flex shrink-0 rounded border px-1 py-0.5 text-xs leading-none',
+              current
+                ? 'border-border-strong bg-surface-unit/70'
+                : 'border-border-default bg-surface-canvas',
+            )}
+            title={intl.formatMessage({ defaultMessage: 'Default character' })}
+          >
+            <FormattedMessage defaultMessage="Default" />
+          </span>
+        )}
         {archived && (
           <span
             className="text-text-muted ml-auto inline-flex shrink-0 items-center"

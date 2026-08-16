@@ -16,3 +16,30 @@ test('selects and clears a character portrait', () => {
   });
   assert.equal(cleared.selectedCharacterPortrait, null);
 });
+
+test('keeps a referenced character after sending when it is not the default', () => {
+  const state = { ...makeInitialComposeState(), source: '.as @alice; hello' };
+  const sent = composeReducer(state, {
+    type: 'sent',
+    payload: { collapseCharacterReference: false },
+  });
+
+  assert.equal(sent.source, '.as @alice; ');
+});
+
+test('omits a referenced character after sending when it is the default', () => {
+  const state = { ...makeInitialComposeState(), source: '.as @alice; hello' };
+  const sent = composeReducer(state, {
+    type: 'sent',
+    payload: { collapseCharacterReference: true },
+  });
+
+  assert.equal(sent.source, '.as ');
+});
+
+test('omits an explicit default-character target after sending', () => {
+  const state = { ...makeInitialComposeState(), source: '.as @; hello' };
+  const sent = composeReducer(state, { type: 'sent', payload: {} });
+
+  assert.equal(sent.source, '.as ');
+});

@@ -6,11 +6,11 @@ import { FormattedMessage, useIntl } from 'react-intl';
 
 interface Props {
   suggestedName: string;
-  disabled: boolean;
+  disabled?: boolean;
   onCreate: (name: string) => Promise<void>;
 }
 
-export const InlineCharacterCreate: FC<Props> = ({ suggestedName, disabled, onCreate }) => {
+export const InlineCharacterCreate: FC<Props> = ({ suggestedName, disabled = false, onCreate }) => {
   const intl = useIntl();
   const [expanded, setExpanded] = useState(false);
   const [name, setName] = useState('');

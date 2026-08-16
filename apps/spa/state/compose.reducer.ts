@@ -1,5 +1,5 @@
 import { makeId } from '@boluo/utils/id';
-import { type Modifier, parseModifiers } from '@boluo/interpreter';
+import { MAX_CHARACTER_IDENTIFIER_LENGTH, type Modifier, parseModifiers } from '@boluo/interpreter';
 import { type MediaError, validateMedia } from '../media';
 import { type ComposeAction, type ComposeActionUnion } from './compose.actions';
 import { type PreviewEdit } from '@boluo/api';
@@ -229,7 +229,7 @@ const modifyModifier = (
   return { ...state, source: nextSource, range: [nextSource.length, nextSource.length] };
 };
 
-const setCharacterName = (source: string, name: string): string => {
+const setAsTargetText = (source: string, text: string): string => {
   const removeSegments = (text: string, segments: Array<{ start: number; len: number }>) => {
     const sorted = [...segments].sort((a, b) => b.start - a.start);
     let result = text;
@@ -252,7 +252,11 @@ const setCharacterName = (source: string, name: string): string => {
   if (segments.length > 0) {
     baseSource = removeSegments(source, segments).trimStart();
   }
-  const trimmedName = name.trim().slice(0, 32);
+  const trimmed = text.trim();
+  const trimmedName = trimmed.slice(
+    0,
+    trimmed.startsWith('@') ? MAX_CHARACTER_IDENTIFIER_LENGTH + 1 : 32,
+  );
   if (trimmedName === '') {
     const suffix = baseSource.trimStart();
     return `.as${suffix ? ` ${suffix}` : ' '}`;
@@ -261,11 +265,11 @@ const setCharacterName = (source: string, name: string): string => {
   return command + baseSource.trimStart();
 };
 
-const handleSetCharacterName = (
+const handleSetAsTargetText = (
   state: ComposeState,
-  { payload }: ComposeAction<'setCharacterName'>,
+  { payload }: ComposeAction<'setAsTargetText'>,
 ): ComposeState => {
-  const nextSource = setCharacterName(state.source, payload.name);
+  const nextSource = setAsTargetText(state.source, payload.text);
   const nextRange: ComposeRange = [nextSource.length, nextSource.length];
   const nextState: ComposeState = { ...state, source: nextSource, range: nextRange };
   if (payload.setInGame) {
@@ -323,7 +327,7 @@ const handleToggleAction = (
 
 const handleSent = (
   state: ComposeState,
-  { payload: { edit = false } }: ComposeAction<'sent'>,
+  { payload: { edit = false, collapseCharacterReference = false } }: ComposeAction<'sent'>,
 ): ComposeState => {
   if (edit && state.backup) {
     return state.backup;
@@ -331,8 +335,14 @@ const handleSent = (
   const modifiers = parseModifiers(state.source);
   let source = '';
   if (modifiers.as) {
-    const name = modifiers.as.characterName.trim();
-    source += name ? `.as ${name}; ` : '.as ';
+    const target = modifiers.as.target;
+    const text =
+      target?.type === 'CharacterReference' && !collapseCharacterReference
+        ? `@${target.identifier}`
+        : target?.type === 'TemporaryName'
+          ? target.name.trim()
+          : undefined;
+    source += text ? `.as ${text}; ` : '.as ';
   } else if (modifiers.inGame) {
     source += modifiers.inGame.inGame ? '.in ' : '.out ';
   }
@@ -455,8 +465,8 @@ export const composeReducer = (state: ComposeState, action: ComposeActionUnion):
   switch (action.type) {
     case 'setSource':
       return handleSetComposeSource(state, action);
-    case 'setCharacterName':
-      return handleSetCharacterName(state, action);
+    case 'setAsTargetText':
+      return handleSetAsTargetText(state, action);
     case 'selectCharacterPortrait':
       return handleSelectCharacterPortrait(state, action);
     case 'toggleInGame':
@@ -511,11 +521,11 @@ export const checkCompose =
     media,
     editingAttribution,
   }: Pick<ComposeState, 'source' | 'media' | 'editingAttribution'>): ComposeError | null => {
-    const { inGame, rest, characterName: modifierCharacterName } = parseModifiers(source);
-    const nameInSource = modifierCharacterName.trim();
-    const effectiveInGame = nameInSource ? true : inGame ? inGame.inGame : defaultInGame;
+    const { inGame, rest, asTarget } = parseModifiers(source);
+    const effectiveInGame = asTarget != null ? true : inGame ? inGame.inGame : defaultInGame;
     const hasBoundEditCharacter = editingAttribution?.characterId != null;
-    if (effectiveInGame && nameInSource === '' && characterName === '' && !hasBoundEditCharacter) {
+    const needsDefaultName = asTarget == null || asTarget.type === 'DefaultCharacter';
+    if (effectiveInGame && needsDefaultName && characterName === '' && !hasBoundEditCharacter) {
       return 'NO_NAME';
     }
     const mediaResult = validateMedia(media);

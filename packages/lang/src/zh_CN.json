@@ -27,7 +27,7 @@
     "message": "载入消息失败 ({errorCode})"
   },
   "/iUStU": {
-    "message": "例如: 耐门·休·柯曼"
+    "message": "例如：耐门·休·柯曼"
   },
   "/jxJyw": {
     "message": "试图放置消息的位置发生了变化。"
@@ -222,7 +222,7 @@
     "message": "在你提交编辑前，这条消息已在其他位置被编辑。你的修改已保存为草稿。"
   },
   "7KDJn8": {
-    "message": "正在加载用户信息..."
+    "message": "正在加载用户信息……"
   },
   "7UOvbT": {
     "message": "离线"
@@ -243,7 +243,7 @@
     "message": "确实要删除这条消息？"
   },
   "82Y7Sa": {
-    "message": "发送中..."
+    "message": "发送中……"
   },
   "8HQJF3": {
     "message": "粘贴CSS变量或其他自定义CSS来覆盖主题。"
@@ -333,7 +333,7 @@
     "message": "找不到位面"
   },
   "BzWmz8": {
-    "message": "位面名"
+    "message": "位面名称"
   },
   "C81/uG": {
     "message": "登出"
@@ -375,7 +375,7 @@
     "message": "悄悄话给主持人"
   },
   "DBP+Od": {
-    "message": "Echo"
+    "message": "回声"
   },
   "EQjIkI": {
     "message": "无法加载访问选项。请重试请求，或者在不更改权限的情况下保存。"
@@ -390,7 +390,7 @@
     "message": "过去{day}天"
   },
   "FGo9HD": {
-    "message": "我在的位面"
+    "message": "我的位面"
   },
   "FN6jdd": {
     "message": "贵安，{username}！"
@@ -501,7 +501,7 @@
     "message": "用户名"
   },
   "JQt0RP": {
-    "message": "下拉刷新"
+    "message": "下拉加载"
   },
   "JXdbo8": {
     "message": "没事"
@@ -555,7 +555,7 @@
     "message": "你的邮箱还没验证，请{verifyEmail}。"
   },
   "L/Ows0": {
-    "message": "扫描了{scanned}条，{matched}条匹配"
+    "message": "已扫描 {scanned} 条消息，匹配到 {matched} 条。"
   },
   "L01rMU": {
     "message": "成员默认将作为本人发言。"
@@ -657,13 +657,13 @@
     "message": "权限"
   },
   "P57vjw": {
-    "message": "频道名称最多不能超过 32 字符。"
+    "message": "频道名称不能超过 32 个字符。"
   },
   "P6PLpi": {
     "message": "加入"
   },
   "PHZ3YP": {
-    "message": "大成功: {critical}, 大失败: {fumble}, 成功: {success}, 加骰: {addition}"
+    "message": "大成功：{critical}、大失败：{fumble}、成功：{success}、加骰：{addition}"
   },
   "PO83gc": {
     "message": "上次出现"
@@ -741,7 +741,7 @@
     "message": "条目键"
   },
   "RraqCg": {
-    "message": "帐号与密码不匹配"
+    "message": "账号与密码不匹配"
   },
   "Rtr4mH": {
     "message": "拖拽移动整列"
@@ -807,7 +807,7 @@
     "message": "自己"
   },
   "Tuwpkq": {
-    "message": "添加投骰"
+    "message": "添加一次掷骰"
   },
   "TwyMau": {
     "message": "账号"
@@ -837,7 +837,7 @@
     "message": "默认角色"
   },
   "V/JHlm": {
-    "message": "忘记密码?"
+    "message": "忘记密码？"
   },
   "V512b5": {
     "message": "此角色已在其他位置更新。请关闭并重新打开编辑器以加载最新版本。"
@@ -1518,7 +1518,7 @@
     "message": "查询用户失败"
   },
   "v3aFf1": {
-    "message": "建立位面"
+    "message": "创建位面"
   },
   "vMrnt6": {
     "message": "解析时发生了错误。"

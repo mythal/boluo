@@ -217,35 +217,6 @@ const useDndHandles = (channelId: string, chatList: ChatItem[]): UseDragHandlesR
   return { handleDragStart, handleDragEnd, active: draggingItem, handleDragCancel };
 };
 
-interface ScrollLockState {
-  end: boolean;
-  /** The id of current preview */
-  id: string | null;
-  modified: number;
-}
-
-const useScrollLock = (
-  virtuosoRef: RefObject<VirtuosoHandle | null>,
-  scrollerRef: RefObject<HTMLDivElement | null>,
-  wrapperRef: RefObject<HTMLDivElement | null>,
-  rangeRef: RefObject<[number, number]>,
-  chatList: ChatItem[],
-): RefObject<ScrollLockState> => {
-  const scrollLockRef = useRef<ScrollLockState>({ end: true, id: null, modified: 0 });
-  const prevChatListRef = useRef(chatList);
-
-  useEffect(() => {
-    if (chatList !== prevChatListRef.current) {
-      const virtuoso = virtuosoRef.current;
-      if (virtuoso && scrollLockRef.current.end) {
-        virtuoso.scrollToIndex({ index: 'LAST' });
-      }
-      prevChatListRef.current = chatList;
-    }
-  });
-  return scrollLockRef;
-};
-
 export const ChatContentView: FC<Props> = ({ setIsScrolling, currentUserId }) => {
   const channelId = useChannelId();
   const store = useStore();

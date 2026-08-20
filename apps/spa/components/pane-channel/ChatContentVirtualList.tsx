@@ -1,4 +1,4 @@
-import { type FC, type RefObject, useCallback, useMemo } from 'react';
+import { type FC, type RefObject, useCallback, useMemo, useRef } from 'react';
 import {
   type ListRange,
   type ScrollSeekPlaceholderProps,
@@ -66,9 +66,17 @@ export const ChatContentVirtualList: FC<Props> = (props) => {
     currentUserId,
   } = props;
   const totalCount = chatList.length;
+  const isAtBottomRef = useRef(true);
+  const onBottomStateChange = useCallback(
+    (bottom: boolean) => {
+      isAtBottomRef.current = bottom;
+      handleBottomStateChange?.(bottom);
+    },
+    [handleBottomStateChange],
+  );
   const onVirtualKeybroadChange: OnVirtualKeybroadChange = useCallback(
     (rect, prevRect) => {
-      if (rect.height <= prevRect.height) return;
+      if (rect.height <= prevRect.height || !isAtBottomRef.current || totalCount === 0) return;
       virtuosoRef.current?.scrollToIndex({ index: totalCount - 1, align: 'end' });
     },
     [totalCount, virtuosoRef],
@@ -146,7 +154,7 @@ export const ChatContentVirtualList: FC<Props> = (props) => {
       overscan={{ main: 128, reverse: 512 }}
       itemContent={itemContent}
       followOutput="auto"
-      atBottomStateChange={handleBottomStateChange}
+      atBottomStateChange={onBottomStateChange}
       firstItemIndex={firstItemIndex}
     />
   );

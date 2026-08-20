@@ -33,13 +33,16 @@ export const followOutputSystem = u.system(
     { scrolledToInitialItem },
     { didMount, propsReady },
     { log },
-    { scrollingInProgress },
+    { scrollingInProgress, scrollTop, statefulScrollTop },
     { context },
     { scrollIntoView },
   ]) => {
     const followOutput = u.statefulStream<FollowOutput>(false)
     const autoscrollToBottom = u.stream<true>()
     let pendingScrollHandle: any = null
+    let cancelPendingScrollOnUp: null | (() => void) = null
+    let cancelSizeIncreaseTrap: null | (() => void) = null
+    let sizeIncreaseTrapTimeout: null | ReturnType<typeof setTimeout> = null
 
     function scrollToBottom(followOutputBehavior: FollowOutputScalarType) {
       u.publish(scrollToIndex, {
@@ -48,6 +51,67 @@ export const followOutputSystem = u.system(
         index: 'LAST',
       })
     }
+
+    function cancelPendingScroll() {
+      if (pendingScrollHandle !== null) {
+        pendingScrollHandle()
+        pendingScrollHandle = null
+      }
+      if (cancelPendingScrollOnUp !== null) {
+        cancelPendingScrollOnUp()
+        cancelPendingScrollOnUp = null
+      }
+    }
+
+    function cancelPendingSizeIncreaseTrap() {
+      if (cancelSizeIncreaseTrap !== null) {
+        cancelSizeIncreaseTrap()
+        cancelSizeIncreaseTrap = null
+      }
+      if (sizeIncreaseTrapTimeout !== null) {
+        clearTimeout(sizeIncreaseTrapTimeout)
+        sizeIncreaseTrapTimeout = null
+      }
+    }
+
+    function followAfterNextSizeRefresh() {
+      cancelPendingScroll()
+      const scrollTopAtRefresh = u.getValue(statefulScrollTop)
+
+      pendingScrollHandle = u.handleNext(
+        u.pipe(
+          listRefresh,
+          u.filter((changed) => changed)
+        ),
+        () => {
+          pendingScrollHandle = null
+          cancelPendingScrollOnUp?.()
+          cancelPendingScrollOnUp = null
+          u.getValue(log)('following output after refreshed item size', {}, LogLevel.DEBUG)
+          scrollToBottom('auto')
+        }
+      )
+      cancelPendingScrollOnUp = u.subscribe(scrollTop, (nextScrollTop) => {
+        if (nextScrollTop < scrollTopAtRefresh) {
+          cancelPendingScroll()
+        }
+      })
+    }
+
+    u.subscribe(
+      u.pipe(
+        u.duc(followOutput),
+        u.filter((follow) => follow === false)
+      ),
+      () => {
+        // cancelPendingScrollOnUp is only set for a deferred content follow.
+        // Other pending operations, such as scrollIntoViewOnChange, are independent.
+        if (cancelPendingScrollOnUp !== null) {
+          cancelPendingScroll()
+        }
+        cancelPendingSizeIncreaseTrap()
+      }
+    )
 
     u.subscribe(
       u.pipe(
@@ -69,10 +133,7 @@ export const followOutputSystem = u.system(
         u.filter(({ shouldFollow }) => shouldFollow)
       ),
       ({ followOutputBehavior, totalCount }) => {
-        if (pendingScrollHandle !== null) {
-          pendingScrollHandle()
-          pendingScrollHandle = null
-        }
+        cancelPendingScroll()
 
         // if the items have fixed size, we can scroll immediately
         if (u.getValue(fixedItemSize) === undefined) {
@@ -91,13 +152,22 @@ export const followOutputSystem = u.system(
     )
 
     function trapNextSizeIncrease(followOutput: boolean) {
-      const cancel = u.handleNext(atBottomState, (state) => {
-        if (followOutput && !state.atBottom && state.notAtBottomBecause === 'SIZE_INCREASED' && pendingScrollHandle === null) {
+      cancelPendingSizeIncreaseTrap()
+      if (!followOutput) {
+        return
+      }
+      cancelSizeIncreaseTrap = u.handleNext(atBottomState, (state) => {
+        cancelSizeIncreaseTrap = null
+        if (sizeIncreaseTrapTimeout !== null) {
+          clearTimeout(sizeIncreaseTrapTimeout)
+          sizeIncreaseTrapTimeout = null
+        }
+        if (!state.atBottom && state.notAtBottomBecause === 'SIZE_INCREASED' && pendingScrollHandle === null) {
           u.getValue(log)('scrolling to bottom due to increased size', {}, LogLevel.DEBUG)
           scrollToBottom('auto')
         }
       })
-      setTimeout(cancel, 100)
+      sizeIncreaseTrapTimeout = setTimeout(cancelPendingSizeIncreaseTrap, 100)
     }
 
     u.subscribe(
@@ -116,7 +186,15 @@ export const followOutputSystem = u.system(
       ([, followOutput]) => {
         // activate adjustment only if the initial item is already scrolled to
         if (u.getValue(scrolledToInitialItem)) {
-          trapNextSizeIncrease(followOutput !== false)
+          const shouldFollow = behaviorFromFollowOutput(followOutput, u.getValue(isAtBottom)) !== false
+          if (shouldFollow && u.getValue(fixedItemSize) === undefined) {
+            // Content-only data updates can commit later than the data prop itself.
+            // Wait for the actual item measurement, coalescing rapid updates, and
+            // cancel the follow if the reader moves upwards in the meantime.
+            followAfterNextSizeRefresh()
+          } else {
+            cancelPendingScroll()
+          }
         }
       }
     )
@@ -127,6 +205,7 @@ export const followOutputSystem = u.system(
 
     u.subscribe(u.combineLatest(u.duc(followOutput), atBottomState), ([followOutput, state]) => {
       if (followOutput !== false && !state.atBottom && state.notAtBottomBecause === 'VIEWPORT_HEIGHT_DECREASING') {
+        cancelPendingScroll()
         scrollToBottom('auto')
       }
     })
@@ -164,10 +243,7 @@ export const followOutputSystem = u.system(
         u.throttleTime(0)
       ),
       (viewLocation) => {
-        if (pendingScrollHandle !== null) {
-          pendingScrollHandle()
-          pendingScrollHandle = null
-        }
+        cancelPendingScroll()
 
         // if the items have fixed size, we can scroll immediately
         if (u.getValue(fixedItemSize) === undefined) {

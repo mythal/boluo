@@ -29,6 +29,34 @@ use uuid::Uuid;
 
 type Sender = SplitSink<WebSocketStream<TokioIo<Upgraded>>, tungstenite::Message>;
 
+struct InitialUpdatesInFlight {
+    gauge: metrics::Gauge,
+    payload_bytes: u64,
+}
+
+impl InitialUpdatesInFlight {
+    fn new(updates: &[Utf8Bytes]) -> Self {
+        let payload_bytes = updates
+            .iter()
+            .map(|update| update.len() as u64)
+            .sum::<u64>();
+        metrics::histogram!("boluo_server_events_push_initial_updates_payload_bytes")
+            .record(payload_bytes as f64);
+        let gauge = metrics::gauge!("boluo_server_events_initial_updates_in_flight_bytes");
+        gauge.increment(payload_bytes as f64);
+        Self {
+            gauge,
+            payload_bytes,
+        }
+    }
+}
+
+impl Drop for InitialUpdatesInFlight {
+    fn drop(&mut self) {
+        self.gauge.decrement(self.payload_bytes as f64);
+    }
+}
+
 async fn check_permissions<'c, T: sqlx::PgExecutor<'c>>(
     db: T,
     space: &Space,
@@ -197,6 +225,9 @@ async fn push_updates(
             return Ok(());
         }
     };
+    // Keep the gauge guard in the same drop scope as `cached_updates`. This makes the metric show
+    // how long the initial replay payload remains retained by the WebSocket task.
+    let _initial_updates_in_flight = InitialUpdatesInFlight::new(&cached_updates);
     let cached_updates_count = cached_updates.len();
     if !cached_updates.is_empty() {
         if matches!(encoding, UpdateEncoding::Plain) {

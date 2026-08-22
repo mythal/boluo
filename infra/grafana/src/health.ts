@@ -241,7 +241,7 @@ export function buildHealthDashboard(datasourceUid: string): DashboardBuilder {
           {
             refId: 'http-5xx',
             editorMode: QueryEditorMode.Code,
-            expr: `(sum(rate(fly_app_http_responses_count{app="${SERVER_APP}",status=~"5.."}[${RATE_INTERVAL}]))) or vector(0)`,
+            expr: `(sum(rate(fly_edge_http_responses_count{app="${SERVER_APP}",status=~"5.."}[${RATE_INTERVAL}]))) or vector(0)`,
             legendFormat: 'HTTP 5xx',
           },
           {

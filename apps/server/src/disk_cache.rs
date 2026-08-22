@@ -401,7 +401,7 @@ fn read_values(
                 "payload for event {event_id:?} is missing"
             )));
         };
-        let encoded = std::str::from_utf8(value.value())
+        let encoded: Utf8Bytes = std::str::from_utf8(value.value())
             .map_err(storage_error)?
             .to_owned()
             .into();
@@ -409,6 +409,12 @@ fn read_values(
     }
     metrics::counter!("boluo_server_mailbox_cache_read_operations_total")
         .increment(event_ids.len() as u64);
+    let payload_bytes = values
+        .iter()
+        .map(|(_, encoded)| encoded.len() as u64)
+        .sum::<u64>();
+    metrics::histogram!("boluo_server_mailbox_cache_read_payload_bytes")
+        .record(payload_bytes as f64);
     metrics::histogram!("boluo_server_mailbox_cache_read_duration_ms")
         .record(start.elapsed().as_secs_f64() * 1000.0);
     Ok(values)

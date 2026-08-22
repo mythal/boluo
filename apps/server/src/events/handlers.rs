@@ -225,9 +225,8 @@ async fn push_updates(
             return Ok(());
         }
     };
-    // Keep the gauge guard in the same drop scope as `cached_updates`. This makes the metric show
-    // how long the initial replay payload remains retained by the WebSocket task.
-    let _initial_updates_in_flight = InitialUpdatesInFlight::new(&cached_updates);
+    // Track the payload until it is explicitly released after the initial replay is flushed.
+    let initial_updates_in_flight = InitialUpdatesInFlight::new(&cached_updates);
     let cached_updates_count = cached_updates.len();
     if !cached_updates.is_empty() {
         if matches!(encoding, UpdateEncoding::Plain) {
@@ -270,6 +269,11 @@ async fn push_updates(
         .record(start_time.elapsed().as_millis() as f64);
     metrics::histogram!("boluo_server_events_push_initial_updates_count")
         .record(cached_updates_count as f64);
+
+    // `push_updates` remains alive for the lifetime of the WebSocket connection. Release the
+    // replay payload before entering that loop instead of retaining it until the connection ends.
+    drop(cached_updates);
+    drop(initial_updates_in_flight);
 
     let mut last_pending_updates_warned = 0;
     let pending_updates = metrics::histogram!("boluo_server_events_pending_updates");

@@ -322,7 +322,8 @@ export function buildAlertRules(datasourceUid: string): AlertRulesProvisioning {
           threshold: (1024 * 1024) / 60,
           forDuration: '10m',
           severity: 'warning',
-          summary: 'Server anonymous memory has grown by more than 1 MiB per minute for ten minutes.',
+          summary:
+            'Server anonymous memory has grown by more than 1 MiB per minute for ten minutes.',
         }),
         alertRule(datasourceUid, resources, {
           uid: 'boluo-server-process-swap-high',

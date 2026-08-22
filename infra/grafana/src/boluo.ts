@@ -527,7 +527,7 @@ export function buildBoluoDashboard(
         id: 30,
         title: 'Event replay payload memory',
         description:
-          'Uncompressed initial-update payload retained by WebSocket tasks and rolling payload-size quantiles.',
+          'Uncompressed initial-update payload retained while replay is being sent, plus rolling payload-size quantiles.',
         datasourceUid,
         unit: 'bytes',
         min: 0,
@@ -542,10 +542,7 @@ export function buildBoluoDashboard(
           {
             refId: 'initial-p95',
             editorMode: QueryEditorMode.Code,
-            expr: summaryQuantile(
-              0.95,
-              'boluo_server_events_push_initial_updates_payload_bytes',
-            ),
+            expr: summaryQuantile(0.95, 'boluo_server_events_push_initial_updates_payload_bytes'),
             legendFormat: '{{instance}} initial updates p95',
           },
           {

@@ -1,6 +1,46 @@
 use metrics::gauge;
 use std::time::Instant;
 
+#[derive(Debug, PartialEq, Eq)]
+struct ProcessMemorySnapshot {
+    rss_bytes: u64,
+    anonymous_bytes: u64,
+    file_bytes: u64,
+    shared_bytes: u64,
+    swap_bytes: u64,
+    threads: u64,
+}
+
+#[cfg(target_os = "linux")]
+fn parse_status_value(status: &str, key: &str) -> Option<u64> {
+    let line = status.lines().find(|line| line.starts_with(key))?;
+    let mut fields = line[key.len()..].split_whitespace();
+    let value = fields.next()?.parse::<u64>().ok()?;
+    match fields.next() {
+        Some("kB") => value.checked_mul(1024),
+        None => Some(value),
+        Some(_) => None,
+    }
+}
+
+#[cfg(target_os = "linux")]
+fn get_process_memory_snapshot() -> Option<ProcessMemorySnapshot> {
+    let status = std::fs::read_to_string("/proc/self/status").ok()?;
+    Some(ProcessMemorySnapshot {
+        rss_bytes: parse_status_value(&status, "VmRSS:")?,
+        anonymous_bytes: parse_status_value(&status, "RssAnon:")?,
+        file_bytes: parse_status_value(&status, "RssFile:")?,
+        shared_bytes: parse_status_value(&status, "RssShmem:")?,
+        swap_bytes: parse_status_value(&status, "VmSwap:")?,
+        threads: parse_status_value(&status, "Threads:")?,
+    })
+}
+
+#[cfg(not(target_os = "linux"))]
+fn get_process_memory_snapshot() -> Option<ProcessMemorySnapshot> {
+    None
+}
+
 fn get_file_descriptor_snapshot() -> (u64, Option<u64>) {
     #[cfg(target_os = "linux")]
     {
@@ -37,6 +77,54 @@ pub async fn update_file_descriptor_metrics() {
         gauge!("boluo_server_file_descriptors_limit").set(fd_limit as f64);
         gauge!("boluo_server_file_descriptors_ratio").set(fd_count as f64 / fd_limit as f64);
     }
+}
+
+pub async fn update_process_memory_metrics() {
+    let Some(snapshot) = tokio::task::spawn_blocking(get_process_memory_snapshot)
+        .await
+        .ok()
+        .flatten()
+    else {
+        return;
+    };
+    gauge!("boluo_server_process_memory_bytes", "kind" => "rss").set(snapshot.rss_bytes as f64);
+    gauge!("boluo_server_process_memory_bytes", "kind" => "anonymous")
+        .set(snapshot.anonymous_bytes as f64);
+    gauge!("boluo_server_process_memory_bytes", "kind" => "file").set(snapshot.file_bytes as f64);
+    gauge!("boluo_server_process_memory_bytes", "kind" => "shared")
+        .set(snapshot.shared_bytes as f64);
+    gauge!("boluo_server_process_swap_bytes").set(snapshot.swap_bytes as f64);
+    gauge!("boluo_server_process_threads").set(snapshot.threads as f64);
+}
+
+pub fn update_allocator_metrics() {
+    let mut elapsed_msecs = 0;
+    let mut user_msecs = 0;
+    let mut system_msecs = 0;
+    let mut current_rss = 0;
+    let mut peak_rss = 0;
+    let mut current_commit = 0;
+    let mut peak_commit = 0;
+    let mut page_faults = 0;
+    // SAFETY: All pointers refer to valid stack-allocated `usize` values for the duration of the
+    // call. `mi_process_info` only writes the process-wide allocator statistics to them.
+    unsafe {
+        libmimalloc_sys::mi_process_info(
+            &mut elapsed_msecs,
+            &mut user_msecs,
+            &mut system_msecs,
+            &mut current_rss,
+            &mut peak_rss,
+            &mut current_commit,
+            &mut peak_commit,
+            &mut page_faults,
+        );
+    }
+    gauge!("boluo_server_allocator_resident_memory_bytes").set(current_rss as f64);
+    gauge!("boluo_server_allocator_peak_resident_memory_bytes").set(peak_rss as f64);
+    gauge!("boluo_server_allocator_committed_bytes").set(current_commit as f64);
+    gauge!("boluo_server_allocator_peak_committed_bytes").set(peak_commit as f64);
+    metrics::counter!("boluo_server_allocator_page_faults_total").absolute(page_faults as u64);
 }
 
 pub fn update_db_pool_metrics(pool: &sqlx::PgPool) {
@@ -135,6 +223,8 @@ pub fn start_update_metrics(
             tokio::select! {
                 _ = interval_4s.tick() => {
                     update_file_descriptor_metrics().await;
+                    update_process_memory_metrics().await;
+                    update_allocator_metrics();
                     update_db_pool_metrics(&pool);
                     update_database_health_metrics(&pool).await;
                     update_redis_health_metrics(redis.clone()).await;
@@ -162,4 +252,25 @@ pub async fn init_metrics(pool: &sqlx::Pool<sqlx::Postgres>) {
         .unwrap_or(0);
     gauge!("boluo_server_users_current").set(total_users_count as f64);
     tracing::info!("Metrics initialized");
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn parses_linux_process_status_memory() {
+        let status = "\
+VmRSS:\t  1234 kB\n\
+RssAnon:\t   900 kB\n\
+RssFile:\t   300 kB\n\
+RssShmem:\t    34 kB\n\
+VmSwap:\t    12 kB\n\
+Threads:\t7\n";
+
+        assert_eq!(parse_status_value(status, "VmRSS:"), Some(1234 * 1024));
+        assert_eq!(parse_status_value(status, "Threads:"), Some(7));
+        assert_eq!(parse_status_value(status, "VmPeak:"), None);
+    }
 }

@@ -38,6 +38,7 @@ hex = "0.4"
 ipnet = "2"
 itertools = "0.15"
 tracing = { version = "0.1", features = ["attributes"] }
+tracing-appender = "0.2"
 percent-encoding = "2.2.0"
 regex = "1"
 ring = "0.17"

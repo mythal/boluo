@@ -481,6 +481,27 @@ async fn init_database(args: InitArgs) {
     }
 }
 
+fn start_log_drop_metrics(error_counter: tracing_appender::non_blocking::ErrorCounter) {
+    metrics::describe_counter!(
+        "boluo_server_log_output_dropped_total",
+        "Structured log lines dropped because the non-blocking stdout queue was full"
+    );
+    tokio::spawn(async move {
+        let metric = metrics::counter!("boluo_server_log_output_dropped_total");
+        let mut reported = 0;
+        let mut interval = tokio::time::interval(std::time::Duration::from_secs(5));
+        loop {
+            interval.tick().await;
+            let dropped = error_counter.dropped_lines();
+            let delta = dropped.saturating_sub(reported);
+            if delta > 0 {
+                metric.increment(delta as u64);
+                reported = dropped;
+            }
+        }
+    });
+}
+
 #[tokio::main(worker_threads = 5)]
 async fn main() {
     use tracing_subscriber::filter::{EnvFilter, LevelFilter};
@@ -508,13 +529,23 @@ async fn main() {
     let filter = EnvFilter::builder()
         .with_default_directive(LevelFilter::INFO.into())
         .from_env_lossy();
+    let (log_writer, log_guard) = tracing_appender::non_blocking::NonBlockingBuilder::default()
+        .buffered_lines_limit(2_048)
+        .lossy(true)
+        .thread_name("boluo-log-writer")
+        .finish(std::io::stdout());
+    let log_error_counter = log_writer.error_counter();
     tracing_subscriber::fmt()
         .json()
         .flatten_event(true)
         .with_current_span(true)
         .with_span_list(false)
+        .with_writer(log_writer)
         .with_env_filter(filter)
         .init();
+    // Keep the guard alive until after the final log event so shutdown flushes
+    // the queue before terminating the writer thread.
+    let _log_guard = log_guard;
 
     let storage = std::sync::Arc::new(s3::Storage::new(s3::StorageConfig {
         endpoint_url: args.s3_endpoint_url.clone(),
@@ -637,6 +668,7 @@ async fn main() {
                 .describe_and_run(),
         );
     }
+    start_log_drop_metrics(log_error_counter);
     client_ip_resolver.start_proxy_probe_refresh(pool.clone(), ctx.signer().clone());
     client_ip_resolver.start_cdn_refresh();
     disk_cache::init(disk_cache_config(&args));

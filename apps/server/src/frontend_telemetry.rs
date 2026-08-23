@@ -29,6 +29,13 @@ static GLOBAL_LIMITER: LazyLock<DefaultDirectRateLimiter> = LazyLock::new(|| {
         Quota::per_minute(NonZeroU32::new(600).unwrap()).allow_burst(NonZeroU32::new(100).unwrap()),
     )
 });
+// Browser-provided batches can contain many log records. Limit emitted lines
+// separately so telemetry cannot monopolize the server's logging queue.
+static FRONTEND_LOG_LIMITER: LazyLock<DefaultDirectRateLimiter> = LazyLock::new(|| {
+    RateLimiter::direct(
+        Quota::per_minute(NonZeroU32::new(600).unwrap()).allow_burst(NonZeroU32::new(100).unwrap()),
+    )
+});
 static CLIENT_IPV4_LIMITER: LazyLock<DefaultKeyedRateLimiter<Ipv4Addr>> = LazyLock::new(|| {
     RateLimiter::keyed(
         Quota::per_minute(NonZeroU32::new(60).unwrap()).allow_burst(NonZeroU32::new(10).unwrap()),
@@ -223,6 +230,15 @@ fn record_signal(signal: &'static str, result: &'static str) {
     .increment(1);
 }
 
+fn frontend_log_allowed(signal: &'static str) -> bool {
+    if FRONTEND_LOG_LIMITER.check().is_ok() {
+        true
+    } else {
+        record_signal(signal, "rate_limited");
+        false
+    }
+}
+
 fn process(payload: FaroPayload) -> Result<(), AppError> {
     let signal_count = payload.signal_count();
     if signal_count == 0 {
@@ -253,6 +269,9 @@ fn process(payload: FaroPayload) -> Result<(), AppError> {
     let faro_session_id = truncated(payload.meta.session.id.as_deref().unwrap_or(""), 128);
 
     for exception in &payload.exceptions {
+        if !frontend_log_allowed("exception") {
+            continue;
+        }
         let stacktrace = stacktrace(exception);
         tracing::error!(
             event = "frontend.exception",
@@ -296,7 +315,7 @@ fn process(payload: FaroPayload) -> Result<(), AppError> {
     for log in &payload.logs {
         let message = truncated(&log.message, MAX_MESSAGE_BYTES);
         match log.level.as_str() {
-            "error" => {
+            "error" if frontend_log_allowed("log") => {
                 tracing::error!(
                     event = "frontend.log",
                     frontend_level = "error",
@@ -316,7 +335,7 @@ fn process(payload: FaroPayload) -> Result<(), AppError> {
                 );
                 record_signal("log", "logged");
             }
-            "warn" => {
+            "warn" if frontend_log_allowed("log") => {
                 tracing::warn!(
                     event = "frontend.log",
                     frontend_level = "warn",
@@ -336,6 +355,7 @@ fn process(payload: FaroPayload) -> Result<(), AppError> {
                 );
                 record_signal("log", "logged");
             }
+            "error" | "warn" => {}
             _ => record_signal("log", "filtered"),
         }
     }

@@ -484,15 +484,6 @@ export function buildBoluoDashboard(
             expr: summedRateOrZero('boluo_server_log_output_dropped_total'),
             legendFormat: 'log output dropped/s',
           },
-          {
-            refId: 'frontend-log-rate-limited',
-            editorMode: QueryEditorMode.Code,
-            expr: summedRateOrZero(
-              'boluo_server_frontend_telemetry_signals_total',
-              'result="rate_limited"',
-            ),
-            legendFormat: 'frontend logs rate limited/s',
-          },
         ],
       }),
     )

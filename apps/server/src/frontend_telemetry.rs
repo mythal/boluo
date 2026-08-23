@@ -1,8 +1,7 @@
 //! A deliberately small receiver for the subset of Grafana Faro used by Boluo.
 //!
-//! Browser exceptions and warning/error logs become structured server logs. Web
-//! vitals become metrics. Events are counted, while traces are intentionally
-//! discarded because the server does not currently run a trace backend.
+//! Browser exceptions and warning/error logs become structured server logs,
+//! while Web Vitals become metrics. Other Faro signals are ignored.
 
 use std::collections::HashMap;
 use std::net::{IpAddr, Ipv4Addr};
@@ -20,18 +19,11 @@ use crate::interface::{Response, read_body_limited};
 use crate::rate_limit::Ipv6Prefix64;
 
 const MAX_BODY_BYTES: usize = 64 * 1024;
-const MAX_SIGNALS_PER_BATCH: usize = 64;
+const MAX_SIGNALS_PER_BATCH: usize = 10;
 const MAX_MESSAGE_BYTES: usize = 2 * 1024;
 const MAX_STACKTRACE_BYTES: usize = 8 * 1024;
 
 static GLOBAL_LIMITER: LazyLock<DefaultDirectRateLimiter> = LazyLock::new(|| {
-    RateLimiter::direct(
-        Quota::per_minute(NonZeroU32::new(600).unwrap()).allow_burst(NonZeroU32::new(100).unwrap()),
-    )
-});
-// Browser-provided batches can contain many log records. Limit emitted lines
-// separately so telemetry cannot monopolize the server's logging queue.
-static FRONTEND_LOG_LIMITER: LazyLock<DefaultDirectRateLimiter> = LazyLock::new(|| {
     RateLimiter::direct(
         Quota::per_minute(NonZeroU32::new(600).unwrap()).allow_burst(NonZeroU32::new(100).unwrap()),
     )
@@ -58,11 +50,7 @@ struct FaroPayload {
     #[serde(default)]
     logs: Vec<FaroLog>,
     #[serde(default)]
-    events: Vec<serde_json::Value>,
-    #[serde(default)]
     measurements: Vec<FaroMeasurement>,
-    #[serde(default)]
-    traces: Option<serde_json::Value>,
 }
 
 #[derive(Debug, Default, Deserialize)]
@@ -155,9 +143,7 @@ impl FaroPayload {
         self.exceptions
             .len()
             .saturating_add(self.logs.len())
-            .saturating_add(self.events.len())
             .saturating_add(self.measurements.len())
-            .saturating_add(usize::from(self.traces.is_some()))
     }
 }
 
@@ -221,24 +207,6 @@ fn stacktrace(exception: &FaroException) -> String {
     output
 }
 
-fn record_signal(signal: &'static str, result: &'static str) {
-    metrics::counter!(
-        "boluo_server_frontend_telemetry_signals_total",
-        "signal" => signal,
-        "result" => result
-    )
-    .increment(1);
-}
-
-fn frontend_log_allowed(signal: &'static str) -> bool {
-    if FRONTEND_LOG_LIMITER.check().is_ok() {
-        true
-    } else {
-        record_signal(signal, "rate_limited");
-        false
-    }
-}
-
 fn process(payload: FaroPayload) -> Result<(), AppError> {
     let signal_count = payload.signal_count();
     if signal_count == 0 {
@@ -269,9 +237,6 @@ fn process(payload: FaroPayload) -> Result<(), AppError> {
     let faro_session_id = truncated(payload.meta.session.id.as_deref().unwrap_or(""), 128);
 
     for exception in &payload.exceptions {
-        if !frontend_log_allowed("exception") {
-            continue;
-        }
         let stacktrace = stacktrace(exception);
         tracing::error!(
             event = "frontend.exception",
@@ -309,13 +274,12 @@ fn process(payload: FaroPayload) -> Result<(), AppError> {
             faro_session_id,
             "Frontend exception"
         );
-        record_signal("exception", "logged");
     }
 
     for log in &payload.logs {
         let message = truncated(&log.message, MAX_MESSAGE_BYTES);
         match log.level.as_str() {
-            "error" if frontend_log_allowed("log") => {
+            "error" => {
                 tracing::error!(
                     event = "frontend.log",
                     frontend_level = "error",
@@ -333,9 +297,8 @@ fn process(payload: FaroPayload) -> Result<(), AppError> {
                     "{}",
                     message
                 );
-                record_signal("log", "logged");
             }
-            "warn" if frontend_log_allowed("log") => {
+            "warn" => {
                 tracing::warn!(
                     event = "frontend.log",
                     frontend_level = "warn",
@@ -353,10 +316,8 @@ fn process(payload: FaroPayload) -> Result<(), AppError> {
                     "{}",
                     message
                 );
-                record_signal("log", "logged");
             }
-            "error" | "warn" => {}
-            _ => record_signal("log", "filtered"),
+            _ => {}
         }
     }
 
@@ -401,17 +362,7 @@ fn process(payload: FaroPayload) -> Result<(), AppError> {
                     .increment(1);
                 }
             }
-            record_signal("measurement", "recorded");
-        } else {
-            record_signal("measurement", "filtered");
         }
-    }
-
-    for _ in &payload.events {
-        record_signal("event", "accepted");
-    }
-    if payload.traces.is_some() {
-        record_signal("trace", "unsupported");
     }
     Ok(())
 }
@@ -526,7 +477,7 @@ mod tests {
         let empty = ingest(request(r#"{"meta":{}}"#)).await.unwrap_err();
         assert!(matches!(empty, AppError::BadRequest(_)));
 
-        let logs = (0..65)
+        let logs = (0..=MAX_SIGNALS_PER_BATCH)
             .map(|_| r#"{"level":"warn","message":"x"}"#)
             .collect::<Vec<_>>()
             .join(",");

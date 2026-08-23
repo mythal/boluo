@@ -2,8 +2,10 @@ import { LogLevel, faro, getInternalFaroFromGlobalObject } from '@grafana/faro-w
 import { v7 as uuidv7 } from 'uuid';
 import { IS_DEVELOPMENT } from './const';
 
+const canSendTelemetry = () => !IS_DEVELOPMENT && Boolean(getInternalFaroFromGlobalObject());
+
 export const recordWarn = (message: string, extras?: Record<string, unknown>) => {
-  if (IS_DEVELOPMENT || !getInternalFaroFromGlobalObject()) {
+  if (!canSendTelemetry()) {
     console.warn(message, extras);
     return;
   }
@@ -13,7 +15,7 @@ export const recordWarn = (message: string, extras?: Record<string, unknown>) =>
 };
 
 export const recordError = (message: string, extras?: Record<string, unknown>) => {
-  if (IS_DEVELOPMENT || !getInternalFaroFromGlobalObject()) {
+  if (!canSendTelemetry()) {
     console.error(message, extras);
     return;
   }
@@ -32,6 +34,10 @@ export const captureException = (
   { componentStack, eventId = uuidv7() }: CaptureExceptionOptions = {},
 ): string => {
   const error = value instanceof Error ? value : new Error(String(value));
+  if (!canSendTelemetry()) {
+    console.error(error, { componentStack, eventId });
+    return eventId;
+  }
   faro.api.pushError(error, {
     context: {
       event_id: eventId,

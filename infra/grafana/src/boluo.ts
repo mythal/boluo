@@ -39,7 +39,6 @@ const panels = {
   eventDelivery: 'panel-26',
   runtimePopulation: 'panel-27',
   processMemory: 'panel-29',
-  eventReplayMemory: 'panel-30',
 } as const;
 
 const messageRateMetrics = [
@@ -522,51 +521,6 @@ export function buildBoluoDashboard(
       }),
     )
     .element(
-      panels.eventReplayMemory,
-      timeSeriesPanel({
-        id: 30,
-        title: 'Event replay payload memory',
-        description:
-          'Uncompressed initial-update payload retained while replay is being sent, plus rolling payload-size quantiles.',
-        datasourceUid,
-        unit: 'bytes',
-        min: 0,
-        tooltipMode: TooltipDisplayMode.Multi,
-        targets: [
-          {
-            refId: 'in-flight',
-            editorMode: QueryEditorMode.Code,
-            expr: `boluo_server_events_initial_updates_in_flight_bytes{app="${APP}"}`,
-            legendFormat: '{{instance}} retained initial updates',
-          },
-          {
-            refId: 'initial-p95',
-            editorMode: QueryEditorMode.Code,
-            expr: summaryQuantile(0.95, 'boluo_server_events_push_initial_updates_payload_bytes'),
-            legendFormat: '{{instance}} initial updates p95',
-          },
-          {
-            refId: 'initial-max',
-            editorMode: QueryEditorMode.Code,
-            expr: summaryQuantile(1, 'boluo_server_events_push_initial_updates_payload_bytes'),
-            legendFormat: '{{instance}} initial updates max',
-          },
-          {
-            refId: 'cache-read-p95',
-            editorMode: QueryEditorMode.Code,
-            expr: summaryQuantile(0.95, 'boluo_server_mailbox_cache_read_payload_bytes'),
-            legendFormat: '{{instance}} mailbox cache read p95',
-          },
-          {
-            refId: 'cache-read-max',
-            editorMode: QueryEditorMode.Code,
-            expr: summaryQuantile(1, 'boluo_server_mailbox_cache_read_payload_bytes'),
-            legendFormat: '{{instance}} mailbox cache read max',
-          },
-        ],
-      }),
-    )
-    .element(
       panels.diskCacheLatency,
       timeSeriesPanel({
         id: 22,
@@ -611,8 +565,7 @@ export function buildBoluoDashboard(
         gridItem(panels.cacheCapacityUtilization).x(12).y(22).width(12).height(8),
         gridItem(panels.messages).x(0).y(30).width(12).height(8),
         gridItem(panels.messageLatency).x(12).y(30).width(12).height(8),
-        gridItem(panels.eventDelivery).x(0).y(38).width(12).height(8),
-        gridItem(panels.eventReplayMemory).x(12).y(38).width(12).height(8),
+        gridItem(panels.eventDelivery).x(0).y(38).width(24).height(8),
         gridItem(panels.diskCacheCapacity).x(0).y(46).width(8).height(8),
         gridItem(panels.diskCacheIo).x(8).y(46).width(8).height(8),
         gridItem(panels.diskCacheLatency).x(16).y(46).width(8).height(8),

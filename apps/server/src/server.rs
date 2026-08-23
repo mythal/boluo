@@ -44,6 +44,7 @@ mod disk_cache;
 mod entries;
 mod events;
 mod frontend_telemetry;
+mod http_client;
 mod info;
 mod interface;
 mod mail;

@@ -14,7 +14,7 @@ pub async fn send(
     use std::time::Duration;
 
     static CLIENT: LazyLock<reqwest::Client> = LazyLock::new(|| {
-        reqwest::Client::builder()
+        crate::http_client::builder()
             .connect_timeout(Duration::from_secs(3))
             .timeout(Duration::from_secs(10))
             .build()

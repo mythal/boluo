@@ -285,7 +285,7 @@ impl Resolver {
                 cdn_providers,
             ))),
             ingress,
-            http_client: reqwest::Client::builder()
+            http_client: crate::http_client::builder()
                 .connect_timeout(Duration::from_secs(5))
                 .timeout(Duration::from_secs(10))
                 .redirect(reqwest::redirect::Policy::none())

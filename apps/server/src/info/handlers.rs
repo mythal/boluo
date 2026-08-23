@@ -1,5 +1,5 @@
 use std::cell::RefCell;
-use std::sync::{Arc, LazyLock};
+use std::sync::LazyLock;
 use std::time::Duration;
 
 use super::models::{BasicInfo, Proxy};
@@ -18,17 +18,7 @@ static PROXY_HEALTH_CHECK_CLIENT: LazyLock<Result<reqwest::Client, reqwest::Erro
     LazyLock::new(build_proxy_health_check_client);
 
 fn build_proxy_health_check_client() -> Result<reqwest::Client, reqwest::Error> {
-    let root_store =
-        rustls::RootCertStore::from_iter(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
-    let provider = Arc::new(rustls::crypto::aws_lc_rs::default_provider());
-    let tls_config = rustls::ClientConfig::builder_with_provider(provider)
-        .with_safe_default_protocol_versions()
-        .expect("AWS-LC supports rustls default protocol versions")
-        .with_root_certificates(root_store)
-        .with_no_client_auth();
-
-    reqwest::Client::builder()
-        .tls_backend_preconfigured(tls_config)
+    crate::http_client::builder()
         .connect_timeout(PROXY_HEALTH_CHECK_TIMEOUT)
         .timeout(PROXY_HEALTH_CHECK_TIMEOUT)
         .build()

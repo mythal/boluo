@@ -32,8 +32,6 @@ pub struct AppSettings {
     pub app_url: Option<String>,
     #[serde(default)]
     pub site_url: Option<String>,
-    #[serde(default)]
-    pub sentry_dsn: Option<String>,
 }
 
 impl AppSettings {
@@ -41,12 +39,10 @@ impl AppSettings {
         let media_url = ctx.config.public_media_url.clone();
         let app_url = ctx.config.app_url.clone();
         let site_url = ctx.config.site_url.clone();
-        let sentry_dsn = ctx.config.sentry_dsn.clone();
         AppSettings {
             media_url,
             app_url,
             site_url,
-            sentry_dsn,
         }
     }
 }

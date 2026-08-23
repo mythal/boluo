@@ -43,6 +43,7 @@ mod db;
 mod disk_cache;
 mod entries;
 mod events;
+mod frontend_telemetry;
 mod info;
 mod interface;
 mod mail;
@@ -110,6 +111,9 @@ async fn router(
     }
     if path == "/api/csrf-token" {
         return csrf::get_csrf_token(ctx, req).await.map(ok_response);
+    }
+    if path == "/api/telemetry" {
+        return frontend_telemetry::ingest(req).await;
     }
     table!("/api/info", info::router);
     table!("/api/assets", assets::router);
@@ -381,8 +385,6 @@ struct ServeArgs {
     app_url: Option<String>,
     #[clap(long, env = "SITE_URL")]
     site_url: Option<String>,
-    #[clap(long, env = "SENTRY_DSN")]
-    sentry_dsn: Option<String>,
     #[clap(long, env = "DISCOURSE_SSO_SECRET")]
     discourse_sso_secret: Option<String>,
     #[clap(long, env = "SECRET")]
@@ -563,7 +565,6 @@ async fn main() {
         public_media_url: args.public_media_url.clone(),
         app_url: args.app_url.clone(),
         site_url: args.site_url.clone(),
-        sentry_dsn: args.sentry_dsn.clone(),
         discourse_sso_secret: args.discourse_sso_secret.clone(),
         secret: args.secret.clone(),
         platform,
@@ -609,6 +610,22 @@ async fn main() {
 
     if let Some(addr) = args.prometheus_exporter {
         metrics_exporter_prometheus::PrometheusBuilder::new()
+            .set_buckets_for_metric(
+                metrics_exporter_prometheus::Matcher::Full(
+                    "boluo_server_frontend_web_vital_duration_seconds".to_owned(),
+                ),
+                &[
+                    0.05, 0.1, 0.2, 0.3, 0.5, 0.8, 1.0, 1.5, 1.8, 2.5, 4.0, 6.0, 10.0, 20.0,
+                ],
+            )
+            .expect("frontend Web Vital duration buckets are valid")
+            .set_buckets_for_metric(
+                metrics_exporter_prometheus::Matcher::Full(
+                    "boluo_server_frontend_web_vital_cls".to_owned(),
+                ),
+                &[0.01, 0.025, 0.05, 0.1, 0.15, 0.25, 0.5, 1.0, 2.0],
+            )
+            .expect("frontend CLS buckets are valid")
             .with_http_listener(addr)
             .install()
             .expect("Failed to install Prometheus metrics exporter");
@@ -643,6 +660,7 @@ async fn main() {
     spaces::start_rate_limiter_cleanup();
     channels::start_rate_limiter_cleanup();
     media::start_rate_limiter_cleanup();
+    frontend_telemetry::start_rate_limiter_cleanup();
     let timeout_counter = metrics::counter!("boluo_server_tcp_connections_timeout_total");
     let error_counter = metrics::counter!("boluo_server_tcp_connections_error_total");
 

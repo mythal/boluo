@@ -440,7 +440,11 @@ async fn connect(ctx: &crate::context::AppContext, req: hyper::Request<Incoming>
         .and_then(|v| v.to_str().ok())
         .unwrap_or("");
     let Ok(query) = parse_query::<UpdateQuery>(req.uri()) else {
-        tracing::warn!("Failed to parse query {:?}", req.uri());
+        tracing::warn!(
+            event = "websocket.query.invalid",
+            path = req.uri().path(),
+            "Failed to parse WebSocket query"
+        );
         return connection_error(req, None, ConnectionError::BadRequest);
     };
     use futures::future;
@@ -679,23 +683,10 @@ pub async fn token(
             }
         }
         (None, Some(user_id)) => {
-            use hyper::header::{AUTHORIZATION, COOKIE};
-
-            let authorization = req
-                .headers()
-                .get(AUTHORIZATION)
-                .and_then(|v| v.to_str().ok())
-                .unwrap_or("");
-            let cookie = req
-                .headers()
-                .get(COOKIE)
-                .and_then(|v| v.to_str().ok())
-                .unwrap_or("");
             tracing::warn!(
+                event = "events.token.user_without_session",
                 user_id = %user_id,
                 space_id = ?space_id,
-                authorization,
-                cookie,
                 "No session found for the user, but 'user_id' is provided"
             );
             Err(AppError::Unauthenticated(AuthenticateFail::NoSessionFound))

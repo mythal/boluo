@@ -14,7 +14,10 @@ use tracing::Instrument as _;
 pub fn check_websocket_header(headers: &HeaderMap) -> Result<HeaderValue, AppError> {
     use base64::{Engine as _, engine::general_purpose::STANDARD as base64_engine};
 
-    tracing::trace!("Checking Websocket request header: {:?}", headers);
+    tracing::trace!(
+        event = "websocket.headers.check",
+        "Checking WebSocket headers"
+    );
     let upgrade = headers
         .get(UPGRADE)
         .and_then(|v| v.to_str().ok())
@@ -63,14 +66,9 @@ where
         .and_then(|v| v.to_str().ok())
         .unwrap_or("unknown")
         .to_string();
-    let referer = req
-        .headers()
-        .get(header::REFERER)
-        .and_then(|v| v.to_str().ok())
-        .unwrap_or("");
-
     let Ok(accept) = check_websocket_header(req.headers()) else {
         tracing::warn!(
+            event = "websocket.header.invalid",
             connection_id = %connection_id,
             user_agent = %user_agent,
             "Invalid websocket header"
@@ -88,7 +86,6 @@ where
         user_agent = %user_agent,
         duration_ms = tracing::field::Empty,
         origin = %origin,
-        referer = %referer,
     );
 
     tokio::spawn(
@@ -108,17 +105,27 @@ where
                     )
                     .await;
 
-                    tracing::trace!("WebSocket connection established");
+                    tracing::debug!(
+                        event = "websocket.connection.established",
+                        "WebSocket connection established"
+                    );
 
                     // Run the handler within this span context
                     handler(ws_stream).await;
 
                     span.record("duration_ms", start_time.elapsed().as_millis() as u64);
-                    tracing::debug!("WebSocket connection closed");
+                    tracing::debug!(
+                        event = "websocket.connection.closed",
+                        "WebSocket connection closed"
+                    );
                 }
                 Err(e) => {
                     span.record("duration_ms", start_time.elapsed().as_millis() as u64);
-                    tracing::error!(error = %e, "Failed to upgrade connection");
+                    tracing::error!(
+                        event = "websocket.upgrade.failed",
+                        error = %e,
+                        "Failed to upgrade connection"
+                    );
                 }
             }
             metrics::histogram!("boluo_server_websocket_connection_duration_ms")

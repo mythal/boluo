@@ -54,7 +54,7 @@ pub fn token_verify(signer: &crate::context::Signer, token: &str) -> Result<Uuid
     use base64::{Engine as _, engine::general_purpose};
 
     let mut iter = token.split('.');
-    let parse_failed = || anyhow::anyhow!("Failed to parse token: {}", token);
+    let parse_failed = || anyhow::anyhow!("Failed to parse session token");
     let session_id_str = iter.next().ok_or_else(parse_failed)?;
     let signature = iter.next().ok_or_else(parse_failed)?;
     signer.verify(session_id_str, signature)?;
@@ -286,7 +286,7 @@ fn parse_cookie(value: &hyper::header::HeaderValue) -> Option<&str> {
     Some(capture.get(1)?.as_str())
 }
 
-#[tracing::instrument]
+#[tracing::instrument(skip(pool))]
 async fn get_session_from_db(pool: &sqlx::PgPool, session_id: Uuid) -> Result<Session, AppError> {
     let mut conn = pool.acquire().await?;
     let session = sqlx::query_file_as!(Session, "sql/users/session_fetch.sql", session_id)
@@ -352,8 +352,8 @@ pub async fn authenticate(
                         .inspect(|session| {
                             span.record("auth_method", "cookie");
                             tracing::warn!(
+                                event = "authentication.bearer_fallback",
                                 user_id = %session.user_id,
-                                token = %token,
                                 token_error = %e,
                                 "Failed to authenticate with bearer token, fallback to cookie"
                             );

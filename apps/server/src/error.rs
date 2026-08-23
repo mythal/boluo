@@ -1,5 +1,5 @@
 use crate::session::AuthenticateFail;
-use hyper::{StatusCode, Uri};
+use hyper::StatusCode;
 use redis::RedisError;
 use std::error::Error;
 use thiserror::Error;
@@ -203,7 +203,7 @@ impl From<sqlx::Error> for ModelError {
     }
 }
 
-pub fn log_error(e: &AppError, uri: &Uri) {
+pub fn log_error(e: &AppError, path: &str) {
     use crate::error::AppError::*;
 
     let error_code = e.error_code();
@@ -212,7 +212,8 @@ pub fn log_error(e: &AppError, uri: &Uri) {
     match e {
         NotFound(resource) => {
             tracing::debug!(
-                uri = %uri,
+                event = "http.request.not_found",
+                path,
                 error_code = error_code,
                 status_code = status_code,
                 resource = resource,
@@ -221,7 +222,8 @@ pub fn log_error(e: &AppError, uri: &Uri) {
         }
         Conflict(detail) => {
             tracing::warn!(
-                uri = %uri,
+                event = "http.request.conflict",
+                path,
                 error_code = error_code,
                 status_code = status_code,
                 detail = detail,
@@ -229,8 +231,9 @@ pub fn log_error(e: &AppError, uri: &Uri) {
             );
         }
         Validation(validation_error) => {
-            tracing::warn!(
-                uri = %uri,
+            tracing::info!(
+                event = "http.request.validation_failed",
+                path,
                 error_code = error_code,
                 status_code = status_code,
                 validation_error = %validation_error,
@@ -238,8 +241,9 @@ pub fn log_error(e: &AppError, uri: &Uri) {
             );
         }
         BadRequest(detail) => {
-            tracing::warn!(
-                uri = %uri,
+            tracing::info!(
+                event = "http.request.bad_request",
+                path,
                 error_code = error_code,
                 status_code = status_code,
                 detail = detail,
@@ -247,8 +251,9 @@ pub fn log_error(e: &AppError, uri: &Uri) {
             );
         }
         Unauthenticated(auth_fail) => {
-            tracing::warn!(
-                uri = %uri,
+            tracing::info!(
+                event = "http.request.authentication_failed",
+                path,
                 error_code = error_code,
                 status_code = status_code,
                 auth_fail_reason = %auth_fail,
@@ -256,8 +261,9 @@ pub fn log_error(e: &AppError, uri: &Uri) {
             );
         }
         NoPermission(detail) => {
-            tracing::warn!(
-                uri = %uri,
+            tracing::info!(
+                event = "http.request.permission_denied",
+                path,
                 error_code = error_code,
                 status_code = status_code,
                 detail = detail,
@@ -266,7 +272,8 @@ pub fn log_error(e: &AppError, uri: &Uri) {
         }
         LimitExceeded(limit_type) => {
             tracing::warn!(
-                uri = %uri,
+                event = "http.request.rate_limited",
+                path,
                 error_code = error_code,
                 status_code = status_code,
                 limit_type = limit_type,
@@ -275,39 +282,39 @@ pub fn log_error(e: &AppError, uri: &Uri) {
         }
         MethodNotAllowed => {
             tracing::info!(
-                uri = %uri,
+                event = "http.request.method_not_allowed",
+                path,
                 error_code = error_code,
                 status_code = status_code,
                 "Method not allowed"
             );
         }
         e => {
-            tracing::error!(
-                uri = %uri,
-                error_code = error_code,
-                status_code = status_code,
-                error = %e,
-                "Internal server error"
-            );
-
-            // Log error chain for debugging
-            let mut source: Option<&_> = e.source();
+            let mut error_chain = String::new();
+            let mut source = e.source();
             let mut depth = 0;
             while let Some(source_error) = source {
-                depth += 1;
-                tracing::error!(
-                    depth = depth,
-                    source_error = %source_error,
-                    "Error source chain"
-                );
+                if !error_chain.is_empty() {
+                    error_chain.push_str(" -> ");
+                }
+                error_chain.push_str(&source_error.to_string());
                 source = source_error.source();
-
-                // Prevent infinite loops
-                if depth > 10 {
-                    tracing::error!("Error chain too deep, stopping");
+                depth += 1;
+                if depth >= 10 {
+                    error_chain.push_str(" -> [error chain truncated]");
                     break;
                 }
             }
+
+            tracing::error!(
+                event = "http.request.internal_error",
+                path,
+                error_code = error_code,
+                status_code = status_code,
+                error = %e,
+                error_chain,
+                "Internal server error"
+            );
         }
     }
 }

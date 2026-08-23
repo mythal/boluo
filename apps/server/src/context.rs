@@ -29,7 +29,7 @@ impl Signer {
             .or_else(|_| general_purpose::STANDARD.decode(signature))
             .context("Failed to decode signature")?;
         hmac::verify(&self.0, message.as_bytes(), &signature)
-            .map_err(|_| anyhow::anyhow!("Failed to verify signature of message {}", message))
+            .map_err(|_| anyhow::anyhow!("Failed to verify message signature"))
     }
 }
 

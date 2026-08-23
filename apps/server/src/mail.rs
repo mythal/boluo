@@ -20,16 +20,13 @@ pub async fn send(
             .build()
             .expect("Failed to build mail HTTP client")
     });
-    tracing::info!("Sending email to {to}");
+    tracing::info!(event = "mail.send.started", "Sending email");
 
     let Some(domain) = config.domain.as_deref() else {
         tracing::info!(
-            "Mailgun is not configured, maybe you are running locally; skipping email delivery and printing the email content"
+            event = "mail.send.skipped",
+            "Mailgun is not configured; skipping email delivery"
         );
-
-        println!("To: {to}");
-        println!("Subject: {subject}");
-        println!("HTML:\n{html}");
 
         return Ok(());
     };
@@ -55,8 +52,11 @@ pub async fn send(
     url.set_password(Some(api_key)).unwrap();
     let res = CLIENT.post(url).form(&params).send().await?;
     if !res.status().is_success() {
-        let error = res.text().await?;
-        tracing::warn!(error, "Failed to send email");
+        tracing::warn!(
+            event = "mail.send.failed",
+            status_code = res.status().as_u16(),
+            "Failed to send email"
+        );
         metrics::counter!("boluo_server_mail_send_failed_total").increment(1);
         return Err(anyhow::anyhow!("Failed to send email"));
     }

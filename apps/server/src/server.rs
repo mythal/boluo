@@ -33,6 +33,7 @@ mod assets;
 mod cache;
 mod channels;
 mod characters;
+mod client_ip;
 mod committed_changes;
 mod config;
 mod context;
@@ -346,8 +347,26 @@ struct ServeArgs {
     port: u16,
     #[clap(long, env = "PROMETHEUS_EXPORTER")]
     prometheus_exporter: Option<SocketAddr>,
+    /// Hosting platform, which defines the trusted HTTP ingress boundary.
     #[clap(long, env = "PLATFORM", value_enum)]
     platform: Option<platform::Platform>,
+    /// CDN providers whose published networks may supply X-Forwarded-For.
+    #[clap(
+        long = "trusted-cdn",
+        env = "TRUSTED_CDNS",
+        value_enum,
+        value_delimiter = ','
+    )]
+    trusted_cdns: Vec<client_ip::CdnProvider>,
+    /// Additional proxy IP addresses or CIDRs that may supply X-Forwarded-For.
+    #[clap(
+        long,
+        env = "TRUSTED_PROXIES",
+        value_delimiter = ',',
+        value_parser = client_ip::parse_trusted_proxy,
+        alias = "trusted-proxy-cidrs"
+    )]
+    trusted_proxy: Vec<ipnet::IpNet>,
     #[clap(long, env = "DATABASE_URL")]
     database_url: String,
     #[clap(long, env = "REDIS_URL")]
@@ -508,6 +527,11 @@ async fn main() {
     let platform = platform::Runtime::detect(args.platform);
     tracing::info!(platform = ?platform.platform(), "Hosting platform selected");
     pubsub::initialize_node_id(platform.node_id());
+    let client_ip_resolver = client_ip::Resolver::new(
+        args.trusted_proxy.clone(),
+        &args.trusted_cdns,
+        platform.ingress(),
+    );
 
     let listener = TcpListener::bind(socket)
         .await
@@ -596,6 +620,8 @@ async fn main() {
                 .describe_and_run(),
         );
     }
+    client_ip_resolver.start_proxy_probe_refresh(pool.clone(), ctx.signer().clone());
+    client_ip_resolver.start_cdn_refresh();
     disk_cache::init(disk_cache_config(&args));
     // https://tokio.rs/tokio/topics/shutdown
     let mut terminate_stream =
@@ -623,7 +649,13 @@ async fn main() {
     loop {
         tokio::select! {
             accept_result = listener.accept() => {
-                handle_connection(ctx.clone(), accept_result, timeout_counter.clone(), error_counter.clone()).await;
+                handle_connection(
+                    ctx.clone(),
+                    &client_ip_resolver,
+                    accept_result,
+                    timeout_counter.clone(),
+                    error_counter.clone(),
+                ).await;
             },
             _ = terminate_stream.recv() => {
                 tracing::info!("Graceful shutdown signal received");
@@ -639,6 +671,7 @@ async fn main() {
 
 async fn handle_connection(
     ctx: std::sync::Arc<context::AppContext>,
+    client_ip_resolver: &client_ip::Resolver,
     accept_result: Result<(tokio::net::TcpStream, SocketAddr), std::io::Error>,
     timeout_counter: metrics::Counter,
     error_counter: metrics::Counter,
@@ -650,6 +683,7 @@ async fn handle_connection(
                     event = "server.connection.tcp_nodelay_failed", error = %e, "Failed to set TCP_NODELAY");
             }
             let io = TokioIo::new(stream);
+            let client_ip_resolver = client_ip_resolver.clone();
             tokio::task::spawn(async move {
                 let start_time = std::time::Instant::now();
                 let tcp_connections_active = gauge!("boluo_server_tcp_connections_active");
@@ -661,9 +695,10 @@ async fn handle_connection(
                 let (timeout_reset_tx, mut timeout_reset_rx) =
                     watch::channel(std::time::Instant::now());
 
-                let handler_with_reset = move |req: Request<Incoming>| {
+                let handler_with_reset = move |mut req: Request<Incoming>| {
                     let tx = timeout_reset_tx.clone();
                     let ctx = ctx.clone();
+                    client_ip_resolver.attach(addr.ip(), &mut req);
                     async move {
                         // Reset timeout on each request
                         let _ = tx.send(std::time::Instant::now());

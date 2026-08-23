@@ -197,6 +197,7 @@ pub async fn router(
         ("/proxies", Method::GET) => proxies(ctx).await,
         ("/settings", Method::GET) => Ok(settings(ctx)),
         ("/echo", Method::GET) => Ok(echo(req)),
+        ("/proxy-probe", Method::POST) => crate::client_ip::handle_probe(ctx, req),
         _ => Ok(basic_info()),
     }
 }

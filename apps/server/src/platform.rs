@@ -50,6 +50,21 @@ impl Runtime {
         self.platform
     }
 
+    pub fn ingress(&self) -> crate::client_ip::Ingress {
+        match self.platform {
+            Platform::BareMetal => crate::client_ip::Ingress::bare_metal(),
+            Platform::Fly => {
+                // Fly authenticates Fly-Client-IP and appends the app's public
+                // address as the final XFF item.
+                // Source: https://fly.io/docs/networking/request-headers/
+                crate::client_ip::Ingress::trusted_header(
+                    hyper::header::HeaderName::from_static("fly-client-ip"),
+                    1,
+                )
+            }
+        }
+    }
+
     pub fn request_id_header(&self) -> Option<&'static hyper::header::HeaderName> {
         match self.platform {
             Platform::Fly => Some(&FLY_REQUEST_ID),

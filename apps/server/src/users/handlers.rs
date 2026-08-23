@@ -1,3 +1,4 @@
+use std::net::IpAddr;
 use std::sync::LazyLock;
 
 use super::api::{
@@ -28,6 +29,10 @@ use uuid::Uuid;
 
 static LOGIN_LIMITER: LazyLock<DefaultKeyedRateLimiter<String>> =
     LazyLock::new(|| RateLimiter::keyed(rate_limit::per_minute(rate_limit::LOGIN_PER_MINUTE)));
+static LOGIN_IP_LIMITER: LazyLock<DefaultKeyedRateLimiter<IpAddr>> =
+    LazyLock::new(|| RateLimiter::keyed(rate_limit::per_minute(rate_limit::LOGIN_IP_PER_MINUTE)));
+static LOGIN_IPV6_PREFIX_LIMITER: LazyLock<DefaultKeyedRateLimiter<rate_limit::Ipv6Prefix64>> =
+    LazyLock::new(|| RateLimiter::keyed(rate_limit::per_minute(rate_limit::LOGIN_IP_PER_MINUTE)));
 static MAIL_GLOBAL_LIMITER: LazyLock<DefaultDirectRateLimiter> = LazyLock::new(|| {
     RateLimiter::direct(rate_limit::per_minute(rate_limit::MAIL_GLOBAL_PER_MINUTE))
 });
@@ -39,6 +44,14 @@ static RESET_PASSWORD_EMAIL_LIMITER: LazyLock<DefaultKeyedRateLimiter<String>> =
             rate_limit::RESET_PASSWORD_EMAIL_PER_HOUR,
         ))
     });
+static RESET_PASSWORD_IP_LIMITER: LazyLock<DefaultKeyedRateLimiter<IpAddr>> = LazyLock::new(|| {
+    RateLimiter::keyed(rate_limit::per_hour(rate_limit::RESET_PASSWORD_IP_PER_HOUR))
+});
+static RESET_PASSWORD_IPV6_PREFIX_LIMITER: LazyLock<
+    DefaultKeyedRateLimiter<rate_limit::Ipv6Prefix64>,
+> = LazyLock::new(|| {
+    RateLimiter::keyed(rate_limit::per_hour(rate_limit::RESET_PASSWORD_IP_PER_HOUR))
+});
 static RESEND_EMAIL_VERIFICATION_USER_LIMITER: LazyLock<DefaultKeyedRateLimiter<Uuid>> =
     LazyLock::new(|| {
         RateLimiter::keyed(rate_limit::per_hour(
@@ -56,15 +69,23 @@ pub fn start_rate_limiter_cleanup() {
     rate_limit::start_cleanup_task(
         || {
             LOGIN_LIMITER.retain_recent();
+            LOGIN_IP_LIMITER.retain_recent();
+            LOGIN_IPV6_PREFIX_LIMITER.retain_recent();
             REGISTER_EMAIL_LIMITER.retain_recent();
             RESET_PASSWORD_EMAIL_LIMITER.retain_recent();
+            RESET_PASSWORD_IP_LIMITER.retain_recent();
+            RESET_PASSWORD_IPV6_PREFIX_LIMITER.retain_recent();
             RESEND_EMAIL_VERIFICATION_USER_LIMITER.retain_recent();
             EMAIL_CHANGE_EMAIL_LIMITER.retain_recent();
         },
         || {
             LOGIN_LIMITER.shrink_to_fit();
+            LOGIN_IP_LIMITER.shrink_to_fit();
+            LOGIN_IPV6_PREFIX_LIMITER.shrink_to_fit();
             REGISTER_EMAIL_LIMITER.shrink_to_fit();
             RESET_PASSWORD_EMAIL_LIMITER.shrink_to_fit();
+            RESET_PASSWORD_IP_LIMITER.shrink_to_fit();
+            RESET_PASSWORD_IPV6_PREFIX_LIMITER.shrink_to_fit();
             RESEND_EMAIL_VERIFICATION_USER_LIMITER.shrink_to_fit();
             EMAIL_CHANGE_EMAIL_LIMITER.shrink_to_fit();
         },
@@ -171,18 +192,41 @@ pub async fn login<B: Body>(
         .and_then(|x| x.to_str().ok())
         .map(|s| s.to_string());
     let is_debug = req.headers().get("X-Debug").is_some();
+    let client_ip = crate::client_ip::ClientIp::require(&req)?;
     let form: Login = interface::parse_body(req).await?;
 
-    // Rate limiting for login attempts: 10 attempts per minute per username
-    // Normalize username for consistent rate limiting (case-insensitive, trimmed)
+    // Limit both the resolved client address and normalized username so rotating
+    // either one alone cannot bypass login throttling.
     let username = if form.username.contains('@') {
         form.username.trim().to_lowercase()
     } else {
         form.username.trim().to_string()
     };
+    if let Some(prefix) = rate_limit::Ipv6Prefix64::from_ip(client_ip) {
+        LOGIN_IPV6_PREFIX_LIMITER.check_key(&prefix).map_err(|_| {
+            tracing::warn!(
+                event = "authentication.login_rate_limited",
+                limit = "client_ipv6_prefix",
+                client_ip = %client_ip,
+                client_ipv6_prefix = %prefix,
+                "Login rate limit exceeded for client IPv6 prefix"
+            );
+            AppError::LimitExceeded("Too many login attempts, please try again later.")
+        })?;
+    }
+    LOGIN_IP_LIMITER.check_key(&client_ip).map_err(|_| {
+        tracing::warn!(
+            event = "authentication.login_rate_limited",
+            limit = "client_ip",
+            client_ip = %client_ip,
+            "Login rate limit exceeded for client address"
+        );
+        AppError::LimitExceeded("Too many login attempts, please try again later.")
+    })?;
     LOGIN_LIMITER.check_key(&username).map_err(|_| {
         tracing::warn!(
             event = "authentication.login_rate_limited",
+            limit = "username",
             "Login rate limit exceeded for username"
         );
         AppError::LimitExceeded("Too many login attempts, please try again later.")
@@ -399,10 +443,36 @@ pub async fn reset_password(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
 ) -> Result<(), AppError> {
+    let client_ip = crate::client_ip::ClientIp::require(&req)?;
     let ResetPassword { email, lang } = parse_body(req).await?;
     let email = email.trim().to_lowercase();
     crate::validators::EMAIL.run(&email)?;
 
+    if let Some(prefix) = rate_limit::Ipv6Prefix64::from_ip(client_ip) {
+        RESET_PASSWORD_IPV6_PREFIX_LIMITER
+            .check_key(&prefix)
+            .map_err(|_| {
+                tracing::warn!(
+                    event = "authentication.password_reset_rate_limited",
+                    limit = "client_ipv6_prefix",
+                    client_ip = %client_ip,
+                    client_ipv6_prefix = %prefix,
+                    "Password reset rate limit exceeded for client IPv6 prefix"
+                );
+                AppError::LimitExceeded("Too many password reset requests, please try again later.")
+            })?;
+    }
+    RESET_PASSWORD_IP_LIMITER
+        .check_key(&client_ip)
+        .map_err(|_| {
+            tracing::warn!(
+                event = "authentication.password_reset_rate_limited",
+                limit = "client_ip",
+                client_ip = %client_ip,
+                "Password reset rate limit exceeded for client address"
+            );
+            AppError::LimitExceeded("Too many password reset requests, please try again later.")
+        })?;
     RESET_PASSWORD_EMAIL_LIMITER
         .check_key(&email)
         .map_err(|_| AppError::LimitExceeded("This email is requested too many times."))?;

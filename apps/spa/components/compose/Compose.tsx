@@ -14,7 +14,7 @@ import { useSend } from '../pane-channel/useSend';
 import { EditMessageBanner } from './EditMessageBanner';
 import { MediaLine } from './MediaLine';
 import { useSettings } from '../../hooks/useSettings';
-import { ErrorBoundary } from '@sentry/nextjs';
+import { ErrorBoundary } from '../ErrorBoundary';
 import { ComposeFallback } from '@boluo/ui/ComposeFallback';
 import { useBackupCompose } from '../../hooks/useBackupCompose';
 import clsx from 'clsx';

@@ -777,7 +777,10 @@ struct StartupInfo {
     private_ip: String,
 }
 
-async fn allocate_startup_id(redis: &mut redis::aio::ConnectionManager) -> u16 {
+async fn allocate_startup_id(
+    redis: &mut redis::aio::ConnectionManager,
+    platform: &crate::platform::Runtime,
+) -> u16 {
     use redis::AsyncCommands;
 
     const NODE_ID_KEY: &str = "node:startup";
@@ -815,8 +818,8 @@ async fn allocate_startup_id(redis: &mut redis::aio::ConnectionManager) -> u16 {
         startup: startup_id,
         version: std::env::var("VERSION").unwrap_or_default(),
         timestamp: OffsetDateTime::now_utc().unix_timestamp_nanos() as i64 / 1_000_000,
-        machine_id: std::env::var("FLY_MACHINE_ID").unwrap_or_default(),
-        private_ip: std::env::var("FLY_PRIVATE_IP").unwrap_or_default(),
+        machine_id: platform.node_id().to_owned(),
+        private_ip: platform.private_ip().to_owned(),
     };
     let _: () = redis
         .set(
@@ -828,9 +831,12 @@ async fn allocate_startup_id(redis: &mut redis::aio::ConnectionManager) -> u16 {
     startup_id
 }
 
-pub async fn initialize_startup_id(redis: Option<&mut redis::aio::ConnectionManager>) -> u16 {
+pub async fn initialize_startup_id(
+    redis: Option<&mut redis::aio::ConnectionManager>,
+    platform: &crate::platform::Runtime,
+) -> u16 {
     let startup_id = match redis {
-        Some(redis) => allocate_startup_id(redis).await,
+        Some(redis) => allocate_startup_id(redis, platform).await,
         None => {
             tracing::info!("Redis is not available, assuming single node environment");
             0

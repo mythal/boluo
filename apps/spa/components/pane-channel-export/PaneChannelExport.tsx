@@ -12,7 +12,7 @@ import { Select } from '@boluo/ui/Select';
 import { Button } from '@boluo/ui/Button';
 import Icon from '@boluo/ui/Icon';
 import { Spinner } from '@boluo/ui/Spinner';
-import * as Sentry from '@sentry/browser';
+import { captureException } from '../../error';
 import { PaneFooterBox } from '../PaneFooterBox';
 import { type ExportOptions, exportChannel } from './export';
 import { useQueryAppSettings } from '@boluo/hooks/useQueryAppSettings';
@@ -99,7 +99,7 @@ const ExportForm: FC<{ channel: Channel }> = ({ channel }) => {
       setIsSubmitSuccessful(true);
     } catch (error) {
       setError(error);
-      Sentry.captureException(error, { extra: { channel, options: formData } });
+      captureException(error);
     } finally {
       setIsSubmitting(false);
     }

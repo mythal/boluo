@@ -6,9 +6,8 @@ import { SWRConfig, type SWRConfiguration } from 'swr';
 import type { IntlMessages } from '@boluo/locale';
 import { IntlProvider, type ResolvedIntlConfig, ReactIntlErrorCode } from 'react-intl';
 import { ChangeLocaleContext } from '@boluo/hooks/useLocale';
-import { recordWarn } from '../error';
+import { captureException, recordWarn } from '../error';
 import { isApiError } from '@boluo/api';
-import { captureException } from '@sentry/nextjs';
 import type { Locale } from '@boluo/types';
 
 interface Props {
@@ -17,7 +16,7 @@ interface Props {
   messages: IntlMessages;
 }
 
-const onError = (error: unknown, key: unknown) => {
+const onError = (error: unknown) => {
   if (isApiError(error)) {
     switch (error.code) {
       case 'UNAUTHENTICATED':
@@ -27,7 +26,7 @@ const onError = (error: unknown, key: unknown) => {
         return;
     }
   }
-  captureException(error, { extra: { key } });
+  captureException(error);
 };
 
 const swrConfig: SWRConfiguration = {

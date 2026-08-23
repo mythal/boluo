@@ -47,6 +47,7 @@ pub fn allow_origin(origin: Option<&str>, mut res: Response<Full<Bytes>>) -> Res
         ACCESS_CONTROL_ALLOW_ORIGIN,
         HeaderValue::from_str(origin).unwrap_or_else(|_| {
             tracing::warn!(
+                event = "http.cors.origin_header_invalid",
                 "[Unexpected] Failed to convert origin to HeaderValue: {:?}",
                 origin
             );

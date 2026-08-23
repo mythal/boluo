@@ -136,7 +136,13 @@ impl From<crate::space_runtime::SpaceRuntimeError> for AppError {
 macro_rules! unexpected {
     ($msg: expr) => {{
         let msg = $msg.to_string();
-        ::tracing::error!("Unexpected error: [{}][{}]{}", file!(), line!(), msg);
+        ::tracing::error!(
+            event = "error.unexpected",
+            "Unexpected error: [{}][{}]{}",
+            file!(),
+            line!(),
+            msg
+        );
         crate::error::AppError::Unexpected(::anyhow::anyhow!(msg))
     }};
 }
@@ -144,13 +150,26 @@ macro_rules! unexpected {
 macro_rules! error_unexpected {
     () => {
         |e| {
-            ::tracing::error!("Unexpected error: [{}][{}]{}", file!(), line!(), e);
+            ::tracing::error!(
+                event = "error.unexpected",
+                "Unexpected error: [{}][{}]{}",
+                file!(),
+                line!(),
+                e
+            );
             crate::error::AppError::Unexpected(e.into())
         }
     };
     ($msg: expr) => {
         |e| {
-            ::tracing::error!("Unexpected error: [{}][{}]{}{}", file!(), line!(), $msg, e);
+            ::tracing::error!(
+                event = "error.unexpected",
+                "Unexpected error: [{}][{}]{}{}",
+                file!(),
+                line!(),
+                $msg,
+                e
+            );
             crate::error::AppError::Unexpected(::anyhow::anyhow!($msg))
         }
     };

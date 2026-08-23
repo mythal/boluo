@@ -547,13 +547,22 @@ async fn main() {
     ));
 
     if ctx.config.site_url.is_none() {
-        tracing::error!("SITE_URL is not set");
+        tracing::error!(
+            event = "server.configuration.site_url_missing",
+            "SITE_URL is not set"
+        );
     }
     if ctx.config.app_url.is_none() {
-        tracing::error!("APP_URL is not set");
+        tracing::error!(
+            event = "server.configuration.app_url_missing",
+            "APP_URL is not set"
+        );
     }
     if ctx.config.public_media_url.is_none() {
-        tracing::error!("PUBLIC_MEDIA_URL is not set");
+        tracing::error!(
+            event = "server.configuration.public_media_url_missing",
+            "PUBLIC_MEDIA_URL is not set"
+        );
     }
 
     server_metrics::init_metrics(&pool).await;
@@ -627,7 +636,8 @@ async fn handle_connection(
     match accept_result {
         Ok((stream, addr)) => {
             if let Err(e) = stream.set_nodelay(true) {
-                tracing::error!(error = %e, "Failed to set TCP_NODELAY");
+                tracing::error!(
+                    event = "server.connection.tcp_nodelay_failed", error = %e, "Failed to set TCP_NODELAY");
             }
             let io = TokioIo::new(stream);
             tokio::task::spawn(async move {
@@ -675,7 +685,11 @@ async fn handle_connection(
                                 if result.is_ok() {
                                     last_reset = *timeout_reset_rx.borrow_and_update();
                                 } else {
-                                    tracing::warn!(addr = %addr, "HTTP connection timeout reset channel closed");
+                                    tracing::warn!(
+                                        event = "server.connection.timeout_reset_closed",
+                                        addr = %addr,
+                                        "HTTP connection timeout reset channel closed"
+                                    );
                                     break;
                                 }
                             }
@@ -688,7 +702,12 @@ async fn handle_connection(
                         match conn_result {
                             Ok(()) => {},
                             Err(err) => {
-                                tracing::warn!(error = %err, addr = %addr, "HTTP connection error");
+                                tracing::warn!(
+                                    event = "server.connection.error",
+                                    error = %err,
+                                    addr = %addr,
+                                    "HTTP connection error"
+                                );
                                 error_counter.increment(1);
                             },
                         }
@@ -702,7 +721,12 @@ async fn handle_connection(
                         connection_future.as_mut().graceful_shutdown();
 
                         if let Err(err) = connection_future.await {
-                            tracing::warn!(error = %err, addr = %addr, "Error during graceful shutdown");
+                            tracing::warn!(
+                                event = "server.connection.graceful_shutdown_failed",
+                                error = %err,
+                                addr = %addr,
+                                "Error during graceful shutdown"
+                            );
                         }
 
                         tracing::info!(addr = %addr, "HTTP connection timeout after {}s", start_time.elapsed().as_secs());
@@ -715,7 +739,8 @@ async fn handle_connection(
             });
         }
         Err(err) => {
-            tracing::error!(error = %err, "Failed to accept connection");
+            tracing::error!(
+                event = "server.connection.accept_failed", error = %err, "Failed to accept connection");
         }
     }
 }

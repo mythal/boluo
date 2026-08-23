@@ -276,6 +276,7 @@ impl ChannelPosState {
             && old_item.id != message_id
         {
             tracing::warn!(
+                event = "channel_position.item_overwritten",
                 pos = ?pos,
                 old_item = ?old_item,
                 message_id = %message_id,
@@ -436,6 +437,7 @@ impl ChannelPosActor {
             action_duration_histogram.record(elapsed.as_millis() as f64);
             if elapsed > std::time::Duration::from_millis(8) {
                 tracing::warn!(
+                    event = "channel_position.action.slow",
                     action_name,
                     "Pos action took too long to process: {:?}",
                     elapsed
@@ -497,6 +499,7 @@ impl ChannelPosHandle {
             .await
             .map_err(|_| {
                 tracing::warn!(
+                    event = "channel_position.action.send_timeout",
                     channel_id = %self.channel_id,
                     action = action_name,
                     timeout_ms = ACTION_SEND_TIMEOUT.as_millis(),
@@ -512,6 +515,7 @@ impl ChannelPosHandle {
             Ok(_) => {}
             Err(TrySendError::Closed(action)) => {
                 tracing::warn!(
+                    event = "channel_position.actor.closed",
                     channel_id = %self.channel_id,
                     action = action.name(),
                     "ChannelPosHandle::send_nonblocking: actor closed"
@@ -526,6 +530,7 @@ impl ChannelPosHandle {
                         Ok(Ok(())) => {}
                         Ok(Err(_)) => {
                             tracing::warn!(
+                                event = "channel_position.actor.closed_while_waiting",
                                 %channel_id,
                                 action = action_name,
                                 "ChannelPosHandle::send_nonblocking: actor closed while waiting"
@@ -533,6 +538,7 @@ impl ChannelPosHandle {
                         }
                         Err(_) => {
                             tracing::warn!(
+                                event = "channel_position.action.send_timeout",
                                 %channel_id,
                                 action = action_name,
                                 timeout_ms = ACTION_SEND_TIMEOUT.as_millis(),
@@ -567,6 +573,7 @@ impl ChannelPosHandle {
             .await
             .map_err(|_| {
                 tracing::warn!(
+                    event = "channel_position.preview.response_timeout",
                     channel_id = %self.channel_id,
                     item_id = %item_id,
                     timeout_ms = ACTION_RESPONSE_TIMEOUT.as_millis(),
@@ -596,6 +603,7 @@ impl ChannelPosHandle {
             .await
             .map_err(|_| {
                 tracing::warn!(
+                    event = "channel_position.message.response_timeout",
                     channel_id = %self.channel_id,
                     message_id = %message_id,
                     request_pos = ?request_pos,
@@ -625,6 +633,7 @@ impl ChannelPosHandle {
             .await
             .map_err(|_| {
                 tracing::warn!(
+                    event = "channel_position.conflict.response_timeout",
                     channel_id = %self.channel_id,
                     message_id = %message_id,
                     timeout_ms = ACTION_RESPONSE_TIMEOUT.as_millis(),
@@ -649,6 +658,7 @@ impl ChannelPosHandle {
             .await
             .map_err(|_| {
                 tracing::warn!(
+                    event = "channel_position.persisted_tail.response_timeout",
                     channel_id = %self.channel_id,
                     timeout_ms = ACTION_RESPONSE_TIMEOUT.as_millis(),
                     "ChannelPosHandle::apply_persisted_tail: timeout waiting actor response"
@@ -666,6 +676,7 @@ impl ChannelPosHandle {
             .await
             .map_err(|_| {
                 tracing::warn!(
+                    event = "channel_position.initialization.response_timeout",
                     channel_id = %self.channel_id,
                     timeout_ms = ACTION_RESPONSE_TIMEOUT.as_millis(),
                     "ChannelPosHandle::is_initialized: timeout waiting actor response"

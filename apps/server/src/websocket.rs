@@ -31,7 +31,10 @@ pub fn check_websocket_header(headers: &HeaderMap) -> Result<HeaderValue, AppErr
         .ok_or_else(|| AppError::BadRequest("Missing the \"Connection\" header".to_string()))?;
 
     if !connection.contains("Upgrade") && !connection.contains("upgrade") {
-        tracing::error!("Can't find \"upgrade\"");
+        tracing::error!(
+            event = "websocket.header.upgrade_missing",
+            "Can't find \"upgrade\""
+        );
     }
     let mut key = headers
         .get(SEC_WEBSOCKET_KEY)
@@ -142,7 +145,8 @@ where
         .header(header::SEC_WEBSOCKET_ACCEPT, accept)
         .body(Vec::new())
         .unwrap_or_else(|err| {
-            tracing::error!(error = %err, "Failed to build websocket response");
+            tracing::error!(
+                event = "websocket.response.build_failed", error = %err, "Failed to build websocket response");
             hyper::Response::default()
         })
 }

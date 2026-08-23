@@ -593,7 +593,10 @@ pub async fn check(pool: &sqlx::Pool<sqlx::Postgres>) {
             .await
             .expect("Cannot generate reset token");
     } else {
-        tracing::warn!("No real user id found, skipping session and reset token check");
+        tracing::warn!(
+            event = "database.check.sample_user_missing",
+            "No real user id found, skipping session and reset token check"
+        );
     }
 }
 

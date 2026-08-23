@@ -6,7 +6,10 @@ use crate::utils::not_whitespace_only;
 /// Get redis database connection.
 pub async fn connect(redis_url: Option<&str>) -> Option<redis::aio::ConnectionManager> {
     let Some(redis_url) = redis_url.filter(|url| not_whitespace_only(url)) else {
-        tracing::warn!("REDIS_URL not set, disabling redis");
+        tracing::warn!(
+            event = "redis.configuration.url_missing",
+            "REDIS_URL not set, disabling redis"
+        );
         return None;
     };
     let client = redis::Client::open(redis_url).expect("Invalid Redis URL");
@@ -35,7 +38,10 @@ pub fn make_key(type_name: &[u8], id: &Uuid, field_name: &[u8]) -> Vec<u8> {
 pub async fn check(conn: Option<&mut redis::aio::ConnectionManager>) {
     use redis::AsyncCommands;
     let Some(redis) = conn else {
-        tracing::warn!("Redis connection not available");
+        tracing::warn!(
+            event = "redis.connection.unavailable",
+            "Redis connection not available"
+        );
         return;
     };
     let _result: Option<String> = redis.get("hello").await.expect("Failed to get redis");

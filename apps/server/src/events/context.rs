@@ -239,7 +239,10 @@ impl MailboxManager {
         tokio::time::timeout(MAILBOX_STATE_READ_TIMEOUT, self.sender.send(action))
             .await
             .map_err(|_| {
-                tracing::warn!("MailboxManager::send_read_action: timeout");
+                tracing::warn!(
+                    event = "mailbox.read_action.send_timeout",
+                    "MailboxManager::send_read_action: timeout"
+                );
                 metrics::counter!(
                     "boluo_server_events_mailbox_actions_total",
                     "action" => action_name,
@@ -249,7 +252,10 @@ impl MailboxManager {
                 MailboxManageError::TimeOut
             })?
             .map_err(|_| {
-                tracing::warn!("MailboxManager::send_read_action: closed");
+                tracing::warn!(
+                    event = "mailbox.read_action.channel_closed",
+                    "MailboxManager::send_read_action: closed"
+                );
                 metrics::counter!(
                     "boluo_server_events_mailbox_actions_total",
                     "action" => action_name,
@@ -296,7 +302,10 @@ impl MailboxManager {
         tokio::time::timeout(MAILBOX_STATE_WRITE_TIMEOUT, self.sender.send(action))
             .await
             .map_err(|_| {
-                tracing::warn!("MailboxManager::send_write_action: timeout");
+                tracing::warn!(
+                    event = "mailbox.write_action.send_timeout",
+                    "MailboxManager::send_write_action: timeout"
+                );
                 metrics::counter!(
                     "boluo_server_events_mailbox_actions_total",
                     "action" => action_name,
@@ -306,7 +315,10 @@ impl MailboxManager {
                 MailboxManageError::TimeOut
             })?
             .map_err(|_| {
-                tracing::warn!("MailboxManager::send_write_action: closed");
+                tracing::warn!(
+                    event = "mailbox.write_action.channel_closed",
+                    "MailboxManager::send_write_action: closed"
+                );
                 metrics::counter!(
                     "boluo_server_events_mailbox_actions_total",
                     "action" => action_name,
@@ -652,6 +664,7 @@ fn cleanup(
             let age = now - start_at.timestamp;
             if age < 1000 * 60 * 30 {
                 tracing::warn!(
+                    event = "mailbox.updates.trimmed_near_head",
                     start_at = start_at.timestamp,
                     age_s = age / 1000,
                     "Mailbox updates trimmed close to current time"
@@ -892,6 +905,7 @@ impl MailBoxState {
                                         metrics::counter!("boluo_server_mailbox_cache_query_failures_total")
                                             .increment(1);
                                         tracing::error!(
+                                            event = "mailbox.disk_cache.load_failed",
                                             error = %err,
                                             mailbox_id = %id,
                                             "Failed to load mailbox updates from disk cache"
@@ -942,7 +956,13 @@ impl MailBoxState {
                                 let elapsed = start.elapsed();
                                 action_duration_histogram.record(elapsed.as_millis() as f64);
                                 if elapsed > std::time::Duration::from_millis(25) {
-                                    tracing::warn!(mailbox_id = %id, update_name, "Update took too long to process: {:?}", elapsed);
+                                    tracing::warn!(
+                                        event = "mailbox.update.slow",
+                                        mailbox_id = %id,
+                                        update_name,
+                                        "Update took too long to process: {:?}",
+                                        elapsed
+                                    );
                                 }
                                 if should_broadcast.should_broadcast() {
                                     Update::send(id, encoded_for_broadcast).await;

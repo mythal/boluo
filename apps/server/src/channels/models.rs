@@ -414,6 +414,7 @@ impl ChannelMember {
         .await?;
         if let Some(record) = record {
             tracing::warn!(
+                event = "channel.member.loaded_from_database",
                 "Loaded channel member from DB for user {} in channel {}",
                 user_id,
                 channel_id

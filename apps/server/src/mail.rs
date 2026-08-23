@@ -32,7 +32,10 @@ pub async fn send(
     };
 
     let Some(api_key) = config.api_key.as_deref() else {
-        tracing::error!("Mailgun API key is not configured");
+        tracing::error!(
+            event = "mail.configuration.api_key_missing",
+            "Mailgun API key is not configured"
+        );
         return Err(anyhow::anyhow!(
             "The server is not configured to send emails"
         ));

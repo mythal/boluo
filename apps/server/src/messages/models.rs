@@ -248,6 +248,7 @@ impl Message {
                 .on_conflict(pool, channel_id, id)
                 .await?;
             tracing::warn!(
+                event = "message.create.position_conflict",
                 channel_id = channel_id.to_string(),
                 allocated_pos = ?pos,
                 request_pos = ?request_pos,
@@ -285,6 +286,7 @@ impl Message {
             };
             if is_unique_violation {
                 tracing::error!(
+                    event = "message.create.position_conflict_repeated",
                     channel_id = %channel_id,
                     pos = ?(new_pos.numer(), new_pos.denom()),
                     "This should never happen, but a unique violation occurred again while creating a message at channel"
@@ -300,6 +302,7 @@ impl Message {
             Ok(message) => message,
             Err(err) => {
                 tracing::error!(
+                    event = "message.create.failed",
                     channel_id = %channel_id,
                     err = %err,
                     "Failed to send message at channel"
@@ -452,18 +455,29 @@ impl Message {
         let pos = match find_intermediate_task_with_timeout
             .await
             .map_err(|_| {
-                tracing::error!(a = ?a, b = ?b, ?id, ?channel_id, "Timeout when finding position");
+                tracing::error!(
+                    event = "message.position.search_timeout",
+                    a = ?a,
+                    b = ?b,
+                    ?id,
+                    ?channel_id,
+                    "Timeout when finding position"
+                );
                 ModelError::Unexpected(anyhow::anyhow!("Timeout when finding position"))
             })?
             .map_err(|e| ModelError::Unexpected(e.into()))?
         {
             Ok(pos) => pos,
             Err(FailToFindIntermediate::EqualFractions) => {
-                tracing::warn!("Failed to find intermediate position: EqualFractions");
+                tracing::warn!(
+                    event = "message.position.intermediate_equal",
+                    "Failed to find intermediate position: EqualFractions"
+                );
                 a
             }
             Err(FailToFindIntermediate::OutOfRange) => {
                 tracing::error!(
+                    event = "message.position.intermediate_out_of_range",
                     "Failed to find intermediate position between ({}, {}) and ({}, {}): Out of range.",
                     a.0,
                     a.1,
@@ -509,6 +523,7 @@ impl Message {
             Some(conflicting_message.id),
         );
         tracing::warn!(
+            event = "message.move.position_conflict",
             conflict_txid = txid_current,
             attempted_pos_p = pos.0,
             attempted_pos_q = pos.1,
@@ -574,6 +589,7 @@ impl Message {
             return Ok(MessageMoveOutcome::NoPermission);
         }
         tracing::warn!(
+            event = "message.move.row_missing",
             %id,
             %user_id,
             %channel_id,
@@ -663,6 +679,7 @@ impl Message {
             return Ok(MessageEditOutcome::Conflict);
         }
         tracing::warn!(
+            event = "message.edit.row_missing",
             %id,
             %user_id,
             "Authorized message edit did not update a matching row"

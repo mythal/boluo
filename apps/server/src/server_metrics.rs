@@ -166,7 +166,11 @@ pub async fn update_database_health_metrics(pool: &sqlx::PgPool) {
         }
         Err(err) => {
             metrics::counter!("boluo_server_db_pool_probe_total", "result" => "error").increment(1);
-            tracing::warn!("Database health metrics probe failed: {}", err);
+            tracing::warn!(
+                event = "health.database_probe.failed",
+                "Database health metrics probe failed: {}",
+                err
+            );
             gauge!("boluo_server_database_up").set(0.0);
             gauge!("boluo_server_database_probe_rtt_ms").set(0.0);
         }
@@ -188,12 +192,19 @@ pub async fn update_redis_health_metrics(conn: Option<redis::aio::ConnectionMana
             gauge!("boluo_server_redis_probe_rtt_ms").set(start.elapsed().as_millis() as f64);
         }
         Ok(response) => {
-            tracing::warn!("Redis health metrics probe returned unexpected response: {response}");
+            tracing::warn!(
+                event = "health.redis_probe.invalid_response",
+                "Redis health metrics probe returned unexpected response: {response}"
+            );
             gauge!("boluo_server_redis_up").set(0.0);
             gauge!("boluo_server_redis_probe_rtt_ms").set(0.0);
         }
         Err(err) => {
-            tracing::warn!("Redis health metrics probe failed: {}", err);
+            tracing::warn!(
+                event = "health.redis_probe.failed",
+                "Redis health metrics probe failed: {}",
+                err
+            );
             gauge!("boluo_server_redis_up").set(0.0);
             gauge!("boluo_server_redis_probe_rtt_ms").set(0.0);
         }

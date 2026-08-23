@@ -268,6 +268,7 @@ impl CommittedChanges {
             )
             .increment(1);
             tracing::error!(
+                event = "space_runtime.commit.apply_failed",
                 %error,
                 %space_id,
                 "Failed to apply committed Space runtime changes"
@@ -330,6 +331,7 @@ impl CommittedChanges {
                         )
                         .increment(1);
                         tracing::error!(
+                            event = "space_runtime.commit.task_failed",
                             %error,
                             "Space runtime change task failed after database commit"
                         );
@@ -373,6 +375,7 @@ impl CommittedChanges {
                     )
                     .increment(1);
                     tracing::error!(
+                        event = "space_runtime.commit.channel_members_refresh_failed",
                         %error,
                         %space_id,
                         channel_count = channel_ids.len(),

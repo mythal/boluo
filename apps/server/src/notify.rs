@@ -94,6 +94,7 @@ impl SpaceActivityNotifier {
                                     )
                                     .increment(1);
                                     tracing::error!(
+                                        event = "space_activity.flush_failed",
                                         error = %err,
                                         update_count,
                                         "Failed to update Space activity batch"

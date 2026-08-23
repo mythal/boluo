@@ -66,6 +66,7 @@ impl MessagePositionService {
                 )
                 .record(load_started.elapsed().as_secs_f64());
                 tracing::error!(
+                    event = "message.position.database_acquire_failed",
                     %channel_id,
                     %error,
                     reason,
@@ -93,6 +94,7 @@ impl MessagePositionService {
             Err(sqlx::Error::RowNotFound) => Ok(None),
             Err(error) => {
                 tracing::error!(
+                    event = "message.position.query_failed",
                     %channel_id,
                     %error,
                     reason,
@@ -120,7 +122,8 @@ impl MessagePositionService {
     }
 
     fn exhausted(channel_id: Uuid) -> AppError {
-        tracing::error!(%channel_id, "Channel message position range is exhausted");
+        tracing::error!(
+            event = "message.position.range_exhausted", %channel_id, "Channel message position range is exhausted");
         AppError::Unexpected(anyhow::anyhow!(
             "Channel message position range is exhausted"
         ))
@@ -133,6 +136,7 @@ impl MessagePositionService {
     ) -> Result<(), AppError> {
         if *attempts >= MAX_TAIL_SYNC_ATTEMPTS {
             tracing::error!(
+                event = "message.position.sync_exhausted",
                 %channel_id,
                 operation,
                 attempts = *attempts,
@@ -149,6 +153,7 @@ impl MessagePositionService {
             )
             .increment(1);
             tracing::warn!(
+                event = "message.position.sync_retry",
                 %channel_id,
                 operation,
                 attempt = *attempts + 1,
@@ -228,7 +233,11 @@ impl MessagePositionService {
                 Self::load_persisted_tail(pool, channel_id, PersistedTailLoadReason::Conflict)
                     .await?;
             if tail.is_none() {
-                tracing::error!(%channel_id, "Position conflict occurred in an empty channel");
+                tracing::error!(
+                    event = "message.position.empty_channel_conflict",
+                    %channel_id,
+                    "Position conflict occurred in an empty channel"
+                );
             }
             match handle.on_conflict(message_id, tail).await? {
                 PositionAllocation::Reserved(pos) => Ok(pos),

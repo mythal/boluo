@@ -418,7 +418,8 @@ export function buildBoluoDashboard(
       panels.eventDelivery,
       timeSeriesPanel({
         id: 26,
-        title: 'Event delivery errors',
+        title: 'Event delivery lag',
+        description: 'Updates dropped because a connected broadcast receiver could not keep up.',
         datasourceUid,
         unit: 'ops',
         tooltipMode: TooltipDisplayMode.Multi,
@@ -428,12 +429,6 @@ export function buildBoluoDashboard(
             editorMode: QueryEditorMode.Code,
             expr: rateOrZero('boluo_server_events_broadcast_lagged_total'),
             legendFormat: 'broadcast lagged updates/s',
-          },
-          {
-            refId: 'broadcast-no-receivers',
-            editorMode: QueryEditorMode.Code,
-            expr: `(sum(rate(boluo_server_events_broadcast_total{app="${APP}",result="no_receivers"}[${RATE_INTERVAL}]))) or vector(0)`,
-            legendFormat: 'broadcast without receivers/s',
           },
         ],
       }),

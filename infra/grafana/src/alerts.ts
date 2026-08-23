@@ -317,13 +317,13 @@ export function buildAlertRules(datasourceUid: string): AlertRulesProvisioning {
         alertRule(datasourceUid, resources, {
           uid: 'boluo-server-anonymous-memory-growing',
           title: 'Server anonymous memory growing',
-          expression: `max by(instance) (deriv(boluo_server_process_memory_bytes{app="${SERVER_APP}",kind="anonymous"}[10m]))`,
+          expression: `(max by(instance) (deriv(boluo_server_process_memory_bytes{app="${SERVER_APP}",kind="anonymous"}[10m]))) and on(instance) (max by(instance) (boluo_server_process_memory_bytes{app="${SERVER_APP}",kind="rss"}) / clamp_min(max by(instance) (fly_instance_memory_mem_total{app="${SERVER_APP}"}), 1) > 0.5)`,
           comparator: 'gt',
           threshold: (1024 * 1024) / 60,
           forDuration: '10m',
           severity: 'warning',
           summary:
-            'Server anonymous memory has grown by more than 1 MiB per minute for ten minutes.',
+            'Server anonymous memory has grown by more than 1 MiB per minute for ten minutes while process RSS exceeds 50% of instance memory.',
         }),
         alertRule(datasourceUid, resources, {
           uid: 'boluo-server-process-swap-high',

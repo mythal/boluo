@@ -29,6 +29,7 @@ import {
   backupMetric,
   cpuBudget,
   databaseVolumeUtilization,
+  memoryUtilization,
 } from './metrics.js';
 
 export const HEALTH_DASHBOARD_RESOURCE_NAME = '42772a90-01f2-4b96-b40d-ad99a7608308';
@@ -44,6 +45,7 @@ const panels = {
   dependencyLatency: 'panel-5',
   databaseVolume: 'panel-6',
   cpuBudget: 'panel-7',
+  instanceMemory: 'panel-8',
 } as const;
 
 function withMissingAsDown(expression: string): string {
@@ -177,7 +179,6 @@ export function buildHealthDashboard(datasourceUid: string): DashboardBuilder {
       healthStatPanel({
         id: 3,
         title: 'Backup health',
-        description: 'Freshness: daily 36h; full 8d.',
         datasourceUid,
         targets: [
           {
@@ -259,8 +260,8 @@ export function buildHealthDashboard(datasourceUid: string): DashboardBuilder {
           {
             refId: 'runtime-load',
             editorMode: QueryEditorMode.Code,
-            expr: `sum(${serverRate('boluo_server_space_runtime_load_failed_total')})`,
-            legendFormat: 'runtime load',
+            expr: `sum(${serverRate('boluo_server_space_runtime_load_total', 'result="database_error"')})`,
+            legendFormat: 'runtime load database error',
           },
           {
             refId: 'runtime-refresh',
@@ -294,6 +295,8 @@ export function buildHealthDashboard(datasourceUid: string): DashboardBuilder {
       timeSeriesPanel({
         id: 5,
         title: 'Dependency probe latency',
+        description:
+          'Database pool acquire p95 includes the SQLx idle-connection liveness check, not only queue wait.',
         datasourceUid,
         unit: 'ms',
         tooltipMode: TooltipDisplayMode.Multi,
@@ -364,6 +367,33 @@ export function buildHealthDashboard(datasourceUid: string): DashboardBuilder {
         ],
       }),
     )
+    .element(
+      panels.instanceMemory,
+      timeSeriesPanel({
+        id: 8,
+        title: 'Instance memory utilization',
+        description: '(Total - available) / total memory for each VM instance.',
+        datasourceUid,
+        unit: 'percentunit',
+        min: 0,
+        max: 1,
+        tooltipMode: TooltipDisplayMode.Multi,
+        targets: [
+          {
+            refId: 'server',
+            editorMode: QueryEditorMode.Code,
+            expr: `max by(instance) (${memoryUtilization(SERVER_APP)})`,
+            legendFormat: '{{instance}} server',
+          },
+          {
+            refId: 'database',
+            editorMode: QueryEditorMode.Code,
+            expr: `max by(instance) (${memoryUtilization(DATABASE_APP)})`,
+            legendFormat: '{{instance}} database',
+          },
+        ],
+      }),
+    )
     .layout(
       new GridBuilder().items([
         gridItem(panels.mascot).x(0).y(0).width(4).height(8),
@@ -372,8 +402,9 @@ export function buildHealthDashboard(datasourceUid: string): DashboardBuilder {
         gridItem(panels.exporters).x(0).y(8).width(8).height(8),
         gridItem(panels.criticalErrors).x(8).y(8).width(8).height(8),
         gridItem(panels.databaseVolume).x(16).y(8).width(8).height(8),
-        gridItem(panels.dependencyLatency).x(0).y(16).width(12).height(8),
-        gridItem(panels.cpuBudget).x(12).y(16).width(12).height(8),
+        gridItem(panels.dependencyLatency).x(0).y(16).width(8).height(8),
+        gridItem(panels.cpuBudget).x(8).y(16).width(8).height(8),
+        gridItem(panels.instanceMemory).x(16).y(16).width(8).height(8),
       ]),
     )
     .links([])

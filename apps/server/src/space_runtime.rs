@@ -305,9 +305,13 @@ impl SpaceRuntime {
         let result = Self::load_snapshot(db, space_id, 0).await;
         metrics::histogram!("boluo_server_space_runtime_load_duration_seconds")
             .record(started.elapsed().as_secs_f64());
-        if result.is_err() {
-            metrics::counter!("boluo_server_space_runtime_load_failed_total").increment(1);
-        }
+        let result_label = match &result {
+            Ok(_) => "success",
+            Err(SpaceRuntimeError::NotFound) => "not_found",
+            Err(_) => "database_error",
+        };
+        metrics::counter!("boluo_server_space_runtime_load_total", "result" => result_label)
+            .increment(1);
         let snapshot = result?;
         let (control_tx, control_rx) = mpsc::channel(96);
         let runtime = Arc::new(Self {

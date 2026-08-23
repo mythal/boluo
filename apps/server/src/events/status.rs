@@ -44,6 +44,22 @@ impl StatusState {
         self.status_map_snapshot.load_full()
     }
 
+    fn broadcast(&mut self) {
+        if !super::broadcast::has_broadcast_receivers(self.space_id) {
+            return;
+        }
+        let status_map = self.snapshot();
+        Update::transient(
+            self.space_id,
+            UpdateBody::StatusMap {
+                status_map,
+                space_id: self.space_id,
+            },
+        );
+        metrics::histogram!("boluo_server_events_status_map_size")
+            .record(self.status_map.len() as f64);
+    }
+
     pub fn update(&mut self, action: StatusAction) {
         match action {
             StatusAction::Update(user_id, status) => {
@@ -54,27 +70,11 @@ impl StatusState {
                     if existing.kind == kind {
                         return;
                     }
-                    let status_map = self.snapshot();
-                    Update::transient(
-                        self.space_id,
-                        UpdateBody::StatusMap {
-                            status_map,
-                            space_id: self.space_id,
-                        },
-                    )
+                    self.broadcast();
                 }
             }
             StatusAction::Broadcast => {
-                let status_map = self.snapshot();
-                Update::transient(
-                    self.space_id,
-                    UpdateBody::StatusMap {
-                        status_map,
-                        space_id: self.space_id,
-                    },
-                );
-                metrics::histogram!("boluo_server_events_status_map_size")
-                    .record(self.status_map.len() as f64);
+                self.broadcast();
                 if self.last_cleanup.elapsed() > Duration::from_secs(60 * 60) {
                     self.last_cleanup = std::time::Instant::now();
                     let one_week_ago = timestamp() - 60 * 60 * 24 * 7;

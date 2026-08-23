@@ -4,6 +4,7 @@ import {
   GridBuilder,
   gridItem,
 } from '@grafana/grafana-foundation-sdk/dashboardv2';
+import { AxisPlacement } from '@grafana/grafana-foundation-sdk/common';
 import {
   QueryEditorMode,
   TooltipDisplayMode,
@@ -39,7 +40,6 @@ const panels = {
   eventDelivery: 'panel-26',
   runtimePopulation: 'panel-27',
   processMemory: 'panel-29',
-  eventReplayMemory: 'panel-30',
 } as const;
 
 const messageRateMetrics = [
@@ -69,6 +69,11 @@ function rateOrZero(metric: string): string {
   return `(${rate(metric)}) or vector(0)`;
 }
 
+function summedRateOrZero(metric: string, extraLabels = ''): string {
+  const labels = extraLabels ? `,${extraLabels}` : '';
+  return `(sum(rate(${metric}{app="${APP}"${labels}}[${RATE_INTERVAL}]))) or vector(0)`;
+}
+
 export function buildBoluoDashboard(
   datasourceUid = DEFAULT_PROMETHEUS_DATASOURCE_UID,
 ): DashboardBuilder {
@@ -81,6 +86,7 @@ export function buildBoluoDashboard(
       timeSeriesPanel({
         id: 13,
         title: 'HTTP request rate',
+        description: 'Measured at the Fly edge.',
         datasourceUid,
         unit: 'reqps',
         seriesNames: HTTP_STATUS_CODES,
@@ -99,6 +105,7 @@ export function buildBoluoDashboard(
       timeSeriesPanel({
         id: 14,
         title: 'HTTP response latency',
+        description: 'Measured at the Fly edge.',
         datasourceUid,
         unit: 's',
         targets: [
@@ -146,7 +153,9 @@ export function buildBoluoDashboard(
       panels.memoryUtilization,
       timeSeriesPanel({
         id: 3,
-        title: 'Instance memory pressure',
+        title: 'Instance memory utilization',
+        description:
+          'Memory is (total - available) / total for each VM instance; swap utilization is shown separately.',
         datasourceUid,
         unit: 'percentunit',
         min: 0,
@@ -195,7 +204,7 @@ export function buildBoluoDashboard(
       timeSeriesPanel({
         id: 15,
         title: 'Cache hit ratio',
-        description: '30-minute window; gaps mean no requests.',
+        description: 'Gaps mean there were no cache requests in the rolling window.',
         datasourceUid,
         unit: 'percentunit',
         min: 0,
@@ -244,6 +253,7 @@ export function buildBoluoDashboard(
       timeSeriesPanel({
         id: 19,
         title: 'Cache capacity utilization',
+        description: 'Cached item count divided by configured capacity.',
         datasourceUid,
         unit: 'percentunit',
         min: 0,
@@ -265,6 +275,7 @@ export function buildBoluoDashboard(
       timeSeriesPanel({
         id: 9,
         title: 'Message operation rate',
+        description: 'Includes transient preview and preview-diff updates.',
         datasourceUid,
         unit: 'ops',
         tooltipMode: TooltipDisplayMode.Multi,
@@ -281,7 +292,7 @@ export function buildBoluoDashboard(
       timeSeriesPanel({
         id: 16,
         title: 'Message operation latency',
-        description: 'Per-instance rolling quantiles; gaps mean no recent operations.',
+        description: 'Gaps mean there were no recent operations in the rolling window.',
         datasourceUid,
         unit: 'ms',
         tooltipMode: TooltipDisplayMode.Multi,
@@ -333,7 +344,6 @@ export function buildBoluoDashboard(
       timeSeriesPanel({
         id: 21,
         title: 'Disk cache I/O',
-        description: 'Rates for redb reads, writes, and rejection events.',
         datasourceUid,
         unit: 'ops',
         tooltipMode: TooltipDisplayMode.Multi,
@@ -351,12 +361,6 @@ export function buildBoluoDashboard(
             legendFormat: 'writes',
           },
           {
-            refId: 'queue-full',
-            editorMode: QueryEditorMode.Code,
-            expr: rateOrZero('boluo_server_disk_cache_queue_full_total'),
-            legendFormat: 'queue full',
-          },
-          {
             refId: 'capacity-rejections',
             editorMode: QueryEditorMode.Code,
             expr: rateOrZero('boluo_server_disk_cache_capacity_rejections_total'),
@@ -370,12 +374,19 @@ export function buildBoluoDashboard(
       timeSeriesPanel({
         id: 24,
         title: 'Queue depths',
-        description: 'Pending work across event delivery, space runtimes, disk cache, and Tokio.',
+        description:
+          'The WebSocket pending-updates series is a rolling p95; the other series are current values.',
         datasourceUid,
         unit: 'short',
         min: 0,
         tooltipMode: TooltipDisplayMode.Multi,
         targets: [
+          {
+            refId: 'websocket-p95',
+            editorMode: QueryEditorMode.Code,
+            expr: summaryQuantile(0.95, 'boluo_server_events_pending_updates'),
+            legendFormat: '{{instance}} WebSocket pending p95',
+          },
           {
             refId: 'mailbox-actions',
             editorMode: QueryEditorMode.Code,
@@ -419,7 +430,7 @@ export function buildBoluoDashboard(
       panels.eventDelivery,
       timeSeriesPanel({
         id: 26,
-        title: 'Event delivery errors',
+        title: 'Backpressure events',
         datasourceUid,
         unit: 'ops',
         tooltipMode: TooltipDisplayMode.Multi,
@@ -427,14 +438,41 @@ export function buildBoluoDashboard(
           {
             refId: 'broadcast-lagged',
             editorMode: QueryEditorMode.Code,
-            expr: rateOrZero('boluo_server_events_broadcast_lagged_total'),
+            expr: summedRateOrZero('boluo_server_events_broadcast_lagged_total'),
             legendFormat: 'broadcast lagged updates/s',
           },
           {
-            refId: 'broadcast-no-receivers',
+            refId: 'mailbox-action-timeout',
             editorMode: QueryEditorMode.Code,
-            expr: `(sum(rate(boluo_server_events_broadcast_total{app="${APP}",result="no_receivers"}[${RATE_INTERVAL}]))) or vector(0)`,
-            legendFormat: 'broadcast without receivers/s',
+            expr: summedRateOrZero('boluo_server_events_mailbox_actions_total', 'result="timeout"'),
+            legendFormat: 'mailbox action timeouts/s',
+          },
+          {
+            refId: 'runtime-mutation-rejected',
+            editorMode: QueryEditorMode.Code,
+            expr: summedRateOrZero('boluo_server_space_runtime_mutation_rejected_total'),
+            legendFormat: 'runtime mutation rejections/s',
+          },
+          {
+            refId: 'runtime-read-timeout',
+            editorMode: QueryEditorMode.Code,
+            expr: summedRateOrZero(
+              'boluo_server_space_runtime_read_wait_total',
+              'result="timeout"',
+            ),
+            legendFormat: 'runtime read wait timeouts/s',
+          },
+          {
+            refId: 'activity-dropped',
+            editorMode: QueryEditorMode.Code,
+            expr: summedRateOrZero('boluo_server_space_activity_notifications_dropped_total'),
+            legendFormat: 'activity notifications dropped/s',
+          },
+          {
+            refId: 'disk-cache-queue-full',
+            editorMode: QueryEditorMode.Code,
+            expr: summedRateOrZero('boluo_server_disk_cache_queue_full_total'),
+            legendFormat: 'disk cache queue full/s',
           },
         ],
       }),
@@ -444,7 +482,6 @@ export function buildBoluoDashboard(
       timeSeriesPanel({
         id: 27,
         title: 'Runtime population',
-        description: 'In-memory application objects retained by each server instance.',
         datasourceUid,
         unit: 'short',
         tooltipMode: TooltipDisplayMode.Multi,
@@ -482,11 +519,17 @@ export function buildBoluoDashboard(
         id: 29,
         title: 'Process & allocator memory',
         description:
-          'Linux /proc memory is authoritative for process RSS; mimalloc committed memory estimates allocator-owned address space.',
+          'RSS is resident process memory. Allocator committed is address space managed by the allocator, uses the right axis, and should not be added to RSS.',
         datasourceUid,
         unit: 'bytes',
         min: 0,
         tooltipMode: TooltipDisplayMode.Multi,
+        overrides: [
+          {
+            matcher: { id: 'byFrameRefID', options: 'allocator-committed' },
+            properties: [{ id: 'custom.axisPlacement', value: AxisPlacement.Right }],
+          },
+        ],
         targets: [
           {
             refId: 'rss',
@@ -522,56 +565,10 @@ export function buildBoluoDashboard(
       }),
     )
     .element(
-      panels.eventReplayMemory,
-      timeSeriesPanel({
-        id: 30,
-        title: 'Event replay payload memory',
-        description:
-          'Uncompressed initial-update payload retained while replay is being sent, plus rolling payload-size quantiles.',
-        datasourceUid,
-        unit: 'bytes',
-        min: 0,
-        tooltipMode: TooltipDisplayMode.Multi,
-        targets: [
-          {
-            refId: 'in-flight',
-            editorMode: QueryEditorMode.Code,
-            expr: `boluo_server_events_initial_updates_in_flight_bytes{app="${APP}"}`,
-            legendFormat: '{{instance}} retained initial updates',
-          },
-          {
-            refId: 'initial-p95',
-            editorMode: QueryEditorMode.Code,
-            expr: summaryQuantile(0.95, 'boluo_server_events_push_initial_updates_payload_bytes'),
-            legendFormat: '{{instance}} initial updates p95',
-          },
-          {
-            refId: 'initial-max',
-            editorMode: QueryEditorMode.Code,
-            expr: summaryQuantile(1, 'boluo_server_events_push_initial_updates_payload_bytes'),
-            legendFormat: '{{instance}} initial updates max',
-          },
-          {
-            refId: 'cache-read-p95',
-            editorMode: QueryEditorMode.Code,
-            expr: summaryQuantile(0.95, 'boluo_server_mailbox_cache_read_payload_bytes'),
-            legendFormat: '{{instance}} mailbox cache read p95',
-          },
-          {
-            refId: 'cache-read-max',
-            editorMode: QueryEditorMode.Code,
-            expr: summaryQuantile(1, 'boluo_server_mailbox_cache_read_payload_bytes'),
-            legendFormat: '{{instance}} mailbox cache read max',
-          },
-        ],
-      }),
-    )
-    .element(
       panels.diskCacheLatency,
       timeSeriesPanel({
         id: 22,
         title: 'Disk cache latency',
-        description: 'p95 latency for redb reads, writes, and compaction.',
         datasourceUid,
         unit: 'ms',
         tooltipMode: TooltipDisplayMode.Multi,
@@ -611,12 +608,11 @@ export function buildBoluoDashboard(
         gridItem(panels.cacheCapacityUtilization).x(12).y(22).width(12).height(8),
         gridItem(panels.messages).x(0).y(30).width(12).height(8),
         gridItem(panels.messageLatency).x(12).y(30).width(12).height(8),
-        gridItem(panels.eventDelivery).x(0).y(38).width(12).height(8),
-        gridItem(panels.eventReplayMemory).x(12).y(38).width(12).height(8),
+        gridItem(panels.queueDepths).x(0).y(38).width(12).height(8),
+        gridItem(panels.eventDelivery).x(12).y(38).width(12).height(8),
         gridItem(panels.diskCacheCapacity).x(0).y(46).width(8).height(8),
         gridItem(panels.diskCacheIo).x(8).y(46).width(8).height(8),
         gridItem(panels.diskCacheLatency).x(16).y(46).width(8).height(8),
-        gridItem(panels.queueDepths).x(0).y(54).width(12).height(8),
       ]),
     )
     .links([])

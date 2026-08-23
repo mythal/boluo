@@ -150,6 +150,7 @@ export function buildDatabaseDashboard(datasourceUid: string): DashboardBuilder 
       timeSeriesPanel({
         id: 7,
         title: 'Buffer cache hit ratio',
+        description: 'Gaps mean there were no buffer reads in the rolling window.',
         datasourceUid,
         unit: 'percentunit',
         min: 0,
@@ -185,6 +186,7 @@ export function buildDatabaseDashboard(datasourceUid: string): DashboardBuilder 
       timeSeriesPanel({
         id: 9,
         title: 'Locks by mode',
+        description: 'All observed PostgreSQL locks by mode, not only waiting locks.',
         datasourceUid,
         tooltipMode: TooltipDisplayMode.Multi,
         seriesNames: LOCK_MODES,

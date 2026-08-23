@@ -86,6 +86,7 @@ export function buildBoluoDashboard(
       timeSeriesPanel({
         id: 13,
         title: 'HTTP request rate',
+        description: 'Measured at the Fly edge.',
         datasourceUid,
         unit: 'reqps',
         seriesNames: HTTP_STATUS_CODES,
@@ -104,6 +105,7 @@ export function buildBoluoDashboard(
       timeSeriesPanel({
         id: 14,
         title: 'HTTP response latency',
+        description: 'Measured at the Fly edge.',
         datasourceUid,
         unit: 's',
         targets: [
@@ -151,7 +153,9 @@ export function buildBoluoDashboard(
       panels.memoryUtilization,
       timeSeriesPanel({
         id: 3,
-        title: 'Instance memory pressure',
+        title: 'Instance memory utilization',
+        description:
+          'Memory is (total - available) / total for each VM instance; swap utilization is shown separately.',
         datasourceUid,
         unit: 'percentunit',
         min: 0,
@@ -200,7 +204,7 @@ export function buildBoluoDashboard(
       timeSeriesPanel({
         id: 15,
         title: 'Cache hit ratio',
-        description: '30-minute window; gaps mean no requests.',
+        description: 'Gaps mean there were no cache requests in the rolling window.',
         datasourceUid,
         unit: 'percentunit',
         min: 0,
@@ -249,6 +253,7 @@ export function buildBoluoDashboard(
       timeSeriesPanel({
         id: 19,
         title: 'Cache capacity utilization',
+        description: 'Cached item count divided by configured capacity.',
         datasourceUid,
         unit: 'percentunit',
         min: 0,
@@ -270,6 +275,7 @@ export function buildBoluoDashboard(
       timeSeriesPanel({
         id: 9,
         title: 'Message operation rate',
+        description: 'Includes transient preview and preview-diff updates.',
         datasourceUid,
         unit: 'ops',
         tooltipMode: TooltipDisplayMode.Multi,
@@ -286,7 +292,7 @@ export function buildBoluoDashboard(
       timeSeriesPanel({
         id: 16,
         title: 'Message operation latency',
-        description: 'Per-instance rolling quantiles; gaps mean no recent operations.',
+        description: 'Gaps mean there were no recent operations in the rolling window.',
         datasourceUid,
         unit: 'ms',
         tooltipMode: TooltipDisplayMode.Multi,
@@ -338,7 +344,6 @@ export function buildBoluoDashboard(
       timeSeriesPanel({
         id: 21,
         title: 'Disk cache I/O',
-        description: 'Rates for redb reads, writes, and capacity rejections.',
         datasourceUid,
         unit: 'ops',
         tooltipMode: TooltipDisplayMode.Multi,
@@ -370,7 +375,7 @@ export function buildBoluoDashboard(
         id: 24,
         title: 'Queue depths',
         description:
-          'Current pending work across WebSocket delivery, mailbox and space runtimes, disk cache, and Tokio.',
+          'The WebSocket pending-updates series is a rolling p95; the other series are current values.',
         datasourceUid,
         unit: 'short',
         min: 0,
@@ -426,8 +431,6 @@ export function buildBoluoDashboard(
       timeSeriesPanel({
         id: 26,
         title: 'Backpressure events',
-        description:
-          'Rates of dropped, rejected, or timed-out work caused by internal queues and consumers falling behind.',
         datasourceUid,
         unit: 'ops',
         tooltipMode: TooltipDisplayMode.Multi,
@@ -479,7 +482,6 @@ export function buildBoluoDashboard(
       timeSeriesPanel({
         id: 27,
         title: 'Runtime population',
-        description: 'In-memory application objects retained by each server instance.',
         datasourceUid,
         unit: 'short',
         tooltipMode: TooltipDisplayMode.Multi,
@@ -517,7 +519,7 @@ export function buildBoluoDashboard(
         id: 29,
         title: 'Process & allocator memory',
         description:
-          'Linux /proc memory is authoritative for process RSS; mimalloc committed memory estimates allocator-owned address space.',
+          'RSS is resident process memory. Allocator committed is address space managed by the allocator, uses the right axis, and should not be added to RSS.',
         datasourceUid,
         unit: 'bytes',
         min: 0,
@@ -567,7 +569,6 @@ export function buildBoluoDashboard(
       timeSeriesPanel({
         id: 22,
         title: 'Disk cache latency',
-        description: 'p95 latency for redb reads, writes, and compaction.',
         datasourceUid,
         unit: 'ms',
         tooltipMode: TooltipDisplayMode.Multi,

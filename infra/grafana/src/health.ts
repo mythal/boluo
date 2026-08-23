@@ -179,7 +179,6 @@ export function buildHealthDashboard(datasourceUid: string): DashboardBuilder {
       healthStatPanel({
         id: 3,
         title: 'Backup health',
-        description: 'Freshness: daily 36h; full 8d.',
         datasourceUid,
         targets: [
           {
@@ -296,6 +295,8 @@ export function buildHealthDashboard(datasourceUid: string): DashboardBuilder {
       timeSeriesPanel({
         id: 5,
         title: 'Dependency probe latency',
+        description:
+          'Database pool acquire p95 includes the SQLx idle-connection liveness check, not only queue wait.',
         datasourceUid,
         unit: 'ms',
         tooltipMode: TooltipDisplayMode.Multi,
@@ -371,7 +372,7 @@ export function buildHealthDashboard(datasourceUid: string): DashboardBuilder {
       timeSeriesPanel({
         id: 8,
         title: 'Instance memory utilization',
-        description: 'Used instance memory as a share of total memory.',
+        description: '(Total - available) / total memory for each VM instance.',
         datasourceUid,
         unit: 'percentunit',
         min: 0,

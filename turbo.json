@@ -59,10 +59,7 @@
         "$TURBO_ROOT$/.env",
         "$TURBO_ROOT$/.env.local"
       ],
-      "env": [
-        "ANALYZE",
-        "BACKEND_URL"
-      ],
+      "env": ["ANALYZE", "BACKEND_URL"],
       "outputs": [".next/**", "!.next/cache/**"]
     },
     "legacy#build": {

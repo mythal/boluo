@@ -8,6 +8,7 @@
 use std::env;
 use std::net::{IpAddr, SocketAddr};
 use std::path::PathBuf;
+use std::sync::LazyLock;
 
 use clap::{Args as ClapArgs, Parser, Subcommand};
 use futures::pin_mut;
@@ -73,6 +74,15 @@ use crate::db::MIGRATOR;
 use crate::error::AppError;
 use crate::interface::{err_response, missing, ok_response};
 
+const REQUEST_ID_HEADER: hyper::header::HeaderName =
+    hyper::header::HeaderName::from_static("x-request-id");
+const FLY_REQUEST_ID_HEADER: hyper::header::HeaderName =
+    hyper::header::HeaderName::from_static("fly-request-id");
+
+static APP_VERSION: LazyLock<String> = LazyLock::new(|| {
+    std::env::var("APP_VERSION").unwrap_or_else(|_| env!("CARGO_PKG_VERSION").to_owned())
+});
+
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
@@ -124,25 +134,11 @@ async fn handler(
     ctx: &context::AppContext,
     req: Request<Incoming>,
 ) -> Result<hyper::Response<Full<hyper::body::Bytes>>, hyper::Error> {
-    use hyper::header;
     use tracing::Instrument as _;
 
     let method = req.method().clone();
-    let uri = req.uri().clone();
-    let path = uri.path();
-    let query = uri.query().unwrap_or("");
-
-    let origin = req
-        .headers()
-        .get(header::ORIGIN)
-        .and_then(|v| v.to_str().ok())
-        .unwrap_or("");
-
-    let user_agent = req
-        .headers()
-        .get(header::USER_AGENT)
-        .and_then(|v| v.to_str().ok())
-        .unwrap_or("unknown");
+    let path = req.uri().path().to_owned();
+    let request_id = request_id(req.headers());
 
     let client_version = req
         .headers()
@@ -150,20 +146,19 @@ async fn handler(
         .and_then(|x| x.to_str().ok())
         .unwrap_or("");
 
-    // Create a span for this HTTP request with structured fields
     let span = tracing::info_span!(
         "http_request",
+        request_id = %request_id.to_str().unwrap_or("invalid"),
         method = %method,
         path = %path,
-        query = %query,
         status_code = tracing::field::Empty,
         duration_ms = tracing::field::Empty,
         user_id = tracing::field::Empty,
         error = tracing::field::Empty,
         auth_method = tracing::field::Empty,
         client = %client_version,
-        origin = %origin,
-        user_agent = %user_agent,
+        app_version = %APP_VERSION.as_str(),
+        startup_id = events::startup_id(),
     );
 
     let start = std::time::Instant::now();
@@ -177,7 +172,8 @@ async fn handler(
 
     // Handle preflight requests quickly
     if req.method() == hyper::Method::OPTIONS {
-        let response = cors::preflight_requests(req);
+        let mut response = cors::preflight_requests(req);
+        response.headers_mut().insert(REQUEST_ID_HEADER, request_id);
         span.record("status_code", 200);
         span.record("duration_ms", start.elapsed().as_millis() as u64);
         return Ok(response);
@@ -196,15 +192,12 @@ async fn handler(
                     span.record("status_code", response.status().as_u16());
                     span.record("duration_ms", duration.as_millis() as u64);
 
-                    if duration.as_millis() > 500 {
-                        tracing::warn!("Slow request: {}ms", duration.as_millis());
-                    } else if path.starts_with("/api/info")
-                        || path.starts_with("/api/updates/connect")
-                        || path.starts_with("/api/events/connect")
-                    {
-                        tracing::debug!("Request Finished");
+                    if response.status().is_server_error() {
+                        tracing::error!(event = "http.request.server_error", "Request failed");
+                    } else if duration.as_millis() > 500 {
+                        tracing::warn!(event = "http.request.slow", "Slow request");
                     } else {
-                        tracing::info!("Request Finished");
+                        tracing::debug!(event = "http.request.completed", "Request completed");
                     }
                     response.map(|bytes| Full::new(bytes.into()))
                 }
@@ -214,17 +207,70 @@ async fn handler(
                     span.record("duration_ms", duration.as_millis() as u64);
                     span.record("error", format!("{e}").as_str());
 
-                    error::log_error(&e, &uri);
+                    error::log_error(&e, &path);
 
                     err_response(e).map(|bytes| Full::new(bytes.into()))
                 }
             },
         );
 
+        let mut response = response;
+        response.headers_mut().insert(REQUEST_ID_HEADER, request_id);
         Ok(response)
     }
     .instrument(span)
     .await
+}
+
+fn request_id(headers: &hyper::HeaderMap) -> hyper::header::HeaderValue {
+    headers
+        .get(&REQUEST_ID_HEADER)
+        .or_else(|| headers.get(&FLY_REQUEST_ID_HEADER))
+        .filter(|value| {
+            !value.is_empty()
+                && value.as_bytes().len() <= 128
+                && value
+                    .as_bytes()
+                    .iter()
+                    .all(|byte| byte.is_ascii_alphanumeric() || b"._:-".contains(byte))
+        })
+        .cloned()
+        .unwrap_or_else(|| {
+            hyper::header::HeaderValue::from_str(&uuid::Uuid::now_v7().to_string())
+                .expect("UUID is a valid header value")
+        })
+}
+
+#[cfg(test)]
+mod request_id_tests {
+    use super::*;
+
+    #[test]
+    fn preserves_valid_request_id() {
+        let mut headers = hyper::HeaderMap::new();
+        headers.insert(&REQUEST_ID_HEADER, "request-123".parse().unwrap());
+
+        assert_eq!(request_id(&headers), "request-123");
+    }
+
+    #[test]
+    fn falls_back_to_fly_request_id() {
+        let mut headers = hyper::HeaderMap::new();
+        headers.insert(&FLY_REQUEST_ID_HEADER, "fly:request-123".parse().unwrap());
+
+        assert_eq!(request_id(&headers), "fly:request-123");
+    }
+
+    #[test]
+    fn replaces_unsafe_request_id() {
+        let mut headers = hyper::HeaderMap::new();
+        headers.insert(&REQUEST_ID_HEADER, "contains spaces".parse().unwrap());
+
+        let generated = request_id(&headers);
+        let generated = generated.to_str().unwrap();
+        assert_ne!(generated, "contains spaces");
+        assert!(uuid::Uuid::parse_str(generated).is_ok());
+    }
 }
 
 #[tracing::instrument(skip(storage))]
@@ -428,7 +474,13 @@ async fn main() {
     let filter = EnvFilter::builder()
         .with_default_directive(LevelFilter::INFO.into())
         .from_env_lossy();
-    tracing_subscriber::fmt().with_env_filter(filter).init();
+    tracing_subscriber::fmt()
+        .json()
+        .flatten_event(true)
+        .with_current_span(true)
+        .with_span_list(false)
+        .with_env_filter(filter)
+        .init();
 
     let storage = std::sync::Arc::new(s3::Storage::new(s3::StorageConfig {
         endpoint_url: args.s3_endpoint_url.clone(),
@@ -495,13 +547,22 @@ async fn main() {
     ));
 
     if ctx.config.site_url.is_none() {
-        tracing::error!("SITE_URL is not set");
+        tracing::error!(
+            event = "server.configuration.site_url_missing",
+            "SITE_URL is not set"
+        );
     }
     if ctx.config.app_url.is_none() {
-        tracing::error!("APP_URL is not set");
+        tracing::error!(
+            event = "server.configuration.app_url_missing",
+            "APP_URL is not set"
+        );
     }
     if ctx.config.public_media_url.is_none() {
-        tracing::error!("PUBLIC_MEDIA_URL is not set");
+        tracing::error!(
+            event = "server.configuration.public_media_url_missing",
+            "PUBLIC_MEDIA_URL is not set"
+        );
     }
 
     server_metrics::init_metrics(&pool).await;
@@ -532,7 +593,12 @@ async fn main() {
             .expect("Failed to create signal stream");
 
     server_metrics::start_update_metrics(pool.clone(), ctx.redis.clone(), ctx.space_store.clone());
-    tracing::info!("Startup ID: {startup_id}");
+    tracing::info!(
+        event = "server.started",
+        startup_id,
+        app_version = %APP_VERSION.as_str(),
+        "Server started"
+    );
 
     cache::start_expiry_task();
     cache::start_log_cache_stats();
@@ -570,7 +636,8 @@ async fn handle_connection(
     match accept_result {
         Ok((stream, addr)) => {
             if let Err(e) = stream.set_nodelay(true) {
-                tracing::error!(error = %e, "Failed to set TCP_NODELAY");
+                tracing::error!(
+                    event = "server.connection.tcp_nodelay_failed", error = %e, "Failed to set TCP_NODELAY");
             }
             let io = TokioIo::new(stream);
             tokio::task::spawn(async move {
@@ -618,7 +685,11 @@ async fn handle_connection(
                                 if result.is_ok() {
                                     last_reset = *timeout_reset_rx.borrow_and_update();
                                 } else {
-                                    tracing::warn!(addr = %addr, "HTTP connection timeout reset channel closed");
+                                    tracing::warn!(
+                                        event = "server.connection.timeout_reset_closed",
+                                        addr = %addr,
+                                        "HTTP connection timeout reset channel closed"
+                                    );
                                     break;
                                 }
                             }
@@ -631,7 +702,12 @@ async fn handle_connection(
                         match conn_result {
                             Ok(()) => {},
                             Err(err) => {
-                                tracing::warn!(error = %err, addr = %addr, "HTTP connection error");
+                                tracing::warn!(
+                                    event = "server.connection.error",
+                                    error = %err,
+                                    addr = %addr,
+                                    "HTTP connection error"
+                                );
                                 error_counter.increment(1);
                             },
                         }
@@ -645,7 +721,12 @@ async fn handle_connection(
                         connection_future.as_mut().graceful_shutdown();
 
                         if let Err(err) = connection_future.await {
-                            tracing::warn!(error = %err, addr = %addr, "Error during graceful shutdown");
+                            tracing::warn!(
+                                event = "server.connection.graceful_shutdown_failed",
+                                error = %err,
+                                addr = %addr,
+                                "Error during graceful shutdown"
+                            );
                         }
 
                         tracing::info!(addr = %addr, "HTTP connection timeout after {}s", start_time.elapsed().as_secs());
@@ -658,7 +739,8 @@ async fn handle_connection(
             });
         }
         Err(err) => {
-            tracing::error!(error = %err, "Failed to accept connection");
+            tracing::error!(
+                event = "server.connection.accept_failed", error = %err, "Failed to accept connection");
         }
     }
 }

@@ -17,7 +17,8 @@ pub async fn handler(ctx: &AppContext, req: Request<Incoming>) -> crate::interfa
         })) {
             bytes
         } else {
-            tracing::error!(error = %e, "Failed to serialize error");
+            tracing::error!(
+                event = "sentry_tunnel.error_response.serialization_failed", error = %e, "Failed to serialize error");
             b"{\"error\":\"Failed to serialize error\"}".to_vec()
         };
         if let Ok(response) = hyper::Response::builder()
@@ -27,7 +28,8 @@ pub async fn handler(ctx: &AppContext, req: Request<Incoming>) -> crate::interfa
         {
             response
         } else {
-            tracing::error!(error = %e, "Failed to build response");
+            tracing::error!(
+                event = "sentry_tunnel.response.build_failed", error = %e, "Failed to build response");
             hyper::Response::new(Vec::new())
         }
     }
@@ -39,7 +41,10 @@ pub async fn handler(ctx: &AppContext, req: Request<Incoming>) -> crate::interfa
     let body = if let Ok(bytes) = req.into_body().collect().await {
         bytes.to_bytes()
     } else {
-        tracing::error!("Failed to read request body");
+        tracing::error!(
+            event = "sentry_tunnel.request_body.read_failed",
+            "Failed to read request body"
+        );
         return error(AppError::Unexpected(anyhow!("Failed to read request body")));
     };
 
@@ -48,7 +53,10 @@ pub async fn handler(ctx: &AppContext, req: Request<Incoming>) -> crate::interfa
     }
 
     let Ok(body_str) = String::from_utf8(body.to_vec()) else {
-        tracing::error!("Invalid UTF-8 in request body");
+        tracing::error!(
+            event = "sentry_tunnel.request_body.invalid_utf8",
+            "Invalid UTF-8 in request body"
+        );
         return error(AppError::BadRequest(
             "Invalid UTF-8 in request body".to_string(),
         ));
@@ -61,21 +69,32 @@ pub async fn handler(ctx: &AppContext, req: Request<Incoming>) -> crate::interfa
 
     let header_line = lines[0];
     let Ok(header_json): Result<Value, _> = serde_json::from_str(header_line) else {
-        tracing::error!(header_line, "Failed to parse header JSON");
+        tracing::error!(
+            event = "sentry_tunnel.header.invalid_json",
+            header_line,
+            "Failed to parse header JSON"
+        );
         return error(AppError::BadRequest(
             "Failed to parse header JSON".to_string(),
         ));
     };
 
     let Some(dsn_str) = header_json.get("dsn").and_then(|v| v.as_str()) else {
-        tracing::error!("No dsn field found in header");
+        tracing::error!(
+            event = "sentry_tunnel.header.dsn_missing",
+            "No dsn field found in header"
+        );
         return error(AppError::BadRequest(
             "No dsn field found in header".to_string(),
         ));
     };
 
     let Ok(dsn_url) = url::Url::parse(dsn_str) else {
-        tracing::error!(dsn_str, "Invalid DSN URL");
+        tracing::error!(
+            event = "sentry_tunnel.header.dsn_invalid",
+            dsn_str,
+            "Invalid DSN URL"
+        );
         return error(AppError::BadRequest("Invalid DSN URL".to_string()));
     };
 
@@ -91,7 +110,10 @@ pub async fn handler(ctx: &AppContext, req: Request<Incoming>) -> crate::interfa
         .to_string();
 
     if ctx.config.sentry_project_ids.is_empty() {
-        tracing::warn!("SENTRY_PROJECT_IDS not configured, rejecting tunnel request");
+        tracing::warn!(
+            event = "sentry_tunnel.configuration.project_ids_missing",
+            "SENTRY_PROJECT_IDS not configured, rejecting tunnel request"
+        );
         return error(AppError::BadRequest(
             "Sentry tunnel not configured".to_string(),
         ));
@@ -103,7 +125,11 @@ pub async fn handler(ctx: &AppContext, req: Request<Incoming>) -> crate::interfa
         .iter()
         .any(|id| id == &project_id)
     {
-        tracing::warn!("Unknown project ID: {}", project_id);
+        tracing::warn!(
+            event = "sentry_tunnel.project.unknown",
+            "Unknown project ID: {}",
+            project_id
+        );
         return error(AppError::BadRequest("Project ID not allowed".to_string()));
     }
 
@@ -119,7 +145,8 @@ pub async fn handler(ctx: &AppContext, req: Request<Incoming>) -> crate::interfa
     {
         Ok(response) => response,
         Err(e) => {
-            tracing::error!(error = %e, "Failed to forward request to Sentry");
+            tracing::error!(
+                event = "sentry_tunnel.forward.failed", error = %e, "Failed to forward request to Sentry");
             return error(AppError::Unexpected(anyhow!(
                 "Failed to forward request to Sentry"
             )));
@@ -135,7 +162,10 @@ pub async fn handler(ctx: &AppContext, req: Request<Incoming>) -> crate::interfa
     let status = response.status();
     let content_type = response.headers().get("content-type").cloned();
     let Ok(response_body) = response.bytes().await else {
-        tracing::error!("Failed to read Sentry response");
+        tracing::error!(
+            event = "sentry_tunnel.upstream_response.read_failed",
+            "Failed to read Sentry response"
+        );
         return error(AppError::Unexpected(anyhow!(
             "Failed to read Sentry response"
         )));
@@ -150,7 +180,10 @@ pub async fn handler(ctx: &AppContext, req: Request<Incoming>) -> crate::interfa
     if let Ok(response) = hyper_response.body(response_body.to_vec()) {
         response
     } else {
-        tracing::error!("Failed to build response");
+        tracing::error!(
+            event = "sentry_tunnel.response.build_failed",
+            "Failed to build response"
+        );
         hyper::Response::new(Vec::new())
     }
 }

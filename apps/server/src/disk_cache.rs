@@ -152,7 +152,8 @@ pub(super) fn init(config: Option<Config>) {
             Ok(cache) => Some(cache),
             Err(err) => {
                 metrics::gauge!("boluo_server_disk_cache_up").set(0.0);
-                tracing::error!(error = %err, "Failed to start redb disk cache; using memory");
+                tracing::error!(
+                    event = "disk_cache.start_failed", error = %err, "Failed to start redb disk cache; using memory");
                 None
             }
         }
@@ -194,7 +195,10 @@ pub(super) async fn shutdown() {
         return;
     }
     if tokio::time::timeout(READ_TIMEOUT, response).await.is_err() {
-        tracing::warn!("Timed out while shutting down redb disk cache");
+        tracing::warn!(
+            event = "disk_cache.shutdown_timeout",
+            "Timed out while shutting down redb disk cache"
+        );
     }
 }
 
@@ -218,7 +222,8 @@ fn create_database(config: &Config) -> Result<Database, CacheError> {
 
 fn run_worker(receiver: Receiver<Command>, config: Config, database: Database) {
     if let Err(err) = run_worker_inner(&receiver, &config, database) {
-        tracing::error!(error = %err, "redb disk cache worker failed");
+        tracing::error!(
+            event = "disk_cache.worker_failed", error = %err, "redb disk cache worker failed");
         mark_unhealthy();
         metrics::gauge!("boluo_server_disk_cache_up").set(0.0);
     }
@@ -467,6 +472,7 @@ fn stop_accepting_writes() {
     {
         metrics::counter!("boluo_server_disk_cache_high_watermark_total").increment(1);
         tracing::warn!(
+            event = "disk_cache.write_high_water_mark",
             "redb disk cache reached its write high-water mark; keeping new payloads in memory"
         );
     }

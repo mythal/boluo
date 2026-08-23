@@ -55,6 +55,7 @@ async fn is_proxy_alive(client: &reqwest::Client, proxy: &Proxy) -> bool {
         Ok(response) => response,
         Err(error) => {
             tracing::warn!(
+                event = "health.proxy.request_failed",
                 proxy_name = proxy.name,
                 proxy_url = proxy.url,
                 error = %error,
@@ -66,6 +67,7 @@ async fn is_proxy_alive(client: &reqwest::Client, proxy: &Proxy) -> bool {
 
     if response.status() != reqwest::StatusCode::OK {
         tracing::warn!(
+            event = "health.proxy.unexpected_status",
             proxy_name = proxy.name,
             proxy_url = proxy.url,
             status = %response.status(),
@@ -78,6 +80,7 @@ async fn is_proxy_alive(client: &reqwest::Client, proxy: &Proxy) -> bool {
         Ok(_) => true,
         Err(error) => {
             tracing::warn!(
+                event = "health.proxy.invalid_response",
                 proxy_name = proxy.name,
                 proxy_url = proxy.url,
                 error = %error,
@@ -92,7 +95,11 @@ async fn filter_alive_proxies(proxies: Vec<Proxy>) -> Vec<Proxy> {
     let client = match PROXY_HEALTH_CHECK_CLIENT.as_ref() {
         Ok(client) => client,
         Err(error) => {
-            tracing::error!(error = %error, "Failed to build proxy health check client");
+            tracing::error!(
+                event = "health.proxy.client_build_failed",
+                error = %error,
+                "Failed to build proxy health check client"
+            );
             return Vec::new();
         }
     };

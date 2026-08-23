@@ -502,6 +502,7 @@ fn report_missing_component_payload(
     )
     .increment(1);
     tracing::warn!(
+        event = "entry.component.payload_missing",
         %entry_id,
         component_type,
         payload_type = payload_type.as_str(),

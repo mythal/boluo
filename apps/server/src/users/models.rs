@@ -355,8 +355,7 @@ impl User {
         use time::OffsetDateTime;
 
         let mut iter = token.split('.');
-        let parse_failed =
-            || anyhow::anyhow!("Failed to parse email verification token: {}", token);
+        let parse_failed = || anyhow::anyhow!("Failed to parse email verification token");
 
         let user_id_str = iter.next().ok_or_else(parse_failed)?;
         let timestamp_str = iter.next().ok_or_else(parse_failed)?;
@@ -450,7 +449,7 @@ impl User {
         use time::OffsetDateTime;
 
         let mut iter = token.split('.');
-        let parse_failed = || anyhow::anyhow!("Failed to parse email change token: {}", token);
+        let parse_failed = || anyhow::anyhow!("Failed to parse email change token");
 
         let user_id_str = iter.next().ok_or_else(parse_failed)?;
         let new_email_str = iter.next().ok_or_else(parse_failed)?;

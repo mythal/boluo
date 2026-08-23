@@ -418,7 +418,11 @@ impl Update {
         spawn(
             async move {
                 if let Err(e) = Update::fire_members(space_id, channel_id, members).await {
-                    tracing::warn!("Failed to fetch member list: {}", e);
+                    tracing::warn!(
+                        event = "event.member_list.fetch_failed",
+                        "Failed to fetch member list: {}",
+                        e
+                    );
                 }
             }
             .instrument(span),
@@ -466,7 +470,12 @@ impl Update {
         let updates_receiver = match manager.query_encoded_updates(after, seq, node).await {
             Ok(receiver) => receiver,
             Err(err) => {
-                tracing::error!(error = ?err, "Failed to query updates for mailbox {}", mailbox_id);
+                tracing::error!(
+                    event = "event.replay.query_failed",
+                    error = ?err,
+                    mailbox_id = %mailbox_id,
+                    "Failed to query updates for mailbox"
+                );
                 return Err(GetFromStateError::FailedToQuery);
             }
         };
@@ -477,11 +486,21 @@ impl Update {
         } = match updates_receiver.await {
             Ok(Ok(updates)) => updates,
             Ok(Err(err)) => {
-                tracing::error!(error = %err, "Failed to load cached updates for mailbox {}", mailbox_id);
+                tracing::error!(
+                    event = "event.replay.cache_load_failed",
+                    error = %err,
+                    mailbox_id = %mailbox_id,
+                    "Failed to load cached updates for mailbox"
+                );
                 return Err(GetFromStateError::FailedToQuery);
             }
             Err(err) => {
-                tracing::error!(error = ?err, "Failed to receive updates for mailbox {}", mailbox_id);
+                tracing::error!(
+                    event = "event.replay.receive_failed",
+                    error = ?err,
+                    mailbox_id = %mailbox_id,
+                    "Failed to receive updates for mailbox"
+                );
                 return Err(GetFromStateError::FailedToQuery);
             }
         };
@@ -502,6 +521,7 @@ impl Update {
                 .record(elapsed as f64);
             if elapsed < 1000 * 60 * 20 {
                 tracing::warn!(
+                    event = "event.replay.cursor_before_cache",
                     mailbox_id = %mailbox_id,
                     after,
                     seq,
@@ -531,6 +551,7 @@ impl Update {
                         Update::transient(space_id, body);
                     }
                     Err(e) => tracing::error!(
+                        event = "event.space_updated.prepare_failed",
                         "There an error occurred while preparing the `space_updated` update: {}",
                         e
                     ),
@@ -612,7 +633,7 @@ impl Update {
                 })
                 .await
                 else {
-                    tracing::error!("Failed to build update");
+                    tracing::error!(event = "event.build_failed", "Failed to build update");
                     return;
                 };
                 Update::send(mailbox, update.encoded.clone()).await;
@@ -630,7 +651,12 @@ impl Update {
                     .fire_update(body, UpdateLifetime::Persistent)
                     .await
                 {
-                    tracing::error!("Failed to send update to mailbox {}: {}", mailbox, e);
+                    tracing::error!(
+                        event = "event.mailbox.send_failed",
+                        "Failed to send update to mailbox {}: {}",
+                        mailbox,
+                        e
+                    );
                 }
             }
             .instrument(span),
@@ -643,7 +669,12 @@ impl Update {
             .fire_update(body, UpdateLifetime::Persistent)
             .await
         {
-            tracing::error!("Failed to send update to mailbox {}: {}", mailbox, e);
+            tracing::error!(
+                event = "event.mailbox.send_failed",
+                "Failed to send update to mailbox {}: {}",
+                mailbox,
+                e
+            );
         }
     }
 
@@ -656,7 +687,12 @@ impl Update {
                 .fire_update(body, UpdateLifetime::Volatile)
                 .await
             {
-                tracing::error!("Failed to send update to mailbox {}: {}", mailbox, e);
+                tracing::error!(
+                    event = "event.mailbox.send_failed",
+                    "Failed to send update to mailbox {}: {}",
+                    mailbox,
+                    e
+                );
             }
         }
         .instrument(span)
@@ -754,9 +790,10 @@ async fn allocate_startup_id(redis: &mut redis::aio::ConnectionManager) -> u16 {
         if startup_id > 0 {
             return startup_id;
         }
-        tracing::warn!("Startup id is 0");
+        tracing::warn!(event = "event.startup_id.zero", "Startup id is 0");
     } else {
         tracing::warn!(
+            event = "event.startup_id.redis_parse_failed",
             "Failed to parse startup id from redis, reset to 0. Redis value: {}",
             node_id_string
         );

@@ -19,7 +19,11 @@ pub fn err_response(e: AppError) -> hyper::Response<Vec<u8>> {
     sonic_rs::to_vec(&WebResult::<()>::err(e))
         .map(|bytes| build_response(bytes, status))
         .unwrap_or_else(|e| {
-            tracing::error!("Failed to serialize error: {}", e);
+            tracing::error!(
+                event = "http.error_response.serialization_failed",
+                "Failed to serialize error: {}",
+                e
+            );
             hyper::Response::builder()
                 .status(hyper::StatusCode::INTERNAL_SERVER_ERROR)
                 .body(
@@ -120,17 +124,24 @@ where
     )
     .await
     .map_err(|_| {
-        tracing::warn!("Timeout when reading the request body");
+        tracing::warn!(
+            event = "http.request_body.read_timeout",
+            "Timeout when reading the request body"
+        );
         AppError::Timeout
     })?;
     let body = collected
         .map_err(|_| {
-            tracing::error!("Failed to read the request body");
+            tracing::error!(
+                event = "http.request_body.read_failed",
+                "Failed to read the request body"
+            );
             AppError::BadRequest("Failed to read the request body".to_string())
         })?
         .to_bytes();
     sonic_rs::from_slice(&body).map_err(|e| {
-        tracing::error!(error = %e, "Failed to parse the request body");
+        tracing::error!(
+            event = "http.request_body.parse_failed", error = %e, "Failed to parse the request body");
         AppError::BadRequest("Failed to parse the request body".to_string())
     })
 }
@@ -147,17 +158,24 @@ where
     )
     .await
     .map_err(|_| {
-        tracing::warn!("Timeout when reading the request body");
+        tracing::warn!(
+            event = "http.request_body.read_timeout",
+            "Timeout when reading the request body"
+        );
         AppError::Timeout
     })?;
     let body = collected
         .map_err(|_| {
-            tracing::error!("Failed to read the request body");
+            tracing::error!(
+                event = "http.request_body.read_failed",
+                "Failed to read the request body"
+            );
             AppError::BadRequest("Failed to read the request body".to_string())
         })?
         .to_bytes();
     sonic_rs::from_slice(&body).map(Box::new).map_err(|e| {
-        tracing::error!(error = %e, "Failed to parse the request body");
+        tracing::error!(
+            event = "http.request_body.parse_failed", error = %e, "Failed to parse the request body");
         AppError::BadRequest("Failed to parse the request body".to_string())
     })
 }

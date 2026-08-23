@@ -203,6 +203,7 @@ async fn push_updates(
         Ok(updates) => updates,
         Err(GetFromStateError::FailedToQuery) => {
             tracing::error!(
+                event = "event_delivery.replay.cache_load_failed",
                 mailbox_id = %mailbox,
                 "Failed to get cached updates"
             );
@@ -247,6 +248,7 @@ async fn push_updates(
                     }
                     Err(err) => {
                         tracing::warn!(
+                            event = "event_delivery.replay.compression_failed",
                             error = %err,
                             mailbox_id = %mailbox,
                             from_index = offset,
@@ -337,7 +339,8 @@ async fn handle_client_event(
     let event = match deserialize_result {
         Ok(event) => event,
         Err(e) => {
-            tracing::warn!(error = %e, "Failed to parse event from client");
+            tracing::warn!(
+                event = "event_delivery.client_message.invalid", error = %e, "Failed to parse event from client");
             error_sender.send(ConnectionError::BadRequest).await.ok();
             return;
         }
@@ -358,7 +361,10 @@ async fn handle_client_event(
     match event {
         ClientEvent::Preview { preview } => {
             let Some(session) = session else {
-                tracing::warn!("An user tried to preview without authentication");
+                tracing::warn!(
+                    event = "event_delivery.preview.authentication_required",
+                    "An user tried to preview without authentication"
+                );
                 metrics::counter!("boluo_server_events_preview_without_authentication_total")
                     .increment(1);
 
@@ -378,12 +384,19 @@ async fn handle_client_event(
             )
             .await
             {
-                tracing::warn!("Failed to broadcast preview update: {}", err);
+                tracing::warn!(
+                    event = "event_delivery.preview.broadcast_failed",
+                    "Failed to broadcast preview update: {}",
+                    err
+                );
             };
         }
         ClientEvent::Diff { preview } => {
             let Some(session) = session else {
-                tracing::warn!("An user tried to diff preview without authentication");
+                tracing::warn!(
+                    event = "event_delivery.preview_diff.authentication_required",
+                    "An user tried to diff preview without authentication"
+                );
                 metrics::counter!("boluo_server_events_preview_diff_without_authentication_total")
                     .increment(1);
 
@@ -399,7 +412,11 @@ async fn handle_client_event(
                 crate::events::preview::broadcast_preview_diff(preview, mailbox, session.user_id)
                     .await
             {
-                tracing::warn!(error = %err, "Failed to broadcast preview diff update");
+                tracing::warn!(
+                    event = "event_delivery.preview_diff.broadcast_failed",
+                    error = %err,
+                    "Failed to broadcast preview diff update"
+                );
             }
         }
         ClientEvent::Status { kind, focus } => {
@@ -407,7 +424,11 @@ async fn handle_client_event(
                 if let Err(err) =
                     Update::status(mailbox, session.user_id, kind, timestamp(), focus).await
                 {
-                    tracing::warn!("Failed to broadcast status update: {}", err);
+                    tracing::warn!(
+                        event = "event_delivery.status.broadcast_failed",
+                        "Failed to broadcast status update: {}",
+                        err
+                    );
                 }
             }
         }
@@ -420,7 +441,11 @@ fn connection_error(
     error: ConnectionError,
 ) -> Response {
     let mailbox = mailbox.unwrap_or_default();
-    tracing::error!(error = %error, "WebSocket connection error");
+    tracing::error!(
+        event = "websocket.connection.error",
+        error = %error,
+        "WebSocket connection error"
+    );
     let error_update = Update::error(mailbox, error).encode();
     establish_web_socket(req, |ws_stream| async move {
         let (mut outgoing, _incoming) = ws_stream.split();
@@ -440,7 +465,11 @@ async fn connect(ctx: &crate::context::AppContext, req: hyper::Request<Incoming>
         .and_then(|v| v.to_str().ok())
         .unwrap_or("");
     let Ok(query) = parse_query::<UpdateQuery>(req.uri()) else {
-        tracing::warn!("Failed to parse query {:?}", req.uri());
+        tracing::warn!(
+            event = "websocket.query.invalid",
+            path = req.uri().path(),
+            "Failed to parse WebSocket query"
+        );
         return connection_error(req, None, ConnectionError::BadRequest);
     };
     use futures::future;
@@ -462,7 +491,8 @@ async fn connect(ctx: &crate::context::AppContext, req: hyper::Request<Incoming>
             Ok(None) => Err(SessionError::Invalid),
             Err(AppError::Unauthenticated(AuthenticateFail::Guest)) => Err(SessionError::Invalid),
             Err(e) => {
-                tracing::error!(error = %e, "Failed to authenticate the user");
+                tracing::error!(
+                    event = "websocket.authentication.failed", error = %e, "Failed to authenticate the user");
                 return connection_error(req, Some(mailbox), ConnectionError::Unexpected);
             }
         }
@@ -477,7 +507,8 @@ async fn connect(ctx: &crate::context::AppContext, req: hyper::Request<Incoming>
                     return connection_error(req, Some(mailbox), ConnectionError::Unauthenticated);
                 }
                 _ => {
-                    tracing::error!(error = %e, "Failed to check permissions");
+                    tracing::error!(
+                        event = "websocket.permission_check.failed", error = %e, "Failed to check permissions");
                     return connection_error(req, Some(mailbox), ConnectionError::Unexpected);
                 }
             }
@@ -488,6 +519,7 @@ async fn connect(ctx: &crate::context::AppContext, req: hyper::Request<Incoming>
         match &session {
             Err(SessionError::Expired) => {
                 tracing::warn!(
+                    event = "websocket.token.expired",
                     user_id = %user_id,
                     mailbox_id = %mailbox,
                     user_agent,
@@ -498,6 +530,7 @@ async fn connect(ctx: &crate::context::AppContext, req: hyper::Request<Incoming>
             }
             Err(SessionError::Invalid) => {
                 tracing::warn!(
+                    event = "websocket.session.not_found",
                     user_id = %user_id,
                     mailbox_id = %mailbox,
                     user_agent,
@@ -509,6 +542,7 @@ async fn connect(ctx: &crate::context::AppContext, req: hyper::Request<Incoming>
             Ok(session) => {
                 if session.user_id != user_id {
                     tracing::error!(
+                        event = "websocket.identity_mismatch",
                         session_user_id = %session.user_id,
                         user_id = %user_id,
                         mailbox_id = %mailbox,
@@ -532,7 +566,8 @@ async fn connect(ctx: &crate::context::AppContext, req: hyper::Request<Incoming>
         static BASIC_INFO: std::sync::LazyLock<Utf8Bytes> =
             std::sync::LazyLock::new(|| sonic_rs::to_string(&Update::app_info()).unwrap().into());
         if let Err(e) = outgoing.send(WsMessage::Text(BASIC_INFO.clone())).await {
-            tracing::warn!(error = %e, "Failed to send basic info");
+            tracing::warn!(
+                event = "event_delivery.basic_info.send_failed", error = %e, "Failed to send basic info");
         }
         let push_updates_future = async move {
             use tokio_tungstenite::tungstenite::Error::{AlreadyClosed, ConnectionClosed};
@@ -558,9 +593,16 @@ async fn connect(ctx: &crate::context::AppContext, req: hyper::Request<Incoming>
                 )) => {
                     metrics::counter!("boluo_server_events_broadcast_lagged_total")
                         .increment(count);
-                    tracing::warn!(count, "Event broadcast receiver lagged");
+                    tracing::warn!(
+                        event = "event_delivery.receiver_lagged",
+                        count,
+                        "Event broadcast receiver lagged"
+                    );
                 }
-                Err(e) => tracing::warn!(error = %e, "Failed to push updates"),
+                Err(e) => {
+                    tracing::warn!(
+                        event = "event_delivery.push_failed", error = %e, "Failed to push updates")
+                }
             }
             outgoing.close().await.ok();
         };
@@ -622,14 +664,18 @@ async fn connect(ctx: &crate::context::AppContext, req: hyper::Request<Incoming>
             future::Either::Right((Err(tungstenite::Error::AlreadyClosed), _)) => {
                 metrics::counter!("boluo_server_events_push_updates_already_closed_total")
                     .increment(1);
-                tracing::warn!("Attempted to operate on already closed WebSocket connection");
+                tracing::warn!(
+                    event = "websocket.already_closed",
+                    "Attempted to operate on already closed WebSocket connection"
+                );
             }
             future::Either::Right((Err(e), _)) => {
                 metrics::counter!(
                     "boluo_server_events_push_updates_failed_to_receive_events_total"
                 )
                 .increment(1);
-                tracing::warn!(error = %e, "Failed to receive events");
+                tracing::warn!(
+                    event = "event_delivery.receive_failed", error = %e, "Failed to receive events");
             }
             future::Either::Right((Ok(_), _)) => {
                 tracing::debug!("Stop receiving events");
@@ -646,7 +692,11 @@ async fn connect(ctx: &crate::context::AppContext, req: hyper::Request<Incoming>
                 )
                 .await
                 {
-                    tracing::warn!("Failed to broadcast offline status: {}", e);
+                    tracing::warn!(
+                        event = "event_delivery.offline_status.broadcast_failed",
+                        "Failed to broadcast offline status: {}",
+                        e
+                    );
                 }
             }
         }
@@ -664,6 +714,7 @@ pub async fn token(
         (Some(session), Some(user_id)) => {
             if session.user_id != user_id {
                 tracing::warn!(
+                    event = "websocket.identity_mismatch",
                     session_user_id = %session.user_id,
                     user_id = %user_id,
                     space_id = ?space_id,
@@ -679,23 +730,10 @@ pub async fn token(
             }
         }
         (None, Some(user_id)) => {
-            use hyper::header::{AUTHORIZATION, COOKIE};
-
-            let authorization = req
-                .headers()
-                .get(AUTHORIZATION)
-                .and_then(|v| v.to_str().ok())
-                .unwrap_or("");
-            let cookie = req
-                .headers()
-                .get(COOKIE)
-                .and_then(|v| v.to_str().ok())
-                .unwrap_or("");
             tracing::warn!(
+                event = "events.token.user_without_session",
                 user_id = %user_id,
                 space_id = ?space_id,
-                authorization,
-                cookie,
                 "No session found for the user, but 'user_id' is provided"
             );
             Err(AppError::Unauthenticated(AuthenticateFail::NoSessionFound))

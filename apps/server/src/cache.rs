@@ -168,7 +168,12 @@ impl CacheStore {
                     "result" => "error"
                 )
                 .increment(1);
-                tracing::warn!(%error, cache = topic, "Failed to publish cache invalidation");
+                tracing::warn!(
+                    event = "cache.invalidation.publish_failed",
+                    %error,
+                    cache = topic,
+                    "Failed to publish cache invalidation"
+                );
             }
         }
     }

@@ -1,9 +1,9 @@
-import { LogLevel, faro } from '@grafana/faro-web-sdk';
+import { LogLevel, faro, getInternalFaroFromGlobalObject } from '@grafana/faro-web-sdk';
 import { v7 as uuidv7 } from 'uuid';
 import { IS_DEVELOPMENT } from './const';
 
 export const recordWarn = (message: string, extras?: Record<string, unknown>) => {
-  if (IS_DEVELOPMENT) {
+  if (IS_DEVELOPMENT || !getInternalFaroFromGlobalObject()) {
     console.warn(message, extras);
     return;
   }
@@ -13,7 +13,7 @@ export const recordWarn = (message: string, extras?: Record<string, unknown>) =>
 };
 
 export const recordError = (message: string, extras?: Record<string, unknown>) => {
-  if (IS_DEVELOPMENT) {
+  if (IS_DEVELOPMENT || !getInternalFaroFromGlobalObject()) {
     console.error(message, extras);
     return;
   }

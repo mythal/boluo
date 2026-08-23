@@ -43,6 +43,7 @@ pub struct AppConfig {
     pub sentry_dsn: Option<String>,
     pub discourse_sso_secret: Option<String>,
     pub secret: String,
+    pub platform: crate::platform::Runtime,
     pub mail: crate::mail::Config,
     pub entry_component_cache_capacity: u64,
 }
@@ -59,6 +60,7 @@ impl Default for AppConfig {
             sentry_dsn: None,
             discourse_sso_secret: None,
             secret: "just a test".to_owned(),
+            platform: crate::platform::Runtime::detect(Some(crate::platform::Platform::BareMetal)),
             mail: crate::mail::Config::default(),
             entry_component_cache_capacity: crate::entries::component_cache::DEFAULT_CACHE_BYTES,
         }

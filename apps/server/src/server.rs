@@ -49,6 +49,7 @@ mod media;
 mod messages;
 mod notes;
 mod notify;
+mod platform;
 mod pos;
 mod pubsub;
 mod rate_limit;
@@ -75,8 +76,6 @@ use crate::interface::{err_response, missing, ok_response};
 
 const REQUEST_ID_HEADER: hyper::header::HeaderName =
     hyper::header::HeaderName::from_static("x-request-id");
-const FLY_REQUEST_ID_HEADER: hyper::header::HeaderName =
-    hyper::header::HeaderName::from_static("fly-request-id");
 
 static APP_VERSION: LazyLock<String> = LazyLock::new(|| {
     std::env::var("APP_VERSION").unwrap_or_else(|_| env!("CARGO_PKG_VERSION").to_owned())
@@ -134,7 +133,7 @@ async fn handler(
 
     let method = req.method().clone();
     let path = req.uri().path().to_owned();
-    let request_id = request_id(req.headers());
+    let request_id = request_id(req.headers(), ctx.config.platform.request_id_header());
 
     let client_version = req
         .headers()
@@ -218,10 +217,13 @@ async fn handler(
     .await
 }
 
-fn request_id(headers: &hyper::HeaderMap) -> hyper::header::HeaderValue {
+fn request_id(
+    headers: &hyper::HeaderMap,
+    platform_header: Option<&hyper::header::HeaderName>,
+) -> hyper::header::HeaderValue {
     headers
         .get(&REQUEST_ID_HEADER)
-        .or_else(|| headers.get(&FLY_REQUEST_ID_HEADER))
+        .or_else(|| platform_header.and_then(|header| headers.get(header)))
         .filter(|value| {
             !value.is_empty()
                 && value.as_bytes().len() <= 128
@@ -246,15 +248,32 @@ mod request_id_tests {
         let mut headers = hyper::HeaderMap::new();
         headers.insert(&REQUEST_ID_HEADER, "request-123".parse().unwrap());
 
-        assert_eq!(request_id(&headers), "request-123");
+        assert_eq!(request_id(&headers, None), "request-123");
     }
 
     #[test]
     fn falls_back_to_fly_request_id() {
         let mut headers = hyper::HeaderMap::new();
-        headers.insert(&FLY_REQUEST_ID_HEADER, "fly:request-123".parse().unwrap());
+        let fly_request_id = hyper::header::HeaderName::from_static("fly-request-id");
+        headers.insert(&fly_request_id, "fly:request-123".parse().unwrap());
 
-        assert_eq!(request_id(&headers), "fly:request-123");
+        assert_eq!(
+            request_id(&headers, Some(&fly_request_id)),
+            "fly:request-123"
+        );
+    }
+
+    #[test]
+    fn bare_metal_ignores_fly_request_id() {
+        let mut headers = hyper::HeaderMap::new();
+        headers.insert(
+            hyper::header::HeaderName::from_static("fly-request-id"),
+            "fly:request-123".parse().unwrap(),
+        );
+
+        let generated = request_id(&headers, None);
+        assert_ne!(generated, "fly:request-123");
+        assert!(uuid::Uuid::parse_str(generated.to_str().unwrap()).is_ok());
     }
 
     #[test]
@@ -262,7 +281,7 @@ mod request_id_tests {
         let mut headers = hyper::HeaderMap::new();
         headers.insert(&REQUEST_ID_HEADER, "contains spaces".parse().unwrap());
 
-        let generated = request_id(&headers);
+        let generated = request_id(&headers, None);
         let generated = generated.to_str().unwrap();
         assert_ne!(generated, "contains spaces");
         assert!(uuid::Uuid::parse_str(generated).is_ok());
@@ -327,6 +346,8 @@ struct ServeArgs {
     port: u16,
     #[clap(long, env = "PROMETHEUS_EXPORTER")]
     prometheus_exporter: Option<SocketAddr>,
+    #[clap(long, env = "PLATFORM", value_enum)]
+    platform: Option<platform::Platform>,
     #[clap(long, env = "DATABASE_URL")]
     database_url: String,
     #[clap(long, env = "REDIS_URL")]
@@ -484,6 +505,9 @@ async fn main() {
     storage_check(&storage, args.ci).await;
 
     let socket = SocketAddr::new(args.host, args.port);
+    let platform = platform::Runtime::detect(args.platform);
+    tracing::info!(platform = ?platform.platform(), "Hosting platform selected");
+    pubsub::initialize_node_id(platform.node_id());
 
     let listener = TcpListener::bind(socket)
         .await
@@ -506,7 +530,7 @@ async fn main() {
     tracing::info!("Database is ready");
     let mut redis_conn = redis::connect(args.redis_url.as_deref()).await;
     redis::check(redis_conn.as_mut()).await;
-    let startup_id = events::initialize_startup_id(redis_conn.as_mut()).await;
+    let startup_id = events::initialize_startup_id(redis_conn.as_mut(), &platform).await;
     tracing::info!("Redis is ready");
 
     let ctx_config = context::AppConfig {
@@ -518,6 +542,7 @@ async fn main() {
         sentry_dsn: args.sentry_dsn.clone(),
         discourse_sso_secret: args.discourse_sso_secret.clone(),
         secret: args.secret.clone(),
+        platform,
         mail: mail::Config {
             domain: args.mailgun_domain.clone(),
             api_key: args.mailgun_api_key.clone(),

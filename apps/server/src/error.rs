@@ -17,7 +17,7 @@ pub enum AppError {
     #[error("Validation failed: {0}")]
     Validation(#[from] ValidationFailed),
     #[error("An unexpected error occurred")]
-    Unexpected(anyhow::Error),
+    Unexpected(#[source] anyhow::Error),
     #[error("An unexpected serialize error occurred")]
     Serialize(sonic_rs::Error),
     #[error("Bad request: {0}")]
@@ -136,41 +136,24 @@ impl From<crate::space_runtime::SpaceRuntimeError> for AppError {
 macro_rules! unexpected {
     ($msg: expr) => {{
         let msg = $msg.to_string();
-        ::tracing::error!(
-            event = "error.unexpected",
-            "Unexpected error: [{}][{}]{}",
-            file!(),
-            line!(),
-            msg
-        );
-        crate::error::AppError::Unexpected(::anyhow::anyhow!(msg))
+        let context = format!("Unexpected error at {}:{}", file!(), line!());
+        crate::error::AppError::Unexpected(::anyhow::anyhow!(msg).context(context))
     }};
 }
 
 macro_rules! error_unexpected {
     () => {
         |e| {
-            ::tracing::error!(
-                event = "error.unexpected",
-                "Unexpected error: [{}][{}]{}",
-                file!(),
-                line!(),
-                e
-            );
-            crate::error::AppError::Unexpected(e.into())
+            let context = format!("Unexpected error at {}:{}", file!(), line!());
+            let error: ::anyhow::Error = e.into();
+            crate::error::AppError::Unexpected(error.context(context))
         }
     };
     ($msg: expr) => {
         |e| {
-            ::tracing::error!(
-                event = "error.unexpected",
-                "Unexpected error: [{}][{}]{}{}",
-                file!(),
-                line!(),
-                $msg,
-                e
-            );
-            crate::error::AppError::Unexpected(::anyhow::anyhow!($msg))
+            let context = format!("{} at {}:{}", $msg, file!(), line!());
+            let error: ::anyhow::Error = e.into();
+            crate::error::AppError::Unexpected(error.context(context))
         }
     };
 }

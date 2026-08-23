@@ -11,6 +11,8 @@ use tokio_tungstenite::WebSocketStream;
 pub use tokio_tungstenite::tungstenite::Message as WsMessage;
 use tracing::Instrument as _;
 
+const USER_AGENT_LOG_MAX_BYTES: usize = 512;
+
 pub fn check_websocket_header(headers: &HeaderMap) -> Result<HeaderValue, AppError> {
     use base64::{Engine as _, engine::general_purpose::STANDARD as base64_engine};
 
@@ -61,8 +63,10 @@ where
         .headers()
         .get(header::USER_AGENT)
         .and_then(|v| v.to_str().ok())
-        .unwrap_or("unknown")
-        .to_string();
+        .unwrap_or("unknown");
+    let user_agent_end = user_agent.floor_char_boundary(USER_AGENT_LOG_MAX_BYTES);
+    let user_agent_truncated = user_agent_end < user_agent.len();
+    let user_agent = user_agent[..user_agent_end].to_owned();
     let origin = req
         .headers()
         .get(header::ORIGIN)
@@ -74,6 +78,7 @@ where
             event = "websocket.header.invalid",
             connection_id = %connection_id,
             user_agent = %user_agent,
+            user_agent_truncated,
             "Invalid websocket header"
         );
         return hyper::Response::builder()
@@ -86,7 +91,6 @@ where
     let span = tracing::info_span!(
         "websocket_connection",
         connection_id = %connection_id,
-        user_agent = %user_agent,
         duration_ms = tracing::field::Empty,
         origin = %origin,
     );
@@ -108,10 +112,14 @@ where
                     )
                     .await;
 
-                    tracing::debug!(
+                    tracing::info!(
                         event = "websocket.connection.established",
+                        user_agent = %user_agent,
+                        user_agent_truncated,
                         "WebSocket connection established"
                     );
+                    // Avoid retaining the header allocation for the connection lifetime.
+                    drop(user_agent);
 
                     // Run the handler within this span context
                     handler(ws_stream).await;
@@ -127,6 +135,8 @@ where
                     tracing::error!(
                         event = "websocket.upgrade.failed",
                         error = %e,
+                        user_agent = %user_agent,
+                        user_agent_truncated,
                         "Failed to upgrade connection"
                     );
                 }

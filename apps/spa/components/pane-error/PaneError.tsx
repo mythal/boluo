@@ -5,7 +5,7 @@ import { PaneBox } from '../PaneBox';
 import { PaneHeaderBox } from '../PaneHeaderBox';
 import { PaneErrorNotFound } from './PaneErrorNotFound';
 import { FormattedMessage } from 'react-intl';
-import { ErrorBoundary, type FallbackRender } from '@sentry/nextjs';
+import { ErrorBoundary, type FallbackRender } from '../ErrorBoundary';
 import { Failed } from '@boluo/ui/Failed';
 import { isChunkLoadError } from '@boluo/utils/errors';
 import { LoadFailed } from '@boluo/ui/LoadFailed';

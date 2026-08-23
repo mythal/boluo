@@ -15,7 +15,6 @@ export type AppSettings = {
   mediaUrl?: string | null;
   appUrl?: string | null;
   siteUrl?: string | null;
-  sentryDsn?: string | null;
 };
 
 export type ArchiveCharacter = {

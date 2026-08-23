@@ -2,7 +2,7 @@ import React, { type FC, type ReactNode } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Failed } from '@boluo/ui/Failed';
 import { LoadFailed } from '@boluo/ui/LoadFailed';
-import { ErrorBoundary } from '@sentry/nextjs';
+import { ErrorBoundary } from '../ErrorBoundary';
 import { isApiError } from '@boluo/api';
 import { isChunkLoadError } from '@boluo/utils/errors';
 

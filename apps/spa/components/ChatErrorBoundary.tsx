@@ -1,6 +1,6 @@
 import type { FC, ReactNode } from 'react';
 import React from 'react';
-import { ErrorBoundary } from '@sentry/nextjs';
+import { ErrorBoundary } from './ErrorBoundary';
 
 export const ChatErrorBoundary: FC<{ children: ReactNode }> = ({ children }) => {
   return (

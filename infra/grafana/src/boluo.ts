@@ -10,12 +10,14 @@ import {
   TooltipDisplayMode,
   dashboardTimeSettings,
   defaultAnnotations,
+  logsPanel,
   timeSeriesPanel,
 } from './lib.js';
 import { SERVER_APP as APP, memoryUtilization } from './metrics.js';
 
 export const BOLUO_DASHBOARD_RESOURCE_NAME = 'c35465c7-1203-42c4-9bcc-5b5cb012d67b';
 export const DEFAULT_PROMETHEUS_DATASOURCE_UID = 'bfuvhahaptkw0d';
+export const DEFAULT_VICTORIALOGS_DATASOURCE_UID = 'victorialogs';
 
 const RATE_INTERVAL = '$__rate_interval';
 const CACHE_RATIO_INTERVAL = '30m';
@@ -40,6 +42,7 @@ const panels = {
   eventDelivery: 'panel-26',
   runtimePopulation: 'panel-27',
   processMemory: 'panel-29',
+  applicationLogs: 'panel-30',
 } as const;
 
 const messageRateMetrics = [
@@ -76,6 +79,7 @@ function summedRateOrZero(metric: string, extraLabels = ''): string {
 
 export function buildBoluoDashboard(
   datasourceUid = DEFAULT_PROMETHEUS_DATASOURCE_UID,
+  logsDatasourceUid = DEFAULT_VICTORIALOGS_DATASOURCE_UID,
 ): DashboardBuilder {
   return new DashboardBuilder('Boluo')
     .annotations([defaultAnnotations()])
@@ -594,6 +598,15 @@ export function buildBoluoDashboard(
         ],
       }),
     )
+    .element(
+      panels.applicationLogs,
+      logsPanel({
+        id: 30,
+        title: 'Application logs',
+        datasourceUid: logsDatasourceUid,
+        expr: `{app="${APP}"}`,
+      }),
+    )
     .layout(
       new GridBuilder().items([
         gridItem(panels.httpTraffic).x(0).y(0).width(12).height(6),
@@ -613,6 +626,7 @@ export function buildBoluoDashboard(
         gridItem(panels.diskCacheCapacity).x(0).y(46).width(8).height(8),
         gridItem(panels.diskCacheIo).x(8).y(46).width(8).height(8),
         gridItem(panels.diskCacheLatency).x(16).y(46).width(8).height(8),
+        gridItem(panels.applicationLogs).x(0).y(54).width(24).height(10),
       ]),
     )
     .links([])

@@ -29,6 +29,7 @@ import {
   backupMetric,
   cpuBudget,
   databaseVolumeUtilization,
+  memoryUtilization,
 } from './metrics.js';
 
 export const HEALTH_DASHBOARD_RESOURCE_NAME = '42772a90-01f2-4b96-b40d-ad99a7608308';
@@ -44,6 +45,7 @@ const panels = {
   dependencyLatency: 'panel-5',
   databaseVolume: 'panel-6',
   cpuBudget: 'panel-7',
+  instanceMemory: 'panel-8',
 } as const;
 
 function withMissingAsDown(expression: string): string {
@@ -364,6 +366,33 @@ export function buildHealthDashboard(datasourceUid: string): DashboardBuilder {
         ],
       }),
     )
+    .element(
+      panels.instanceMemory,
+      timeSeriesPanel({
+        id: 8,
+        title: 'Instance memory utilization',
+        description: 'Used instance memory as a share of total memory.',
+        datasourceUid,
+        unit: 'percentunit',
+        min: 0,
+        max: 1,
+        tooltipMode: TooltipDisplayMode.Multi,
+        targets: [
+          {
+            refId: 'server',
+            editorMode: QueryEditorMode.Code,
+            expr: `max by(instance) (${memoryUtilization(SERVER_APP)})`,
+            legendFormat: '{{instance}} server',
+          },
+          {
+            refId: 'database',
+            editorMode: QueryEditorMode.Code,
+            expr: `max by(instance) (${memoryUtilization(DATABASE_APP)})`,
+            legendFormat: '{{instance}} database',
+          },
+        ],
+      }),
+    )
     .layout(
       new GridBuilder().items([
         gridItem(panels.mascot).x(0).y(0).width(4).height(8),
@@ -372,8 +401,9 @@ export function buildHealthDashboard(datasourceUid: string): DashboardBuilder {
         gridItem(panels.exporters).x(0).y(8).width(8).height(8),
         gridItem(panels.criticalErrors).x(8).y(8).width(8).height(8),
         gridItem(panels.databaseVolume).x(16).y(8).width(8).height(8),
-        gridItem(panels.dependencyLatency).x(0).y(16).width(12).height(8),
-        gridItem(panels.cpuBudget).x(12).y(16).width(12).height(8),
+        gridItem(panels.dependencyLatency).x(0).y(16).width(8).height(8),
+        gridItem(panels.cpuBudget).x(8).y(16).width(8).height(8),
+        gridItem(panels.instanceMemory).x(16).y(16).width(8).height(8),
       ]),
     )
     .links([])

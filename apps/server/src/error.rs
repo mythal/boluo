@@ -28,6 +28,8 @@ pub enum AppError {
     Conflict(String),
     #[error("Limit exceed")]
     LimitExceeded(&'static str),
+    #[error("Request payload is too large")]
+    PayloadTooLarge,
     #[error("Timeout")]
     Timeout,
     #[error("An I/O error occurred")]
@@ -59,6 +61,7 @@ impl AppError {
             MethodNotAllowed => StatusCode::METHOD_NOT_ALLOWED,
             Conflict(_) => StatusCode::CONFLICT,
             LimitExceeded(_) => StatusCode::TOO_MANY_REQUESTS,
+            PayloadTooLarge => StatusCode::PAYLOAD_TOO_LARGE,
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
@@ -73,6 +76,7 @@ impl AppError {
             BadRequest(_) => "BAD_REQUEST",
             MethodNotAllowed => "METHOD_NOT_ALLOWED",
             LimitExceeded(_) => "LIMIT_EXCEEDED",
+            PayloadTooLarge => "PAYLOAD_TOO_LARGE",
             Conflict(_) => "CONFLICT",
             _ => "UNEXPECTED",
         }
@@ -282,6 +286,15 @@ pub fn log_error(e: &AppError, path: &str) {
                 "Rate limit exceeded"
             );
         }
+        PayloadTooLarge => {
+            tracing::info!(
+                event = "http.request.payload_too_large",
+                path,
+                error_code = error_code,
+                status_code = status_code,
+                "Request payload is too large"
+            );
+        }
         MethodNotAllowed => {
             tracing::info!(
                 event = "http.request.method_not_allowed",
@@ -377,5 +390,13 @@ mod tests {
 
         assert_eq!(error.status_code(), StatusCode::NOT_FOUND);
         assert_eq!(error.error_code(), "NOT_FOUND");
+    }
+
+    #[test]
+    fn payload_too_large_maps_to_payload_too_large_api_error() {
+        let error = AppError::PayloadTooLarge;
+
+        assert_eq!(error.status_code(), StatusCode::PAYLOAD_TOO_LARGE);
+        assert_eq!(error.error_code(), "PAYLOAD_TOO_LARGE");
     }
 }

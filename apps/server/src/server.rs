@@ -56,7 +56,6 @@ mod redis;
 mod rs;
 mod s3;
 mod scopes;
-mod sentry_tunnel;
 mod server_metrics;
 mod session;
 mod shutdown;
@@ -111,9 +110,6 @@ async fn router(
     }
     if path == "/api/csrf-token" {
         return csrf::get_csrf_token(ctx, req).await.map(ok_response);
-    }
-    if path.starts_with("/api/tunnel") {
-        return Ok(sentry_tunnel::handler(ctx, req).await);
     }
     table!("/api/info", info::router);
     table!("/api/assets", assets::router);
@@ -347,10 +343,6 @@ struct ServeArgs {
     site_url: Option<String>,
     #[clap(long, env = "SENTRY_DSN")]
     sentry_dsn: Option<String>,
-    #[clap(long, env = "SENTRY_HOST", default_value = "sentry.mythal.net")]
-    sentry_host: String,
-    #[clap(long, env = "SENTRY_PROJECT_IDS", value_delimiter = ',')]
-    sentry_project_ids: Vec<String>,
     #[clap(long, env = "DISCOURSE_SSO_SECRET")]
     discourse_sso_secret: Option<String>,
     #[clap(long, env = "SECRET")]
@@ -524,13 +516,6 @@ async fn main() {
         app_url: args.app_url.clone(),
         site_url: args.site_url.clone(),
         sentry_dsn: args.sentry_dsn.clone(),
-        sentry_host: args.sentry_host.clone(),
-        sentry_project_ids: args
-            .sentry_project_ids
-            .iter()
-            .map(|id| id.trim().to_owned())
-            .filter(|id| !id.is_empty())
-            .collect(),
         discourse_sso_secret: args.discourse_sso_secret.clone(),
         secret: args.secret.clone(),
         mail: mail::Config {

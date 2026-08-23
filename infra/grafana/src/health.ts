@@ -259,8 +259,8 @@ export function buildHealthDashboard(datasourceUid: string): DashboardBuilder {
           {
             refId: 'runtime-load',
             editorMode: QueryEditorMode.Code,
-            expr: `sum(${serverRate('boluo_server_space_runtime_load_failed_total')})`,
-            legendFormat: 'runtime load',
+            expr: `sum(${serverRate('boluo_server_space_runtime_load_total', 'result="database_error"')})`,
+            legendFormat: 'runtime load database error',
           },
           {
             refId: 'runtime-refresh',

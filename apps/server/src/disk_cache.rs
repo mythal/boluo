@@ -152,7 +152,8 @@ pub(super) fn init(config: Option<Config>) {
             Ok(cache) => Some(cache),
             Err(err) => {
                 metrics::gauge!("boluo_server_disk_cache_up").set(0.0);
-                tracing::error!(error = %err, "Failed to start redb disk cache; using memory");
+                tracing::error!(
+                    event = "disk_cache.start_failed", error = %err, "Failed to start redb disk cache; using memory");
                 None
             }
         }
@@ -194,7 +195,10 @@ pub(super) async fn shutdown() {
         return;
     }
     if tokio::time::timeout(READ_TIMEOUT, response).await.is_err() {
-        tracing::warn!("Timed out while shutting down redb disk cache");
+        tracing::warn!(
+            event = "disk_cache.shutdown_timeout",
+            "Timed out while shutting down redb disk cache"
+        );
     }
 }
 
@@ -218,7 +222,8 @@ fn create_database(config: &Config) -> Result<Database, CacheError> {
 
 fn run_worker(receiver: Receiver<Command>, config: Config, database: Database) {
     if let Err(err) = run_worker_inner(&receiver, &config, database) {
-        tracing::error!(error = %err, "redb disk cache worker failed");
+        tracing::error!(
+            event = "disk_cache.worker_failed", error = %err, "redb disk cache worker failed");
         mark_unhealthy();
         metrics::gauge!("boluo_server_disk_cache_up").set(0.0);
     }
@@ -401,7 +406,7 @@ fn read_values(
                 "payload for event {event_id:?} is missing"
             )));
         };
-        let encoded = std::str::from_utf8(value.value())
+        let encoded: Utf8Bytes = std::str::from_utf8(value.value())
             .map_err(storage_error)?
             .to_owned()
             .into();
@@ -409,6 +414,12 @@ fn read_values(
     }
     metrics::counter!("boluo_server_mailbox_cache_read_operations_total")
         .increment(event_ids.len() as u64);
+    let payload_bytes = values
+        .iter()
+        .map(|(_, encoded)| encoded.len() as u64)
+        .sum::<u64>();
+    metrics::histogram!("boluo_server_mailbox_cache_read_payload_bytes")
+        .record(payload_bytes as f64);
     metrics::histogram!("boluo_server_mailbox_cache_read_duration_ms")
         .record(start.elapsed().as_secs_f64() * 1000.0);
     Ok(values)
@@ -461,6 +472,7 @@ fn stop_accepting_writes() {
     {
         metrics::counter!("boluo_server_disk_cache_high_watermark_total").increment(1);
         tracing::warn!(
+            event = "disk_cache.write_high_water_mark",
             "redb disk cache reached its write high-water mark; keeping new payloads in memory"
         );
     }

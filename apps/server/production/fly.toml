@@ -18,6 +18,7 @@ swap_size_mb = 512
   MAILGUN_DOMAIN = 'noreply.boluo.chat'
   PORT = '3000'
   SITE_URL = 'https://site.boluochat.com'
+  TRUSTED_CDNS = 'cloudflare'
   APP_URL = 'https://app.boluochat.com'
   PUBLIC_MEDIA_URL = 'https://media.boluochat.com'
   S3_BUCKET_NAME = 'boluo'

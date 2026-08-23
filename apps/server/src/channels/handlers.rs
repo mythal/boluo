@@ -131,6 +131,7 @@ pub(crate) async fn push_refreshed_members(
             )
             .increment(1);
             tracing::error!(
+                event = "channel.members.post_commit_failed",
                 %error,
                 %space_id,
                 %channel_id,
@@ -164,6 +165,7 @@ async fn members<B: Body>(
         .map(|session| session.user_id);
     if !channel.is_public && current_user_id.is_none() {
         tracing::warn!(
+            event = "channel.private_access.guest_denied",
             "A guest is trying to access a private channel: {:?}",
             channel.id
         );
@@ -227,6 +229,7 @@ async fn members<B: Body>(
             // Allow the owner to access the private channel
         } else {
             tracing::warn!(
+                event = "channel.private_access.denied",
                 user_id = ?current_user_id,
                 channel_id = ?channel.id,
                 "A user is trying to access a private channel"
@@ -746,6 +749,7 @@ async fn join(
             // Allow the owner to join the private channel
         } else {
             tracing::warn!(
+                event = "channel.private_join.denied",
                 user_id = %session.user_id,
                 channel_id = %channel.id,
                 "A user is trying to join a private channel"

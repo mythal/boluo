@@ -42,7 +42,7 @@ import { useFloatingSetters } from '@boluo/ui/hooks/useFloatingSetters';
 import { messageToParsed, toSimpleText } from '@boluo/interpreter';
 import { useMutateMessageDelete } from '@boluo/hooks/useMutateMessageDelete';
 import { empty, identity } from '@boluo/utils/function';
-import { ErrorBoundary } from '@sentry/nextjs';
+import { ErrorBoundary } from '../ErrorBoundary';
 import { useIsOptimistic } from '../../hooks/useIsOptimistic';
 import { useIsDragging } from '../../hooks/useIsDragging';
 import { useLongPressProgress } from '../../hooks/useLongPressProgress';

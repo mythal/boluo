@@ -1,17 +1,8 @@
 'use client';
 
-import * as Sentry from '@sentry/nextjs';
 import NextError from 'next/error';
-import { useEffect } from 'react';
-import { SENTRY_CONFIG } from './const';
 
-export default function GlobalError({ error }: { error: Error & { digest?: string } }) {
-  useEffect(() => {
-    if (SENTRY_CONFIG.enabled) {
-      Sentry.captureException(error);
-    }
-  }, [error]);
-
+export default function GlobalError() {
   return (
     <html>
       <body>

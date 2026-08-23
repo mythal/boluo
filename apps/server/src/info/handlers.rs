@@ -1,5 +1,5 @@
 use std::cell::RefCell;
-use std::sync::{Arc, LazyLock};
+use std::sync::LazyLock;
 use std::time::Duration;
 
 use super::models::{BasicInfo, Proxy};
@@ -18,17 +18,7 @@ static PROXY_HEALTH_CHECK_CLIENT: LazyLock<Result<reqwest::Client, reqwest::Erro
     LazyLock::new(build_proxy_health_check_client);
 
 fn build_proxy_health_check_client() -> Result<reqwest::Client, reqwest::Error> {
-    let root_store =
-        rustls::RootCertStore::from_iter(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
-    let provider = Arc::new(rustls::crypto::aws_lc_rs::default_provider());
-    let tls_config = rustls::ClientConfig::builder_with_provider(provider)
-        .with_safe_default_protocol_versions()
-        .expect("AWS-LC supports rustls default protocol versions")
-        .with_root_certificates(root_store)
-        .with_no_client_auth();
-
-    reqwest::Client::builder()
-        .tls_backend_preconfigured(tls_config)
+    crate::http_client::builder()
         .connect_timeout(PROXY_HEALTH_CHECK_TIMEOUT)
         .timeout(PROXY_HEALTH_CHECK_TIMEOUT)
         .build()
@@ -55,6 +45,7 @@ async fn is_proxy_alive(client: &reqwest::Client, proxy: &Proxy) -> bool {
         Ok(response) => response,
         Err(error) => {
             tracing::warn!(
+                event = "health.proxy.request_failed",
                 proxy_name = proxy.name,
                 proxy_url = proxy.url,
                 error = %error,
@@ -66,6 +57,7 @@ async fn is_proxy_alive(client: &reqwest::Client, proxy: &Proxy) -> bool {
 
     if response.status() != reqwest::StatusCode::OK {
         tracing::warn!(
+            event = "health.proxy.unexpected_status",
             proxy_name = proxy.name,
             proxy_url = proxy.url,
             status = %response.status(),
@@ -78,6 +70,7 @@ async fn is_proxy_alive(client: &reqwest::Client, proxy: &Proxy) -> bool {
         Ok(_) => true,
         Err(error) => {
             tracing::warn!(
+                event = "health.proxy.invalid_response",
                 proxy_name = proxy.name,
                 proxy_url = proxy.url,
                 error = %error,
@@ -92,7 +85,11 @@ async fn filter_alive_proxies(proxies: Vec<Proxy>) -> Vec<Proxy> {
     let client = match PROXY_HEALTH_CHECK_CLIENT.as_ref() {
         Ok(client) => client,
         Err(error) => {
-            tracing::error!(error = %error, "Failed to build proxy health check client");
+            tracing::error!(
+                event = "health.proxy.client_build_failed",
+                error = %error,
+                "Failed to build proxy health check client"
+            );
             return Vec::new();
         }
     };
@@ -190,6 +187,7 @@ pub async fn router(
         ("/proxies", Method::GET) => proxies(ctx).await,
         ("/settings", Method::GET) => Ok(settings(ctx)),
         ("/echo", Method::GET) => Ok(echo(req)),
+        ("/proxy-probe", Method::POST) => crate::client_ip::handle_probe(ctx, req),
         _ => Ok(basic_info()),
     }
 }

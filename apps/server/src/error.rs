@@ -1,5 +1,5 @@
 use crate::session::AuthenticateFail;
-use hyper::{StatusCode, Uri};
+use hyper::StatusCode;
 use redis::RedisError;
 use std::error::Error;
 use thiserror::Error;
@@ -17,7 +17,7 @@ pub enum AppError {
     #[error("Validation failed: {0}")]
     Validation(#[from] ValidationFailed),
     #[error("An unexpected error occurred")]
-    Unexpected(anyhow::Error),
+    Unexpected(#[source] anyhow::Error),
     #[error("An unexpected serialize error occurred")]
     Serialize(sonic_rs::Error),
     #[error("Bad request: {0}")]
@@ -28,6 +28,8 @@ pub enum AppError {
     Conflict(String),
     #[error("Limit exceed")]
     LimitExceeded(&'static str),
+    #[error("Request payload is too large")]
+    PayloadTooLarge,
     #[error("Timeout")]
     Timeout,
     #[error("An I/O error occurred")]
@@ -59,6 +61,7 @@ impl AppError {
             MethodNotAllowed => StatusCode::METHOD_NOT_ALLOWED,
             Conflict(_) => StatusCode::CONFLICT,
             LimitExceeded(_) => StatusCode::TOO_MANY_REQUESTS,
+            PayloadTooLarge => StatusCode::PAYLOAD_TOO_LARGE,
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
@@ -73,6 +76,7 @@ impl AppError {
             BadRequest(_) => "BAD_REQUEST",
             MethodNotAllowed => "METHOD_NOT_ALLOWED",
             LimitExceeded(_) => "LIMIT_EXCEEDED",
+            PayloadTooLarge => "PAYLOAD_TOO_LARGE",
             Conflict(_) => "CONFLICT",
             _ => "UNEXPECTED",
         }
@@ -136,22 +140,24 @@ impl From<crate::space_runtime::SpaceRuntimeError> for AppError {
 macro_rules! unexpected {
     ($msg: expr) => {{
         let msg = $msg.to_string();
-        ::tracing::error!("Unexpected error: [{}][{}]{}", file!(), line!(), msg);
-        crate::error::AppError::Unexpected(::anyhow::anyhow!(msg))
+        let context = format!("Unexpected error at {}:{}", file!(), line!());
+        crate::error::AppError::Unexpected(::anyhow::anyhow!(msg).context(context))
     }};
 }
 
 macro_rules! error_unexpected {
     () => {
         |e| {
-            ::tracing::error!("Unexpected error: [{}][{}]{}", file!(), line!(), e);
-            crate::error::AppError::Unexpected(e.into())
+            let context = format!("Unexpected error at {}:{}", file!(), line!());
+            let error: ::anyhow::Error = e.into();
+            crate::error::AppError::Unexpected(error.context(context))
         }
     };
     ($msg: expr) => {
         |e| {
-            ::tracing::error!("Unexpected error: [{}][{}]{}{}", file!(), line!(), $msg, e);
-            crate::error::AppError::Unexpected(::anyhow::anyhow!($msg))
+            let context = format!("{} at {}:{}", $msg, file!(), line!());
+            let error: ::anyhow::Error = e.into();
+            crate::error::AppError::Unexpected(error.context(context))
         }
     };
 }
@@ -203,7 +209,7 @@ impl From<sqlx::Error> for ModelError {
     }
 }
 
-pub fn log_error(e: &AppError, uri: &Uri) {
+pub fn log_error(e: &AppError, path: &str) {
     use crate::error::AppError::*;
 
     let error_code = e.error_code();
@@ -212,7 +218,8 @@ pub fn log_error(e: &AppError, uri: &Uri) {
     match e {
         NotFound(resource) => {
             tracing::debug!(
-                uri = %uri,
+                event = "http.request.not_found",
+                path,
                 error_code = error_code,
                 status_code = status_code,
                 resource = resource,
@@ -221,7 +228,8 @@ pub fn log_error(e: &AppError, uri: &Uri) {
         }
         Conflict(detail) => {
             tracing::warn!(
-                uri = %uri,
+                event = "http.request.conflict",
+                path,
                 error_code = error_code,
                 status_code = status_code,
                 detail = detail,
@@ -229,8 +237,9 @@ pub fn log_error(e: &AppError, uri: &Uri) {
             );
         }
         Validation(validation_error) => {
-            tracing::warn!(
-                uri = %uri,
+            tracing::info!(
+                event = "http.request.validation_failed",
+                path,
                 error_code = error_code,
                 status_code = status_code,
                 validation_error = %validation_error,
@@ -238,8 +247,9 @@ pub fn log_error(e: &AppError, uri: &Uri) {
             );
         }
         BadRequest(detail) => {
-            tracing::warn!(
-                uri = %uri,
+            tracing::info!(
+                event = "http.request.bad_request",
+                path,
                 error_code = error_code,
                 status_code = status_code,
                 detail = detail,
@@ -247,8 +257,9 @@ pub fn log_error(e: &AppError, uri: &Uri) {
             );
         }
         Unauthenticated(auth_fail) => {
-            tracing::warn!(
-                uri = %uri,
+            tracing::info!(
+                event = "http.request.authentication_failed",
+                path,
                 error_code = error_code,
                 status_code = status_code,
                 auth_fail_reason = %auth_fail,
@@ -256,8 +267,9 @@ pub fn log_error(e: &AppError, uri: &Uri) {
             );
         }
         NoPermission(detail) => {
-            tracing::warn!(
-                uri = %uri,
+            tracing::info!(
+                event = "http.request.permission_denied",
+                path,
                 error_code = error_code,
                 status_code = status_code,
                 detail = detail,
@@ -266,48 +278,58 @@ pub fn log_error(e: &AppError, uri: &Uri) {
         }
         LimitExceeded(limit_type) => {
             tracing::warn!(
-                uri = %uri,
+                event = "http.request.rate_limited",
+                path,
                 error_code = error_code,
                 status_code = status_code,
                 limit_type = limit_type,
                 "Rate limit exceeded"
             );
         }
+        PayloadTooLarge => {
+            tracing::info!(
+                event = "http.request.payload_too_large",
+                path,
+                error_code = error_code,
+                status_code = status_code,
+                "Request payload is too large"
+            );
+        }
         MethodNotAllowed => {
             tracing::info!(
-                uri = %uri,
+                event = "http.request.method_not_allowed",
+                path,
                 error_code = error_code,
                 status_code = status_code,
                 "Method not allowed"
             );
         }
         e => {
-            tracing::error!(
-                uri = %uri,
-                error_code = error_code,
-                status_code = status_code,
-                error = %e,
-                "Internal server error"
-            );
-
-            // Log error chain for debugging
-            let mut source: Option<&_> = e.source();
+            let mut error_chain = String::new();
+            let mut source = e.source();
             let mut depth = 0;
             while let Some(source_error) = source {
-                depth += 1;
-                tracing::error!(
-                    depth = depth,
-                    source_error = %source_error,
-                    "Error source chain"
-                );
+                if !error_chain.is_empty() {
+                    error_chain.push_str(" -> ");
+                }
+                error_chain.push_str(&source_error.to_string());
                 source = source_error.source();
-
-                // Prevent infinite loops
-                if depth > 10 {
-                    tracing::error!("Error chain too deep, stopping");
+                depth += 1;
+                if depth >= 10 {
+                    error_chain.push_str(" -> [error chain truncated]");
                     break;
                 }
             }
+
+            tracing::error!(
+                event = "http.request.internal_error",
+                path,
+                error_code = error_code,
+                status_code = status_code,
+                error = %e,
+                error_chain,
+                "Internal server error"
+            );
         }
     }
 }
@@ -368,5 +390,13 @@ mod tests {
 
         assert_eq!(error.status_code(), StatusCode::NOT_FOUND);
         assert_eq!(error.error_code(), "NOT_FOUND");
+    }
+
+    #[test]
+    fn payload_too_large_maps_to_payload_too_large_api_error() {
+        let error = AppError::PayloadTooLarge;
+
+        assert_eq!(error.status_code(), StatusCode::PAYLOAD_TOO_LARGE);
+        assert_eq!(error.error_code(), "PAYLOAD_TOO_LARGE");
     }
 }

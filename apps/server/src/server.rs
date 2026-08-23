@@ -8,6 +8,7 @@
 use std::env;
 use std::net::{IpAddr, SocketAddr};
 use std::path::PathBuf;
+use std::sync::LazyLock;
 
 use clap::{Args as ClapArgs, Parser, Subcommand};
 use futures::pin_mut;
@@ -32,6 +33,7 @@ mod assets;
 mod cache;
 mod channels;
 mod characters;
+mod client_ip;
 mod committed_changes;
 mod config;
 mod context;
@@ -41,6 +43,8 @@ mod db;
 mod disk_cache;
 mod entries;
 mod events;
+mod frontend_telemetry;
+mod http_client;
 mod info;
 mod interface;
 mod mail;
@@ -48,6 +52,7 @@ mod media;
 mod messages;
 mod notes;
 mod notify;
+mod platform;
 mod pos;
 mod pubsub;
 mod rate_limit;
@@ -55,7 +60,6 @@ mod redis;
 mod rs;
 mod s3;
 mod scopes;
-mod sentry_tunnel;
 mod server_metrics;
 mod session;
 mod shutdown;
@@ -72,6 +76,13 @@ use crate::cors::allow_origin;
 use crate::db::MIGRATOR;
 use crate::error::AppError;
 use crate::interface::{err_response, missing, ok_response};
+
+const REQUEST_ID_HEADER: hyper::header::HeaderName =
+    hyper::header::HeaderName::from_static("x-request-id");
+
+static APP_VERSION: LazyLock<String> = LazyLock::new(|| {
+    std::env::var("APP_VERSION").unwrap_or_else(|_| env!("CARGO_PKG_VERSION").to_owned())
+});
 
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
@@ -102,8 +113,8 @@ async fn router(
     if path == "/api/csrf-token" {
         return csrf::get_csrf_token(ctx, req).await.map(ok_response);
     }
-    if path.starts_with("/api/tunnel") {
-        return Ok(sentry_tunnel::handler(ctx, req).await);
+    if path == "/api/telemetry" {
+        return frontend_telemetry::ingest(req).await;
     }
     table!("/api/info", info::router);
     table!("/api/assets", assets::router);
@@ -124,25 +135,11 @@ async fn handler(
     ctx: &context::AppContext,
     req: Request<Incoming>,
 ) -> Result<hyper::Response<Full<hyper::body::Bytes>>, hyper::Error> {
-    use hyper::header;
     use tracing::Instrument as _;
 
     let method = req.method().clone();
-    let uri = req.uri().clone();
-    let path = uri.path();
-    let query = uri.query().unwrap_or("");
-
-    let origin = req
-        .headers()
-        .get(header::ORIGIN)
-        .and_then(|v| v.to_str().ok())
-        .unwrap_or("");
-
-    let user_agent = req
-        .headers()
-        .get(header::USER_AGENT)
-        .and_then(|v| v.to_str().ok())
-        .unwrap_or("unknown");
+    let path = req.uri().path().to_owned();
+    let request_id = request_id(req.headers(), ctx.config.platform.request_id_header());
 
     let client_version = req
         .headers()
@@ -150,20 +147,19 @@ async fn handler(
         .and_then(|x| x.to_str().ok())
         .unwrap_or("");
 
-    // Create a span for this HTTP request with structured fields
     let span = tracing::info_span!(
         "http_request",
+        request_id = %request_id.to_str().unwrap_or("invalid"),
         method = %method,
         path = %path,
-        query = %query,
         status_code = tracing::field::Empty,
         duration_ms = tracing::field::Empty,
         user_id = tracing::field::Empty,
         error = tracing::field::Empty,
         auth_method = tracing::field::Empty,
         client = %client_version,
-        origin = %origin,
-        user_agent = %user_agent,
+        app_version = %APP_VERSION.as_str(),
+        startup_id = events::startup_id(),
     );
 
     let start = std::time::Instant::now();
@@ -177,7 +173,8 @@ async fn handler(
 
     // Handle preflight requests quickly
     if req.method() == hyper::Method::OPTIONS {
-        let response = cors::preflight_requests(req);
+        let mut response = cors::preflight_requests(req);
+        response.headers_mut().insert(REQUEST_ID_HEADER, request_id);
         span.record("status_code", 200);
         span.record("duration_ms", start.elapsed().as_millis() as u64);
         return Ok(response);
@@ -196,15 +193,12 @@ async fn handler(
                     span.record("status_code", response.status().as_u16());
                     span.record("duration_ms", duration.as_millis() as u64);
 
-                    if duration.as_millis() > 500 {
-                        tracing::warn!("Slow request: {}ms", duration.as_millis());
-                    } else if path.starts_with("/api/info")
-                        || path.starts_with("/api/updates/connect")
-                        || path.starts_with("/api/events/connect")
-                    {
-                        tracing::debug!("Request Finished");
+                    if response.status().is_server_error() {
+                        tracing::error!(event = "http.request.server_error", "Request failed");
+                    } else if duration.as_millis() > 500 {
+                        tracing::warn!(event = "http.request.slow", "Slow request");
                     } else {
-                        tracing::info!("Request Finished");
+                        tracing::debug!(event = "http.request.completed", "Request completed");
                     }
                     response.map(|bytes| Full::new(bytes.into()))
                 }
@@ -214,17 +208,90 @@ async fn handler(
                     span.record("duration_ms", duration.as_millis() as u64);
                     span.record("error", format!("{e}").as_str());
 
-                    error::log_error(&e, &uri);
+                    error::log_error(&e, &path);
 
                     err_response(e).map(|bytes| Full::new(bytes.into()))
                 }
             },
         );
 
+        let mut response = response;
+        response.headers_mut().insert(REQUEST_ID_HEADER, request_id);
         Ok(response)
     }
     .instrument(span)
     .await
+}
+
+fn request_id(
+    headers: &hyper::HeaderMap,
+    platform_header: Option<&hyper::header::HeaderName>,
+) -> hyper::header::HeaderValue {
+    headers
+        .get(&REQUEST_ID_HEADER)
+        .or_else(|| platform_header.and_then(|header| headers.get(header)))
+        .filter(|value| {
+            !value.is_empty()
+                && value.as_bytes().len() <= 128
+                && value
+                    .as_bytes()
+                    .iter()
+                    .all(|byte| byte.is_ascii_alphanumeric() || b"._:-".contains(byte))
+        })
+        .cloned()
+        .unwrap_or_else(|| {
+            hyper::header::HeaderValue::from_str(&uuid::Uuid::now_v7().to_string())
+                .expect("UUID is a valid header value")
+        })
+}
+
+#[cfg(test)]
+mod request_id_tests {
+    use super::*;
+
+    #[test]
+    fn preserves_valid_request_id() {
+        let mut headers = hyper::HeaderMap::new();
+        headers.insert(&REQUEST_ID_HEADER, "request-123".parse().unwrap());
+
+        assert_eq!(request_id(&headers, None), "request-123");
+    }
+
+    #[test]
+    fn falls_back_to_fly_request_id() {
+        let mut headers = hyper::HeaderMap::new();
+        let fly_request_id = hyper::header::HeaderName::from_static("fly-request-id");
+        headers.insert(&fly_request_id, "fly:request-123".parse().unwrap());
+
+        assert_eq!(
+            request_id(&headers, Some(&fly_request_id)),
+            "fly:request-123"
+        );
+    }
+
+    #[test]
+    fn bare_metal_ignores_fly_request_id() {
+        let mut headers = hyper::HeaderMap::new();
+        headers.insert(
+            hyper::header::HeaderName::from_static("fly-request-id"),
+            "fly:request-123".parse().unwrap(),
+        );
+
+        let generated = request_id(&headers, None);
+        assert_ne!(generated, "fly:request-123");
+        assert!(uuid::Uuid::parse_str(generated.to_str().unwrap()).is_ok());
+    }
+
+    #[test]
+    fn replaces_unsafe_request_id() {
+        let mut headers = hyper::HeaderMap::new();
+        headers.insert(&REQUEST_ID_HEADER, "contains spaces".parse().unwrap());
+
+        let generated = request_id(&headers, None);
+        let generated = generated.to_str().unwrap();
+        assert_ne!(generated, "contains spaces");
+        assert!(uuid::Uuid::parse_str(generated).is_ok());
+    }
 }
 
 #[tracing::instrument(skip(storage))]
@@ -285,6 +352,26 @@ struct ServeArgs {
     port: u16,
     #[clap(long, env = "PROMETHEUS_EXPORTER")]
     prometheus_exporter: Option<SocketAddr>,
+    /// Hosting platform, which defines the trusted HTTP ingress boundary.
+    #[clap(long, env = "PLATFORM", value_enum)]
+    platform: Option<platform::Platform>,
+    /// CDN providers whose published networks may supply X-Forwarded-For.
+    #[clap(
+        long = "trusted-cdn",
+        env = "TRUSTED_CDNS",
+        value_enum,
+        value_delimiter = ','
+    )]
+    trusted_cdns: Vec<client_ip::CdnProvider>,
+    /// Additional proxy IP addresses or CIDRs that may supply X-Forwarded-For.
+    #[clap(
+        long,
+        env = "TRUSTED_PROXIES",
+        value_delimiter = ',',
+        value_parser = client_ip::parse_trusted_proxy,
+        alias = "trusted-proxy-cidrs"
+    )]
+    trusted_proxy: Vec<ipnet::IpNet>,
     #[clap(long, env = "DATABASE_URL")]
     database_url: String,
     #[clap(long, env = "REDIS_URL")]
@@ -299,12 +386,6 @@ struct ServeArgs {
     app_url: Option<String>,
     #[clap(long, env = "SITE_URL")]
     site_url: Option<String>,
-    #[clap(long, env = "SENTRY_DSN")]
-    sentry_dsn: Option<String>,
-    #[clap(long, env = "SENTRY_HOST", default_value = "sentry.mythal.net")]
-    sentry_host: String,
-    #[clap(long, env = "SENTRY_PROJECT_IDS", value_delimiter = ',')]
-    sentry_project_ids: Vec<String>,
     #[clap(long, env = "DISCOURSE_SSO_SECRET")]
     discourse_sso_secret: Option<String>,
     #[clap(long, env = "SECRET")]
@@ -401,6 +482,27 @@ async fn init_database(args: InitArgs) {
     }
 }
 
+fn start_log_drop_metrics(error_counter: tracing_appender::non_blocking::ErrorCounter) {
+    metrics::describe_counter!(
+        "boluo_server_log_output_dropped_total",
+        "Structured log lines dropped because the non-blocking stdout queue was full"
+    );
+    tokio::spawn(async move {
+        let metric = metrics::counter!("boluo_server_log_output_dropped_total");
+        let mut reported = 0;
+        let mut interval = tokio::time::interval(std::time::Duration::from_secs(5));
+        loop {
+            interval.tick().await;
+            let dropped = error_counter.dropped_lines();
+            let delta = dropped.saturating_sub(reported);
+            if delta > 0 {
+                metric.increment(delta as u64);
+                reported = dropped;
+            }
+        }
+    });
+}
+
 #[tokio::main(worker_threads = 5)]
 async fn main() {
     use tracing_subscriber::filter::{EnvFilter, LevelFilter};
@@ -428,7 +530,23 @@ async fn main() {
     let filter = EnvFilter::builder()
         .with_default_directive(LevelFilter::INFO.into())
         .from_env_lossy();
-    tracing_subscriber::fmt().with_env_filter(filter).init();
+    let (log_writer, log_guard) = tracing_appender::non_blocking::NonBlockingBuilder::default()
+        .buffered_lines_limit(2_048)
+        .lossy(true)
+        .thread_name("boluo-log-writer")
+        .finish(std::io::stdout());
+    let log_error_counter = log_writer.error_counter();
+    tracing_subscriber::fmt()
+        .json()
+        .flatten_event(true)
+        .with_current_span(true)
+        .with_span_list(false)
+        .with_writer(log_writer)
+        .with_env_filter(filter)
+        .init();
+    // Keep the guard alive until after the final log event so shutdown flushes
+    // the queue before terminating the writer thread.
+    let _log_guard = log_guard;
 
     let storage = std::sync::Arc::new(s3::Storage::new(s3::StorageConfig {
         endpoint_url: args.s3_endpoint_url.clone(),
@@ -440,6 +558,14 @@ async fn main() {
     storage_check(&storage, args.ci).await;
 
     let socket = SocketAddr::new(args.host, args.port);
+    let platform = platform::Runtime::detect(args.platform);
+    tracing::info!(platform = ?platform.platform(), "Hosting platform selected");
+    pubsub::initialize_node_id(platform.node_id());
+    let client_ip_resolver = client_ip::Resolver::new(
+        args.trusted_proxy.clone(),
+        &args.trusted_cdns,
+        platform.ingress(),
+    );
 
     let listener = TcpListener::bind(socket)
         .await
@@ -462,7 +588,7 @@ async fn main() {
     tracing::info!("Database is ready");
     let mut redis_conn = redis::connect(args.redis_url.as_deref()).await;
     redis::check(redis_conn.as_mut()).await;
-    let startup_id = events::initialize_startup_id(redis_conn.as_mut()).await;
+    let startup_id = events::initialize_startup_id(redis_conn.as_mut(), &platform).await;
     tracing::info!("Redis is ready");
 
     let ctx_config = context::AppConfig {
@@ -471,16 +597,9 @@ async fn main() {
         public_media_url: args.public_media_url.clone(),
         app_url: args.app_url.clone(),
         site_url: args.site_url.clone(),
-        sentry_dsn: args.sentry_dsn.clone(),
-        sentry_host: args.sentry_host.clone(),
-        sentry_project_ids: args
-            .sentry_project_ids
-            .iter()
-            .map(|id| id.trim().to_owned())
-            .filter(|id| !id.is_empty())
-            .collect(),
         discourse_sso_secret: args.discourse_sso_secret.clone(),
         secret: args.secret.clone(),
+        platform,
         mail: mail::Config {
             domain: args.mailgun_domain.clone(),
             api_key: args.mailgun_api_key.clone(),
@@ -495,13 +614,22 @@ async fn main() {
     ));
 
     if ctx.config.site_url.is_none() {
-        tracing::error!("SITE_URL is not set");
+        tracing::error!(
+            event = "server.configuration.site_url_missing",
+            "SITE_URL is not set"
+        );
     }
     if ctx.config.app_url.is_none() {
-        tracing::error!("APP_URL is not set");
+        tracing::error!(
+            event = "server.configuration.app_url_missing",
+            "APP_URL is not set"
+        );
     }
     if ctx.config.public_media_url.is_none() {
-        tracing::error!("PUBLIC_MEDIA_URL is not set");
+        tracing::error!(
+            event = "server.configuration.public_media_url_missing",
+            "PUBLIC_MEDIA_URL is not set"
+        );
     }
 
     server_metrics::init_metrics(&pool).await;
@@ -514,6 +642,22 @@ async fn main() {
 
     if let Some(addr) = args.prometheus_exporter {
         metrics_exporter_prometheus::PrometheusBuilder::new()
+            .set_buckets_for_metric(
+                metrics_exporter_prometheus::Matcher::Full(
+                    "boluo_server_frontend_web_vital_duration_seconds".to_owned(),
+                ),
+                &[
+                    0.05, 0.1, 0.2, 0.3, 0.5, 0.8, 1.0, 1.5, 1.8, 2.5, 4.0, 6.0, 10.0, 20.0,
+                ],
+            )
+            .expect("frontend Web Vital duration buckets are valid")
+            .set_buckets_for_metric(
+                metrics_exporter_prometheus::Matcher::Full(
+                    "boluo_server_frontend_web_vital_cls".to_owned(),
+                ),
+                &[0.01, 0.025, 0.05, 0.1, 0.15, 0.25, 0.5, 1.0, 2.0],
+            )
+            .expect("frontend CLS buckets are valid")
             .with_http_listener(addr)
             .install()
             .expect("Failed to install Prometheus metrics exporter");
@@ -525,6 +669,9 @@ async fn main() {
                 .describe_and_run(),
         );
     }
+    start_log_drop_metrics(log_error_counter);
+    client_ip_resolver.start_proxy_probe_refresh(pool.clone(), ctx.signer().clone());
+    client_ip_resolver.start_cdn_refresh();
     disk_cache::init(disk_cache_config(&args));
     // https://tokio.rs/tokio/topics/shutdown
     let mut terminate_stream =
@@ -532,7 +679,12 @@ async fn main() {
             .expect("Failed to create signal stream");
 
     server_metrics::start_update_metrics(pool.clone(), ctx.redis.clone(), ctx.space_store.clone());
-    tracing::info!("Startup ID: {startup_id}");
+    tracing::info!(
+        event = "server.started",
+        startup_id,
+        app_version = %APP_VERSION.as_str(),
+        "Server started"
+    );
 
     cache::start_expiry_task();
     cache::start_log_cache_stats();
@@ -541,13 +693,20 @@ async fn main() {
     spaces::start_rate_limiter_cleanup();
     channels::start_rate_limiter_cleanup();
     media::start_rate_limiter_cleanup();
+    frontend_telemetry::start_rate_limiter_cleanup();
     let timeout_counter = metrics::counter!("boluo_server_tcp_connections_timeout_total");
     let error_counter = metrics::counter!("boluo_server_tcp_connections_error_total");
 
     loop {
         tokio::select! {
             accept_result = listener.accept() => {
-                handle_connection(ctx.clone(), accept_result, timeout_counter.clone(), error_counter.clone()).await;
+                handle_connection(
+                    ctx.clone(),
+                    &client_ip_resolver,
+                    accept_result,
+                    timeout_counter.clone(),
+                    error_counter.clone(),
+                ).await;
             },
             _ = terminate_stream.recv() => {
                 tracing::info!("Graceful shutdown signal received");
@@ -563,6 +722,7 @@ async fn main() {
 
 async fn handle_connection(
     ctx: std::sync::Arc<context::AppContext>,
+    client_ip_resolver: &client_ip::Resolver,
     accept_result: Result<(tokio::net::TcpStream, SocketAddr), std::io::Error>,
     timeout_counter: metrics::Counter,
     error_counter: metrics::Counter,
@@ -570,9 +730,11 @@ async fn handle_connection(
     match accept_result {
         Ok((stream, addr)) => {
             if let Err(e) = stream.set_nodelay(true) {
-                tracing::error!(error = %e, "Failed to set TCP_NODELAY");
+                tracing::error!(
+                    event = "server.connection.tcp_nodelay_failed", error = %e, "Failed to set TCP_NODELAY");
             }
             let io = TokioIo::new(stream);
+            let client_ip_resolver = client_ip_resolver.clone();
             tokio::task::spawn(async move {
                 let start_time = std::time::Instant::now();
                 let tcp_connections_active = gauge!("boluo_server_tcp_connections_active");
@@ -584,9 +746,10 @@ async fn handle_connection(
                 let (timeout_reset_tx, mut timeout_reset_rx) =
                     watch::channel(std::time::Instant::now());
 
-                let handler_with_reset = move |req: Request<Incoming>| {
+                let handler_with_reset = move |mut req: Request<Incoming>| {
                     let tx = timeout_reset_tx.clone();
                     let ctx = ctx.clone();
+                    client_ip_resolver.attach(addr.ip(), &mut req);
                     async move {
                         // Reset timeout on each request
                         let _ = tx.send(std::time::Instant::now());
@@ -618,7 +781,11 @@ async fn handle_connection(
                                 if result.is_ok() {
                                     last_reset = *timeout_reset_rx.borrow_and_update();
                                 } else {
-                                    tracing::warn!(addr = %addr, "HTTP connection timeout reset channel closed");
+                                    tracing::warn!(
+                                        event = "server.connection.timeout_reset_closed",
+                                        addr = %addr,
+                                        "HTTP connection timeout reset channel closed"
+                                    );
                                     break;
                                 }
                             }
@@ -631,7 +798,12 @@ async fn handle_connection(
                         match conn_result {
                             Ok(()) => {},
                             Err(err) => {
-                                tracing::warn!(error = %err, addr = %addr, "HTTP connection error");
+                                tracing::warn!(
+                                    event = "server.connection.error",
+                                    error = %err,
+                                    addr = %addr,
+                                    "HTTP connection error"
+                                );
                                 error_counter.increment(1);
                             },
                         }
@@ -645,7 +817,12 @@ async fn handle_connection(
                         connection_future.as_mut().graceful_shutdown();
 
                         if let Err(err) = connection_future.await {
-                            tracing::warn!(error = %err, addr = %addr, "Error during graceful shutdown");
+                            tracing::warn!(
+                                event = "server.connection.graceful_shutdown_failed",
+                                error = %err,
+                                addr = %addr,
+                                "Error during graceful shutdown"
+                            );
                         }
 
                         tracing::info!(addr = %addr, "HTTP connection timeout after {}s", start_time.elapsed().as_secs());
@@ -658,7 +835,8 @@ async fn handle_connection(
             });
         }
         Err(err) => {
-            tracing::error!(error = %err, "Failed to accept connection");
+            tracing::error!(
+                event = "server.connection.accept_failed", error = %err, "Failed to accept connection");
         }
     }
 }

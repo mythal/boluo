@@ -35,8 +35,10 @@ cookie = "0.18"
 dotenvy = "0.15"
 futures = "0.3"
 hex = "0.4"
+ipnet = "2"
 itertools = "0.15"
 tracing = { version = "0.1", features = ["attributes"] }
+tracing-appender = "0.2"
 percent-encoding = "2.2.0"
 regex = "1"
 ring = "0.17"
@@ -81,6 +83,7 @@ shared-types = { version = "0.1.0", path = "../../packages/shared-types", featur
 ] }
 governor = "0.10.0"
 mimalloc = { version = "0.1.49" }
+libmimalloc-sys = { version = "0.1.49", features = ["extended"] }
 redis = { version = "1.2.0", features = [
   "streams",
   "ahash",
@@ -129,7 +132,7 @@ features = [
 
 [dependencies.tracing-subscriber]
 version = "0.3"
-features = ["env-filter", "time", "fmt"]
+features = ["env-filter", "time", "fmt", "json"]
 
 [dependencies.num-rational]
 version = "0.4.2"

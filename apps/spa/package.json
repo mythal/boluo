@@ -22,7 +22,7 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@floating-ui/react": "^0.27.19",
-    "@sentry/nextjs": "^10.64.0",
+    "@grafana/faro-web-sdk": "^2.10.0",
     "clsx": "^2.1.1",
     "dotenv": "^17.4.2",
     "jotai": "^2.20.1",

@@ -11,10 +11,15 @@ use tokio_tungstenite::WebSocketStream;
 pub use tokio_tungstenite::tungstenite::Message as WsMessage;
 use tracing::Instrument as _;
 
+const USER_AGENT_LOG_MAX_BYTES: usize = 512;
+
 pub fn check_websocket_header(headers: &HeaderMap) -> Result<HeaderValue, AppError> {
     use base64::{Engine as _, engine::general_purpose::STANDARD as base64_engine};
 
-    tracing::trace!("Checking Websocket request header: {:?}", headers);
+    tracing::trace!(
+        event = "websocket.headers.check",
+        "Checking WebSocket headers"
+    );
     let upgrade = headers
         .get(UPGRADE)
         .and_then(|v| v.to_str().ok())
@@ -28,7 +33,10 @@ pub fn check_websocket_header(headers: &HeaderMap) -> Result<HeaderValue, AppErr
         .ok_or_else(|| AppError::BadRequest("Missing the \"Connection\" header".to_string()))?;
 
     if !connection.contains("Upgrade") && !connection.contains("upgrade") {
-        tracing::error!("Can't find \"upgrade\"");
+        tracing::error!(
+            event = "websocket.header.upgrade_missing",
+            "Can't find \"upgrade\""
+        );
     }
     let mut key = headers
         .get(SEC_WEBSOCKET_KEY)
@@ -55,24 +63,22 @@ where
         .headers()
         .get(header::USER_AGENT)
         .and_then(|v| v.to_str().ok())
-        .unwrap_or("unknown")
-        .to_string();
+        .unwrap_or("unknown");
+    let user_agent_end = user_agent.floor_char_boundary(USER_AGENT_LOG_MAX_BYTES);
+    let user_agent_truncated = user_agent_end < user_agent.len();
+    let user_agent = user_agent[..user_agent_end].to_owned();
     let origin = req
         .headers()
         .get(header::ORIGIN)
         .and_then(|v| v.to_str().ok())
         .unwrap_or("unknown")
         .to_string();
-    let referer = req
-        .headers()
-        .get(header::REFERER)
-        .and_then(|v| v.to_str().ok())
-        .unwrap_or("");
-
     let Ok(accept) = check_websocket_header(req.headers()) else {
         tracing::warn!(
+            event = "websocket.header.invalid",
             connection_id = %connection_id,
             user_agent = %user_agent,
+            user_agent_truncated,
             "Invalid websocket header"
         );
         return hyper::Response::builder()
@@ -85,10 +91,8 @@ where
     let span = tracing::info_span!(
         "websocket_connection",
         connection_id = %connection_id,
-        user_agent = %user_agent,
         duration_ms = tracing::field::Empty,
         origin = %origin,
-        referer = %referer,
     );
 
     tokio::spawn(
@@ -108,17 +112,33 @@ where
                     )
                     .await;
 
-                    tracing::trace!("WebSocket connection established");
+                    tracing::info!(
+                        event = "websocket.connection.established",
+                        user_agent = %user_agent,
+                        user_agent_truncated,
+                        "WebSocket connection established"
+                    );
+                    // Avoid retaining the header allocation for the connection lifetime.
+                    drop(user_agent);
 
                     // Run the handler within this span context
                     handler(ws_stream).await;
 
                     span.record("duration_ms", start_time.elapsed().as_millis() as u64);
-                    tracing::debug!("WebSocket connection closed");
+                    tracing::debug!(
+                        event = "websocket.connection.closed",
+                        "WebSocket connection closed"
+                    );
                 }
                 Err(e) => {
                     span.record("duration_ms", start_time.elapsed().as_millis() as u64);
-                    tracing::error!(error = %e, "Failed to upgrade connection");
+                    tracing::error!(
+                        event = "websocket.upgrade.failed",
+                        error = %e,
+                        user_agent = %user_agent,
+                        user_agent_truncated,
+                        "Failed to upgrade connection"
+                    );
                 }
             }
             metrics::histogram!("boluo_server_websocket_connection_duration_ms")
@@ -135,7 +155,8 @@ where
         .header(header::SEC_WEBSOCKET_ACCEPT, accept)
         .body(Vec::new())
         .unwrap_or_else(|err| {
-            tracing::error!(error = %err, "Failed to build websocket response");
+            tracing::error!(
+                event = "websocket.response.build_failed", error = %err, "Failed to build websocket response");
             hyper::Response::default()
         })
 }

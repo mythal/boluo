@@ -1,7 +1,6 @@
 /* eslint-disable no-restricted-globals */
 import path from 'path';
 import withBundleAnalyzer from '@next/bundle-analyzer';
-import { withSentryConfig } from '@sentry/nextjs';
 import { type NextConfig } from 'next';
 import dotenv from 'dotenv';
 
@@ -15,11 +14,6 @@ dotenv.config({
 
 const env = {
   BACKEND_URL: process.env.BACKEND_URL,
-  SENTRY_DSN: process.env.SENTRY_DSN,
-  SENTRY_ORG: process.env.SENTRY_ORG,
-  SENTRY_URL: process.env.SENTRY_URL,
-  SENTRY_PROJECT_SITE: process.env.SENTRY_PROJECT_SITE,
-  SENTRY_TOKEN: process.env.SENTRY_TOKEN,
   ANALYZE: process.env.ANALYZE,
 };
 
@@ -57,9 +51,6 @@ const config: NextConfig = {
       ],
     ],
   },
-  env: {
-    SENTRY_DSN: env.SENTRY_DSN,
-  },
   outputFileTracingRoot: root,
   webpack: (config) => {
     // `react-intl` without parser
@@ -74,17 +65,7 @@ const config: NextConfig = {
   },
 };
 
-if (env.SENTRY_DSN) {
-  module.exports = withSentryConfig(config, {
-    org: env.SENTRY_ORG ?? 'mythal',
-    sentryUrl: env.SENTRY_URL ?? 'https://sentry.io/',
-    project: env.SENTRY_PROJECT_SITE ?? 'boluo-site',
-    disableLogger: true,
-    authToken: env.SENTRY_TOKEN,
-    widenClientFileUpload: true,
-    silent: true,
-  });
-} else if (env.ANALYZE === 'true') {
+if (env.ANALYZE === 'true') {
   module.exports = withBundleAnalyzer()(config);
 } else {
   module.exports = config;

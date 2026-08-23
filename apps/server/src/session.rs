@@ -54,7 +54,7 @@ pub fn token_verify(signer: &crate::context::Signer, token: &str) -> Result<Uuid
     use base64::{Engine as _, engine::general_purpose};
 
     let mut iter = token.split('.');
-    let parse_failed = || anyhow::anyhow!("Failed to parse token: {}", token);
+    let parse_failed = || anyhow::anyhow!("Failed to parse session token");
     let session_id_str = iter.next().ok_or_else(parse_failed)?;
     let signature = iter.next().ok_or_else(parse_failed)?;
     signer.verify(session_id_str, signature)?;
@@ -278,7 +278,10 @@ fn parse_cookie(value: &hyper::header::HeaderValue) -> Option<&str> {
     let value = match value.to_str() {
         Ok(value) => value,
         Err(_) => {
-            tracing::warn!("Failed to convert cookie to string");
+            tracing::warn!(
+                event = "authentication.cookie.invalid_header",
+                "Failed to convert cookie to string"
+            );
             return None;
         }
     };
@@ -286,14 +289,15 @@ fn parse_cookie(value: &hyper::header::HeaderValue) -> Option<&str> {
     Some(capture.get(1)?.as_str())
 }
 
-#[tracing::instrument]
+#[tracing::instrument(skip(pool))]
 async fn get_session_from_db(pool: &sqlx::PgPool, session_id: Uuid) -> Result<Session, AppError> {
     let mut conn = pool.acquire().await?;
     let session = sqlx::query_file_as!(Session, "sql/users/session_fetch.sql", session_id)
         .fetch_optional(&mut *conn)
         .await
         .map_err(|err| {
-            tracing::warn!(error = %err, "Database error while fetching session");
+            tracing::warn!(
+                event = "authentication.session.database_error", error = %err, "Database error while fetching session");
             AppError::Db { source: err }
         })?;
     session.ok_or(AuthenticateFail::NoSessionFound.into())
@@ -309,7 +313,8 @@ async fn get_session_from_token(
         .await
         .map_err(|err| AppError::Unexpected(err.into()))?
         .map_err(|err| {
-            tracing::warn!(error = %err, "Failed to verify the token");
+            tracing::warn!(
+                event = "authentication.token.verification_failed", error = %err, "Failed to verify the token");
             AuthenticateFail::CheckSignFail
         })?;
 
@@ -352,8 +357,8 @@ pub async fn authenticate(
                         .inspect(|session| {
                             span.record("auth_method", "cookie");
                             tracing::warn!(
+                                event = "authentication.bearer_fallback",
                                 user_id = %session.user_id,
-                                token = %token,
                                 token_error = %e,
                                 "Failed to authenticate with bearer token, fallback to cookie"
                             );
@@ -361,7 +366,10 @@ pub async fn authenticate(
                 }
             }
         } else {
-            tracing::warn!("Failed to convert header value to string, fallback to cookie");
+            tracing::warn!(
+                event = "authentication.authorization.invalid_header",
+                "Failed to convert header value to string, fallback to cookie"
+            );
             authenticate_with_cookie(ctx, headers).await.inspect(|_| {
                 span.record("auth_method", "cookie");
             })

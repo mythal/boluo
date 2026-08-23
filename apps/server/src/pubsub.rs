@@ -5,11 +5,18 @@ use time::OffsetDateTime;
 use uuid::Uuid;
 
 fn node_id() -> &'static str {
-    static NODE_ID: OnceLock<&'static str> = OnceLock::new();
-    NODE_ID.get_or_init(|| {
-        let fly_machine_id = std::env::var("FLY_MACHINE_ID").unwrap_or_else(|_| "None".to_string());
-        Box::leak(fly_machine_id.into_boxed_str())
-    })
+    NODE_ID.get().map(String::as_str).unwrap_or("unknown")
+}
+
+static NODE_ID: OnceLock<String> = OnceLock::new();
+
+pub fn initialize_node_id(node_id: &str) {
+    if NODE_ID.set(node_id.to_owned()).is_err() {
+        tracing::warn!(
+            event = "pubsub.node_id_already_initialized",
+            "PubSub node ID was already initialized"
+        );
+    }
 }
 
 #[derive(Clone, Serialize, Deserialize)]

@@ -120,6 +120,7 @@ pub async fn broadcast_preview_post(
             ));
         }
         tracing::warn!(
+            event = "event.preview.membership_missing",
             "User {} is posting preview to public channel {} without being a member",
             user_id,
             channel_id

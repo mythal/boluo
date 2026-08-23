@@ -49,6 +49,18 @@ pub fn broadcast_table_len() -> usize {
         .unwrap_or(0)
 }
 
+pub(super) fn has_broadcast_receivers(id: Uuid) -> bool {
+    BROADCAST_TABLE
+        .get()
+        .and_then(|table| {
+            table
+                .pin()
+                .get(&id)
+                .map(|sender| sender.receiver_count() > 0)
+        })
+        .unwrap_or(false)
+}
+
 async fn broadcast_clean() {
     let Some(broadcast_table) = BROADCAST_TABLE.get() else {
         return;
@@ -73,4 +85,21 @@ pub fn get_mailbox_broadcast_rx(id: Uuid) -> tokio::sync::broadcast::Receiver<Ut
             tx
         })
         .subscribe()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn reports_whether_a_mailbox_has_broadcast_receivers() {
+        let mailbox_id = Uuid::new_v4();
+        assert!(!has_broadcast_receivers(mailbox_id));
+
+        let receiver = get_mailbox_broadcast_rx(mailbox_id);
+        assert!(has_broadcast_receivers(mailbox_id));
+
+        drop(receiver);
+        assert!(!has_broadcast_receivers(mailbox_id));
+    }
 }

@@ -305,9 +305,13 @@ impl SpaceRuntime {
         let result = Self::load_snapshot(db, space_id, 0).await;
         metrics::histogram!("boluo_server_space_runtime_load_duration_seconds")
             .record(started.elapsed().as_secs_f64());
-        if result.is_err() {
-            metrics::counter!("boluo_server_space_runtime_load_failed_total").increment(1);
-        }
+        let result_label = match &result {
+            Ok(_) => "success",
+            Err(SpaceRuntimeError::NotFound) => "not_found",
+            Err(_) => "database_error",
+        };
+        metrics::counter!("boluo_server_space_runtime_load_total", "result" => result_label)
+            .increment(1);
         let snapshot = result?;
         let (control_tx, control_rx) = mpsc::channel(96);
         let runtime = Arc::new(Self {
@@ -597,6 +601,7 @@ impl SpaceRuntime {
                 metrics::counter!("boluo_server_space_runtime_reconciliation_failed_total")
                     .increment(1);
                 tracing::error!(
+                    event = "space_runtime.reconciliation.enqueue_failed",
                     %error,
                     space_id = %self.space_id,
                     "Failed to enqueue Space runtime reconciliation"
@@ -844,6 +849,7 @@ impl SpaceRuntime {
         };
         if active.mutation_token != mutation_token {
             tracing::warn!(
+                event = "space_runtime.mutation.prepare_rejected",
                 space_id = %runtime.space_id,
                 mutation_token,
                 active_mutation_token = active.mutation_token,
@@ -881,6 +887,7 @@ impl SpaceRuntime {
         };
         if active.mutation_token != mutation_token {
             tracing::warn!(
+                event = "space_runtime.mutation.completion_ignored",
                 space_id = %runtime.space_id,
                 mutation_token,
                 active_mutation_token = active.mutation_token,
@@ -928,6 +935,7 @@ impl SpaceRuntime {
                 }
                 Err(error) => {
                     tracing::error!(
+                        event = "space_runtime.mutation.recovery_failed",
                         %error,
                         space_id = %runtime.space_id,
                         mutation_token,
@@ -1043,6 +1051,7 @@ impl SpaceRuntime {
                 break;
             }
             tracing::warn!(
+                event = "space_runtime.snapshot.refresh_retry",
                 space_id = %runtime.space_id,
                 ticket,
                 attempt = attempt + 1,
@@ -1068,6 +1077,7 @@ impl SpaceRuntime {
                         )
                         .increment(1);
                         tracing::warn!(
+                            event = "space_runtime.snapshot.mismatch",
                             space_id = %runtime.space_id,
                             space_mismatch = mismatch.space,
                             settings_mismatch = mismatch.settings,
@@ -1100,6 +1110,7 @@ impl SpaceRuntime {
                 )
                 .increment(1);
                 tracing::error!(
+                    event = "space_runtime.snapshot.refresh_failed",
                     %error,
                     space_id = %runtime.space_id,
                     ticket,

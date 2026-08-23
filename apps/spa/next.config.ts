@@ -1,6 +1,5 @@
 /* eslint-disable no-restricted-globals */
 import generateWithBundleAnalyzer from '@next/bundle-analyzer';
-import { withSentryConfig } from '@sentry/nextjs';
 import { type NextConfig } from 'next';
 import dotenv from 'dotenv';
 import path from 'path';
@@ -15,12 +14,7 @@ dotenv.config({
 
 const env = {
   BACKEND_URL: process.env.BACKEND_URL,
-  SENTRY_DSN: process.env.SENTRY_DSN,
-  SENTRY_TUNNEL: process.env.SENTRY_TUNNEL,
-  SENTRY_ORG: process.env.SENTRY_ORG,
-  SENTRY_URL: process.env.SENTRY_URL,
-  SENTRY_PROJECT: process.env.SENTRY_PROJECT,
-  SENTRY_TOKEN: process.env.SENTRY_TOKEN,
+  APP_VERSION: process.env.APP_VERSION ?? process.env.GITHUB_SHA,
   ANALYZE: process.env.ANALYZE,
 };
 
@@ -68,9 +62,8 @@ const config: NextConfig = {
     ],
   },
   env: {
+    APP_VERSION: env.APP_VERSION,
     BACKEND_URL: env.BACKEND_URL,
-    SENTRY_DSN: env.SENTRY_DSN,
-    SENTRY_TUNNEL: env.SENTRY_TUNNEL,
   },
 
   webpack: (config) => {
@@ -83,18 +76,4 @@ const config: NextConfig = {
     return config;
   },
 };
-if (env.SENTRY_DSN) {
-  module.exports = withSentryConfig(config, {
-    org: env.SENTRY_ORG ?? 'mythal',
-    sentryUrl: env.SENTRY_URL ?? 'https://sentry.io/',
-    project: process.env.SENTRY_PROJECT ?? 'boluo-spa',
-    autoInstrumentServerFunctions: false,
-    autoInstrumentMiddleware: false,
-    disableLogger: true,
-    authToken: process.env.SENTRY_TOKEN,
-    widenClientFileUpload: true,
-    silent: true,
-  });
-} else {
-  module.exports = withBundleAnalyzer(config);
-}
+module.exports = withBundleAnalyzer(config);

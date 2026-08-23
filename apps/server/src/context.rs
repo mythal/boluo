@@ -29,7 +29,7 @@ impl Signer {
             .or_else(|_| general_purpose::STANDARD.decode(signature))
             .context("Failed to decode signature")?;
         hmac::verify(&self.0, message.as_bytes(), &signature)
-            .map_err(|_| anyhow::anyhow!("Failed to verify signature of message {}", message))
+            .map_err(|_| anyhow::anyhow!("Failed to verify message signature"))
     }
 }
 
@@ -40,11 +40,9 @@ pub struct AppConfig {
     pub public_media_url: Option<String>,
     pub app_url: Option<String>,
     pub site_url: Option<String>,
-    pub sentry_dsn: Option<String>,
-    pub sentry_host: String,
-    pub sentry_project_ids: Vec<String>,
     pub discourse_sso_secret: Option<String>,
     pub secret: String,
+    pub platform: crate::platform::Runtime,
     pub mail: crate::mail::Config,
     pub entry_component_cache_capacity: u64,
 }
@@ -58,11 +56,9 @@ impl Default for AppConfig {
             public_media_url: None,
             app_url: None,
             site_url: None,
-            sentry_dsn: None,
-            sentry_host: String::new(),
-            sentry_project_ids: Vec::new(),
             discourse_sso_secret: None,
             secret: "just a test".to_owned(),
+            platform: crate::platform::Runtime::detect(Some(crate::platform::Platform::BareMetal)),
             mail: crate::mail::Config::default(),
             entry_component_cache_capacity: crate::entries::component_cache::DEFAULT_CACHE_BYTES,
         }

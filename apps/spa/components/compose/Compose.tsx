@@ -2,7 +2,7 @@
 import type { MemberWithUser, User } from '@boluo/api';
 import { useAtomValue } from 'jotai';
 import { selectAtom } from 'jotai/utils';
-import { type FC, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
+import { type FC, useDeferredValue, useMemo, useRef, useState } from 'react';
 import { useMediaDrop } from '../../hooks/useMediaDrop';
 import { AddDiceButton } from './AddDiceButton';
 import { ComposeTextArea } from './ComposeTextArea';
@@ -14,8 +14,7 @@ import { useSend } from '../pane-channel/useSend';
 import { EditMessageBanner } from './EditMessageBanner';
 import { MediaLine } from './MediaLine';
 import { useSettings } from '../../hooks/useSettings';
-import { FormattedMessage } from 'react-intl';
-import { ErrorBoundary } from '@sentry/nextjs';
+import { ErrorBoundary } from '../ErrorBoundary';
 import { ComposeFallback } from '@boluo/ui/ComposeFallback';
 import { useBackupCompose } from '../../hooks/useBackupCompose';
 import clsx from 'clsx';
@@ -49,12 +48,6 @@ export const Compose = ({ member, channelAtoms }: Props) => {
   const enterSend = settings?.enterSend === true;
   const send = useSend();
   const { onDrop } = useMediaDrop();
-  useEffect(() => {
-    const { virtualKeyboard } = navigator;
-    if (!virtualKeyboard) return;
-    virtualKeyboard.overlaysContent = true;
-  }, []);
-
   const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault(); // This is important to prevent the browser's default handling of the data
   };
@@ -119,11 +112,6 @@ export const Compose = ({ member, channelAtoms }: Props) => {
 
           {addDiceButton}
           {sendButton}
-        </div>
-        <div className="h-(--keyboard-inset,0px) overflow-clip">
-          <div className="px-1 py-4">
-            <FormattedMessage defaultMessage="If you see this text, please try to swipe down ↓ to display the content." />
-          </div>
         </div>
       </div>
     </ErrorBoundary>

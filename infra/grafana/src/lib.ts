@@ -32,6 +32,8 @@ import {
   LegendPlacement,
   LineInterpolation,
   LineStyleBuilder,
+  LogsDedupStrategy,
+  LogsSortOrder,
   ScaleDistribution,
   ScaleDistributionConfigBuilder,
   ReduceDataOptionsBuilder,
@@ -50,6 +52,7 @@ import { QueryEditorMode, QueryV2Builder } from '@grafana/grafana-foundation-sdk
 import { VisualizationV2Builder } from '@grafana/grafana-foundation-sdk/timeseries';
 import { VisualizationV2Builder as StatVisualizationBuilder } from '@grafana/grafana-foundation-sdk/stat';
 import { VisualizationV2Builder as TableVisualizationBuilder } from '@grafana/grafana-foundation-sdk/table';
+import { VisualizationV2Builder as LogsVisualizationBuilder } from '@grafana/grafana-foundation-sdk/logs';
 
 export const GRAFANA_PLUGIN_VERSION = '12.4.2';
 
@@ -95,6 +98,14 @@ interface StatPanelOptions {
   targets: PrometheusTarget[];
   unit?: string;
   mappings?: ValueMapping[];
+}
+
+interface LogsPanelOptions {
+  id: number;
+  title: string;
+  datasourceUid: string;
+  expr: string;
+  maxLines?: number;
 }
 
 type TimeSeriesOverride = NonNullable<TimeSeriesPanelOptions['overrides']>[number];
@@ -264,6 +275,48 @@ export function timeSeriesPanel(options: TimeSeriesPanelOptions): PanelBuilder {
     panel.description(options.description);
   }
   return panel;
+}
+
+export function logsPanel(options: LogsPanelOptions): PanelBuilder {
+  const query: DataQueryKind = {
+    kind: 'DataQuery',
+    group: 'victoriametrics-logs-datasource',
+    version: 'v0',
+    datasource: { name: options.datasourceUid },
+    spec: {
+      editorMode: 'code',
+      expr: options.expr,
+      maxLines: options.maxLines ?? 1000,
+      queryType: 'instant',
+    },
+  };
+
+  const visualization = new LogsVisualizationBuilder()
+    .showLabels(false)
+    .showCommonLabels(false)
+    .showTime(true)
+    .showLogContextToggle(true)
+    .wrapLogMessage(true)
+    .prettifyLogMessage(false)
+    .enableLogDetails(true)
+    .sortOrder(LogsSortOrder.Descending)
+    .dedupStrategy(LogsDedupStrategy.None)
+    .enableInfiniteScrolling(true)
+    .showControls(true)
+    .showFieldSelector(true)
+    .syntaxHighlighting(true)
+    .fontSize('default')
+    .detailsMode('sidebar');
+
+  return new PanelBuilder()
+    .id(options.id)
+    .title(options.title)
+    .data(
+      new QueryGroupBuilder().targets([
+        new TargetBuilder().query(valueBuilder(query)).refId('logs').hidden(false),
+      ]),
+    )
+    .visualization(versionedVisualization(visualization));
 }
 
 export function healthStatPanel(options: StatPanelOptions): PanelBuilder {

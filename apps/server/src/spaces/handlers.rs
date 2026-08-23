@@ -106,6 +106,7 @@ async fn query(
     };
     if !is_member {
         tracing::warn!(
+            event = "space.access.membership_required",
             space_id = %id,
             user_id = %session.user_id,
             "A non-member tries to query space"
@@ -228,6 +229,7 @@ async fn token(
         .unwrap_or(false);
     if !is_admin {
         tracing::warn!(
+            event = "space.invitation.read_admin_required",
             space_id = %id,
             user_id = %session.user_id,
             "A non-admin tries to get invitation token"
@@ -253,6 +255,7 @@ async fn refresh_token(
         .unwrap_or(false);
     if !is_admin {
         tracing::warn!(
+            event = "space.invitation.refresh_admin_required",
             space_id = %id,
             user_id = %session.user_id,
             "A non-admin tries to refresh invitation token"
@@ -422,6 +425,7 @@ async fn edit(
         .or_no_permission()?;
     if !space_member.is_admin && space.owner_id != session.user_id {
         tracing::warn!(
+            event = "space.edit.admin_required",
             space_id = %space_id,
             user_id = %session.user_id,
             "A non-admin tries to edit space"
@@ -507,6 +511,7 @@ async fn join(
         .or_not_found()?;
     if !space.is_public && token != Some(space.invite_token) && space.owner_id != session.user_id {
         tracing::warn!(
+            event = "space.join.token_missing",
             space_id = %space_id,
             user_id = %session.user_id,
             "A user tries to join group without token"
@@ -573,6 +578,7 @@ async fn kick(
     }
     if !my_member.is_admin && space.owner_id != session.user_id {
         tracing::warn!(
+            event = "space.member.kick_admin_required",
             space_id = %space_id,
             user_id = %session.user_id,
             "A non-admin tries to kick"
@@ -667,6 +673,7 @@ async fn delete(
         return Ok(space);
     }
     tracing::warn!(
+        event = "space.delete.admin_required",
         "The user {} failed to try delete a space {}",
         session.user_id,
         space.id
@@ -712,6 +719,7 @@ async fn update_settings(
         .unwrap_or(false);
     if !is_admin && space.owner_id != session.user_id {
         tracing::warn!(
+            event = "space.settings.admin_required",
             space_id = %id,
             user_id = %session.user_id,
             "A non-admin tries to update settings"

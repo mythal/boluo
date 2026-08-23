@@ -413,11 +413,6 @@ impl ChannelMember {
         .fetch_optional(db)
         .await?;
         if let Some(record) = record {
-            tracing::warn!(
-                "Loaded channel member from DB for user {} in channel {}",
-                user_id,
-                channel_id
-            );
             return Ok(Some(record.channel));
         }
         Ok(None)

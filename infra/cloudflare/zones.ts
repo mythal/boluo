@@ -271,12 +271,6 @@ boluoChat.dnsRecord('cname-media-dev', {
   proxied: true,
   type: 'CNAME',
 });
-boluoChat.dnsRecord('cname-sentry', {
-  content: 'sentry.yuru.me',
-  name: 'sentry.boluo.chat',
-  proxied: true,
-  type: 'CNAME',
-});
 boluoChat.dnsRecord('cname-www', {
   comment: '[boluo-infra production] Managed by Pulumi',
   content: 'fly.boluo.chat',

@@ -231,18 +231,11 @@ impl MailboxManager {
                 .increment(1);
                 return Err(MailboxManageError::Closed);
             }
-            Err(TrySendError::Full(action)) => {
-                tracing::info!("MailboxManager::send_read_action: full");
-                action
-            }
+            Err(TrySendError::Full(action)) => action,
         };
         tokio::time::timeout(MAILBOX_STATE_READ_TIMEOUT, self.sender.send(action))
             .await
             .map_err(|_| {
-                tracing::warn!(
-                    event = "mailbox.read_action.send_timeout",
-                    "MailboxManager::send_read_action: timeout"
-                );
                 metrics::counter!(
                     "boluo_server_events_mailbox_actions_total",
                     "action" => action_name,
@@ -252,10 +245,6 @@ impl MailboxManager {
                 MailboxManageError::TimeOut
             })?
             .map_err(|_| {
-                tracing::warn!(
-                    event = "mailbox.read_action.channel_closed",
-                    "MailboxManager::send_read_action: closed"
-                );
                 metrics::counter!(
                     "boluo_server_events_mailbox_actions_total",
                     "action" => action_name,
@@ -294,18 +283,11 @@ impl MailboxManager {
                 .increment(1);
                 return Err(MailboxManageError::Closed);
             }
-            Err(TrySendError::Full(action)) => {
-                tracing::info!("MailboxManager::send_write_action: full");
-                action
-            }
+            Err(TrySendError::Full(action)) => action,
         };
         tokio::time::timeout(MAILBOX_STATE_WRITE_TIMEOUT, self.sender.send(action))
             .await
             .map_err(|_| {
-                tracing::warn!(
-                    event = "mailbox.write_action.send_timeout",
-                    "MailboxManager::send_write_action: timeout"
-                );
                 metrics::counter!(
                     "boluo_server_events_mailbox_actions_total",
                     "action" => action_name,
@@ -315,10 +297,6 @@ impl MailboxManager {
                 MailboxManageError::TimeOut
             })?
             .map_err(|_| {
-                tracing::warn!(
-                    event = "mailbox.write_action.channel_closed",
-                    "MailboxManager::send_write_action: closed"
-                );
                 metrics::counter!(
                     "boluo_server_events_mailbox_actions_total",
                     "action" => action_name,

@@ -1,5 +1,29 @@
 use metrics::gauge;
+use std::sync::atomic::{AtomicU8, Ordering};
 use std::time::Instant;
+
+const HEALTH_UNKNOWN: u8 = 0;
+const HEALTH_UP: u8 = 1;
+const HEALTH_DOWN: u8 = 2;
+
+static DATABASE_HEALTH_STATE: AtomicU8 = AtomicU8::new(HEALTH_UNKNOWN);
+static REDIS_HEALTH_STATE: AtomicU8 = AtomicU8::new(HEALTH_UNKNOWN);
+
+#[derive(Debug, PartialEq, Eq)]
+enum HealthTransition {
+    Unchanged,
+    BecameUp,
+    BecameDown,
+}
+
+fn update_health_state(state: &AtomicU8, is_up: bool) -> HealthTransition {
+    let next = if is_up { HEALTH_UP } else { HEALTH_DOWN };
+    match (state.swap(next, Ordering::Relaxed), next) {
+        (HEALTH_DOWN, HEALTH_UP) => HealthTransition::BecameUp,
+        (HEALTH_UNKNOWN | HEALTH_UP, HEALTH_DOWN) => HealthTransition::BecameDown,
+        _ => HealthTransition::Unchanged,
+    }
+}
 
 #[derive(Debug, PartialEq, Eq)]
 struct ProcessMemorySnapshot {
@@ -163,16 +187,24 @@ pub async fn update_database_health_metrics(pool: &sqlx::PgPool) {
                 .increment(1);
             gauge!("boluo_server_database_up").set(1.0);
             gauge!("boluo_server_database_probe_rtt_ms").set(start.elapsed().as_millis() as f64);
+            if update_health_state(&DATABASE_HEALTH_STATE, true) == HealthTransition::BecameUp {
+                tracing::info!(
+                    event = "health.database_probe.recovered",
+                    "Database health probe recovered"
+                );
+            }
         }
         Err(err) => {
             metrics::counter!("boluo_server_db_pool_probe_total", "result" => "error").increment(1);
-            tracing::warn!(
-                event = "health.database_probe.failed",
-                "Database health metrics probe failed: {}",
-                err
-            );
             gauge!("boluo_server_database_up").set(0.0);
             gauge!("boluo_server_database_probe_rtt_ms").set(0.0);
+            if update_health_state(&DATABASE_HEALTH_STATE, false) == HealthTransition::BecameDown {
+                tracing::warn!(
+                    event = "health.database_probe.failed",
+                    error = %err,
+                    "Database health probe failed"
+                );
+            }
         }
     }
 }
@@ -188,25 +220,39 @@ pub async fn update_redis_health_metrics(conn: Option<redis::aio::ConnectionMana
     let result = redis::cmd("PING").query_async::<String>(&mut conn).await;
     match result {
         Ok(response) if response == "PONG" => {
+            metrics::counter!("boluo_server_redis_probe_total", "result" => "success").increment(1);
             gauge!("boluo_server_redis_up").set(1.0);
             gauge!("boluo_server_redis_probe_rtt_ms").set(start.elapsed().as_millis() as f64);
+            if update_health_state(&REDIS_HEALTH_STATE, true) == HealthTransition::BecameUp {
+                tracing::info!(
+                    event = "health.redis_probe.recovered",
+                    "Redis health probe recovered"
+                );
+            }
         }
         Ok(response) => {
-            tracing::warn!(
-                event = "health.redis_probe.invalid_response",
-                "Redis health metrics probe returned unexpected response: {response}"
-            );
+            metrics::counter!("boluo_server_redis_probe_total", "result" => "error").increment(1);
             gauge!("boluo_server_redis_up").set(0.0);
             gauge!("boluo_server_redis_probe_rtt_ms").set(0.0);
+            if update_health_state(&REDIS_HEALTH_STATE, false) == HealthTransition::BecameDown {
+                tracing::warn!(
+                    event = "health.redis_probe.invalid_response",
+                    response,
+                    "Redis health probe returned an unexpected response"
+                );
+            }
         }
         Err(err) => {
-            tracing::warn!(
-                event = "health.redis_probe.failed",
-                "Redis health metrics probe failed: {}",
-                err
-            );
+            metrics::counter!("boluo_server_redis_probe_total", "result" => "error").increment(1);
             gauge!("boluo_server_redis_up").set(0.0);
             gauge!("boluo_server_redis_probe_rtt_ms").set(0.0);
+            if update_health_state(&REDIS_HEALTH_STATE, false) == HealthTransition::BecameDown {
+                tracing::warn!(
+                    event = "health.redis_probe.failed",
+                    error = %err,
+                    "Redis health probe failed"
+                );
+            }
         }
     }
 }
@@ -283,5 +329,31 @@ Threads:\t7\n";
         assert_eq!(parse_status_value(status, "VmRSS:"), Some(1234 * 1024));
         assert_eq!(parse_status_value(status, "Threads:"), Some(7));
         assert_eq!(parse_status_value(status, "VmPeak:"), None);
+    }
+
+    #[test]
+    fn reports_only_health_state_transitions() {
+        let state = AtomicU8::new(HEALTH_UNKNOWN);
+
+        assert_eq!(
+            update_health_state(&state, true),
+            HealthTransition::Unchanged
+        );
+        assert_eq!(
+            update_health_state(&state, false),
+            HealthTransition::BecameDown
+        );
+        assert_eq!(
+            update_health_state(&state, false),
+            HealthTransition::Unchanged
+        );
+        assert_eq!(
+            update_health_state(&state, true),
+            HealthTransition::BecameUp
+        );
+        assert_eq!(
+            update_health_state(&state, true),
+            HealthTransition::Unchanged
+        );
     }
 }

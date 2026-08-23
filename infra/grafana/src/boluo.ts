@@ -4,6 +4,7 @@ import {
   GridBuilder,
   gridItem,
 } from '@grafana/grafana-foundation-sdk/dashboardv2';
+import { AxisPlacement } from '@grafana/grafana-foundation-sdk/common';
 import {
   QueryEditorMode,
   TooltipDisplayMode,
@@ -66,6 +67,11 @@ function summaryQuantile(quantile: number, metric: string): string {
 
 function rateOrZero(metric: string): string {
   return `(${rate(metric)}) or vector(0)`;
+}
+
+function summedRateOrZero(metric: string, extraLabels = ''): string {
+  const labels = extraLabels ? `,${extraLabels}` : '';
+  return `(sum(rate(${metric}{app="${APP}"${labels}}[${RATE_INTERVAL}]))) or vector(0)`;
 }
 
 export function buildBoluoDashboard(
@@ -332,7 +338,7 @@ export function buildBoluoDashboard(
       timeSeriesPanel({
         id: 21,
         title: 'Disk cache I/O',
-        description: 'Rates for redb reads, writes, and rejection events.',
+        description: 'Rates for redb reads, writes, and capacity rejections.',
         datasourceUid,
         unit: 'ops',
         tooltipMode: TooltipDisplayMode.Multi,
@@ -350,12 +356,6 @@ export function buildBoluoDashboard(
             legendFormat: 'writes',
           },
           {
-            refId: 'queue-full',
-            editorMode: QueryEditorMode.Code,
-            expr: rateOrZero('boluo_server_disk_cache_queue_full_total'),
-            legendFormat: 'queue full',
-          },
-          {
             refId: 'capacity-rejections',
             editorMode: QueryEditorMode.Code,
             expr: rateOrZero('boluo_server_disk_cache_capacity_rejections_total'),
@@ -369,12 +369,19 @@ export function buildBoluoDashboard(
       timeSeriesPanel({
         id: 24,
         title: 'Queue depths',
-        description: 'Pending work across event delivery, space runtimes, disk cache, and Tokio.',
+        description:
+          'Current pending work across WebSocket delivery, mailbox and space runtimes, disk cache, and Tokio.',
         datasourceUid,
         unit: 'short',
         min: 0,
         tooltipMode: TooltipDisplayMode.Multi,
         targets: [
+          {
+            refId: 'websocket-p95',
+            editorMode: QueryEditorMode.Code,
+            expr: summaryQuantile(0.95, 'boluo_server_events_pending_updates'),
+            legendFormat: '{{instance}} WebSocket pending p95',
+          },
           {
             refId: 'mailbox-actions',
             editorMode: QueryEditorMode.Code,
@@ -418,8 +425,9 @@ export function buildBoluoDashboard(
       panels.eventDelivery,
       timeSeriesPanel({
         id: 26,
-        title: 'Event delivery lag',
-        description: 'Updates dropped because a connected broadcast receiver could not keep up.',
+        title: 'Backpressure events',
+        description:
+          'Rates of dropped, rejected, or timed-out work caused by internal queues and consumers falling behind.',
         datasourceUid,
         unit: 'ops',
         tooltipMode: TooltipDisplayMode.Multi,
@@ -427,8 +435,41 @@ export function buildBoluoDashboard(
           {
             refId: 'broadcast-lagged',
             editorMode: QueryEditorMode.Code,
-            expr: rateOrZero('boluo_server_events_broadcast_lagged_total'),
+            expr: summedRateOrZero('boluo_server_events_broadcast_lagged_total'),
             legendFormat: 'broadcast lagged updates/s',
+          },
+          {
+            refId: 'mailbox-action-timeout',
+            editorMode: QueryEditorMode.Code,
+            expr: summedRateOrZero('boluo_server_events_mailbox_actions_total', 'result="timeout"'),
+            legendFormat: 'mailbox action timeouts/s',
+          },
+          {
+            refId: 'runtime-mutation-rejected',
+            editorMode: QueryEditorMode.Code,
+            expr: summedRateOrZero('boluo_server_space_runtime_mutation_rejected_total'),
+            legendFormat: 'runtime mutation rejections/s',
+          },
+          {
+            refId: 'runtime-read-timeout',
+            editorMode: QueryEditorMode.Code,
+            expr: summedRateOrZero(
+              'boluo_server_space_runtime_read_wait_total',
+              'result="timeout"',
+            ),
+            legendFormat: 'runtime read wait timeouts/s',
+          },
+          {
+            refId: 'activity-dropped',
+            editorMode: QueryEditorMode.Code,
+            expr: summedRateOrZero('boluo_server_space_activity_notifications_dropped_total'),
+            legendFormat: 'activity notifications dropped/s',
+          },
+          {
+            refId: 'disk-cache-queue-full',
+            editorMode: QueryEditorMode.Code,
+            expr: summedRateOrZero('boluo_server_disk_cache_queue_full_total'),
+            legendFormat: 'disk cache queue full/s',
           },
         ],
       }),
@@ -481,6 +522,12 @@ export function buildBoluoDashboard(
         unit: 'bytes',
         min: 0,
         tooltipMode: TooltipDisplayMode.Multi,
+        overrides: [
+          {
+            matcher: { id: 'byFrameRefID', options: 'allocator-committed' },
+            properties: [{ id: 'custom.axisPlacement', value: AxisPlacement.Right }],
+          },
+        ],
         targets: [
           {
             refId: 'rss',
@@ -560,11 +607,11 @@ export function buildBoluoDashboard(
         gridItem(panels.cacheCapacityUtilization).x(12).y(22).width(12).height(8),
         gridItem(panels.messages).x(0).y(30).width(12).height(8),
         gridItem(panels.messageLatency).x(12).y(30).width(12).height(8),
-        gridItem(panels.eventDelivery).x(0).y(38).width(24).height(8),
+        gridItem(panels.queueDepths).x(0).y(38).width(12).height(8),
+        gridItem(panels.eventDelivery).x(12).y(38).width(12).height(8),
         gridItem(panels.diskCacheCapacity).x(0).y(46).width(8).height(8),
         gridItem(panels.diskCacheIo).x(8).y(46).width(8).height(8),
         gridItem(panels.diskCacheLatency).x(16).y(46).width(8).height(8),
-        gridItem(panels.queueDepths).x(0).y(54).width(12).height(8),
       ]),
     )
     .links([])

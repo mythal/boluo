@@ -41,6 +41,7 @@ const panels = {
   queueDepths: 'panel-24',
   eventDelivery: 'panel-26',
   runtimePopulation: 'panel-27',
+  snapshotPopulation: 'panel-31',
   processMemory: 'panel-29',
   applicationLogs: 'panel-30',
 } as const;
@@ -581,6 +582,26 @@ export function buildBoluoDashboard(
       }),
     )
     .element(
+      panels.snapshotPopulation,
+      timeSeriesPanel({
+        id: 31,
+        title: 'Loaded snapshot contents',
+        description: 'Total items retained by all currently loaded Space snapshots.',
+        datasourceUid,
+        unit: 'short',
+        min: 0,
+        tooltipMode: TooltipDisplayMode.Multi,
+        targets: [
+          {
+            refId: 'snapshot-items',
+            editorMode: QueryEditorMode.Code,
+            expr: `boluo_server_space_runtime_snapshot_items{app="${APP}"}`,
+            legendFormat: '{{instance}} {{kind}}',
+          },
+        ],
+      }),
+    )
+    .element(
       panels.diskCacheLatency,
       timeSeriesPanel({
         id: 22,
@@ -638,7 +659,8 @@ export function buildBoluoDashboard(
         gridItem(panels.diskCacheCapacity).x(0).y(46).width(8).height(8),
         gridItem(panels.diskCacheIo).x(8).y(46).width(8).height(8),
         gridItem(panels.diskCacheLatency).x(16).y(46).width(8).height(8),
-        gridItem(panels.applicationLogs).x(0).y(54).width(24).height(10),
+        gridItem(panels.snapshotPopulation).x(0).y(54).width(24).height(8),
+        gridItem(panels.applicationLogs).x(0).y(62).width(24).height(10),
       ]),
     )
     .links([])

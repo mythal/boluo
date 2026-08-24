@@ -1466,6 +1466,13 @@ impl SpaceStore {
         let mut mutations_in_flight = 0_u64;
         let mut control_queue_depth = 0_u64;
         let mut mutation_queue_depth = 0_u64;
+        let mut snapshot_channels = 0_u64;
+        let mut snapshot_characters = 0_u64;
+        let mut snapshot_notes = 0_u64;
+        let mut snapshot_scopes = 0_u64;
+        let mut snapshot_entries = 0_u64;
+        let mut snapshot_space_members = 0_u64;
+        let mut snapshot_channel_members = 0_u64;
         for (_, handle) in self.inner.runtimes.pin().iter() {
             let Some(runtime) = handle.runtime_if_active() else {
                 continue;
@@ -1475,6 +1482,22 @@ impl SpaceStore {
             mutations_in_flight += runtime.active_mutations.load(Ordering::Acquire);
             control_queue_depth += runtime.control_queue_depth.load(Ordering::Acquire);
             mutation_queue_depth += runtime.mutation_queue_depth.load(Ordering::Acquire);
+            let snapshot = runtime.snapshot();
+            snapshot_channels += snapshot.channels.size() as u64;
+            snapshot_characters += snapshot.characters.size() as u64;
+            snapshot_notes += snapshot.notes.size() as u64;
+            snapshot_scopes += snapshot.scopes.size() as u64;
+            snapshot_entries += snapshot
+                .entries
+                .values()
+                .map(|entries| entries.size() as u64)
+                .sum::<u64>();
+            snapshot_space_members += snapshot.space_members.size() as u64;
+            snapshot_channel_members += snapshot
+                .channel_members
+                .values()
+                .map(|members| members.size() as u64)
+                .sum::<u64>();
         }
 
         metrics::gauge!("boluo_server_space_runtime_loaded").set(loaded as f64);
@@ -1485,6 +1508,20 @@ impl SpaceStore {
             .set(control_queue_depth as f64);
         metrics::gauge!("boluo_server_space_runtime_mutation_queue_depth")
             .set(mutation_queue_depth as f64);
+        metrics::gauge!("boluo_server_space_runtime_snapshot_items", "kind" => "channels")
+            .set(snapshot_channels as f64);
+        metrics::gauge!("boluo_server_space_runtime_snapshot_items", "kind" => "characters")
+            .set(snapshot_characters as f64);
+        metrics::gauge!("boluo_server_space_runtime_snapshot_items", "kind" => "notes")
+            .set(snapshot_notes as f64);
+        metrics::gauge!("boluo_server_space_runtime_snapshot_items", "kind" => "scopes")
+            .set(snapshot_scopes as f64);
+        metrics::gauge!("boluo_server_space_runtime_snapshot_items", "kind" => "entries")
+            .set(snapshot_entries as f64);
+        metrics::gauge!("boluo_server_space_runtime_snapshot_items", "kind" => "space_members")
+            .set(snapshot_space_members as f64);
+        metrics::gauge!("boluo_server_space_runtime_snapshot_items", "kind" => "channel_members")
+            .set(snapshot_channel_members as f64);
     }
 
     pub(crate) async fn get_or_load(

@@ -1,13 +1,17 @@
 'use client';
 
 import { post } from '@boluo/api-browser';
+import type { ApiError } from '@boluo/api';
 import { useQueryAppSettings } from '@boluo/hooks/useQueryAppSettings';
 import { useQueryCurrentUser } from '@boluo/hooks/useQueryCurrentUser';
 import Link from 'next/link';
-import type { FC } from 'react';
+import { type FC, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { Button } from '@boluo/ui/Button';
 import * as classes from '@boluo/ui/classes';
+import { ErrorMessageBox } from '@boluo/ui/ErrorMessageBox';
+import { explainError } from '@boluo/locale/errors';
+import { reportApiError } from '../../../../../../../error';
 
 interface Props {
   spaceId: string;
@@ -15,6 +19,7 @@ interface Props {
 }
 
 export const AcceptButton: FC<Props> = ({ spaceId, token }) => {
+  const [error, setError] = useState<ApiError | null>(null);
   const { data: currentUser, isLoading } = useQueryCurrentUser();
   const intl = useIntl();
   const { data: appSettings, isLoading: isLoadingAppSettings } = useQueryAppSettings();
@@ -25,7 +30,13 @@ export const AcceptButton: FC<Props> = ({ spaceId, token }) => {
       return;
     }
     const result = await post('/spaces/join', { spaceId, token }, {});
-    const { space } = result.unwrap();
+    if (result.isErr) {
+      reportApiError(result.err, { requestPath: '/spaces/join', source: 'accept-invite' });
+      setError(result.err);
+      return;
+    }
+    setError(null);
+    const { space } = result.some;
     window.open(`${appUrl}/${intl.locale}/#route=${space.id}`, '_blank');
   };
   const loginLink = (
@@ -40,6 +51,7 @@ export const AcceptButton: FC<Props> = ({ spaceId, token }) => {
   }
   return (
     <div className="text-right">
+      {error && <ErrorMessageBox>{explainError(intl, error)}</ErrorMessageBox>}
       {currentUser == null && (
         <div className="py-2">
           <FormattedMessage

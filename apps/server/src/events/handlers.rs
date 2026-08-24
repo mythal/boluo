@@ -814,8 +814,6 @@ async fn sse(ctx: &crate::context::AppContext, req: Request<Incoming>) -> Respon
 }
 
 async fn receive_events(ctx: &crate::context::AppContext, req: Request<Incoming>) -> Response {
-    use http_body_util::BodyExt;
-
     let query = match parse_query::<UpdateQuery>(req.uri()) {
         Ok(q) => q,
         Err(e) => return err_response(e),
@@ -831,13 +829,14 @@ async fn receive_events(ctx: &crate::context::AppContext, req: Request<Incoming>
         return err_response(error);
     }
 
-    let body_bytes = match req.into_body().collect().await {
-        Ok(c) => c.to_bytes(),
-        Err(_) => {
-            return err_response(AppError::BadRequest(
-                "Failed to read the request body".to_string(),
-            ));
-        }
+    let body_bytes = match crate::interface::read_body_limited(
+        req,
+        crate::interface::DEFAULT_JSON_BODY_LIMIT_BYTES,
+    )
+    .await
+    {
+        Ok(body) => body,
+        Err(error) => return err_response(error),
     };
     let body_str = match std::str::from_utf8(&body_bytes) {
         Ok(s) => s,

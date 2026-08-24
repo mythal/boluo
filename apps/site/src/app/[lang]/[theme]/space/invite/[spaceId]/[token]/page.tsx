@@ -54,11 +54,10 @@ export default async function Page({ params }: Props) {
     } else if (err.code === 'NO_PERMISSION') {
       const invaild = intl.formatMessage({ defaultMessage: 'Invalid invitation link' });
       return <div className="p-4">{invaild}</div>;
-    } else if (err.code === 'FETCH_FAIL') {
-      console.warn(err.cause);
-      throw err.cause;
     }
-    return spaceResult.unwrap();
+    throw new Error(`Failed to load invited space: ${err.code}`, {
+      cause: 'cause' in err ? err.cause : err,
+    });
   }
   const space = spaceResult.some;
   if (space == null) {

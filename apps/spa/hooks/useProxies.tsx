@@ -1,12 +1,12 @@
 import { type Proxy } from '@boluo/api';
-import { getDefaultBaseUrl } from '@boluo/api-browser';
+import { getDefaultBaseUrl, withFaroSessionId } from '@boluo/api-browser';
 import { useMemo } from 'react';
 import { useIntl } from 'react-intl';
 import useSWR from 'swr';
 
 const fetcher = async (): Promise<Proxy[]> => {
   try {
-    const res = await fetch(`${getDefaultBaseUrl()}/api/info/proxies`);
+    const res = await fetch(`${getDefaultBaseUrl()}/api/info/proxies`, withFaroSessionId());
     const proxies = (await res.json()) as Proxy[];
     return proxies.map((proxy) => {
       // TODO: Remove this hack

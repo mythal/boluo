@@ -18,8 +18,7 @@ class TokenManager implements TokenStorage {
     try {
       const stored = localStorage.getItem(TOKEN_STORAGE_KEY);
       this._token = stored;
-    } catch (error) {
-      console.warn('Failed to load token from localStorage:', error);
+    } catch {
       this._token = null;
     }
   }
@@ -31,8 +30,8 @@ class TokenManager implements TokenStorage {
       } else {
         localStorage.removeItem(TOKEN_STORAGE_KEY);
       }
-    } catch (error) {
-      console.warn('Failed to save token to localStorage:', error);
+    } catch {
+      // The in-memory token remains usable when storage is unavailable.
     }
   }
 

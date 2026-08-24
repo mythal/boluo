@@ -13,6 +13,7 @@ import { Button } from '@boluo/ui/Button';
 import { ErrorMessageBox } from '@boluo/ui/ErrorMessageBox';
 import { TextArea, TextInput } from '@boluo/ui/TextInput';
 import { DiceSelect } from '@boluo/ui/DiceSelect';
+import { neverMind } from '@boluo/utils/function';
 import { PaneFooterBox } from './PaneFooterBox';
 
 const FormErrorDispay: FC<{ error: ApiError; intl: IntlShape }> = ({ error, intl }) => {
@@ -158,7 +159,7 @@ export const CreateSpaceForm: FC<Props> = ({ onSuccess, close }) => {
   });
 
   const onSubmit: SubmitHandler<CreateSpace> = (params) => {
-    void trigger(params);
+    void trigger(params).catch(neverMind);
   };
   const handleFormSubmit = handleSubmit(onSubmit);
   return (

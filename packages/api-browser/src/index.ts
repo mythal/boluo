@@ -40,6 +40,25 @@ export const apiUrlAtom = atom((get) => {
 });
 
 const TOKEN_KEY = 'BOLUO_TOKEN_V1';
+const FARO_SESSION_ID_HEADER = 'X-Faro-Session-ID';
+const MAX_FARO_SESSION_ID_LENGTH = 128;
+
+let faroSessionIdProvider: (() => string | null | undefined) | undefined;
+
+export function setFaroSessionIdProvider(
+  provider: (() => string | null | undefined) | undefined,
+): void {
+  faroSessionIdProvider = provider;
+}
+
+export function withFaroSessionId(params: RequestInit = {}): RequestInit {
+  const headers = new Headers(params.headers || {});
+  const faroSessionId = faroSessionIdProvider?.();
+  if (faroSessionId && faroSessionId.length <= MAX_FARO_SESSION_ID_LENGTH) {
+    headers.set(FARO_SESSION_ID_HEADER, faroSessionId);
+  }
+  return { ...params, headers };
+}
 
 export function getToken(): string | null {
   return localStorage.getItem(TOKEN_KEY) || null;
@@ -50,7 +69,8 @@ export function clearToken(): void {
 }
 
 function addToken(params: RequestInit): RequestInit {
-  const headers = new Headers(params.headers || {});
+  const paramsWithSession = withFaroSessionId(params);
+  const headers = new Headers(paramsWithSession.headers);
   if (isCrossOrigin()) {
     headers.set('X-Debug', '1');
   }
@@ -59,7 +79,7 @@ function addToken(params: RequestInit): RequestInit {
     headers.set('Authorization', token);
   }
   // headers.set('Authorization', `Bearer ${token}`);
-  return { ...params, headers };
+  return { ...paramsWithSession, headers };
 }
 
 export function setToken(token: unknown): void {

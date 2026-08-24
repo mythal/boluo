@@ -7,6 +7,7 @@ import { TextArea } from '@boluo/ui/TextInput';
 import { useSettings } from '../../hooks/useSettings';
 import { useMutateSettings } from '@boluo/hooks/useMutateSettings';
 import type { Settings } from '@boluo/settings';
+import { neverMind } from '@boluo/utils/function';
 
 const normalizeSettings = (settings: Settings) => {
   const css = settings.customThemeCss ?? '';
@@ -38,7 +39,7 @@ export const CustomThemeOverridesField: FC = () => {
     setEnabled(nextEnabled);
     void updateSettings(payload, {
       optimisticData: (current) => ({ ...(current ?? {}), ...payload }),
-    });
+    }).catch(neverMind);
   };
 
   return (

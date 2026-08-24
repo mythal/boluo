@@ -16,6 +16,7 @@ import { ErrorMessageBox } from '@boluo/ui/ErrorMessageBox';
 import { TextInput } from '@boluo/ui/TextInput';
 import { type StyleProps } from '@boluo/types';
 import { required } from '@boluo/common/validations';
+import { reportApiError } from '../error';
 
 // https://web.dev/sign-in-form-best-practices/
 
@@ -147,6 +148,7 @@ export const LoginForm: FC<Props> = () => {
   const onSubmit: SubmitHandler<Inputs> = async ({ password, username }) => {
     const result = await post('/users/login', null, { password, username });
     if (result.isErr) {
+      reportApiError(result.err, { requestPath: '/users/login', source: 'login-form' });
       return setError(result.err);
     }
     setError(null);

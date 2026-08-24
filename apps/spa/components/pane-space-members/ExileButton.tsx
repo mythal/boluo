@@ -13,6 +13,7 @@ import { FormattedMessage } from 'react-intl';
 import useSWRMutation from 'swr/mutation';
 import { Button } from '@boluo/ui/Button';
 import Icon from '@boluo/ui/Icon';
+import { neverMind } from '@boluo/utils/function';
 import { FloatingBox } from '@boluo/ui/FloatingBox';
 import { useFloatingSetters } from '@boluo/ui/hooks/useFloatingSetters';
 import { InListButton } from './InListButton';
@@ -42,7 +43,11 @@ const ExileConfirm: FC<Props> = ({ spaceId, userId }) => {
         <FormattedMessage defaultMessage="Are you sure you want to exile this member?" />
       </div>
       <div className="pt-2 text-right">
-        <Button variant="danger" disabled={isMutating} onClick={() => void exile()}>
+        <Button
+          variant="danger"
+          disabled={isMutating}
+          onClick={() => void exile().catch(neverMind)}
+        >
           <FormattedMessage defaultMessage="Exile" />
         </Button>
       </div>

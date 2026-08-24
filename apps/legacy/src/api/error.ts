@@ -114,7 +114,6 @@ export const errorText = (raw: AppError): ErrorText => {
     case BAD_REQUEST:
       return { description: '请求格式错误', detail: raw.message, raw };
     default:
-      console.warn(raw);
       return { description: '发生了一个未处理的错误', detail: raw.message, raw };
   }
 };

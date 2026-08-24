@@ -13,6 +13,7 @@ import { TextArea, TextInput } from '@boluo/ui/TextInput';
 import { required, spaceName } from '@boluo/common/validations';
 import { DiceSelect } from '@boluo/ui/DiceSelect';
 import { explainError } from '@boluo/locale/errors';
+import { reportApiError } from '../error';
 
 const FormErrorDispay: FC<{ error: ApiError; intl: IntlShape }> = ({ intl, error }) => {
   return <div className="text-state-danger-text my-1">{explainError(intl, error)}</div>;
@@ -137,6 +138,7 @@ export const CreateSpaceForm: FC = () => {
   const onSubmit: SubmitHandler<CreateSpace> = async (params) => {
     const result = await post('/spaces/create', null, params);
     if (result.isErr) {
+      reportApiError(result.err, { requestPath: '/spaces/create', source: 'create-space-form' });
       setError(result.err);
       return;
     }

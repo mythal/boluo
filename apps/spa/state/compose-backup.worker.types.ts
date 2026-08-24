@@ -12,4 +12,9 @@ export type ComposeBackupWorkerRequest =
 
 export type ComposeBackupWorkerResponse =
   | { type: 'updated'; channelId: string }
-  | { type: 'listResult'; channelId: string; requestId: number; drafts: ComposeDraftEntry[] };
+  | { type: 'listResult'; channelId: string; requestId: number; drafts: ComposeDraftEntry[] }
+  | {
+      type: 'error';
+      operation: 'load' | 'persist' | 'list';
+      message: string;
+    };

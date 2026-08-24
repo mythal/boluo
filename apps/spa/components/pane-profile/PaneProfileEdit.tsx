@@ -6,6 +6,7 @@ import { FormattedMessage } from 'react-intl';
 import { useSWRConfig } from 'swr';
 import useSWRMutation from 'swr/mutation';
 import { Button } from '@boluo/ui/Button';
+import { neverMind } from '@boluo/utils/function';
 import { upload } from '../../media';
 import { ErrorDisplay } from '../ErrorDisplay';
 import { PaneFooterBox } from '../PaneFooterBox';
@@ -65,7 +66,9 @@ export const PaneProfileEdit: FC<Props> = ({ me, onSuccess }) => {
       },
     },
   );
-  const handleFormSubmit = form.handleSubmit((formData) => void editUser(formData));
+  const handleFormSubmit = form.handleSubmit(
+    (formData) => void editUser(formData).catch(neverMind),
+  );
   const disabled = !form.formState.isDirty || isMutating;
   return (
     <FormProvider {...form}>

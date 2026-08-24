@@ -25,7 +25,6 @@ export class Err<E> {
   }
 
   expect(msg: string): never {
-    console.error(this.value);
     throw new UnwrapError(msg);
   }
 

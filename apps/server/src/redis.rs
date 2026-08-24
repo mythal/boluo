@@ -5,7 +5,7 @@ use crate::utils::not_whitespace_only;
 
 /// Get redis database connection.
 pub async fn connect(redis_url: Option<&str>) -> Option<redis::aio::ConnectionManager> {
-    let Some(redis_url) = redis_url.filter(|url| not_whitespace_only(url)) else {
+    let Some(redis_url) = redis_url.filter(not_whitespace_only) else {
         tracing::warn!(
             event = "redis.configuration.url_missing",
             "REDIS_URL not set, disabling redis"

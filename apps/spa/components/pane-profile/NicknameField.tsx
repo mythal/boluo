@@ -2,6 +2,7 @@ import { type FC } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { useIntl } from 'react-intl';
 import { TextInput } from '@boluo/ui/TextInput';
+import { nickname as nicknameValidation } from '@boluo/common/validations';
 import { type ProfileEditSchema } from './PaneProfileEdit';
 
 interface Props {
@@ -18,9 +19,7 @@ export const NicknameField: FC<Props> = ({ nickname }) => {
     <div className="">
       <TextInput
         defaultValue={nickname}
-        {...register('nickname', {
-          required: intl.formatMessage({ defaultMessage: "Can't be empty." }),
-        })}
+        {...register('nickname', nicknameValidation(intl))}
         className="max-w-full"
       ></TextInput>
 

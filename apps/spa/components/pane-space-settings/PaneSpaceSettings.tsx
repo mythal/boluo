@@ -8,6 +8,7 @@ import { FormProvider, useController, useForm, useFormContext, useWatch } from '
 import { FormattedMessage } from 'react-intl';
 import type { MutationFetcher } from 'swr/mutation';
 import useSWRMutation from 'swr/mutation';
+import { neverMind } from '@boluo/utils/function';
 import { Button } from '@boluo/ui/Button';
 import { HelpText } from '@boluo/ui/HelpText';
 import { Loading } from '@boluo/ui/Loading';
@@ -223,7 +224,12 @@ const PaneSpaceSettingsForm: FC<{ space: Space }> = ({ space }) => {
 
   const onSubmit = async ({ publicity, ...rest }: FormSchema): Promise<void> => {
     const isPublic = publicity === 'public';
-    const space = await editSpace({ isPublic, ...rest, grantAdmins: [], removeAdmins: [] });
+    const space = await editSpace({
+      isPublic,
+      ...rest,
+      grantAdmins: [],
+      removeAdmins: [],
+    }).catch(neverMind);
     if (space) {
       form.reset(spaceToForm(space));
     }

@@ -5,6 +5,7 @@ import { isApple } from '@boluo/utils/browser';
 import { useSettings } from '../../hooks/useSettings';
 import { SelectBox } from '@boluo/ui/SelectBox';
 import { useMutateSettings } from '@boluo/hooks/useMutateSettings';
+import { neverMind } from '@boluo/utils/function';
 
 export const EneterSendField: FC = () => {
   const { trigger: updateSettings } = useMutateSettings();
@@ -17,10 +18,10 @@ export const EneterSendField: FC = () => {
     );
   const useCommand = isApple();
   const setEnterSend = () => {
-    if (!enterSend) void handleChange(true);
+    if (!enterSend) void handleChange(true).catch(neverMind);
   };
   const setCtrlEnterSend = () => {
-    if (enterSend) void handleChange(false);
+    if (enterSend) void handleChange(false).catch(neverMind);
   };
   return (
     <div className="flex flex-col gap-2">

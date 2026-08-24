@@ -3,6 +3,8 @@ import { isCrossOrigin } from '../settings';
 import store from '../store';
 import { Err, Ok, type Result } from '../utils/result';
 import { getAuthToken, clearAuthToken } from '../utils/token';
+import { withFaroSessionId } from '../frontend-telemetry';
+import { isAppError, reportApiError } from '../error-reporting';
 import type {
   IdQuery,
   IdWithToken,
@@ -27,7 +29,7 @@ import {
   type Export,
   type JoinChannel,
 } from './channels';
-import { type AppError, FETCH_FAIL, notJson, UNAUTHENTICATED } from './error';
+import { type AppError, FETCH_FAIL, notJson, UNAUTHENTICATED, UNEXPECTED } from './error';
 import { type Media, type PreSign, type PreSignResult } from './media';
 import {
   type ByChannel,
@@ -89,9 +91,22 @@ export const request = async <T>(
   body: RequestInit['body'],
   contentType = 'application/json',
 ): Promise<AppResult<T>> => {
-  const headers = new Headers({
-    'Content-Type': contentType,
-  });
+  const requestPath = (() => {
+    try {
+      return new URL(path, location.origin).pathname.replace(/^\/api(?=\/|$)/, '') || '/';
+    } catch {
+      return 'unknown';
+    }
+  })();
+  const failed = (error: AppError): AppResult<T> => {
+    reportApiError(error, { requestPath, source: 'api-request' });
+    return new Err(error);
+  };
+  const headers = new Headers(
+    withFaroSessionId({
+      headers: { 'Content-Type': contentType },
+    }).headers,
+  );
   if (isCrossOrigin) {
     headers.append('X-Debug', '1');
   }
@@ -110,7 +125,7 @@ export const request = async <T>(
       credentials: token ? 'omit' : 'include',
     });
   } catch (e) {
-    return new Err({
+    return failed({
       code: FETCH_FAIL,
       message: e instanceof Error ? e.message : 'Unknown error',
       context: null,
@@ -120,9 +135,36 @@ export const request = async <T>(
   try {
     resultJson = await result.json();
   } catch (e) {
-    return new Err(notJson);
+    return failed(notJson);
+  }
+  if (typeof resultJson !== 'object' || resultJson == null || !('isOk' in resultJson)) {
+    return failed({
+      code: UNEXPECTED,
+      message: 'The API response has an invalid shape',
+      context: null,
+    });
+  }
+  if (resultJson.isOk === true && !('ok' in resultJson)) {
+    return failed({
+      code: UNEXPECTED,
+      message: 'The API response has no result value',
+      context: null,
+    });
+  }
+  if (
+    resultJson.isOk !== true &&
+    (resultJson.isOk !== false || !('err' in resultJson) || !isAppError(resultJson.err))
+  ) {
+    return failed({
+      code: UNEXPECTED,
+      message: 'The API response has an invalid result',
+      context: null,
+    });
   }
   const appResult = toResult<T, AppError>(resultJson as ApiOk<T> | ApiErr<AppError>);
+  if (appResult.isErr) {
+    reportApiError(appResult.value, { requestPath, source: 'api-request' });
+  }
   if (appResult.isErr && appResult.value.code === UNAUTHENTICATED) {
     if (token) {
       clearAuthToken();
@@ -342,13 +384,28 @@ export function mediaUrl(id: string, download = false, addBaseUrl = true): strin
   return makeUri('/media/get', { download, id }, addBaseUrl);
 }
 
-export function mediaHead(id: string): Promise<Response> {
+export async function mediaHead(id: string): Promise<Response> {
   // https://stackoverflow.com/a/75115203
-  return fetch(makeUri('/media/get', { id }), {
-    method: 'HEAD',
-    mode: 'cors',
-    cache: 'no-store',
-  });
+  try {
+    return await fetch(
+      makeUri('/media/get', { id }),
+      withFaroSessionId({
+        method: 'HEAD',
+        mode: 'cors',
+        cache: 'no-store',
+      }),
+    );
+  } catch (cause) {
+    reportApiError(
+      {
+        code: FETCH_FAIL,
+        message: cause instanceof Error ? cause.message : 'Media HEAD request failed',
+        context: null,
+      },
+      { requestPath: '/media/get', source: 'media-head' },
+    );
+    throw cause;
+  }
 }
 
 export async function uploadWithPresigned(
@@ -378,19 +435,23 @@ export async function uploadWithPresigned(
     });
 
     if (!uploadResponse.ok) {
-      return new Err({
+      const error: AppError = {
         code: FETCH_FAIL,
         message: `S3 upload failed: ${uploadResponse.status} ${uploadResponse.statusText}`,
         context: null,
-      });
+      };
+      reportApiError(error, { requestPath: 'external-media-upload', source: 'media-upload' });
+      return new Err(error);
     }
 
     return new Ok({ mediaId });
   } catch (e) {
-    return new Err({
+    const error: AppError = {
       code: FETCH_FAIL,
       message: e instanceof Error ? e.message : 'S3 upload failed',
       context: null,
-    });
+    };
+    reportApiError(error, { requestPath: 'external-media-upload', source: 'media-upload' });
+    return new Err(error);
   }
 }

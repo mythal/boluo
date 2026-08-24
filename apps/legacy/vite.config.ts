@@ -13,6 +13,11 @@ dotenv.config({
 });
 
 export default defineConfig({
+  define: {
+    'import.meta.env.APP_VERSION': JSON.stringify(
+      process.env.APP_VERSION ?? process.env.GITHUB_SHA ?? 'unknown',
+    ),
+  },
   plugins: [
     react({
       jsxImportSource: '@emotion/react',

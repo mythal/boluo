@@ -6,12 +6,28 @@ import { App } from './components/App';
 import { store } from './store';
 import { baseStyle } from './styles/atoms';
 import { getRoot } from './utils/browser';
+import { initializeFrontendTelemetry, setTelemetryUser } from './frontend-telemetry';
+import { getDefaultBaseUrl } from './base-url';
+import PageError from './components/molecules/PageError';
+
+initializeFrontendTelemetry(getDefaultBaseUrl());
+
+let telemetryUserId: string | undefined;
+store.subscribe(() => {
+  const nextUserId = store.getState().profile?.user.id;
+  if (nextUserId !== telemetryUserId) {
+    telemetryUserId = nextUserId;
+    setTelemetryUser(nextUserId);
+  }
+});
 
 const root = createRoot(getRoot());
 root.render(
   <Provider store={store}>
-    <Sprite />
-    <Global styles={baseStyle} />
-    <App />
+    <PageError>
+      <Sprite />
+      <Global styles={baseStyle} />
+      <App />
+    </PageError>
   </Provider>,
 );

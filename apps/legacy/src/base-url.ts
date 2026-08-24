@@ -1,5 +1,6 @@
 import { getRouteScore, getAllRouteStats } from './hooks/useBaseUrlMovingAverage';
 import { originMap } from '@boluo/api/origin-map';
+import { withFaroSessionId } from './frontend-telemetry';
 
 export interface Proxy {
   name: string;
@@ -12,8 +13,14 @@ export const getBaseUrlList = async (): Promise<string[]> => {
   if (urlListCache.length > 0) {
     return urlListCache;
   }
-  const response = await fetch(`${getDefaultBaseUrl()}/api/info/proxies`);
-  const proxies = (await response.json()) as Proxy[];
+  let proxies: Proxy[];
+  try {
+    const response = await fetch(`${getDefaultBaseUrl()}/api/info/proxies`, withFaroSessionId());
+    if (!response.ok) return [getDefaultBaseUrl()];
+    proxies = (await response.json()) as Proxy[];
+  } catch {
+    return [getDefaultBaseUrl()];
+  }
   const urls = [
     getDefaultBaseUrl(),
     ...proxies.map((proxy) => {
@@ -38,7 +45,6 @@ export const getDefaultBaseUrl = (): string => {
       return value;
     }
   }
-  console.warn('Unknown origin, using location.origin', origin);
   return origin;
 };
 
@@ -53,7 +59,10 @@ const timeout = (ms: number): Promise<'TIMEOUT'> => {
 const testBaseUrl = async (baseUrl: string): Promise<number> => {
   const start = performance.now();
   try {
-    const response = await Promise.race([fetch(baseUrl + '/api/info'), timeout(1000)]);
+    const response = await Promise.race([
+      fetch(baseUrl + '/api/info', withFaroSessionId()),
+      timeout(1000),
+    ]);
     if (response === 'TIMEOUT') {
       return FAILED;
     }
@@ -94,7 +103,6 @@ export const selectBestBaseUrl = async (block?: string): Promise<string> => {
 
   // If best route score is too high (>3000ms), fallback to real-time measurement
   if (bestScore > 3000) {
-    console.warn('All route moving average scores too high, falling back to real-time measurement');
     const responseMsList = await Promise.all(list.map((url) => testBaseUrl(url)));
     let bestIndex = 0;
     let bestMs = responseMsList[0];
@@ -108,6 +116,5 @@ export const selectBestBaseUrl = async (block?: string): Promise<string> => {
     return list[bestIndex];
   }
 
-  console.log(`Final selection: ${bestUrl} (Score: ${bestScore.toFixed(0)})`);
   return bestUrl;
 };

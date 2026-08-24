@@ -133,7 +133,7 @@ impl Character {
         .execute(&mut **db)
         .await
         .map_err(ModelError::from)?;
-        insert_character_identifiers(&mut **db, space_id, character_id, &key, &aliases).await?;
+        insert_character_identifiers(db, space_id, character_id, &key, &aliases).await?;
         Self::get_by_id(&mut **db, &character_id)
             .await?
             .ok_or(ModelError::NotFound("Character"))
@@ -247,8 +247,7 @@ impl Character {
         let Some(target) = target else {
             return Ok(None);
         };
-        replace_character_identifiers(&mut **db, target.space_id, *character_id, &key, &aliases)
-            .await?;
+        replace_character_identifiers(db, target.space_id, *character_id, &key, &aliases).await?;
         Self::get_by_id(&mut **db, character_id)
             .await
             .map_err(Into::into)

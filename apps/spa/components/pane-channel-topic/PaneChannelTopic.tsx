@@ -15,6 +15,7 @@ import { ErrorDisplay } from '../ErrorDisplay';
 import { useQueryChannel } from '@boluo/hooks/useQueryChannel';
 import { usePaneClose } from '../../hooks/usePaneClose';
 import { Failed } from '@boluo/ui/Failed';
+import { neverMind } from '@boluo/utils/function';
 
 interface ChannelTopicForm {
   topic: string;
@@ -55,7 +56,8 @@ const PaneChannelTopicForm: FC<{ channel: Channel }> = ({ channel }) => {
   );
 
   const onSubmit: SubmitHandler<ChannelTopicForm> = async (data) => {
-    await trigger(data);
+    const channel = await trigger(data).catch(neverMind);
+    if (channel == null) return;
     closePane();
   };
 

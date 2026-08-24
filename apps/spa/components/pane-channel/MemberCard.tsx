@@ -20,6 +20,7 @@ import { Badge } from '@boluo/ui/Badge';
 import { Button } from '@boluo/ui/Button';
 import Icon from '@boluo/ui/Icon';
 import { Avatar } from '@boluo/ui/users/Avatar';
+import { neverMind } from '@boluo/utils/function';
 import { FloatingBox } from '@boluo/ui/FloatingBox';
 import { useQueryAppSettings } from '@boluo/hooks/useQueryAppSettings';
 
@@ -46,7 +47,7 @@ const EditMasterCheckBox: FC<{ channelMember: ChannelMember }> = ({ channelMembe
       <input
         type="checkbox"
         checked={channelMember.isMaster}
-        onChange={() => void edit()}
+        onChange={() => void edit().catch(neverMind)}
         disabled={isEditing}
       />
       <span className="space-x-1">
@@ -76,7 +77,7 @@ const InviteButton: FC<{ userId: string; channelId: string }> = ({ userId, chann
     },
   );
   return (
-    <Button small disabled={isInviting} onClick={() => void invite()}>
+    <Button small disabled={isInviting} onClick={() => void invite().catch(neverMind)}>
       <Icon icon={UserPlus} />
       <FormattedMessage defaultMessage="Invite" />
     </Button>
@@ -111,7 +112,12 @@ const ConfirmLeave: FC<{ channelId: string; channelName: string; dismiss: () => 
         <Button small className="mx-1" onClick={dismiss}>
           <FormattedMessage defaultMessage="Cancel" />
         </Button>
-        <Button small variant="danger" disabled={isKicking} onClick={() => void kick()}>
+        <Button
+          small
+          variant="danger"
+          disabled={isKicking}
+          onClick={() => void kick().catch(neverMind)}
+        >
           <FormattedMessage defaultMessage="Leave" />
         </Button>
       </div>
@@ -151,7 +157,12 @@ const ConfirmKick: FC<{
         <Button small className="mx-1" onClick={dismiss}>
           <FormattedMessage defaultMessage="Cancel" />
         </Button>
-        <Button small variant="danger" disabled={isKicking} onClick={() => void kick()}>
+        <Button
+          small
+          variant="danger"
+          disabled={isKicking}
+          onClick={() => void kick().catch(neverMind)}
+        >
           <FormattedMessage defaultMessage="Yes, Kick" />
         </Button>
       </div>

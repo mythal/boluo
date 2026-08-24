@@ -13,13 +13,11 @@ export class Err<E> {
     return null;
   }
 
-  expect(msg: string): never {
-    console.error(msg);
+  expect(_msg: string): never {
     throw this.err;
   }
 
   unwrap(): never {
-    console.error('Unhandled error', this.err);
     throw this.err;
   }
 

@@ -6,9 +6,10 @@ import { SWRConfig, type SWRConfiguration } from 'swr';
 import type { IntlMessages } from '@boluo/locale';
 import { IntlProvider, type ResolvedIntlConfig, ReactIntlErrorCode } from 'react-intl';
 import { ChangeLocaleContext } from '@boluo/hooks/useLocale';
-import { captureException, recordWarn } from '../error';
+import { recordWarn } from '../error';
 import { isApiError } from '@boluo/api';
 import type { Locale } from '@boluo/types';
+import { reportSwrError } from '../swr-error';
 
 interface Props {
   lang: Locale;
@@ -16,22 +17,13 @@ interface Props {
   messages: IntlMessages;
 }
 
-const onError = (error: unknown) => {
-  if (isApiError(error)) {
-    switch (error.code) {
-      case 'UNAUTHENTICATED':
-      case 'NOT_FOUND':
-      case 'NO_PERMISSION':
-      case 'FETCH_FAIL':
-        return;
-    }
-  }
-  captureException(error);
-};
+const expectedApiErrorCodes = new Set(['UNAUTHENTICATED', 'NOT_FOUND', 'NO_PERMISSION']);
 
 const swrConfig: SWRConfiguration = {
   refreshInterval: 60000,
-  onError,
+  onError: reportSwrError,
+  shouldRetryOnError: (error: unknown) =>
+    !isApiError(error) || !expectedApiErrorCodes.has(error.code),
 };
 
 export function ClientProviders({ children, lang, messages }: Props) {

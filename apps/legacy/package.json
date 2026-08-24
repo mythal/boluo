@@ -11,6 +11,7 @@
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@hello-pangea/dnd": "^18.0.1",
+    "@grafana/faro-web-sdk": "^2.10.0",
     "@redux-devtools/extension": "^4.0.0",
     "dotenv": "^17.4.2",
     "immutable": "^5.1.9",

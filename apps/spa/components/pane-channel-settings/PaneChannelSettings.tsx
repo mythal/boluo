@@ -24,6 +24,7 @@ import { TopicField } from './TopicField';
 import { Failed } from '@boluo/ui/Failed';
 import { ChannelTypeField } from '../pane-create-channel/ChannelTypeField';
 import { IsArchivedField } from './IsArchivedField';
+import { neverMind } from '@boluo/utils/function';
 
 const channelToInitialValues = (channel: Channel): ChannelSettingsForm => ({
   name: channel.name,
@@ -75,7 +76,8 @@ const PaneChannelSettingsForm: FC<{ channel: Channel }> = ({ channel }) => {
   );
 
   const onSubmit: SubmitHandler<ChannelSettingsForm> = async (data) => {
-    await trigger(data);
+    const channel = await trigger(data).catch(neverMind);
+    if (channel == null) return;
     closePane();
   };
 

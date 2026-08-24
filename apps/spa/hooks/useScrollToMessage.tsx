@@ -7,6 +7,7 @@ import { chatAtom } from '../state/chat.atoms';
 import { type ChatItem } from '../state/channel.types';
 import { head } from 'list';
 import { useSetBanner } from './useBanner';
+import { recordWarn } from '../error';
 
 const LOAD_MESSAGE_LIMIT = 51;
 const HIGHLIGHT_DURATION = 3000;
@@ -181,7 +182,10 @@ export const useScrollToMessage = ({
         });
 
         if (result.isErr) {
-          console.error('Failed to load messages:', result.err);
+          recordWarn('Failed to load messages while scrolling', {
+            channelId,
+            error: result.err,
+          });
           setScrollToMessage(null);
           isLoadingRef.current = false;
           return;

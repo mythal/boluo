@@ -487,7 +487,6 @@ fn components_from_rows(
 ) -> BTreeMap<CompactString, EntryComponent> {
     rows.into_iter()
         .filter_map(|row| row.into_response(entry_id))
-        .map(|(component_type, component)| (component_type, component))
         .collect()
 }
 

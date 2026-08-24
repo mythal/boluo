@@ -8,7 +8,6 @@ use crate::media::models::MediaFile;
 use crate::rate_limit;
 use crate::utils::id;
 use governor::{DefaultKeyedRateLimiter, RateLimiter};
-use http_body_util::BodyExt;
 use hyper::body::{Body, Incoming};
 use hyper::header::{self, HeaderValue};
 use hyper::{Request, Uri};
@@ -94,7 +93,12 @@ pub async fn upload(
     let mime_type = mime_type.unwrap_or_default();
 
     check_size(size, max_size)?;
-    let body = req.into_body();
+    let body = crate::interface::read_body_limited(req, max_size).await?;
+    if body.len() != size {
+        return Err(
+            ValidationFailed("Uploaded file size does not match the declared size.").into(),
+        );
+    }
     put_object(
         storage,
         &id.as_hyphenated().to_string(),
@@ -168,16 +172,10 @@ async fn get(
 async fn put_object(
     storage: &crate::s3::Storage,
     key: &str,
-    body: hyper::body::Incoming,
+    body: bytes::Bytes,
     content_type: &str,
     content_length: i32,
 ) -> Result<(), AppError> {
-    let bytes = body
-        .collect()
-        .await
-        .map_err(error_unexpected!("Failed to read request body"))?
-        .to_bytes();
-
     let mut action = storage
         .bucket()
         .put_object(Some(storage.credentials()), key);
@@ -189,7 +187,7 @@ async fn put_object(
         .put(url.as_str())
         .header("content-type", content_type)
         .header("content-length", content_length)
-        .body(bytes)
+        .body(body)
         .send()
         .await
         .map_err(error_unexpected!("Failed to upload object"))?;

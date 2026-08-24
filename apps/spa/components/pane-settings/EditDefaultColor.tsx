@@ -5,6 +5,7 @@ import { FormattedMessage } from 'react-intl';
 import useSWRMutation from 'swr/mutation';
 import { post } from '@boluo/api-browser';
 import { mutate } from 'swr';
+import { neverMind } from '@boluo/utils/function';
 import { ColorEditor } from '../ColorEditor';
 import { classifyLightOrDark } from '@boluo/theme';
 import { useResolvedTheme } from '../../hooks/useResolvedTheme';
@@ -48,7 +49,7 @@ export const EditDefaultColor: FC<{ currentUser: User }> = ({ currentUser }) => 
           computeColors(currentUser.id, parseGameColor(normalizedColor))[lightOrDark],
       );
       if (normalizedColor !== currentUser.defaultColor) {
-        void trigger(normalizedColor);
+        void trigger(normalizedColor).catch(neverMind);
       }
     },
     [currentUser.defaultColor, currentUser.id, lightOrDark, normalizeColor, trigger],

@@ -12,6 +12,7 @@ import { useMutateVerifyEmail } from '@boluo/hooks/useMutateVerifyEmail';
 import type { ResendEmailVerificationResult, User } from '@boluo/api';
 import { useQueryIsEmailVerified } from '@boluo/hooks/useQueryIsEmailVerified';
 import Link from 'next/link';
+import { reportApiError } from '../../../../../error';
 
 const useSendVerificationEmail = (): SWRMutationResponse<
   ResendEmailVerificationResult,
@@ -24,6 +25,14 @@ const useSendVerificationEmail = (): SWRMutationResponse<
     async ([path, lang]) => {
       const result = await post(path, null, { lang });
       return result.unwrap();
+    },
+    {
+      onError: (error) => {
+        reportApiError(error, {
+          requestPath: '/users/resend_email_verification',
+          source: 'resend-verification-email',
+        });
+      },
     },
   );
 };
@@ -43,6 +52,12 @@ export function VerifyEmailContent({
     error: verifyError,
     data: verifyResult,
   } = useMutateVerifyEmail(token, {
+    onError: (error) => {
+      reportApiError(error, {
+        requestPath: '/users/verify_email',
+        source: 'verify-email',
+      });
+    },
     onSuccess: () => {
       setTimeout(() => {
         if (currentUser) {

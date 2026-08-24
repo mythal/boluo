@@ -2,7 +2,10 @@ use ahash::RandomState;
 use papaya::HashMap as PapayaHashMap;
 use std::{
     collections::BTreeMap,
-    sync::{Arc, LazyLock},
+    sync::{
+        Arc, LazyLock,
+        atomic::{AtomicUsize, Ordering},
+    },
     time::{Duration, Instant},
 };
 use tokio::sync::{
@@ -326,14 +329,20 @@ struct ChannelPosActor {
     channel_id: Uuid,
     state: ChannelPosState,
     receiver: mpsc::Receiver<PosAction>,
+    entry_count: PositionEntryCount,
 }
 
 impl ChannelPosActor {
-    fn new(channel_id: Uuid, receiver: mpsc::Receiver<PosAction>) -> Self {
+    fn new(
+        channel_id: Uuid,
+        receiver: mpsc::Receiver<PosAction>,
+        total_entries: Arc<AtomicUsize>,
+    ) -> Self {
         Self {
             channel_id,
             state: ChannelPosState::new(),
             receiver,
+            entry_count: PositionEntryCount::new(total_entries),
         }
     }
 
@@ -433,6 +442,7 @@ impl ChannelPosActor {
                     positions_len_histogram.record(self.state.positions.len() as f64);
                 }
             }
+            self.entry_count.update(self.state.positions.len());
             let elapsed = start.elapsed();
             action_duration_histogram.record(elapsed.as_millis() as f64);
             if elapsed > std::time::Duration::from_millis(8) {
@@ -446,6 +456,38 @@ impl ChannelPosActor {
         }
 
         tracing::info!("Channel pos actor shutdown");
+    }
+}
+
+struct PositionEntryCount {
+    total: Arc<AtomicUsize>,
+    current: usize,
+}
+
+impl PositionEntryCount {
+    fn new(total: Arc<AtomicUsize>) -> Self {
+        Self { total, current: 0 }
+    }
+
+    fn update(&mut self, current: usize) {
+        match current.cmp(&self.current) {
+            std::cmp::Ordering::Greater => {
+                self.total
+                    .fetch_add(current - self.current, Ordering::Relaxed);
+            }
+            std::cmp::Ordering::Less => {
+                self.total
+                    .fetch_sub(self.current - current, Ordering::Relaxed);
+            }
+            std::cmp::Ordering::Equal => {}
+        }
+        self.current = current;
+    }
+}
+
+impl Drop for PositionEntryCount {
+    fn drop(&mut self) {
+        self.total.fetch_sub(self.current, Ordering::Relaxed);
     }
 }
 
@@ -722,6 +764,7 @@ impl ChannelPosHandle {
 
 pub(crate) struct ChannelPosManager {
     actors: PapayaHashMap<Uuid, ChannelPosHandle, RandomState>,
+    state_entries: Arc<AtomicUsize>,
 }
 
 impl ChannelPosManager {
@@ -731,6 +774,7 @@ impl ChannelPosManager {
                 .capacity(1024)
                 .hasher(RandomState::new())
                 .build(),
+            state_entries: Arc::new(AtomicUsize::new(0)),
         };
         let span = tracing::info_span!(parent: None, "channel_pos_manager_tick");
         tokio::spawn(
@@ -755,11 +799,12 @@ impl ChannelPosManager {
                 }
             }
             let (sender, receiver) = mpsc::channel(256);
+            let state_entries = Arc::clone(&self.state_entries);
             let span =
                 tracing::info_span!(parent: None, "channel_pos_actor", channel_id = %channel_id);
             tokio::spawn(
                 async move {
-                    let actor = ChannelPosActor::new(channel_id, receiver);
+                    let actor = ChannelPosActor::new(channel_id, receiver, state_entries);
                     actor.run().await;
                 }
                 .instrument(span),
@@ -814,6 +859,10 @@ impl ChannelPosManager {
 
     pub(crate) fn actor_count(&self) -> usize {
         self.actors.pin().len()
+    }
+
+    pub(crate) fn state_entry_count(&self) -> usize {
+        self.state_entries.load(Ordering::Relaxed)
     }
 }
 
@@ -982,6 +1031,26 @@ pub fn find_intermediate(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn position_entry_count_tracks_updates_and_actor_drop() {
+        let total = Arc::new(AtomicUsize::new(0));
+        let mut first = PositionEntryCount::new(Arc::clone(&total));
+        first.update(3);
+        assert_eq!(total.load(Ordering::Relaxed), 3);
+
+        {
+            let mut second = PositionEntryCount::new(Arc::clone(&total));
+            second.update(2);
+            assert_eq!(total.load(Ordering::Relaxed), 5);
+            first.update(1);
+            assert_eq!(total.load(Ordering::Relaxed), 3);
+        }
+
+        assert_eq!(total.load(Ordering::Relaxed), 1);
+        drop(first);
+        assert_eq!(total.load(Ordering::Relaxed), 0);
+    }
 
     #[test]
     fn test_neighbors_1_3_1_2() {

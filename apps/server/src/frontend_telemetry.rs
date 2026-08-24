@@ -253,6 +253,30 @@ fn process(payload: FaroPayload) -> Result<(), AppError> {
                     .unwrap_or(""),
                 128
             ),
+            frontend_source = truncated(
+                exception
+                    .context
+                    .get("source")
+                    .map(String::as_str)
+                    .unwrap_or(""),
+                64
+            ),
+            frontend_request_path = truncated(
+                exception
+                    .context
+                    .get("request_path")
+                    .map(String::as_str)
+                    .unwrap_or(""),
+                256
+            ),
+            api_error_code = truncated(
+                exception
+                    .context
+                    .get("api_error_code")
+                    .map(String::as_str)
+                    .unwrap_or(""),
+                64
+            ),
             component_stack = truncated(
                 exception
                     .context

@@ -1,7 +1,6 @@
 import { apiUrlAtom } from '@boluo/api-browser';
 import { store } from '@boluo/store';
 import {
-  ConsoleInstrumentation,
   ErrorsInstrumentation,
   FetchTransport,
   LogLevel,
@@ -60,15 +59,11 @@ export function initializeFrontendTelemetry(): void {
       }
       return item;
     },
-    consoleInstrumentation: {
-      disabledLevels: [LogLevel.DEBUG, LogLevel.TRACE, LogLevel.LOG, LogLevel.INFO],
-    },
     ignoreUrls: [/\/api\/telemetry(?:[/?#]|$)/],
     instrumentations: [
       new ErrorsInstrumentation(),
       new WebVitalsInstrumentation(),
       new SessionInstrumentation(),
-      new ConsoleInstrumentation(),
     ],
     sessionTracking: {
       enabled: true,

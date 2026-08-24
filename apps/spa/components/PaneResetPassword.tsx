@@ -12,6 +12,7 @@ import { PaneBox } from './PaneBox';
 import { PaneHeaderBox } from './PaneHeaderBox';
 import { usePaneReplace } from '../hooks/usePaneReplace';
 import { paneHref } from '../href';
+import { recordError } from '../error';
 
 type PageState = 'FORM' | 'SUCCESS' | 'NOT_FOUND' | 'UNKNOWN_ERROR';
 
@@ -48,7 +49,7 @@ export const PaneResetPassword: FC = () => {
             setPageState('NOT_FOUND');
             return;
           }
-          console.warn(result.err);
+          recordError('Failed to request password reset', { error: result.err });
           setPageState('UNKNOWN_ERROR');
           return;
         }

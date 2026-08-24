@@ -16,7 +16,15 @@ interface Props {
   messages: IntlMessages;
 }
 
-const onError = (error: unknown) => {
+const expectedApiErrorCodes = new Set(['UNAUTHENTICATED', 'NOT_FOUND', 'NO_PERMISSION']);
+
+const requestPathFromKey = (key: unknown): string => {
+  if (typeof key === 'string') return key;
+  if (Array.isArray(key) && typeof key[0] === 'string') return key[0];
+  return 'unknown';
+};
+
+const onError: NonNullable<SWRConfiguration['onError']> = (error: unknown, key: unknown) => {
   if (isApiError(error)) {
     switch (error.code) {
       case 'UNAUTHENTICATED':
@@ -26,12 +34,20 @@ const onError = (error: unknown) => {
         return;
     }
   }
-  captureException(error);
+  captureException(error, {
+    context: {
+      source: 'swr',
+      request_path: requestPathFromKey(key),
+      ...(isApiError(error) ? { api_error_code: error.code } : {}),
+    },
+  });
 };
 
 const swrConfig: SWRConfiguration = {
   refreshInterval: 60000,
   onError,
+  shouldRetryOnError: (error: unknown) =>
+    !isApiError(error) || !expectedApiErrorCodes.has(error.code),
 };
 
 export function ClientProviders({ children, lang, messages }: Props) {

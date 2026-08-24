@@ -3,6 +3,7 @@ import type {
   ComposeBackupWorkerResponse,
   ComposeDraftEntry,
 } from './compose-backup.worker.types';
+import { captureException, recordWarn } from '../error';
 
 type DraftUpdateListener = (channelId: string) => void;
 
@@ -23,7 +24,9 @@ const ensureWorker = (): Worker | null => {
       type: 'module',
     });
   } catch (error) {
-    console.error('Failed to create compose backup worker', error);
+    captureException(error, {
+      context: { source: 'compose_backup_worker' },
+    });
     workerInstance = null;
     return null;
   }
@@ -40,6 +43,13 @@ const ensureWorker = (): Worker | null => {
       }
       if (data.type === 'updated') {
         listeners.forEach((listener) => listener(data.channelId));
+        return;
+      }
+      if (data.type === 'error') {
+        recordWarn('Compose backup worker operation failed', {
+          operation: data.operation,
+          message: data.message,
+        });
       }
     },
   );

@@ -48,6 +48,7 @@ import { useIsOptimistic } from '../../hooks/useIsOptimistic';
 import { useIsDragging } from '../../hooks/useIsDragging';
 import { useLongPressProgress } from '../../hooks/useLongPressProgress';
 import { useChannel } from '../../hooks/useChannel';
+import { reportSwrError } from '../../swr-error';
 
 type ToolbarDisplay =
   | { type: 'HIDDEN' }
@@ -161,7 +162,8 @@ const MessageArchive: FC<{ messageId: string; archived: boolean; variant: 'toolb
   const { trigger: toggle, isMutating: isToggling } = useMutateMessageArchive(messageId, spaceId, {
     revalidate: false,
     populateCache: identity,
-    onError: () => {
+    onError: (error, key) => {
+      reportSwrError(error, key);
       setDisplay({
         type: 'ERROR',
         message: intl.formatMessage({ defaultMessage: 'Failed to archive the message' }),
@@ -351,7 +353,8 @@ const MessageDeleteButton: FC<{ messageId: string }> = ({ messageId }) => {
     spaceId,
     {
       revalidate: false,
-      onError: () => {
+      onError: (error, key) => {
+        reportSwrError(error, key);
         setDisplay({
           type: 'ERROR',
           message: intl.formatMessage({ defaultMessage: 'Failed to delete the message' }),

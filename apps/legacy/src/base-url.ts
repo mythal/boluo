@@ -1,5 +1,6 @@
 import { getRouteScore, getAllRouteStats } from './hooks/useBaseUrlMovingAverage';
 import { originMap } from '@boluo/api/origin-map';
+import { withFaroSessionId } from './frontend-telemetry';
 
 export interface Proxy {
   name: string;
@@ -12,7 +13,7 @@ export const getBaseUrlList = async (): Promise<string[]> => {
   if (urlListCache.length > 0) {
     return urlListCache;
   }
-  const response = await fetch(`${getDefaultBaseUrl()}/api/info/proxies`);
+  const response = await fetch(`${getDefaultBaseUrl()}/api/info/proxies`, withFaroSessionId());
   const proxies = (await response.json()) as Proxy[];
   const urls = [
     getDefaultBaseUrl(),
@@ -53,7 +54,10 @@ const timeout = (ms: number): Promise<'TIMEOUT'> => {
 const testBaseUrl = async (baseUrl: string): Promise<number> => {
   const start = performance.now();
   try {
-    const response = await Promise.race([fetch(baseUrl + '/api/info'), timeout(1000)]);
+    const response = await Promise.race([
+      fetch(baseUrl + '/api/info', withFaroSessionId()),
+      timeout(1000),
+    ]);
     if (response === 'TIMEOUT') {
       return FAILED;
     }

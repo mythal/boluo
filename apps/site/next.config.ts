@@ -14,6 +14,7 @@ dotenv.config({
 
 const env = {
   BACKEND_URL: process.env.BACKEND_URL,
+  APP_VERSION: process.env.APP_VERSION ?? process.env.GITHUB_SHA,
   ANALYZE: process.env.ANALYZE,
 };
 
@@ -52,6 +53,9 @@ const config: NextConfig = {
     ],
   },
   outputFileTracingRoot: root,
+  env: {
+    APP_VERSION: env.APP_VERSION,
+  },
   webpack: (config) => {
     // `react-intl` without parser
     // https://formatjs.io/docs/guides/advanced-usage#react-intl-without-parser-40-smaller

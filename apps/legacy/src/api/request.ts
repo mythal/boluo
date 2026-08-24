@@ -3,6 +3,7 @@ import { isCrossOrigin } from '../settings';
 import store from '../store';
 import { Err, Ok, type Result } from '../utils/result';
 import { getAuthToken, clearAuthToken } from '../utils/token';
+import { withFaroSessionId } from '../frontend-telemetry';
 import type {
   IdQuery,
   IdWithToken,
@@ -89,9 +90,11 @@ export const request = async <T>(
   body: RequestInit['body'],
   contentType = 'application/json',
 ): Promise<AppResult<T>> => {
-  const headers = new Headers({
-    'Content-Type': contentType,
-  });
+  const headers = new Headers(
+    withFaroSessionId({
+      headers: { 'Content-Type': contentType },
+    }).headers,
+  );
   if (isCrossOrigin) {
     headers.append('X-Debug', '1');
   }
@@ -344,11 +347,14 @@ export function mediaUrl(id: string, download = false, addBaseUrl = true): strin
 
 export function mediaHead(id: string): Promise<Response> {
   // https://stackoverflow.com/a/75115203
-  return fetch(makeUri('/media/get', { id }), {
-    method: 'HEAD',
-    mode: 'cors',
-    cache: 'no-store',
-  });
+  return fetch(
+    makeUri('/media/get', { id }),
+    withFaroSessionId({
+      method: 'HEAD',
+      mode: 'cors',
+      cache: 'no-store',
+    }),
+  );
 }
 
 export async function uploadWithPresigned(

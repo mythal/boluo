@@ -265,6 +265,8 @@ pub fn update_runtime_metrics(space_store: &crate::space_runtime::SpaceStore) {
         .set(crate::events::context::mailbox_action_queue_depth() as f64);
     gauge!("boluo_server_events_token_store_entries").set(crate::events::token_store_len() as f64);
     gauge!("boluo_server_pos_actors").set(crate::messages::MESSAGE_POSITIONS.actor_count() as f64);
+    gauge!("boluo_server_pos_state_entries")
+        .set(crate::messages::MESSAGE_POSITIONS.state_entry_count() as f64);
     space_store.update_metrics();
 }
 

@@ -515,6 +515,12 @@ export function buildBoluoDashboard(
             legendFormat: '{{instance}} position actors',
           },
           {
+            refId: 'position-state-entries',
+            editorMode: QueryEditorMode.Code,
+            expr: `boluo_server_pos_state_entries{app="${APP}"}`,
+            legendFormat: '{{instance}} position state entries',
+          },
+          {
             refId: 'token-store',
             editorMode: QueryEditorMode.Code,
             expr: `boluo_server_events_token_store_entries{app="${APP}"}`,

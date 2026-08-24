@@ -166,7 +166,6 @@ const handleFocusChannel = (state: UiState, { pane }: FocusChannel): UiState => 
 
 const handleChangeBaseUrl = (state: UiState, { baseUrl }: ChangeBaseUrl): UiState => {
   if (state.baseUrl === baseUrl) return state;
-  console.log('change base url to: ', baseUrl);
   return { ...state, baseUrl };
 };
 

@@ -51,6 +51,7 @@ import {
   resetMovingMessage,
 } from '../states/chat-item-set';
 import { type Id, newId } from '../utils/id';
+import { captureRecoverableException, recordWarning } from '../error-reporting';
 
 export interface UserItem {
   label: string;
@@ -161,8 +162,8 @@ const applyPreviewDiff = (itemSet: ChatItemSet, diff: PreviewDiff): ChatItemSet 
     currentVersion: previewItem.preview.v ?? keyframe.version,
     diff: diff._,
     parseEntities: (text) => parse(text).entities,
-    onParseError: (error, text) => {
-      console.warn('Failed to parse preview diff text', { text, error });
+    onParseError: (error) => {
+      captureRecoverableException(error, { source: 'preview-diff-parser' });
     },
   });
   if (result == null) return itemSet;
@@ -517,7 +518,7 @@ export const checkMessagesOrder = (itemSet: ChatItemSet) => {
   let prevPos = -1.0;
   for (const item of itemSet.messages) {
     if (item.pos <= prevPos) {
-      console.warn('incorrect messages order');
+      recordWarning('Incorrect messages order', { source: 'chat-state' });
     }
     prevPos = item.pos;
   }

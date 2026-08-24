@@ -1,11 +1,14 @@
 import {
   ErrorsInstrumentation,
   FetchTransport,
+  LogLevel,
   SessionInstrumentation,
   TransportItemType,
   WebVitalsInstrumentation,
   getInternalFaroFromGlobalObject,
   initializeFaro,
+  type LogEvent,
+  type TransportItem,
 } from '@grafana/faro-web-sdk';
 
 const FARO_SESSION_ID_HEADER = 'X-Faro-Session-ID';
@@ -26,50 +29,57 @@ export function initializeFrontendTelemetry(baseUrl: string): void {
   }
 
   const appVersion = import.meta.env.APP_VERSION || 'unknown';
-  initializeFaro({
-    app: {
-      name: 'legacy',
-      environment: telemetryEnvironment(),
-      version: appVersion,
-      release: appVersion,
-    },
-    batching: {
-      enabled: true,
-      itemLimit: 10,
-      sendTimeout: 1_000,
-    },
-    beforeSend: (item) => {
-      if (
-        item.type === TransportItemType.LOG ||
-        item.type === TransportItemType.EVENT ||
-        item.type === TransportItemType.TRACE
-      ) {
-        return null;
-      }
-      return item;
-    },
-    ignoreUrls: [/\/api\/telemetry(?:[/?#]|$)/],
-    instrumentations: [
-      new ErrorsInstrumentation(),
-      new WebVitalsInstrumentation(),
-      new SessionInstrumentation(),
-    ],
-    sessionTracking: {
-      enabled: true,
-      persistent: false,
-    },
-    trackGeolocation: false,
-    transports: [
-      new FetchTransport({
-        url: `${baseUrl}/api/telemetry`,
-        requestCompression: false,
-      }),
-    ],
-    webVitalsInstrumentation: {
-      reportAllChanges: false,
-      trackAttributionSources: false,
-    },
-  });
+  try {
+    initializeFaro({
+      app: {
+        name: 'legacy',
+        environment: telemetryEnvironment(),
+        version: appVersion,
+        release: appVersion,
+      },
+      batching: {
+        enabled: true,
+        itemLimit: 5,
+        sendTimeout: 1_000,
+      },
+      beforeSend: (item) => {
+        if (item.type === TransportItemType.LOG) {
+          const { level } = (item as TransportItem<LogEvent>).payload;
+          return level === LogLevel.WARN || level === LogLevel.ERROR ? item : null;
+        }
+        if (item.type === TransportItemType.EVENT || item.type === TransportItemType.TRACE) {
+          return null;
+        }
+        return item;
+      },
+      ignoreErrors: [
+        /ResizeObserver loop (?:limit exceeded|completed with undelivered notifications)/i,
+      ],
+      ignoreUrls: [/\/api\/telemetry(?:[/?#]|$)/],
+      instrumentations: [
+        new ErrorsInstrumentation(),
+        new WebVitalsInstrumentation(),
+        new SessionInstrumentation(),
+      ],
+      sessionTracking: {
+        enabled: true,
+        persistent: false,
+      },
+      trackGeolocation: false,
+      transports: [
+        new FetchTransport({
+          url: `${baseUrl}/api/telemetry`,
+          requestCompression: false,
+        }),
+      ],
+      webVitalsInstrumentation: {
+        reportAllChanges: false,
+        trackAttributionSources: false,
+      },
+    });
+  } catch {
+    // Telemetry must never prevent the legacy application from starting.
+  }
 }
 
 export function setTelemetryUser(userId: string | null | undefined): void {

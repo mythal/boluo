@@ -174,7 +174,19 @@ fn sanitized_page_path(raw_url: &str) -> String {
             || segments.get(index.wrapping_sub(2)) == Some(&"invite");
         let follows_reset_confirm = segments.get(index.wrapping_sub(1)) == Some(&"confirm")
             && segments.get(index.wrapping_sub(2)) == Some(&"reset");
-        if uuid::Uuid::parse_str(segment).is_ok() || follows_invite || follows_reset_confirm {
+        let follows_legacy_join_space = segments.get(index.wrapping_sub(1)) == Some(&"space")
+            && segments.get(index.wrapping_sub(2)) == Some(&"join");
+        let follows_legacy_join_space_id = segments.get(index.wrapping_sub(2)) == Some(&"space")
+            && segments.get(index.wrapping_sub(3)) == Some(&"join");
+        let follows_legacy_reset =
+            segments.get(index.wrapping_sub(1)) == Some(&"confirm-password-reset");
+        if uuid::Uuid::parse_str(segment).is_ok()
+            || follows_invite
+            || follows_reset_confirm
+            || follows_legacy_join_space
+            || follows_legacy_join_space_id
+            || follows_legacy_reset
+        {
             path.push_str(":id");
         } else {
             path.push_str(segment);
@@ -512,6 +524,14 @@ mod tests {
         assert_eq!(
             sanitized_page_path("https://example.com/en/light/account/reset/confirm/secret-token"),
             "/en/light/account/reset/confirm/:id"
+        );
+        assert_eq!(
+            sanitized_page_path("https://old.example.com/join/space/compact-id/compact-token"),
+            "/join/space/:id/:id"
+        );
+        assert_eq!(
+            sanitized_page_path("https://old.example.com/confirm-password-reset/opaque-token"),
+            "/confirm-password-reset/:id"
         );
         assert_eq!(sanitized_page_path("not a URL"), "");
     }

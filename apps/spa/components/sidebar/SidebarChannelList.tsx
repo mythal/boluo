@@ -19,6 +19,7 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { useQuerySpaceSettings } from '@boluo/hooks/useQuerySpaceSettings';
 import { SidebarChannelListSkeleton } from './SidebarChannelListSkeleton';
 import { useMutateSpaceSettings } from '@boluo/hooks/useMutateSpaceSettings';
+import { neverMind } from '@boluo/utils/function';
 
 interface Props {
   spaceId: string;
@@ -114,7 +115,7 @@ export const SidebarChannelList: FC<Props> = ({
       };
       const channelsOrder = mergeWithArchived(idList);
       const nextSettings: typeof spaceSettings = { ...spaceSettings, channelsOrder };
-      void trigger(nextSettings, { optimisticData: nextSettings });
+      void trigger(nextSettings, { optimisticData: nextSettings }).catch(neverMind);
     },
     [archivedChannelIds, channelWithMemberList, spaceSettings, trigger],
   );

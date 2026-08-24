@@ -42,7 +42,7 @@ import { useFloatingSetters } from '@boluo/ui/hooks/useFloatingSetters';
 import { useCopyText } from '@boluo/ui/hooks/useCopyText';
 import { messageToParsed, toSimpleText } from '@boluo/interpreter';
 import { useMutateMessageDelete } from '@boluo/hooks/useMutateMessageDelete';
-import { empty, identity } from '@boluo/utils/function';
+import { empty, identity, neverMind } from '@boluo/utils/function';
 import { ErrorBoundary } from '../ErrorBoundary';
 import { useIsOptimistic } from '../../hooks/useIsOptimistic';
 import { useIsDragging } from '../../hooks/useIsDragging';
@@ -168,13 +168,14 @@ const MessageArchive: FC<{ messageId: string; archived: boolean; variant: 'toolb
       });
     },
   });
+  const handleToggle = () => void toggle().catch(neverMind);
   if (variant === 'toolbar') {
     return (
       <>
         <MessageToolbarButton
           optimistic={optimistic}
           loading={isToggling}
-          onClick={() => (isToggling ? empty() : toggle())}
+          onClick={isToggling ? empty : handleToggle}
           pressed={archived}
         >
           <Archive />
@@ -187,7 +188,7 @@ const MessageArchive: FC<{ messageId: string; archived: boolean; variant: 'toolb
         icon={Archive}
         pressed={archived}
         optimistic={optimistic}
-        onClick={isToggling ? empty : toggle}
+        onClick={isToggling ? empty : handleToggle}
         label={intl.formatMessage({ defaultMessage: 'Archive' })}
         className={clsx('flex-1', isToggling ? 'text-text-muted cursor-progress' : '')}
       />
@@ -358,11 +359,12 @@ const MessageDeleteButton: FC<{ messageId: string }> = ({ messageId }) => {
       },
     },
   );
+  const handleDelete = () => void deleteMessage().catch(neverMind);
   return (
     <MoreMenuItem
       icon={Trash}
       label={intl.formatMessage({ defaultMessage: 'Delete' })}
-      onClick={deleting ? empty : deleteMessage}
+      onClick={deleting ? empty : handleDelete}
       className={deleting ? 'text-text-muted cursor-progress' : 'text-state-danger-text'}
     />
   );

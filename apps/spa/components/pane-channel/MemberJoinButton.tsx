@@ -15,6 +15,7 @@ import { Spinner } from '@boluo/ui/Spinner';
 import { useMySpaceMember } from '@boluo/hooks/useQueryMySpaceMember';
 import { PaneHeaderButton } from '@boluo/ui/PaneHeaderButton';
 import { FailedBanner } from '@boluo/ui/chat/FailedBanner';
+import { neverMind } from '@boluo/utils/function';
 import { usePaneAdd } from '../../hooks/usePaneAdd';
 import { useQueryChannelMembers } from '@boluo/hooks/useQueryChannelMembers';
 import { ButtonInline } from '@boluo/ui/ButtonInline';
@@ -73,7 +74,7 @@ export const MemberJoinButton: FC<Props> = ({ channel }) => {
       setShowError(true);
       return;
     }
-    void trigger({});
+    void trigger({}).catch(neverMind);
   };
   let errorNode: ReactNode = null;
   if (showError && checkResult != null) {

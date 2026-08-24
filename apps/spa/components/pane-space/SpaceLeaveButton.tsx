@@ -15,6 +15,7 @@ import { FormattedMessage } from 'react-intl';
 import useSWRMutation from 'swr/mutation';
 import { Button } from '@boluo/ui/Button';
 import { unwrap } from '@boluo/utils/result';
+import { neverMind } from '@boluo/utils/function';
 import { FloatingBox } from '@boluo/ui/FloatingBox';
 import { PaneHeaderButton } from '@boluo/ui/PaneHeaderButton';
 import { useFloatingSetters } from '@boluo/ui/hooks/useFloatingSetters';
@@ -81,7 +82,7 @@ export const SpaceLeaveButton: FC<Props> = ({ space, mySpaceMember }) => {
                 <Button
                   variant="danger"
                   type="button"
-                  onClick={() => void leave()}
+                  onClick={() => void leave().catch(neverMind)}
                   disabled={isLeaving}
                 >
                   <FormattedMessage defaultMessage="Leave" />

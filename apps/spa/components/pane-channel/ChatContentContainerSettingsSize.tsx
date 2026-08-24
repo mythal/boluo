@@ -7,6 +7,7 @@ import AArrowUp from '@boluo/icons/AArrowUp';
 import Shrink from '@boluo/icons/Shrink';
 import { FormattedMessage } from 'react-intl';
 import { LampSwitch } from '@boluo/ui/LampSwitch';
+import { neverMind } from '@boluo/utils/function';
 
 interface Props {
   messageSize?: MessageSize;
@@ -25,7 +26,7 @@ export const ChatContentContainerSettingsSize: FC<Props> = ({ messageSize, updat
       {
         optimisticData: (current) => ({ ...current, messageSize: nextSize }),
       },
-    );
+    ).catch(neverMind);
   };
   return (
     <Button

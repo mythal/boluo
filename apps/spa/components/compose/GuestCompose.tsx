@@ -4,6 +4,7 @@ import { ComposeFallbackBox } from '@boluo/ui/ComposeFallbackBox';
 import { type ReactNode, type FC } from 'react';
 import { useQuerySpaceMembers } from '@boluo/hooks/useQuerySpaceMembers';
 import { ButtonInline } from '@boluo/ui/ButtonInline';
+import { neverMind } from '@boluo/utils/function';
 import { useMutateJoinChannel } from '@boluo/hooks/useMutateJoinChannel';
 import AlertTriangle from '@boluo/icons/AlertTriangle';
 import UserPlus from '@boluo/icons/UserPlus';
@@ -53,7 +54,7 @@ export const GuestCompose: FC<Props> = ({ channelId, spaceId }) => {
           <span className="mr-1">
             <FormattedMessage defaultMessage="You are not a member of this channel" />
           </span>
-          <ButtonInline onClick={() => void join({})}>
+          <ButtonInline onClick={() => void join({}).catch(neverMind)}>
             {icon} <FormattedMessage defaultMessage="Join" />
           </ButtonInline>
         </>

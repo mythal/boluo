@@ -6,6 +6,7 @@ import { type ReactNode, type FC } from 'react';
 import { FormattedMessage } from 'react-intl';
 import useSWRMutation from 'swr/mutation';
 import { unwrap } from '@boluo/utils/result';
+import { neverMind } from '@boluo/utils/function';
 import { PaneHeaderButton } from '@boluo/ui/PaneHeaderButton';
 import { useSWRConfig } from 'swr';
 import { Spinner } from '@boluo/ui/Spinner';
@@ -41,7 +42,7 @@ export const SpaceJoinButton: FC<Props> = ({ spaceId }) => {
       className="SpaceJoinButton"
       isLoading={isJoining}
       icon={icon}
-      onClick={() => void join()}
+      onClick={() => void join().catch(neverMind)}
     >
       <span className="text-xs">
         <FormattedMessage defaultMessage="Join Space" />

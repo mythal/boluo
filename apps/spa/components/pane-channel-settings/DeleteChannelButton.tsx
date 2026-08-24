@@ -7,6 +7,7 @@ import useSWRMutation from 'swr/mutation';
 import type { MutationFetcher } from 'swr/mutation';
 import { Button } from '@boluo/ui/Button';
 import { type Empty } from '@boluo/types';
+import { neverMind } from '@boluo/utils/function';
 import { panesAtom } from '../../state/view.atoms';
 import { type Pane } from '../../state/view.types';
 
@@ -45,7 +46,7 @@ export const DeleteChannel: FC<Props> = ({ channelId, channelName }) => {
     },
   );
   const confirm = useCallback(() => {
-    void trigger({});
+    void trigger({}).catch(neverMind);
   }, [trigger]);
   return (
     <div>

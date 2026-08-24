@@ -14,6 +14,7 @@ import useSWRMutation, { type MutationFetcher } from 'swr/mutation';
 import { Button } from '@boluo/ui/Button';
 import { Spinner } from '@boluo/ui/Spinner';
 import { type Empty } from '@boluo/types';
+import { neverMind } from '@boluo/utils/function';
 import { useQueryChannel } from '@boluo/hooks/useQueryChannel';
 import { FloatingBox } from '@boluo/ui/FloatingBox';
 import { PaneHeaderButton } from '@boluo/ui/PaneHeaderButton';
@@ -53,7 +54,7 @@ export const MemberLeaveButton: FC<Props> = ({ channelId, spaceId, onSuccess }) 
   const dismiss = useDismiss(context);
   const confirm = useCallback(() => {
     setComfirmOpen(false);
-    void trigger({});
+    void trigger({}).catch(neverMind);
   }, [trigger]);
   const { getReferenceProps, getFloatingProps } = useInteractions([click, dismiss]);
   return (

@@ -316,14 +316,16 @@ export function buildAlertRules(datasourceUid: string): AlertRulesProvisioning {
         }),
         alertRule(datasourceUid, resources, {
           uid: 'boluo-server-anonymous-memory-growing',
-          title: 'Server anonymous memory growing',
-          expression: `(max by(instance) (deriv(boluo_server_process_memory_bytes{app="${SERVER_APP}",kind="anonymous"}[10m]))) and on(instance) (max by(instance) (boluo_server_process_memory_bytes{app="${SERVER_APP}",kind="rss"}) / clamp_min(max by(instance) (fly_instance_memory_mem_total{app="${SERVER_APP}"}), 1) > 0.5)`,
+          title: 'Server process RSS projected high',
+          expression: `(clamp_min(predict_linear(max by(instance) (boluo_server_process_memory_bytes{app="${SERVER_APP}",kind="rss"})[1h:], 3600), 0) / clamp_min(max by(instance) (fly_instance_memory_mem_total{app="${SERVER_APP}"}), 1)) and on(instance) (max by(instance) (deriv(boluo_server_process_memory_bytes{app="${SERVER_APP}",kind="anonymous"}[1h])) > 0) and on(instance) (max by(instance) (fly_instance_uptime_seconds{app="${SERVER_APP}"}) > 3600)`,
           comparator: 'gt',
-          threshold: (1024 * 1024) / 60,
-          forDuration: '10m',
+          threshold: 0.8,
+          forDuration: '15m',
           severity: 'warning',
           summary:
-            'Server anonymous memory has grown by more than 1 MiB per minute for ten minutes while process RSS exceeds 50% of instance memory.',
+            'Based on the latest hour, server process RSS is projected to exceed 80% of instance memory within one hour while anonymous memory is growing.',
+          description:
+            'Evaluation starts after one hour of instance uptime. Current RSS above 80% and overall instance memory above 90% are covered by separate alerts.',
         }),
         alertRule(datasourceUid, resources, {
           uid: 'boluo-server-process-swap-high',

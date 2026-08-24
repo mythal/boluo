@@ -13,7 +13,7 @@ export class Err<E> {
     return null;
   }
 
-  expect(msg: string): never {
+  expect(_msg: string): never {
     throw this.err;
   }
 

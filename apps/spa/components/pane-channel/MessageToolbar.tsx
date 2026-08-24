@@ -39,6 +39,7 @@ import { MessageToolbarBox } from '@boluo/ui/chat/MessageToolbarBox';
 import { MessageToolbarButton } from '@boluo/ui/chat/MessageToolbarButton';
 import { CircleIndicator } from '@boluo/ui/CircleIndicator';
 import { useFloatingSetters } from '@boluo/ui/hooks/useFloatingSetters';
+import { useCopyText } from '@boluo/ui/hooks/useCopyText';
 import { messageToParsed, toSimpleText } from '@boluo/interpreter';
 import { useMutateMessageDelete } from '@boluo/hooks/useMutateMessageDelete';
 import { empty, identity } from '@boluo/utils/function';
@@ -429,8 +430,9 @@ const MessageArchiveOrDelete: FC<{ message: Message }> = ({ message }) => {
 
 const CopyMessageSource: FC<{ source: string }> = ({ source }) => {
   const setDisplay = useSetAtom(use(DisplayContext));
-  const copy = () => {
-    void navigator.clipboard.writeText(source);
+  const { copy } = useCopyText();
+  const copySource = () => {
+    void copy(source);
     setDisplay(SHOW);
   };
   const intl = useIntl();
@@ -438,7 +440,7 @@ const CopyMessageSource: FC<{ source: string }> = ({ source }) => {
     <MoreMenuItem
       icon={ClipboardCopy}
       label={intl.formatMessage({ defaultMessage: 'Copy Source' })}
-      onClick={copy}
+      onClick={copySource}
       className=""
     />
   );

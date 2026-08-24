@@ -154,6 +154,9 @@ async fn handler(
         path = %path,
         status_code = tracing::field::Empty,
         duration_ms = tracing::field::Empty,
+        request_content_length = tracing::field::Empty,
+        request_body_read_ms = tracing::field::Empty,
+        request_body_bytes = tracing::field::Empty,
         user_id = tracing::field::Empty,
         error = tracing::field::Empty,
         auth_method = tracing::field::Empty,
@@ -161,6 +164,14 @@ async fn handler(
         app_version = %APP_VERSION.as_str(),
         startup_id = events::startup_id(),
     );
+    if let Some(content_length) = req
+        .headers()
+        .get(hyper::header::CONTENT_LENGTH)
+        .and_then(|value| value.to_str().ok())
+        .and_then(|value| value.parse::<u64>().ok())
+    {
+        span.record("request_content_length", content_length);
+    }
 
     let start = std::time::Instant::now();
 

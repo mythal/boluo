@@ -3,7 +3,7 @@ use hyper::StatusCode;
 use hyper::body::Body;
 use serde::{Deserialize, Serialize};
 use std::error::Error;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use crate::error::AppError;
 pub type Response = hyper::Response<Vec<u8>>;
@@ -114,6 +114,50 @@ where
     })
 }
 
+fn record_request_body_read(started_at: Instant, body_bytes: Option<usize>) {
+    let span = tracing::Span::current();
+    span.record(
+        "request_body_read_ms",
+        started_at.elapsed().as_millis() as u64,
+    );
+    if let Some(body_bytes) = body_bytes {
+        span.record("request_body_bytes", body_bytes as u64);
+    }
+}
+
+pub async fn read_body<B>(req: hyper::Request<B>) -> Result<bytes::Bytes, AppError>
+where
+    B: Body,
+{
+    use http_body_util::BodyExt;
+
+    let started_at = Instant::now();
+    let collected = tokio::time::timeout(Duration::from_secs(10), req.into_body().collect()).await;
+    let body = match collected {
+        Err(_) => {
+            record_request_body_read(started_at, None);
+            tracing::warn!(
+                event = "http.request_body.read_timeout",
+                "Timeout when reading the request body"
+            );
+            return Err(AppError::Timeout);
+        }
+        Ok(Err(_)) => {
+            record_request_body_read(started_at, None);
+            tracing::error!(
+                event = "http.request_body.read_failed",
+                "Failed to read the request body"
+            );
+            return Err(AppError::BadRequest(
+                "Failed to read the request body".to_string(),
+            ));
+        }
+        Ok(Ok(body)) => body.to_bytes(),
+    };
+    record_request_body_read(started_at, Some(body.len()));
+    Ok(body)
+}
+
 pub async fn read_body_limited<B>(
     req: hyper::Request<B>,
     max_bytes: usize,
@@ -124,19 +168,37 @@ where
 {
     use http_body_util::{BodyExt, LengthLimitError, Limited};
 
+    let started_at = Instant::now();
     let collected = tokio::time::timeout(
         Duration::from_secs(10),
         Limited::new(req.into_body(), max_bytes).collect(),
     )
-    .await
-    .map_err(|_| AppError::Timeout)?;
+    .await;
 
-    collected.map(|body| body.to_bytes()).map_err(|error| {
-        match error.downcast_ref::<LengthLimitError>() {
-            Some(_) => AppError::PayloadTooLarge,
-            None => AppError::BadRequest("Failed to read the request body".to_string()),
+    let collected = match collected {
+        Ok(collected) => collected,
+        Err(_) => {
+            record_request_body_read(started_at, None);
+            return Err(AppError::Timeout);
         }
-    })
+    };
+
+    match collected {
+        Ok(body) => {
+            let body = body.to_bytes();
+            record_request_body_read(started_at, Some(body.len()));
+            Ok(body)
+        }
+        Err(error) => {
+            record_request_body_read(started_at, None);
+            match error.downcast_ref::<LengthLimitError>() {
+                Some(_) => Err(AppError::PayloadTooLarge),
+                None => Err(AppError::BadRequest(
+                    "Failed to read the request body".to_string(),
+                )),
+            }
+        }
+    }
 }
 
 pub async fn parse_body_limited<T, B>(
@@ -157,29 +219,8 @@ pub async fn parse_body<T>(req: hyper::Request<impl Body>) -> Result<T, AppError
 where
     for<'de> T: Deserialize<'de>,
 {
-    use http_body_util::BodyExt;
     // TODO: limit the body size
-    let collected = tokio::time::timeout(
-        std::time::Duration::from_secs(10),
-        req.into_body().collect(),
-    )
-    .await
-    .map_err(|_| {
-        tracing::warn!(
-            event = "http.request_body.read_timeout",
-            "Timeout when reading the request body"
-        );
-        AppError::Timeout
-    })?;
-    let body = collected
-        .map_err(|_| {
-            tracing::error!(
-                event = "http.request_body.read_failed",
-                "Failed to read the request body"
-            );
-            AppError::BadRequest("Failed to read the request body".to_string())
-        })?
-        .to_bytes();
+    let body = read_body(req).await?;
     sonic_rs::from_slice(&body).map_err(|e| {
         tracing::error!(
             event = "http.request_body.parse_failed", error = %e, "Failed to parse the request body");
@@ -192,28 +233,7 @@ where
     T: Send + 'static,
     for<'de> T: Deserialize<'de>,
 {
-    use http_body_util::BodyExt;
-    let collected = tokio::time::timeout(
-        std::time::Duration::from_secs(10),
-        req.into_body().collect(),
-    )
-    .await
-    .map_err(|_| {
-        tracing::warn!(
-            event = "http.request_body.read_timeout",
-            "Timeout when reading the request body"
-        );
-        AppError::Timeout
-    })?;
-    let body = collected
-        .map_err(|_| {
-            tracing::error!(
-                event = "http.request_body.read_failed",
-                "Failed to read the request body"
-            );
-            AppError::BadRequest("Failed to read the request body".to_string())
-        })?
-        .to_bytes();
+    let body = read_body(req).await?;
     sonic_rs::from_slice(&body).map(Box::new).map_err(|e| {
         tracing::error!(
             event = "http.request_body.parse_failed", error = %e, "Failed to parse the request body");

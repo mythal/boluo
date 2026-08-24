@@ -382,7 +382,7 @@ struct Cli {
 #[derive(Subcommand)]
 enum Command {
     /// Run the HTTP server
-    Serve(ServeArgs),
+    Serve(Box<ServeArgs>),
     /// Initialize the database
     Init(InitArgs),
     /// Export TypeScript types

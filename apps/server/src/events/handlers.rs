@@ -280,10 +280,16 @@ async fn push_updates(
     let mut last_pending_updates_warned = 0;
     let pending_updates = metrics::histogram!("boluo_server_events_pending_updates");
     let events_sent_counter = metrics::counter!("boluo_server_events_events_sent_total");
+    let heartbeat_period = Duration::from_secs(8);
+    let mut heartbeat_interval = tokio::time::interval_at(
+        tokio::time::Instant::now() + heartbeat_period,
+        heartbeat_period,
+    );
+    heartbeat_interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
 
     loop {
         tokio::select! {
-            _ = tokio::time::sleep(Duration::from_secs(8)) => {
+            _ = heartbeat_interval.tick() => {
                 outgoing.send(WsMessage::Text(tungstenite::Utf8Bytes::from_static("♥"))).await?;
             }
             _ = crate::shutdown::SHUTDOWN.notified() => {

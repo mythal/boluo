@@ -1,4 +1,6 @@
 #![allow(dead_code)]
+// Hyper's nested routing futures require deeper recursion when proving `Send`.
+#![recursion_limit = "256"]
 #![allow(
     clippy::too_many_arguments,
     clippy::needless_return,

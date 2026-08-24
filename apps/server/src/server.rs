@@ -79,6 +79,22 @@ use crate::interface::{err_response, missing, ok_response};
 
 const REQUEST_ID_HEADER: hyper::header::HeaderName =
     hyper::header::HeaderName::from_static("x-request-id");
+const FARO_SESSION_ID_HEADER: hyper::header::HeaderName =
+    hyper::header::HeaderName::from_static("x-faro-session-id");
+const MAX_FARO_SESSION_ID_LENGTH: usize = 128;
+
+fn faro_session_id(headers: &hyper::HeaderMap) -> Option<&str> {
+    headers
+        .get(&FARO_SESSION_ID_HEADER)
+        .and_then(|value| value.to_str().ok())
+        .filter(|value| {
+            !value.is_empty()
+                && value.len() <= MAX_FARO_SESSION_ID_LENGTH
+                && value
+                    .bytes()
+                    .all(|byte| byte.is_ascii_alphanumeric() || b"._:-".contains(&byte))
+        })
+}
 
 static APP_VERSION: LazyLock<String> = LazyLock::new(|| {
     std::env::var("APP_VERSION").unwrap_or_else(|_| env!("CARGO_PKG_VERSION").to_owned())
@@ -146,6 +162,7 @@ async fn handler(
         .get(hyper::header::HeaderName::from_static("x-client-version"))
         .and_then(|x| x.to_str().ok())
         .unwrap_or("");
+    let faro_session_id = faro_session_id(req.headers());
 
     let span = tracing::info_span!(
         "http_request",
@@ -160,10 +177,14 @@ async fn handler(
         user_id = tracing::field::Empty,
         error = tracing::field::Empty,
         auth_method = tracing::field::Empty,
+        faro_session_id = tracing::field::Empty,
         client = %client_version,
         app_version = %APP_VERSION.as_str(),
         startup_id = events::startup_id(),
     );
+    if let Some(faro_session_id) = faro_session_id {
+        span.record("faro_session_id", faro_session_id);
+    }
     if let Some(content_length) = req
         .headers()
         .get(hyper::header::CONTENT_LENGTH)
@@ -302,6 +323,30 @@ mod request_id_tests {
         let generated = generated.to_str().unwrap();
         assert_ne!(generated, "contains spaces");
         assert!(uuid::Uuid::parse_str(generated).is_ok());
+    }
+}
+
+#[cfg(test)]
+mod faro_session_id_tests {
+    use super::*;
+
+    #[test]
+    fn accepts_safe_session_id() {
+        let mut headers = hyper::HeaderMap::new();
+        headers.insert(&FARO_SESSION_ID_HEADER, "session-123".parse().unwrap());
+
+        assert_eq!(faro_session_id(&headers), Some("session-123"));
+    }
+
+    #[test]
+    fn rejects_unsafe_or_oversized_session_id() {
+        let mut headers = hyper::HeaderMap::new();
+        headers.insert(&FARO_SESSION_ID_HEADER, "contains spaces".parse().unwrap());
+        assert_eq!(faro_session_id(&headers), None);
+
+        let oversized = "a".repeat(MAX_FARO_SESSION_ID_LENGTH + 1);
+        headers.insert(&FARO_SESSION_ID_HEADER, oversized.parse().unwrap());
+        assert_eq!(faro_session_id(&headers), None);
     }
 }
 

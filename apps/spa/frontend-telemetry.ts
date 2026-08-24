@@ -1,4 +1,4 @@
-import { apiUrlAtom } from '@boluo/api-browser';
+import { apiUrlAtom, setFaroSessionIdProvider } from '@boluo/api-browser';
 import { store } from '@boluo/store';
 import {
   ErrorsInstrumentation,
@@ -31,7 +31,13 @@ const telemetryEnvironment = (): string => {
 };
 
 export function initializeFrontendTelemetry(): void {
-  if (IS_DEVELOPMENT || getInternalFaroFromGlobalObject()) {
+  if (IS_DEVELOPMENT) {
+    return;
+  }
+
+  const existingInstance = getInternalFaroFromGlobalObject();
+  if (existingInstance) {
+    setFaroSessionIdProvider(() => existingInstance.api.getSession()?.id);
     return;
   }
 
@@ -76,6 +82,8 @@ export function initializeFrontendTelemetry(): void {
       trackAttributionSources: false,
     },
   });
+
+  setFaroSessionIdProvider(() => instance.api.getSession()?.id);
 
   store.sub(apiUrlAtom, () => {
     const nextUrl = telemetryUrl();

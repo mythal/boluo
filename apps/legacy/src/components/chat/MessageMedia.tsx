@@ -63,7 +63,6 @@ function MessageMedia({ className, mediaId, file }: Props) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     error,
   } = useSWR(mediaId ? ['media', mediaId] : null, ([, mediaId]) => mediaHead(mediaId));
-  console.log('headResponse', headResponse);
   let type: string | null = null;
   if (file) {
     type = file.type;

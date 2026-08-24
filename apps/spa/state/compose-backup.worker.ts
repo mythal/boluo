@@ -15,6 +15,17 @@ const MIN_DRAFT_LENGTH = 3;
 
 let dbPromise: Promise<IDBDatabase> | null = null;
 
+const reportError = (
+  operation: Extract<ComposeBackupWorkerResponse, { type: 'error' }>['operation'],
+  error: unknown,
+): void => {
+  worker.postMessage({
+    type: 'error',
+    operation,
+    message: error instanceof Error ? error.message : String(error),
+  } satisfies ComposeBackupWorkerResponse);
+};
+
 const openDb = (): Promise<IDBDatabase> => {
   if (dbPromise) return dbPromise;
   dbPromise = new Promise((resolve, reject) => {
@@ -93,7 +104,7 @@ const saveDraft = async (channelId: string, text: string): Promise<void> => {
   try {
     drafts = await readDrafts(channelId);
   } catch (error) {
-    console.error('Failed to load compose drafts', error);
+    reportError('load', error);
     drafts = [];
   }
   const now = Date.now();
@@ -126,7 +137,7 @@ const saveDraft = async (channelId: string, text: string): Promise<void> => {
   try {
     await writeDrafts(channelId, drafts);
   } catch (error) {
-    console.error('Failed to persist compose drafts', error);
+    reportError('persist', error);
     return;
   }
   const response: ComposeBackupWorkerResponse = { type: 'updated', channelId };
@@ -150,7 +161,7 @@ const listDrafts = async (
     const drafts = await readDrafts(channelId);
     return { type: 'listResult', channelId, requestId, drafts };
   } catch (error) {
-    console.error('Failed to list compose drafts', error);
+    reportError('list', error);
     return { type: 'listResult', channelId, requestId, drafts: [] };
   }
 };

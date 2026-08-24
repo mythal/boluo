@@ -5,6 +5,7 @@ import { type FC, useEffect, useRef } from 'react';
 import { FormattedMessage } from 'react-intl';
 import useSWRMutation from 'swr/mutation';
 import { Button } from '@boluo/ui/Button';
+import { neverMind } from '@boluo/utils/function';
 import { chatAtom } from '../../state/chat.atoms';
 import { useQueryChannelMembers } from '@boluo/hooks/useQueryChannelMembers';
 import { useQueryCurrentUser } from '@boluo/hooks/useQueryCurrentUser';
@@ -71,7 +72,7 @@ const ShowButton: FC<{ messageId: string; channelId: string }> = ({ messageId, c
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            void trigger();
+            void trigger().catch(neverMind);
           }
         });
       },
@@ -89,7 +90,7 @@ const ShowButton: FC<{ messageId: string; channelId: string }> = ({ messageId, c
       type="button"
       small
       disabled={isMutating}
-      onClick={() => void trigger()}
+      onClick={() => void trigger().catch(neverMind)}
     >
       <FormattedMessage defaultMessage="Show" />
     </Button>

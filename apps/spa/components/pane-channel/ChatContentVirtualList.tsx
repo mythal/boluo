@@ -19,6 +19,7 @@ import { SelfPreview } from './SelfPreview';
 import { OthersPreview } from './OthersPreview';
 import { virtualChatItemKey } from '../../hooks/useChatList';
 import { isContinuousMessage } from './isContinuousMessage';
+import { neverMind } from '@boluo/utils/function';
 
 interface Props {
   firstItemIndex: number;
@@ -53,7 +54,7 @@ export const ChatContentVirtualList: FC<Props> = (props) => {
           alignToBottom: nextAlignToBottom,
         }),
       },
-    );
+    ).catch(neverMind);
   }, [alignToBottom, updateSettings]);
   const {
     renderRangeRef,

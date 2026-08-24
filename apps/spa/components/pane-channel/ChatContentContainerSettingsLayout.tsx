@@ -6,6 +6,7 @@ import Icon from '@boluo/ui/Icon';
 import Shrink from '@boluo/icons/Shrink';
 import { FormattedMessage } from 'react-intl';
 import { LampSwitch } from '@boluo/ui/LampSwitch';
+import { neverMind } from '@boluo/utils/function';
 
 interface Props {
   layout?: ChannelLayout;
@@ -20,7 +21,7 @@ export const ChatContentContainerSettingsLayout: FC<Props> = ({ layout, updateSe
       {
         optimisticData: (current) => ({ ...current, layout: nextLayout }),
       },
-    );
+    ).catch(neverMind);
   };
   return (
     <Button

@@ -280,10 +280,16 @@ async fn push_updates(
     let mut last_pending_updates_warned = 0;
     let pending_updates = metrics::histogram!("boluo_server_events_pending_updates");
     let events_sent_counter = metrics::counter!("boluo_server_events_events_sent_total");
+    let heartbeat_period = Duration::from_secs(8);
+    let mut heartbeat_interval = tokio::time::interval_at(
+        tokio::time::Instant::now() + heartbeat_period,
+        heartbeat_period,
+    );
+    heartbeat_interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
 
     loop {
         tokio::select! {
-            _ = tokio::time::sleep(Duration::from_secs(8)) => {
+            _ = heartbeat_interval.tick() => {
                 outgoing.send(WsMessage::Text(tungstenite::Utf8Bytes::from_static("♥"))).await?;
             }
             _ = crate::shutdown::SHUTDOWN.notified() => {
@@ -814,8 +820,6 @@ async fn sse(ctx: &crate::context::AppContext, req: Request<Incoming>) -> Respon
 }
 
 async fn receive_events(ctx: &crate::context::AppContext, req: Request<Incoming>) -> Response {
-    use http_body_util::BodyExt;
-
     let query = match parse_query::<UpdateQuery>(req.uri()) {
         Ok(q) => q,
         Err(e) => return err_response(e),
@@ -831,13 +835,14 @@ async fn receive_events(ctx: &crate::context::AppContext, req: Request<Incoming>
         return err_response(error);
     }
 
-    let body_bytes = match req.into_body().collect().await {
-        Ok(c) => c.to_bytes(),
-        Err(_) => {
-            return err_response(AppError::BadRequest(
-                "Failed to read the request body".to_string(),
-            ));
-        }
+    let body_bytes = match crate::interface::read_body_limited(
+        req,
+        crate::interface::DEFAULT_JSON_BODY_LIMIT_BYTES,
+    )
+    .await
+    {
+        Ok(body) => body,
+        Err(error) => return err_response(error),
     };
     let body_str = match std::str::from_utf8(&body_bytes) {
         Ok(s) => s,

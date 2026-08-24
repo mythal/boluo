@@ -17,6 +17,7 @@ import store, { type Dispatch, useDispatch, useSelector } from '../../store';
 import { shadowXl, spacingN, textSm } from '../../styles/atoms';
 import { type Id } from '../../utils/id';
 import Button from '../atoms/Button';
+import { captureRecoverableException, recordWarning } from '../../error-reporting';
 
 export const PING = '♥';
 export const PONG = '♡';
@@ -61,7 +62,6 @@ async function getConnectionToken(
   } else if (err.code === 'UNAUTHENTICATED') {
     return 'UNAUTHENTICATED';
   } else {
-    console.warn('Unexpected error when getting event token', err);
     return 'UNEXPECTED';
   }
 }
@@ -89,7 +89,7 @@ const handleEvent = (
       }
       return;
     }
-    console.error('Connection Error', body);
+    recordWarning(`WebSocket server error: ${body.code}`, { source: 'websocket-server' });
     setState('CLOSED');
   } else if (body.type === 'SPACE_UPDATED') {
     const { spaceWithRelated } = body;
@@ -177,26 +177,26 @@ export const Connector = ({ spaceId, myId }: Props) => {
   }, []);
 
   useEffect(() => {
-    const makeConnection = async () => {
-      const retry = () => {
-        setState('CLOSED');
-        retryCount.current += 1;
-        if (retryCount.current <= 2) {
-          setRetrySec(0);
-        } else if (retryCount.current >= RETRY_WAIT_SEC.length) {
-          setRetrySec(7);
-        } else {
-          const x = Math.random();
-          let sec = RETRY_WAIT_SEC[retryCount.current];
-          if (x > 0.66666) {
-            sec += 1;
-          } else if (x < 0.33333) {
-            sec -= 1;
-          }
-          setRetrySec(sec);
+    const retry = () => {
+      setState('CLOSED');
+      retryCount.current += 1;
+      if (retryCount.current <= 2) {
+        setRetrySec(0);
+      } else if (retryCount.current >= RETRY_WAIT_SEC.length) {
+        setRetrySec(7);
+      } else {
+        const x = Math.random();
+        let sec = RETRY_WAIT_SEC[retryCount.current];
+        if (x > 0.66666) {
+          sec += 1;
+        } else if (x < 0.33333) {
+          sec -= 1;
         }
-        connectionRef.current = null;
-      };
+        setRetrySec(sec);
+      }
+      connectionRef.current = null;
+    };
+    const makeConnection = async () => {
       setState('CONNECTING');
       const tokenResult = await getConnectionToken(spaceId, myId);
       if (tokenResult === 'UNAUTHENTICATED') {
@@ -226,12 +226,8 @@ export const Connector = ({ spaceId, myId }: Props) => {
         cursor.current.seq,
       );
       connectionRef.current = connection;
-      connection.onclose = (event) => {
-        console.log('Websocket connection closed', event);
+      connection.onclose = () => {
         retry();
-      };
-      connection.onerror = (event) => {
-        console.warn('WebSocket error ', event);
       };
       connection.onmessage = (onMessageEvent) => {
         retryCount.current = 0;
@@ -247,7 +243,7 @@ export const Connector = ({ spaceId, myId }: Props) => {
         try {
           event = JSON.parse(received) as Events;
         } catch (e) {
-          console.warn('Failed to parse websocket message', received, e);
+          captureRecoverableException(e, { source: 'websocket-message-parser' });
           return;
         }
 
@@ -265,8 +261,10 @@ export const Connector = ({ spaceId, myId }: Props) => {
       dispatch(connectSpace(spaceId, connection));
     };
     if (state === 'CLOSED' && retrySec === 0) {
-      console.log('attempt to reconnection ', retryCount.current);
-      makeConnection().catch(console.warn);
+      void makeConnection().catch((error: unknown) => {
+        captureRecoverableException(error, { source: 'websocket-connect' });
+        retry();
+      });
     }
   }, [state, spaceId, myId, dispatch, retrySec, setState]);
 

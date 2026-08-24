@@ -1,13 +1,13 @@
 import { apiUrlAtom, setFaroSessionIdProvider } from '@boluo/api-browser';
 import { store } from '@boluo/store';
 import {
+  ConsoleInstrumentation,
   ErrorsInstrumentation,
   FetchTransport,
   LogLevel,
   SessionInstrumentation,
   TransportItemType,
   WebVitalsInstrumentation,
-  faro,
   getInternalFaroFromGlobalObject,
   initializeFaro,
   type LogEvent,
@@ -45,14 +45,14 @@ export function initializeFrontendTelemetry(): void {
   let transport = newTransport(currentUrl);
   const instance = initializeFaro({
     app: {
-      name: 'spa',
+      name: 'site',
       environment: telemetryEnvironment(),
       version: APP_VERSION,
       release: APP_VERSION,
     },
     batching: {
       enabled: true,
-      itemLimit: 10,
+      itemLimit: 5,
       sendTimeout: 1_000,
     },
     beforeSend: (item) => {
@@ -65,8 +65,12 @@ export function initializeFrontendTelemetry(): void {
       }
       return item;
     },
+    ignoreErrors: [
+      /ResizeObserver loop (?:limit exceeded|completed with undelivered notifications)/i,
+    ],
     ignoreUrls: [/\/api\/telemetry(?:[/?#]|$)/],
     instrumentations: [
+      new ConsoleInstrumentation(),
       new ErrorsInstrumentation(),
       new WebVitalsInstrumentation(),
       new SessionInstrumentation(),
@@ -87,9 +91,8 @@ export function initializeFrontendTelemetry(): void {
 
   store.sub(apiUrlAtom, () => {
     const nextUrl = telemetryUrl();
-    if (nextUrl === currentUrl) {
-      return;
-    }
+    if (nextUrl === currentUrl) return;
+
     const nextTransport = newTransport(nextUrl);
     instance.transports.add(nextTransport);
     instance.transports.remove(transport);
@@ -99,9 +102,12 @@ export function initializeFrontendTelemetry(): void {
 }
 
 export function setTelemetryUser(userId: string | null | undefined): void {
+  const instance = getInternalFaroFromGlobalObject();
+  if (!instance) return;
+
   if (userId) {
-    faro.api.setUser({ id: userId });
+    instance.api.setUser({ id: userId });
   } else {
-    faro.api.resetUser();
+    instance.api.resetUser();
   }
 }

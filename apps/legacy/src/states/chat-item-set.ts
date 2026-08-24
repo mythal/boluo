@@ -3,6 +3,7 @@ import { isClearedPreviewContent, type PreviewDiffBase } from '@boluo/api/previe
 import { type Preview } from '../api/events';
 import { type Message } from '../api/messages';
 import { type Id } from '../utils/id';
+import { recordWarning } from '../error-reporting';
 
 export interface ChatNode {
   id: Id;
@@ -76,7 +77,7 @@ const insertItem = (
     }
   }
 
-  console.error("Can't find the insertion position");
+  recordWarning("Can't find the insertion position", { source: 'chat-item-set' });
   return messages;
 };
 

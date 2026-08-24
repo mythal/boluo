@@ -8,6 +8,7 @@ import { FormattedMessage } from 'react-intl';
 import { type MutateSettingsTrigger } from '@boluo/hooks/useMutateSettings';
 import { useAtomValue } from 'jotai';
 import { devMode } from '../../state/dev.atoms';
+import { neverMind } from '@boluo/utils/function';
 
 interface Props {
   inGameFont?: InGameFont;
@@ -33,7 +34,7 @@ export const ChatContentContainerSettingsFont: FC<Props> = ({ inGameFont, update
       {
         optimisticData: (current) => ({ ...current, inGameFont: nextFont }),
       },
-    );
+    ).catch(neverMind);
   };
   const isDev = useAtomValue(devMode);
   if (!isDev) {

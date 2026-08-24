@@ -1,6 +1,10 @@
 /// <reference types="node" />
 /// <reference types="react-dom" />
 
+interface ImportMetaEnv {
+  readonly APP_VERSION: string;
+}
+
 declare namespace NodeJS {
   interface ProcessEnv {
     readonly NODE_ENV: 'development' | 'production' | 'test';

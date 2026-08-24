@@ -1,4 +1,5 @@
 import { v1 as uuidV1 } from 'uuid';
+import { captureRecoverableException } from '../error-reporting';
 
 const getNodeId = (): Uint8Array => {
   const key = 'client-node-id';
@@ -78,7 +79,7 @@ export function decodeUuid(s: string): Id {
     const node = hex.substr(20, 12);
     return `${timeLow}-${timeMid}-${timeHiAndVersion}-${hex.substr(16, 4)}-${node}`;
   } catch (e) {
-    console.error('Failed to decode id to UUID: ', s);
+    captureRecoverableException(e, { source: 'decode-route-id' });
     return '00000000-0000-0000-0000-000000000000';
   }
 }

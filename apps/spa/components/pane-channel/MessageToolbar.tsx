@@ -39,14 +39,16 @@ import { MessageToolbarBox } from '@boluo/ui/chat/MessageToolbarBox';
 import { MessageToolbarButton } from '@boluo/ui/chat/MessageToolbarButton';
 import { CircleIndicator } from '@boluo/ui/CircleIndicator';
 import { useFloatingSetters } from '@boluo/ui/hooks/useFloatingSetters';
+import { useCopyText } from '@boluo/ui/hooks/useCopyText';
 import { messageToParsed, toSimpleText } from '@boluo/interpreter';
 import { useMutateMessageDelete } from '@boluo/hooks/useMutateMessageDelete';
-import { empty, identity } from '@boluo/utils/function';
+import { empty, identity, neverMind } from '@boluo/utils/function';
 import { ErrorBoundary } from '../ErrorBoundary';
 import { useIsOptimistic } from '../../hooks/useIsOptimistic';
 import { useIsDragging } from '../../hooks/useIsDragging';
 import { useLongPressProgress } from '../../hooks/useLongPressProgress';
 import { useChannel } from '../../hooks/useChannel';
+import { reportSwrError } from '../../swr-error';
 
 type ToolbarDisplay =
   | { type: 'HIDDEN' }
@@ -160,20 +162,22 @@ const MessageArchive: FC<{ messageId: string; archived: boolean; variant: 'toolb
   const { trigger: toggle, isMutating: isToggling } = useMutateMessageArchive(messageId, spaceId, {
     revalidate: false,
     populateCache: identity,
-    onError: () => {
+    onError: (error, key) => {
+      reportSwrError(error, key);
       setDisplay({
         type: 'ERROR',
         message: intl.formatMessage({ defaultMessage: 'Failed to archive the message' }),
       });
     },
   });
+  const handleToggle = () => void toggle().catch(neverMind);
   if (variant === 'toolbar') {
     return (
       <>
         <MessageToolbarButton
           optimistic={optimistic}
           loading={isToggling}
-          onClick={() => (isToggling ? empty() : toggle())}
+          onClick={isToggling ? empty : handleToggle}
           pressed={archived}
         >
           <Archive />
@@ -186,7 +190,7 @@ const MessageArchive: FC<{ messageId: string; archived: boolean; variant: 'toolb
         icon={Archive}
         pressed={archived}
         optimistic={optimistic}
-        onClick={isToggling ? empty : toggle}
+        onClick={isToggling ? empty : handleToggle}
         label={intl.formatMessage({ defaultMessage: 'Archive' })}
         className={clsx('flex-1', isToggling ? 'text-text-muted cursor-progress' : '')}
       />
@@ -349,7 +353,8 @@ const MessageDeleteButton: FC<{ messageId: string }> = ({ messageId }) => {
     spaceId,
     {
       revalidate: false,
-      onError: () => {
+      onError: (error, key) => {
+        reportSwrError(error, key);
         setDisplay({
           type: 'ERROR',
           message: intl.formatMessage({ defaultMessage: 'Failed to delete the message' }),
@@ -357,11 +362,12 @@ const MessageDeleteButton: FC<{ messageId: string }> = ({ messageId }) => {
       },
     },
   );
+  const handleDelete = () => void deleteMessage().catch(neverMind);
   return (
     <MoreMenuItem
       icon={Trash}
       label={intl.formatMessage({ defaultMessage: 'Delete' })}
-      onClick={deleting ? empty : deleteMessage}
+      onClick={deleting ? empty : handleDelete}
       className={deleting ? 'text-text-muted cursor-progress' : 'text-state-danger-text'}
     />
   );
@@ -429,8 +435,9 @@ const MessageArchiveOrDelete: FC<{ message: Message }> = ({ message }) => {
 
 const CopyMessageSource: FC<{ source: string }> = ({ source }) => {
   const setDisplay = useSetAtom(use(DisplayContext));
-  const copy = () => {
-    void navigator.clipboard.writeText(source);
+  const { copy } = useCopyText();
+  const copySource = () => {
+    void copy(source);
     setDisplay(SHOW);
   };
   const intl = useIntl();
@@ -438,7 +445,7 @@ const CopyMessageSource: FC<{ source: string }> = ({ source }) => {
     <MoreMenuItem
       icon={ClipboardCopy}
       label={intl.formatMessage({ defaultMessage: 'Copy Source' })}
-      onClick={copy}
+      onClick={copySource}
       className=""
     />
   );

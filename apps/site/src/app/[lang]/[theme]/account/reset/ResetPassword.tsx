@@ -7,6 +7,7 @@ import { type SubmitHandler, useForm } from 'react-hook-form';
 import { FormattedMessage, useIntl } from 'react-intl';
 import * as validators from '@boluo/common/validations';
 import { Button } from '@boluo/ui/Button';
+import { reportApiError } from '../../../../../error';
 
 interface FormSchema {
   email: string;
@@ -23,9 +24,14 @@ export const ResetPassword = () => {
     const result = await post('/users/reset_password', null, { email, lang: intl.locale });
     if (result.isErr && result.err.code === 'NOT_FOUND') {
       setPageState('NOT_FOUND');
+      return;
     } else if (result.isErr) {
-      console.warn(result.err);
+      reportApiError(result.err, {
+        requestPath: '/users/reset_password',
+        source: 'reset-password-form',
+      });
       setPageState('UNKNOWN_ERROR');
+      return;
     }
     setPageState('SUCCESS');
   };

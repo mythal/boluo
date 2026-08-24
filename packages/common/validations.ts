@@ -65,7 +65,7 @@ export const maxLength = (max: number) => (intl: IntlShape) => ({
 export const nickname = (intl: IntlShape) =>
   ({
     ...required(intl),
-    ...minLength(3)(intl),
+    ...minLength(2)(intl),
     ...maxLength(32)(intl),
   }) satisfies RegisterOptions;
 

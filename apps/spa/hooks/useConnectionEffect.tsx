@@ -14,6 +14,7 @@ import { get } from '@boluo/api-browser';
 import { sleep } from '@boluo/utils/async';
 import { useLogout } from '@boluo/hooks/useLogout';
 import { type ClientConnectionError } from '../state/chat.actions';
+import { recordError, recordWarn } from '../error';
 
 /**
  * The last time the connection showed signs of life (any incoming message;
@@ -68,12 +69,16 @@ const parseAndDispatchUpdate = (
   let update: unknown;
   try {
     update = JSON.parse(raw);
-  } catch {
-    console.warn('Failed to parse incoming message', mailboxId, raw);
+  } catch (error) {
+    recordWarn('Failed to parse incoming WebSocket message', {
+      error,
+      mailboxId,
+      messageLength: raw.length,
+    });
     return;
   }
   if (!isServerUpdate(update)) {
-    console.warn('Received invalid update', mailboxId, update);
+    recordWarn('Received invalid WebSocket update', { mailboxId });
     return;
   }
   publishOwnPreviewAcknowledgement(update, userId, connection);
@@ -99,7 +104,7 @@ const decompressCachedUpdates = async (
     if (decompressedText === '') return [];
     return decompressedText.split('\n').filter((x) => x !== '');
   } catch (error) {
-    console.warn('Failed to decompress cached websocket updates', mailboxId, format, error);
+    recordWarn('Failed to decompress cached WebSocket updates', { error, format, mailboxId });
     return null;
   }
 };
@@ -126,7 +131,7 @@ const handleIncomingMessage = async (
   }
   if (raw instanceof ArrayBuffer || raw instanceof Blob) {
     if (encoding === 'plain') {
-      console.warn('Received binary websocket message while using plain encoding', mailboxId);
+      recordWarn('Received binary WebSocket message while using plain encoding', { mailboxId });
       return;
     }
     const compressed = raw instanceof ArrayBuffer ? raw : await raw.arrayBuffer();
@@ -137,7 +142,10 @@ const handleIncomingMessage = async (
     }
     return;
   }
-  console.warn('Invalid message received', mailboxId, raw);
+  recordWarn('Received unsupported WebSocket message', {
+    dataType: typeof raw,
+    mailboxId,
+  });
 };
 
 const getToken = async (
@@ -164,7 +172,7 @@ const getToken = async (
       errorCode = NETWORK_ERROR;
       continue;
     } else {
-      console.error('Unexpected error when getting event token', err);
+      recordError('Unexpected error when getting event token', { error: err });
       errorCode = 'UNEXPECTED';
       break;
     }
@@ -260,7 +268,7 @@ const connect = async (
         handleIncomingMessage(newConnection, message, mailboxId, userId, dispatch, encoding),
       )
       .catch((error) => {
-        console.warn('Failed to handle websocket message', mailboxId, error);
+        recordWarn('Failed to handle WebSocket message', { error, mailboxId });
       });
   };
   return newConnection;

@@ -543,11 +543,6 @@ const repeat = (): P<ExprNode> =>
     ];
   });
 
-const logResult = <T>(result: T): T => {
-  console.log(result);
-  return result;
-};
-
 const expr2 = (): P<ExprNode> =>
   chainl1<ExprNode, Operator>(operator2, atom, (op, l, r) => ({ type: 'Binary', l, r, op }));
 const expr = (): P<ExprNode> =>

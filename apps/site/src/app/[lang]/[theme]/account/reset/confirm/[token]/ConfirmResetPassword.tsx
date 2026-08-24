@@ -11,6 +11,7 @@ import { Button } from '@boluo/ui/Button';
 import { post } from '@boluo/api-browser';
 import { useRouter } from 'next/navigation';
 import * as classes from '@boluo/ui/classes';
+import { reportApiError } from '../../../../../../../error';
 
 interface Props {
   token: string;
@@ -37,7 +38,10 @@ export const ConfirmResetPassword: FC<Props> = ({ token }) => {
       setPageState('INVALID_TOKEN');
       return;
     } else {
-      console.warn(err);
+      reportApiError(err, {
+        requestPath: '/users/reset_password_confirm',
+        source: 'confirm-reset-password-form',
+      });
       setPageState('UNKNOWN_ERROR');
     }
   };

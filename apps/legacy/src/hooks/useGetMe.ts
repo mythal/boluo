@@ -27,7 +27,7 @@ const queryOptions = <T>(): SWRConfiguration<T, AppError> => ({
   },
 });
 
-export const useGetMe = (dispatch: Dispatch, finish: () => void): void => {
+export const useGetMe = (dispatch: Dispatch, finish: () => void): AppError | undefined => {
   const baseUrl = useSelector((state) => state.ui.baseUrl);
   const finishedRef = useRef(false);
   // Login and logout actions own later session changes; this hook only bootstraps once.
@@ -125,4 +125,6 @@ export const useGetMe = (dispatch: Dispatch, finish: () => void): void => {
     });
     finishOnce();
   }, [dispatch, finish, meData, meError, settingsData, settingsError, spacesData, spacesError]);
+
+  return meError ?? settingsError ?? spacesError;
 };

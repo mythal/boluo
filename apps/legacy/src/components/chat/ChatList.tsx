@@ -5,6 +5,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
 import { DragDropContext, type DragDropContextProps, Droppable } from '@hello-pangea/dnd';
 import { type FinishMoveMessage, type ResetMessageMoving } from '../../actions';
 import { post } from '../../api/request';
+import { recordWarning } from '../../error-reporting';
 import { usePane } from '../../hooks/useChannelId';
 import { type ChatState } from '../../reducers/chatState';
 import { type MessageItem, type PreviewItem } from '../../states/chat-item-set';
@@ -128,7 +129,7 @@ function useOnDragEnd(
       dispatch(finishMove);
 
       if (a === null && b === null) {
-        console.warn('no target item');
+        recordWarning('No target item while moving a message', { source: 'move-message' });
         return;
       }
 

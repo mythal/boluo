@@ -10,6 +10,7 @@ import { throwErr } from '../../../utils/errors';
 import { getDiceFace } from '../../../utils/game';
 import { newId } from '../../../utils/id';
 import { SendTimeoutError, uploadMedia, withTimeout } from './helper';
+import { captureRecoverableException } from '../../../error-reporting';
 
 const MEDIA_UPLOAD_TIMEOUT_MS = 60_000;
 const MESSAGE_REQUEST_TIMEOUT_MS = 30_000;
@@ -36,7 +37,7 @@ const unexpectedSendError = (error: unknown): AppError => {
       context: null,
     };
   }
-  console.error('Unexpected error while sending a message', error);
+  captureRecoverableException(error, { source: 'send-message' });
   return {
     code: UNEXPECTED,
     message: error instanceof Error ? error.message : 'Unknown error',

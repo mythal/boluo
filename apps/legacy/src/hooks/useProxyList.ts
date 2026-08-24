@@ -1,9 +1,10 @@
 import { useMemo } from 'react';
 import useSWR from 'swr';
 import { type Proxy, getDefaultBaseUrl } from '../base-url';
+import { withFaroSessionId } from '../frontend-telemetry';
 
 const fetchList = async (): Promise<Proxy[]> => {
-  const response = await fetch(getDefaultBaseUrl() + '/api/info/proxies');
+  const response = await fetch(getDefaultBaseUrl() + '/api/info/proxies', withFaroSessionId());
   const proxies = (await response.json()) as Proxy[];
   return proxies.map((proxy) => {
     // TODO: Remove this hack

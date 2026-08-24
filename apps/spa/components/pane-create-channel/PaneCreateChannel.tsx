@@ -23,6 +23,7 @@ import { ChannelTypeField } from './ChannelTypeField';
 import { useQuerySpace } from '@boluo/hooks/useQuerySpace';
 import { PaneLoading } from '../PaneLoading';
 import { PaneFailed } from '../pane-failed/PaneFailed';
+import { neverMind } from '@boluo/utils/function';
 
 const FormErrorDispay: FC<{ error: ApiError; intl: IntlShape }> = ({ error, intl }) => {
   return <ErrorMessageBox>{explainError(intl, error)}</ErrorMessageBox>;
@@ -85,7 +86,7 @@ export const CreateChannelForm: FC<{ space: Space }> = ({ space }) => {
     FormSchema
   >(key, createChannel, {});
   const onSubmit = async (data: FormSchema) => {
-    const channelWithMember = await trigger(data);
+    const channelWithMember = await trigger(data).catch(neverMind);
     if (channelWithMember) {
       await mutate(['/channels/by_space', spaceId]);
       replacePane({ type: 'CHANNEL', channelId: channelWithMember.channel.id });

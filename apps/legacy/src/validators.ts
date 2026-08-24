@@ -20,9 +20,7 @@ export const emailValidation = {
   },
   validate: async (email: string) => {
     const result = await get('/users/check_email', { email });
-    if (!result.isOk) {
-      console.warn(result);
-    } else if (result.value) {
+    if (result.isOk && result.value) {
       return '这个 E-mail 地址已经存在，是否已经注册了？';
     }
     return true;
@@ -63,9 +61,7 @@ export const usernameValidation = {
   },
   validate: async (username: string) => {
     const result = await get('/users/check_username', { username });
-    if (!result.isOk) {
-      console.warn(result);
-    } else if (result.value) {
+    if (result.isOk && result.value) {
       return '这个用户名已经存在';
     }
     return true;
@@ -124,9 +120,7 @@ export const channelNameValidation = (
     }
     if (currentName !== name) {
       const result = await get('/channels/check_name', { spaceId, name });
-      if (!result.isOk) {
-        console.warn(result);
-      } else if (result.value) {
+      if (result.isOk && result.value) {
         return '这个频道名已经存在';
       }
     }

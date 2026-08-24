@@ -10,6 +10,7 @@ import { setThemeToDom, writeThemeToCookie } from '@boluo/theme';
 import { useTheme } from '@boluo/theme/react';
 import { type Theme } from '@boluo/types';
 import type { Settings } from '@boluo/settings';
+import { neverMind } from '@boluo/utils/function';
 import { Select } from '@boluo/ui/Select';
 import { identity } from '@boluo/utils/function';
 
@@ -41,7 +42,7 @@ export const ThemeSelect: FC<Props> = ({ id }) => {
     const theme = setThemeToDom(value);
     writeThemeToCookie(theme);
     if (currentUser) {
-      void trigger(theme);
+      void trigger(theme).catch(neverMind);
     }
   };
 

@@ -60,9 +60,16 @@ struct FaroMeta {
     #[serde(default)]
     browser: FaroBrowser,
     #[serde(default)]
+    page: FaroPage,
+    #[serde(default)]
     user: FaroUser,
     #[serde(default)]
     session: FaroSession,
+}
+
+#[derive(Debug, Default, Deserialize)]
+struct FaroPage {
+    url: Option<String>,
 }
 
 #[derive(Debug, Default, Deserialize)]
@@ -151,6 +158,44 @@ fn truncated(value: &str, max_bytes: usize) -> &str {
     &value[..value.floor_char_boundary(max_bytes.min(value.len()))]
 }
 
+fn sanitized_page_path(raw_url: &str) -> String {
+    let Ok(url) = url::Url::parse(raw_url) else {
+        return String::new();
+    };
+    let Some(segments) = url.path_segments() else {
+        return String::new();
+    };
+    let segments: Vec<_> = segments.collect();
+
+    let mut path = String::new();
+    for (index, segment) in segments.iter().enumerate() {
+        path.push('/');
+        let follows_invite = segments.get(index.wrapping_sub(1)) == Some(&"invite")
+            || segments.get(index.wrapping_sub(2)) == Some(&"invite");
+        let follows_reset_confirm = segments.get(index.wrapping_sub(1)) == Some(&"confirm")
+            && segments.get(index.wrapping_sub(2)) == Some(&"reset");
+        let follows_legacy_join_space = segments.get(index.wrapping_sub(1)) == Some(&"space")
+            && segments.get(index.wrapping_sub(2)) == Some(&"join");
+        let follows_legacy_join_space_id = segments.get(index.wrapping_sub(2)) == Some(&"space")
+            && segments.get(index.wrapping_sub(3)) == Some(&"join");
+        let follows_legacy_reset =
+            segments.get(index.wrapping_sub(1)) == Some(&"confirm-password-reset");
+        if uuid::Uuid::parse_str(segment).is_ok()
+            || follows_invite
+            || follows_reset_confirm
+            || follows_legacy_join_space
+            || follows_legacy_join_space_id
+            || follows_legacy_reset
+        {
+            path.push_str(":id");
+        } else {
+            path.push_str(segment);
+        }
+    }
+    path.truncate(path.floor_char_boundary(256));
+    path
+}
+
 fn check_rate_limit(client_ip: IpAddr) -> Result<(), AppError> {
     let client_limited = match client_ip {
         IpAddr::V4(ip) => CLIENT_IPV4_LIMITER.check_key(&ip).is_err(),
@@ -235,6 +280,7 @@ fn process(payload: FaroPayload) -> Result<(), AppError> {
     // These identifiers are client-reported correlation hints, not authenticated identity.
     let frontend_user_id = truncated(payload.meta.user.id.as_deref().unwrap_or(""), 128);
     let faro_session_id = truncated(payload.meta.session.id.as_deref().unwrap_or(""), 128);
+    let frontend_page_path = sanitized_page_path(payload.meta.page.url.as_deref().unwrap_or(""));
 
     for exception in &payload.exceptions {
         let stacktrace = stacktrace(exception);
@@ -252,6 +298,38 @@ fn process(payload: FaroPayload) -> Result<(), AppError> {
                     .map(String::as_str)
                     .unwrap_or(""),
                 128
+            ),
+            frontend_error_digest = truncated(
+                exception
+                    .context
+                    .get("digest")
+                    .map(String::as_str)
+                    .unwrap_or(""),
+                128
+            ),
+            frontend_source = truncated(
+                exception
+                    .context
+                    .get("source")
+                    .map(String::as_str)
+                    .unwrap_or(""),
+                64
+            ),
+            frontend_request_path = truncated(
+                exception
+                    .context
+                    .get("request_path")
+                    .map(String::as_str)
+                    .unwrap_or(""),
+                256
+            ),
+            api_error_code = truncated(
+                exception
+                    .context
+                    .get("api_error_code")
+                    .map(String::as_str)
+                    .unwrap_or(""),
+                64
             ),
             component_stack = truncated(
                 exception
@@ -272,6 +350,7 @@ fn process(payload: FaroPayload) -> Result<(), AppError> {
             browser_mobile,
             frontend_user_id,
             faro_session_id,
+            frontend_page_path,
             "Frontend exception"
         );
     }
@@ -294,6 +373,7 @@ fn process(payload: FaroPayload) -> Result<(), AppError> {
                     browser_mobile,
                     frontend_user_id,
                     faro_session_id,
+                    frontend_page_path,
                     "{}",
                     message
                 );
@@ -313,6 +393,7 @@ fn process(payload: FaroPayload) -> Result<(), AppError> {
                     browser_mobile,
                     frontend_user_id,
                     faro_session_id,
+                    frontend_page_path,
                     "{}",
                     message
                 );
@@ -431,6 +512,29 @@ mod tests {
     use hyper::body::Bytes;
 
     use super::*;
+
+    #[test]
+    fn sanitizes_frontend_page_url() {
+        assert_eq!(
+            sanitized_page_path(
+                "https://example.com/en/light/space/invite/not-a-uuid/secret-token?secret=value#fragment"
+            ),
+            "/en/light/space/invite/:id/:id"
+        );
+        assert_eq!(
+            sanitized_page_path("https://example.com/en/light/account/reset/confirm/secret-token"),
+            "/en/light/account/reset/confirm/:id"
+        );
+        assert_eq!(
+            sanitized_page_path("https://old.example.com/join/space/compact-id/compact-token"),
+            "/join/space/:id/:id"
+        );
+        assert_eq!(
+            sanitized_page_path("https://old.example.com/confirm-password-reset/opaque-token"),
+            "/confirm-password-reset/:id"
+        );
+        assert_eq!(sanitized_page_path("not a URL"), "");
+    }
 
     fn request(body: impl Into<Bytes>) -> Request<Full<Bytes>> {
         let mut request = Request::builder()

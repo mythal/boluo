@@ -18,7 +18,9 @@ const getUser = React.cache(async (userId: string): Promise<User | null> => {
   }
   const error = result.err;
   if (error.code === 'NOT_FOUND') return null;
-  return result.unwrap();
+  throw new Error(`Failed to load profile: ${error.code}`, {
+    cause: 'cause' in error ? error.cause : error,
+  });
 });
 
 export async function generateMetadata({ params }: { params: Promise<Params> }): Promise<Metadata> {

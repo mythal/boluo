@@ -5,12 +5,14 @@ import { ChangeLocaleContext } from '@boluo/hooks/useLocale';
 import { defaultLocale, type IntlMessages, LOCALES, onIntlError } from '@boluo/locale';
 import type { Settings } from '@boluo/settings';
 import { useRouter } from 'next/navigation';
-import { type FC, useCallback } from 'react';
+import { type FC, useCallback, useEffect } from 'react';
 import { IntlProvider } from 'react-intl';
 import { type MutationFetcher } from 'swr/mutation';
 import useSWRMutation from 'swr/mutation';
 import type { ChildrenProps, Locale } from '@boluo/types';
 import { identity } from '@boluo/utils/function';
+import { setTelemetryUser } from '../../frontend-telemetry';
+import { reportApiError } from '../../error';
 
 interface Props extends ChildrenProps {
   locale: Locale;
@@ -20,13 +22,25 @@ interface Props extends ChildrenProps {
 export const LocaleProvider: FC<Props> = ({ children, locale, messages }) => {
   const { data: currentUser } = useQueryCurrentUser();
   const router = useRouter();
+  const currentUserId = currentUser?.id;
+
+  useEffect(() => {
+    setTelemetryUser(currentUserId);
+  }, [currentUserId]);
 
   const key = ['/users/settings'] as const;
   const localeUpdater: MutationFetcher<Settings, typeof key, Locale> = useCallback(
     async (_, { arg: locale }) => {
       const settings: Settings = { locale };
       const settingsResult = await patch('/users/update_settings', null, settings);
-      return settingsResult.unwrapOr({});
+      if (settingsResult.isErr) {
+        reportApiError(settingsResult.err, {
+          requestPath: '/users/update_settings',
+          source: 'locale-update',
+        });
+        return {};
+      }
+      return settingsResult.some;
     },
     [],
   );

@@ -277,6 +277,10 @@ impl MessagePositionService {
     pub(crate) fn actor_count(&self) -> usize {
         CHANNEL_POS_MANAGER.actor_count()
     }
+
+    pub(crate) fn state_entry_count(&self) -> usize {
+        CHANNEL_POS_MANAGER.state_entry_count()
+    }
 }
 
 pub(crate) static MESSAGE_POSITIONS: MessagePositionService = MessagePositionService;

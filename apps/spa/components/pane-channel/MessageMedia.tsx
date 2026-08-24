@@ -176,9 +176,6 @@ export const MessageMedia = memo<Props>(({ media, className, children = null }: 
     );
   }
   if (src == null || previewSource == null) {
-    if (!isLoadingAppSettings && !(media instanceof File)) {
-      console.error('MEDIA_URL is not set.');
-    }
     const loadState = isLoadingAppSettings || media instanceof File ? 'LOADING' : 'ERROR';
     return (
       <MediaContainer

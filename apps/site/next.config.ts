@@ -14,6 +14,7 @@ dotenv.config({
 
 const env = {
   BACKEND_URL: process.env.BACKEND_URL,
+  APP_VERSION: process.env.APP_VERSION ?? process.env.GITHUB_SHA,
   ANALYZE: process.env.ANALYZE,
 };
 
@@ -32,6 +33,7 @@ const config: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   output: 'standalone',
+  productionBrowserSourceMaps: true,
   rewrites: process.env.NODE_ENV === 'development' ? rewrites : undefined,
   turbopack: {
     // Workaround for https://github.com/vercel/next.js/issues/81628
@@ -52,6 +54,9 @@ const config: NextConfig = {
     ],
   },
   outputFileTracingRoot: root,
+  env: {
+    APP_VERSION: env.APP_VERSION,
+  },
   webpack: (config) => {
     // `react-intl` without parser
     // https://formatjs.io/docs/guides/advanced-usage#react-intl-without-parser-40-smaller

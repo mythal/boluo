@@ -50,7 +50,17 @@ export function createConfig(tsconfigRootDir) {
       },
     },
     {
-      ignores: ['**/dist/**', 'out/**', '**/.next/**', '**/_next/**', 'postcss.config.cjs'],
+      ignores: [
+        '**/dist/**',
+        'out/**',
+        '**/.next/**',
+        '**/_next/**',
+        '**/.open-next/**',
+        '**/.tmp/**',
+        '**/.vercel/**',
+        '**/.wrangler/**',
+        'postcss.config.cjs',
+      ],
     },
     {
       rules: {

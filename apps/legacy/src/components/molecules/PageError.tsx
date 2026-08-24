@@ -8,6 +8,7 @@ import Text from '../../components/atoms/Text';
 import Title from '../../components/atoms/Title';
 import { mask, mX, mY } from '../../styles/atoms';
 import { Code } from '../atoms/Code';
+import { captureException } from '../../error-reporting';
 
 interface Props {
   children: React.ReactNode;
@@ -16,20 +17,6 @@ interface Props {
 interface State {
   error: unknown;
 }
-
-const formatError = (error: unknown) => {
-  if (error instanceof Error) {
-    return error.message;
-  }
-  if (typeof error === 'string') {
-    return error;
-  }
-  try {
-    return JSON.stringify(error);
-  } catch {
-    return 'Unknown error';
-  }
-};
 
 const Mask = styled.div`
   display: flex;
@@ -52,8 +39,13 @@ class PageError extends React.Component<Props, State> {
     this.state = { error: undefined };
   }
   static getDerivedStateFromError(error: unknown) {
-    console.error(error);
     return { error };
+  }
+  componentDidCatch(error: unknown, info: React.ErrorInfo) {
+    captureException(error, {
+      source: 'react-error-boundary',
+      componentStack: info.componentStack ?? undefined,
+    });
   }
   onClick = () => {
     document.location.reload();
@@ -61,7 +53,6 @@ class PageError extends React.Component<Props, State> {
   render() {
     if (this.state.error !== undefined) {
       document.title = '菠萝出错啦';
-      const errorMessage = formatError(this.state.error);
       return (
         <Mask>
           <Container>
@@ -77,7 +68,7 @@ class PageError extends React.Component<Props, State> {
               重试，如果依然错误请联系网站管理员。
             </Text>
             <Text css={mY(4)}>
-              详情：<Code>{errorMessage}</Code>
+              详情：<Code>页面遇到了无法恢复的错误</Code>
             </Text>
           </Container>
         </Mask>

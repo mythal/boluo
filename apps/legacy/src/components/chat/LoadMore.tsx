@@ -85,7 +85,6 @@ function LoadMore() {
       setLoading(false);
     }
     if (!result.isOk) {
-      console.error(result.value);
       return;
     }
     const messages = result.value;

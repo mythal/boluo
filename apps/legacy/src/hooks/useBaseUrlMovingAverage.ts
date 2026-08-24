@@ -9,6 +9,7 @@
  */
 
 import useSWR from 'swr';
+import { withFaroSessionId } from '../frontend-telemetry';
 
 export type MeasureResult = number | 'TIMEOUT' | 'ERROR';
 
@@ -44,7 +45,7 @@ const sleep = (ms: number): Promise<'TIMEOUT'> => {
 const measure = async (url: string): Promise<MeasureResult> => {
   const start = performance.now();
   try {
-    const result = await Promise.race([fetch(url + '/api/info'), sleep(1000)]);
+    const result = await Promise.race([fetch(url + '/api/info', withFaroSessionId()), sleep(1000)]);
     if (result === 'TIMEOUT') {
       return result;
     }

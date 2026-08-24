@@ -9,3 +9,5 @@ export type EmptyFunction = () => void;
 export const empty = () => {
   // empty function
 };
+
+export const neverMind = () => undefined;

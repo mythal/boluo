@@ -1,4 +1,5 @@
 import { type Proxy } from '@boluo/api';
+import { withFaroSessionId } from '@boluo/api-browser';
 import { timeout } from '@boluo/utils/async';
 import { atomWithStorage } from 'jotai/utils';
 import { IS_DEVELOPMENT } from './const';
@@ -15,7 +16,10 @@ export const testProxy = async (proxy: Proxy): Promise<BaseUrlTestResult> => {
   const now = performance.now();
 
   try {
-    const rtt = await Promise.race([fetch(url + '/api/info'), timeout(TIMEOUT)]);
+    const rtt = await Promise.race([
+      fetch(url + '/api/info', withFaroSessionId()),
+      timeout(TIMEOUT),
+    ]);
     if (rtt === 'TIMEOUT') {
       return { proxy, rtt: 'TIMEOUT' };
     } else {

@@ -59,11 +59,12 @@
         "$TURBO_ROOT$/.env",
         "$TURBO_ROOT$/.env.local"
       ],
-      "env": ["ANALYZE", "BACKEND_URL"],
+      "env": ["ANALYZE", "APP_VERSION", "BACKEND_URL", "GITHUB_SHA"],
       "outputs": [".next/**", "!.next/cache/**"]
     },
     "legacy#build": {
       "dependsOn": ["@boluo/backend-proxy#build", "@boluo/icons#generate"],
+      "env": ["APP_VERSION", "GITHUB_SHA"],
       "inputs": [
         "$TURBO_DEFAULT$",
         ".env",

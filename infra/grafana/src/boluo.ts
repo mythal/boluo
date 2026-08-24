@@ -4,7 +4,6 @@ import {
   GridBuilder,
   gridItem,
 } from '@grafana/grafana-foundation-sdk/dashboardv2';
-import { AxisPlacement } from '@grafana/grafana-foundation-sdk/common';
 import {
   QueryEditorMode,
   TooltipDisplayMode,
@@ -41,6 +40,8 @@ const panels = {
   queueDepths: 'panel-24',
   eventDelivery: 'panel-26',
   runtimePopulation: 'panel-27',
+  snapshotPopulation: 'panel-31',
+  allocatorMemory: 'panel-32',
   processMemory: 'panel-29',
   applicationLogs: 'panel-30',
 } as const;
@@ -159,17 +160,28 @@ export function buildBoluoDashboard(
         id: 3,
         title: 'Instance memory utilization',
         description:
-          'Memory is (total - available) / total for each VM instance; swap utilization is shown separately.',
+          'Memory is cgroup utilization. RSS is the server process resident share. Anonymous projected is the one-hour linear forecast from the latest hour.',
         datasourceUid,
         unit: 'percentunit',
         min: 0,
-        max: 1,
         targets: [
           {
             refId: 'memory',
             editorMode: QueryEditorMode.Code,
             expr: memoryUtilization(APP),
             legendFormat: '{{instance}} memory',
+          },
+          {
+            refId: 'rss',
+            editorMode: QueryEditorMode.Code,
+            expr: `(max by(instance) (boluo_server_process_memory_bytes{app="${APP}",kind="rss"})) / clamp_min(max by(instance) (fly_instance_memory_mem_total{app="${APP}"}), 1)`,
+            legendFormat: '{{instance}} process RSS',
+          },
+          {
+            refId: 'anonymous-projected',
+            editorMode: QueryEditorMode.Code,
+            expr: `clamp_min(predict_linear(max by(instance) (boluo_server_process_memory_bytes{app="${APP}",kind="anonymous"})[1h:], 3600), 0) / clamp_min(max by(instance) (fly_instance_memory_mem_total{app="${APP}"}), 1)`,
+            legendFormat: '{{instance}} anonymous projected +1h',
           },
           {
             refId: 'swap',
@@ -515,6 +527,12 @@ export function buildBoluoDashboard(
             legendFormat: '{{instance}} position actors',
           },
           {
+            refId: 'position-state-entries',
+            editorMode: QueryEditorMode.Code,
+            expr: `boluo_server_pos_state_entries{app="${APP}"}`,
+            legendFormat: '{{instance}} position state entries',
+          },
+          {
             refId: 'token-store',
             editorMode: QueryEditorMode.Code,
             expr: `boluo_server_events_token_store_entries{app="${APP}"}`,
@@ -527,19 +545,13 @@ export function buildBoluoDashboard(
       panels.processMemory,
       timeSeriesPanel({
         id: 29,
-        title: 'Process & allocator memory',
+        title: 'Process resident memory',
         description:
-          'RSS is resident process memory. Allocator committed is address space managed by the allocator, uses the right axis, and should not be added to RSS.',
+          'Linux process RSS split into anonymous, file-backed, and shared mappings; the instance total is shown as a capacity reference.',
         datasourceUid,
         unit: 'bytes',
         min: 0,
         tooltipMode: TooltipDisplayMode.Multi,
-        overrides: [
-          {
-            matcher: { id: 'byFrameRefID', options: 'allocator-committed' },
-            properties: [{ id: 'custom.axisPlacement', value: AxisPlacement.Right }],
-          },
-        ],
         targets: [
           {
             refId: 'rss',
@@ -560,16 +572,69 @@ export function buildBoluoDashboard(
             legendFormat: '{{instance}} file',
           },
           {
-            refId: 'allocator-committed',
+            refId: 'shared',
             editorMode: QueryEditorMode.Code,
-            expr: `boluo_server_allocator_committed_bytes{app="${APP}"}`,
-            legendFormat: '{{instance}} allocator committed',
+            expr: `boluo_server_process_memory_bytes{app="${APP}",kind="shared"}`,
+            legendFormat: '{{instance}} shared',
           },
           {
             refId: 'swap',
             editorMode: QueryEditorMode.Code,
             expr: `boluo_server_process_swap_bytes{app="${APP}"}`,
             legendFormat: '{{instance}} process swap',
+          },
+          {
+            refId: 'instance-total',
+            editorMode: QueryEditorMode.Code,
+            expr: `max by(instance) (fly_instance_memory_mem_total{app="${APP}"})`,
+            legendFormat: '{{instance}} instance total',
+          },
+        ],
+      }),
+    )
+    .element(
+      panels.snapshotPopulation,
+      timeSeriesPanel({
+        id: 31,
+        title: 'Loaded snapshot contents',
+        description: 'Total items retained by all currently loaded Space snapshots.',
+        datasourceUid,
+        unit: 'short',
+        min: 0,
+        tooltipMode: TooltipDisplayMode.Multi,
+        targets: [
+          {
+            refId: 'snapshot-items',
+            editorMode: QueryEditorMode.Code,
+            expr: `boluo_server_space_runtime_snapshot_items{app="${APP}"}`,
+            legendFormat: '{{instance}} {{kind}}',
+          },
+        ],
+      }),
+    )
+    .element(
+      panels.allocatorMemory,
+      timeSeriesPanel({
+        id: 32,
+        title: 'Allocator committed address space',
+        description:
+          'mimalloc committed and peak committed estimates on Linux. These are allocator-managed address-space figures, not physical RSS, and must not be added to process memory.',
+        datasourceUid,
+        unit: 'bytes',
+        min: 0,
+        tooltipMode: TooltipDisplayMode.Multi,
+        targets: [
+          {
+            refId: 'committed',
+            editorMode: QueryEditorMode.Code,
+            expr: `boluo_server_allocator_committed_bytes{app="${APP}"}`,
+            legendFormat: '{{instance}} committed',
+          },
+          {
+            refId: 'peak-committed',
+            editorMode: QueryEditorMode.Code,
+            expr: `boluo_server_allocator_peak_committed_bytes{app="${APP}"}`,
+            legendFormat: '{{instance}} peak committed',
           },
         ],
       }),
@@ -632,7 +697,9 @@ export function buildBoluoDashboard(
         gridItem(panels.diskCacheCapacity).x(0).y(46).width(8).height(8),
         gridItem(panels.diskCacheIo).x(8).y(46).width(8).height(8),
         gridItem(panels.diskCacheLatency).x(16).y(46).width(8).height(8),
-        gridItem(panels.applicationLogs).x(0).y(54).width(24).height(10),
+        gridItem(panels.snapshotPopulation).x(0).y(54).width(12).height(8),
+        gridItem(panels.allocatorMemory).x(12).y(54).width(12).height(8),
+        gridItem(panels.applicationLogs).x(0).y(62).width(24).height(10),
       ]),
     )
     .links([])

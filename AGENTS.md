@@ -9,9 +9,12 @@ Important design decisions are documented in `docs/DESIGN.md`. However, you shou
 - After making changes, provide 2-3 concise possible commit messages as options to summarize all uncommitted work using the conventional commit format, with the package name as the scope.
 - Temporary files created during development can be placed in the `.tmp/` directory, which is ignored.
 
-### Prometheus (VictoriaMetrics)
+## Observability
 
-- Query `https://metrics.mythal.net/api/v1/query`
+The observability stack includes:
+
+- VictoriaMetrics `https://metrics.mythal.net/api/v1/query`
+- VictoriaLog `https://log.mythal.net/`
 
 ---
 

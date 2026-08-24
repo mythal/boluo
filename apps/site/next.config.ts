@@ -33,6 +33,7 @@ const config: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   output: 'standalone',
+  productionBrowserSourceMaps: true,
   rewrites: process.env.NODE_ENV === 'development' ? rewrites : undefined,
   turbopack: {
     // Workaround for https://github.com/vercel/next.js/issues/81628

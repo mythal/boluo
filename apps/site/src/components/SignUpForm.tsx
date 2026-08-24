@@ -12,6 +12,7 @@ import { Button } from '@boluo/ui/Button';
 import { ErrorMessageBox } from '@boluo/ui/ErrorMessageBox';
 import { TextInput } from '@boluo/ui/TextInput';
 import * as validations from '@boluo/common/validations';
+import { reportApiError } from '../error';
 
 // https://web.dev/sign-in-form-best-practices/
 
@@ -200,6 +201,7 @@ export const SignUpForm = () => {
   const onSubmit: SubmitHandler<Schema> = async ({ password, username, email, nickname }) => {
     const result = await post('/users/register', null, { password, username, email, nickname });
     if (result.isErr) {
+      reportApiError(result.err, { requestPath: '/users/register', source: 'sign-up-form' });
       return setError(result.err);
     }
     setError(null);

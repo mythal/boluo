@@ -1,14 +1,18 @@
 'use client';
 
-import Refresh from '@boluo/icons/Refresh';
 import { useEffect } from 'react';
 import { Button } from '@boluo/ui/Button';
 import Link from 'next/link';
+import { captureException } from '../../../error';
 
-export default function Error({ error, reset }: { error: Error; reset: () => void }) {
+type NextError = Error & { digest?: string };
+
+export default function Error({ error, reset }: { error: NextError; reset: () => void }) {
   useEffect(() => {
-    // Log the error to an error reporting service
-    console.error(error);
+    captureException(error, {
+      source: 'next-route-error-boundary',
+      context: { digest: error.digest },
+    });
   }, [error]);
 
   return (
@@ -18,7 +22,10 @@ export default function Error({ error, reset }: { error: Error; reset: () => voi
         Something went very wrong. Please try again later or contact admin.
       </div>
 
-      <div className="py-2">
+      <div className="flex gap-2 py-2">
+        <Button variant="primary" onClick={reset}>
+          Try again
+        </Button>
         <Link
           href="/"
           className="text-text-link decoration-text-link-decoration hover:text-text-link-hover underline"
@@ -27,14 +34,7 @@ export default function Error({ error, reset }: { error: Error; reset: () => voi
         </Link>
       </div>
 
-      <div>
-        <div className="py-2 text-sm">Tech details:</div>
-
-        <div>
-          <span className="bg-state-danger-bg mr-2 rounded px-2">{error.name}</span>
-          <span className="font-mono">{error.message}</span>
-        </div>
-      </div>
+      {error.digest && <div className="py-2 font-mono text-sm">Error ID: {error.digest}</div>}
     </div>
   );
 }

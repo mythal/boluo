@@ -52,7 +52,7 @@ export function initializeFrontendTelemetry(): void {
     },
     batching: {
       enabled: true,
-      itemLimit: 10,
+      itemLimit: 5,
       sendTimeout: 1_000,
     },
     beforeSend: (item) => {
@@ -65,6 +65,9 @@ export function initializeFrontendTelemetry(): void {
       }
       return item;
     },
+    ignoreErrors: [
+      /ResizeObserver loop (?:limit exceeded|completed with undelivered notifications)/i,
+    ],
     ignoreUrls: [/\/api\/telemetry(?:[/?#]|$)/],
     instrumentations: [
       new ConsoleInstrumentation(),

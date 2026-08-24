@@ -829,7 +829,12 @@ async fn receive_events(ctx: &crate::context::AppContext, req: Request<Incoming>
         return err_response(error);
     }
 
-    let body_bytes = match crate::interface::read_body(req).await {
+    let body_bytes = match crate::interface::read_body_limited(
+        req,
+        crate::interface::DEFAULT_JSON_BODY_LIMIT_BYTES,
+    )
+    .await
+    {
         Ok(body) => body,
         Err(error) => return err_response(error),
     };

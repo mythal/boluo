@@ -2,11 +2,15 @@
 use hyper::StatusCode;
 use hyper::body::Body;
 use serde::{Deserialize, Serialize};
-use std::error::Error;
 use std::time::{Duration, Instant};
 
 use crate::error::AppError;
 pub type Response = hyper::Response<Vec<u8>>;
+
+/// Maximum request size for ordinary JSON API payloads.
+pub const DEFAULT_JSON_BODY_LIMIT_BYTES: usize = 1024 * 1024;
+/// Maximum request size for message payloads, whose parsed entities may be substantially larger.
+pub const LARGE_JSON_BODY_LIMIT_BYTES: usize = 4 * 1024 * 1024;
 
 fn build_response(bytes: Vec<u8>, status: StatusCode) -> hyper::Response<Vec<u8>> {
     hyper::Response::builder()
@@ -125,15 +129,53 @@ fn record_request_body_read(started_at: Instant, body_bytes: Option<usize>) {
     }
 }
 
-pub async fn read_body<B>(req: hyper::Request<B>) -> Result<bytes::Bytes, AppError>
+pub async fn read_body_limited<B>(
+    req: hyper::Request<B>,
+    max_bytes: usize,
+) -> Result<bytes::Bytes, AppError>
 where
     B: Body,
 {
+    use bytes::{Buf, BufMut, BytesMut};
     use http_body_util::BodyExt;
 
+    if req
+        .headers()
+        .get(hyper::header::CONTENT_LENGTH)
+        .and_then(|value| value.to_str().ok())
+        .and_then(|value| value.parse::<u64>().ok())
+        .is_some_and(|content_length| content_length > max_bytes as u64)
+    {
+        record_request_body_read(Instant::now(), None);
+        return Err(AppError::PayloadTooLarge);
+    }
+
     let started_at = Instant::now();
-    let collected = tokio::time::timeout(Duration::from_secs(10), req.into_body().collect()).await;
+    let collect = async move {
+        let mut body = std::pin::pin!(req.into_body());
+        let mut output = BytesMut::new();
+        while let Some(frame) = body.frame().await {
+            let frame = frame
+                .map_err(|_| AppError::BadRequest("Failed to read the request body".to_string()))?;
+            let Ok(data) = frame.into_data() else {
+                continue;
+            };
+            let data_len = data.remaining();
+            if data_len > max_bytes.saturating_sub(output.len()) {
+                return Err(AppError::PayloadTooLarge);
+            }
+            output.put(data);
+        }
+        Ok(output.freeze())
+    };
+    let collected = tokio::time::timeout(Duration::from_secs(10), collect).await;
+
     let body = match collected {
+        Ok(Ok(body)) => body,
+        Ok(Err(error)) => {
+            record_request_body_read(started_at, None);
+            return Err(error);
+        }
         Err(_) => {
             record_request_body_read(started_at, None);
             tracing::warn!(
@@ -142,63 +184,9 @@ where
             );
             return Err(AppError::Timeout);
         }
-        Ok(Err(_)) => {
-            record_request_body_read(started_at, None);
-            tracing::error!(
-                event = "http.request_body.read_failed",
-                "Failed to read the request body"
-            );
-            return Err(AppError::BadRequest(
-                "Failed to read the request body".to_string(),
-            ));
-        }
-        Ok(Ok(body)) => body.to_bytes(),
     };
     record_request_body_read(started_at, Some(body.len()));
     Ok(body)
-}
-
-pub async fn read_body_limited<B>(
-    req: hyper::Request<B>,
-    max_bytes: usize,
-) -> Result<bytes::Bytes, AppError>
-where
-    B: Body,
-    B::Error: Into<Box<dyn Error + Send + Sync>>,
-{
-    use http_body_util::{BodyExt, LengthLimitError, Limited};
-
-    let started_at = Instant::now();
-    let collected = tokio::time::timeout(
-        Duration::from_secs(10),
-        Limited::new(req.into_body(), max_bytes).collect(),
-    )
-    .await;
-
-    let collected = match collected {
-        Ok(collected) => collected,
-        Err(_) => {
-            record_request_body_read(started_at, None);
-            return Err(AppError::Timeout);
-        }
-    };
-
-    match collected {
-        Ok(body) => {
-            let body = body.to_bytes();
-            record_request_body_read(started_at, Some(body.len()));
-            Ok(body)
-        }
-        Err(error) => {
-            record_request_body_read(started_at, None);
-            match error.downcast_ref::<LengthLimitError>() {
-                Some(_) => Err(AppError::PayloadTooLarge),
-                None => Err(AppError::BadRequest(
-                    "Failed to read the request body".to_string(),
-                )),
-            }
-        }
-    }
 }
 
 pub async fn parse_body_limited<T, B>(
@@ -208,7 +196,6 @@ pub async fn parse_body_limited<T, B>(
 where
     for<'de> T: Deserialize<'de>,
     B: Body,
-    B::Error: Into<Box<dyn Error + Send + Sync>>,
 {
     let body = read_body_limited(req, max_bytes).await?;
     sonic_rs::from_slice(&body)
@@ -219,8 +206,7 @@ pub async fn parse_body<T>(req: hyper::Request<impl Body>) -> Result<T, AppError
 where
     for<'de> T: Deserialize<'de>,
 {
-    // TODO: limit the body size
-    let body = read_body(req).await?;
+    let body = read_body_limited(req, DEFAULT_JSON_BODY_LIMIT_BYTES).await?;
     sonic_rs::from_slice(&body).map_err(|e| {
         tracing::error!(
             event = "http.request_body.parse_failed", error = %e, "Failed to parse the request body");
@@ -233,7 +219,7 @@ where
     T: Send + 'static,
     for<'de> T: Deserialize<'de>,
 {
-    let body = read_body(req).await?;
+    let body = read_body_limited(req, LARGE_JSON_BODY_LIMIT_BYTES).await?;
     sonic_rs::from_slice(&body).map(Box::new).map_err(|e| {
         tracing::error!(
             event = "http.request_body.parse_failed", error = %e, "Failed to parse the request body");
@@ -314,5 +300,34 @@ mod body_tests {
             .expect_err("invalid JSON should be rejected");
 
         assert!(matches!(error, AppError::BadRequest(_)));
+    }
+
+    #[tokio::test]
+    async fn default_json_body_rejects_oversized_payload() {
+        let request = hyper::Request::new(Full::new(Bytes::from(vec![
+            b' ';
+            DEFAULT_JSON_BODY_LIMIT_BYTES
+                + 1
+        ])));
+
+        let error = parse_body::<Payload>(request)
+            .await
+            .expect_err("oversized default JSON payload should be rejected");
+
+        assert!(matches!(error, AppError::PayloadTooLarge));
+    }
+
+    #[tokio::test]
+    async fn limited_body_rejects_oversized_content_length_before_reading() {
+        let request = hyper::Request::builder()
+            .header(hyper::header::CONTENT_LENGTH, "9")
+            .body(Full::new(Bytes::from_static(b"short")))
+            .unwrap();
+
+        let error = read_body_limited(request, 8)
+            .await
+            .expect_err("oversized declared content length should be rejected");
+
+        assert!(matches!(error, AppError::PayloadTooLarge));
     }
 }

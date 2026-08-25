@@ -1,7 +1,13 @@
 import type { Channel, MemberWithUser, Space, UserStatus } from '@boluo/api';
+import type { ClientWebSocketCloseReason } from '@boluo/api/websocket/close';
 
 export type ChatEffect =
-  | { type: 'CLOSE_CONNECTION'; id: string; connection: WebSocket }
+  | {
+      type: 'CLOSE_CONNECTION';
+      id: string;
+      connection: WebSocket;
+      reason: Exclude<ClientWebSocketCloseReason, 'UNKNOWN'>;
+    }
   | {
       type: 'CHANNEL_CHANGED';
       id: string;

@@ -71,10 +71,10 @@ pub struct Character {
     pub archived_at: Option<OffsetDateTime>,
     #[specta(type = Vec<String>)]
     pub tags: Vec<CompactString>,
-    #[specta(type = String)]
+    #[specta(type = OffsetDateTime)]
     #[serde(with = "time::serde::rfc3339")]
     pub created: OffsetDateTime,
-    #[specta(type = String)]
+    #[specta(type = OffsetDateTime)]
     #[serde(with = "time::serde::rfc3339")]
     pub modified: OffsetDateTime,
     pub version: Uuid,

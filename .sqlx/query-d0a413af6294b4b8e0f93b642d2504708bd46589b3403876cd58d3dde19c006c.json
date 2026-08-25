@@ -1,11 +1,11 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT\n    s AS \"space!: Space\"\nFROM\n    spaces s\nWHERE\n    s.id = $1\n    AND deleted = FALSE\nLIMIT 1;\n\n",
+  "query": "SELECT\n    space AS \"space!: SpaceRecord\"\nFROM spaces space\nWHERE\n    space.id = $1\n    AND space.deleted = FALSE\nLIMIT 1;\n",
   "describe": {
     "columns": [
       {
         "ordinal": 0,
-        "name": "space!: Space",
+        "name": "space!: SpaceRecord",
         "type_info": {
           "Custom": {
             "name": "spaces",
@@ -68,10 +68,6 @@
                   "Bool"
                 ],
                 [
-                  "latest_activity",
-                  "Timestamptz"
-                ],
-                [
                   "scope_id",
                   "Uuid"
                 ]
@@ -91,5 +87,5 @@
       null
     ]
   },
-  "hash": "29cfb7da5d969217f5a8fbba3ba9e85dc0b5dabfab4143c97e37cba1c202ae31"
+  "hash": "d0a413af6294b4b8e0f93b642d2504708bd46589b3403876cd58d3dde19c006c"
 }

@@ -1,10 +1,10 @@
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::channels::ChannelMember;
 use crate::error::{AppError, ModelError};
 
-use super::{Space, SpaceMember};
+use super::SpaceMember;
+use super::models::SpaceRecord;
 
 #[derive(Debug, Clone, Copy)]
 pub struct SpaceAccess {
@@ -95,8 +95,8 @@ pub async fn resolve_space_access(
         .loaded_authoritative_snapshot_after_wait(space_id)
         .await
     {
-        let space = snapshot.space();
-        let member = user_id.and_then(|user_id| snapshot.space_members.get(&user_id));
+        let space = snapshot.space_record();
+        let member = user_id.and_then(|user_id| snapshot.space_members().get(&user_id));
         let is_member = member.is_some();
         return Ok(SpaceAccess {
             can_access: space.is_public || space.allow_spectator || is_member,
@@ -107,7 +107,7 @@ pub async fn resolve_space_access(
         });
     }
 
-    let space = Space::get_by_id(&ctx.db, &space_id)
+    let space = SpaceRecord::get_by_id(&ctx.db, &space_id)
         .await?
         .ok_or(AppError::NotFound("space"))?;
     let member = match user_id {
@@ -152,13 +152,10 @@ pub async fn resolve_resource_access_context(
     let channel_member = match user_id {
         Some(user_id) => {
             if let Some(snapshot) = resolved.snapshot {
-                snapshot
-                    .channel_member(channel_id, user_id)
-                    .map(|member| member.channel)
+                snapshot.channel_membership(channel_id, user_id)
             } else {
-                ChannelMember::get_with_space_member(&ctx.db, user_id, channel_id, &space_id)
+                crate::space_runtime::ChannelMembership::get(&ctx.db, space_id, channel_id, user_id)
                     .await?
-                    .map(|(channel_member, _)| channel_member)
             }
         }
         None => None,
@@ -210,6 +207,7 @@ mod tests {
     use super::*;
     use crate::channels::{Channel, ChannelMember, ChannelType};
     use crate::context::AppContext;
+    use crate::spaces::Space;
     use crate::users::User;
 
     fn context(

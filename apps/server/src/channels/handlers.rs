@@ -18,6 +18,7 @@ use crate::interface::{self, IdQuery, missing, ok_response, parse_body, parse_qu
 use crate::messages::Message;
 use crate::rate_limit;
 use crate::session::Session;
+use crate::spaces::models::SpaceRecord;
 use crate::spaces::{Space, SpaceMember};
 use governor::{DefaultKeyedRateLimiter, RateLimiter};
 use hyper::Request;
@@ -93,7 +94,7 @@ async fn query_channel(
 ) -> Result<Channel, AppError> {
     if let Some(space_id) = space_id
         && let Some(snapshot) = ctx.space_store.loaded_snapshot_maybe_stale(space_id)
-        && let Some(channel) = snapshot.channels.get(&id)
+        && let Some(channel) = snapshot.channels().get(&id)
     {
         metrics::counter!("boluo_server_space_runtime_read_total", "result" => "hit").increment(1);
         return Ok(channel.clone());
@@ -155,7 +156,7 @@ async fn members<B: Body>(
     let runtime_snapshot = resolved.snapshot;
     if let Some(snapshot) = &runtime_snapshot {
         channel = snapshot
-            .channels
+            .channels()
             .get(&channel.id)
             .cloned()
             .ok_or(AppError::NotFound("channel"))?;
@@ -175,13 +176,13 @@ async fn members<B: Body>(
     }
     let mut members = if let Some(snapshot) = &runtime_snapshot {
         snapshot
-            .channel_members
+            .channel_members()
             .get(&channel.id)
             .into_iter()
             .flat_map(|members| members.values())
             .filter_map(|member| {
                 snapshot
-                    .space_members
+                    .space_members()
                     .get(&member.user_id)
                     .map(|space| Member {
                         channel: member.clone(),
@@ -218,14 +219,14 @@ async fn members<B: Body>(
     };
 
     if !channel.is_public && self_index.is_none() {
-        let space = if let Some(snapshot) = runtime_snapshot {
-            Some(snapshot.space())
+        let owner_id = if let Some(snapshot) = runtime_snapshot {
+            Some(snapshot.space_record().owner_id)
         } else {
-            Space::get_by_id(&ctx.db, &channel.space_id).await?
+            SpaceRecord::get_by_id(&ctx.db, &channel.space_id)
+                .await?
+                .map(|space| space.owner_id)
         };
-        if let Some(space) = space
-            && Some(space.owner_id) == current_user_id
-        {
+        if owner_id == current_user_id {
             // Allow the owner to access the private channel
         } else {
             tracing::warn!(
@@ -262,7 +263,7 @@ async fn query_with_related(
         .await?
         .or_not_found()?;
     let mut conn = ctx.db.acquire().await?;
-    let (mut channel, mut space, snapshot) = if let Some(snapshot) = resolved.snapshot {
+    let (mut channel, space, snapshot) = if let Some(snapshot) = resolved.snapshot {
         (resolved.channel, snapshot.space(), Some(snapshot))
     } else {
         let space = Space::get_by_id(&mut *conn, &resolved.channel.space_id)
@@ -270,20 +271,19 @@ async fn query_with_related(
             .or_not_found()?;
         (resolved.channel, space, None)
     };
-    let mut members = if let Some(snapshot) = &snapshot {
-        let Some(snapshot_channel) = snapshot.channels.get(&channel.id) else {
+    let mut members = if let Some(snapshot) = snapshot {
+        let Some(snapshot_channel) = snapshot.channels().get(&channel.id) else {
             return Err(AppError::NotFound("channel"));
         };
         channel = snapshot_channel.clone();
-        space = snapshot.space();
         snapshot
-            .channel_members
+            .channel_members()
             .get(&channel.id)
             .into_iter()
             .flat_map(|members| members.values())
             .filter_map(|member| {
                 snapshot
-                    .space_members
+                    .space_members()
                     .get(&member.user_id)
                     .map(|space| Member {
                         channel: member.clone(),
@@ -342,7 +342,7 @@ where
 
     let mutation = ctx.space_store.acquire_mutation(space_id).await?;
     let mut trans = ctx.db.begin().await?;
-    Space::get_by_id(&mut *trans, &space_id)
+    SpaceRecord::get_by_id(&mut *trans, &space_id)
         .await?
         .ok_or_else(|| AppError::BadRequest("The space not found".to_string()))?;
     admin_only(&mut *trans, &user_id, &space_id).await?;
@@ -425,7 +425,7 @@ async fn edit(
         .await
         .or_not_found()?;
 
-    let space = Space::get_by_id(&mut *trans, &channel.space_id)
+    let space = SpaceRecord::get_by_id(&mut *trans, &channel.space_id)
         .await?
         .or_not_found()?;
 
@@ -497,11 +497,10 @@ async fn edit_topic(
         .await
         .or_not_found()?;
     let mutation = ctx.space_store.acquire_mutation(mutation_space_id).await?;
-    let channel_member = ctx
+    let channel_membership = ctx
         .space_store
-        .resolve_channel_member(mutation_space_id, channel_id, session.user_id)
-        .await?
-        .map(|member| member.channel);
+        .resolve_channel_membership(mutation_space_id, channel_id, session.user_id)
+        .await?;
     let mut trans = ctx.db.begin().await?;
 
     let channel = Channel::get_by_id(&mut *trans, &channel_id)
@@ -515,8 +514,8 @@ async fn edit_topic(
         has_permission = space_member.is_admin;
     }
 
-    if !has_permission && let Some(channel_member) = channel_member {
-        has_permission = channel_member.is_master;
+    if !has_permission && let Some(channel_membership) = channel_membership {
+        has_permission = channel_membership.is_master;
     }
 
     if !has_permission {
@@ -612,7 +611,7 @@ async fn add_member(
         .or_not_found()?;
     let mutation = ctx.space_store.acquire_mutation(mutation_space_id).await?;
     ctx.space_store
-        .resolve_channel_member(mutation_space_id, channel_id, session.user_id)
+        .resolve_channel_membership(mutation_space_id, channel_id, session.user_id)
         .await?
         .or_no_permission()?;
     let mut trans = ctx.db.begin().await?;
@@ -660,7 +659,7 @@ async fn edit_member(
 
     let mutation = ctx.space_store.acquire_mutation(space_id).await?;
     ctx.space_store
-        .resolve_channel_member(space_id, channel_id, session.user_id)
+        .resolve_channel_membership(space_id, channel_id, session.user_id)
         .await?
         .or_no_permission()?;
     let mut trans = ctx.db.begin().await?;
@@ -742,7 +741,7 @@ async fn join(
         .await
         .or_not_found()?;
     if !channel.is_public {
-        let space = Space::get_by_id(&mut *trans, &channel.space_id).await?;
+        let space = SpaceRecord::get_by_id(&mut *trans, &channel.space_id).await?;
         if let Some(space) = space
             && space.owner_id == session.user_id
         {
@@ -820,18 +819,17 @@ async fn kick(ctx: &crate::context::AppContext, req: Request<impl Body>) -> Resu
     let operator_user_id = session.user_id;
     let owning_space_id = resolve_channel_mutation_space(ctx, channel_id, space_id).await?;
     let mutation = ctx.space_store.acquire_mutation(owning_space_id).await?;
-    let channel_member = ctx
+    let channel_membership = ctx
         .space_store
-        .resolve_channel_member(owning_space_id, channel_id, operator_user_id)
-        .await?
-        .map(|member| member.channel);
+        .resolve_channel_membership(owning_space_id, channel_id, operator_user_id)
+        .await?;
     let mut trans = ctx.db.begin().await?;
     let space_member = SpaceMember::get(&mut *trans, &operator_user_id, &owning_space_id)
         .await
         .or_no_permission()?;
     if !space_member.is_admin {
-        let channel_member = channel_member.or_no_permission()?;
-        if !channel_member.is_master {
+        let channel_membership = channel_membership.or_no_permission()?;
+        if !channel_membership.is_master {
             return Err(AppError::NoPermission(
                 "You have no permission to kick user from this channel.".to_string(),
             ));
@@ -938,16 +936,16 @@ async fn by_space(
         metrics::counter!("boluo_server_space_runtime_read_total", "result" => "hit").increment(1);
         let user_id = session.map(|session| session.user_id);
         let is_admin = user_id
-            .and_then(|user_id| snapshot.space_members.get(&user_id))
+            .and_then(|user_id| snapshot.space_members().get(&user_id))
             .is_some_and(|member| member.is_admin);
-        let mut channels: Vec<_> = snapshot.channels.values().cloned().collect();
+        let mut channels: Vec<_> = snapshot.channels().values().cloned().collect();
         channels.sort_unstable_by_key(|channel| channel.created);
         return Ok(channels
             .into_iter()
             .filter_map(|channel| {
                 let member = user_id.and_then(|user_id| {
                     snapshot
-                        .channel_members
+                        .channel_members()
                         .get(&channel.id)
                         .and_then(|members| members.get(&user_id))
                         .cloned()
@@ -993,12 +991,12 @@ async fn export(
     let mut trans = ctx.db.begin().await?;
     let (channel, space_member, channel_member) = if let Some(snapshot) = resolved.snapshot {
         let space_member = snapshot
-            .space_members
+            .space_members()
             .get(&session.user_id)
             .cloned()
             .or_no_permission()?;
         let channel_member = snapshot
-            .channel_members
+            .channel_members()
             .get(&channel_id)
             .and_then(|members| members.get(&session.user_id))
             .cloned();
@@ -1030,7 +1028,7 @@ pub async fn check_channel_name_exists(
     let CheckChannelName { space_id, name } = parse_query(req.uri())?;
     if let Some(snapshot) = ctx.space_store.loaded_snapshot_maybe_stale(space_id) {
         return Ok(snapshot
-            .channels
+            .channels()
             .values()
             .any(|channel| channel.name == name));
     }

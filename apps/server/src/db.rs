@@ -152,15 +152,14 @@ pub async fn check(pool: &sqlx::Pool<sqlx::Postgres>) {
     .await
     .expect("Cannot get user extension");
 
-    let space = sqlx::query_file_scalar!(
-        "sql/spaces/create.sql",
-        "Low of Cycles",
-        user.id,
-        "",
-        "d20",
-        ""
+    let space = Space::create(
+        &mut *trans,
+        "Low of Cycles".to_string(),
+        &user.id,
+        String::new(),
+        Some(String::new()),
+        Some("d20"),
     )
-    .fetch_one(&mut *trans)
     .await
     .expect("Cannot create space");
     let space_member =

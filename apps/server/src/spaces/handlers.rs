@@ -13,7 +13,7 @@ use crate::events::{StatusMap, Update};
 use crate::interface::{self, IdQuery, Response, missing, ok_response, parse_query, response};
 use crate::rate_limit;
 use crate::spaces::api::{JoinSpace, KickFromSpace, SearchParams, SpaceWithMember};
-use crate::spaces::models::SpaceMemberWithUser;
+use crate::spaces::models::{SpaceMemberWithUser, SpaceRecord};
 use crate::users::User;
 use arc_swap::ArcSwap;
 use governor::{DefaultKeyedRateLimiter, RateLimiter};
@@ -98,7 +98,7 @@ async fn query(
     }
     let session = authenticate(ctx, &req).await?;
     let is_member = if let Some(snapshot) = snapshot {
-        snapshot.space_members.contains_key(&session.user_id)
+        snapshot.space_members().contains_key(&session.user_id)
     } else {
         SpaceMember::get(&ctx.db, &session.user_id, &id)
             .await?
@@ -124,27 +124,12 @@ pub async fn space_related(
 ) -> Result<SpaceWithRelated, AppError> {
     if let Ok(Some(snapshot)) = ctx.space_store.authoritative_snapshot(*id).await {
         metrics::counter!("boluo_server_space_runtime_read_total", "result" => "hit").increment(1);
-        let mut users =
-            User::get_by_id_list(&ctx.db, snapshot.space_members.keys().copied()).await?;
-        let members = snapshot
-            .space_members
-            .values()
-            .filter_map(|member| {
-                users.remove(&member.user_id).map(|user| {
-                    (
-                        member.user_id,
-                        SpaceMemberWithUser {
-                            space: member.clone(),
-                            user,
-                        },
-                    )
-                })
-            })
-            .collect();
-        let mut channels: Vec<_> = snapshot.channels.values().cloned().collect();
+        let space = snapshot.space();
+        let space_members: Vec<_> = snapshot.space_members().values().cloned().collect();
+        let mut channels: Vec<_> = snapshot.channels().values().cloned().collect();
         channels.sort_unstable_by_key(|channel| channel.created);
         let channel_members = snapshot
-            .channel_members
+            .channel_members()
             .iter()
             .map(|(channel_id, members)| {
                 let mut members: Vec<_> = members.values().cloned().collect();
@@ -152,11 +137,29 @@ pub async fn space_related(
                 (*channel_id, members)
             })
             .collect();
-        let users_status = space_users_status(snapshot.space().id)
-            .await
-            .unwrap_or_default();
+        drop(snapshot);
+
+        let mut users =
+            User::get_by_id_list(&ctx.db, space_members.iter().map(|member| member.user_id))
+                .await?;
+        let members = space_members
+            .into_iter()
+            .filter_map(|member| {
+                let user_id = member.user_id;
+                users.remove(&user_id).map(|user| {
+                    (
+                        user_id,
+                        SpaceMemberWithUser {
+                            space: member,
+                            user,
+                        },
+                    )
+                })
+            })
+            .collect();
+        let users_status = space_users_status(space.id).await.unwrap_or_default();
         return Ok(SpaceWithRelated {
-            space: snapshot.space(),
+            space,
             members,
             channels,
             users_status,
@@ -212,7 +215,7 @@ async fn token(
         .await
     {
         let is_admin = snapshot
-            .space_members
+            .space_members()
             .get(&session.user_id)
             .is_some_and(|member| member.is_admin);
         if !is_admin {
@@ -220,7 +223,7 @@ async fn token(
                 "Only admins can get space invitation token".to_string(),
             ));
         }
-        return Ok(snapshot.space().invite_token);
+        return Ok(snapshot.space_record().invite_token);
     }
     let mut conn = ctx.db.acquire().await?;
     let is_admin = SpaceMember::get(&mut *conn, &session.user_id, &id)
@@ -285,7 +288,7 @@ async fn my_spaces(
     let mut missing = Vec::new();
     for member in &members {
         if let Some(snapshot) = ctx.space_store.loaded_snapshot_maybe_stale(member.space_id)
-            && let Some(snapshot_member) = snapshot.space_members.get(&session.user_id)
+            && let Some(snapshot_member) = snapshot.space_members().get(&session.user_id)
         {
             loaded.insert(member.space_id, (snapshot.space(), snapshot_member.clone()));
         } else {
@@ -297,7 +300,7 @@ async fn my_spaces(
     } else {
         Space::get_by_id_list(&ctx.db, missing.into_iter()).await?
     };
-    Ok(members
+    let mut result: Vec<_> = members
         .into_iter()
         .filter_map(|member| {
             let (space, member) = loaded
@@ -309,7 +312,9 @@ async fn my_spaces(
                 user: user.clone(),
             })
         })
-        .collect())
+        .collect();
+    result.sort_unstable_by_key(|item| std::cmp::Reverse(item.space.latest_activity));
+    Ok(result)
 }
 
 async fn search(
@@ -416,7 +421,7 @@ async fn edit(
     let mutation = ctx.space_store.acquire_mutation(space_id).await?;
     let mut trans = ctx.db.begin().await?;
 
-    let Some(space) = Space::get_by_id(&mut *trans, &space_id).await? else {
+    let Some(space) = SpaceRecord::get_by_id(&mut *trans, &space_id).await? else {
         return Err(AppError::NotFound("space"));
     };
 
@@ -564,7 +569,7 @@ async fn kick(
 
     let mutation = ctx.space_store.acquire_mutation(space_id).await?;
     let mut trans = ctx.db.begin().await?;
-    let Some(space) = Space::get_by_id(&mut *trans, &space_id).await? else {
+    let Some(space) = SpaceRecord::get_by_id(&mut *trans, &space_id).await? else {
         return Err(AppError::NotFound("space"));
     };
     let my_member = SpaceMember::get(&mut *trans, &session.user_id, &space_id)
@@ -607,7 +612,7 @@ async fn my_space_member(
     };
     let IdQuery { id } = parse_query(req.uri())?;
     if let Some(snapshot) = ctx.space_store.loaded_snapshot_maybe_stale(id) {
-        return Ok(snapshot.space_members.get(&session.user_id).cloned());
+        return Ok(snapshot.space_members().get(&session.user_id).cloned());
     }
     let my_space_members = SpaceMember::get_by_user_with_cache(&ctx.db, session.user_id).await?;
     Ok(my_space_members
@@ -622,9 +627,9 @@ async fn members(
     let IdQuery { id } = parse_query(req.uri())?;
     if let Some(snapshot) = ctx.space_store.loaded_snapshot_maybe_stale(id) {
         let mut users =
-            User::get_by_id_list(&ctx.db, snapshot.space_members.keys().copied()).await?;
+            User::get_by_id_list(&ctx.db, snapshot.space_members().keys().copied()).await?;
         return Ok(snapshot
-            .space_members
+            .space_members()
             .values()
             .filter_map(|member| {
                 users.remove(&member.user_id).map(|user| {
@@ -690,7 +695,7 @@ async fn space_settings(
     let IdQuery { id } = parse_query(req.uri())?;
     // TODO: check whether the user is a member of the space
     if let Some(snapshot) = ctx.space_store.loaded_snapshot_maybe_stale(id) {
-        return Ok(snapshot.settings.clone());
+        return Ok(snapshot.settings().clone());
     }
     let extension = Space::get_settings(&ctx.db, id).await?;
     Ok(extension)
@@ -709,7 +714,7 @@ async fn update_settings(
     let mutation = ctx.space_store.acquire_mutation(id).await?;
     let mut trans = ctx.db.begin().await?;
 
-    let Some(space) = Space::get_by_id(&mut *trans, &id).await? else {
+    let Some(space) = SpaceRecord::get_by_id(&mut *trans, &id).await? else {
         return Err(AppError::NotFound("space"));
     };
 

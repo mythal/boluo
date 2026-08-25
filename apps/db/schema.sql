@@ -600,6 +600,17 @@ CREATE TABLE public.scopes (
 
 
 --
+-- Name: space_activity; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.space_activity (
+    space_id uuid NOT NULL,
+    latest_activity timestamp with time zone NOT NULL
+)
+WITH (fillfactor='80');
+
+
+--
 -- Name: space_members; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -631,7 +642,6 @@ CREATE TABLE public.spaces (
     explorable boolean DEFAULT false NOT NULL,
     invite_token uuid DEFAULT gen_random_uuid() NOT NULL,
     allow_spectator boolean DEFAULT true NOT NULL,
-    latest_activity timestamp with time zone DEFAULT now() NOT NULL,
     scope_id uuid NOT NULL
 );
 
@@ -950,6 +960,14 @@ ALTER TABLE ONLY public.scopes
 
 ALTER TABLE ONLY public.spaces
     ADD CONSTRAINT space_scope_id_unique UNIQUE (scope_id);
+
+
+--
+-- Name: space_activity space_activity_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.space_activity
+    ADD CONSTRAINT space_activity_pkey PRIMARY KEY (space_id);
 
 
 --
@@ -1445,6 +1463,14 @@ ALTER TABLE ONLY public.events
 
 ALTER TABLE ONLY public.spaces_extension
     ADD CONSTRAINT extension_space FOREIGN KEY (space_id) REFERENCES public.spaces(id) ON DELETE CASCADE;
+
+
+--
+-- Name: space_activity space_activity_space; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.space_activity
+    ADD CONSTRAINT space_activity_space FOREIGN KEY (space_id) REFERENCES public.spaces(id) ON DELETE CASCADE;
 
 
 --

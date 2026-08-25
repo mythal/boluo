@@ -1,4 +1,5 @@
 import { type ClientConnectionError, type ChatAction, type ChatActionUnion } from './chat.actions';
+import type { ClientWebSocketCloseReason } from '@boluo/api/websocket/close';
 import { type ChatReducerContext } from './chat.reducer';
 import type { ChatEffect } from './chat.types';
 import { createEffectId } from './chat.effects';
@@ -40,10 +41,14 @@ export const initialConnectionState: ConnectionState = {
   recoveringFromError: null,
 };
 
-const makeCloseEffect = (connection: WebSocket): ChatEffect => ({
+const makeCloseEffect = (
+  connection: WebSocket,
+  reason: Exclude<ClientWebSocketCloseReason, 'UNKNOWN'>,
+): ChatEffect => ({
   type: 'CLOSE_CONNECTION',
   id: createEffectId(),
   connection,
+  reason,
 });
 
 const handleConnected = (
@@ -53,11 +58,11 @@ const handleConnected = (
 ): [ConnectionState, ChatEffect[]] => {
   const effects: ChatEffect[] = [];
   if (mailboxId && action.payload.mailboxId !== mailboxId) {
-    effects.push(makeCloseEffect(action.payload.connection));
+    effects.push(makeCloseEffect(action.payload.connection, 'CONNECTION_REJECTED'));
     return [state, effects];
   }
   if (state.type === 'CONNECTED' && state.connection !== action.payload.connection) {
-    effects.push(makeCloseEffect(state.connection));
+    effects.push(makeCloseEffect(state.connection, 'CONNECTION_REPLACED'));
   }
   return [{ type: 'CONNECTED', connection: action.payload.connection }, effects];
 };
@@ -72,7 +77,7 @@ const handleConnecting = (
     return [state, effects];
   }
   if (state.type === 'CONNECTED') {
-    effects.push(makeCloseEffect(state.connection));
+    effects.push(makeCloseEffect(state.connection, 'RECONNECT_STARTED'));
   }
   let retry = 0;
   if (state.type === 'CLOSED') {
@@ -137,7 +142,7 @@ const handleConnectionError = (
       ? state.retry
       : 0;
   if (state.type === 'CONNECTED') {
-    effects.push(makeCloseEffect(state.connection));
+    effects.push(makeCloseEffect(state.connection, 'CONNECTION_ERROR'));
   }
   const recoveringFromError = getRecoveringFromError(state);
   if (shouldAutoRetry(payload.code) && recoveringFromError == null) {
@@ -174,7 +179,7 @@ const handleDebugCloseConnection = (
 ): [ConnectionState, ChatEffect[]] => {
   const effects: ChatEffect[] = [];
   if (state.type === 'CONNECTED') {
-    effects.push(makeCloseEffect(state.connection));
+    effects.push(makeCloseEffect(state.connection, 'DEBUG_DISCONNECT'));
   }
   return [{ type: 'CLOSED', retry: 4, countdown, recoveringFromError: null }, effects];
 };
@@ -189,7 +194,7 @@ const handleRetryConnection = (
     return [state, effects];
   }
   if (state.type === 'CONNECTED') {
-    effects.push(makeCloseEffect(state.connection));
+    effects.push(makeCloseEffect(state.connection, 'RETRY_REQUESTED'));
   }
   const retry =
     state.type === 'CONNECTING' || state.type === 'CLOSED' || state.type === 'ERROR'

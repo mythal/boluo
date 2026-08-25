@@ -846,7 +846,7 @@ async fn join_space_from_link(bridge: &Bridge, text: &str) -> String {
     match bridge.boluo.join_space(space_id, Some(token)).await {
         Ok(space) => {
             info!(%space_id, "joined Boluo space from invite link");
-            format!("Joined Boluo space “{}” ({space_id}).", space.name)
+            format!("Joined Boluo space “{}” ({space_id}).", space.record.name)
         }
         Err(error) => {
             warn!(error = %error, %space_id, "failed to join Boluo space from invite link");
@@ -1013,7 +1013,7 @@ async fn bind_group(
                 warn!(error = %error, %space_id, "failed to auto-join Boluo space while binding");
                 return Ok(format!(
                     "I'm not a member of Boluo space “{}” and couldn't join it. If it's private, send me an invite link: /bind <invite link>.",
-                    space.name
+                    space.record.name
                 ));
             }
             Err(JoinError::MembershipCheck(error)) => {
@@ -1058,7 +1058,7 @@ async fn bind_group(
     info!(group = binding.tg_chat_id, %space_id, "bound Telegram group to Boluo space");
     Ok(format!(
         "Bound this group to Boluo space “{}” ({space_id}).",
-        space.name
+        space.record.name
     ))
 }
 

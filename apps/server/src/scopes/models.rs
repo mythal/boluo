@@ -14,10 +14,10 @@ pub struct Scope {
     pub access_policy: AccessPolicy,
     pub access_channel_id: Option<Uuid>,
     pub version: Uuid,
-    #[specta(type = String)]
+    #[specta(type = OffsetDateTime)]
     #[serde(with = "time::serde::rfc3339")]
     pub created: OffsetDateTime,
-    #[specta(type = String)]
+    #[specta(type = OffsetDateTime)]
     #[serde(with = "time::serde::rfc3339")]
     pub modified: OffsetDateTime,
 }

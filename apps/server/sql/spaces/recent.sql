@@ -1,7 +1,8 @@
 SELECT
-    id AS "id!: Uuid"
+    space.id AS "id!: Uuid"
 FROM
-    spaces
+    spaces space
+    INNER JOIN space_activity activity ON activity.space_id = space.id
 WHERE
-    deleted = FALSE
-    AND latest_activity > now() - interval '2 hours';
+    space.deleted = FALSE
+    AND activity.latest_activity > now() - interval '2 hours';

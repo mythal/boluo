@@ -1,6 +1,7 @@
 import { css } from '@emotion/react';
 import { useAtom } from 'jotai';
 import { publishOwnPreviewAcknowledgement } from '@boluo/api/preview/ack';
+import { closeWebSocketNormally } from '@boluo/api/websocket/close';
 import { useEffect, useRef, useState } from 'react';
 import { connectSpace } from '../../actions';
 import { connect } from '../../api/connect';
@@ -152,7 +153,7 @@ export const Connector = ({ spaceId, myId }: Props) => {
       connectionRef.current.onclose = null;
       connectionRef.current.onerror = null;
       connectionRef.current.onmessage = null;
-      connectionRef.current.close();
+      closeWebSocketNormally(connectionRef.current, 'LEGACY_BASE_URL_CHANGED');
       connectionRef.current = null;
     }
     retryCount.current = 0;
@@ -170,7 +171,7 @@ export const Connector = ({ spaceId, myId }: Props) => {
         connection.onclose = null;
         connection.onerror = null;
         connection.onmessage = null;
-        connection.close();
+        closeWebSocketNormally(connection, 'LEGACY_CONNECTOR_DISPOSED');
         connectionRef.current = null;
       }
     };
@@ -288,7 +289,10 @@ export const Connector = ({ spaceId, myId }: Props) => {
             onClick={() => {
               retryCount.current = 10;
               setRetrySec(5);
-              connectionRef.current?.close();
+              const connection = connectionRef.current;
+              if (connection != null) {
+                closeWebSocketNormally(connection, 'DEBUG_DISCONNECT');
+              }
             }}
           >
             断开连接

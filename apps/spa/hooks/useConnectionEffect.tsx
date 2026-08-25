@@ -1,6 +1,7 @@
 import { type MakeToken, type EventId, type UpdateEncoding } from '@boluo/api';
 import { isServerUpdate } from '@boluo/api/events';
 import { publishOwnPreviewAcknowledgement } from '@boluo/api/preview/ack';
+import { closeWebSocketNormally } from '@boluo/api/websocket/close';
 import { useQueryCurrentUser } from '@boluo/hooks/useQueryCurrentUser';
 import { webSocketUrlAtom } from '@boluo/hooks/useWebSocketUrl';
 import { useAtomValue, useSetAtom, useStore } from 'jotai';
@@ -258,7 +259,12 @@ const connect = async (
     dispatch({ type: 'connected', payload: { connection: newConnection, mailboxId } });
   };
   newConnection.onclose = (event) => {
-    console.info(`connection closed for ${mailboxId}`, event);
+    console.info('WebSocket connection closed', {
+      mailboxId,
+      code: event.code,
+      reason: event.reason,
+      wasClean: event.wasClean,
+    });
     dispatch({ type: 'connectionClosed', payload: { mailboxId, random: Math.random() } });
   };
   let messageQueue = Promise.resolve();
@@ -325,7 +331,9 @@ export const useConnectionEffect = (mailboxId: string) => {
     return () => {
       window.clearTimeout(handle);
       unsub();
-      if (currentConnection) currentConnection.close();
+      if (currentConnection) {
+        closeWebSocketNormally(currentConnection, 'CHAT_CONTEXT_DISPOSED');
+      }
     };
   }, [dispatch, isQueryingUser, mailboxId, store, userId, webSocketEndpoint]);
 };

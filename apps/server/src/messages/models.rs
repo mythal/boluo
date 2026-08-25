@@ -45,10 +45,10 @@ pub struct Message {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub whisper_to_users: Option<Vec<Uuid>>,
     pub entities: Entities,
-    #[specta(type = String)]
+    #[specta(type = OffsetDateTime)]
     #[serde(with = "time::serde::rfc3339")]
     pub created: OffsetDateTime,
-    #[specta(type = String)]
+    #[specta(type = OffsetDateTime)]
     #[serde(with = "time::serde::rfc3339")]
     pub modified: OffsetDateTime,
     pub pos_p: i32,

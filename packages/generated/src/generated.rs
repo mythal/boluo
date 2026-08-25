@@ -202,19 +202,9 @@ pub struct NewMessage {
 #[derive(serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Space {
-    pub id: ::uuid::Uuid,
-    pub name: ::std::string::String,
-    pub description: ::std::string::String,
-    pub created: ::time::OffsetDateTime,
-    pub modified: ::time::OffsetDateTime,
-    pub owner_id: ::uuid::Uuid,
-    pub is_public: bool,
-    pub language: ::std::string::String,
-    pub default_dice_type: ::std::string::String,
-    pub explorable: bool,
-    pub allow_spectator: bool,
+    #[serde(flatten)]
+    pub record: SpaceRecord,
     pub latest_activity: ::time::OffsetDateTime,
-    pub scope_id: ::uuid::Uuid,
 }
 
 #[allow(deprecated, non_camel_case_types, non_snake_case)]
@@ -234,6 +224,24 @@ pub struct SpaceMember {
 pub struct SpaceMemberWithUser {
     pub space: SpaceMember,
     pub user: User,
+}
+
+#[allow(deprecated, non_camel_case_types, non_snake_case)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SpaceRecord {
+    pub id: ::uuid::Uuid,
+    pub name: ::std::string::String,
+    pub description: ::std::string::String,
+    pub created: ::time::OffsetDateTime,
+    pub modified: ::time::OffsetDateTime,
+    pub owner_id: ::uuid::Uuid,
+    pub is_public: bool,
+    pub language: ::std::string::String,
+    pub default_dice_type: ::std::string::String,
+    pub explorable: bool,
+    pub allow_spectator: bool,
+    pub scope_id: ::uuid::Uuid,
 }
 
 #[allow(deprecated, non_camel_case_types, non_snake_case)]

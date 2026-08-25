@@ -329,13 +329,16 @@ export function buildAlertRules(datasourceUid: string): AlertRulesProvisioning {
         }),
         alertRule(datasourceUid, resources, {
           uid: 'boluo-server-process-swap-high',
-          title: 'Server process swap usage high',
-          expression: `max by(instance) (boluo_server_process_swap_bytes{app="${SERVER_APP}"})`,
+          title: 'Server process swap usage high under memory pressure',
+          expression: `max by(instance) (boluo_server_process_swap_bytes{app="${SERVER_APP}"}) * on(instance) (max by(instance) (${memoryUtilization(SERVER_APP)}) > bool 0.8)`,
           comparator: 'gt',
           threshold: 16 * 1024 * 1024,
           forDuration: '5m',
           severity: 'warning',
-          summary: 'The server process has used more than 16 MiB of swap for five minutes.',
+          summary:
+            'The server process has used more than 16 MiB of swap while instance memory utilization exceeds 80% for five minutes.',
+          description:
+            'Gating on current memory pressure avoids a sticky warning for swapped-out pages retained after utilization recovers.',
         }),
         alertRule(datasourceUid, resources, {
           uid: 'boluo-database-memory-high',

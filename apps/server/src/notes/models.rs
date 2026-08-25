@@ -49,10 +49,10 @@ pub struct NoteMetadata {
     #[specta(type = Option<String>)]
     #[serde(with = "time::serde::rfc3339::option")]
     pub archived_at: Option<OffsetDateTime>,
-    #[specta(type = String)]
+    #[specta(type = OffsetDateTime)]
     #[serde(with = "time::serde::rfc3339")]
     pub created: OffsetDateTime,
-    #[specta(type = String)]
+    #[specta(type = OffsetDateTime)]
     #[serde(with = "time::serde::rfc3339")]
     pub modified: OffsetDateTime,
 }
@@ -64,6 +64,50 @@ pub struct Note {
     pub metadata: NoteMetadata,
     pub text: String,
     pub entities: Entities,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
+pub(crate) struct NotePayload {
+    text: String,
+    entities: Entities,
+}
+
+impl NotePayload {
+    #[cfg(test)]
+    pub(crate) fn empty() -> Self {
+        Self {
+            text: String::new(),
+            entities: Entities::default(),
+        }
+    }
+
+    pub(crate) async fn load(
+        db: &sqlx::PgPool,
+        space_id: Uuid,
+        note_id: Uuid,
+    ) -> Result<Option<Self>, sqlx::Error> {
+        sqlx::query_as::<_, Self>(
+            "SELECT text, entities FROM notes WHERE space_id = $1 AND id = $2",
+        )
+        .bind(space_id)
+        .bind(note_id)
+        .fetch_optional(db)
+        .await
+    }
+
+    pub(crate) fn into_note(self, metadata: NoteMetadata) -> Note {
+        Note {
+            metadata,
+            text: self.text,
+            entities: self.entities,
+        }
+    }
+
+    pub(crate) fn estimated_memory_bytes(&self) -> usize {
+        std::mem::size_of::<Self>()
+            + self.text.capacity()
+            + self.entities.0.capacity() * std::mem::size_of::<shared_types::entities::Entity>()
+    }
 }
 
 impl Deref for Note {
@@ -304,7 +348,7 @@ pub struct NoteContentRevision {
     pub title: CompactString,
     pub text: String,
     pub entities: Entities,
-    #[specta(type = String)]
+    #[specta(type = OffsetDateTime)]
     #[serde(with = "time::serde::rfc3339")]
     pub created: OffsetDateTime,
 }

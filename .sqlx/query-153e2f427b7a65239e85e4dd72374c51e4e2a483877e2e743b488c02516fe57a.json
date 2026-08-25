@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT\n    id AS \"id!: Uuid\"\nFROM\n    spaces\nWHERE\n    deleted = FALSE\n    AND latest_activity > now() - interval '2 hours';\n",
+  "query": "SELECT\n    space.id AS \"id!: Uuid\"\nFROM\n    spaces space\n    INNER JOIN space_activity activity ON activity.space_id = space.id\nWHERE\n    space.deleted = FALSE\n    AND activity.latest_activity > now() - interval '2 hours';\n",
   "describe": {
     "columns": [
       {
@@ -22,5 +22,5 @@
       false
     ]
   },
-  "hash": "73b6c9dd7d1105ac973a75ee0fc86b3b56682e636c7a6f0b82b8947fd2ff6354"
+  "hash": "153e2f427b7a65239e85e4dd72374c51e4e2a483877e2e743b488c02516fe57a"
 }

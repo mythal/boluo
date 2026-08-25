@@ -12,13 +12,43 @@ use uuid::Uuid;
 use crate::channels::models::Member;
 use crate::channels::{Channel, ChannelMember};
 use crate::characters::Character;
-use crate::entries::component_cache::EntryComponentMemoryCache;
 use crate::entries::models::{Entry, EntryMetadata};
-use crate::notes::NoteMetadata;
+use crate::notes::{Note, NoteMetadata};
 use crate::scopes::models::Scope;
+use crate::space_payload_cache::SpacePayloadCache;
+use crate::spaces::models::SpaceRecord;
 use crate::spaces::{Space, SpaceMember};
 
-type PersistentMap<K, V> = rpds::HashTrieMapSync<K, V>;
+pub(crate) type SnapshotMap<K, V> = HashMap<K, V, ahash::RandomState>;
+
+#[derive(Debug, Clone, PartialEq)]
+struct CoreSnapshot {
+    space: SpaceRecord,
+    settings: serde_json::Value,
+    channels: SnapshotMap<Uuid, Channel>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+struct MembersSnapshot {
+    space_members: SnapshotMap<Uuid, SpaceMember>,
+    channel_members: SnapshotMap<Uuid, Arc<SnapshotMap<Uuid, ChannelMember>>>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+struct NotesSnapshot {
+    notes: SnapshotMap<Uuid, NoteMetadata>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+struct ScopesSnapshot {
+    characters: SnapshotMap<Uuid, Character>,
+    scopes: SnapshotMap<Uuid, Scope>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+struct EntriesSnapshot {
+    entries: SnapshotMap<Uuid, Arc<SnapshotMap<Uuid, EntryMetadata>>>,
+}
 
 const MAINTENANCE_INTERVAL: Duration = Duration::from_secs(60);
 const SNAPSHOT_MAX_AGE: Duration = Duration::from_secs(10 * 60);
@@ -30,20 +60,109 @@ const AUTHORITATIVE_SNAPSHOT_WAIT: Duration = Duration::from_millis(3);
 #[derive(Debug, Clone)]
 pub(crate) struct SpaceSnapshot {
     pub(crate) revision: u64,
-    verified_at: Instant,
-    space: Space,
+    database_fingerprint: DatabaseFingerprint,
     latest_activity_us: Arc<AtomicI64>,
-    pub(crate) settings: serde_json::Value,
-    pub(crate) channels: PersistentMap<Uuid, Channel>,
-    pub(crate) characters: PersistentMap<Uuid, Character>,
-    pub(crate) notes: PersistentMap<Uuid, NoteMetadata>,
-    pub(crate) scopes: PersistentMap<Uuid, Scope>,
-    pub(crate) entries: PersistentMap<Uuid, PersistentMap<Uuid, EntryMetadata>>,
-    pub(crate) space_members: PersistentMap<Uuid, SpaceMember>,
-    pub(crate) channel_members: PersistentMap<Uuid, PersistentMap<Uuid, ChannelMember>>,
+    core: Arc<CoreSnapshot>,
+    members: Arc<MembersSnapshot>,
+    notes: Arc<NotesSnapshot>,
+    scopes: Arc<ScopesSnapshot>,
+    entries: Arc<EntriesSnapshot>,
 }
 
-#[derive(Debug, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) struct ChannelMembership {
+    pub(crate) is_master: bool,
+}
+
+impl ChannelMembership {
+    pub(crate) async fn get<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
+        space_id: Uuid,
+        channel_id: Uuid,
+        user_id: Uuid,
+    ) -> Result<Option<Self>, sqlx::Error> {
+        sqlx::query_file_scalar!(
+            "sql/channels/get_membership.sql",
+            user_id,
+            channel_id,
+            space_id,
+        )
+        .fetch_optional(db)
+        .await
+        .map(|membership| membership.map(|is_master| Self { is_master }))
+    }
+}
+
+/// A read-only, probabilistic change detector for one independently reloadable
+/// section of a Space snapshot.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+struct SectionFingerprint {
+    row_count: i64,
+    xor_a: i64,
+    xor_b: i64,
+}
+
+/// Fingerprints are split along the same boundaries as the snapshot payload so
+/// reconciliation can reload only the sections which actually changed.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+struct DatabaseFingerprint {
+    core: SectionFingerprint,
+    members: SectionFingerprint,
+    notes: SectionFingerprint,
+    scopes: SectionFingerprint,
+    entries: SectionFingerprint,
+}
+
+#[derive(Debug, sqlx::FromRow)]
+struct DatabaseFingerprintRow {
+    section: String,
+    row_count: i64,
+    xor_a: i64,
+    xor_b: i64,
+}
+
+enum ReconciliationResult {
+    Unchanged,
+    Refreshed {
+        snapshot: Arc<SpaceSnapshot>,
+        changed: SnapshotSections,
+    },
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+struct SnapshotSections {
+    core: bool,
+    members: bool,
+    notes: bool,
+    scopes: bool,
+    entries: bool,
+}
+
+impl SnapshotSections {
+    fn any(self) -> bool {
+        self.core || self.members || self.notes || self.scopes || self.entries
+    }
+
+    fn record_refreshes(self) {
+        for (section, changed) in [
+            ("core", self.core),
+            ("members", self.members),
+            ("notes", self.notes),
+            ("scopes", self.scopes),
+            ("entries", self.entries),
+        ] {
+            if changed {
+                metrics::counter!(
+                    "boluo_server_space_runtime_reconciliation_section_refresh_total",
+                    "section" => section
+                )
+                .increment(1);
+            }
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 struct SnapshotPayloadMismatch {
     space: bool,
     settings: bool,
@@ -67,6 +186,59 @@ impl SnapshotPayloadMismatch {
             || self.entries
             || self.space_members
             || self.channel_members
+    }
+
+    fn report(self, space_id: Uuid) {
+        if !self.any() {
+            return;
+        }
+        metrics::counter!("boluo_server_space_runtime_reconciliation_mismatch_total").increment(1);
+        tracing::warn!(
+            event = "space_runtime.snapshot.mismatch",
+            %space_id,
+            space_mismatch = self.space,
+            settings_mismatch = self.settings,
+            channels_mismatch = self.channels,
+            characters_mismatch = self.characters,
+            notes_mismatch = self.notes,
+            scopes_mismatch = self.scopes,
+            entries_mismatch = self.entries,
+            space_members_mismatch = self.space_members,
+            channel_members_mismatch = self.channel_members,
+            "Space runtime reconciliation detected a snapshot mismatch"
+        );
+    }
+}
+
+impl DatabaseFingerprint {
+    fn from_rows(rows: Vec<DatabaseFingerprintRow>) -> Self {
+        let mut fingerprint = Self::default();
+        for row in rows {
+            let section = SectionFingerprint {
+                row_count: row.row_count,
+                xor_a: row.xor_a,
+                xor_b: row.xor_b,
+            };
+            match row.section.as_str() {
+                "core" => fingerprint.core = section,
+                "members" => fingerprint.members = section,
+                "notes" => fingerprint.notes = section,
+                "scopes" => fingerprint.scopes = section,
+                "entries" => fingerprint.entries = section,
+                section => debug_assert!(false, "unknown snapshot fingerprint section: {section}"),
+            }
+        }
+        fingerprint
+    }
+
+    fn changed_sections(&self, current: &Self) -> SnapshotSections {
+        SnapshotSections {
+            core: self.core != current.core,
+            members: self.members != current.members,
+            notes: self.notes != current.notes,
+            scopes: self.scopes != current.scopes,
+            entries: self.entries != current.entries,
+        }
     }
 }
 
@@ -99,33 +271,136 @@ pub(crate) enum SpaceDelta {
     },
 }
 
+impl MembersSnapshot {
+    fn upsert_channel_member(&mut self, member: ChannelMember) {
+        let channel_id = member.channel_id;
+        let user_id = member.user_id;
+        if member.is_joined {
+            Arc::make_mut(
+                self.channel_members
+                    .entry(channel_id)
+                    .or_insert_with(|| Arc::new(SnapshotMap::default())),
+            )
+            .insert(user_id, member);
+        } else {
+            self.remove_channel_member(channel_id, user_id);
+        }
+    }
+
+    fn remove_channel_member(&mut self, channel_id: Uuid, user_id: Uuid) {
+        let should_remove_channel =
+            self.channel_members
+                .get_mut(&channel_id)
+                .is_some_and(|members| {
+                    let members = Arc::make_mut(members);
+                    members.remove(&user_id);
+                    members.is_empty()
+                });
+        if should_remove_channel {
+            self.channel_members.remove(&channel_id);
+        }
+    }
+}
+
+impl EntriesSnapshot {
+    fn upsert(&mut self, entry: EntryMetadata) {
+        Arc::make_mut(
+            self.entries
+                .entry(entry.scope_id)
+                .or_insert_with(|| Arc::new(SnapshotMap::default())),
+        )
+        .insert(entry.id, entry);
+    }
+
+    fn remove(&mut self, scope_id: Uuid, entry_id: Uuid) {
+        let should_remove_scope = self.entries.get_mut(&scope_id).is_some_and(|entries| {
+            let entries = Arc::make_mut(entries);
+            entries.remove(&entry_id);
+            entries.is_empty()
+        });
+        if should_remove_scope {
+            self.entries.remove(&scope_id);
+        }
+    }
+}
+
 impl SpaceSnapshot {
+    pub(crate) fn space_record(&self) -> &SpaceRecord {
+        &self.core.space
+    }
+
+    pub(crate) fn settings(&self) -> &serde_json::Value {
+        &self.core.settings
+    }
+
+    pub(crate) fn channels(&self) -> &SnapshotMap<Uuid, Channel> {
+        &self.core.channels
+    }
+
+    pub(crate) fn characters(&self) -> &SnapshotMap<Uuid, Character> {
+        &self.scopes.characters
+    }
+
+    pub(crate) fn notes(&self) -> &SnapshotMap<Uuid, NoteMetadata> {
+        &self.notes.notes
+    }
+
+    pub(crate) fn scopes(&self) -> &SnapshotMap<Uuid, Scope> {
+        &self.scopes.scopes
+    }
+
+    pub(crate) fn entries(&self) -> &SnapshotMap<Uuid, Arc<SnapshotMap<Uuid, EntryMetadata>>> {
+        &self.entries.entries
+    }
+
+    pub(crate) fn space_members(&self) -> &SnapshotMap<Uuid, SpaceMember> {
+        &self.members.space_members
+    }
+
+    pub(crate) fn channel_members(
+        &self,
+    ) -> &SnapshotMap<Uuid, Arc<SnapshotMap<Uuid, ChannelMember>>> {
+        &self.members.channel_members
+    }
+
     pub(crate) fn space(&self) -> Space {
-        let mut space = self.space.clone();
-        space.latest_activity = OffsetDateTime::from_unix_timestamp_nanos(
+        let latest_activity = OffsetDateTime::from_unix_timestamp_nanos(
             self.latest_activity_us.load(Ordering::Relaxed) as i128 * 1_000,
         )
         .expect("Space latest_activity must be a valid UTC timestamp");
-        space
+        Space::from_record(self.core.space.clone(), latest_activity)
     }
 
     pub(crate) fn channel_member(&self, channel_id: Uuid, user_id: Uuid) -> Option<Member> {
         let channel = self
-            .channel_members
+            .channel_members()
             .get(&channel_id)?
             .get(&user_id)?
             .clone();
-        let space = self.space_members.get(&user_id)?.clone();
+        let space = self.space_members().get(&user_id)?.clone();
         Some(Member { channel, space })
     }
 
+    pub(crate) fn channel_membership(
+        &self,
+        channel_id: Uuid,
+        user_id: Uuid,
+    ) -> Option<ChannelMembership> {
+        let channel = self.channel_members().get(&channel_id)?.get(&user_id)?;
+        self.space_members()
+            .contains_key(&user_id)
+            .then_some(ChannelMembership {
+                is_master: channel.is_master,
+            })
+    }
+
     pub(crate) fn members_in_channel(&self, channel_id: Uuid) -> Vec<Member> {
-        self.channel_members
+        self.channel_members()
             .get(&channel_id)
             .into_iter()
             .flat_map(|members| members.values())
             .filter_map(|channel| {
-                self.space_members
+                self.space_members()
                     .get(&channel.user_id)
                     .map(|space| Member {
                         channel: channel.clone(),
@@ -136,22 +411,16 @@ impl SpaceSnapshot {
     }
 
     fn payload_mismatch(&self, reloaded: &Self) -> SnapshotPayloadMismatch {
-        let mut current_space = self.space.clone();
-        let reloaded_space = reloaded.space.clone();
-        // Activity is updated eagerly in memory and persisted asynchronously. It is
-        // intentionally excluded from structural cache-consistency reporting.
-        current_space.latest_activity = reloaded_space.latest_activity;
-
         SnapshotPayloadMismatch {
-            space: current_space != reloaded_space,
-            settings: self.settings != reloaded.settings,
-            channels: self.channels != reloaded.channels,
-            characters: self.characters != reloaded.characters,
-            notes: self.notes != reloaded.notes,
-            scopes: self.scopes != reloaded.scopes,
-            entries: self.entries != reloaded.entries,
-            space_members: self.space_members != reloaded.space_members,
-            channel_members: self.channel_members != reloaded.channel_members,
+            space: self.space_record() != reloaded.space_record(),
+            settings: self.settings() != reloaded.settings(),
+            channels: self.channels() != reloaded.channels(),
+            characters: self.characters() != reloaded.characters(),
+            notes: self.notes() != reloaded.notes(),
+            scopes: self.scopes() != reloaded.scopes(),
+            entries: self.entries() != reloaded.entries(),
+            space_members: self.space_members() != reloaded.space_members(),
+            channel_members: self.channel_members() != reloaded.channel_members(),
         }
     }
 
@@ -160,103 +429,77 @@ impl SpaceSnapshot {
         next.revision = revision;
         for delta in deltas {
             match delta {
-                SpaceDelta::SpaceUpdated(space) => next.space = space,
-                SpaceDelta::SettingsUpdated(settings) => next.settings = settings,
-                SpaceDelta::InviteTokenUpdated(token) => next.space.invite_token = token,
+                SpaceDelta::SpaceUpdated(space) => {
+                    Arc::make_mut(&mut next.core).space = space.into_parts().0;
+                }
+                SpaceDelta::SettingsUpdated(settings) => {
+                    Arc::make_mut(&mut next.core).settings = settings;
+                }
+                SpaceDelta::InviteTokenUpdated(token) => {
+                    Arc::make_mut(&mut next.core).space.invite_token = token;
+                }
                 SpaceDelta::ChannelUpserted(channel) => {
-                    next.channels.insert_mut(channel.id, channel);
+                    Arc::make_mut(&mut next.core)
+                        .channels
+                        .insert(channel.id, channel);
                 }
                 SpaceDelta::ChannelDeleted(channel_id) => {
-                    next.channels.remove_mut(&channel_id);
-                    next.channel_members.remove_mut(&channel_id);
+                    Arc::make_mut(&mut next.core).channels.remove(&channel_id);
+                    Arc::make_mut(&mut next.members)
+                        .channel_members
+                        .remove(&channel_id);
                 }
                 SpaceDelta::CharacterUpserted(character) => {
-                    next.characters.insert_mut(character.id, character);
+                    Arc::make_mut(&mut next.scopes)
+                        .characters
+                        .insert(character.id, character);
                 }
                 SpaceDelta::CharacterDeleted(character_id) => {
-                    next.characters.remove_mut(&character_id);
+                    Arc::make_mut(&mut next.scopes)
+                        .characters
+                        .remove(&character_id);
                 }
                 SpaceDelta::NoteUpserted(note) => {
-                    next.notes.insert_mut(note.id, note);
+                    Arc::make_mut(&mut next.notes).notes.insert(note.id, note);
                 }
                 SpaceDelta::ScopeUpserted(scope) => {
-                    next.scopes.insert_mut(scope.id, scope);
+                    Arc::make_mut(&mut next.scopes)
+                        .scopes
+                        .insert(scope.id, scope);
                 }
                 SpaceDelta::ScopeDeleted(scope_id) => {
-                    next.scopes.remove_mut(&scope_id);
-                    next.entries.remove_mut(&scope_id);
+                    Arc::make_mut(&mut next.scopes).scopes.remove(&scope_id);
+                    Arc::make_mut(&mut next.entries).entries.remove(&scope_id);
                 }
                 SpaceDelta::EntryUpserted(entry) => {
-                    let scope_id = entry.scope_id;
-                    let mut entries = next
-                        .entries
-                        .get(&scope_id)
-                        .cloned()
-                        .unwrap_or_else(PersistentMap::new_sync);
-                    entries.insert_mut(entry.id, entry);
-                    next.entries.insert_mut(scope_id, entries);
+                    Arc::make_mut(&mut next.entries).upsert(entry);
                 }
                 SpaceDelta::EntryDeleted { scope_id, entry_id } => {
-                    if let Some(mut entries) = next.entries.get(&scope_id).cloned() {
-                        entries.remove_mut(&entry_id);
-                        if entries.size() == 0 {
-                            next.entries.remove_mut(&scope_id);
-                        } else {
-                            next.entries.insert_mut(scope_id, entries);
-                        }
-                    }
+                    Arc::make_mut(&mut next.entries).remove(scope_id, entry_id);
                 }
                 SpaceDelta::SpaceMemberUpserted(member) => {
-                    next.space_members.insert_mut(member.user_id, member);
+                    Arc::make_mut(&mut next.members)
+                        .space_members
+                        .insert(member.user_id, member);
                 }
                 SpaceDelta::SpaceMemberRemoved {
                     user_id,
                     channel_ids,
                 } => {
-                    next.space_members.remove_mut(&user_id);
+                    let members = Arc::make_mut(&mut next.members);
+                    members.space_members.remove(&user_id);
                     for channel_id in channel_ids {
-                        if let Some(mut members) = next.channel_members.get(&channel_id).cloned() {
-                            members.remove_mut(&user_id);
-                            if members.size() == 0 {
-                                next.channel_members.remove_mut(&channel_id);
-                            } else {
-                                next.channel_members.insert_mut(channel_id, members);
-                            }
-                        }
+                        members.remove_channel_member(channel_id, user_id);
                     }
                 }
                 SpaceDelta::ChannelMemberUpserted(member) => {
-                    if member.is_joined {
-                        let mut members = next
-                            .channel_members
-                            .get(&member.channel_id)
-                            .cloned()
-                            .unwrap_or_else(PersistentMap::new_sync);
-                        members.insert_mut(member.user_id, member.clone());
-                        next.channel_members.insert_mut(member.channel_id, members);
-                    } else if let Some(mut members) =
-                        next.channel_members.get(&member.channel_id).cloned()
-                    {
-                        members.remove_mut(&member.user_id);
-                        if members.size() == 0 {
-                            next.channel_members.remove_mut(&member.channel_id);
-                        } else {
-                            next.channel_members.insert_mut(member.channel_id, members);
-                        }
-                    }
+                    Arc::make_mut(&mut next.members).upsert_channel_member(member);
                 }
                 SpaceDelta::ChannelMemberRemoved {
                     channel_id,
                     user_id,
                 } => {
-                    if let Some(mut members) = next.channel_members.get(&channel_id).cloned() {
-                        members.remove_mut(&user_id);
-                        if members.size() == 0 {
-                            next.channel_members.remove_mut(&channel_id);
-                        } else {
-                            next.channel_members.insert_mut(channel_id, members);
-                        }
-                    }
+                    Arc::make_mut(&mut next.members).remove_channel_member(channel_id, user_id);
                 }
             }
         }
@@ -275,6 +518,8 @@ pub(crate) enum SpaceRuntimeError {
     NotFound,
     #[error(transparent)]
     Database(#[from] sqlx::Error),
+    #[error(transparent)]
+    SpacePayloadCache(#[from] crate::space_payload_cache::Error),
     #[error("space runtime control queue is closed")]
     Closed,
     #[error("space runtime mutation queue is full")]
@@ -289,6 +534,7 @@ pub(crate) struct SpaceRuntime {
     space_id: Uuid,
     db: sqlx::PgPool,
     snapshot: ArcSwap<SpaceSnapshot>,
+    verified_at: parking_lot::Mutex<Instant>,
     dirty: AtomicBool,
     next_ticket: AtomicU64,
     reconciliation_pending: AtomicBool,
@@ -318,6 +564,7 @@ impl SpaceRuntime {
             space_id,
             db: db.clone(),
             snapshot: ArcSwap::from_pointee(snapshot),
+            verified_at: parking_lot::Mutex::new(Instant::now()),
             dirty: AtomicBool::new(false),
             next_ticket: AtomicU64::new(0),
             reconciliation_pending: AtomicBool::new(false),
@@ -341,91 +588,247 @@ impl SpaceRuntime {
             .execute(&mut *transaction)
             .await?;
 
-        let space = sqlx::query_file_scalar!("sql/spaces/get_by_id.sql", space_id)
-            .fetch_optional(&mut *transaction)
+        let space = Space::get_by_id(&mut *transaction, &space_id)
             .await?
             .ok_or(SpaceRuntimeError::NotFound)?;
         let settings = sqlx::query_file_scalar!("sql/spaces/get_settings.sql", space_id)
             .fetch_optional(&mut *transaction)
             .await?
             .unwrap_or_else(|| serde_json::json!({}));
-        let channels = sqlx::query_file_scalar!("sql/channels/get_by_space.sql", space_id)
-            .fetch_all(&mut *transaction)
-            .await?;
-        let characters = Character::list_by_space(&mut *transaction, &space_id).await?;
-        let notes = NoteMetadata::list_by_space(&mut *transaction, space_id, true).await?;
-        let scopes = Scope::list_by_space(&mut transaction, space_id).await?;
-        let entries = EntryMetadata::list_by_space(&mut transaction, space_id).await?;
-        let space_members =
-            sqlx::query_file_scalar!("sql/spaces/get_members_by_space.sql", space_id)
+        let channels: SnapshotMap<_, _> =
+            sqlx::query_file_scalar!("sql/channels/get_by_space.sql", space_id)
                 .fetch_all(&mut *transaction)
-                .await?;
-        let channel_members =
-            sqlx::query_file_scalar!("sql/channels/get_joined_members_by_space.sql", space_id)
-                .fetch_all(&mut *transaction)
-                .await?;
-        transaction.commit().await?;
-
-        let channels: PersistentMap<_, _> = channels
-            .into_iter()
-            .map(|channel: Channel| (channel.id, channel))
-            .collect();
-        let characters: PersistentMap<_, _> = characters
+                .await?
+                .into_iter()
+                .map(|channel: Channel| (channel.id, channel))
+                .collect();
+        let characters: SnapshotMap<_, _> = Character::list_by_space(&mut *transaction, &space_id)
+            .await?
             .into_iter()
             .map(|character: Character| (character.id, character))
             .collect();
-        let notes: PersistentMap<_, _> = notes.into_iter().map(|note| (note.id, note)).collect();
-        let scopes: PersistentMap<_, _> = scopes
+        let notes: SnapshotMap<_, _> =
+            NoteMetadata::list_by_space(&mut *transaction, space_id, true)
+                .await?
+                .into_iter()
+                .map(|note| (note.id, note))
+                .collect();
+        let scopes: SnapshotMap<_, _> = Scope::list_by_space(&mut transaction, space_id)
+            .await?
             .into_iter()
             .map(|scope: Scope| (scope.id, scope))
             .collect();
-        let mut entries_by_scope: HashMap<Uuid, PersistentMap<Uuid, EntryMetadata>> =
-            HashMap::new();
+        let entries =
+            Self::index_entries(EntryMetadata::list_by_space(&mut transaction, space_id).await?);
+        let space_members: SnapshotMap<_, _> =
+            sqlx::query_file_scalar!("sql/spaces/get_members_by_space.sql", space_id)
+                .fetch_all(&mut *transaction)
+                .await?
+                .into_iter()
+                .map(|member: SpaceMember| (member.user_id, member))
+                .collect();
+        let channel_members = Self::index_channel_members(
+            sqlx::query_file_scalar!("sql/channels/get_joined_members_by_space.sql", space_id)
+                .fetch_all(&mut *transaction)
+                .await?,
+        );
+        let database_fingerprint =
+            Self::load_database_fingerprint(&mut *transaction, space_id).await?;
+        transaction.commit().await?;
+
+        let (space, latest_activity) = space.into_parts();
+        Ok(SpaceSnapshot {
+            revision,
+            database_fingerprint,
+            latest_activity_us: Arc::new(AtomicI64::new(
+                latest_activity.unix_timestamp_nanos() as i64 / 1_000,
+            )),
+            core: Arc::new(CoreSnapshot {
+                space,
+                settings,
+                channels,
+            }),
+            members: Arc::new(MembersSnapshot {
+                space_members,
+                channel_members,
+            }),
+            notes: Arc::new(NotesSnapshot { notes }),
+            scopes: Arc::new(ScopesSnapshot { characters, scopes }),
+            entries: Arc::new(EntriesSnapshot { entries }),
+        })
+    }
+
+    async fn load_database_fingerprint<'c, T>(
+        db: T,
+        space_id: Uuid,
+    ) -> Result<DatabaseFingerprint, sqlx::Error>
+    where
+        T: sqlx::PgExecutor<'c>,
+    {
+        sqlx::query_as::<_, DatabaseFingerprintRow>(include_str!(
+            "../sql/spaces/snapshot_fingerprint.sql"
+        ))
+        .bind(space_id)
+        .fetch_all(db)
+        .await
+        .map(DatabaseFingerprint::from_rows)
+    }
+
+    fn index_entries(
+        entries: Vec<EntryMetadata>,
+    ) -> SnapshotMap<Uuid, Arc<SnapshotMap<Uuid, EntryMetadata>>> {
+        let mut entries_by_scope = SnapshotMap::<Uuid, SnapshotMap<Uuid, EntryMetadata>>::default();
         for entry in entries {
             let scope_id = entry.scope_id;
             entries_by_scope
                 .entry(scope_id)
-                .or_insert_with(PersistentMap::new_sync)
-                .insert_mut(entry.id, entry);
+                .or_default()
+                .insert(entry.id, entry);
         }
-        let entries = entries_by_scope.into_iter().collect();
-        let space_members: PersistentMap<_, _> = space_members
+        entries_by_scope
             .into_iter()
-            .map(|member: SpaceMember| (member.user_id, member))
-            .collect();
-        let mut channel_members_by_channel = HashMap::new();
+            .map(|(scope_id, entries)| (scope_id, Arc::new(entries)))
+            .collect()
+    }
+
+    fn index_channel_members(
+        channel_members: Vec<ChannelMember>,
+    ) -> SnapshotMap<Uuid, Arc<SnapshotMap<Uuid, ChannelMember>>> {
+        let mut channel_members_by_channel =
+            SnapshotMap::<Uuid, SnapshotMap<Uuid, ChannelMember>>::default();
         for member in channel_members {
-            let members: &mut HashMap<Uuid, ChannelMember> = channel_members_by_channel
+            let members = channel_members_by_channel
                 .entry(member.channel_id)
-                .or_insert_with(HashMap::new);
+                .or_default();
             members.insert(member.user_id, member);
         }
-        let channel_members: PersistentMap<_, _> = channel_members_by_channel
+        channel_members_by_channel
             .into_iter()
-            .map(|(channel_id, members)| {
-                (
-                    channel_id,
-                    members.into_iter().collect::<PersistentMap<_, _>>(),
-                )
-            })
-            .collect();
+            .map(|(channel_id, members)| (channel_id, Arc::new(members)))
+            .collect()
+    }
 
-        let latest_activity = space.latest_activity;
-        Ok(SpaceSnapshot {
-            revision,
-            verified_at: Instant::now(),
-            space,
-            latest_activity_us: Arc::new(AtomicI64::new(
-                latest_activity.unix_timestamp_nanos() as i64 / 1_000,
-            )),
-            settings,
-            channels,
-            characters,
-            notes,
-            scopes,
-            entries,
-            space_members,
-            channel_members,
+    async fn reconcile_snapshot(
+        db: &sqlx::PgPool,
+        space_id: Uuid,
+        revision: u64,
+        current: &SpaceSnapshot,
+    ) -> Result<ReconciliationResult, SpaceRuntimeError> {
+        let mut transaction = db.begin().await?;
+        sqlx::query("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ, READ ONLY")
+            .execute(&mut *transaction)
+            .await?;
+        let probe_started = Instant::now();
+        let database_fingerprint =
+            match Self::load_database_fingerprint(&mut *transaction, space_id).await {
+                Ok(fingerprint) => fingerprint,
+                Err(error) => {
+                    metrics::counter!(
+                        "boluo_server_space_runtime_reconciliation_probe_total",
+                        "result" => "error"
+                    )
+                    .increment(1);
+                    metrics::histogram!(
+                        "boluo_server_space_runtime_reconciliation_probe_duration_seconds",
+                        "result" => "error"
+                    )
+                    .record(probe_started.elapsed().as_secs_f64());
+                    return Err(error.into());
+                }
+            };
+        let changed = database_fingerprint.changed_sections(&current.database_fingerprint);
+        let result_label = if changed.any() {
+            "changed"
+        } else {
+            "unchanged"
+        };
+        metrics::counter!(
+            "boluo_server_space_runtime_reconciliation_probe_total",
+            "result" => result_label
+        )
+        .increment(1);
+        metrics::histogram!(
+            "boluo_server_space_runtime_reconciliation_probe_duration_seconds",
+            "result" => result_label
+        )
+        .record(probe_started.elapsed().as_secs_f64());
+        if !changed.any() {
+            transaction.commit().await?;
+            return Ok(ReconciliationResult::Unchanged);
+        }
+
+        let mut next = current.clone();
+        next.revision = revision;
+        next.database_fingerprint = database_fingerprint;
+        if changed.core {
+            let space = SpaceRecord::get_by_id(&mut *transaction, &space_id)
+                .await?
+                .ok_or(SpaceRuntimeError::NotFound)?;
+            let settings = sqlx::query_file_scalar!("sql/spaces/get_settings.sql", space_id)
+                .fetch_optional(&mut *transaction)
+                .await?
+                .unwrap_or_else(|| serde_json::json!({}));
+            let channels = sqlx::query_file_scalar!("sql/channels/get_by_space.sql", space_id)
+                .fetch_all(&mut *transaction)
+                .await?
+                .into_iter()
+                .map(|channel: Channel| (channel.id, channel))
+                .collect();
+            next.core = Arc::new(CoreSnapshot {
+                space,
+                settings,
+                channels,
+            });
+        }
+        if changed.scopes {
+            let characters = Character::list_by_space(&mut *transaction, &space_id)
+                .await?
+                .into_iter()
+                .map(|character| (character.id, character))
+                .collect();
+            let scopes = Scope::list_by_space(&mut transaction, space_id)
+                .await?
+                .into_iter()
+                .map(|scope| (scope.id, scope))
+                .collect();
+            next.scopes = Arc::new(ScopesSnapshot { characters, scopes });
+        }
+        if changed.notes {
+            let notes = NoteMetadata::list_by_space(&mut *transaction, space_id, true)
+                .await?
+                .into_iter()
+                .map(|note| (note.id, note))
+                .collect();
+            next.notes = Arc::new(NotesSnapshot { notes });
+        }
+        if changed.entries {
+            let entries = Self::index_entries(
+                EntryMetadata::list_by_space(&mut transaction, space_id).await?,
+            );
+            next.entries = Arc::new(EntriesSnapshot { entries });
+        }
+        if changed.members {
+            let space_members =
+                sqlx::query_file_scalar!("sql/spaces/get_members_by_space.sql", space_id)
+                    .fetch_all(&mut *transaction)
+                    .await?
+                    .into_iter()
+                    .map(|member: SpaceMember| (member.user_id, member))
+                    .collect();
+            let channel_members = Self::index_channel_members(
+                sqlx::query_file_scalar!("sql/channels/get_joined_members_by_space.sql", space_id)
+                    .fetch_all(&mut *transaction)
+                    .await?,
+            );
+            next.members = Arc::new(MembersSnapshot {
+                space_members,
+                channel_members,
+            });
+        }
+        transaction.commit().await?;
+        Ok(ReconciliationResult::Refreshed {
+            snapshot: Arc::new(next),
+            changed,
         })
     }
 
@@ -570,7 +973,7 @@ impl SpaceRuntime {
     fn needs_reconciliation(&self, max_age: Duration) -> bool {
         self.active_mutations.load(Ordering::Acquire) == 0
             && !self.reconciliation_pending.load(Ordering::Acquire)
-            && self.snapshot().verified_at.elapsed() >= max_age
+            && self.verified_at.lock().elapsed() >= max_age
     }
 
     fn reconcile_if_stale(&self, max_age: Duration, permits: &Arc<tokio::sync::Semaphore>) -> bool {
@@ -1028,6 +1431,61 @@ impl SpaceRuntime {
         ticket: u64,
         reason: SnapshotReloadReason,
     ) -> Result<u64, SpaceRuntimeError> {
+        if matches!(reason, SnapshotReloadReason::Reconciliation) {
+            let current = runtime.snapshot();
+            let authoritative = !runtime.dirty.load(Ordering::Acquire)
+                && current.revision == runtime.next_ticket.load(Ordering::Acquire);
+            if authoritative {
+                let started = Instant::now();
+                match Self::reconcile_snapshot(&runtime.db, runtime.space_id, ticket, &current)
+                    .await
+                {
+                    Ok(ReconciliationResult::Unchanged) => {
+                        *runtime.verified_at.lock() = Instant::now();
+                        runtime.update_dirty(state);
+                        return Ok(ticket);
+                    }
+                    Ok(ReconciliationResult::Refreshed { snapshot, changed }) => {
+                        metrics::counter!(
+                            "boluo_server_space_runtime_refresh_total",
+                            "reason" => reason.as_str()
+                        )
+                        .increment(1);
+                        metrics::histogram!(
+                            "boluo_server_space_runtime_refresh_duration_seconds",
+                            "reason" => reason.as_str()
+                        )
+                        .record(started.elapsed().as_secs_f64());
+                        changed.record_refreshes();
+                        current.payload_mismatch(&snapshot).report(runtime.space_id);
+                        if current.revision <= ticket {
+                            runtime.snapshot.store(snapshot);
+                            *runtime.verified_at.lock() = Instant::now();
+                        }
+                        runtime.update_dirty(state);
+                        return Ok(ticket);
+                    }
+                    Err(error) => {
+                        metrics::counter!(
+                            "boluo_server_space_runtime_reconciliation_selective_refresh_failed_total"
+                        )
+                        .increment(1);
+                        tracing::warn!(
+                            event = "space_runtime.reconciliation.selective_refresh_failed",
+                            %error,
+                            space_id = %runtime.space_id,
+                            "Failed to selectively refresh the Space snapshot; falling back to a full refresh"
+                        );
+                    }
+                }
+            } else {
+                tracing::debug!(
+                    space_id = %runtime.space_id,
+                    "Space runtime is dirty; reconciliation is using a full refresh"
+                );
+            }
+        }
+
         let started = Instant::now();
         metrics::counter!(
             "boluo_server_space_runtime_refresh_total",
@@ -1070,35 +1528,17 @@ impl SpaceRuntime {
                 if matches!(reason, SnapshotReloadReason::Reconciliation)
                     && current.revision <= ticket
                 {
-                    let mismatch = current.payload_mismatch(&snapshot);
-                    if mismatch.any() {
-                        metrics::counter!(
-                            "boluo_server_space_runtime_reconciliation_mismatch_total"
-                        )
-                        .increment(1);
-                        tracing::warn!(
-                            event = "space_runtime.snapshot.mismatch",
-                            space_id = %runtime.space_id,
-                            space_mismatch = mismatch.space,
-                            settings_mismatch = mismatch.settings,
-                            channels_mismatch = mismatch.channels,
-                            characters_mismatch = mismatch.characters,
-                            scopes_mismatch = mismatch.scopes,
-                            entries_mismatch = mismatch.entries,
-                            space_members_mismatch = mismatch.space_members,
-                            channel_members_mismatch = mismatch.channel_members,
-                            "Space runtime reconciliation detected a snapshot mismatch"
-                        );
-                    }
+                    current.payload_mismatch(&snapshot).report(runtime.space_id);
                 }
                 let current_activity_us = current.latest_activity_us.clone();
                 current_activity_us.fetch_max(
-                    snapshot.space.latest_activity.unix_timestamp_nanos() as i64 / 1_000,
+                    snapshot.latest_activity_us.load(Ordering::Relaxed),
                     Ordering::Relaxed,
                 );
                 snapshot.latest_activity_us = current_activity_us;
                 if current.revision <= ticket {
                     runtime.snapshot.store(Arc::new(snapshot));
+                    *runtime.verified_at.lock() = Instant::now();
                 }
                 runtime.update_dirty(state);
                 Ok(ticket)
@@ -1268,7 +1708,7 @@ pub(crate) struct SpaceStore {
 struct SpaceStoreInner {
     db: sqlx::PgPool,
     runtimes: papaya::HashMap<Uuid, Arc<SpaceRuntimeHandle>, ahash::RandomState>,
-    entry_component_memory_cache: Arc<EntryComponentMemoryCache>,
+    space_payload_cache: SpacePayloadCache,
     reconciliation_permits: Arc<tokio::sync::Semaphore>,
     reconciliation_cursor: AtomicU64,
     #[cfg(test)]
@@ -1391,15 +1831,15 @@ impl Drop for SpaceRuntimeLease {
 
 impl SpaceStore {
     pub(crate) fn new(db: sqlx::PgPool) -> Self {
-        Self::with_entry_component_cache_capacity(
+        Self::with_space_payload_cache(
             db,
-            crate::entries::component_cache::DEFAULT_CACHE_BYTES,
+            SpacePayloadCache::memory_only(crate::space_payload_cache::DEFAULT_MEMORY_CACHE_BYTES),
         )
     }
 
-    pub(crate) fn with_entry_component_cache_capacity(
+    pub(crate) fn with_space_payload_cache(
         db: sqlx::PgPool,
-        entry_component_cache_capacity: u64,
+        space_payload_cache: SpacePayloadCache,
     ) -> Self {
         let store = Self {
             inner: Arc::new(SpaceStoreInner {
@@ -1409,9 +1849,7 @@ impl SpaceStore {
                     .hasher(ahash::RandomState::new())
                     .resize_mode(papaya::ResizeMode::Blocking)
                     .build(),
-                entry_component_memory_cache: Arc::new(EntryComponentMemoryCache::new(
-                    entry_component_cache_capacity,
-                )),
+                space_payload_cache,
                 reconciliation_permits: Arc::new(tokio::sync::Semaphore::new(
                     MAX_CONCURRENT_RECONCILIATIONS,
                 )),
@@ -1461,6 +1899,7 @@ impl SpaceStore {
     }
 
     pub(crate) fn update_metrics(&self) {
+        self.inner.space_payload_cache.update_metrics();
         let mut loaded = 0_u64;
         let mut dirty = 0_u64;
         let mut mutations_in_flight = 0_u64;
@@ -1483,20 +1922,20 @@ impl SpaceStore {
             control_queue_depth += runtime.control_queue_depth.load(Ordering::Acquire);
             mutation_queue_depth += runtime.mutation_queue_depth.load(Ordering::Acquire);
             let snapshot = runtime.snapshot();
-            snapshot_channels += snapshot.channels.size() as u64;
-            snapshot_characters += snapshot.characters.size() as u64;
-            snapshot_notes += snapshot.notes.size() as u64;
-            snapshot_scopes += snapshot.scopes.size() as u64;
+            snapshot_channels += snapshot.channels().len() as u64;
+            snapshot_characters += snapshot.characters().len() as u64;
+            snapshot_notes += snapshot.notes().len() as u64;
+            snapshot_scopes += snapshot.scopes().len() as u64;
             snapshot_entries += snapshot
-                .entries
+                .entries()
                 .values()
-                .map(|entries| entries.size() as u64)
+                .map(|entries| entries.len() as u64)
                 .sum::<u64>();
-            snapshot_space_members += snapshot.space_members.size() as u64;
+            snapshot_space_members += snapshot.space_members().len() as u64;
             snapshot_channel_members += snapshot
-                .channel_members
+                .channel_members()
                 .values()
-                .map(|members| members.size() as u64)
+                .map(|members| members.len() as u64)
                 .sum::<u64>();
         }
 
@@ -1605,7 +2044,7 @@ impl SpaceStore {
             && let Some(snapshot) = self
                 .loaded_authoritative_snapshot_once(space_id, &mut waited_space_id)
                 .await
-            && let Some(channel) = snapshot.channels.get(&channel_id).cloned()
+            && let Some(channel) = snapshot.channels().get(&channel_id).cloned()
         {
             return Ok(Some(ResolvedChannel {
                 channel,
@@ -1622,7 +2061,7 @@ impl SpaceStore {
             if let Some(snapshot) = self
                 .loaded_authoritative_snapshot_once(space_id, &mut waited_space_id)
                 .await
-                && let Some(channel) = snapshot.channels.get(&channel_id).cloned()
+                && let Some(channel) = snapshot.channels().get(&channel_id).cloned()
             {
                 return Ok(Some(ResolvedChannel {
                     channel,
@@ -1637,7 +2076,7 @@ impl SpaceStore {
         if let Some(snapshot) = self
             .loaded_authoritative_snapshot_once(channel.space_id, &mut waited_space_id)
             .await
-            && let Some(channel) = snapshot.channels.get(&channel_id).cloned()
+            && let Some(channel) = snapshot.channels().get(&channel_id).cloned()
         {
             return Ok(Some(ResolvedChannel {
                 channel,
@@ -1659,7 +2098,7 @@ impl SpaceStore {
         if let Some(snapshot) = runtime.authoritative_snapshot_after_wait().await {
             metrics::counter!("boluo_server_space_runtime_read_total", "result" => "hit")
                 .increment(1);
-            return Ok(snapshot.characters.get(&character_id).cloned());
+            return Ok(snapshot.characters().get(&character_id).cloned());
         }
 
         metrics::counter!("boluo_server_space_runtime_read_total", "result" => "fallback")
@@ -1678,7 +2117,7 @@ impl SpaceStore {
         if let Some(snapshot) = runtime.authoritative_snapshot_after_wait().await {
             metrics::counter!("boluo_server_space_runtime_read_total", "result" => "hit")
                 .increment(1);
-            return Ok(snapshot.notes.get(&note_id).cloned());
+            return Ok(snapshot.notes().get(&note_id).cloned());
         }
 
         metrics::counter!("boluo_server_space_runtime_read_total", "result" => "fallback")
@@ -1686,6 +2125,45 @@ impl SpaceStore {
         NoteMetadata::get_by_id(&self.inner.db, space_id, note_id)
             .await
             .map_err(Into::into)
+    }
+
+    pub(crate) async fn resolve_note(
+        &self,
+        space_id: Uuid,
+        note_id: Uuid,
+    ) -> Result<Option<Note>, SpaceRuntimeError> {
+        let runtime = self.get_or_load(space_id).await?;
+        let Some(snapshot) = runtime.authoritative_snapshot_after_wait().await else {
+            return Note::get_by_id(&self.inner.db, space_id, note_id)
+                .await
+                .map_err(Into::into);
+        };
+        let Some(expected_note) = snapshot.notes().get(&note_id) else {
+            return Ok(None);
+        };
+        let expected_revision = expected_note.revision;
+        let Some(payload) = self
+            .inner
+            .space_payload_cache
+            .note_payload(&self.inner.db, space_id, note_id, expected_revision)
+            .await?
+        else {
+            return Ok(None);
+        };
+        let Some(current) = runtime.authoritative_snapshot_after_wait().await else {
+            return Note::get_by_id(&self.inner.db, space_id, note_id)
+                .await
+                .map_err(Into::into);
+        };
+        let Some(current_note) = current.notes().get(&note_id) else {
+            return Ok(None);
+        };
+        if current_note.revision != expected_revision {
+            return Note::get_by_id(&self.inner.db, space_id, note_id)
+                .await
+                .map_err(Into::into);
+        }
+        Ok(Some(payload.into_note(current_note.clone())))
     }
 
     pub(crate) async fn list_note_metadata(
@@ -1698,7 +2176,7 @@ impl SpaceStore {
             metrics::counter!("boluo_server_space_runtime_read_total", "result" => "hit")
                 .increment(1);
             let mut notes: Vec<_> = snapshot
-                .notes
+                .notes()
                 .values()
                 .filter(|note| include_archived || note.archived_at.is_none())
                 .cloned()
@@ -1728,7 +2206,7 @@ impl SpaceStore {
         if let Some(snapshot) = runtime.authoritative_snapshot_after_wait().await {
             metrics::counter!("boluo_server_space_runtime_read_total", "result" => "hit")
                 .increment(1);
-            return Ok(snapshot.scopes.get(&scope_id).cloned());
+            return Ok(snapshot.scopes().get(&scope_id).cloned());
         }
 
         metrics::counter!("boluo_server_space_runtime_read_total", "result" => "fallback")
@@ -1749,10 +2227,10 @@ impl SpaceStore {
             metrics::counter!("boluo_server_space_runtime_read_total", "result" => "hit")
                 .increment(1);
             let mut entries: Vec<_> = snapshot
-                .entries
+                .entries()
                 .get(&scope_id)
                 .into_iter()
-                .flat_map(PersistentMap::values)
+                .flat_map(|entries| entries.values())
                 .cloned()
                 .collect();
             entries.sort_unstable_by(|left, right| {
@@ -1782,7 +2260,7 @@ impl SpaceStore {
                 .map_err(Into::into);
         };
         let Some(expected_entry) = snapshot
-            .entries
+            .entries()
             .get(&scope_id)
             .and_then(|entries| entries.get(&entry_id))
         else {
@@ -1791,8 +2269,8 @@ impl SpaceStore {
         let expected_version = expected_entry.components_version;
         let components = self
             .inner
-            .entry_component_memory_cache
-            .get_or_load(&self.inner.db, entry_id, expected_version)
+            .space_payload_cache
+            .entry_components(&self.inner.db, entry_id, expected_version)
             .await?;
         let Some(current) = runtime.authoritative_snapshot_after_wait().await else {
             return Entry::get_by_id(&self.inner.db, scope_id, entry_id)
@@ -1800,7 +2278,7 @@ impl SpaceStore {
                 .map_err(Into::into);
         };
         let Some(current_entry) = current
-            .entries
+            .entries()
             .get(&scope_id)
             .and_then(|entries| entries.get(&entry_id))
         else {
@@ -1811,11 +2289,7 @@ impl SpaceStore {
                 .await
                 .map_err(Into::into);
         }
-        return Ok(Some(
-            current_entry
-                .clone()
-                .with_components(components.to_response()),
-        ));
+        return Ok(Some(current_entry.clone().with_components(components)));
     }
 
     pub(crate) async fn resolve_channel_member(
@@ -1846,6 +2320,26 @@ impl SpaceStore {
                 space: record.space,
             })
         }))
+    }
+
+    pub(crate) async fn resolve_channel_membership(
+        &self,
+        space_id: Uuid,
+        channel_id: Uuid,
+        user_id: Uuid,
+    ) -> Result<Option<ChannelMembership>, SpaceRuntimeError> {
+        let runtime = self.get_or_load(space_id).await?;
+        if let Some(snapshot) = runtime.authoritative_snapshot_after_wait().await {
+            metrics::counter!("boluo_server_space_runtime_read_total", "result" => "hit")
+                .increment(1);
+            return Ok(snapshot.channel_membership(channel_id, user_id));
+        }
+
+        metrics::counter!("boluo_server_space_runtime_read_total", "result" => "fallback")
+            .increment(1);
+        ChannelMembership::get(&self.inner.db, space_id, channel_id, user_id)
+            .await
+            .map_err(Into::into)
     }
 
     async fn get_or_load_with_hook<F>(
@@ -2018,9 +2512,8 @@ impl SpaceStore {
             .load(std::sync::atomic::Ordering::Relaxed)
     }
 
-    #[cfg(test)]
-    fn entry_component_memory_cache_len(&self) -> usize {
-        self.inner.entry_component_memory_cache.len()
+    pub(crate) async fn close_space_payload_cache(&self) -> Result<(), foyer::Error> {
+        self.inner.space_payload_cache.close().await
     }
 }
 
@@ -2037,6 +2530,52 @@ mod tests {
     use serde_json::json;
     use shared_types::messages::Entities;
     use std::collections::BTreeMap;
+
+    fn entry_metadata(scope_id: Uuid, id: Uuid, display_name: &str) -> EntryMetadata {
+        EntryMetadata {
+            id,
+            scope_id,
+            key: display_name.into(),
+            aliases: Vec::new(),
+            display_name: display_name.into(),
+            reference_note_id: None,
+            tags: Vec::new(),
+            pos_p: 0,
+            pos_q: 1,
+            pos: 0.0,
+            metadata_version: Uuid::new_v4(),
+            components_version: Uuid::new_v4(),
+            created: time::OffsetDateTime::UNIX_EPOCH,
+            modified: time::OffsetDateTime::UNIX_EPOCH,
+        }
+    }
+
+    #[test]
+    fn entry_update_only_clones_the_target_scope() {
+        let scope_a = Uuid::new_v4();
+        let scope_b = Uuid::new_v4();
+        let entry_a = Uuid::new_v4();
+        let entry_b = Uuid::new_v4();
+        let mut entries = EntriesSnapshot {
+            entries: SnapshotMap::default(),
+        };
+        entries.upsert(entry_metadata(scope_a, entry_a, "before"));
+        entries.upsert(entry_metadata(scope_b, entry_b, "unchanged"));
+        let original = entries.clone();
+
+        entries.upsert(entry_metadata(scope_a, entry_a, "after"));
+
+        assert!(!Arc::ptr_eq(
+            &original.entries[&scope_a],
+            &entries.entries[&scope_a]
+        ));
+        assert!(Arc::ptr_eq(
+            &original.entries[&scope_b],
+            &entries.entries[&scope_b]
+        ));
+        assert_eq!(original.entries[&scope_a][&entry_a].display_name, "before");
+        assert_eq!(entries.entries[&scope_a][&entry_a].display_name, "after");
+    }
 
     async fn create_space(pool: &sqlx::PgPool) -> (User, Space, Channel) {
         let suffix = Uuid::new_v4().simple().to_string();
@@ -2081,6 +2620,7 @@ mod tests {
     #[sqlx::test]
     async fn db_test_space_store_coalesces_concurrent_loads(pool: sqlx::PgPool) {
         let (owner, space, channel) = create_space(&pool).await;
+        let space_id = space.id;
 
         let store = SpaceStore::new(pool);
         let barrier = Arc::new(tokio::sync::Barrier::new(2));
@@ -2089,7 +2629,7 @@ mod tests {
             let barrier = barrier.clone();
             tokio::spawn(async move {
                 store
-                    .get_or_load_with_hook(space.id, async move {
+                    .get_or_load_with_hook(space_id, async move {
                         barrier.wait().await;
                     })
                     .await
@@ -2100,7 +2640,7 @@ mod tests {
             let barrier = barrier.clone();
             tokio::spawn(async move {
                 store
-                    .get_or_load_with_hook(space.id, async move {
+                    .get_or_load_with_hook(space_id, async move {
                         barrier.wait().await;
                     })
                     .await
@@ -2117,11 +2657,11 @@ mod tests {
             "concurrent callers loaded the same Space snapshot more than once"
         );
         let snapshot = first.snapshot();
-        assert_eq!(snapshot.space().id, space.id);
-        assert!(snapshot.channels.contains_key(&channel.id));
-        assert!(snapshot.space_members.contains_key(&owner.id));
+        assert_eq!(snapshot.space().id, space_id);
+        assert!(snapshot.channels().contains_key(&channel.id));
+        assert!(snapshot.space_members().contains_key(&owner.id));
         assert_eq!(
-            snapshot.channel_members[&channel.id][&owner.id].character_name,
+            snapshot.channel_members()[&channel.id][&owner.id].character_name,
             "GM"
         );
     }
@@ -2138,6 +2678,13 @@ mod tests {
             .expect("failed to resolve channel member")
             .expect("owner is missing from channel");
         assert!(member.channel.is_master);
+        let membership = ctx
+            .space_store
+            .resolve_channel_membership(space.id, channel.id, owner.id)
+            .await
+            .expect("failed to resolve channel membership")
+            .expect("owner membership is missing from channel");
+        assert!(membership.is_master);
         assert!(
             crate::events::context::store()
                 .get_manager(&space.id)
@@ -2166,6 +2713,14 @@ mod tests {
                 .is_none(),
             "dirty runtime returned its stale member snapshot"
         );
+        assert!(
+            ctx.space_store
+                .resolve_channel_membership(space.id, channel.id, owner.id)
+                .await
+                .expect("failed to use membership fallback while runtime was dirty")
+                .is_none(),
+            "dirty runtime returned its stale membership snapshot"
+        );
 
         let mut changes = CommittedChanges::default();
         changes.channel_member_removed(space.id, channel.id, owner.id);
@@ -2177,6 +2732,14 @@ mod tests {
                 .expect("failed to read refreshed runtime")
                 .is_none(),
             "refreshed runtime retained a removed member"
+        );
+        assert!(
+            ctx.space_store
+                .resolve_channel_membership(space.id, channel.id, owner.id)
+                .await
+                .expect("failed to read refreshed channel membership")
+                .is_none(),
+            "refreshed runtime retained a removed membership"
         );
         assert!(
             crate::events::context::store()
@@ -2266,7 +2829,7 @@ mod tests {
             .expect("runtime snapshot is dirty");
         assert_eq!(
             snapshot
-                .scopes
+                .scopes()
                 .get(&space.scope_id)
                 .expect("Space Scope is not resident"),
             &Scope::get_by_id(&pool, space.scope_id)
@@ -2276,7 +2839,7 @@ mod tests {
         );
         assert!(
             snapshot
-                .entries
+                .entries()
                 .get(&space.scope_id)
                 .is_some_and(|entries| entries.contains_key(&entry.id))
         );
@@ -2481,10 +3044,17 @@ mod tests {
             runtime
                 .authoritative_snapshot()
                 .expect("runtime snapshot is dirty")
-                .notes
+                .notes()
                 .get(&note.id),
             Some(&note.metadata)
         );
+        let initial = ctx
+            .space_store
+            .resolve_note(space.id, note.id)
+            .await
+            .expect("failed to resolve initial Note")
+            .expect("initial Note is missing");
+        assert_eq!(initial.text, "Initial content");
 
         let mutation = ctx
             .space_store
@@ -2525,9 +3095,11 @@ mod tests {
             .expect("Note metadata is missing");
         assert_eq!(resolved.title, "Updated Rules");
         assert_eq!(resolved.revision, 2);
-        let full = Note::get_by_id(&pool, space.id, note.id)
+        let full = ctx
+            .space_store
+            .resolve_note(space.id, note.id)
             .await
-            .expect("failed to query full Note")
+            .expect("failed to resolve full Note")
             .expect("full Note is missing");
         assert_eq!(full.text, "Updated content");
         assert!(full.entities.0.is_empty());
@@ -2568,10 +3140,10 @@ mod tests {
         let snapshot = runtime
             .authoritative_snapshot()
             .expect("runtime snapshot is dirty");
-        assert_eq!(snapshot.settings, serde_json::json!({"theme": "dark"}));
+        assert_eq!(snapshot.settings(), &serde_json::json!({"theme": "dark"}));
         assert!(
             snapshot
-                .channel_members
+                .channel_members()
                 .get(&channel.id)
                 .is_none_or(|members| !members.contains_key(&former_member.id)),
             "a former member was treated as currently joined"
@@ -2596,12 +3168,221 @@ mod tests {
         let mut changes = CommittedChanges::default();
         changes.space_settings_updated(space.id, serde_json::json!({"theme": "light"}));
         changes.apply_with_mutation(&ctx, &mutation).await;
+        let updated_snapshot = runtime
+            .authoritative_snapshot()
+            .expect("refreshed runtime snapshot is dirty");
         assert_eq!(
-            runtime
-                .authoritative_snapshot()
-                .expect("refreshed runtime snapshot is dirty")
-                .settings,
-            serde_json::json!({"theme": "light"})
+            updated_snapshot.settings(),
+            &serde_json::json!({"theme": "light"})
+        );
+        assert_eq!(snapshot.settings(), &serde_json::json!({"theme": "dark"}));
+        assert!(!Arc::ptr_eq(&snapshot.core, &updated_snapshot.core));
+        assert!(Arc::ptr_eq(&snapshot.members, &updated_snapshot.members));
+        assert!(Arc::ptr_eq(&snapshot.notes, &updated_snapshot.notes));
+        assert!(Arc::ptr_eq(&snapshot.scopes, &updated_snapshot.scopes));
+        assert!(Arc::ptr_eq(&snapshot.entries, &updated_snapshot.entries));
+        let current = runtime.snapshot();
+        let ReconciliationResult::Refreshed {
+            snapshot: reconciled,
+            changed,
+        } = SpaceRuntime::reconcile_snapshot(&pool, space.id, current.revision, &current)
+            .await
+            .expect("failed to reconcile the locally updated settings")
+        else {
+            panic!("the local settings mutation did not change its database fingerprint");
+        };
+        assert_eq!(
+            changed,
+            SnapshotSections {
+                core: true,
+                ..SnapshotSections::default()
+            }
+        );
+        assert_eq!(
+            current.payload_mismatch(&reconciled),
+            SnapshotPayloadMismatch::default(),
+            "reconciliation disagreed with the locally applied settings delta"
+        );
+    }
+
+    #[sqlx::test(migrator = "crate::db::MIGRATOR")]
+    async fn db_test_reconciliation_skips_reload_when_fingerprint_is_unchanged(pool: sqlx::PgPool) {
+        let (_owner, space, _) = create_space(&pool).await;
+        let store = SpaceStore::new(pool);
+        let runtime = store
+            .get_or_load(space.id)
+            .await
+            .expect("failed to load Space runtime");
+        let before = runtime.snapshot();
+        let permits = Arc::new(tokio::sync::Semaphore::new(1));
+        let permit = permits
+            .acquire_owned()
+            .await
+            .expect("reconciliation semaphore was closed");
+        let (_, ack) = runtime
+            .enqueue_reconciliation(permit)
+            .expect("failed to enqueue reconciliation");
+
+        ack.await
+            .expect("reconciliation actor dropped its acknowledgement")
+            .expect("reconciliation probe failed");
+
+        let after = runtime.snapshot();
+        assert!(
+            Arc::ptr_eq(&before, &after),
+            "an unchanged database caused the snapshot to be rebuilt"
+        );
+    }
+
+    #[sqlx::test(migrator = "crate::db::MIGRATOR")]
+    async fn db_test_reconciliation_repairs_dirty_runtime_with_unchanged_fingerprint(
+        pool: sqlx::PgPool,
+    ) {
+        let (_owner, space, _) = create_space(&pool).await;
+        let store = SpaceStore::new(pool);
+        let runtime = store
+            .get_or_load(space.id)
+            .await
+            .expect("failed to load Space runtime");
+        let before = runtime.snapshot();
+
+        // Model a failed mutation repair: generation was reserved, but the
+        // unchanged database could not be reloaded while it was unavailable.
+        let reserved_ticket = runtime.reserve_generation();
+        assert!(runtime.authoritative_snapshot().is_none());
+
+        let permits = Arc::new(tokio::sync::Semaphore::new(1));
+        let permit = permits
+            .acquire_owned()
+            .await
+            .expect("reconciliation semaphore was closed");
+        let (_, ack) = runtime
+            .enqueue_reconciliation(permit)
+            .expect("failed to enqueue reconciliation");
+        ack.await
+            .expect("reconciliation actor dropped its acknowledgement")
+            .expect("reconciliation repair failed");
+
+        let after = runtime
+            .authoritative_snapshot()
+            .expect("reconciliation did not restore an authoritative snapshot");
+        assert_eq!(after.revision, reserved_ticket);
+        assert!(
+            !Arc::ptr_eq(&before, &after),
+            "a dirty runtime incorrectly took the fingerprint fast path"
+        );
+    }
+
+    #[sqlx::test(migrator = "crate::db::MIGRATOR")]
+    async fn db_test_snapshot_fingerprint_ignores_latest_activity(pool: sqlx::PgPool) {
+        let (_owner, space, _) = create_space(&pool).await;
+        let before = SpaceRuntime::load_database_fingerprint(&pool, space.id)
+            .await
+            .expect("failed to load initial fingerprint");
+
+        sqlx::query(
+            "UPDATE space_activity SET latest_activity = latest_activity + interval '1 second' WHERE space_id = $1",
+        )
+        .bind(space.id)
+        .execute(&pool)
+        .await
+        .expect("failed to update latest activity");
+
+        let after = SpaceRuntime::load_database_fingerprint(&pool, space.id)
+            .await
+            .expect("failed to load updated fingerprint");
+        assert_eq!(before, after);
+    }
+
+    #[sqlx::test(migrator = "crate::db::MIGRATOR")]
+    async fn db_test_snapshot_fingerprint_separates_game_state_sections(pool: sqlx::PgPool) {
+        let (owner, space, _) = create_space(&pool).await;
+        let initial = SpaceRuntime::load_database_fingerprint(&pool, space.id)
+            .await
+            .expect("failed to load initial fingerprint");
+
+        let mut transaction = pool.begin().await.expect("failed to begin transaction");
+        Note::create(
+            &mut transaction,
+            space.id,
+            "Rules".to_string(),
+            vec![],
+            vec![],
+            owner.id,
+            "Content".to_string(),
+            Entities::default(),
+            AccessPolicy::Public,
+            None,
+        )
+        .await
+        .expect("failed to create Note");
+        transaction.commit().await.expect("failed to commit Note");
+        let after_note = SpaceRuntime::load_database_fingerprint(&pool, space.id)
+            .await
+            .expect("failed to fingerprint Note creation");
+        assert_eq!(
+            after_note.changed_sections(&initial),
+            SnapshotSections {
+                notes: true,
+                ..SnapshotSections::default()
+            }
+        );
+
+        let mut transaction = pool.begin().await.expect("failed to begin transaction");
+        let character = Character::create(
+            &mut transaction,
+            space.id,
+            owner.id,
+            "Investigator",
+            "investigator",
+            vec![],
+            "",
+            "",
+            AccessPolicy::Secret,
+            None,
+            vec![],
+        )
+        .await
+        .expect("failed to create Character");
+        transaction
+            .commit()
+            .await
+            .expect("failed to commit Character");
+        let after_character = SpaceRuntime::load_database_fingerprint(&pool, space.id)
+            .await
+            .expect("failed to fingerprint Character creation");
+        assert_eq!(
+            after_character.changed_sections(&after_note),
+            SnapshotSections {
+                scopes: true,
+                ..SnapshotSections::default()
+            }
+        );
+
+        let mut transaction = pool.begin().await.expect("failed to begin transaction");
+        Entry::create(
+            &mut transaction,
+            character.scope_id,
+            "hp".to_string(),
+            vec![],
+            "Hit Points".to_string(),
+            None,
+            BTreeMap::new(),
+            vec![],
+            None,
+        )
+        .await
+        .expect("failed to create Entry");
+        transaction.commit().await.expect("failed to commit Entry");
+        let after_entry = SpaceRuntime::load_database_fingerprint(&pool, space.id)
+            .await
+            .expect("failed to fingerprint Entry creation");
+        assert_eq!(
+            after_entry.changed_sections(&after_character),
+            SnapshotSections {
+                entries: true,
+                ..SnapshotSections::default()
+            }
         );
     }
 
@@ -2626,13 +3407,28 @@ mod tests {
             runtime
                 .authoritative_snapshot()
                 .expect("fresh runtime was unexpectedly dirty")
-                .settings,
-            serde_json::json!({"version": "cached"}),
+                .settings(),
+            &serde_json::json!({"version": "cached"}),
             "the test write unexpectedly updated process-local state"
         );
         let reloaded = SpaceRuntime::load_snapshot(&pool, space.id, 0)
             .await
             .expect("failed to reload Space snapshot");
+        assert_ne!(
+            runtime.snapshot().database_fingerprint,
+            reloaded.database_fingerprint,
+            "an out-of-band settings update did not change the database fingerprint"
+        );
+        assert_eq!(
+            reloaded
+                .database_fingerprint
+                .changed_sections(&runtime.snapshot().database_fingerprint),
+            SnapshotSections {
+                core: true,
+                ..SnapshotSections::default()
+            },
+            "a settings update changed unrelated snapshot fingerprint sections"
+        );
         assert_eq!(
             runtime.snapshot().payload_mismatch(&reloaded),
             SnapshotPayloadMismatch {
@@ -2674,7 +3470,7 @@ mod tests {
         tokio::time::timeout(Duration::from_secs(1), async {
             loop {
                 if let Some(snapshot) = runtime.authoritative_snapshot()
-                    && snapshot.settings == serde_json::json!({"version": "database"})
+                    && snapshot.settings() == &serde_json::json!({"version": "database"})
                 {
                     break;
                 }
@@ -2729,9 +3525,9 @@ mod tests {
         let snapshot = runtime
             .authoritative_snapshot()
             .expect("runtime remained dirty");
-        assert!(snapshot.channels.contains_key(&initial_channel.id));
-        assert!(snapshot.channels.contains_key(&first.id));
-        assert!(snapshot.channels.contains_key(&second.id));
+        assert!(snapshot.channels().contains_key(&initial_channel.id));
+        assert!(snapshot.channels().contains_key(&first.id));
+        assert!(snapshot.channels().contains_key(&second.id));
 
         let joined_cold_channel = Channel::create(
             &pool,
@@ -2846,7 +3642,7 @@ mod tests {
             runtime
                 .authoritative_snapshot()
                 .expect("runtime remained dirty after Character creation")
-                .characters[&character.id]
+                .characters()[&character.id]
                 .name,
             "Runtime Character"
         );
@@ -2854,7 +3650,7 @@ mod tests {
             runtime
                 .authoritative_snapshot()
                 .expect("runtime remained dirty after Scope creation")
-                .scopes[&character.scope_id],
+                .scopes()[&character.scope_id],
             character_scope
         );
         assert!(
@@ -2922,9 +3718,9 @@ mod tests {
         let snapshot = runtime
             .authoritative_snapshot()
             .expect("runtime remained dirty after Character deletion");
-        assert!(!snapshot.characters.contains_key(&character.id));
-        assert!(!snapshot.scopes.contains_key(&character.scope_id));
-        assert!(!snapshot.entries.contains_key(&character.scope_id));
+        assert!(!snapshot.characters().contains_key(&character.id));
+        assert!(!snapshot.scopes().contains_key(&character.scope_id));
+        assert!(!snapshot.entries().contains_key(&character.scope_id));
         assert!(
             ctx.space_store
                 .resolve_entry(space.id, character.scope_id, entry.id)
@@ -2937,9 +3733,10 @@ mod tests {
     #[sqlx::test]
     async fn db_test_space_mutations_are_serialized_and_guard_eviction(pool: sqlx::PgPool) {
         let (_, space, _) = create_space(&pool).await;
+        let space_id = space.id;
         let store = SpaceStore::new(pool);
         let first = store
-            .acquire_mutation(space.id)
+            .acquire_mutation(space_id)
             .await
             .expect("failed to acquire first mutation");
         assert_eq!(
@@ -2955,7 +3752,7 @@ mod tests {
             tokio::spawn(async move {
                 let _ = attempted_tx.send(());
                 let guard = store
-                    .acquire_mutation(space.id)
+                    .acquire_mutation(space_id)
                     .await
                     .expect("failed to acquire second mutation");
                 let _ = acquired_tx.send(());
@@ -2977,12 +3774,12 @@ mod tests {
         let second = second.await.expect("second mutation task failed");
         drop(second);
         store
-            .refresh_if_loaded(space.id)
+            .refresh_if_loaded(space_id)
             .await
             .expect("failed to await guard refresh");
         tokio::task::yield_now().await;
         assert_eq!(store.evict_idle(Duration::ZERO), 1);
-        assert!(store.get(&space.id).is_none());
+        assert!(store.get(&space_id).is_none());
     }
 
     #[sqlx::test]
@@ -3012,10 +3809,11 @@ mod tests {
     #[sqlx::test]
     async fn db_test_idle_eviction_does_not_race_runtime_get(pool: sqlx::PgPool) {
         let (_, space, _) = create_space(&pool).await;
+        let space_id = space.id;
         let store = SpaceStore::new(pool);
         drop(
             store
-                .get_or_load(space.id)
+                .get_or_load(space_id)
                 .await
                 .expect("failed to load Space runtime"),
         );
@@ -3026,7 +3824,7 @@ mod tests {
             let store = store.clone();
             tokio::spawn(async move {
                 store
-                    .get_with_hook(&space.id, async move {
+                    .get_with_hook(&space_id, async move {
                         handle_cloned_tx
                             .send(())
                             .expect("handle clone receiver was dropped");
@@ -3049,7 +3847,7 @@ mod tests {
         );
         assert!(fetched.is_some(), "the paused get lost its Runtime");
         assert!(
-            store.get(&space.id).is_some(),
+            store.get(&space_id).is_some(),
             "the fetched Runtime was no longer registered in the Store"
         );
     }
@@ -3057,10 +3855,11 @@ mod tests {
     #[sqlx::test]
     async fn db_test_removed_handle_is_not_returned_by_in_flight_get(pool: sqlx::PgPool) {
         let (_, space, _) = create_space(&pool).await;
+        let space_id = space.id;
         let store = SpaceStore::new(pool);
         drop(
             store
-                .get_or_load(space.id)
+                .get_or_load(space_id)
                 .await
                 .expect("failed to load Space runtime"),
         );
@@ -3071,7 +3870,7 @@ mod tests {
             let store = store.clone();
             tokio::spawn(async move {
                 store
-                    .get_with_hook(&space.id, async move {
+                    .get_with_hook(&space_id, async move {
                         handle_acquired_tx
                             .send(())
                             .expect("handle acquire receiver was dropped");
@@ -3084,7 +3883,7 @@ mod tests {
             .await
             .expect("get did not acquire the Runtime handle");
 
-        store.remove(space.id);
+        store.remove(space_id);
         resume_get_tx.send(()).expect("paused get task was dropped");
         let fetched = get_task.await.expect("get task panicked");
 
@@ -3092,7 +3891,7 @@ mod tests {
             fetched.is_none(),
             "an in-flight get returned a Runtime after its handle was removed"
         );
-        assert!(store.get(&space.id).is_none());
+        assert!(store.get(&space_id).is_none());
     }
 
     #[sqlx::test]
@@ -3180,8 +3979,8 @@ mod tests {
             .expect("strict read task failed")
             .expect("strict read did not recover after snapshot publication");
         assert_eq!(
-            snapshot.settings,
-            serde_json::json!({"version": "published"})
+            snapshot.settings(),
+            &serde_json::json!({"version": "published"})
         );
         drop(mutation);
     }
@@ -3320,7 +4119,7 @@ mod tests {
         tokio::time::timeout(Duration::from_secs(1), async {
             loop {
                 if let Some(snapshot) = runtime.authoritative_snapshot()
-                    && snapshot.channels.contains_key(&channel.id)
+                    && snapshot.channels().contains_key(&channel.id)
                 {
                     break;
                 }
@@ -3392,8 +4191,8 @@ mod tests {
         tokio::time::timeout(Duration::from_secs(1), async {
             loop {
                 if let Some(snapshot) = runtime.authoritative_snapshot()
-                    && snapshot.channels.contains_key(&unguarded_channel.id)
-                    && snapshot.channels.contains_key(&cancelled_channel.id)
+                    && snapshot.channels().contains_key(&unguarded_channel.id)
+                    && snapshot.channels().contains_key(&cancelled_channel.id)
                 {
                     break;
                 }

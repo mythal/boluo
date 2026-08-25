@@ -146,7 +146,6 @@ impl Drop for AllocatorCollectGuard {
 struct MemorySnapshot {
     rss_bytes: Option<u64>,
     anonymous_bytes: Option<u64>,
-    allocator_resident_bytes: u64,
     allocator_committed_bytes: u64,
 }
 
@@ -157,7 +156,6 @@ impl MemorySnapshot {
         Self {
             rss_bytes: process.as_ref().map(|snapshot| snapshot.rss_bytes),
             anonymous_bytes: process.as_ref().map(|snapshot| snapshot.anonymous_bytes),
-            allocator_resident_bytes: allocator.resident_bytes as u64,
             allocator_committed_bytes: allocator.committed_bytes as u64,
         }
     }
@@ -202,8 +200,6 @@ async fn collect_allocator() -> Result<Response, AppError> {
         rss_after = result.after.rss_bytes,
         anonymous_before = result.before.anonymous_bytes,
         anonymous_after = result.after.anonymous_bytes,
-        allocator_resident_before = result.before.allocator_resident_bytes,
-        allocator_resident_after = result.after.allocator_resident_bytes,
         allocator_committed_before = result.before.allocator_committed_bytes,
         allocator_committed_after = result.after.allocator_committed_bytes,
         "Forced allocator collection completed"

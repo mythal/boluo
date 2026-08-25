@@ -466,9 +466,66 @@ impl OnUpdateResult {
     }
 }
 
+#[derive(Debug, Default)]
+struct PersistentMutation {
+    put: Option<EventId>,
+    deletes: Vec<EventId>,
+}
+
+impl PersistentMutation {
+    fn insert(
+        &mut self,
+        updates: &mut BTreeMap<EventId, StoredUpdate>,
+        event_id: EventId,
+        update: StoredUpdate,
+    ) {
+        debug_assert!(
+            self.put.is_none(),
+            "only one update may be inserted per action"
+        );
+        updates.insert(event_id, update);
+        self.put = Some(event_id);
+    }
+
+    fn remove(&mut self, updates: &mut BTreeMap<EventId, StoredUpdate>, event_id: EventId) {
+        if updates.remove(&event_id).is_some() {
+            self.record_removed(event_id);
+        }
+    }
+
+    fn retain(
+        &mut self,
+        updates: &mut BTreeMap<EventId, StoredUpdate>,
+        mut keep: impl FnMut(EventId, &StoredUpdate) -> bool,
+    ) {
+        let put = &mut self.put;
+        let deletes = &mut self.deletes;
+        updates.retain(|event_id, update| {
+            if keep(*event_id, update) {
+                return true;
+            }
+            if *put == Some(*event_id) {
+                *put = None;
+            } else {
+                deletes.push(*event_id);
+            }
+            false
+        });
+    }
+
+    fn record_removed(&mut self, event_id: EventId) {
+        if self.put == Some(event_id) {
+            self.put = None;
+        } else {
+            self.deletes.push(event_id);
+        }
+    }
+}
+
 fn on_update(
     persistent_updates: &mut BTreeMap<EventId, StoredUpdate>,
     preview_map: &mut PreviewMap,
+    persistent_mutation: &mut PersistentMutation,
     encoded_update: EncodedUpdate,
 ) -> OnUpdateResult {
     let EncodedUpdate { update, encoded } = encoded_update;
@@ -550,7 +607,7 @@ fn on_update(
                     let preview_id = *preview_id;
                     let message_id = *message_id;
                     let deleted = has_message_deleted_update(persistent_updates, message_id);
-                    persistent_updates.insert(update_id, stored);
+                    persistent_mutation.insert(persistent_updates, update_id, stored);
                     let preview_id = preview_id.unwrap_or_default();
                     if !preview_id.is_nil() {
                         if let std::collections::hash_map::Entry::Occupied(entry) =
@@ -561,27 +618,31 @@ fn on_update(
                         }
                     }
                     if deleted {
-                        persistent_updates.remove(&update_id);
+                        persistent_mutation.remove(persistent_updates, update_id);
                         return OnUpdateResult::SkipBroadcast;
                     }
                 }
                 StoredUpdateMeta::ChannelAndMessage { message_id, .. } => {
                     let message_id = *message_id;
-                    persistent_updates.retain(|_, cached| cached.message_id() != Some(message_id));
-                    persistent_updates.insert(update_id, stored);
+                    persistent_mutation.retain(persistent_updates, |_, cached| {
+                        cached.message_id() != Some(message_id)
+                    });
+                    persistent_mutation.insert(persistent_updates, update_id, stored);
                 }
                 StoredUpdateMeta::MessageEdited { message_id, .. } => {
                     if has_message_deleted_update(persistent_updates, *message_id) {
                         return OnUpdateResult::SkipBroadcast;
                     }
-                    persistent_updates.insert(update_id, stored);
+                    persistent_mutation.insert(persistent_updates, update_id, stored);
                 }
                 StoredUpdateMeta::ChannelDeleted { channel_id } => {
                     let channel_id = *channel_id;
-                    persistent_updates.retain(|_, cached| cached.channel_id() != Some(channel_id));
+                    persistent_mutation.retain(persistent_updates, |_, cached| {
+                        cached.channel_id() != Some(channel_id)
+                    });
                     preview_map.retain(|key, _| key.channel_id != channel_id);
                     // Keep the deletion itself replayable for reconnecting clients.
-                    persistent_updates.insert(update_id, stored);
+                    persistent_mutation.insert(persistent_updates, update_id, stored);
                 }
                 StoredUpdateMeta::Other { .. } => {
                     // Do nothing
@@ -754,20 +815,19 @@ async fn collect_cached_updates_with_storage(
 
 fn offload_persistent_mutation(
     mailbox_id: Uuid,
-    update_id: EventId,
-    before_event_ids: &BTreeSet<EventId>,
+    mutation: PersistentMutation,
     persistent_updates: &mut BTreeMap<EventId, StoredUpdate>,
 ) {
-    let after_event_ids = persistent_updates.keys().copied().collect::<BTreeSet<_>>();
-    let deletes = before_event_ids
-        .difference(&after_event_ids)
-        .copied()
+    let PersistentMutation { put, deletes } = mutation;
+    let puts = put
+        .and_then(|event_id| {
+            persistent_updates
+                .get(&event_id)
+                .and_then(|update| update.encoded.as_ref().ok().cloned())
+                .map(|encoded| (event_id, encoded))
+        })
+        .into_iter()
         .collect::<Vec<_>>();
-    let puts = persistent_updates
-        .get(&update_id)
-        .and_then(|update| update.encoded.as_ref().ok().cloned())
-        .map(|encoded| vec![(update_id, encoded)])
-        .unwrap_or_default();
     if puts.is_empty() && deletes.is_empty() {
         return;
     }
@@ -779,7 +839,7 @@ fn offload_persistent_mutation(
     };
     match crate::disk_cache::try_mutate_mailbox(mutation) {
         Ok(()) if has_put => {
-            if let Some(update) = persistent_updates.get_mut(&update_id) {
+            if let Some(update) = put.and_then(|event_id| persistent_updates.get_mut(&event_id)) {
                 update.encoded = Err(Offloaded);
             }
         }
@@ -863,13 +923,8 @@ impl MailBoxState {
                             }
                             Action::Update { body, live } => {
                                 last_event_at = Some(Instant::now());
-                                let before_event_ids = matches!(live, UpdateLifetime::Persistent)
-                                    .then(|| {
-                                        persistent_updates
-                                            .keys()
-                                            .copied()
-                                            .collect::<BTreeSet<_>>()
-                                    });
+                                let should_offload = matches!(live, UpdateLifetime::Persistent);
+                                let mut persistent_mutation = PersistentMutation::default();
                                 let mut body = body;
                                 let stale_edited_event_id =
                                     prepare_message_edited_old_pos(&persistent_updates, &mut body);
@@ -881,21 +936,23 @@ impl MailBoxState {
                                     live,
                                 });
                                 if let Some(stale_edited_event_id) = stale_edited_event_id {
-                                    persistent_updates.remove(&stale_edited_event_id);
+                                    persistent_mutation.remove(
+                                        &mut persistent_updates,
+                                        stale_edited_event_id,
+                                    );
                                 }
                                 let update_name = encoded_update.update.name();
-                                let update_id = encoded_update.update.id;
                                 let encoded_for_broadcast = encoded_update.encoded.clone();
                                 let should_broadcast = on_update(
                                     &mut persistent_updates,
                                     &mut preview_map,
+                                    &mut persistent_mutation,
                                     encoded_update,
                                 );
-                                if let Some(before_event_ids) = before_event_ids {
+                                if should_offload {
                                     offload_persistent_mutation(
                                         id,
-                                        update_id,
-                                        &before_event_ids,
+                                        persistent_mutation,
                                         &mut persistent_updates,
                                     );
                                 }
@@ -1072,6 +1129,19 @@ mod tests {
             preview,
             diff: Some(diff),
         }
+    }
+
+    fn apply_update(
+        persistent_updates: &mut BTreeMap<EventId, StoredUpdate>,
+        preview_map: &mut PreviewMap,
+        encoded_update: EncodedUpdate,
+    ) -> OnUpdateResult {
+        on_update(
+            persistent_updates,
+            preview_map,
+            &mut PersistentMutation::default(),
+            encoded_update,
+        )
     }
 
     fn message(id: Uuid, channel_id: Uuid, pos: f64, rev: i32) -> Message {
@@ -1294,7 +1364,7 @@ mod tests {
         persistent_updates.insert(delete_event_id, delete_update);
         let mut preview_map = PreviewMap::with_hasher(ahash::RandomState::new());
 
-        let result = on_update(
+        let result = apply_update(
             &mut persistent_updates,
             &mut preview_map,
             EncodedUpdate::new(Update {
@@ -1355,9 +1425,11 @@ mod tests {
             ),
         );
 
+        let mut persistent_mutation = PersistentMutation::default();
         let result = on_update(
             &mut persistent_updates,
             &mut preview_map,
+            &mut persistent_mutation,
             EncodedUpdate::new(Update {
                 mailbox: Uuid::nil(),
                 id: new_event_id,
@@ -1374,6 +1446,8 @@ mod tests {
         assert_eq!(persistent_updates.len(), 1);
         assert!(persistent_updates.contains_key(&delete_event_id));
         assert!(!preview_map.contains_key(&key));
+        assert_eq!(persistent_mutation.put, None);
+        assert!(persistent_mutation.deletes.is_empty());
     }
 
     #[test]
@@ -1419,7 +1493,7 @@ mod tests {
             live: UpdateLifetime::Volatile,
         });
         let first_should_broadcast =
-            on_update(&mut persistent_updates, &mut preview_map, newer_diff_update);
+            apply_update(&mut persistent_updates, &mut preview_map, newer_diff_update);
         assert_eq!(first_should_broadcast, OnUpdateResult::Broadcast);
 
         let older_diff_late_update = EncodedUpdate::new(Update {
@@ -1441,7 +1515,7 @@ mod tests {
             },
             live: UpdateLifetime::Volatile,
         });
-        let second_should_broadcast = on_update(
+        let second_should_broadcast = apply_update(
             &mut persistent_updates,
             &mut preview_map,
             older_diff_late_update,
@@ -1483,7 +1557,7 @@ mod tests {
             },
             live: UpdateLifetime::Volatile,
         });
-        let should_broadcast = on_update(&mut persistent_updates, &mut preview_map, diff_update);
+        let should_broadcast = apply_update(&mut persistent_updates, &mut preview_map, diff_update);
 
         assert_eq!(should_broadcast, OnUpdateResult::SkipBroadcast);
         assert!(persistent_updates.is_empty());
@@ -1591,7 +1665,7 @@ mod tests {
             },
             live: UpdateLifetime::Persistent,
         });
-        on_update(&mut persistent_updates, &mut preview_map, members_update);
+        apply_update(&mut persistent_updates, &mut preview_map, members_update);
 
         assert!(persistent_updates.contains_key(&message_event_id));
         assert!(!persistent_updates.contains_key(&members_event_id));
@@ -1833,9 +1907,11 @@ mod tests {
             live: UpdateLifetime::Persistent,
         });
 
+        let mut persistent_mutation = PersistentMutation::default();
         on_update(
             &mut persistent_updates,
             &mut preview_map,
+            &mut persistent_mutation,
             channel_deleted_update,
         );
 
@@ -1845,5 +1921,7 @@ mod tests {
         assert!(!preview_map.contains_key(&key_a));
         assert!(preview_map.contains_key(&key_b));
         assert!(preview_map[&key_b].diff.is_some());
+        assert_eq!(persistent_mutation.put, Some(deleted_event_id));
+        assert_eq!(persistent_mutation.deletes, [persistent_a]);
     }
 }

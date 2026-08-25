@@ -297,7 +297,7 @@ async fn my_spaces(
     } else {
         Space::get_by_id_list(&ctx.db, missing.into_iter()).await?
     };
-    Ok(members
+    let mut result: Vec<_> = members
         .into_iter()
         .filter_map(|member| {
             let (space, member) = loaded
@@ -309,7 +309,9 @@ async fn my_spaces(
                 user: user.clone(),
             })
         })
-        .collect())
+        .collect();
+    result.sort_unstable_by_key(|item| std::cmp::Reverse(item.space.latest_activity));
+    Ok(result)
 }
 
 async fn search(

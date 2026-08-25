@@ -1,11 +1,11 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT\n    spaces AS \"space!: Space\"\nFROM\n    spaces\nWHERE\n    spaces.owner_id = $1\n    AND spaces.deleted = FALSE;\n\n",
+  "query": "SELECT\n    s AS \"space!: SpaceRecord\",\n    COALESCE(activity.latest_activity, s.created) AS \"latest_activity!\"\nFROM\n    spaces s\nLEFT JOIN space_activity activity ON activity.space_id = s.id\nWHERE\n    s.id = ANY($1)\n    AND deleted = FALSE;\n",
   "describe": {
     "columns": [
       {
         "ordinal": 0,
-        "name": "space!: Space",
+        "name": "space!: SpaceRecord",
         "type_info": {
           "Custom": {
             "name": "spaces",
@@ -68,10 +68,6 @@
                   "Bool"
                 ],
                 [
-                  "latest_activity",
-                  "Timestamptz"
-                ],
-                [
                   "scope_id",
                   "Uuid"
                 ]
@@ -80,16 +76,23 @@
           }
         },
         "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "latest_activity!",
+        "type_info": "Timestamptz",
+        "origin": "Expression"
       }
     ],
     "parameters": {
       "Left": [
-        "Uuid"
+        "UuidArray"
       ]
     },
     "nullable": [
+      null,
       null
     ]
   },
-  "hash": "86b5ef1ab10d2baf1d7788e284f00c897419bd0c85fc0773f8953c3f7fa66b65"
+  "hash": "cee534eb9770cc2c76943d75cc5f77228f78c8c31256d4af4e95859b626624c0"
 }

@@ -1,8 +1,9 @@
 SELECT
-    spaces AS "space!: Space"
+    space AS "space!: SpaceRecord",
+    COALESCE(activity.latest_activity, space.created) AS "latest_activity!"
 FROM
-    spaces
+    spaces space
+LEFT JOIN space_activity activity ON activity.space_id = space.id
 WHERE
-    spaces.owner_id = $1
-    AND spaces.deleted = FALSE;
-
+    space.owner_id = $1
+    AND space.deleted = FALSE;

@@ -1192,20 +1192,8 @@ export type Settings = {
 };
 
 export type Space = {
-  id: string;
-  name: string;
-  description: string;
-  created: string;
-  modified: string;
-  ownerId: string;
-  isPublic: boolean;
-  language: string;
-  defaultDiceType: string;
-  explorable: boolean;
-  allowSpectator: boolean;
   latestActivity: string;
-  scopeId: string;
-};
+} & SpaceRecord;
 
 export type SpaceMember = {
   userId: string;
@@ -1218,6 +1206,21 @@ export type SpaceMember = {
 export type SpaceMemberWithUser = {
   space: SpaceMember;
   user: User;
+};
+
+export type SpaceRecord = {
+  id: string;
+  name: string;
+  description: string;
+  created: string;
+  modified: string;
+  ownerId: string;
+  isPublic: boolean;
+  language: string;
+  defaultDiceType: string;
+  explorable: boolean;
+  allowSpectator: boolean;
+  scopeId: string;
 };
 
 export type SpaceWithMember = {

@@ -14,7 +14,7 @@ pub struct Channel {
     pub name: ::std::string::String,
     pub topic: ::std::string::String,
     pub space_id: ::uuid::Uuid,
-    pub created: ::time::OffsetDateTime,
+    pub created: ::std::string::String,
     pub is_public: bool,
     pub default_dice_type: ::std::string::String,
     pub default_roll_command: ::std::string::String,
@@ -30,7 +30,7 @@ pub struct Channel {
 pub struct ChannelMember {
     pub user_id: ::uuid::Uuid,
     pub channel_id: ::uuid::Uuid,
-    pub join_date: ::time::OffsetDateTime,
+    pub join_date: ::std::string::String,
     pub character_name: ::std::string::String,
     pub text_color: ::std::option::Option<::std::string::String>,
     pub is_master: bool,
@@ -144,8 +144,8 @@ pub struct Message {
     #[serde(default)]
     pub whisper_to_users: ::std::option::Option<::std::vec::Vec<::uuid::Uuid>>,
     pub entities: shared_types::messages::Entities,
-    pub created: ::time::OffsetDateTime,
-    pub modified: ::time::OffsetDateTime,
+    pub created: ::std::string::String,
+    pub modified: ::std::string::String,
     pub pos_p: i32,
     pub pos_q: i32,
     pub pos: f64,
@@ -202,19 +202,9 @@ pub struct NewMessage {
 #[derive(serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Space {
-    pub id: ::uuid::Uuid,
-    pub name: ::std::string::String,
-    pub description: ::std::string::String,
-    pub created: ::time::OffsetDateTime,
-    pub modified: ::time::OffsetDateTime,
-    pub owner_id: ::uuid::Uuid,
-    pub is_public: bool,
-    pub language: ::std::string::String,
-    pub default_dice_type: ::std::string::String,
-    pub explorable: bool,
-    pub allow_spectator: bool,
-    pub latest_activity: ::time::OffsetDateTime,
-    pub scope_id: ::uuid::Uuid,
+    #[serde(flatten)]
+    pub record: SpaceRecord,
+    pub latest_activity: ::std::string::String,
 }
 
 #[allow(deprecated, non_camel_case_types, non_snake_case)]
@@ -224,7 +214,7 @@ pub struct SpaceMember {
     pub user_id: ::uuid::Uuid,
     pub space_id: ::uuid::Uuid,
     pub is_admin: bool,
-    pub join_date: ::time::OffsetDateTime,
+    pub join_date: ::std::string::String,
     pub is_game_master: bool,
 }
 
@@ -234,6 +224,24 @@ pub struct SpaceMember {
 pub struct SpaceMemberWithUser {
     pub space: SpaceMember,
     pub user: User,
+}
+
+#[allow(deprecated, non_camel_case_types, non_snake_case)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SpaceRecord {
+    pub id: ::uuid::Uuid,
+    pub name: ::std::string::String,
+    pub description: ::std::string::String,
+    pub created: ::std::string::String,
+    pub modified: ::std::string::String,
+    pub owner_id: ::uuid::Uuid,
+    pub is_public: bool,
+    pub language: ::std::string::String,
+    pub default_dice_type: ::std::string::String,
+    pub explorable: bool,
+    pub allow_spectator: bool,
+    pub scope_id: ::uuid::Uuid,
 }
 
 #[allow(deprecated, non_camel_case_types, non_snake_case)]
@@ -401,7 +409,7 @@ pub struct User {
     pub username: ::std::string::String,
     pub nickname: ::std::string::String,
     pub bio: ::std::string::String,
-    pub joined: ::time::OffsetDateTime,
+    pub joined: ::std::string::String,
     pub avatar_id: ::std::option::Option<::uuid::Uuid>,
     /// See `Message::color`
     pub default_color: ::std::string::String,

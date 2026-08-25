@@ -1,6 +1,6 @@
 WITH snapshot_rows (value) AS (
-    -- latest_activity is maintained asynchronously and reconciled separately in memory.
-    SELECT jsonb_build_array('space', to_jsonb(space) - 'latest_activity')::text
+    -- Activity lives in space_activity and is reconciled separately in memory.
+    SELECT jsonb_build_array('space', to_jsonb(space))::text
     FROM spaces space
     WHERE space.id = $1
       AND space.deleted = FALSE

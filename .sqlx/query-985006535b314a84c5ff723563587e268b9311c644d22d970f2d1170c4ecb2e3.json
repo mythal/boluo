@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO space_activity (space_id, latest_activity)\nSELECT activity.space_id, activity.update_time\nFROM (\n    SELECT\n        space_id,\n        MAX(update_time) AS update_time\n    FROM\n        unnest($1::uuid[], $2::timestamptz[]) AS updates (space_id, update_time)\n    GROUP BY\n        space_id\n) AS activity\nINNER JOIN spaces space ON space.id = activity.space_id\nON CONFLICT (space_id) DO UPDATE\nSET latest_activity = EXCLUDED.latest_activity\nWHERE space_activity.latest_activity < EXCLUDED.latest_activity;\n",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "UuidArray",
+        "TimestamptzArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "985006535b314a84c5ff723563587e268b9311c644d22d970f2d1170c4ecb2e3"
+}

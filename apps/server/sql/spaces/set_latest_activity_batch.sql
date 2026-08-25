@@ -1,6 +1,5 @@
-UPDATE spaces
-SET
-    latest_activity = GREATEST(spaces.latest_activity, activity.update_time)
+INSERT INTO space_activity (space_id, latest_activity)
+SELECT activity.space_id, activity.update_time
 FROM (
     SELECT
         space_id,
@@ -10,5 +9,7 @@ FROM (
     GROUP BY
         space_id
 ) AS activity
-WHERE
-    spaces.id = activity.space_id;
+INNER JOIN spaces space ON space.id = activity.space_id
+ON CONFLICT (space_id) DO UPDATE
+SET latest_activity = EXCLUDED.latest_activity
+WHERE space_activity.latest_activity < EXCLUDED.latest_activity;

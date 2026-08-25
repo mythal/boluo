@@ -1,11 +1,11 @@
 {
   "db_name": "PostgreSQL",
-  "query": "UPDATE\n    spaces\nSET\n    name = COALESCE($2, name),\n    description = COALESCE($3, description),\n    default_dice_type = COALESCE($4, default_dice_type),\n    explorable = COALESCE($5, explorable),\n    is_public = COALESCE($6, is_public),\n    allow_spectator = COALESCE($7, allow_spectator)\nWHERE\n    id = $1\nRETURNING\n    spaces AS \"space!: Space\";\n\n",
+  "query": "SELECT\n    s AS \"space!: SpaceRecord\",\n    COALESCE(activity.latest_activity, s.created) AS \"latest_activity!\"\nFROM\n    channels ch\n    INNER JOIN spaces s ON ch.space_id = s.id\n    LEFT JOIN space_activity activity ON activity.space_id = s.id\nWHERE\n    ch.id = $1;\n",
   "describe": {
     "columns": [
       {
         "ordinal": 0,
-        "name": "space!: Space",
+        "name": "space!: SpaceRecord",
         "type_info": {
           "Custom": {
             "name": "spaces",
@@ -68,10 +68,6 @@
                   "Bool"
                 ],
                 [
-                  "latest_activity",
-                  "Timestamptz"
-                ],
-                [
                   "scope_id",
                   "Uuid"
                 ]
@@ -80,22 +76,23 @@
           }
         },
         "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "latest_activity!",
+        "type_info": "Timestamptz",
+        "origin": "Expression"
       }
     ],
     "parameters": {
       "Left": [
-        "Uuid",
-        "Text",
-        "Text",
-        "Text",
-        "Bool",
-        "Bool",
-        "Bool"
+        "Uuid"
       ]
     },
     "nullable": [
+      null,
       null
     ]
   },
-  "hash": "cf389f0a4919067fb9545604ed5e799b98bfc7d29d45df6dba88c5b557ca8cec"
+  "hash": "aa058a781f8b2038dd077e107dde5edb91adec192218e96bf30102ddf720b877"
 }

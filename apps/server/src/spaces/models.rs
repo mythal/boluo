@@ -1,7 +1,7 @@
+use std::cmp::Reverse;
 use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
-use sqlx::query_file_scalar;
 use time::OffsetDateTime;
 use uuid::Uuid;
 
@@ -24,10 +24,21 @@ impl Lifespan for UserSpaces {
     }
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct Space {
+    #[serde(flatten)]
+    record: SpaceRecord,
+    #[specta(type = String)]
+    #[serde(with = "time::serde::rfc3339")]
+    pub latest_activity: OffsetDateTime,
+}
+
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, specta::Type, sqlx::Type)]
 #[sqlx(type_name = "spaces")]
 #[serde(rename_all = "camelCase")]
-pub struct Space {
+#[doc(hidden)]
+pub struct SpaceRecord {
     pub id: Uuid,
     pub name: String,
     pub description: String,
@@ -49,13 +60,29 @@ pub struct Space {
     #[serde(skip)]
     pub invite_token: Uuid,
     pub allow_spectator: bool,
-    #[specta(type = String)]
-    #[serde(with = "time::serde::rfc3339")]
-    pub latest_activity: OffsetDateTime,
     pub scope_id: Uuid,
 }
 
+impl std::ops::Deref for Space {
+    type Target = SpaceRecord;
+
+    fn deref(&self) -> &Self::Target {
+        &self.record
+    }
+}
+
 impl Space {
+    pub(crate) fn from_record(record: SpaceRecord, latest_activity: OffsetDateTime) -> Self {
+        Self {
+            record,
+            latest_activity,
+        }
+    }
+
+    pub(crate) fn into_parts(self) -> (SpaceRecord, OffsetDateTime) {
+        (self.record, self.latest_activity)
+    }
+
     pub async fn create<'c, T: sqlx::PgExecutor<'c>>(
         db: T,
         name: String,
@@ -71,7 +98,7 @@ impl Space {
             DICE.run(default_dice_type)?;
         }
         DESCRIPTION.run(description.as_str())?;
-        query_file_scalar!(
+        let row = sqlx::query_file!(
             "sql/spaces/create.sql",
             name,
             owner_id,
@@ -81,7 +108,8 @@ impl Space {
         )
         .fetch_one(db)
         .await
-        .map_err(Into::into)
+        .map_err(ModelError::from)?;
+        Ok(Self::from_record(row.space, row.latest_activity))
     }
 
     pub async fn is_admin<'c, T: sqlx::PgExecutor<'c>>(&self, db: T, user_id: &Uuid) -> bool {
@@ -113,18 +141,24 @@ impl Space {
     }
 
     pub async fn all<'c, T: sqlx::PgExecutor<'c>>(db: T) -> Result<Vec<Space>, sqlx::Error> {
-        sqlx::query_file_scalar!("sql/spaces/all.sql")
+        sqlx::query_file!("sql/spaces/all.sql")
             .fetch_all(db)
             .await
+            .map(|rows| {
+                rows.into_iter()
+                    .map(|row| Self::from_record(row.space, row.latest_activity))
+                    .collect()
+            })
     }
 
     pub async fn get_by_id<'c, T: sqlx::PgExecutor<'c>>(
         db: T,
         id: &Uuid,
     ) -> Result<Option<Space>, sqlx::Error> {
-        sqlx::query_file_scalar!("sql/spaces/get_by_id.sql", id)
+        sqlx::query_file!("sql/spaces/get_by_id.sql", id)
             .fetch_optional(db)
             .await
+            .map(|row| row.map(|row| Self::from_record(row.space, row.latest_activity)))
     }
 
     pub async fn get_by_id_list<'c, T: sqlx::PgExecutor<'c>, I: Iterator<Item = Uuid>>(
@@ -132,20 +166,26 @@ impl Space {
         id_list: I,
     ) -> Result<HashMap<Uuid, Space>, sqlx::Error> {
         let query_ids: Vec<Uuid> = id_list.collect();
-        let spaces = sqlx::query_file_scalar!("sql/spaces/get_by_id_list.sql", &*query_ids)
+        let spaces = sqlx::query_file!("sql/spaces/get_by_id_list.sql", &*query_ids)
             .fetch_all(db)
             .await?;
-        Ok(spaces.into_iter().map(|space| (space.id, space)).collect())
+        Ok(spaces
+            .into_iter()
+            .map(|row| {
+                let space = Self::from_record(row.space, row.latest_activity);
+                (space.id, space)
+            })
+            .collect())
     }
 
     pub async fn get_by_channel<'c, T: sqlx::PgExecutor<'c>>(
         db: T,
         channel_id: &Uuid,
     ) -> Result<Option<Space>, sqlx::Error> {
-        let space = sqlx::query_file_scalar!("sql/spaces/get_by_channel.sql", channel_id)
+        let space = sqlx::query_file!("sql/spaces/get_by_channel.sql", channel_id)
             .fetch_optional(db)
             .await?;
-        Ok(space)
+        Ok(space.map(|row| Self::from_record(row.space, row.latest_activity)))
     }
 
     pub async fn refresh_token<'c, T: sqlx::PgExecutor<'c>>(
@@ -199,7 +239,7 @@ impl Space {
         if let Some(dice) = default_dice_type.as_ref() {
             validators::DICE.run(dice)?;
         }
-        sqlx::query_file_scalar!(
+        sqlx::query_file!(
             "sql/spaces/edit.sql",
             space_id,
             name,
@@ -211,6 +251,7 @@ impl Space {
         )
         .fetch_optional(db)
         .await
+        .map(|row| row.map(|row| Self::from_record(row.space, row.latest_activity)))
         .map_err(Into::into)
     }
 
@@ -229,9 +270,14 @@ impl Space {
                 pattern
             })
             .collect();
-        query_file_scalar!("sql/spaces/search.sql", &patterns)
+        sqlx::query_file!("sql/spaces/search.sql", &patterns)
             .fetch_all(db)
             .await
+            .map(|rows| {
+                rows.into_iter()
+                    .map(|row| Self::from_record(row.space, row.latest_activity))
+                    .collect()
+            })
     }
 
     pub async fn get_by_user_with_cache(
@@ -255,6 +301,7 @@ impl Space {
                 user: user.clone(),
             });
         }
+        spaces_with_member.sort_unstable_by_key(|item| Reverse(item.space.latest_activity));
         Ok(spaces_with_member)
     }
 
@@ -262,9 +309,14 @@ impl Space {
         db: T,
         user_id: &Uuid,
     ) -> Result<Vec<Space>, sqlx::Error> {
-        sqlx::query_file_scalar!("sql/spaces/user_owned_spaces.sql", user_id)
+        sqlx::query_file!("sql/spaces/user_owned_spaces.sql", user_id)
             .fetch_all(db)
             .await
+            .map(|rows| {
+                rows.into_iter()
+                    .map(|row| Self::from_record(row.space, row.latest_activity))
+                    .collect()
+            })
     }
 
     pub async fn get_settings<'c, T: sqlx::PgExecutor<'c>>(
@@ -525,6 +577,47 @@ mod tests {
             .await
             .expect("get_by_user after removal failed");
         assert!(members_after.is_empty());
+    }
+
+    #[sqlx::test(migrator = "crate::db::MIGRATOR")]
+    async fn db_test_cached_memberships_do_not_freeze_space_activity_order(pool: sqlx::PgPool) {
+        let owner = create_test_user(&pool, "activity_order_owner").await;
+        let first = create_test_space(&pool, &owner, "activity_order_first").await;
+        let second = create_test_space(&pool, &owner, "activity_order_second").await;
+        SpaceMember::add_admin(&pool, &owner.id, &first.id)
+            .await
+            .expect("failed to add first Space membership");
+        SpaceMember::add_admin(&pool, &owner.id, &second.id)
+            .await
+            .expect("failed to add second Space membership");
+
+        SpaceMember::get_by_user_with_cache(&pool, owner.id)
+            .await
+            .expect("failed to prime membership cache");
+        let latest = OffsetDateTime::now_utc() + time::Duration::minutes(1);
+        sqlx::query("UPDATE space_activity SET latest_activity = $2 WHERE space_id = $1")
+            .bind(first.id)
+            .bind(latest)
+            .execute(&pool)
+            .await
+            .expect("failed to update first Space activity");
+
+        let spaces = Space::get_by_user_with_cache(&pool, owner.id)
+            .await
+            .expect("failed to load Spaces with cached memberships");
+        assert_eq!(spaces[0].space.id, first.id);
+
+        sqlx::query("UPDATE space_activity SET latest_activity = $2 WHERE space_id = $1")
+            .bind(second.id)
+            .bind(latest + time::Duration::minutes(1))
+            .execute(&pool)
+            .await
+            .expect("failed to update second Space activity");
+
+        let reordered = Space::get_by_user_with_cache(&pool, owner.id)
+            .await
+            .expect("failed to reload Spaces with cached memberships");
+        assert_eq!(reordered[0].space.id, second.id);
     }
 
     #[sqlx::test(migrator = "crate::db::MIGRATOR")]

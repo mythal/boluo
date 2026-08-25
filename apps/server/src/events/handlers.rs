@@ -167,7 +167,26 @@ enum CompressCachedUpdatesError {
     Join(#[from] tokio::task::JoinError),
 }
 
-const CACHED_UPDATES_CHUNK_SIZE: usize = 32;
+const CACHED_UPDATES_CHUNK_MAX_BYTES: usize = 64 * 1024;
+
+fn cached_updates_chunk_len(updates: &[Utf8Bytes], max_bytes: usize) -> usize {
+    let mut payload_bytes = 0usize;
+    let mut chunk_len = 0usize;
+
+    for update in updates {
+        let delimiter_bytes = usize::from(chunk_len > 0);
+        let next_payload_bytes = payload_bytes
+            .saturating_add(delimiter_bytes)
+            .saturating_add(update.len());
+        if chunk_len > 0 && next_payload_bytes > max_bytes {
+            break;
+        }
+        payload_bytes = next_payload_bytes;
+        chunk_len += 1;
+    }
+
+    chunk_len
+}
 
 fn serialize_cached_updates(cached_updates: &[Utf8Bytes]) -> Vec<u8> {
     let total_len = cached_updates.iter().map(|x| x.len()).sum::<usize>();
@@ -269,7 +288,11 @@ async fn push_updates(
         } else {
             let mut offset = 0;
             while offset < cached_updates.len() {
-                let end = (offset + CACHED_UPDATES_CHUNK_SIZE).min(cached_updates.len());
+                let chunk_len = cached_updates_chunk_len(
+                    &cached_updates[offset..],
+                    CACHED_UPDATES_CHUNK_MAX_BYTES,
+                );
+                let end = offset + chunk_len;
                 let chunk = &cached_updates[offset..end];
                 match compress_cached_updates(chunk, encoding).await {
                     Ok(payload) => {
@@ -1080,6 +1103,31 @@ mod tests {
             }
         }
         decompressed
+    }
+
+    #[test]
+    fn cached_update_chunks_are_limited_by_serialized_bytes() {
+        let updates = [
+            Utf8Bytes::from_static("1234"),
+            Utf8Bytes::from_static("5678"),
+            Utf8Bytes::from_static("90"),
+        ];
+
+        // The newline delimiter between updates is part of the serialized payload.
+        assert_eq!(cached_updates_chunk_len(&updates, 9), 2);
+        assert_eq!(cached_updates_chunk_len(&updates, 8), 1);
+        assert_eq!(cached_updates_chunk_len(&updates[1..], 7), 2);
+    }
+
+    #[test]
+    fn oversized_cached_update_gets_its_own_chunk() {
+        let updates = [
+            Utf8Bytes::from_static("oversized"),
+            Utf8Bytes::from_static("next"),
+        ];
+
+        assert_eq!(cached_updates_chunk_len(&updates, 4), 1);
+        assert_eq!(cached_updates_chunk_len(&[], 4), 0);
     }
 
     #[tokio::test]

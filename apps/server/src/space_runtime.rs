@@ -30,7 +30,7 @@ const AUTHORITATIVE_SNAPSHOT_WAIT: Duration = Duration::from_millis(3);
 #[derive(Debug, Clone)]
 pub(crate) struct SpaceSnapshot {
     pub(crate) revision: u64,
-    verified_at: Instant,
+    database_fingerprint: DatabaseFingerprint,
     space: Space,
     latest_activity_us: Arc<AtomicI64>,
     pub(crate) settings: serde_json::Value,
@@ -41,6 +41,17 @@ pub(crate) struct SpaceSnapshot {
     pub(crate) entries: PersistentMap<Uuid, PersistentMap<Uuid, EntryMetadata>>,
     pub(crate) space_members: PersistentMap<Uuid, SpaceMember>,
     pub(crate) channel_members: PersistentMap<Uuid, PersistentMap<Uuid, ChannelMember>>,
+}
+
+/// A read-only, probabilistic change detector used to gate full reconciliation.
+///
+/// Two independently seeded hashes plus the row count make an accidental match
+/// negligible while avoiding writes on every Space mutation.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, sqlx::FromRow)]
+struct DatabaseFingerprint {
+    row_count: i64,
+    xor_a: i64,
+    xor_b: i64,
 }
 
 #[derive(Debug, Default, PartialEq, Eq)]
@@ -289,6 +300,7 @@ pub(crate) struct SpaceRuntime {
     space_id: Uuid,
     db: sqlx::PgPool,
     snapshot: ArcSwap<SpaceSnapshot>,
+    verified_at: parking_lot::Mutex<Instant>,
     dirty: AtomicBool,
     next_ticket: AtomicU64,
     reconciliation_pending: AtomicBool,
@@ -318,6 +330,7 @@ impl SpaceRuntime {
             space_id,
             db: db.clone(),
             snapshot: ArcSwap::from_pointee(snapshot),
+            verified_at: parking_lot::Mutex::new(Instant::now()),
             dirty: AtomicBool::new(false),
             next_ticket: AtomicU64::new(0),
             reconciliation_pending: AtomicBool::new(false),
@@ -364,6 +377,8 @@ impl SpaceRuntime {
             sqlx::query_file_scalar!("sql/channels/get_joined_members_by_space.sql", space_id)
                 .fetch_all(&mut *transaction)
                 .await?;
+        let database_fingerprint =
+            Self::load_database_fingerprint(&mut *transaction, space_id).await?;
         transaction.commit().await?;
 
         let channels: PersistentMap<_, _> = channels
@@ -413,7 +428,7 @@ impl SpaceRuntime {
         let latest_activity = space.latest_activity;
         Ok(SpaceSnapshot {
             revision,
-            verified_at: Instant::now(),
+            database_fingerprint,
             space,
             latest_activity_us: Arc::new(AtomicI64::new(
                 latest_activity.unix_timestamp_nanos() as i64 / 1_000,
@@ -427,6 +442,21 @@ impl SpaceRuntime {
             space_members,
             channel_members,
         })
+    }
+
+    async fn load_database_fingerprint<'c, T>(
+        db: T,
+        space_id: Uuid,
+    ) -> Result<DatabaseFingerprint, sqlx::Error>
+    where
+        T: sqlx::PgExecutor<'c>,
+    {
+        sqlx::query_as::<_, DatabaseFingerprint>(include_str!(
+            "../sql/spaces/snapshot_fingerprint.sql"
+        ))
+        .bind(space_id)
+        .fetch_one(db)
+        .await
     }
 
     pub(crate) fn space_id(&self) -> Uuid {
@@ -570,7 +600,7 @@ impl SpaceRuntime {
     fn needs_reconciliation(&self, max_age: Duration) -> bool {
         self.active_mutations.load(Ordering::Acquire) == 0
             && !self.reconciliation_pending.load(Ordering::Acquire)
-            && self.snapshot().verified_at.elapsed() >= max_age
+            && self.verified_at.lock().elapsed() >= max_age
     }
 
     fn reconcile_if_stale(&self, max_age: Duration, permits: &Arc<tokio::sync::Semaphore>) -> bool {
@@ -1028,6 +1058,48 @@ impl SpaceRuntime {
         ticket: u64,
         reason: SnapshotReloadReason,
     ) -> Result<u64, SpaceRuntimeError> {
+        if matches!(reason, SnapshotReloadReason::Reconciliation) {
+            let probe_started = Instant::now();
+            let current = runtime.snapshot();
+            let probe = Self::load_database_fingerprint(&runtime.db, runtime.space_id).await;
+            let result_label = match &probe {
+                Ok(fingerprint) if *fingerprint == current.database_fingerprint => "unchanged",
+                Ok(_) => "changed",
+                Err(_) => "error",
+            };
+            metrics::counter!(
+                "boluo_server_space_runtime_reconciliation_probe_total",
+                "result" => result_label
+            )
+            .increment(1);
+            metrics::histogram!(
+                "boluo_server_space_runtime_reconciliation_probe_duration_seconds",
+                "result" => result_label
+            )
+            .record(probe_started.elapsed().as_secs_f64());
+
+            match probe {
+                Ok(fingerprint)
+                    if fingerprint == current.database_fingerprint
+                        && !runtime.dirty.load(Ordering::Acquire)
+                        && current.revision == runtime.next_ticket.load(Ordering::Acquire) =>
+                {
+                    *runtime.verified_at.lock() = Instant::now();
+                    runtime.update_dirty(state);
+                    return Ok(ticket);
+                }
+                Ok(_) => {}
+                Err(error) => {
+                    tracing::warn!(
+                        event = "space_runtime.reconciliation.probe_failed",
+                        %error,
+                        space_id = %runtime.space_id,
+                        "Failed to probe the Space snapshot fingerprint; falling back to a full refresh"
+                    );
+                }
+            }
+        }
+
         let started = Instant::now();
         metrics::counter!(
             "boluo_server_space_runtime_refresh_total",
@@ -1099,6 +1171,7 @@ impl SpaceRuntime {
                 snapshot.latest_activity_us = current_activity_us;
                 if current.revision <= ticket {
                     runtime.snapshot.store(Arc::new(snapshot));
+                    *runtime.verified_at.lock() = Instant::now();
                 }
                 runtime.update_dirty(state);
                 Ok(ticket)
@@ -2606,6 +2679,95 @@ mod tests {
     }
 
     #[sqlx::test(migrator = "crate::db::MIGRATOR")]
+    async fn db_test_reconciliation_skips_reload_when_fingerprint_is_unchanged(pool: sqlx::PgPool) {
+        let (_owner, space, _) = create_space(&pool).await;
+        let store = SpaceStore::new(pool);
+        let runtime = store
+            .get_or_load(space.id)
+            .await
+            .expect("failed to load Space runtime");
+        let before = runtime.snapshot();
+        let permits = Arc::new(tokio::sync::Semaphore::new(1));
+        let permit = permits
+            .acquire_owned()
+            .await
+            .expect("reconciliation semaphore was closed");
+        let (_, ack) = runtime
+            .enqueue_reconciliation(permit)
+            .expect("failed to enqueue reconciliation");
+
+        ack.await
+            .expect("reconciliation actor dropped its acknowledgement")
+            .expect("reconciliation probe failed");
+
+        let after = runtime.snapshot();
+        assert!(
+            Arc::ptr_eq(&before, &after),
+            "an unchanged database caused the snapshot to be rebuilt"
+        );
+    }
+
+    #[sqlx::test(migrator = "crate::db::MIGRATOR")]
+    async fn db_test_reconciliation_repairs_dirty_runtime_with_unchanged_fingerprint(
+        pool: sqlx::PgPool,
+    ) {
+        let (_owner, space, _) = create_space(&pool).await;
+        let store = SpaceStore::new(pool);
+        let runtime = store
+            .get_or_load(space.id)
+            .await
+            .expect("failed to load Space runtime");
+        let before = runtime.snapshot();
+
+        // Model a failed mutation repair: generation was reserved, but the
+        // unchanged database could not be reloaded while it was unavailable.
+        let reserved_ticket = runtime.reserve_generation();
+        assert!(runtime.authoritative_snapshot().is_none());
+
+        let permits = Arc::new(tokio::sync::Semaphore::new(1));
+        let permit = permits
+            .acquire_owned()
+            .await
+            .expect("reconciliation semaphore was closed");
+        let (_, ack) = runtime
+            .enqueue_reconciliation(permit)
+            .expect("failed to enqueue reconciliation");
+        ack.await
+            .expect("reconciliation actor dropped its acknowledgement")
+            .expect("reconciliation repair failed");
+
+        let after = runtime
+            .authoritative_snapshot()
+            .expect("reconciliation did not restore an authoritative snapshot");
+        assert_eq!(after.revision, reserved_ticket);
+        assert!(
+            !Arc::ptr_eq(&before, &after),
+            "a dirty runtime incorrectly took the fingerprint fast path"
+        );
+    }
+
+    #[sqlx::test(migrator = "crate::db::MIGRATOR")]
+    async fn db_test_snapshot_fingerprint_ignores_latest_activity(pool: sqlx::PgPool) {
+        let (_owner, space, _) = create_space(&pool).await;
+        let before = SpaceRuntime::load_database_fingerprint(&pool, space.id)
+            .await
+            .expect("failed to load initial fingerprint");
+
+        sqlx::query(
+            "UPDATE spaces SET latest_activity = latest_activity + interval '1 second' WHERE id = $1",
+        )
+        .bind(space.id)
+        .execute(&pool)
+        .await
+        .expect("failed to update latest activity");
+
+        let after = SpaceRuntime::load_database_fingerprint(&pool, space.id)
+            .await
+            .expect("failed to load updated fingerprint");
+        assert_eq!(before, after);
+    }
+
+    #[sqlx::test(migrator = "crate::db::MIGRATOR")]
     async fn db_test_reconciliation_detects_mismatch_and_respects_pool_pressure(
         pool: sqlx::PgPool,
     ) {
@@ -2633,6 +2795,11 @@ mod tests {
         let reloaded = SpaceRuntime::load_snapshot(&pool, space.id, 0)
             .await
             .expect("failed to reload Space snapshot");
+        assert_ne!(
+            runtime.snapshot().database_fingerprint,
+            reloaded.database_fingerprint,
+            "an out-of-band settings update did not change the database fingerprint"
+        );
         assert_eq!(
             runtime.snapshot().payload_mismatch(&reloaded),
             SnapshotPayloadMismatch {

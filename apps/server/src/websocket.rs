@@ -9,9 +9,22 @@ use metrics::{counter, gauge};
 use std::future::Future;
 use tokio_tungstenite::WebSocketStream;
 pub use tokio_tungstenite::tungstenite::Message as WsMessage;
+use tokio_tungstenite::tungstenite::protocol::WebSocketConfig;
 use tracing::Instrument as _;
 
 const USER_AGENT_LOG_MAX_BYTES: usize = 512;
+const WEBSOCKET_BUFFER_BYTES: usize = 16 * 1024;
+const WEBSOCKET_MAX_MESSAGE_BYTES: usize = 4 * 1024 * 1024;
+const WEBSOCKET_MAX_WRITE_BUFFER_BYTES: usize = 8 * 1024 * 1024;
+
+fn websocket_config() -> WebSocketConfig {
+    WebSocketConfig::default()
+        .read_buffer_size(WEBSOCKET_BUFFER_BYTES)
+        .write_buffer_size(WEBSOCKET_BUFFER_BYTES)
+        .max_write_buffer_size(WEBSOCKET_MAX_WRITE_BUFFER_BYTES)
+        .max_message_size(Some(WEBSOCKET_MAX_MESSAGE_BYTES))
+        .max_frame_size(Some(WEBSOCKET_MAX_MESSAGE_BYTES))
+}
 
 pub fn check_websocket_header(headers: &HeaderMap) -> Result<HeaderValue, AppError> {
     use base64::{Engine as _, engine::general_purpose::STANDARD as base64_engine};
@@ -108,7 +121,7 @@ where
                     let ws_stream = tokio_tungstenite::WebSocketStream::from_raw_socket(
                         upgraded,
                         Role::Server,
-                        None,
+                        Some(websocket_config()),
                     )
                     .await;
 
@@ -159,4 +172,23 @@ where
                 event = "websocket.response.build_failed", error = %err, "Failed to build websocket response");
             hyper::Response::default()
         })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn websocket_buffers_are_bounded() {
+        let config = websocket_config();
+
+        assert_eq!(config.read_buffer_size, WEBSOCKET_BUFFER_BYTES);
+        assert_eq!(config.write_buffer_size, WEBSOCKET_BUFFER_BYTES);
+        assert_eq!(
+            config.max_write_buffer_size,
+            WEBSOCKET_MAX_WRITE_BUFFER_BYTES
+        );
+        assert_eq!(config.max_message_size, Some(WEBSOCKET_MAX_MESSAGE_BYTES));
+        assert_eq!(config.max_frame_size, Some(WEBSOCKET_MAX_MESSAGE_BYTES));
+    }
 }

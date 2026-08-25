@@ -44,7 +44,6 @@ pub struct AppConfig {
     pub secret: String,
     pub platform: crate::platform::Runtime,
     pub mail: crate::mail::Config,
-    pub entry_component_cache_capacity: u64,
 }
 
 #[cfg(test)]
@@ -60,7 +59,6 @@ impl Default for AppConfig {
             secret: "just a test".to_owned(),
             platform: crate::platform::Runtime::detect(Some(crate::platform::Platform::BareMetal)),
             mail: crate::mail::Config::default(),
-            entry_component_cache_capacity: crate::entries::component_cache::DEFAULT_CACHE_BYTES,
         }
     }
 }
@@ -109,10 +107,30 @@ impl AppContext {
         config: AppConfig,
         storage: Arc<crate::s3::Storage>,
     ) -> Self {
+        let entry_component_cache =
+            crate::entries::component_cache::EntryComponentCache::memory_only(
+                crate::entries::component_cache::DEFAULT_MEMORY_CACHE_BYTES,
+            );
+        Self::with_config_and_entry_component_cache(
+            db,
+            redis,
+            config,
+            storage,
+            entry_component_cache,
+        )
+    }
+
+    pub(crate) fn with_config_and_entry_component_cache(
+        db: sqlx::Pool<sqlx::Postgres>,
+        redis: Option<redis::aio::ConnectionManager>,
+        config: AppConfig,
+        storage: Arc<crate::s3::Storage>,
+        entry_component_cache: crate::entries::component_cache::EntryComponentCache,
+    ) -> Self {
         let signer = Signer::new(&config.secret);
-        let space_store = crate::space_runtime::SpaceStore::with_entry_component_cache_capacity(
+        let space_store = crate::space_runtime::SpaceStore::with_entry_component_cache(
             db.clone(),
-            config.entry_component_cache_capacity,
+            entry_component_cache,
         );
         let space_activity_notifier = crate::notify::SpaceActivityNotifier::new(db.clone());
         Self {

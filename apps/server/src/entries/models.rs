@@ -140,12 +140,19 @@ pub struct EntryMetadata {
     pub modified: OffsetDateTime,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Serialize, Deserialize)]
 pub(crate) struct EntryComponentsSnapshot {
     components: Box<[(CompactString, EntryComponent)]>,
 }
 
 impl EntryComponentsSnapshot {
+    #[cfg(test)]
+    pub(crate) fn empty() -> Self {
+        Self {
+            components: Box::new([]),
+        }
+    }
+
     pub(crate) fn estimated_memory_bytes(&self) -> usize {
         std::mem::size_of_val(self.components.as_ref())
             + self

@@ -493,7 +493,20 @@ struct ServeArgs {
         default_value_t = 16,
         help = "entry component memory cache size in MiB"
     )]
-    entry_component_cache_mb: u64,
+    entry_component_cache_mb: usize,
+    #[clap(
+        long,
+        env = "ENTRY_COMPONENT_DISK_CACHE_PATH",
+        help = "entry component foyer disk cache directory"
+    )]
+    entry_component_disk_cache_path: Option<PathBuf>,
+    #[clap(
+        long,
+        env = "ENTRY_COMPONENT_DISK_CACHE_MB",
+        default_value_t = entries::component_cache::DEFAULT_DISK_CACHE_BYTES / (1024 * 1024),
+        help = "entry component foyer disk cache size in MiB; set to 0 to disable"
+    )]
+    entry_component_disk_cache_mb: usize,
 }
 
 fn disk_cache_config(args: &ServeArgs) -> Option<disk_cache::Config> {
@@ -513,6 +526,38 @@ fn disk_cache_config(args: &ServeArgs) -> Option<disk_cache::Config> {
         cache_size: args.disk_cache_memory_mb.saturating_mul(1024 * 1024),
         max_file_size: args.disk_cache_max_file_mb.saturating_mul(1024 * 1024),
     })
+}
+
+async fn entry_component_cache(args: &ServeArgs) -> entries::component_cache::EntryComponentCache {
+    let memory_capacity = args.entry_component_cache_mb.saturating_mul(1024 * 1024);
+    let disk_path = args
+        .entry_component_disk_cache_path
+        .clone()
+        .unwrap_or_else(|| env::temp_dir().join("boluo-entry-components"));
+    if args.entry_component_disk_cache_mb == 0 || disk_path.as_os_str().is_empty() {
+        tracing::info!(memory_capacity, "Entry component disk cache is disabled");
+        return entries::component_cache::EntryComponentCache::memory_only(memory_capacity);
+    }
+
+    let config = entries::component_cache::HybridCacheConfig {
+        memory_capacity,
+        disk_capacity: args
+            .entry_component_disk_cache_mb
+            .saturating_mul(1024 * 1024),
+        disk_path,
+    };
+    match entries::component_cache::EntryComponentCache::hybrid(config).await {
+        Ok(cache) => cache,
+        Err(error) => {
+            tracing::error!(
+                event = "entry_component_cache.start_failed",
+                %error,
+                memory_capacity,
+                "Failed to start the entry component disk cache; using memory only"
+            );
+            entries::component_cache::EntryComponentCache::memory_only(memory_capacity)
+        }
+    }
 }
 
 async fn init_database(args: InitArgs) {
@@ -664,13 +709,14 @@ async fn main() {
             domain: args.mailgun_domain.clone(),
             api_key: args.mailgun_api_key.clone(),
         },
-        entry_component_cache_capacity: args.entry_component_cache_mb.saturating_mul(1024 * 1024),
     };
-    let ctx = std::sync::Arc::new(context::AppContext::with_config(
+    let entry_component_cache = entry_component_cache(&args).await;
+    let ctx = std::sync::Arc::new(context::AppContext::with_config_and_entry_component_cache(
         pool.clone(),
         redis_conn,
         ctx_config,
         storage,
+        entry_component_cache,
     ));
 
     if ctx.config.site_url.is_none() {
@@ -777,6 +823,13 @@ async fn main() {
     }
     shutdown::SHUTDOWN.notify_waiters();
     tokio::time::sleep(std::time::Duration::from_secs(4)).await;
+    if let Err(error) = ctx.space_store.close_entry_component_cache().await {
+        tracing::warn!(
+            event = "entry_component_cache.shutdown_failed",
+            %error,
+            "Failed to close the entry component cache cleanly"
+        );
+    }
     disk_cache::shutdown().await;
     tracing::info!("Shutting down");
 }

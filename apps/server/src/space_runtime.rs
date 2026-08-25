@@ -12,7 +12,7 @@ use uuid::Uuid;
 use crate::channels::models::Member;
 use crate::channels::{Channel, ChannelMember};
 use crate::characters::Character;
-use crate::entries::component_cache::EntryComponentMemoryCache;
+use crate::entries::component_cache::EntryComponentCache;
 use crate::entries::models::{Entry, EntryMetadata};
 use crate::notes::NoteMetadata;
 use crate::scopes::models::Scope;
@@ -518,6 +518,8 @@ pub(crate) enum SpaceRuntimeError {
     NotFound,
     #[error(transparent)]
     Database(#[from] sqlx::Error),
+    #[error(transparent)]
+    EntryComponentCache(#[from] crate::entries::component_cache::Error),
     #[error("space runtime control queue is closed")]
     Closed,
     #[error("space runtime mutation queue is full")]
@@ -1706,7 +1708,7 @@ pub(crate) struct SpaceStore {
 struct SpaceStoreInner {
     db: sqlx::PgPool,
     runtimes: papaya::HashMap<Uuid, Arc<SpaceRuntimeHandle>, ahash::RandomState>,
-    entry_component_memory_cache: Arc<EntryComponentMemoryCache>,
+    entry_component_cache: EntryComponentCache,
     reconciliation_permits: Arc<tokio::sync::Semaphore>,
     reconciliation_cursor: AtomicU64,
     #[cfg(test)]
@@ -1831,13 +1833,23 @@ impl SpaceStore {
     pub(crate) fn new(db: sqlx::PgPool) -> Self {
         Self::with_entry_component_cache_capacity(
             db,
-            crate::entries::component_cache::DEFAULT_CACHE_BYTES,
+            crate::entries::component_cache::DEFAULT_MEMORY_CACHE_BYTES,
         )
     }
 
     pub(crate) fn with_entry_component_cache_capacity(
         db: sqlx::PgPool,
-        entry_component_cache_capacity: u64,
+        entry_component_cache_capacity: usize,
+    ) -> Self {
+        Self::with_entry_component_cache(
+            db,
+            EntryComponentCache::memory_only(entry_component_cache_capacity),
+        )
+    }
+
+    pub(crate) fn with_entry_component_cache(
+        db: sqlx::PgPool,
+        entry_component_cache: EntryComponentCache,
     ) -> Self {
         let store = Self {
             inner: Arc::new(SpaceStoreInner {
@@ -1847,9 +1859,7 @@ impl SpaceStore {
                     .hasher(ahash::RandomState::new())
                     .resize_mode(papaya::ResizeMode::Blocking)
                     .build(),
-                entry_component_memory_cache: Arc::new(EntryComponentMemoryCache::new(
-                    entry_component_cache_capacity,
-                )),
+                entry_component_cache,
                 reconciliation_permits: Arc::new(tokio::sync::Semaphore::new(
                     MAX_CONCURRENT_RECONCILIATIONS,
                 )),
@@ -1899,6 +1909,7 @@ impl SpaceStore {
     }
 
     pub(crate) fn update_metrics(&self) {
+        self.inner.entry_component_cache.update_metrics();
         let mut loaded = 0_u64;
         let mut dirty = 0_u64;
         let mut mutations_in_flight = 0_u64;
@@ -2229,7 +2240,7 @@ impl SpaceStore {
         let expected_version = expected_entry.components_version;
         let components = self
             .inner
-            .entry_component_memory_cache
+            .entry_component_cache
             .get_or_load(&self.inner.db, entry_id, expected_version)
             .await?;
         let Some(current) = runtime.authoritative_snapshot_after_wait().await else {
@@ -2249,11 +2260,7 @@ impl SpaceStore {
                 .await
                 .map_err(Into::into);
         }
-        return Ok(Some(
-            current_entry
-                .clone()
-                .with_components(components.to_response()),
-        ));
+        return Ok(Some(current_entry.clone().with_components(components)));
     }
 
     pub(crate) async fn resolve_channel_member(
@@ -2476,9 +2483,8 @@ impl SpaceStore {
             .load(std::sync::atomic::Ordering::Relaxed)
     }
 
-    #[cfg(test)]
-    fn entry_component_memory_cache_len(&self) -> usize {
-        self.inner.entry_component_memory_cache.len()
+    pub(crate) async fn close_entry_component_cache(&self) -> Result<(), foyer::Error> {
+        self.inner.entry_component_cache.close().await
     }
 }
 

@@ -19,7 +19,36 @@ use crate::scopes::models::Scope;
 use crate::spaces::models::SpaceRecord;
 use crate::spaces::{Space, SpaceMember};
 
-type PersistentMap<K, V> = rpds::HashTrieMapSync<K, V>;
+pub(crate) type SnapshotMap<K, V> = HashMap<K, V, ahash::RandomState>;
+
+#[derive(Debug, Clone, PartialEq)]
+struct CoreSnapshot {
+    space: SpaceRecord,
+    settings: serde_json::Value,
+    channels: SnapshotMap<Uuid, Channel>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+struct MembersSnapshot {
+    space_members: SnapshotMap<Uuid, SpaceMember>,
+    channel_members: SnapshotMap<Uuid, Arc<SnapshotMap<Uuid, ChannelMember>>>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+struct NotesSnapshot {
+    notes: SnapshotMap<Uuid, NoteMetadata>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+struct ScopesSnapshot {
+    characters: SnapshotMap<Uuid, Character>,
+    scopes: SnapshotMap<Uuid, Scope>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+struct EntriesSnapshot {
+    entries: SnapshotMap<Uuid, Arc<SnapshotMap<Uuid, EntryMetadata>>>,
+}
 
 const MAINTENANCE_INTERVAL: Duration = Duration::from_secs(60);
 const SNAPSHOT_MAX_AGE: Duration = Duration::from_secs(10 * 60);
@@ -32,16 +61,12 @@ const AUTHORITATIVE_SNAPSHOT_WAIT: Duration = Duration::from_millis(3);
 pub(crate) struct SpaceSnapshot {
     pub(crate) revision: u64,
     database_fingerprint: DatabaseFingerprint,
-    space: SpaceRecord,
     latest_activity_us: Arc<AtomicI64>,
-    pub(crate) settings: serde_json::Value,
-    pub(crate) channels: PersistentMap<Uuid, Channel>,
-    pub(crate) characters: PersistentMap<Uuid, Character>,
-    pub(crate) notes: PersistentMap<Uuid, NoteMetadata>,
-    pub(crate) scopes: PersistentMap<Uuid, Scope>,
-    pub(crate) entries: PersistentMap<Uuid, PersistentMap<Uuid, EntryMetadata>>,
-    pub(crate) space_members: PersistentMap<Uuid, SpaceMember>,
-    pub(crate) channel_members: PersistentMap<Uuid, PersistentMap<Uuid, ChannelMember>>,
+    core: Arc<CoreSnapshot>,
+    members: Arc<MembersSnapshot>,
+    notes: Arc<NotesSnapshot>,
+    scopes: Arc<ScopesSnapshot>,
+    entries: Arc<EntriesSnapshot>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -84,7 +109,7 @@ struct DatabaseFingerprint {
     core: SectionFingerprint,
     members: SectionFingerprint,
     notes: SectionFingerprint,
-    characters: SectionFingerprint,
+    scopes: SectionFingerprint,
     entries: SectionFingerprint,
 }
 
@@ -109,13 +134,13 @@ struct SnapshotSections {
     core: bool,
     members: bool,
     notes: bool,
-    characters: bool,
+    scopes: bool,
     entries: bool,
 }
 
 impl SnapshotSections {
     fn any(self) -> bool {
-        self.core || self.members || self.notes || self.characters || self.entries
+        self.core || self.members || self.notes || self.scopes || self.entries
     }
 
     fn record_refreshes(self) {
@@ -123,7 +148,7 @@ impl SnapshotSections {
             ("core", self.core),
             ("members", self.members),
             ("notes", self.notes),
-            ("characters", self.characters),
+            ("scopes", self.scopes),
             ("entries", self.entries),
         ] {
             if changed {
@@ -198,7 +223,7 @@ impl DatabaseFingerprint {
                 "core" => fingerprint.core = section,
                 "members" => fingerprint.members = section,
                 "notes" => fingerprint.notes = section,
-                "characters" => fingerprint.characters = section,
+                "scopes" => fingerprint.scopes = section,
                 "entries" => fingerprint.entries = section,
                 section => debug_assert!(false, "unknown snapshot fingerprint section: {section}"),
             }
@@ -211,7 +236,7 @@ impl DatabaseFingerprint {
             core: self.core != current.core,
             members: self.members != current.members,
             notes: self.notes != current.notes,
-            characters: self.characters != current.characters,
+            scopes: self.scopes != current.scopes,
             entries: self.entries != current.entries,
         }
     }
@@ -246,9 +271,96 @@ pub(crate) enum SpaceDelta {
     },
 }
 
+impl MembersSnapshot {
+    fn upsert_channel_member(&mut self, member: ChannelMember) {
+        let channel_id = member.channel_id;
+        let user_id = member.user_id;
+        if member.is_joined {
+            Arc::make_mut(
+                self.channel_members
+                    .entry(channel_id)
+                    .or_insert_with(|| Arc::new(SnapshotMap::default())),
+            )
+            .insert(user_id, member);
+        } else {
+            self.remove_channel_member(channel_id, user_id);
+        }
+    }
+
+    fn remove_channel_member(&mut self, channel_id: Uuid, user_id: Uuid) {
+        let should_remove_channel =
+            self.channel_members
+                .get_mut(&channel_id)
+                .is_some_and(|members| {
+                    let members = Arc::make_mut(members);
+                    members.remove(&user_id);
+                    members.is_empty()
+                });
+        if should_remove_channel {
+            self.channel_members.remove(&channel_id);
+        }
+    }
+}
+
+impl EntriesSnapshot {
+    fn upsert(&mut self, entry: EntryMetadata) {
+        Arc::make_mut(
+            self.entries
+                .entry(entry.scope_id)
+                .or_insert_with(|| Arc::new(SnapshotMap::default())),
+        )
+        .insert(entry.id, entry);
+    }
+
+    fn remove(&mut self, scope_id: Uuid, entry_id: Uuid) {
+        let should_remove_scope = self.entries.get_mut(&scope_id).is_some_and(|entries| {
+            let entries = Arc::make_mut(entries);
+            entries.remove(&entry_id);
+            entries.is_empty()
+        });
+        if should_remove_scope {
+            self.entries.remove(&scope_id);
+        }
+    }
+}
+
 impl SpaceSnapshot {
     pub(crate) fn space_record(&self) -> &SpaceRecord {
-        &self.space
+        &self.core.space
+    }
+
+    pub(crate) fn settings(&self) -> &serde_json::Value {
+        &self.core.settings
+    }
+
+    pub(crate) fn channels(&self) -> &SnapshotMap<Uuid, Channel> {
+        &self.core.channels
+    }
+
+    pub(crate) fn characters(&self) -> &SnapshotMap<Uuid, Character> {
+        &self.scopes.characters
+    }
+
+    pub(crate) fn notes(&self) -> &SnapshotMap<Uuid, NoteMetadata> {
+        &self.notes.notes
+    }
+
+    pub(crate) fn scopes(&self) -> &SnapshotMap<Uuid, Scope> {
+        &self.scopes.scopes
+    }
+
+    pub(crate) fn entries(&self) -> &SnapshotMap<Uuid, Arc<SnapshotMap<Uuid, EntryMetadata>>> {
+        &self.entries.entries
+    }
+
+    pub(crate) fn space_members(&self) -> &SnapshotMap<Uuid, SpaceMember> {
+        &self.members.space_members
+    }
+
+    pub(crate) fn channel_members(
+        &self,
+    ) -> &SnapshotMap<Uuid, Arc<SnapshotMap<Uuid, ChannelMember>>> {
+        &self.members.channel_members
     }
 
     pub(crate) fn space(&self) -> Space {
@@ -256,16 +368,16 @@ impl SpaceSnapshot {
             self.latest_activity_us.load(Ordering::Relaxed) as i128 * 1_000,
         )
         .expect("Space latest_activity must be a valid UTC timestamp");
-        Space::from_record(self.space.clone(), latest_activity)
+        Space::from_record(self.core.space.clone(), latest_activity)
     }
 
     pub(crate) fn channel_member(&self, channel_id: Uuid, user_id: Uuid) -> Option<Member> {
         let channel = self
-            .channel_members
+            .channel_members()
             .get(&channel_id)?
             .get(&user_id)?
             .clone();
-        let space = self.space_members.get(&user_id)?.clone();
+        let space = self.space_members().get(&user_id)?.clone();
         Some(Member { channel, space })
     }
 
@@ -274,8 +386,8 @@ impl SpaceSnapshot {
         channel_id: Uuid,
         user_id: Uuid,
     ) -> Option<ChannelMembership> {
-        let channel = self.channel_members.get(&channel_id)?.get(&user_id)?;
-        self.space_members
+        let channel = self.channel_members().get(&channel_id)?.get(&user_id)?;
+        self.space_members()
             .contains_key(&user_id)
             .then_some(ChannelMembership {
                 is_master: channel.is_master,
@@ -283,12 +395,12 @@ impl SpaceSnapshot {
     }
 
     pub(crate) fn members_in_channel(&self, channel_id: Uuid) -> Vec<Member> {
-        self.channel_members
+        self.channel_members()
             .get(&channel_id)
             .into_iter()
             .flat_map(|members| members.values())
             .filter_map(|channel| {
-                self.space_members
+                self.space_members()
                     .get(&channel.user_id)
                     .map(|space| Member {
                         channel: channel.clone(),
@@ -300,15 +412,15 @@ impl SpaceSnapshot {
 
     fn payload_mismatch(&self, reloaded: &Self) -> SnapshotPayloadMismatch {
         SnapshotPayloadMismatch {
-            space: self.space != reloaded.space,
-            settings: self.settings != reloaded.settings,
-            channels: self.channels != reloaded.channels,
-            characters: self.characters != reloaded.characters,
-            notes: self.notes != reloaded.notes,
-            scopes: self.scopes != reloaded.scopes,
-            entries: self.entries != reloaded.entries,
-            space_members: self.space_members != reloaded.space_members,
-            channel_members: self.channel_members != reloaded.channel_members,
+            space: self.space_record() != reloaded.space_record(),
+            settings: self.settings() != reloaded.settings(),
+            channels: self.channels() != reloaded.channels(),
+            characters: self.characters() != reloaded.characters(),
+            notes: self.notes() != reloaded.notes(),
+            scopes: self.scopes() != reloaded.scopes(),
+            entries: self.entries() != reloaded.entries(),
+            space_members: self.space_members() != reloaded.space_members(),
+            channel_members: self.channel_members() != reloaded.channel_members(),
         }
     }
 
@@ -317,104 +429,77 @@ impl SpaceSnapshot {
         next.revision = revision;
         for delta in deltas {
             match delta {
-                SpaceDelta::SpaceUpdated(space) => next.space = space.into_parts().0,
-                SpaceDelta::SettingsUpdated(settings) => next.settings = settings,
-                SpaceDelta::InviteTokenUpdated(token) => next.space.invite_token = token,
+                SpaceDelta::SpaceUpdated(space) => {
+                    Arc::make_mut(&mut next.core).space = space.into_parts().0;
+                }
+                SpaceDelta::SettingsUpdated(settings) => {
+                    Arc::make_mut(&mut next.core).settings = settings;
+                }
+                SpaceDelta::InviteTokenUpdated(token) => {
+                    Arc::make_mut(&mut next.core).space.invite_token = token;
+                }
                 SpaceDelta::ChannelUpserted(channel) => {
-                    next.channels.insert_mut(channel.id, channel);
+                    Arc::make_mut(&mut next.core)
+                        .channels
+                        .insert(channel.id, channel);
                 }
                 SpaceDelta::ChannelDeleted(channel_id) => {
-                    next.channels.remove_mut(&channel_id);
-                    next.channel_members.remove_mut(&channel_id);
+                    Arc::make_mut(&mut next.core).channels.remove(&channel_id);
+                    Arc::make_mut(&mut next.members)
+                        .channel_members
+                        .remove(&channel_id);
                 }
                 SpaceDelta::CharacterUpserted(character) => {
-                    next.characters.insert_mut(character.id, character);
+                    Arc::make_mut(&mut next.scopes)
+                        .characters
+                        .insert(character.id, character);
                 }
                 SpaceDelta::CharacterDeleted(character_id) => {
-                    next.characters.remove_mut(&character_id);
+                    Arc::make_mut(&mut next.scopes)
+                        .characters
+                        .remove(&character_id);
                 }
                 SpaceDelta::NoteUpserted(note) => {
-                    next.notes.insert_mut(note.id, note);
+                    Arc::make_mut(&mut next.notes).notes.insert(note.id, note);
                 }
                 SpaceDelta::ScopeUpserted(scope) => {
-                    next.scopes.insert_mut(scope.id, scope);
+                    Arc::make_mut(&mut next.scopes)
+                        .scopes
+                        .insert(scope.id, scope);
                 }
                 SpaceDelta::ScopeDeleted(scope_id) => {
-                    next.scopes.remove_mut(&scope_id);
-                    next.entries.remove_mut(&scope_id);
+                    Arc::make_mut(&mut next.scopes).scopes.remove(&scope_id);
+                    Arc::make_mut(&mut next.entries).entries.remove(&scope_id);
                 }
                 SpaceDelta::EntryUpserted(entry) => {
-                    let scope_id = entry.scope_id;
-                    let mut entries = next
-                        .entries
-                        .get(&scope_id)
-                        .cloned()
-                        .unwrap_or_else(PersistentMap::new_sync);
-                    entries.insert_mut(entry.id, entry);
-                    next.entries.insert_mut(scope_id, entries);
+                    Arc::make_mut(&mut next.entries).upsert(entry);
                 }
                 SpaceDelta::EntryDeleted { scope_id, entry_id } => {
-                    if let Some(mut entries) = next.entries.get(&scope_id).cloned() {
-                        entries.remove_mut(&entry_id);
-                        if entries.size() == 0 {
-                            next.entries.remove_mut(&scope_id);
-                        } else {
-                            next.entries.insert_mut(scope_id, entries);
-                        }
-                    }
+                    Arc::make_mut(&mut next.entries).remove(scope_id, entry_id);
                 }
                 SpaceDelta::SpaceMemberUpserted(member) => {
-                    next.space_members.insert_mut(member.user_id, member);
+                    Arc::make_mut(&mut next.members)
+                        .space_members
+                        .insert(member.user_id, member);
                 }
                 SpaceDelta::SpaceMemberRemoved {
                     user_id,
                     channel_ids,
                 } => {
-                    next.space_members.remove_mut(&user_id);
+                    let members = Arc::make_mut(&mut next.members);
+                    members.space_members.remove(&user_id);
                     for channel_id in channel_ids {
-                        if let Some(mut members) = next.channel_members.get(&channel_id).cloned() {
-                            members.remove_mut(&user_id);
-                            if members.size() == 0 {
-                                next.channel_members.remove_mut(&channel_id);
-                            } else {
-                                next.channel_members.insert_mut(channel_id, members);
-                            }
-                        }
+                        members.remove_channel_member(channel_id, user_id);
                     }
                 }
                 SpaceDelta::ChannelMemberUpserted(member) => {
-                    let channel_id = member.channel_id;
-                    let user_id = member.user_id;
-                    if member.is_joined {
-                        let mut members = next
-                            .channel_members
-                            .get(&channel_id)
-                            .cloned()
-                            .unwrap_or_else(PersistentMap::new_sync);
-                        members.insert_mut(user_id, member);
-                        next.channel_members.insert_mut(channel_id, members);
-                    } else if let Some(mut members) = next.channel_members.get(&channel_id).cloned()
-                    {
-                        members.remove_mut(&user_id);
-                        if members.size() == 0 {
-                            next.channel_members.remove_mut(&channel_id);
-                        } else {
-                            next.channel_members.insert_mut(channel_id, members);
-                        }
-                    }
+                    Arc::make_mut(&mut next.members).upsert_channel_member(member);
                 }
                 SpaceDelta::ChannelMemberRemoved {
                     channel_id,
                     user_id,
                 } => {
-                    if let Some(mut members) = next.channel_members.get(&channel_id).cloned() {
-                        members.remove_mut(&user_id);
-                        if members.size() == 0 {
-                            next.channel_members.remove_mut(&channel_id);
-                        } else {
-                            next.channel_members.insert_mut(channel_id, members);
-                        }
-                    }
+                    Arc::make_mut(&mut next.members).remove_channel_member(channel_id, user_id);
                 }
             }
         }
@@ -508,33 +593,32 @@ impl SpaceRuntime {
             .fetch_optional(&mut *transaction)
             .await?
             .unwrap_or_else(|| serde_json::json!({}));
-        let channels: PersistentMap<_, _> =
+        let channels: SnapshotMap<_, _> =
             sqlx::query_file_scalar!("sql/channels/get_by_space.sql", space_id)
                 .fetch_all(&mut *transaction)
                 .await?
                 .into_iter()
                 .map(|channel: Channel| (channel.id, channel))
                 .collect();
-        let characters: PersistentMap<_, _> =
-            Character::list_by_space(&mut *transaction, &space_id)
-                .await?
-                .into_iter()
-                .map(|character: Character| (character.id, character))
-                .collect();
-        let notes: PersistentMap<_, _> =
+        let characters: SnapshotMap<_, _> = Character::list_by_space(&mut *transaction, &space_id)
+            .await?
+            .into_iter()
+            .map(|character: Character| (character.id, character))
+            .collect();
+        let notes: SnapshotMap<_, _> =
             NoteMetadata::list_by_space(&mut *transaction, space_id, true)
                 .await?
                 .into_iter()
                 .map(|note| (note.id, note))
                 .collect();
-        let scopes: PersistentMap<_, _> = Scope::list_by_space(&mut transaction, space_id)
+        let scopes: SnapshotMap<_, _> = Scope::list_by_space(&mut transaction, space_id)
             .await?
             .into_iter()
             .map(|scope: Scope| (scope.id, scope))
             .collect();
         let entries =
             Self::index_entries(EntryMetadata::list_by_space(&mut transaction, space_id).await?);
-        let space_members: PersistentMap<_, _> =
+        let space_members: SnapshotMap<_, _> =
             sqlx::query_file_scalar!("sql/spaces/get_members_by_space.sql", space_id)
                 .fetch_all(&mut *transaction)
                 .await?
@@ -554,18 +638,21 @@ impl SpaceRuntime {
         Ok(SpaceSnapshot {
             revision,
             database_fingerprint,
-            space,
             latest_activity_us: Arc::new(AtomicI64::new(
                 latest_activity.unix_timestamp_nanos() as i64 / 1_000,
             )),
-            settings,
-            channels,
-            characters,
-            notes,
-            scopes,
-            entries,
-            space_members,
-            channel_members,
+            core: Arc::new(CoreSnapshot {
+                space,
+                settings,
+                channels,
+            }),
+            members: Arc::new(MembersSnapshot {
+                space_members,
+                channel_members,
+            }),
+            notes: Arc::new(NotesSnapshot { notes }),
+            scopes: Arc::new(ScopesSnapshot { characters, scopes }),
+            entries: Arc::new(EntriesSnapshot { entries }),
         })
     }
 
@@ -587,37 +674,35 @@ impl SpaceRuntime {
 
     fn index_entries(
         entries: Vec<EntryMetadata>,
-    ) -> PersistentMap<Uuid, PersistentMap<Uuid, EntryMetadata>> {
-        let mut entries_by_scope: HashMap<Uuid, PersistentMap<Uuid, EntryMetadata>> =
-            HashMap::new();
+    ) -> SnapshotMap<Uuid, Arc<SnapshotMap<Uuid, EntryMetadata>>> {
+        let mut entries_by_scope = SnapshotMap::<Uuid, SnapshotMap<Uuid, EntryMetadata>>::default();
         for entry in entries {
             let scope_id = entry.scope_id;
             entries_by_scope
                 .entry(scope_id)
-                .or_insert_with(PersistentMap::new_sync)
-                .insert_mut(entry.id, entry);
+                .or_default()
+                .insert(entry.id, entry);
         }
-        entries_by_scope.into_iter().collect()
+        entries_by_scope
+            .into_iter()
+            .map(|(scope_id, entries)| (scope_id, Arc::new(entries)))
+            .collect()
     }
 
     fn index_channel_members(
         channel_members: Vec<ChannelMember>,
-    ) -> PersistentMap<Uuid, PersistentMap<Uuid, ChannelMember>> {
-        let mut channel_members_by_channel = HashMap::new();
+    ) -> SnapshotMap<Uuid, Arc<SnapshotMap<Uuid, ChannelMember>>> {
+        let mut channel_members_by_channel =
+            SnapshotMap::<Uuid, SnapshotMap<Uuid, ChannelMember>>::default();
         for member in channel_members {
-            let members: &mut HashMap<Uuid, ChannelMember> = channel_members_by_channel
+            let members = channel_members_by_channel
                 .entry(member.channel_id)
-                .or_insert_with(HashMap::new);
+                .or_default();
             members.insert(member.user_id, member);
         }
         channel_members_by_channel
             .into_iter()
-            .map(|(channel_id, members)| {
-                (
-                    channel_id,
-                    members.into_iter().collect::<PersistentMap<_, _>>(),
-                )
-            })
+            .map(|(channel_id, members)| (channel_id, Arc::new(members)))
             .collect()
     }
 
@@ -674,57 +759,69 @@ impl SpaceRuntime {
         next.revision = revision;
         next.database_fingerprint = database_fingerprint;
         if changed.core {
-            next.space = SpaceRecord::get_by_id(&mut *transaction, &space_id)
+            let space = SpaceRecord::get_by_id(&mut *transaction, &space_id)
                 .await?
                 .ok_or(SpaceRuntimeError::NotFound)?;
-            next.settings = sqlx::query_file_scalar!("sql/spaces/get_settings.sql", space_id)
+            let settings = sqlx::query_file_scalar!("sql/spaces/get_settings.sql", space_id)
                 .fetch_optional(&mut *transaction)
                 .await?
                 .unwrap_or_else(|| serde_json::json!({}));
-            next.channels = sqlx::query_file_scalar!("sql/channels/get_by_space.sql", space_id)
+            let channels = sqlx::query_file_scalar!("sql/channels/get_by_space.sql", space_id)
                 .fetch_all(&mut *transaction)
                 .await?
                 .into_iter()
                 .map(|channel: Channel| (channel.id, channel))
                 .collect();
+            next.core = Arc::new(CoreSnapshot {
+                space,
+                settings,
+                channels,
+            });
         }
-        if changed.characters {
-            next.characters = Character::list_by_space(&mut *transaction, &space_id)
+        if changed.scopes {
+            let characters = Character::list_by_space(&mut *transaction, &space_id)
                 .await?
                 .into_iter()
                 .map(|character| (character.id, character))
                 .collect();
-            next.scopes = Scope::list_by_space(&mut transaction, space_id)
+            let scopes = Scope::list_by_space(&mut transaction, space_id)
                 .await?
                 .into_iter()
                 .map(|scope| (scope.id, scope))
                 .collect();
+            next.scopes = Arc::new(ScopesSnapshot { characters, scopes });
         }
         if changed.notes {
-            next.notes = NoteMetadata::list_by_space(&mut *transaction, space_id, true)
+            let notes = NoteMetadata::list_by_space(&mut *transaction, space_id, true)
                 .await?
                 .into_iter()
                 .map(|note| (note.id, note))
                 .collect();
+            next.notes = Arc::new(NotesSnapshot { notes });
         }
         if changed.entries {
-            next.entries = Self::index_entries(
+            let entries = Self::index_entries(
                 EntryMetadata::list_by_space(&mut transaction, space_id).await?,
             );
+            next.entries = Arc::new(EntriesSnapshot { entries });
         }
         if changed.members {
-            next.space_members =
+            let space_members =
                 sqlx::query_file_scalar!("sql/spaces/get_members_by_space.sql", space_id)
                     .fetch_all(&mut *transaction)
                     .await?
                     .into_iter()
                     .map(|member: SpaceMember| (member.user_id, member))
                     .collect();
-            next.channel_members = Self::index_channel_members(
+            let channel_members = Self::index_channel_members(
                 sqlx::query_file_scalar!("sql/channels/get_joined_members_by_space.sql", space_id)
                     .fetch_all(&mut *transaction)
                     .await?,
             );
+            next.members = Arc::new(MembersSnapshot {
+                space_members,
+                channel_members,
+            });
         }
         transaction.commit().await?;
         Ok(ReconciliationResult::Refreshed {
@@ -1824,20 +1921,20 @@ impl SpaceStore {
             control_queue_depth += runtime.control_queue_depth.load(Ordering::Acquire);
             mutation_queue_depth += runtime.mutation_queue_depth.load(Ordering::Acquire);
             let snapshot = runtime.snapshot();
-            snapshot_channels += snapshot.channels.size() as u64;
-            snapshot_characters += snapshot.characters.size() as u64;
-            snapshot_notes += snapshot.notes.size() as u64;
-            snapshot_scopes += snapshot.scopes.size() as u64;
+            snapshot_channels += snapshot.channels().len() as u64;
+            snapshot_characters += snapshot.characters().len() as u64;
+            snapshot_notes += snapshot.notes().len() as u64;
+            snapshot_scopes += snapshot.scopes().len() as u64;
             snapshot_entries += snapshot
-                .entries
+                .entries()
                 .values()
-                .map(|entries| entries.size() as u64)
+                .map(|entries| entries.len() as u64)
                 .sum::<u64>();
-            snapshot_space_members += snapshot.space_members.size() as u64;
+            snapshot_space_members += snapshot.space_members().len() as u64;
             snapshot_channel_members += snapshot
-                .channel_members
+                .channel_members()
                 .values()
-                .map(|members| members.size() as u64)
+                .map(|members| members.len() as u64)
                 .sum::<u64>();
         }
 
@@ -1946,7 +2043,7 @@ impl SpaceStore {
             && let Some(snapshot) = self
                 .loaded_authoritative_snapshot_once(space_id, &mut waited_space_id)
                 .await
-            && let Some(channel) = snapshot.channels.get(&channel_id).cloned()
+            && let Some(channel) = snapshot.channels().get(&channel_id).cloned()
         {
             return Ok(Some(ResolvedChannel {
                 channel,
@@ -1963,7 +2060,7 @@ impl SpaceStore {
             if let Some(snapshot) = self
                 .loaded_authoritative_snapshot_once(space_id, &mut waited_space_id)
                 .await
-                && let Some(channel) = snapshot.channels.get(&channel_id).cloned()
+                && let Some(channel) = snapshot.channels().get(&channel_id).cloned()
             {
                 return Ok(Some(ResolvedChannel {
                     channel,
@@ -1978,7 +2075,7 @@ impl SpaceStore {
         if let Some(snapshot) = self
             .loaded_authoritative_snapshot_once(channel.space_id, &mut waited_space_id)
             .await
-            && let Some(channel) = snapshot.channels.get(&channel_id).cloned()
+            && let Some(channel) = snapshot.channels().get(&channel_id).cloned()
         {
             return Ok(Some(ResolvedChannel {
                 channel,
@@ -2000,7 +2097,7 @@ impl SpaceStore {
         if let Some(snapshot) = runtime.authoritative_snapshot_after_wait().await {
             metrics::counter!("boluo_server_space_runtime_read_total", "result" => "hit")
                 .increment(1);
-            return Ok(snapshot.characters.get(&character_id).cloned());
+            return Ok(snapshot.characters().get(&character_id).cloned());
         }
 
         metrics::counter!("boluo_server_space_runtime_read_total", "result" => "fallback")
@@ -2019,7 +2116,7 @@ impl SpaceStore {
         if let Some(snapshot) = runtime.authoritative_snapshot_after_wait().await {
             metrics::counter!("boluo_server_space_runtime_read_total", "result" => "hit")
                 .increment(1);
-            return Ok(snapshot.notes.get(&note_id).cloned());
+            return Ok(snapshot.notes().get(&note_id).cloned());
         }
 
         metrics::counter!("boluo_server_space_runtime_read_total", "result" => "fallback")
@@ -2039,7 +2136,7 @@ impl SpaceStore {
             metrics::counter!("boluo_server_space_runtime_read_total", "result" => "hit")
                 .increment(1);
             let mut notes: Vec<_> = snapshot
-                .notes
+                .notes()
                 .values()
                 .filter(|note| include_archived || note.archived_at.is_none())
                 .cloned()
@@ -2069,7 +2166,7 @@ impl SpaceStore {
         if let Some(snapshot) = runtime.authoritative_snapshot_after_wait().await {
             metrics::counter!("boluo_server_space_runtime_read_total", "result" => "hit")
                 .increment(1);
-            return Ok(snapshot.scopes.get(&scope_id).cloned());
+            return Ok(snapshot.scopes().get(&scope_id).cloned());
         }
 
         metrics::counter!("boluo_server_space_runtime_read_total", "result" => "fallback")
@@ -2090,10 +2187,10 @@ impl SpaceStore {
             metrics::counter!("boluo_server_space_runtime_read_total", "result" => "hit")
                 .increment(1);
             let mut entries: Vec<_> = snapshot
-                .entries
+                .entries()
                 .get(&scope_id)
                 .into_iter()
-                .flat_map(PersistentMap::values)
+                .flat_map(|entries| entries.values())
                 .cloned()
                 .collect();
             entries.sort_unstable_by(|left, right| {
@@ -2123,7 +2220,7 @@ impl SpaceStore {
                 .map_err(Into::into);
         };
         let Some(expected_entry) = snapshot
-            .entries
+            .entries()
             .get(&scope_id)
             .and_then(|entries| entries.get(&entry_id))
         else {
@@ -2141,7 +2238,7 @@ impl SpaceStore {
                 .map_err(Into::into);
         };
         let Some(current_entry) = current
-            .entries
+            .entries()
             .get(&scope_id)
             .and_then(|entries| entries.get(&entry_id))
         else {
@@ -2399,6 +2496,52 @@ mod tests {
     use shared_types::messages::Entities;
     use std::collections::BTreeMap;
 
+    fn entry_metadata(scope_id: Uuid, id: Uuid, display_name: &str) -> EntryMetadata {
+        EntryMetadata {
+            id,
+            scope_id,
+            key: display_name.into(),
+            aliases: Vec::new(),
+            display_name: display_name.into(),
+            reference_note_id: None,
+            tags: Vec::new(),
+            pos_p: 0,
+            pos_q: 1,
+            pos: 0.0,
+            metadata_version: Uuid::new_v4(),
+            components_version: Uuid::new_v4(),
+            created: time::OffsetDateTime::UNIX_EPOCH,
+            modified: time::OffsetDateTime::UNIX_EPOCH,
+        }
+    }
+
+    #[test]
+    fn entry_update_only_clones_the_target_scope() {
+        let scope_a = Uuid::new_v4();
+        let scope_b = Uuid::new_v4();
+        let entry_a = Uuid::new_v4();
+        let entry_b = Uuid::new_v4();
+        let mut entries = EntriesSnapshot {
+            entries: SnapshotMap::default(),
+        };
+        entries.upsert(entry_metadata(scope_a, entry_a, "before"));
+        entries.upsert(entry_metadata(scope_b, entry_b, "unchanged"));
+        let original = entries.clone();
+
+        entries.upsert(entry_metadata(scope_a, entry_a, "after"));
+
+        assert!(!Arc::ptr_eq(
+            &original.entries[&scope_a],
+            &entries.entries[&scope_a]
+        ));
+        assert!(Arc::ptr_eq(
+            &original.entries[&scope_b],
+            &entries.entries[&scope_b]
+        ));
+        assert_eq!(original.entries[&scope_a][&entry_a].display_name, "before");
+        assert_eq!(entries.entries[&scope_a][&entry_a].display_name, "after");
+    }
+
     async fn create_space(pool: &sqlx::PgPool) -> (User, Space, Channel) {
         let suffix = Uuid::new_v4().simple().to_string();
         let owner = User::register(
@@ -2480,10 +2623,10 @@ mod tests {
         );
         let snapshot = first.snapshot();
         assert_eq!(snapshot.space().id, space_id);
-        assert!(snapshot.channels.contains_key(&channel.id));
-        assert!(snapshot.space_members.contains_key(&owner.id));
+        assert!(snapshot.channels().contains_key(&channel.id));
+        assert!(snapshot.space_members().contains_key(&owner.id));
         assert_eq!(
-            snapshot.channel_members[&channel.id][&owner.id].character_name,
+            snapshot.channel_members()[&channel.id][&owner.id].character_name,
             "GM"
         );
     }
@@ -2651,7 +2794,7 @@ mod tests {
             .expect("runtime snapshot is dirty");
         assert_eq!(
             snapshot
-                .scopes
+                .scopes()
                 .get(&space.scope_id)
                 .expect("Space Scope is not resident"),
             &Scope::get_by_id(&pool, space.scope_id)
@@ -2661,7 +2804,7 @@ mod tests {
         );
         assert!(
             snapshot
-                .entries
+                .entries()
                 .get(&space.scope_id)
                 .is_some_and(|entries| entries.contains_key(&entry.id))
         );
@@ -2866,7 +3009,7 @@ mod tests {
             runtime
                 .authoritative_snapshot()
                 .expect("runtime snapshot is dirty")
-                .notes
+                .notes()
                 .get(&note.id),
             Some(&note.metadata)
         );
@@ -2953,10 +3096,10 @@ mod tests {
         let snapshot = runtime
             .authoritative_snapshot()
             .expect("runtime snapshot is dirty");
-        assert_eq!(snapshot.settings, serde_json::json!({"theme": "dark"}));
+        assert_eq!(snapshot.settings(), &serde_json::json!({"theme": "dark"}));
         assert!(
             snapshot
-                .channel_members
+                .channel_members()
                 .get(&channel.id)
                 .is_none_or(|members| !members.contains_key(&former_member.id)),
             "a former member was treated as currently joined"
@@ -2981,13 +3124,19 @@ mod tests {
         let mut changes = CommittedChanges::default();
         changes.space_settings_updated(space.id, serde_json::json!({"theme": "light"}));
         changes.apply_with_mutation(&ctx, &mutation).await;
+        let updated_snapshot = runtime
+            .authoritative_snapshot()
+            .expect("refreshed runtime snapshot is dirty");
         assert_eq!(
-            runtime
-                .authoritative_snapshot()
-                .expect("refreshed runtime snapshot is dirty")
-                .settings,
-            serde_json::json!({"theme": "light"})
+            updated_snapshot.settings(),
+            &serde_json::json!({"theme": "light"})
         );
+        assert_eq!(snapshot.settings(), &serde_json::json!({"theme": "dark"}));
+        assert!(!Arc::ptr_eq(&snapshot.core, &updated_snapshot.core));
+        assert!(Arc::ptr_eq(&snapshot.members, &updated_snapshot.members));
+        assert!(Arc::ptr_eq(&snapshot.notes, &updated_snapshot.notes));
+        assert!(Arc::ptr_eq(&snapshot.scopes, &updated_snapshot.scopes));
+        assert!(Arc::ptr_eq(&snapshot.entries, &updated_snapshot.entries));
         let current = runtime.snapshot();
         let ReconciliationResult::Refreshed {
             snapshot: reconciled,
@@ -3161,7 +3310,7 @@ mod tests {
         assert_eq!(
             after_character.changed_sections(&after_note),
             SnapshotSections {
-                characters: true,
+                scopes: true,
                 ..SnapshotSections::default()
             }
         );
@@ -3214,8 +3363,8 @@ mod tests {
             runtime
                 .authoritative_snapshot()
                 .expect("fresh runtime was unexpectedly dirty")
-                .settings,
-            serde_json::json!({"version": "cached"}),
+                .settings(),
+            &serde_json::json!({"version": "cached"}),
             "the test write unexpectedly updated process-local state"
         );
         let reloaded = SpaceRuntime::load_snapshot(&pool, space.id, 0)
@@ -3277,7 +3426,7 @@ mod tests {
         tokio::time::timeout(Duration::from_secs(1), async {
             loop {
                 if let Some(snapshot) = runtime.authoritative_snapshot()
-                    && snapshot.settings == serde_json::json!({"version": "database"})
+                    && snapshot.settings() == &serde_json::json!({"version": "database"})
                 {
                     break;
                 }
@@ -3332,9 +3481,9 @@ mod tests {
         let snapshot = runtime
             .authoritative_snapshot()
             .expect("runtime remained dirty");
-        assert!(snapshot.channels.contains_key(&initial_channel.id));
-        assert!(snapshot.channels.contains_key(&first.id));
-        assert!(snapshot.channels.contains_key(&second.id));
+        assert!(snapshot.channels().contains_key(&initial_channel.id));
+        assert!(snapshot.channels().contains_key(&first.id));
+        assert!(snapshot.channels().contains_key(&second.id));
 
         let joined_cold_channel = Channel::create(
             &pool,
@@ -3449,7 +3598,7 @@ mod tests {
             runtime
                 .authoritative_snapshot()
                 .expect("runtime remained dirty after Character creation")
-                .characters[&character.id]
+                .characters()[&character.id]
                 .name,
             "Runtime Character"
         );
@@ -3457,7 +3606,7 @@ mod tests {
             runtime
                 .authoritative_snapshot()
                 .expect("runtime remained dirty after Scope creation")
-                .scopes[&character.scope_id],
+                .scopes()[&character.scope_id],
             character_scope
         );
         assert!(
@@ -3525,9 +3674,9 @@ mod tests {
         let snapshot = runtime
             .authoritative_snapshot()
             .expect("runtime remained dirty after Character deletion");
-        assert!(!snapshot.characters.contains_key(&character.id));
-        assert!(!snapshot.scopes.contains_key(&character.scope_id));
-        assert!(!snapshot.entries.contains_key(&character.scope_id));
+        assert!(!snapshot.characters().contains_key(&character.id));
+        assert!(!snapshot.scopes().contains_key(&character.scope_id));
+        assert!(!snapshot.entries().contains_key(&character.scope_id));
         assert!(
             ctx.space_store
                 .resolve_entry(space.id, character.scope_id, entry.id)
@@ -3786,8 +3935,8 @@ mod tests {
             .expect("strict read task failed")
             .expect("strict read did not recover after snapshot publication");
         assert_eq!(
-            snapshot.settings,
-            serde_json::json!({"version": "published"})
+            snapshot.settings(),
+            &serde_json::json!({"version": "published"})
         );
         drop(mutation);
     }
@@ -3926,7 +4075,7 @@ mod tests {
         tokio::time::timeout(Duration::from_secs(1), async {
             loop {
                 if let Some(snapshot) = runtime.authoritative_snapshot()
-                    && snapshot.channels.contains_key(&channel.id)
+                    && snapshot.channels().contains_key(&channel.id)
                 {
                     break;
                 }
@@ -3998,8 +4147,8 @@ mod tests {
         tokio::time::timeout(Duration::from_secs(1), async {
             loop {
                 if let Some(snapshot) = runtime.authoritative_snapshot()
-                    && snapshot.channels.contains_key(&unguarded_channel.id)
-                    && snapshot.channels.contains_key(&cancelled_channel.id)
+                    && snapshot.channels().contains_key(&unguarded_channel.id)
+                    && snapshot.channels().contains_key(&cancelled_channel.id)
                 {
                     break;
                 }

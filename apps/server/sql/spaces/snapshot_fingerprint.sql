@@ -20,7 +20,7 @@ WITH snapshot_rows (section, value) AS (
 
     UNION ALL
 
-    SELECT 'characters', jsonb_build_array(
+    SELECT 'scopes', jsonb_build_array(
         'character', character.id, character.xmin::text
     )::text
     FROM characters character
@@ -28,7 +28,7 @@ WITH snapshot_rows (section, value) AS (
 
     UNION ALL
 
-    SELECT 'characters', jsonb_build_array(
+    SELECT 'scopes', jsonb_build_array(
         'character_identifier',
         identifier.character_id,
         identifier.value,
@@ -45,9 +45,9 @@ WITH snapshot_rows (section, value) AS (
 
     UNION ALL
 
-    -- Character snapshots embed access fields from their main scope, so all
-    -- scopes and characters form one reconciliation section.
-    SELECT 'characters', jsonb_build_array('scope', scope.id, scope.xmin::text)::text
+    -- Characters are specialized scopes and embed access fields from their
+    -- main scope, so both tables form one reconciliation section.
+    SELECT 'scopes', jsonb_build_array('scope', scope.id, scope.xmin::text)::text
     FROM scopes scope
     WHERE scope.space_id = $1
 
@@ -97,7 +97,7 @@ WITH snapshot_rows (section, value) AS (
         ('core'),
         ('members'),
         ('notes'),
-        ('characters'),
+        ('scopes'),
         ('entries')
 )
 SELECT

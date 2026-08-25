@@ -96,7 +96,7 @@ pub async fn resolve_space_access(
         .await
     {
         let space = snapshot.space_record();
-        let member = user_id.and_then(|user_id| snapshot.space_members.get(&user_id));
+        let member = user_id.and_then(|user_id| snapshot.space_members().get(&user_id));
         let is_member = member.is_some();
         return Ok(SpaceAccess {
             can_access: space.is_public || space.allow_spectator || is_member,

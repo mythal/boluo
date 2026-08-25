@@ -93,8 +93,8 @@ pub async fn broadcast_preview_post(
         // resolve_channel_membership already performed the bounded authoritative wait.
         let snapshot = ctx.space_store.loaded_authoritative_snapshot(space_id);
         let (channel_space_id, is_public, is_space_member) = if let Some(snapshot) = snapshot {
-            let channel = snapshot.channels.get(&channel_id).or_not_found()?;
-            let is_space_member = snapshot.space_members.contains_key(&user_id);
+            let channel = snapshot.channels().get(&channel_id).or_not_found()?;
+            let is_space_member = snapshot.space_members().contains_key(&user_id);
             (channel.space_id, channel.is_public, is_space_member)
         } else {
             let mut conn = ctx.db.acquire().await?;

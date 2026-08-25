@@ -70,13 +70,13 @@ async fn send(
         .or_not_found()?;
     let (channel, channel_member, space_member) = if let Some(snapshot) = resolved.snapshot {
         let channel_member = snapshot
-            .channel_members
+            .channel_members()
             .get(&channel_id)
             .and_then(|members| members.get(&session.user_id))
             .cloned()
             .or_no_permission()?;
         let space_member = snapshot
-            .space_members
+            .space_members()
             .get(&session.user_id)
             .cloned()
             .or_no_permission()?;
@@ -306,10 +306,10 @@ async fn resolve_space_member_cache_first(
             .space_store
             .loaded_authoritative_snapshot_after_wait(space_id)
             .await
-        && snapshot.channels.contains_key(&channel_id)
+        && snapshot.channels().contains_key(&channel_id)
     {
         let member = snapshot
-            .space_members
+            .space_members()
             .get(&user_id)
             .cloned()
             .or_no_permission()?;
@@ -333,9 +333,13 @@ async fn resolve_channel_member_cache_first(
             .space_store
             .loaded_authoritative_snapshot_after_wait(space_id)
             .await
-        && snapshot.channels.contains_key(&channel_id)
+        && snapshot.channels().contains_key(&channel_id)
     {
-        let channel = snapshot.channels.get(&channel_id).cloned().or_not_found()?;
+        let channel = snapshot
+            .channels()
+            .get(&channel_id)
+            .cloned()
+            .or_not_found()?;
         let member = snapshot
             .channel_membership(channel_id, user_id)
             .or_no_permission()?;
@@ -428,7 +432,7 @@ async fn by_channel(
         let user_id = session?.user_id;
         if let Some(snapshot) = used_snapshot {
             snapshot
-                .channel_members
+                .channel_members()
                 .get(&channel_id)
                 .and_then(|members| members.get(&user_id))
                 .or_no_permission()?;
@@ -499,7 +503,7 @@ async fn search(
         let user_id = session?.user_id;
         if let Some(snapshot) = used_snapshot {
             snapshot
-                .channel_members
+                .channel_members()
                 .get(&channel_id)
                 .and_then(|members| members.get(&user_id))
                 .or_no_permission()?;

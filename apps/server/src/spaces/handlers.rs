@@ -98,7 +98,7 @@ async fn query(
     }
     let session = authenticate(ctx, &req).await?;
     let is_member = if let Some(snapshot) = snapshot {
-        snapshot.space_members.contains_key(&session.user_id)
+        snapshot.space_members().contains_key(&session.user_id)
     } else {
         SpaceMember::get(&ctx.db, &session.user_id, &id)
             .await?
@@ -125,11 +125,11 @@ pub async fn space_related(
     if let Ok(Some(snapshot)) = ctx.space_store.authoritative_snapshot(*id).await {
         metrics::counter!("boluo_server_space_runtime_read_total", "result" => "hit").increment(1);
         let space = snapshot.space();
-        let space_members: Vec<_> = snapshot.space_members.values().cloned().collect();
-        let mut channels: Vec<_> = snapshot.channels.values().cloned().collect();
+        let space_members: Vec<_> = snapshot.space_members().values().cloned().collect();
+        let mut channels: Vec<_> = snapshot.channels().values().cloned().collect();
         channels.sort_unstable_by_key(|channel| channel.created);
         let channel_members = snapshot
-            .channel_members
+            .channel_members()
             .iter()
             .map(|(channel_id, members)| {
                 let mut members: Vec<_> = members.values().cloned().collect();
@@ -215,7 +215,7 @@ async fn token(
         .await
     {
         let is_admin = snapshot
-            .space_members
+            .space_members()
             .get(&session.user_id)
             .is_some_and(|member| member.is_admin);
         if !is_admin {
@@ -288,7 +288,7 @@ async fn my_spaces(
     let mut missing = Vec::new();
     for member in &members {
         if let Some(snapshot) = ctx.space_store.loaded_snapshot_maybe_stale(member.space_id)
-            && let Some(snapshot_member) = snapshot.space_members.get(&session.user_id)
+            && let Some(snapshot_member) = snapshot.space_members().get(&session.user_id)
         {
             loaded.insert(member.space_id, (snapshot.space(), snapshot_member.clone()));
         } else {
@@ -612,7 +612,7 @@ async fn my_space_member(
     };
     let IdQuery { id } = parse_query(req.uri())?;
     if let Some(snapshot) = ctx.space_store.loaded_snapshot_maybe_stale(id) {
-        return Ok(snapshot.space_members.get(&session.user_id).cloned());
+        return Ok(snapshot.space_members().get(&session.user_id).cloned());
     }
     let my_space_members = SpaceMember::get_by_user_with_cache(&ctx.db, session.user_id).await?;
     Ok(my_space_members
@@ -627,9 +627,9 @@ async fn members(
     let IdQuery { id } = parse_query(req.uri())?;
     if let Some(snapshot) = ctx.space_store.loaded_snapshot_maybe_stale(id) {
         let mut users =
-            User::get_by_id_list(&ctx.db, snapshot.space_members.keys().copied()).await?;
+            User::get_by_id_list(&ctx.db, snapshot.space_members().keys().copied()).await?;
         return Ok(snapshot
-            .space_members
+            .space_members()
             .values()
             .filter_map(|member| {
                 users.remove(&member.user_id).map(|user| {
@@ -695,7 +695,7 @@ async fn space_settings(
     let IdQuery { id } = parse_query(req.uri())?;
     // TODO: check whether the user is a member of the space
     if let Some(snapshot) = ctx.space_store.loaded_snapshot_maybe_stale(id) {
-        return Ok(snapshot.settings.clone());
+        return Ok(snapshot.settings().clone());
     }
     let extension = Space::get_settings(&ctx.db, id).await?;
     Ok(extension)

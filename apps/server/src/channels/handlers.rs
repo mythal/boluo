@@ -94,7 +94,7 @@ async fn query_channel(
 ) -> Result<Channel, AppError> {
     if let Some(space_id) = space_id
         && let Some(snapshot) = ctx.space_store.loaded_snapshot_maybe_stale(space_id)
-        && let Some(channel) = snapshot.channels.get(&id)
+        && let Some(channel) = snapshot.channels().get(&id)
     {
         metrics::counter!("boluo_server_space_runtime_read_total", "result" => "hit").increment(1);
         return Ok(channel.clone());
@@ -156,7 +156,7 @@ async fn members<B: Body>(
     let runtime_snapshot = resolved.snapshot;
     if let Some(snapshot) = &runtime_snapshot {
         channel = snapshot
-            .channels
+            .channels()
             .get(&channel.id)
             .cloned()
             .ok_or(AppError::NotFound("channel"))?;
@@ -176,13 +176,13 @@ async fn members<B: Body>(
     }
     let mut members = if let Some(snapshot) = &runtime_snapshot {
         snapshot
-            .channel_members
+            .channel_members()
             .get(&channel.id)
             .into_iter()
             .flat_map(|members| members.values())
             .filter_map(|member| {
                 snapshot
-                    .space_members
+                    .space_members()
                     .get(&member.user_id)
                     .map(|space| Member {
                         channel: member.clone(),
@@ -272,18 +272,18 @@ async fn query_with_related(
         (resolved.channel, space, None)
     };
     let mut members = if let Some(snapshot) = snapshot {
-        let Some(snapshot_channel) = snapshot.channels.get(&channel.id) else {
+        let Some(snapshot_channel) = snapshot.channels().get(&channel.id) else {
             return Err(AppError::NotFound("channel"));
         };
         channel = snapshot_channel.clone();
         snapshot
-            .channel_members
+            .channel_members()
             .get(&channel.id)
             .into_iter()
             .flat_map(|members| members.values())
             .filter_map(|member| {
                 snapshot
-                    .space_members
+                    .space_members()
                     .get(&member.user_id)
                     .map(|space| Member {
                         channel: member.clone(),
@@ -936,16 +936,16 @@ async fn by_space(
         metrics::counter!("boluo_server_space_runtime_read_total", "result" => "hit").increment(1);
         let user_id = session.map(|session| session.user_id);
         let is_admin = user_id
-            .and_then(|user_id| snapshot.space_members.get(&user_id))
+            .and_then(|user_id| snapshot.space_members().get(&user_id))
             .is_some_and(|member| member.is_admin);
-        let mut channels: Vec<_> = snapshot.channels.values().cloned().collect();
+        let mut channels: Vec<_> = snapshot.channels().values().cloned().collect();
         channels.sort_unstable_by_key(|channel| channel.created);
         return Ok(channels
             .into_iter()
             .filter_map(|channel| {
                 let member = user_id.and_then(|user_id| {
                     snapshot
-                        .channel_members
+                        .channel_members()
                         .get(&channel.id)
                         .and_then(|members| members.get(&user_id))
                         .cloned()
@@ -991,12 +991,12 @@ async fn export(
     let mut trans = ctx.db.begin().await?;
     let (channel, space_member, channel_member) = if let Some(snapshot) = resolved.snapshot {
         let space_member = snapshot
-            .space_members
+            .space_members()
             .get(&session.user_id)
             .cloned()
             .or_no_permission()?;
         let channel_member = snapshot
-            .channel_members
+            .channel_members()
             .get(&channel_id)
             .and_then(|members| members.get(&session.user_id))
             .cloned();
@@ -1028,7 +1028,7 @@ pub async fn check_channel_name_exists(
     let CheckChannelName { space_id, name } = parse_query(req.uri())?;
     if let Some(snapshot) = ctx.space_store.loaded_snapshot_maybe_stale(space_id) {
         return Ok(snapshot
-            .channels
+            .channels()
             .values()
             .any(|channel| channel.name == name));
     }

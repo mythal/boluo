@@ -136,7 +136,7 @@ async fn check_space_permissions(
             return Err(AppError::Unauthenticated(AuthenticateFail::Guest));
         };
         if space.owner_id == session.user_id
-            || snapshot.space_members.contains_key(&session.user_id)
+            || snapshot.space_members().contains_key(&session.user_id)
         {
             return Ok(());
         }

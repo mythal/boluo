@@ -19,6 +19,7 @@ use hyper::Request;
 use hyper::body::{Body, Incoming};
 use hyper::upgrade::Upgraded;
 use hyper_util::rt::TokioIo;
+use shared_types::events::ClientWebSocketCloseReason;
 use std::io::Write;
 use std::time::Duration;
 use thiserror::Error;
@@ -28,6 +29,37 @@ use tokio_tungstenite::tungstenite::{self, Utf8Bytes};
 use uuid::Uuid;
 
 type Sender = SplitSink<WebSocketStream<TokioIo<Upgraded>>, tungstenite::Message>;
+
+enum ReceiveClientEventsTermination {
+    PeerClose { code: u16, reason: Utf8Bytes },
+    PeerCloseWithoutStatus,
+    StreamEnded,
+}
+
+fn websocket_close_code_group(code: u16) -> &'static str {
+    match code {
+        1000 => "normal",
+        1001..=2999 => "standard",
+        3000..=4999 => "application",
+        _ => "invalid",
+    }
+}
+
+fn record_websocket_close(
+    outcome: &'static str,
+    client_reason: Option<ClientWebSocketCloseReason>,
+    code_group: &'static str,
+) {
+    metrics::counter!(
+        "boluo_server_websocket_closes_total",
+        "outcome" => outcome,
+        "client_reason" => client_reason
+            .map(ClientWebSocketCloseReason::as_str)
+            .unwrap_or("NOT_APPLICABLE"),
+        "code_group" => code_group,
+    )
+    .increment(1);
+}
 
 struct InitialUpdatesInFlight {
     gauge: metrics::Gauge,
@@ -135,7 +167,26 @@ enum CompressCachedUpdatesError {
     Join(#[from] tokio::task::JoinError),
 }
 
-const CACHED_UPDATES_CHUNK_SIZE: usize = 32;
+const CACHED_UPDATES_CHUNK_MAX_BYTES: usize = 64 * 1024;
+
+fn cached_updates_chunk_len(updates: &[Utf8Bytes], max_bytes: usize) -> usize {
+    let mut payload_bytes = 0usize;
+    let mut chunk_len = 0usize;
+
+    for update in updates {
+        let delimiter_bytes = usize::from(chunk_len > 0);
+        let next_payload_bytes = payload_bytes
+            .saturating_add(delimiter_bytes)
+            .saturating_add(update.len());
+        if chunk_len > 0 && next_payload_bytes > max_bytes {
+            break;
+        }
+        payload_bytes = next_payload_bytes;
+        chunk_len += 1;
+    }
+
+    chunk_len
+}
 
 fn serialize_cached_updates(cached_updates: &[Utf8Bytes]) -> Vec<u8> {
     let total_len = cached_updates.iter().map(|x| x.len()).sum::<usize>();
@@ -237,7 +288,11 @@ async fn push_updates(
         } else {
             let mut offset = 0;
             while offset < cached_updates.len() {
-                let end = (offset + CACHED_UPDATES_CHUNK_SIZE).min(cached_updates.len());
+                let chunk_len = cached_updates_chunk_len(
+                    &cached_updates[offset..],
+                    CACHED_UPDATES_CHUNK_MAX_BYTES,
+                );
+                let end = offset + chunk_len;
                 let chunk = &cached_updates[offset..end];
                 match compress_cached_updates(chunk, encoding).await {
                     Ok(payload) => {
@@ -614,7 +669,7 @@ async fn connect(ctx: &crate::context::AppContext, req: hyper::Request<Incoming>
         };
 
         let ctx = ctx.clone();
-        let receive_client_events = incoming
+        let incoming = incoming
             .timeout(Duration::from_secs(40))
             .map_err(|_| {
                 tungstenite::Error::Io(std::io::Error::new(
@@ -622,26 +677,95 @@ async fn connect(ctx: &crate::context::AppContext, req: hyper::Request<Incoming>
                     "WebSocket read timeout",
                 ))
             })
-            .and_then(future::ready)
-            .try_for_each(|message: WsMessage| {
-                let error_sender = error_sender.clone();
-                async {
-                    if let WsMessage::Text(message) = message {
-                        if message == "♡" {
-                            return Ok(());
-                        }
-                        handle_client_event(&ctx, mailbox, error_sender, session.ok(), message)
-                            .await
+            .and_then(future::ready);
+        let receive_client_events = async move {
+            futures::pin_mut!(incoming);
+            let mut received_close = None;
+            loop {
+                let Some(message) = futures::StreamExt::next(&mut incoming).await else {
+                    return Ok(
+                        received_close.unwrap_or(ReceiveClientEventsTermination::StreamEnded)
+                    );
+                };
+                let message = match message {
+                    Ok(message) => message,
+                    Err(tungstenite::Error::ConnectionClosed) if received_close.is_some() => {
+                        return Ok(received_close.expect("checked above"));
                     }
-                    Ok(())
+                    Err(error) => return Err(error),
+                };
+                match message {
+                    WsMessage::Text(message) => {
+                        if message == "♡" {
+                            continue;
+                        }
+                        handle_client_event(
+                            &ctx,
+                            mailbox,
+                            error_sender.clone(),
+                            session.ok(),
+                            message,
+                        )
+                        .await;
+                    }
+                    WsMessage::Close(Some(frame)) => {
+                        received_close = Some(ReceiveClientEventsTermination::PeerClose {
+                            code: u16::from(frame.code),
+                            reason: frame.reason,
+                        });
+                    }
+                    WsMessage::Close(None) => {
+                        received_close =
+                            Some(ReceiveClientEventsTermination::PeerCloseWithoutStatus);
+                    }
+                    _ => {}
                 }
-            });
+            }
+        };
         futures::pin_mut!(push_updates_future);
         futures::pin_mut!(receive_client_events);
         let select_result = future::select(push_updates_future, receive_client_events).await;
-        match select_result {
+        let (close_outcome, client_close_reason, close_code_group) = match select_result {
             future::Either::Left((_, _)) => {
                 tracing::debug!("Stop push updates");
+                ("push_stopped", None, "not_applicable")
+            }
+            future::Either::Right((
+                Ok(ReceiveClientEventsTermination::PeerClose { code, reason }),
+                _,
+            )) => {
+                let client_close_reason = ClientWebSocketCloseReason::from(reason.as_str());
+                tracing::info!(
+                    event = "websocket.close.received",
+                    mailbox_id = %mailbox,
+                    close_code = code,
+                    close_reason = %reason,
+                    client_close_reason = %client_close_reason,
+                    "Received WebSocket close frame"
+                );
+                (
+                    "peer_close",
+                    Some(client_close_reason),
+                    websocket_close_code_group(code),
+                )
+            }
+            future::Either::Right((
+                Ok(ReceiveClientEventsTermination::PeerCloseWithoutStatus),
+                _,
+            )) => {
+                tracing::info!(
+                    event = "websocket.close.received",
+                    mailbox_id = %mailbox,
+                    close_code = 1005,
+                    close_reason = "",
+                    client_close_reason = %ClientWebSocketCloseReason::Unknown,
+                    "Received WebSocket close frame without a status code"
+                );
+                (
+                    "peer_close",
+                    Some(ClientWebSocketCloseReason::Unknown),
+                    "missing",
+                )
             }
             future::Either::Right((
                 Err(tungstenite::Error::Protocol(
@@ -653,19 +777,35 @@ async fn connect(ctx: &crate::context::AppContext, req: hyper::Request<Incoming>
                     "boluo_server_events_push_updates_reset_without_closing_handshake_total"
                 )
                 .increment(1);
-                tracing::debug!("Reset without closing handshake");
+                tracing::info!(
+                    event = "websocket.close.without_handshake",
+                    mailbox_id = %mailbox,
+                    "WebSocket reset without a closing handshake"
+                );
+                ("reset_without_handshake", None, "not_applicable")
             }
             future::Either::Right((Err(tungstenite::Error::Io(ref io_err)), _))
                 if io_err.kind() == std::io::ErrorKind::TimedOut =>
             {
                 metrics::counter!("boluo_server_events_push_updates_read_timeout_total")
                     .increment(1);
-                tracing::debug!("WebSocket read timeout after 40 seconds");
+                tracing::info!(
+                    event = "websocket.close.read_timeout",
+                    mailbox_id = %mailbox,
+                    timeout_seconds = 40,
+                    "WebSocket closed after a read timeout"
+                );
+                ("read_timeout", None, "not_applicable")
             }
             future::Either::Right((Err(tungstenite::Error::ConnectionClosed), _)) => {
                 metrics::counter!("boluo_server_events_push_updates_connection_closed_total")
                     .increment(1);
-                tracing::debug!("WebSocket connection closed normally");
+                tracing::info!(
+                    event = "websocket.close.handshake_completed",
+                    mailbox_id = %mailbox,
+                    "WebSocket closing handshake completed"
+                );
+                ("handshake_completed", None, "not_applicable")
             }
             future::Either::Right((Err(tungstenite::Error::AlreadyClosed), _)) => {
                 metrics::counter!("boluo_server_events_push_updates_already_closed_total")
@@ -674,6 +814,7 @@ async fn connect(ctx: &crate::context::AppContext, req: hyper::Request<Incoming>
                     event = "websocket.already_closed",
                     "Attempted to operate on already closed WebSocket connection"
                 );
+                ("receive_error", None, "not_applicable")
             }
             future::Either::Right((Err(e), _)) => {
                 metrics::counter!(
@@ -682,11 +823,14 @@ async fn connect(ctx: &crate::context::AppContext, req: hyper::Request<Incoming>
                 .increment(1);
                 tracing::warn!(
                     event = "event_delivery.receive_failed", error = %e, "Failed to receive events");
+                ("receive_error", None, "not_applicable")
             }
-            future::Either::Right((Ok(_), _)) => {
+            future::Either::Right((Ok(ReceiveClientEventsTermination::StreamEnded), _)) => {
                 tracing::debug!("Stop receiving events");
+                ("stream_ended", None, "not_applicable")
             }
-        }
+        };
+        record_websocket_close(close_outcome, client_close_reason, close_code_group);
         if let Ok(session) = session {
             if !mailbox.is_nil() {
                 if let Err(e) = Update::status(
@@ -881,6 +1025,68 @@ mod tests {
     use super::*;
     use std::io::Read;
 
+    #[test]
+    fn websocket_close_codes_use_bounded_groups() {
+        assert_eq!(websocket_close_code_group(1000), "normal");
+        assert_eq!(websocket_close_code_group(1001), "standard");
+        assert_eq!(websocket_close_code_group(2999), "standard");
+        assert_eq!(websocket_close_code_group(3000), "application");
+        assert_eq!(websocket_close_code_group(4000), "application");
+        assert_eq!(websocket_close_code_group(4999), "application");
+        assert_eq!(websocket_close_code_group(999), "invalid");
+        assert_eq!(websocket_close_code_group(5000), "invalid");
+    }
+
+    #[tokio::test]
+    async fn polling_split_stream_sends_queued_close_reply() {
+        use tokio_tungstenite::tungstenite::protocol::frame::coding::CloseCode;
+        use tokio_tungstenite::tungstenite::protocol::{CloseFrame, Role};
+
+        let (client_io, server_io) = tokio::io::duplex(1024);
+        let (mut client, server) = tokio::join!(
+            WebSocketStream::from_raw_socket(client_io, Role::Client, None),
+            WebSocketStream::from_raw_socket(server_io, Role::Server, None),
+        );
+        let (_server_outgoing, mut server_incoming) = server.split();
+        let close_frame = CloseFrame {
+            code: CloseCode::Normal,
+            reason: Utf8Bytes::from_static("CHAT_CONTEXT_DISPOSED"),
+        };
+
+        client
+            .send(WsMessage::Close(Some(close_frame.clone())))
+            .await
+            .unwrap();
+        assert_eq!(
+            futures::StreamExt::next(&mut server_incoming)
+                .await
+                .unwrap()
+                .unwrap(),
+            WsMessage::Close(Some(close_frame.clone()))
+        );
+
+        let client_reply = tokio::spawn(async move {
+            futures::StreamExt::next(&mut client)
+                .await
+                .unwrap()
+                .unwrap()
+        });
+        let server_closed = tokio::time::timeout(
+            Duration::from_secs(1),
+            futures::StreamExt::next(&mut server_incoming),
+        )
+        .await
+        .unwrap();
+        assert!(matches!(
+            server_closed,
+            None | Some(Err(tungstenite::Error::ConnectionClosed))
+        ));
+        assert_eq!(
+            client_reply.await.unwrap(),
+            WsMessage::Close(Some(close_frame))
+        );
+    }
+
     fn decompress_cached_updates(payload: &[u8], encoding: UpdateEncoding) -> Vec<u8> {
         let mut decompressed = Vec::new();
         match encoding {
@@ -897,6 +1103,31 @@ mod tests {
             }
         }
         decompressed
+    }
+
+    #[test]
+    fn cached_update_chunks_are_limited_by_serialized_bytes() {
+        let updates = [
+            Utf8Bytes::from_static("1234"),
+            Utf8Bytes::from_static("5678"),
+            Utf8Bytes::from_static("90"),
+        ];
+
+        // The newline delimiter between updates is part of the serialized payload.
+        assert_eq!(cached_updates_chunk_len(&updates, 9), 2);
+        assert_eq!(cached_updates_chunk_len(&updates, 8), 1);
+        assert_eq!(cached_updates_chunk_len(&updates[1..], 7), 2);
+    }
+
+    #[test]
+    fn oversized_cached_update_gets_its_own_chunk() {
+        let updates = [
+            Utf8Bytes::from_static("oversized"),
+            Utf8Bytes::from_static("next"),
+        ];
+
+        assert_eq!(cached_updates_chunk_len(&updates, 4), 1);
+        assert_eq!(cached_updates_chunk_len(&[], 4), 0);
     }
 
     #[tokio::test]

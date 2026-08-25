@@ -2,6 +2,7 @@ import { useAtomValue, useSetAtom } from 'jotai';
 import { useEffect } from 'react';
 import { useSWRConfig } from 'swr';
 import type { ChannelMembers, UserStatus } from '@boluo/api';
+import { closeWebSocketNormally } from '@boluo/api/websocket/close';
 import { chatAtom, chatEffectsAtom } from '../state/chat.atoms';
 import type { ChatEffect } from '../state/chat.types';
 
@@ -17,12 +18,7 @@ const applyEffect = async (
   switch (effect.type) {
     case 'CLOSE_CONNECTION':
       effect.connection.onclose = null;
-      if (
-        effect.connection.readyState !== WebSocket.CLOSING &&
-        effect.connection.readyState !== WebSocket.CLOSED
-      ) {
-        effect.connection.close();
-      }
+      closeWebSocketNormally(effect.connection, effect.reason);
       return;
     case 'CHANNEL_CHANGED':
       if (effect.channel == null) {

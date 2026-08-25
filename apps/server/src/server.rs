@@ -50,6 +50,7 @@ mod http_client;
 mod info;
 mod interface;
 mod mail;
+mod maintenance;
 mod media;
 mod messages;
 mod notes;
@@ -134,6 +135,7 @@ async fn router(
     if path == "/api/telemetry" {
         return frontend_telemetry::ingest(req).await;
     }
+    table!("/api/maintenance", maintenance::router);
     table!("/api/info", info::router);
     table!("/api/assets", assets::router);
     table!("/api/messages", messages::router);
@@ -728,6 +730,7 @@ async fn main() {
         );
     }
     start_log_drop_metrics(log_error_counter);
+    maintenance::start_token_rotation();
     client_ip_resolver.start_proxy_probe_refresh(pool.clone(), ctx.signer().clone());
     client_ip_resolver.start_cdn_refresh();
     disk_cache::init(disk_cache_config(&args));

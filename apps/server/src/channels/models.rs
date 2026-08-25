@@ -5,6 +5,7 @@ use uuid::Uuid;
 
 use crate::channels::api::{ChannelMemberWithUser, ChannelWithMaybeMember, ChannelWithMember};
 use crate::error::ModelError;
+use crate::spaces::models::SpaceRecord;
 use crate::spaces::{Space, SpaceMember};
 use crate::users::User;
 use crate::utils::{is_false, merge_blank};
@@ -58,7 +59,7 @@ pub struct Channel {
     pub name: CompactString,
     pub topic: String,
     pub space_id: Uuid,
-    #[specta(type = String)]
+    #[specta(type = OffsetDateTime)]
     #[serde(with = "time::serde::rfc3339")]
     pub created: OffsetDateTime,
     pub is_public: bool,
@@ -166,7 +167,12 @@ impl Channel {
         let channel_and_space = sqlx::query_file!("sql/channels/fetch_channel_with_space.sql", id)
             .fetch_optional(db)
             .await?
-            .map(|record| (record.channel, record.space));
+            .map(|record| {
+                (
+                    record.channel,
+                    Space::from_record(record.space, record.latest_activity),
+                )
+            });
         Ok(channel_and_space)
     }
 
@@ -270,7 +276,7 @@ impl Channel {
 pub struct ChannelMember {
     pub user_id: Uuid,
     pub channel_id: Uuid,
-    #[specta(type = String)]
+    #[specta(type = OffsetDateTime)]
     #[serde(with = "time::serde::rfc3339")]
     pub join_date: OffsetDateTime,
     #[specta(type = String)]

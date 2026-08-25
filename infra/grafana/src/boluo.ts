@@ -21,7 +21,7 @@ export const DEFAULT_VICTORIALOGS_DATASOURCE_UID = 'victorialogs';
 const RATE_INTERVAL = '$__rate_interval';
 const CACHE_RATIO_INTERVAL = '30m';
 const HTTP_STATUS_CODES = ['200', '204', '304', '400', '401', '403', '404', '429', '500', '502'];
-const CACHE_NAMES = ['CharacterVariables', 'Session', 'User', 'UserExt', 'UserSpaces'];
+const CACHE_NAMES = ['Session', 'User', 'UserExt', 'UserSpaces'];
 
 const panels = {
   httpTraffic: 'panel-13',
@@ -43,6 +43,7 @@ const panels = {
   snapshotPopulation: 'panel-31',
   allocatorMemory: 'panel-32',
   processMemory: 'panel-29',
+  websocketLifecycle: 'panel-33',
   applicationLogs: 'panel-30',
 } as const;
 
@@ -84,7 +85,7 @@ export function buildBoluoDashboard(
 ): DashboardBuilder {
   return new DashboardBuilder('Boluo')
     .annotations([defaultAnnotations()])
-    .cursorSync(DashboardCursorSync.Off)
+    .cursorSync(DashboardCursorSync.Crosshair)
     .editable(true)
     .element(
       panels.httpTraffic,
@@ -160,7 +161,7 @@ export function buildBoluoDashboard(
         id: 3,
         title: 'Instance memory utilization',
         description:
-          'Memory is cgroup utilization. RSS is the server process resident share. Anonymous projected is the one-hour linear forecast from the latest hour.',
+          'Memory is cgroup utilization. RSS is the server process resident share. RSS projected is the one-hour linear forecast from the latest hour.',
         datasourceUid,
         unit: 'percentunit',
         min: 0,
@@ -178,10 +179,10 @@ export function buildBoluoDashboard(
             legendFormat: '{{instance}} process RSS',
           },
           {
-            refId: 'anonymous-projected',
+            refId: 'rss-projected',
             editorMode: QueryEditorMode.Code,
-            expr: `clamp_min(predict_linear(max by(instance) (boluo_server_process_memory_bytes{app="${APP}",kind="anonymous"})[1h:], 3600), 0) / clamp_min(max by(instance) (fly_instance_memory_mem_total{app="${APP}"}), 1)`,
-            legendFormat: '{{instance}} anonymous projected +1h',
+            expr: `clamp_min(predict_linear(max by(instance) (boluo_server_process_memory_bytes{app="${APP}",kind="rss"})[1h:], 3600), 0) / clamp_min(max by(instance) (fly_instance_memory_mem_total{app="${APP}"}), 1)`,
+            legendFormat: '{{instance}} RSS projected +1h',
           },
           {
             refId: 'swap',
@@ -211,6 +212,39 @@ export function buildBoluoDashboard(
             editorMode: QueryEditorMode.Code,
             expr: `sum by(instance) (boluo_server_websocket_connections_active{app="${APP}"})`,
             legendFormat: '{{instance}} websocket',
+          },
+        ],
+      }),
+    )
+    .element(
+      panels.websocketLifecycle,
+      timeSeriesPanel({
+        id: 33,
+        title: 'WebSocket lifecycle',
+        description:
+          'Connection opens and closes per second. Peer closes are grouped by normalized client reason; all other closes are grouped by outcome.',
+        datasourceUid,
+        unit: 'ops',
+        min: 0,
+        tooltipMode: TooltipDisplayMode.Multi,
+        targets: [
+          {
+            refId: 'opened',
+            editorMode: QueryEditorMode.Code,
+            expr: summedRateOrZero('boluo_server_websocket_connections_total'),
+            legendFormat: 'opened/s',
+          },
+          {
+            refId: 'non-peer-closes',
+            editorMode: QueryEditorMode.Code,
+            expr: `sum by(outcome) (rate(boluo_server_websocket_closes_total{app="${APP}",outcome!="peer_close"}[${RATE_INTERVAL}]))`,
+            legendFormat: 'closed {{outcome}}/s',
+          },
+          {
+            refId: 'peer-closes',
+            editorMode: QueryEditorMode.Code,
+            expr: `sum by(client_reason) (rate(boluo_server_websocket_closes_total{app="${APP}",outcome="peer_close"}[${RATE_INTERVAL}]))`,
+            legendFormat: 'peer {{client_reason}}/s',
           },
         ],
       }),
@@ -545,9 +579,9 @@ export function buildBoluoDashboard(
       panels.processMemory,
       timeSeriesPanel({
         id: 29,
-        title: 'Process resident memory',
+        title: 'Process memory breakdown',
         description:
-          'Linux process RSS split into anonymous, file-backed, and shared mappings; the instance total is shown as a capacity reference.',
+          'Linux process RSS with its anonymous and file-backed components, plus process swap.',
         datasourceUid,
         unit: 'bytes',
         min: 0,
@@ -572,22 +606,10 @@ export function buildBoluoDashboard(
             legendFormat: '{{instance}} file',
           },
           {
-            refId: 'shared',
-            editorMode: QueryEditorMode.Code,
-            expr: `boluo_server_process_memory_bytes{app="${APP}",kind="shared"}`,
-            legendFormat: '{{instance}} shared',
-          },
-          {
             refId: 'swap',
             editorMode: QueryEditorMode.Code,
             expr: `boluo_server_process_swap_bytes{app="${APP}"}`,
             legendFormat: '{{instance}} process swap',
-          },
-          {
-            refId: 'instance-total',
-            editorMode: QueryEditorMode.Code,
-            expr: `max by(instance) (fly_instance_memory_mem_total{app="${APP}"})`,
-            legendFormat: '{{instance}} instance total',
           },
         ],
       }),
@@ -618,7 +640,7 @@ export function buildBoluoDashboard(
         id: 32,
         title: 'Allocator committed address space',
         description:
-          'mimalloc committed and peak committed estimates on Linux. These are allocator-managed address-space figures, not physical RSS, and must not be added to process memory.',
+          'mimalloc committed estimate on Linux. This is allocator-managed address space, not physical RSS, and must not be added to process memory.',
         datasourceUid,
         unit: 'bytes',
         min: 0,
@@ -629,12 +651,6 @@ export function buildBoluoDashboard(
             editorMode: QueryEditorMode.Code,
             expr: `boluo_server_allocator_committed_bytes{app="${APP}"}`,
             legendFormat: '{{instance}} committed',
-          },
-          {
-            refId: 'peak-committed',
-            editorMode: QueryEditorMode.Code,
-            expr: `boluo_server_allocator_peak_committed_bytes{app="${APP}"}`,
-            legendFormat: '{{instance}} peak committed',
           },
         ],
       }),
@@ -675,7 +691,7 @@ export function buildBoluoDashboard(
         id: 30,
         title: 'Application logs',
         datasourceUid: logsDatasourceUid,
-        expr: `{app="${APP}"}`,
+        expr: `{app="${APP}"} -event:="maintenance.token_rotated"`,
       }),
     )
     .layout(
@@ -685,20 +701,21 @@ export function buildBoluoDashboard(
         gridItem(panels.cpuUtilization).x(0).y(6).width(8).height(8),
         gridItem(panels.memoryUtilization).x(8).y(6).width(8).height(8),
         gridItem(panels.processMemory).x(16).y(6).width(8).height(8),
-        gridItem(panels.appConnections).x(0).y(14).width(8).height(8),
-        gridItem(panels.applicationPool).x(8).y(14).width(8).height(8),
-        gridItem(panels.runtimePopulation).x(16).y(14).width(8).height(8),
-        gridItem(panels.cacheHitRatio).x(0).y(22).width(12).height(8),
-        gridItem(panels.cacheCapacityUtilization).x(12).y(22).width(12).height(8),
-        gridItem(panels.messages).x(0).y(30).width(12).height(8),
-        gridItem(panels.messageLatency).x(12).y(30).width(12).height(8),
-        gridItem(panels.queueDepths).x(0).y(38).width(12).height(8),
-        gridItem(panels.eventDelivery).x(12).y(38).width(12).height(8),
-        gridItem(panels.diskCacheCapacity).x(0).y(46).width(8).height(8),
-        gridItem(panels.diskCacheIo).x(8).y(46).width(8).height(8),
-        gridItem(panels.diskCacheLatency).x(16).y(46).width(8).height(8),
-        gridItem(panels.snapshotPopulation).x(0).y(54).width(12).height(8),
-        gridItem(panels.allocatorMemory).x(12).y(54).width(12).height(8),
+        gridItem(panels.allocatorMemory).x(0).y(14).width(8).height(8),
+        gridItem(panels.runtimePopulation).x(8).y(14).width(8).height(8),
+        gridItem(panels.snapshotPopulation).x(16).y(14).width(8).height(8),
+        gridItem(panels.appConnections).x(0).y(22).width(12).height(8),
+        gridItem(panels.websocketLifecycle).x(12).y(22).width(12).height(8),
+        gridItem(panels.applicationPool).x(0).y(30).width(8).height(8),
+        gridItem(panels.cacheHitRatio).x(8).y(30).width(8).height(8),
+        gridItem(panels.cacheCapacityUtilization).x(16).y(30).width(8).height(8),
+        gridItem(panels.messages).x(0).y(38).width(12).height(8),
+        gridItem(panels.messageLatency).x(12).y(38).width(12).height(8),
+        gridItem(panels.queueDepths).x(0).y(46).width(12).height(8),
+        gridItem(panels.eventDelivery).x(12).y(46).width(12).height(8),
+        gridItem(panels.diskCacheCapacity).x(0).y(54).width(8).height(8),
+        gridItem(panels.diskCacheIo).x(8).y(54).width(8).height(8),
+        gridItem(panels.diskCacheLatency).x(16).y(54).width(8).height(8),
         gridItem(panels.applicationLogs).x(0).y(62).width(24).height(10),
       ]),
     )

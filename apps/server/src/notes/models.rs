@@ -49,10 +49,10 @@ pub struct NoteMetadata {
     #[specta(type = Option<String>)]
     #[serde(with = "time::serde::rfc3339::option")]
     pub archived_at: Option<OffsetDateTime>,
-    #[specta(type = String)]
+    #[specta(type = OffsetDateTime)]
     #[serde(with = "time::serde::rfc3339")]
     pub created: OffsetDateTime,
-    #[specta(type = String)]
+    #[specta(type = OffsetDateTime)]
     #[serde(with = "time::serde::rfc3339")]
     pub modified: OffsetDateTime,
 }
@@ -304,7 +304,7 @@ pub struct NoteContentRevision {
     pub title: CompactString,
     pub text: String,
     pub entities: Entities,
-    #[specta(type = String)]
+    #[specta(type = OffsetDateTime)]
     #[serde(with = "time::serde::rfc3339")]
     pub created: OffsetDateTime,
 }

@@ -175,6 +175,20 @@ export type ClientEvent =
   | { type: 'DIFF'; preview: PreviewDiffPost }
   | { type: 'STATUS'; kind: StatusKind; focus: string[] };
 
+export type ClientWebSocketCloseReason =
+  | 'API_ENDPOINT_CHANGED'
+  | 'CHAT_CONTEXT_DISPOSED'
+  | 'CHAT_STATE_RESET'
+  | 'CONNECTION_ERROR'
+  | 'CONNECTION_REJECTED'
+  | 'CONNECTION_REPLACED'
+  | 'DEBUG_DISCONNECT'
+  | 'LEGACY_BASE_URL_CHANGED'
+  | 'LEGACY_CONNECTOR_DISPOSED'
+  | 'RECONNECT_STARTED'
+  | 'RETRY_REQUESTED'
+  | 'UNKNOWN';
+
 export type CocRoll = {
   subType: CocRollSubType;
   target?: PureExprNode | null;
@@ -1178,20 +1192,8 @@ export type Settings = {
 };
 
 export type Space = {
-  id: string;
-  name: string;
-  description: string;
-  created: string;
-  modified: string;
-  ownerId: string;
-  isPublic: boolean;
-  language: string;
-  defaultDiceType: string;
-  explorable: boolean;
-  allowSpectator: boolean;
   latestActivity: string;
-  scopeId: string;
-};
+} & SpaceRecord;
 
 export type SpaceMember = {
   userId: string;
@@ -1204,6 +1206,21 @@ export type SpaceMember = {
 export type SpaceMemberWithUser = {
   space: SpaceMember;
   user: User;
+};
+
+export type SpaceRecord = {
+  id: string;
+  name: string;
+  description: string;
+  created: string;
+  modified: string;
+  ownerId: string;
+  isPublic: boolean;
+  language: string;
+  defaultDiceType: string;
+  explorable: boolean;
+  allowSpectator: boolean;
+  scopeId: string;
 };
 
 export type SpaceWithMember = {

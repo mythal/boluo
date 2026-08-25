@@ -23,7 +23,7 @@ pub struct User {
     #[serde(skip)]
     pub password: String,
     pub bio: String,
-    #[specta(type = String)]
+    #[specta(type = OffsetDateTime)]
     #[serde(with = "time::serde::rfc3339")]
     pub joined: OffsetDateTime,
     #[serde(skip)]

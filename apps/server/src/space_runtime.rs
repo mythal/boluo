@@ -16,6 +16,7 @@ use crate::entries::component_cache::EntryComponentMemoryCache;
 use crate::entries::models::{Entry, EntryMetadata};
 use crate::notes::NoteMetadata;
 use crate::scopes::models::Scope;
+use crate::spaces::models::SpaceRecord;
 use crate::spaces::{Space, SpaceMember};
 
 type PersistentMap<K, V> = rpds::HashTrieMapSync<K, V>;
@@ -30,8 +31,8 @@ const AUTHORITATIVE_SNAPSHOT_WAIT: Duration = Duration::from_millis(3);
 #[derive(Debug, Clone)]
 pub(crate) struct SpaceSnapshot {
     pub(crate) revision: u64,
-    verified_at: Instant,
-    space: Space,
+    database_fingerprint: DatabaseFingerprint,
+    space: SpaceRecord,
     latest_activity_us: Arc<AtomicI64>,
     pub(crate) settings: serde_json::Value,
     pub(crate) channels: PersistentMap<Uuid, Channel>,
@@ -41,6 +42,17 @@ pub(crate) struct SpaceSnapshot {
     pub(crate) entries: PersistentMap<Uuid, PersistentMap<Uuid, EntryMetadata>>,
     pub(crate) space_members: PersistentMap<Uuid, SpaceMember>,
     pub(crate) channel_members: PersistentMap<Uuid, PersistentMap<Uuid, ChannelMember>>,
+}
+
+/// A read-only, probabilistic change detector used to gate full reconciliation.
+///
+/// Two independently seeded hashes plus the row count make an accidental match
+/// negligible while avoiding writes on every Space mutation.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, sqlx::FromRow)]
+struct DatabaseFingerprint {
+    row_count: i64,
+    xor_a: i64,
+    xor_b: i64,
 }
 
 #[derive(Debug, Default, PartialEq, Eq)]
@@ -101,12 +113,11 @@ pub(crate) enum SpaceDelta {
 
 impl SpaceSnapshot {
     pub(crate) fn space(&self) -> Space {
-        let mut space = self.space.clone();
-        space.latest_activity = OffsetDateTime::from_unix_timestamp_nanos(
+        let latest_activity = OffsetDateTime::from_unix_timestamp_nanos(
             self.latest_activity_us.load(Ordering::Relaxed) as i128 * 1_000,
         )
         .expect("Space latest_activity must be a valid UTC timestamp");
-        space
+        Space::from_record(self.space.clone(), latest_activity)
     }
 
     pub(crate) fn channel_member(&self, channel_id: Uuid, user_id: Uuid) -> Option<Member> {
@@ -136,14 +147,8 @@ impl SpaceSnapshot {
     }
 
     fn payload_mismatch(&self, reloaded: &Self) -> SnapshotPayloadMismatch {
-        let mut current_space = self.space.clone();
-        let reloaded_space = reloaded.space.clone();
-        // Activity is updated eagerly in memory and persisted asynchronously. It is
-        // intentionally excluded from structural cache-consistency reporting.
-        current_space.latest_activity = reloaded_space.latest_activity;
-
         SnapshotPayloadMismatch {
-            space: current_space != reloaded_space,
+            space: self.space != reloaded.space,
             settings: self.settings != reloaded.settings,
             channels: self.channels != reloaded.channels,
             characters: self.characters != reloaded.characters,
@@ -160,7 +165,7 @@ impl SpaceSnapshot {
         next.revision = revision;
         for delta in deltas {
             match delta {
-                SpaceDelta::SpaceUpdated(space) => next.space = space,
+                SpaceDelta::SpaceUpdated(space) => next.space = space.into_parts().0,
                 SpaceDelta::SettingsUpdated(settings) => next.settings = settings,
                 SpaceDelta::InviteTokenUpdated(token) => next.space.invite_token = token,
                 SpaceDelta::ChannelUpserted(channel) => {
@@ -289,6 +294,7 @@ pub(crate) struct SpaceRuntime {
     space_id: Uuid,
     db: sqlx::PgPool,
     snapshot: ArcSwap<SpaceSnapshot>,
+    verified_at: parking_lot::Mutex<Instant>,
     dirty: AtomicBool,
     next_ticket: AtomicU64,
     reconciliation_pending: AtomicBool,
@@ -318,6 +324,7 @@ impl SpaceRuntime {
             space_id,
             db: db.clone(),
             snapshot: ArcSwap::from_pointee(snapshot),
+            verified_at: parking_lot::Mutex::new(Instant::now()),
             dirty: AtomicBool::new(false),
             next_ticket: AtomicU64::new(0),
             reconciliation_pending: AtomicBool::new(false),
@@ -341,8 +348,7 @@ impl SpaceRuntime {
             .execute(&mut *transaction)
             .await?;
 
-        let space = sqlx::query_file_scalar!("sql/spaces/get_by_id.sql", space_id)
-            .fetch_optional(&mut *transaction)
+        let space = Space::get_by_id(&mut *transaction, &space_id)
             .await?
             .ok_or(SpaceRuntimeError::NotFound)?;
         let settings = sqlx::query_file_scalar!("sql/spaces/get_settings.sql", space_id)
@@ -364,6 +370,8 @@ impl SpaceRuntime {
             sqlx::query_file_scalar!("sql/channels/get_joined_members_by_space.sql", space_id)
                 .fetch_all(&mut *transaction)
                 .await?;
+        let database_fingerprint =
+            Self::load_database_fingerprint(&mut *transaction, space_id).await?;
         transaction.commit().await?;
 
         let channels: PersistentMap<_, _> = channels
@@ -410,10 +418,10 @@ impl SpaceRuntime {
             })
             .collect();
 
-        let latest_activity = space.latest_activity;
+        let (space, latest_activity) = space.into_parts();
         Ok(SpaceSnapshot {
             revision,
-            verified_at: Instant::now(),
+            database_fingerprint,
             space,
             latest_activity_us: Arc::new(AtomicI64::new(
                 latest_activity.unix_timestamp_nanos() as i64 / 1_000,
@@ -427,6 +435,21 @@ impl SpaceRuntime {
             space_members,
             channel_members,
         })
+    }
+
+    async fn load_database_fingerprint<'c, T>(
+        db: T,
+        space_id: Uuid,
+    ) -> Result<DatabaseFingerprint, sqlx::Error>
+    where
+        T: sqlx::PgExecutor<'c>,
+    {
+        sqlx::query_as::<_, DatabaseFingerprint>(include_str!(
+            "../sql/spaces/snapshot_fingerprint.sql"
+        ))
+        .bind(space_id)
+        .fetch_one(db)
+        .await
     }
 
     pub(crate) fn space_id(&self) -> Uuid {
@@ -570,7 +593,7 @@ impl SpaceRuntime {
     fn needs_reconciliation(&self, max_age: Duration) -> bool {
         self.active_mutations.load(Ordering::Acquire) == 0
             && !self.reconciliation_pending.load(Ordering::Acquire)
-            && self.snapshot().verified_at.elapsed() >= max_age
+            && self.verified_at.lock().elapsed() >= max_age
     }
 
     fn reconcile_if_stale(&self, max_age: Duration, permits: &Arc<tokio::sync::Semaphore>) -> bool {
@@ -1028,6 +1051,48 @@ impl SpaceRuntime {
         ticket: u64,
         reason: SnapshotReloadReason,
     ) -> Result<u64, SpaceRuntimeError> {
+        if matches!(reason, SnapshotReloadReason::Reconciliation) {
+            let probe_started = Instant::now();
+            let current = runtime.snapshot();
+            let probe = Self::load_database_fingerprint(&runtime.db, runtime.space_id).await;
+            let result_label = match &probe {
+                Ok(fingerprint) if *fingerprint == current.database_fingerprint => "unchanged",
+                Ok(_) => "changed",
+                Err(_) => "error",
+            };
+            metrics::counter!(
+                "boluo_server_space_runtime_reconciliation_probe_total",
+                "result" => result_label
+            )
+            .increment(1);
+            metrics::histogram!(
+                "boluo_server_space_runtime_reconciliation_probe_duration_seconds",
+                "result" => result_label
+            )
+            .record(probe_started.elapsed().as_secs_f64());
+
+            match probe {
+                Ok(fingerprint)
+                    if fingerprint == current.database_fingerprint
+                        && !runtime.dirty.load(Ordering::Acquire)
+                        && current.revision == runtime.next_ticket.load(Ordering::Acquire) =>
+                {
+                    *runtime.verified_at.lock() = Instant::now();
+                    runtime.update_dirty(state);
+                    return Ok(ticket);
+                }
+                Ok(_) => {}
+                Err(error) => {
+                    tracing::warn!(
+                        event = "space_runtime.reconciliation.probe_failed",
+                        %error,
+                        space_id = %runtime.space_id,
+                        "Failed to probe the Space snapshot fingerprint; falling back to a full refresh"
+                    );
+                }
+            }
+        }
+
         let started = Instant::now();
         metrics::counter!(
             "boluo_server_space_runtime_refresh_total",
@@ -1093,12 +1158,13 @@ impl SpaceRuntime {
                 }
                 let current_activity_us = current.latest_activity_us.clone();
                 current_activity_us.fetch_max(
-                    snapshot.space.latest_activity.unix_timestamp_nanos() as i64 / 1_000,
+                    snapshot.latest_activity_us.load(Ordering::Relaxed),
                     Ordering::Relaxed,
                 );
                 snapshot.latest_activity_us = current_activity_us;
                 if current.revision <= ticket {
                     runtime.snapshot.store(Arc::new(snapshot));
+                    *runtime.verified_at.lock() = Instant::now();
                 }
                 runtime.update_dirty(state);
                 Ok(ticket)
@@ -2081,6 +2147,7 @@ mod tests {
     #[sqlx::test]
     async fn db_test_space_store_coalesces_concurrent_loads(pool: sqlx::PgPool) {
         let (owner, space, channel) = create_space(&pool).await;
+        let space_id = space.id;
 
         let store = SpaceStore::new(pool);
         let barrier = Arc::new(tokio::sync::Barrier::new(2));
@@ -2089,7 +2156,7 @@ mod tests {
             let barrier = barrier.clone();
             tokio::spawn(async move {
                 store
-                    .get_or_load_with_hook(space.id, async move {
+                    .get_or_load_with_hook(space_id, async move {
                         barrier.wait().await;
                     })
                     .await
@@ -2100,7 +2167,7 @@ mod tests {
             let barrier = barrier.clone();
             tokio::spawn(async move {
                 store
-                    .get_or_load_with_hook(space.id, async move {
+                    .get_or_load_with_hook(space_id, async move {
                         barrier.wait().await;
                     })
                     .await
@@ -2117,7 +2184,7 @@ mod tests {
             "concurrent callers loaded the same Space snapshot more than once"
         );
         let snapshot = first.snapshot();
-        assert_eq!(snapshot.space().id, space.id);
+        assert_eq!(snapshot.space().id, space_id);
         assert!(snapshot.channels.contains_key(&channel.id));
         assert!(snapshot.space_members.contains_key(&owner.id));
         assert_eq!(
@@ -2606,6 +2673,95 @@ mod tests {
     }
 
     #[sqlx::test(migrator = "crate::db::MIGRATOR")]
+    async fn db_test_reconciliation_skips_reload_when_fingerprint_is_unchanged(pool: sqlx::PgPool) {
+        let (_owner, space, _) = create_space(&pool).await;
+        let store = SpaceStore::new(pool);
+        let runtime = store
+            .get_or_load(space.id)
+            .await
+            .expect("failed to load Space runtime");
+        let before = runtime.snapshot();
+        let permits = Arc::new(tokio::sync::Semaphore::new(1));
+        let permit = permits
+            .acquire_owned()
+            .await
+            .expect("reconciliation semaphore was closed");
+        let (_, ack) = runtime
+            .enqueue_reconciliation(permit)
+            .expect("failed to enqueue reconciliation");
+
+        ack.await
+            .expect("reconciliation actor dropped its acknowledgement")
+            .expect("reconciliation probe failed");
+
+        let after = runtime.snapshot();
+        assert!(
+            Arc::ptr_eq(&before, &after),
+            "an unchanged database caused the snapshot to be rebuilt"
+        );
+    }
+
+    #[sqlx::test(migrator = "crate::db::MIGRATOR")]
+    async fn db_test_reconciliation_repairs_dirty_runtime_with_unchanged_fingerprint(
+        pool: sqlx::PgPool,
+    ) {
+        let (_owner, space, _) = create_space(&pool).await;
+        let store = SpaceStore::new(pool);
+        let runtime = store
+            .get_or_load(space.id)
+            .await
+            .expect("failed to load Space runtime");
+        let before = runtime.snapshot();
+
+        // Model a failed mutation repair: generation was reserved, but the
+        // unchanged database could not be reloaded while it was unavailable.
+        let reserved_ticket = runtime.reserve_generation();
+        assert!(runtime.authoritative_snapshot().is_none());
+
+        let permits = Arc::new(tokio::sync::Semaphore::new(1));
+        let permit = permits
+            .acquire_owned()
+            .await
+            .expect("reconciliation semaphore was closed");
+        let (_, ack) = runtime
+            .enqueue_reconciliation(permit)
+            .expect("failed to enqueue reconciliation");
+        ack.await
+            .expect("reconciliation actor dropped its acknowledgement")
+            .expect("reconciliation repair failed");
+
+        let after = runtime
+            .authoritative_snapshot()
+            .expect("reconciliation did not restore an authoritative snapshot");
+        assert_eq!(after.revision, reserved_ticket);
+        assert!(
+            !Arc::ptr_eq(&before, &after),
+            "a dirty runtime incorrectly took the fingerprint fast path"
+        );
+    }
+
+    #[sqlx::test(migrator = "crate::db::MIGRATOR")]
+    async fn db_test_snapshot_fingerprint_ignores_latest_activity(pool: sqlx::PgPool) {
+        let (_owner, space, _) = create_space(&pool).await;
+        let before = SpaceRuntime::load_database_fingerprint(&pool, space.id)
+            .await
+            .expect("failed to load initial fingerprint");
+
+        sqlx::query(
+            "UPDATE space_activity SET latest_activity = latest_activity + interval '1 second' WHERE space_id = $1",
+        )
+        .bind(space.id)
+        .execute(&pool)
+        .await
+        .expect("failed to update latest activity");
+
+        let after = SpaceRuntime::load_database_fingerprint(&pool, space.id)
+            .await
+            .expect("failed to load updated fingerprint");
+        assert_eq!(before, after);
+    }
+
+    #[sqlx::test(migrator = "crate::db::MIGRATOR")]
     async fn db_test_reconciliation_detects_mismatch_and_respects_pool_pressure(
         pool: sqlx::PgPool,
     ) {
@@ -2633,6 +2789,11 @@ mod tests {
         let reloaded = SpaceRuntime::load_snapshot(&pool, space.id, 0)
             .await
             .expect("failed to reload Space snapshot");
+        assert_ne!(
+            runtime.snapshot().database_fingerprint,
+            reloaded.database_fingerprint,
+            "an out-of-band settings update did not change the database fingerprint"
+        );
         assert_eq!(
             runtime.snapshot().payload_mismatch(&reloaded),
             SnapshotPayloadMismatch {
@@ -2937,9 +3098,10 @@ mod tests {
     #[sqlx::test]
     async fn db_test_space_mutations_are_serialized_and_guard_eviction(pool: sqlx::PgPool) {
         let (_, space, _) = create_space(&pool).await;
+        let space_id = space.id;
         let store = SpaceStore::new(pool);
         let first = store
-            .acquire_mutation(space.id)
+            .acquire_mutation(space_id)
             .await
             .expect("failed to acquire first mutation");
         assert_eq!(
@@ -2955,7 +3117,7 @@ mod tests {
             tokio::spawn(async move {
                 let _ = attempted_tx.send(());
                 let guard = store
-                    .acquire_mutation(space.id)
+                    .acquire_mutation(space_id)
                     .await
                     .expect("failed to acquire second mutation");
                 let _ = acquired_tx.send(());
@@ -2977,12 +3139,12 @@ mod tests {
         let second = second.await.expect("second mutation task failed");
         drop(second);
         store
-            .refresh_if_loaded(space.id)
+            .refresh_if_loaded(space_id)
             .await
             .expect("failed to await guard refresh");
         tokio::task::yield_now().await;
         assert_eq!(store.evict_idle(Duration::ZERO), 1);
-        assert!(store.get(&space.id).is_none());
+        assert!(store.get(&space_id).is_none());
     }
 
     #[sqlx::test]
@@ -3012,10 +3174,11 @@ mod tests {
     #[sqlx::test]
     async fn db_test_idle_eviction_does_not_race_runtime_get(pool: sqlx::PgPool) {
         let (_, space, _) = create_space(&pool).await;
+        let space_id = space.id;
         let store = SpaceStore::new(pool);
         drop(
             store
-                .get_or_load(space.id)
+                .get_or_load(space_id)
                 .await
                 .expect("failed to load Space runtime"),
         );
@@ -3026,7 +3189,7 @@ mod tests {
             let store = store.clone();
             tokio::spawn(async move {
                 store
-                    .get_with_hook(&space.id, async move {
+                    .get_with_hook(&space_id, async move {
                         handle_cloned_tx
                             .send(())
                             .expect("handle clone receiver was dropped");
@@ -3049,7 +3212,7 @@ mod tests {
         );
         assert!(fetched.is_some(), "the paused get lost its Runtime");
         assert!(
-            store.get(&space.id).is_some(),
+            store.get(&space_id).is_some(),
             "the fetched Runtime was no longer registered in the Store"
         );
     }
@@ -3057,10 +3220,11 @@ mod tests {
     #[sqlx::test]
     async fn db_test_removed_handle_is_not_returned_by_in_flight_get(pool: sqlx::PgPool) {
         let (_, space, _) = create_space(&pool).await;
+        let space_id = space.id;
         let store = SpaceStore::new(pool);
         drop(
             store
-                .get_or_load(space.id)
+                .get_or_load(space_id)
                 .await
                 .expect("failed to load Space runtime"),
         );
@@ -3071,7 +3235,7 @@ mod tests {
             let store = store.clone();
             tokio::spawn(async move {
                 store
-                    .get_with_hook(&space.id, async move {
+                    .get_with_hook(&space_id, async move {
                         handle_acquired_tx
                             .send(())
                             .expect("handle acquire receiver was dropped");
@@ -3084,7 +3248,7 @@ mod tests {
             .await
             .expect("get did not acquire the Runtime handle");
 
-        store.remove(space.id);
+        store.remove(space_id);
         resume_get_tx.send(()).expect("paused get task was dropped");
         let fetched = get_task.await.expect("get task panicked");
 
@@ -3092,7 +3256,7 @@ mod tests {
             fetched.is_none(),
             "an in-flight get returned a Runtime after its handle was removed"
         );
-        assert!(store.get(&space.id).is_none());
+        assert!(store.get(&space_id).is_none());
     }
 
     #[sqlx::test]

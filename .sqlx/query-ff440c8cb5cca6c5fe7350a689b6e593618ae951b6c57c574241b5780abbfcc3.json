@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT\n    ch AS \"channel!: Channel\",\n    s AS \"space!: Space\"\nFROM\n    channels ch\n    INNER JOIN spaces s ON ch.space_id = s.id\nWHERE\n    ch.id = $1\n    AND ch.deleted = FALSE\nLIMIT 1;\n\n",
+  "query": "SELECT\n    ch AS \"channel!: Channel\",\n    s AS \"space!: SpaceRecord\",\n    COALESCE(activity.latest_activity, s.created) AS \"latest_activity!\"\nFROM\n    channels ch\n    INNER JOIN spaces s ON ch.space_id = s.id\n    LEFT JOIN space_activity activity ON activity.space_id = s.id\nWHERE\n    ch.id = $1\n    AND ch.deleted = FALSE\nLIMIT 1;\n",
   "describe": {
     "columns": [
       {
@@ -71,7 +71,7 @@
       },
       {
         "ordinal": 1,
-        "name": "space!: Space",
+        "name": "space!: SpaceRecord",
         "type_info": {
           "Custom": {
             "name": "spaces",
@@ -134,10 +134,6 @@
                   "Bool"
                 ],
                 [
-                  "latest_activity",
-                  "Timestamptz"
-                ],
-                [
                   "scope_id",
                   "Uuid"
                 ]
@@ -145,6 +141,12 @@
             }
           }
         },
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "latest_activity!",
+        "type_info": "Timestamptz",
         "origin": "Expression"
       }
     ],
@@ -155,8 +157,9 @@
     },
     "nullable": [
       null,
+      null,
       null
     ]
   },
-  "hash": "6582d35b5d9d076cba8d54e5e51f164b152206bafe02d3570ce43d40d7ad3906"
+  "hash": "ff440c8cb5cca6c5fe7350a689b6e593618ae951b6c57c574241b5780abbfcc3"
 }

@@ -261,6 +261,7 @@ export const chatReducer: Reducer<ChatSpaceState, ChatActionUnion> = (
         type: 'CLOSE_CONNECTION',
         id: createEffectId(),
         connection: state.connection.connection,
+        reason: 'CHAT_STATE_RESET',
       });
     }
     const nextState = makeChatState(context.spaceId);

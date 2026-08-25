@@ -1,0 +1,39 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH identifiers AS MATERIALIZED (\n    SELECT uuidv7() AS space_id, uuidv7() AS scope_id\n),\ninserted_space AS MATERIALIZED (\n    INSERT INTO spaces (\n        id,\n        scope_id,\n        \"name\",\n        owner_id,\n        \"password\",\n        default_dice_type,\n        \"description\"\n    )\n    SELECT\n        space_id,\n        scope_id,\n        $1,\n        $2,\n        COALESCE($3, ''),\n        COALESCE($4, 'd20'),\n        $5\n    FROM identifiers\n    RETURNING *\n),\ninserted_scope AS (\n    INSERT INTO scopes (\n        id,\n        space_id,\n        kind,\n        owner_id,\n        access_policy\n    )\n    SELECT\n        scope_id,\n        id,\n        'Space',\n        owner_id,\n        'Public'\n    FROM inserted_space\n    RETURNING id\n),\ninserted_activity AS (\n    INSERT INTO space_activity (space_id, latest_activity)\n    SELECT id, created\n    FROM inserted_space\n    RETURNING latest_activity\n)\nSELECT\n    inserted_space AS \"space!: SpaceRecord\",\n    inserted_activity.latest_activity AS \"latest_activity!\"\nFROM inserted_space\nCROSS JOIN inserted_scope\nCROSS JOIN inserted_activity;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "space!: SpaceRecord",
+        "type_info": "Record",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "latest_activity!",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "space_activity",
+            "name": "latest_activity"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Uuid",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null,
+      false
+    ]
+  },
+  "hash": "5e562dd4d01cc39611dcf81235f4500772947f65293f6056b1bfb68f1b3485dc"
+}

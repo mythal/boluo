@@ -38,7 +38,16 @@ inserted_scope AS (
         'Public'
     FROM inserted_space
     RETURNING id
+),
+inserted_activity AS (
+    INSERT INTO space_activity (space_id, latest_activity)
+    SELECT id, created
+    FROM inserted_space
+    RETURNING latest_activity
 )
-SELECT ROW(inserted_space.*)::spaces AS "space!: Space"
+SELECT
+    inserted_space AS "space!: SpaceRecord",
+    inserted_activity.latest_activity AS "latest_activity!"
 FROM inserted_space
-CROSS JOIN inserted_scope;
+CROSS JOIN inserted_scope
+CROSS JOIN inserted_activity;

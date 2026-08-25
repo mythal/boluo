@@ -62,9 +62,9 @@ impl ChannelMembership {
             channel_id,
             space_id,
         )
-            .fetch_optional(db)
-            .await
-            .map(|membership| membership.map(|is_master| Self { is_master }))
+        .fetch_optional(db)
+        .await
+        .map(|membership| membership.map(|is_master| Self { is_master }))
     }
 }
 

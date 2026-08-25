@@ -122,7 +122,7 @@ pub struct Preview {
 #[derive(Debug, Serialize, Deserialize, Clone, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct PreviewEdit {
-    #[specta(type = String)]
+    #[specta(type = OffsetDateTime)]
     #[serde(with = "time::serde::rfc3339")]
     pub time: OffsetDateTime,
     pub p: i32,

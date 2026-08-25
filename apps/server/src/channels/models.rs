@@ -59,7 +59,7 @@ pub struct Channel {
     pub name: CompactString,
     pub topic: String,
     pub space_id: Uuid,
-    #[specta(type = String)]
+    #[specta(type = OffsetDateTime)]
     #[serde(with = "time::serde::rfc3339")]
     pub created: OffsetDateTime,
     pub is_public: bool,
@@ -276,7 +276,7 @@ impl Channel {
 pub struct ChannelMember {
     pub user_id: Uuid,
     pub channel_id: Uuid,
-    #[specta(type = String)]
+    #[specta(type = OffsetDateTime)]
     #[serde(with = "time::serde::rfc3339")]
     pub join_date: OffsetDateTime,
     #[specta(type = String)]

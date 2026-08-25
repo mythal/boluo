@@ -47,7 +47,7 @@ pub struct Asset {
     pub name: String,
     pub policy: AssetPolicy,
     pub mime_type: String,
-    #[specta(type = String)]
+    #[specta(type = OffsetDateTime)]
     #[serde(with = "time::serde::rfc3339")]
     pub created: OffsetDateTime,
 }

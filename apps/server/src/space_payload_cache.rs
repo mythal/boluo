@@ -4,7 +4,7 @@ use std::path::PathBuf;
 use compact_str::CompactString;
 use foyer::{
     BlockEngineConfig, CacheBuilder, Compression, DeviceBuilder, FsDeviceBuilder, HybridCache,
-    HybridCacheBuilder, HybridCachePolicy, PsyncIoEngineConfig, RecoverMode, Source,
+    HybridCacheBuilder, HybridCachePolicy, RecoverMode, Source,
 };
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -14,6 +14,10 @@ use crate::notes::models::NotePayload;
 
 pub(crate) const DEFAULT_MEMORY_CACHE_BYTES: usize = 16 * 1024 * 1024;
 pub(crate) const DEFAULT_DISK_CACHE_BYTES: usize = 512 * 1024 * 1024;
+const DISK_CACHE_BLOCK_BYTES: usize = 4 * 1024 * 1024;
+const DISK_CACHE_BUFFER_POOL_BYTES: usize = 4 * 1024 * 1024;
+const DISK_CACHE_SUBMIT_QUEUE_BYTES: usize = 8 * 1024 * 1024;
+const DISK_CACHE_INDEXER_SHARDS: usize = 16;
 
 #[derive(Debug, Clone)]
 pub(crate) struct HybridCacheConfig {
@@ -75,37 +79,11 @@ impl SpacePayloadCache {
     pub(crate) async fn hybrid(config: HybridCacheConfig) -> Result<Self, foyer::Error> {
         std::fs::create_dir_all(&config.disk_path)?;
 
-        #[cfg(target_os = "linux")]
-        {
-            match build_hybrid_cache(&config, true).await {
-                Ok(cache) => {
-                    tracing::info!(
-                        path = %config.disk_path.display(),
-                        memory_capacity = config.memory_capacity,
-                        disk_capacity = config.disk_capacity,
-                        io_engine = "io_uring",
-                        "Space payload hybrid cache started"
-                    );
-                    return Ok(Self {
-                        backend: Backend::Hybrid(cache),
-                    });
-                }
-                Err(error) => {
-                    tracing::warn!(
-                        event = "space_payload_cache.io_uring_unavailable",
-                        %error,
-                        "Failed to start the Space payload cache with io_uring; falling back to psync"
-                    );
-                }
-            }
-        }
-
-        let cache = build_hybrid_cache(&config, false).await?;
+        let cache = build_hybrid_cache(&config).await?;
         tracing::info!(
             path = %config.disk_path.display(),
             memory_capacity = config.memory_capacity,
             disk_capacity = config.disk_capacity,
-            io_engine = "psync",
             "Space payload hybrid cache started"
         );
         Ok(Self {
@@ -299,34 +277,25 @@ fn record_read(payload: &'static str, source: Source) {
 
 async fn build_hybrid_cache(
     config: &HybridCacheConfig,
-    use_io_uring: bool,
 ) -> Result<HybridPayloadCache, foyer::Error> {
     let device = FsDeviceBuilder::new(&config.disk_path)
         .with_capacity(config.disk_capacity)
         .build()?;
-    let builder = HybridCacheBuilder::new()
+    HybridCacheBuilder::new()
         .with_name("space_payloads")
         .with_policy(HybridCachePolicy::WriteOnInsertion)
         .memory(config.memory_capacity)
         .with_weighter(cache_weight)
         .storage()
-        .with_engine_config(BlockEngineConfig::new(device))
+        .with_engine_config(
+            BlockEngineConfig::new(device)
+                .with_block_size(DISK_CACHE_BLOCK_BYTES)
+                .with_buffer_pool_size(DISK_CACHE_BUFFER_POOL_BYTES)
+                .with_submit_queue_size_threshold(DISK_CACHE_SUBMIT_QUEUE_BYTES)
+                .with_indexer_shards(DISK_CACHE_INDEXER_SHARDS),
+        )
         .with_recover_mode(RecoverMode::None)
-        .with_compression(Compression::Lz4);
-
-    #[cfg(target_os = "linux")]
-    if use_io_uring {
-        return builder
-            .with_io_engine_config(
-                Box::new(foyer::UringIoEngineConfig::new()) as Box<dyn foyer::IoEngineConfig>
-            )
-            .build()
-            .await;
-    }
-
-    let _ = use_io_uring;
-    builder
-        .with_io_engine_config(PsyncIoEngineConfig::new())
+        .with_compression(Compression::Lz4)
         .build()
         .await
 }

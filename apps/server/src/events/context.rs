@@ -637,9 +637,9 @@ fn cleanup(
         let elapsed = now - preview.id.timestamp;
         elapsed < 1000 * 60 * 15 // 15 minutes
     });
-    if preview_map.capacity() > 64 {
+    if preview_map.capacity() > preview_map.len().saturating_mul(2).max(64) {
         let old_capacity = preview_map.capacity();
-        preview_map.shrink_to_fit();
+        preview_map.shrink_to(preview_map.len().max(64));
         tracing::info!(
             "Shrinking preview map from {} to {}",
             old_capacity,

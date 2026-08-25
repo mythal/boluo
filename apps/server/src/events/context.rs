@@ -180,7 +180,6 @@ pub enum Action {
         live: UpdateLifetime,
     },
     Status(super::status::StatusAction),
-    TouchActivity,
 }
 
 impl Action {
@@ -191,7 +190,6 @@ impl Action {
             Self::Status(super::status::StatusAction::Query(_)) => "status_query",
             Self::Status(super::status::StatusAction::Update(_, _)) => "status_update",
             Self::Status(super::status::StatusAction::Broadcast) => "status_broadcast",
-            Self::TouchActivity => "touch_activity",
         }
     }
 }
@@ -360,31 +358,6 @@ impl MailboxManager {
             return Err(MailboxManageError::Closed);
         }
         Ok(())
-    }
-
-    pub fn touch_activity(&self) -> Result<(), MailboxManageError> {
-        let action = Action::TouchActivity;
-        match self.sender.try_send(action) {
-            Ok(_) => Ok(()),
-            Err(TrySendError::Closed(_)) => {
-                metrics::counter!(
-                    "boluo_server_events_mailbox_actions_total",
-                    "action" => "touch_activity",
-                    "result" => "closed"
-                )
-                .increment(1);
-                Err(MailboxManageError::Closed)
-            }
-            Err(TrySendError::Full(_)) => {
-                metrics::counter!(
-                    "boluo_server_events_mailbox_actions_total",
-                    "action" => "touch_activity",
-                    "result" => "full_dropped"
-                )
-                .increment(1);
-                Ok(())
-            }
-        }
     }
 }
 
@@ -945,9 +918,6 @@ impl MailBoxState {
                                 if should_broadcast.should_broadcast() {
                                     Update::send(id, encoded_for_broadcast).await;
                                 }
-                            }
-                            Action::TouchActivity => {
-                                last_event_at = Some(Instant::now());
                             }
                             Action::Status(action) => {
                                 status_state.update(action);

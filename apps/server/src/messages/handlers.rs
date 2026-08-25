@@ -327,7 +327,7 @@ async fn resolve_channel_member_cache_first(
     user_id: Uuid,
     channel_id: Uuid,
     space_id: Option<Uuid>,
-) -> Result<(Channel, ChannelMember), AppError> {
+) -> Result<(Channel, crate::space_runtime::ChannelMembership), AppError> {
     if let Some(space_id) = space_id
         && let Some(snapshot) = ctx
             .space_store
@@ -337,8 +337,7 @@ async fn resolve_channel_member_cache_first(
     {
         let channel = snapshot.channels.get(&channel_id).cloned().or_not_found()?;
         let member = snapshot
-            .channel_member(channel_id, user_id)
-            .map(|member| member.channel)
+            .channel_membership(channel_id, user_id)
             .or_no_permission()?;
         return Ok((channel, member));
     }
@@ -346,11 +345,14 @@ async fn resolve_channel_member_cache_first(
     let channel = Channel::get_by_id(&ctx.db, &channel_id)
         .await
         .or_not_found()?;
-    let member =
-        ChannelMember::get_with_space_member(&ctx.db, user_id, channel_id, &channel.space_id)
-            .await?
-            .map(|(channel_member, _)| channel_member)
-            .or_no_permission()?;
+    let member = crate::space_runtime::ChannelMembership::get(
+        &ctx.db,
+        channel.space_id,
+        channel_id,
+        user_id,
+    )
+    .await?
+    .or_no_permission()?;
     Ok((channel, member))
 }
 
@@ -664,7 +666,7 @@ mod tests {
         assert_eq!(cold_space_id, space.id);
         assert_eq!(cold_space_member.user_id, owner.id);
         assert_eq!(cold_channel.id, channel.id);
-        assert_eq!(cold_channel_member.user_id, owner.id);
+        assert!(cold_channel_member.is_master);
         assert!(
             ctx.space_store.get(&space.id).is_none(),
             "cold member lookup unexpectedly loaded the Space runtime"

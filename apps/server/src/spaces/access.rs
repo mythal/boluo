@@ -1,7 +1,6 @@
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::channels::ChannelMember;
 use crate::error::{AppError, ModelError};
 
 use super::SpaceMember;
@@ -153,13 +152,10 @@ pub async fn resolve_resource_access_context(
     let channel_member = match user_id {
         Some(user_id) => {
             if let Some(snapshot) = resolved.snapshot {
-                snapshot
-                    .channel_member(channel_id, user_id)
-                    .map(|member| member.channel)
+                snapshot.channel_membership(channel_id, user_id)
             } else {
-                ChannelMember::get_with_space_member(&ctx.db, user_id, channel_id, &space_id)
+                crate::space_runtime::ChannelMembership::get(&ctx.db, space_id, channel_id, user_id)
                     .await?
-                    .map(|(channel_member, _)| channel_member)
             }
         }
         None => None,

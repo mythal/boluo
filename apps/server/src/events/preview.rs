@@ -85,31 +85,35 @@ pub async fn broadcast_preview_post(
     }
     let is_master = if let Some(member) = ctx
         .space_store
-        .resolve_channel_member(space_id, channel_id, user_id)
+        .resolve_channel_membership(space_id, channel_id, user_id)
         .await?
     {
-        member.channel.is_master
+        member.is_master
     } else {
-        // resolve_channel_member already performed the bounded authoritative wait.
+        // resolve_channel_membership already performed the bounded authoritative wait.
         let snapshot = ctx.space_store.loaded_authoritative_snapshot(space_id);
-        let (channel, is_space_member) = if let Some(snapshot) = snapshot {
-            let channel = snapshot.channels.get(&channel_id).cloned().or_not_found()?;
+        let (channel_space_id, is_public, is_space_member) = if let Some(snapshot) = snapshot {
+            let channel = snapshot.channels.get(&channel_id).or_not_found()?;
             let is_space_member = snapshot.space_members.contains_key(&user_id);
-            (channel, is_space_member)
+            (channel.space_id, channel.is_public, is_space_member)
         } else {
             let mut conn = ctx.db.acquire().await?;
             let channel = Channel::get_by_id(&mut *conn, &channel_id)
                 .await
                 .or_not_found()?;
             let is_space_member = SpaceMember::get(&mut *conn, &user_id, &channel.space_id).await?;
-            (channel, is_space_member.is_some())
+            (
+                channel.space_id,
+                channel.is_public,
+                is_space_member.is_some(),
+            )
         };
-        if channel.space_id != space_id {
+        if channel_space_id != space_id {
             return Err(AppError::NoPermission(
                 "Channel does not belong to this space".to_string(),
             ));
         }
-        if !channel.is_public {
+        if !is_public {
             return Err(AppError::NoPermission(
                 "You are not a member of this channel".to_string(),
             ));

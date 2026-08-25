@@ -44,6 +44,30 @@ pub(crate) struct SpaceSnapshot {
     pub(crate) channel_members: PersistentMap<Uuid, PersistentMap<Uuid, ChannelMember>>,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) struct ChannelMembership {
+    pub(crate) is_master: bool,
+}
+
+impl ChannelMembership {
+    pub(crate) async fn get<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
+        space_id: Uuid,
+        channel_id: Uuid,
+        user_id: Uuid,
+    ) -> Result<Option<Self>, sqlx::Error> {
+        sqlx::query_file_scalar!(
+            "sql/channels/get_membership.sql",
+            user_id,
+            channel_id,
+            space_id,
+        )
+            .fetch_optional(db)
+            .await
+            .map(|membership| membership.map(|is_master| Self { is_master }))
+    }
+}
+
 /// A read-only, probabilistic change detector for one independently reloadable
 /// section of a Space snapshot.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
@@ -243,6 +267,19 @@ impl SpaceSnapshot {
             .clone();
         let space = self.space_members.get(&user_id)?.clone();
         Some(Member { channel, space })
+    }
+
+    pub(crate) fn channel_membership(
+        &self,
+        channel_id: Uuid,
+        user_id: Uuid,
+    ) -> Option<ChannelMembership> {
+        let channel = self.channel_members.get(&channel_id)?.get(&user_id)?;
+        self.space_members
+            .contains_key(&user_id)
+            .then_some(ChannelMembership {
+                is_master: channel.is_master,
+            })
     }
 
     pub(crate) fn members_in_channel(&self, channel_id: Uuid) -> Vec<Member> {
@@ -2152,6 +2189,26 @@ impl SpaceStore {
         }))
     }
 
+    pub(crate) async fn resolve_channel_membership(
+        &self,
+        space_id: Uuid,
+        channel_id: Uuid,
+        user_id: Uuid,
+    ) -> Result<Option<ChannelMembership>, SpaceRuntimeError> {
+        let runtime = self.get_or_load(space_id).await?;
+        if let Some(snapshot) = runtime.authoritative_snapshot_after_wait().await {
+            metrics::counter!("boluo_server_space_runtime_read_total", "result" => "hit")
+                .increment(1);
+            return Ok(snapshot.channel_membership(channel_id, user_id));
+        }
+
+        metrics::counter!("boluo_server_space_runtime_read_total", "result" => "fallback")
+            .increment(1);
+        ChannelMembership::get(&self.inner.db, space_id, channel_id, user_id)
+            .await
+            .map_err(Into::into)
+    }
+
     async fn get_or_load_with_hook<F>(
         &self,
         space_id: Uuid,
@@ -2443,6 +2500,13 @@ mod tests {
             .expect("failed to resolve channel member")
             .expect("owner is missing from channel");
         assert!(member.channel.is_master);
+        let membership = ctx
+            .space_store
+            .resolve_channel_membership(space.id, channel.id, owner.id)
+            .await
+            .expect("failed to resolve channel membership")
+            .expect("owner membership is missing from channel");
+        assert!(membership.is_master);
         assert!(
             crate::events::context::store()
                 .get_manager(&space.id)
@@ -2471,6 +2535,14 @@ mod tests {
                 .is_none(),
             "dirty runtime returned its stale member snapshot"
         );
+        assert!(
+            ctx.space_store
+                .resolve_channel_membership(space.id, channel.id, owner.id)
+                .await
+                .expect("failed to use membership fallback while runtime was dirty")
+                .is_none(),
+            "dirty runtime returned its stale membership snapshot"
+        );
 
         let mut changes = CommittedChanges::default();
         changes.channel_member_removed(space.id, channel.id, owner.id);
@@ -2482,6 +2554,14 @@ mod tests {
                 .expect("failed to read refreshed runtime")
                 .is_none(),
             "refreshed runtime retained a removed member"
+        );
+        assert!(
+            ctx.space_store
+                .resolve_channel_membership(space.id, channel.id, owner.id)
+                .await
+                .expect("failed to read refreshed channel membership")
+                .is_none(),
+            "refreshed runtime retained a removed membership"
         );
         assert!(
             crate::events::context::store()

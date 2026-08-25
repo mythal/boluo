@@ -680,23 +680,18 @@ impl Update {
 
     async fn enqueue_volatile_update(body: UpdateBody, mailbox: Uuid) {
         // WebSocket client events are sequential, so awaiting preserves keyframe/diff order.
-        let span = tracing::info_span!("Fire Volatile Update", mailbox = %mailbox);
-        async move {
-            let mailbox_manager = super::context::store().get_or_create_manager(mailbox);
-            if let Err(e) = mailbox_manager
-                .fire_update(body, UpdateLifetime::Volatile)
-                .await
-            {
-                tracing::error!(
-                    event = "event.mailbox.send_failed",
-                    "Failed to send update to mailbox {}: {}",
-                    mailbox,
-                    e
-                );
-            }
+        let mailbox_manager = super::context::store().get_or_create_manager(mailbox);
+        if let Err(e) = mailbox_manager
+            .fire_update(body, UpdateLifetime::Volatile)
+            .await
+        {
+            tracing::error!(
+                event = "event.mailbox.send_failed",
+                mailbox_id = %mailbox,
+                error = %e,
+                "Failed to send volatile update to mailbox"
+            );
         }
-        .instrument(span)
-        .await;
     }
 
     pub fn name(&self) -> &'static str {

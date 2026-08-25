@@ -243,10 +243,23 @@ async fn query(
 ) -> Result<Note, AppError> {
     let session = authenticate_optional(ctx, &req).await?;
     let QueryNote { space_id, note_id } = parse_query(req.uri())?;
-    let note = Note::get_by_id(&ctx.db, space_id, note_id)
+    let metadata = ctx
+        .space_store
+        .resolve_note_metadata(space_id, note_id)
         .await?
         .or_not_found()?;
     let user_id = session.map(|session| session.user_id);
+    if !can_view_note(ctx, &metadata, user_id).await? {
+        return Err(AppError::NoPermission(
+            "You don't have permission to view this note".to_string(),
+        ));
+    }
+    let note = ctx
+        .space_store
+        .resolve_note(space_id, note_id)
+        .await?
+        .or_not_found()?;
+    // Access metadata can change while the payload is being loaded.
     if !can_view_note(ctx, &note, user_id).await? {
         return Err(AppError::NoPermission(
             "You don't have permission to view this note".to_string(),

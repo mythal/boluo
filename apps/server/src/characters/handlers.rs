@@ -79,7 +79,7 @@ async fn query(
         character_id,
     } = parse_query(req.uri())?;
     let character = if let Some(snapshot) = ctx.space_store.loaded_snapshot_maybe_stale(space_id)
-        && let Some(character) = snapshot.characters.get(&character_id)
+        && let Some(character) = snapshot.characters().get(&character_id)
     {
         metrics::counter!("boluo_server_space_runtime_read_total", "result" => "hit").increment(1);
         character.clone()
@@ -112,7 +112,7 @@ async fn by_space(
         ctx.space_store.loaded_snapshot_maybe_stale(space_id)
     {
         metrics::counter!("boluo_server_space_runtime_read_total", "result" => "hit").increment(1);
-        snapshot.characters.values().cloned().collect()
+        snapshot.characters().values().cloned().collect()
     } else {
         metrics::counter!("boluo_server_space_runtime_read_total", "result" => "fallback")
             .increment(1);
@@ -184,7 +184,7 @@ async fn check_identifier(
         .space_store
         .loaded_authoritative_snapshot_after_wait(space_id)
         .await
-        .is_some_and(|snapshot| snapshot.space_members.contains_key(&session.user_id));
+        .is_some_and(|snapshot| snapshot.space_members().contains_key(&session.user_id));
     let mut conn = ctx.db.acquire().await?;
     if !is_space_member {
         SpaceMember::get(&mut *conn, &session.user_id, &space_id)
@@ -218,7 +218,7 @@ async fn create(
     if !ctx
         .space_store
         .loaded_authoritative_snapshot(space_id)
-        .is_some_and(|snapshot| snapshot.space_members.contains_key(&session.user_id))
+        .is_some_and(|snapshot| snapshot.space_members().contains_key(&session.user_id))
     {
         SpaceMember::get(&mut *trans, &session.user_id, &space_id)
             .await?

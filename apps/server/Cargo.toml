@@ -34,6 +34,7 @@ clap = { version = "4.4.12", features = ["derive", "env"] }
 cookie = "0.18"
 dotenvy = "0.15"
 futures = "0.3"
+foyer = { version = "0.22.3", features = ["serde"] }
 hex = "0.4"
 ipnet = "2"
 itertools = "0.15"
@@ -73,7 +74,6 @@ quick_cache = { version = "0.7.0", features = ["stats"] }
 papaya = "0.2.1"
 ahash = "0.8.11"
 parking_lot = "0.12.3"
-rpds = "1.2.1"
 specta.workspace = true
 specta-serde.workspace = true
 specta-typescript.workspace = true

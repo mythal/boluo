@@ -32,6 +32,8 @@ const panels = {
   applicationPool: 'panel-17',
   cacheHitRatio: 'panel-15',
   cacheCapacityUtilization: 'panel-19',
+  spacePayloadCacheMemory: 'panel-34',
+  spacePayloadCacheReads: 'panel-35',
   messages: 'panel-9',
   messageLatency: 'panel-16',
   diskCacheCapacity: 'panel-20',
@@ -316,6 +318,53 @@ export function buildBoluoDashboard(
             editorMode: QueryEditorMode.Code,
             expr: `sum by(cache) (boluo_server_cache_items{app="${APP}"}) / clamp_min(sum by(cache) (boluo_server_cache_capacity{app="${APP}"}), 1)`,
             legendFormat: '{{cache}}',
+          },
+        ],
+      }),
+    )
+    .element(
+      panels.spacePayloadCacheMemory,
+      timeSeriesPanel({
+        id: 34,
+        title: 'Space payload cache memory',
+        description: 'Combined Foyer memory tier for versioned Entry components and Note payloads.',
+        datasourceUid,
+        unit: 'bytes',
+        min: 0,
+        tooltipMode: TooltipDisplayMode.Multi,
+        targets: [
+          {
+            refId: 'memory',
+            editorMode: QueryEditorMode.Code,
+            expr: `boluo_server_space_payload_cache_memory_bytes{app="${APP}"}`,
+            legendFormat: '{{instance}}',
+          },
+        ],
+      }),
+    )
+    .element(
+      panels.spacePayloadCacheReads,
+      timeSeriesPanel({
+        id: 35,
+        title: 'Space payload cache reads',
+        description:
+          'Reads by payload type and source. Storage errors fall back to PostgreSQL when possible.',
+        datasourceUid,
+        unit: 'ops',
+        min: 0,
+        tooltipMode: TooltipDisplayMode.Multi,
+        targets: [
+          {
+            refId: 'reads',
+            editorMode: QueryEditorMode.Code,
+            expr: `sum by(instance, payload, result) (rate(boluo_server_space_payload_cache_read_total{app="${APP}"}[${RATE_INTERVAL}]))`,
+            legendFormat: '{{instance}} {{payload}} {{result}}/s',
+          },
+          {
+            refId: 'storage-errors',
+            editorMode: QueryEditorMode.Code,
+            expr: `sum by(instance, payload) (rate(boluo_server_space_payload_cache_storage_errors_total{app="${APP}"}[${RATE_INTERVAL}]))`,
+            legendFormat: '{{instance}} {{payload}} storage errors/s',
           },
         ],
       }),
@@ -709,14 +758,16 @@ export function buildBoluoDashboard(
         gridItem(panels.applicationPool).x(0).y(30).width(8).height(8),
         gridItem(panels.cacheHitRatio).x(8).y(30).width(8).height(8),
         gridItem(panels.cacheCapacityUtilization).x(16).y(30).width(8).height(8),
-        gridItem(panels.messages).x(0).y(38).width(12).height(8),
-        gridItem(panels.messageLatency).x(12).y(38).width(12).height(8),
-        gridItem(panels.queueDepths).x(0).y(46).width(12).height(8),
-        gridItem(panels.eventDelivery).x(12).y(46).width(12).height(8),
-        gridItem(panels.diskCacheCapacity).x(0).y(54).width(8).height(8),
-        gridItem(panels.diskCacheIo).x(8).y(54).width(8).height(8),
-        gridItem(panels.diskCacheLatency).x(16).y(54).width(8).height(8),
-        gridItem(panels.applicationLogs).x(0).y(62).width(24).height(10),
+        gridItem(panels.spacePayloadCacheMemory).x(0).y(38).width(8).height(8),
+        gridItem(panels.spacePayloadCacheReads).x(8).y(38).width(16).height(8),
+        gridItem(panels.messages).x(0).y(46).width(12).height(8),
+        gridItem(panels.messageLatency).x(12).y(46).width(12).height(8),
+        gridItem(panels.queueDepths).x(0).y(54).width(12).height(8),
+        gridItem(panels.eventDelivery).x(12).y(54).width(12).height(8),
+        gridItem(panels.diskCacheCapacity).x(0).y(62).width(8).height(8),
+        gridItem(panels.diskCacheIo).x(8).y(62).width(8).height(8),
+        gridItem(panels.diskCacheLatency).x(16).y(62).width(8).height(8),
+        gridItem(panels.applicationLogs).x(0).y(70).width(24).height(10),
       ]),
     )
     .links([])

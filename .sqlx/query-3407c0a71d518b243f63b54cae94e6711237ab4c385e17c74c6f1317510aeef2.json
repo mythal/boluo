@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT invite_token\nFROM spaces\nWHERE\n    id = $1\n    AND deleted = FALSE;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "invite_token",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "spaces",
+            "name": "invite_token"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "3407c0a71d518b243f63b54cae94e6711237ab4c385e17c74c6f1317510aeef2"
+}

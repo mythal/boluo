@@ -71,6 +71,27 @@ impl std::ops::Deref for Space {
     }
 }
 
+impl SpaceRecord {
+    pub async fn get_by_id<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
+        id: &Uuid,
+    ) -> Result<Option<Self>, sqlx::Error> {
+        sqlx::query_file_scalar!("sql/spaces/get_record_by_id.sql", id)
+            .fetch_optional(db)
+            .await
+    }
+
+    pub async fn is_admin<'c, T: sqlx::PgExecutor<'c>>(&self, db: T, user_id: &Uuid) -> bool {
+        if self.owner_id == *user_id {
+            return true;
+        }
+        let Ok(space_member) = SpaceMember::get(db, user_id, &self.id).await else {
+            return false;
+        };
+        space_member.map(|member| member.is_admin).unwrap_or(false)
+    }
+}
+
 impl Space {
     pub(crate) fn from_record(record: SpaceRecord, latest_activity: OffsetDateTime) -> Self {
         Self {
@@ -110,16 +131,6 @@ impl Space {
         .await
         .map_err(ModelError::from)?;
         Ok(Self::from_record(row.space, row.latest_activity))
-    }
-
-    pub async fn is_admin<'c, T: sqlx::PgExecutor<'c>>(&self, db: T, user_id: &Uuid) -> bool {
-        if self.owner_id == *user_id {
-            return true;
-        }
-        let Ok(space_member) = SpaceMember::get(db, user_id, &self.id).await else {
-            return false;
-        };
-        space_member.map(|member| member.is_admin).unwrap_or(false)
     }
 
     pub async fn delete(
@@ -202,17 +213,16 @@ impl Space {
         db: T,
         id: &Uuid,
     ) -> Result<Uuid, sqlx::Error> {
-        Space::get_by_id(db, id)
-            .await?
-            .ok_or(sqlx::Error::RowNotFound)
-            .map(|space| space.invite_token)
+        sqlx::query_file_scalar!("sql/spaces/get_token.sql", id)
+            .fetch_one(db)
+            .await
     }
 
     pub async fn is_public<'c, T: sqlx::PgExecutor<'c>>(
         db: T,
         id: &Uuid,
     ) -> Result<Option<bool>, sqlx::Error> {
-        Space::get_by_id(db, id)
+        SpaceRecord::get_by_id(db, id)
             .await
             .map(|space| space.map(|space| space.is_public))
     }

@@ -86,8 +86,9 @@ impl StatusState {
                     if self.status_map.len() != before_len {
                         self.status_map_snapshot_dirty = true;
                     }
-                    if self.status_map.capacity() > 64 {
-                        self.status_map.shrink_to_fit();
+                    if self.status_map.capacity() > self.status_map.len().saturating_mul(2).max(64)
+                    {
+                        self.status_map.shrink_to(self.status_map.len().max(64));
                     }
                 }
             }

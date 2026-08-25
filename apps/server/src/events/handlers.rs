@@ -10,7 +10,8 @@ use crate::events::token::SessionError;
 use crate::events::types::{ClientEvent, ConnectionError, GetFromStateError};
 use crate::interface::{Response, err_response, missing, ok_response, parse_query};
 use crate::session::{AuthenticateFail, Session};
-use crate::spaces::{Space, SpaceMember};
+use crate::spaces::SpaceMember;
+use crate::spaces::models::SpaceRecord;
 use crate::utils::timestamp;
 use crate::websocket::{WsMessage, establish_web_socket};
 use futures::stream::SplitSink;
@@ -91,7 +92,7 @@ impl Drop for InitialUpdatesInFlight {
 
 async fn check_permissions<'c, T: sqlx::PgExecutor<'c>>(
     db: T,
-    space: &Space,
+    space: &SpaceRecord,
     session: Option<&Session>,
 ) -> Result<(), AppError> {
     if space.is_public || space.allow_spectator {
@@ -127,7 +128,7 @@ async fn check_space_permissions(
         .loaded_authoritative_snapshot_after_wait(space_id)
         .await
     {
-        let space = snapshot.space();
+        let space = snapshot.space_record();
         if space.is_public || space.allow_spectator {
             return Ok(());
         }
@@ -135,7 +136,7 @@ async fn check_space_permissions(
             return Err(AppError::Unauthenticated(AuthenticateFail::Guest));
         };
         if space.owner_id == session.user_id
-            || snapshot.space_members.contains_key(&session.user_id)
+            || snapshot.space_members().contains_key(&session.user_id)
         {
             return Ok(());
         }
@@ -143,7 +144,7 @@ async fn check_space_permissions(
             "You are not a member of this space".to_string(),
         ));
     }
-    let Some(space) = Space::get_by_id(&ctx.db, &space_id).await? else {
+    let Some(space) = SpaceRecord::get_by_id(&ctx.db, &space_id).await? else {
         return Ok(());
     };
     check_permissions(&ctx.db, &space, session).await
@@ -406,19 +407,6 @@ async fn handle_client_event(
             return;
         }
     };
-    if !mailbox.is_nil() {
-        match event {
-            ClientEvent::Preview { .. } | ClientEvent::Diff { .. } => {
-                // Mark activity even if the event fails to broadcast, so refresh gating can trigger.
-                if let Some(manager) = crate::events::context::store().get_manager(&mailbox) {
-                    manager.touch_activity().ok();
-                }
-            }
-            ClientEvent::Status { .. } => {
-                // Do nothing
-            }
-        }
-    }
     match event {
         ClientEvent::Preview { preview } => {
             let Some(session) = session else {

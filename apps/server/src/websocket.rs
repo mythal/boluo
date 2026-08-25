@@ -138,7 +138,7 @@ where
                     handler(ws_stream).await;
 
                     span.record("duration_ms", start_time.elapsed().as_millis() as u64);
-                    tracing::debug!(
+                    tracing::info!(
                         event = "websocket.connection.closed",
                         "WebSocket connection closed"
                     );

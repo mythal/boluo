@@ -175,6 +175,20 @@ export type ClientEvent =
   | { type: 'DIFF'; preview: PreviewDiffPost }
   | { type: 'STATUS'; kind: StatusKind; focus: string[] };
 
+export type ClientWebSocketCloseReason =
+  | 'API_ENDPOINT_CHANGED'
+  | 'CHAT_CONTEXT_DISPOSED'
+  | 'CHAT_STATE_RESET'
+  | 'CONNECTION_ERROR'
+  | 'CONNECTION_REJECTED'
+  | 'CONNECTION_REPLACED'
+  | 'DEBUG_DISCONNECT'
+  | 'LEGACY_BASE_URL_CHANGED'
+  | 'LEGACY_CONNECTOR_DISPOSED'
+  | 'RECONNECT_STARTED'
+  | 'RETRY_REQUESTED'
+  | 'UNKNOWN';
+
 export type CocRoll = {
   subType: CocRollSubType;
   target?: PureExprNode | null;

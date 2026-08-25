@@ -1,4 +1,5 @@
 import { Map } from 'immutable';
+import { closeWebSocketNormally } from '@boluo/api/websocket/close';
 import {
   type Action,
   type ChangeBaseUrl,
@@ -213,7 +214,7 @@ export function uiReducer(
       if (state.connection) {
         state.connection.onclose = null;
         state.connection.onerror = null;
-        state.connection.close();
+        closeWebSocketNormally(state.connection, 'CONNECTION_REPLACED');
       }
       return { ...state, connection: action.connection };
     case 'EVENT_RECEIVED':

@@ -263,7 +263,7 @@ async fn query_with_related(
         .await?
         .or_not_found()?;
     let mut conn = ctx.db.acquire().await?;
-    let (mut channel, mut space, snapshot) = if let Some(snapshot) = resolved.snapshot {
+    let (mut channel, space, snapshot) = if let Some(snapshot) = resolved.snapshot {
         (resolved.channel, snapshot.space(), Some(snapshot))
     } else {
         let space = Space::get_by_id(&mut *conn, &resolved.channel.space_id)
@@ -271,12 +271,11 @@ async fn query_with_related(
             .or_not_found()?;
         (resolved.channel, space, None)
     };
-    let mut members = if let Some(snapshot) = &snapshot {
+    let mut members = if let Some(snapshot) = snapshot {
         let Some(snapshot_channel) = snapshot.channels.get(&channel.id) else {
             return Err(AppError::NotFound("channel"));
         };
         channel = snapshot_channel.clone();
-        space = snapshot.space();
         snapshot
             .channel_members
             .get(&channel.id)

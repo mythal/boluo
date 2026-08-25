@@ -124,23 +124,8 @@ pub async fn space_related(
 ) -> Result<SpaceWithRelated, AppError> {
     if let Ok(Some(snapshot)) = ctx.space_store.authoritative_snapshot(*id).await {
         metrics::counter!("boluo_server_space_runtime_read_total", "result" => "hit").increment(1);
-        let mut users =
-            User::get_by_id_list(&ctx.db, snapshot.space_members.keys().copied()).await?;
-        let members = snapshot
-            .space_members
-            .values()
-            .filter_map(|member| {
-                users.remove(&member.user_id).map(|user| {
-                    (
-                        member.user_id,
-                        SpaceMemberWithUser {
-                            space: member.clone(),
-                            user,
-                        },
-                    )
-                })
-            })
-            .collect();
+        let space = snapshot.space();
+        let space_members: Vec<_> = snapshot.space_members.values().cloned().collect();
         let mut channels: Vec<_> = snapshot.channels.values().cloned().collect();
         channels.sort_unstable_by_key(|channel| channel.created);
         let channel_members = snapshot
@@ -152,11 +137,29 @@ pub async fn space_related(
                 (*channel_id, members)
             })
             .collect();
-        let users_status = space_users_status(snapshot.space_record().id)
-            .await
-            .unwrap_or_default();
+        drop(snapshot);
+
+        let mut users =
+            User::get_by_id_list(&ctx.db, space_members.iter().map(|member| member.user_id))
+                .await?;
+        let members = space_members
+            .into_iter()
+            .filter_map(|member| {
+                let user_id = member.user_id;
+                users.remove(&user_id).map(|user| {
+                    (
+                        user_id,
+                        SpaceMemberWithUser {
+                            space: member,
+                            user,
+                        },
+                    )
+                })
+            })
+            .collect();
+        let users_status = space_users_status(space.id).await.unwrap_or_default();
         return Ok(SpaceWithRelated {
-            space: snapshot.space(),
+            space,
             members,
             channels,
             users_status,

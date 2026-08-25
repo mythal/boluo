@@ -75,7 +75,7 @@ struct DatabaseFingerprintRow {
 enum ReconciliationResult {
     Unchanged,
     Refreshed {
-        snapshot: Box<SpaceSnapshot>,
+        snapshot: Arc<SpaceSnapshot>,
         changed: SnapshotSections,
     },
 }
@@ -346,22 +346,23 @@ impl SpaceSnapshot {
                     }
                 }
                 SpaceDelta::ChannelMemberUpserted(member) => {
+                    let channel_id = member.channel_id;
+                    let user_id = member.user_id;
                     if member.is_joined {
                         let mut members = next
                             .channel_members
-                            .get(&member.channel_id)
+                            .get(&channel_id)
                             .cloned()
                             .unwrap_or_else(PersistentMap::new_sync);
-                        members.insert_mut(member.user_id, member.clone());
-                        next.channel_members.insert_mut(member.channel_id, members);
-                    } else if let Some(mut members) =
-                        next.channel_members.get(&member.channel_id).cloned()
+                        members.insert_mut(user_id, member);
+                        next.channel_members.insert_mut(channel_id, members);
+                    } else if let Some(mut members) = next.channel_members.get(&channel_id).cloned()
                     {
-                        members.remove_mut(&member.user_id);
+                        members.remove_mut(&user_id);
                         if members.size() == 0 {
-                            next.channel_members.remove_mut(&member.channel_id);
+                            next.channel_members.remove_mut(&channel_id);
                         } else {
-                            next.channel_members.insert_mut(member.channel_id, members);
+                            next.channel_members.insert_mut(channel_id, members);
                         }
                     }
                 }
@@ -470,44 +471,47 @@ impl SpaceRuntime {
             .fetch_optional(&mut *transaction)
             .await?
             .unwrap_or_else(|| serde_json::json!({}));
-        let channels = sqlx::query_file_scalar!("sql/channels/get_by_space.sql", space_id)
-            .fetch_all(&mut *transaction)
-            .await?;
-        let characters = Character::list_by_space(&mut *transaction, &space_id).await?;
-        let notes = NoteMetadata::list_by_space(&mut *transaction, space_id, true).await?;
-        let scopes = Scope::list_by_space(&mut transaction, space_id).await?;
-        let entries = EntryMetadata::list_by_space(&mut transaction, space_id).await?;
-        let space_members =
-            sqlx::query_file_scalar!("sql/spaces/get_members_by_space.sql", space_id)
+        let channels: PersistentMap<_, _> =
+            sqlx::query_file_scalar!("sql/channels/get_by_space.sql", space_id)
                 .fetch_all(&mut *transaction)
-                .await?;
-        let channel_members =
-            sqlx::query_file_scalar!("sql/channels/get_joined_members_by_space.sql", space_id)
-                .fetch_all(&mut *transaction)
-                .await?;
-        let database_fingerprint =
-            Self::load_database_fingerprint(&mut *transaction, space_id).await?;
-        transaction.commit().await?;
-
-        let channels: PersistentMap<_, _> = channels
-            .into_iter()
-            .map(|channel: Channel| (channel.id, channel))
-            .collect();
-        let characters: PersistentMap<_, _> = characters
-            .into_iter()
-            .map(|character: Character| (character.id, character))
-            .collect();
-        let notes: PersistentMap<_, _> = notes.into_iter().map(|note| (note.id, note)).collect();
-        let scopes: PersistentMap<_, _> = scopes
+                .await?
+                .into_iter()
+                .map(|channel: Channel| (channel.id, channel))
+                .collect();
+        let characters: PersistentMap<_, _> =
+            Character::list_by_space(&mut *transaction, &space_id)
+                .await?
+                .into_iter()
+                .map(|character: Character| (character.id, character))
+                .collect();
+        let notes: PersistentMap<_, _> =
+            NoteMetadata::list_by_space(&mut *transaction, space_id, true)
+                .await?
+                .into_iter()
+                .map(|note| (note.id, note))
+                .collect();
+        let scopes: PersistentMap<_, _> = Scope::list_by_space(&mut transaction, space_id)
+            .await?
             .into_iter()
             .map(|scope: Scope| (scope.id, scope))
             .collect();
-        let entries = Self::index_entries(entries);
-        let space_members: PersistentMap<_, _> = space_members
-            .into_iter()
-            .map(|member: SpaceMember| (member.user_id, member))
-            .collect();
-        let channel_members = Self::index_channel_members(channel_members);
+        let entries =
+            Self::index_entries(EntryMetadata::list_by_space(&mut transaction, space_id).await?);
+        let space_members: PersistentMap<_, _> =
+            sqlx::query_file_scalar!("sql/spaces/get_members_by_space.sql", space_id)
+                .fetch_all(&mut *transaction)
+                .await?
+                .into_iter()
+                .map(|member: SpaceMember| (member.user_id, member))
+                .collect();
+        let channel_members = Self::index_channel_members(
+            sqlx::query_file_scalar!("sql/channels/get_joined_members_by_space.sql", space_id)
+                .fetch_all(&mut *transaction)
+                .await?,
+        );
+        let database_fingerprint =
+            Self::load_database_fingerprint(&mut *transaction, space_id).await?;
+        transaction.commit().await?;
 
         let (space, latest_activity) = space.into_parts();
         Ok(SpaceSnapshot {
@@ -687,7 +691,7 @@ impl SpaceRuntime {
         }
         transaction.commit().await?;
         Ok(ReconciliationResult::Refreshed {
-            snapshot: Box::new(next),
+            snapshot: Arc::new(next),
             changed,
         })
     }
@@ -1319,7 +1323,7 @@ impl SpaceRuntime {
                         changed.record_refreshes();
                         current.payload_mismatch(&snapshot).report(runtime.space_id);
                         if current.revision <= ticket {
-                            runtime.snapshot.store(Arc::new(*snapshot));
+                            runtime.snapshot.store(snapshot);
                             *runtime.verified_at.lock() = Instant::now();
                         }
                         runtime.update_dirty(state);

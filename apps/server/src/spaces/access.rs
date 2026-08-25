@@ -4,7 +4,8 @@ use uuid::Uuid;
 use crate::channels::ChannelMember;
 use crate::error::{AppError, ModelError};
 
-use super::{Space, SpaceMember};
+use super::SpaceMember;
+use super::models::SpaceRecord;
 
 #[derive(Debug, Clone, Copy)]
 pub struct SpaceAccess {
@@ -95,7 +96,7 @@ pub async fn resolve_space_access(
         .loaded_authoritative_snapshot_after_wait(space_id)
         .await
     {
-        let space = snapshot.space();
+        let space = snapshot.space_record();
         let member = user_id.and_then(|user_id| snapshot.space_members.get(&user_id));
         let is_member = member.is_some();
         return Ok(SpaceAccess {
@@ -107,7 +108,7 @@ pub async fn resolve_space_access(
         });
     }
 
-    let space = Space::get_by_id(&ctx.db, &space_id)
+    let space = SpaceRecord::get_by_id(&ctx.db, &space_id)
         .await?
         .ok_or(AppError::NotFound("space"))?;
     let member = match user_id {
@@ -210,6 +211,7 @@ mod tests {
     use super::*;
     use crate::channels::{Channel, ChannelMember, ChannelType};
     use crate::context::AppContext;
+    use crate::spaces::Space;
     use crate::users::User;
 
     fn context(

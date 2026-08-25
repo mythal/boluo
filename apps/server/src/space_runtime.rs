@@ -112,6 +112,10 @@ pub(crate) enum SpaceDelta {
 }
 
 impl SpaceSnapshot {
+    pub(crate) fn space_record(&self) -> &SpaceRecord {
+        &self.space
+    }
+
     pub(crate) fn space(&self) -> Space {
         let latest_activity = OffsetDateTime::from_unix_timestamp_nanos(
             self.latest_activity_us.load(Ordering::Relaxed) as i128 * 1_000,

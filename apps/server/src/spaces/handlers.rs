@@ -13,7 +13,7 @@ use crate::events::{StatusMap, Update};
 use crate::interface::{self, IdQuery, Response, missing, ok_response, parse_query, response};
 use crate::rate_limit;
 use crate::spaces::api::{JoinSpace, KickFromSpace, SearchParams, SpaceWithMember};
-use crate::spaces::models::SpaceMemberWithUser;
+use crate::spaces::models::{SpaceMemberWithUser, SpaceRecord};
 use crate::users::User;
 use arc_swap::ArcSwap;
 use governor::{DefaultKeyedRateLimiter, RateLimiter};
@@ -152,7 +152,7 @@ pub async fn space_related(
                 (*channel_id, members)
             })
             .collect();
-        let users_status = space_users_status(snapshot.space().id)
+        let users_status = space_users_status(snapshot.space_record().id)
             .await
             .unwrap_or_default();
         return Ok(SpaceWithRelated {
@@ -220,7 +220,7 @@ async fn token(
                 "Only admins can get space invitation token".to_string(),
             ));
         }
-        return Ok(snapshot.space().invite_token);
+        return Ok(snapshot.space_record().invite_token);
     }
     let mut conn = ctx.db.acquire().await?;
     let is_admin = SpaceMember::get(&mut *conn, &session.user_id, &id)
@@ -418,7 +418,7 @@ async fn edit(
     let mutation = ctx.space_store.acquire_mutation(space_id).await?;
     let mut trans = ctx.db.begin().await?;
 
-    let Some(space) = Space::get_by_id(&mut *trans, &space_id).await? else {
+    let Some(space) = SpaceRecord::get_by_id(&mut *trans, &space_id).await? else {
         return Err(AppError::NotFound("space"));
     };
 
@@ -566,7 +566,7 @@ async fn kick(
 
     let mutation = ctx.space_store.acquire_mutation(space_id).await?;
     let mut trans = ctx.db.begin().await?;
-    let Some(space) = Space::get_by_id(&mut *trans, &space_id).await? else {
+    let Some(space) = SpaceRecord::get_by_id(&mut *trans, &space_id).await? else {
         return Err(AppError::NotFound("space"));
     };
     let my_member = SpaceMember::get(&mut *trans, &session.user_id, &space_id)
@@ -711,7 +711,7 @@ async fn update_settings(
     let mutation = ctx.space_store.acquire_mutation(id).await?;
     let mut trans = ctx.db.begin().await?;
 
-    let Some(space) = Space::get_by_id(&mut *trans, &id).await? else {
+    let Some(space) = SpaceRecord::get_by_id(&mut *trans, &id).await? else {
         return Err(AppError::NotFound("space"));
     };
 

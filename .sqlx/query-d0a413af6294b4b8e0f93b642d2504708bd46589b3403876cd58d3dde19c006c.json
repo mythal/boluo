@@ -1,0 +1,91 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n    space AS \"space!: SpaceRecord\"\nFROM spaces space\nWHERE\n    space.id = $1\n    AND space.deleted = FALSE\nLIMIT 1;\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "space!: SpaceRecord",
+        "type_info": {
+          "Custom": {
+            "name": "spaces",
+            "kind": {
+              "Composite": [
+                [
+                  "id",
+                  "Uuid"
+                ],
+                [
+                  "name",
+                  "Text"
+                ],
+                [
+                  "description",
+                  "Text"
+                ],
+                [
+                  "created",
+                  "Timestamptz"
+                ],
+                [
+                  "modified",
+                  "Timestamptz"
+                ],
+                [
+                  "owner_id",
+                  "Uuid"
+                ],
+                [
+                  "is_public",
+                  "Bool"
+                ],
+                [
+                  "deleted",
+                  "Bool"
+                ],
+                [
+                  "password",
+                  "Text"
+                ],
+                [
+                  "language",
+                  "Text"
+                ],
+                [
+                  "default_dice_type",
+                  "Text"
+                ],
+                [
+                  "explorable",
+                  "Bool"
+                ],
+                [
+                  "invite_token",
+                  "Uuid"
+                ],
+                [
+                  "allow_spectator",
+                  "Bool"
+                ],
+                [
+                  "scope_id",
+                  "Uuid"
+                ]
+              ]
+            }
+          }
+        },
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "d0a413af6294b4b8e0f93b642d2504708bd46589b3403876cd58d3dde19c006c"
+}

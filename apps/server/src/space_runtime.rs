@@ -12,10 +12,10 @@ use uuid::Uuid;
 use crate::channels::models::Member;
 use crate::channels::{Channel, ChannelMember};
 use crate::characters::Character;
-use crate::entries::component_cache::EntryComponentCache;
 use crate::entries::models::{Entry, EntryMetadata};
-use crate::notes::NoteMetadata;
+use crate::notes::{Note, NoteMetadata};
 use crate::scopes::models::Scope;
+use crate::space_payload_cache::SpacePayloadCache;
 use crate::spaces::models::SpaceRecord;
 use crate::spaces::{Space, SpaceMember};
 
@@ -519,7 +519,7 @@ pub(crate) enum SpaceRuntimeError {
     #[error(transparent)]
     Database(#[from] sqlx::Error),
     #[error(transparent)]
-    EntryComponentCache(#[from] crate::entries::component_cache::Error),
+    SpacePayloadCache(#[from] crate::space_payload_cache::Error),
     #[error("space runtime control queue is closed")]
     Closed,
     #[error("space runtime mutation queue is full")]
@@ -1708,7 +1708,7 @@ pub(crate) struct SpaceStore {
 struct SpaceStoreInner {
     db: sqlx::PgPool,
     runtimes: papaya::HashMap<Uuid, Arc<SpaceRuntimeHandle>, ahash::RandomState>,
-    entry_component_cache: EntryComponentCache,
+    space_payload_cache: SpacePayloadCache,
     reconciliation_permits: Arc<tokio::sync::Semaphore>,
     reconciliation_cursor: AtomicU64,
     #[cfg(test)]
@@ -1831,25 +1831,15 @@ impl Drop for SpaceRuntimeLease {
 
 impl SpaceStore {
     pub(crate) fn new(db: sqlx::PgPool) -> Self {
-        Self::with_entry_component_cache_capacity(
+        Self::with_space_payload_cache(
             db,
-            crate::entries::component_cache::DEFAULT_MEMORY_CACHE_BYTES,
+            SpacePayloadCache::memory_only(crate::space_payload_cache::DEFAULT_MEMORY_CACHE_BYTES),
         )
     }
 
-    pub(crate) fn with_entry_component_cache_capacity(
+    pub(crate) fn with_space_payload_cache(
         db: sqlx::PgPool,
-        entry_component_cache_capacity: usize,
-    ) -> Self {
-        Self::with_entry_component_cache(
-            db,
-            EntryComponentCache::memory_only(entry_component_cache_capacity),
-        )
-    }
-
-    pub(crate) fn with_entry_component_cache(
-        db: sqlx::PgPool,
-        entry_component_cache: EntryComponentCache,
+        space_payload_cache: SpacePayloadCache,
     ) -> Self {
         let store = Self {
             inner: Arc::new(SpaceStoreInner {
@@ -1859,7 +1849,7 @@ impl SpaceStore {
                     .hasher(ahash::RandomState::new())
                     .resize_mode(papaya::ResizeMode::Blocking)
                     .build(),
-                entry_component_cache,
+                space_payload_cache,
                 reconciliation_permits: Arc::new(tokio::sync::Semaphore::new(
                     MAX_CONCURRENT_RECONCILIATIONS,
                 )),
@@ -1909,7 +1899,7 @@ impl SpaceStore {
     }
 
     pub(crate) fn update_metrics(&self) {
-        self.inner.entry_component_cache.update_metrics();
+        self.inner.space_payload_cache.update_metrics();
         let mut loaded = 0_u64;
         let mut dirty = 0_u64;
         let mut mutations_in_flight = 0_u64;
@@ -2137,6 +2127,45 @@ impl SpaceStore {
             .map_err(Into::into)
     }
 
+    pub(crate) async fn resolve_note(
+        &self,
+        space_id: Uuid,
+        note_id: Uuid,
+    ) -> Result<Option<Note>, SpaceRuntimeError> {
+        let runtime = self.get_or_load(space_id).await?;
+        let Some(snapshot) = runtime.authoritative_snapshot_after_wait().await else {
+            return Note::get_by_id(&self.inner.db, space_id, note_id)
+                .await
+                .map_err(Into::into);
+        };
+        let Some(expected_note) = snapshot.notes().get(&note_id) else {
+            return Ok(None);
+        };
+        let expected_revision = expected_note.revision;
+        let Some(payload) = self
+            .inner
+            .space_payload_cache
+            .note_payload(&self.inner.db, space_id, note_id, expected_revision)
+            .await?
+        else {
+            return Ok(None);
+        };
+        let Some(current) = runtime.authoritative_snapshot_after_wait().await else {
+            return Note::get_by_id(&self.inner.db, space_id, note_id)
+                .await
+                .map_err(Into::into);
+        };
+        let Some(current_note) = current.notes().get(&note_id) else {
+            return Ok(None);
+        };
+        if current_note.revision != expected_revision {
+            return Note::get_by_id(&self.inner.db, space_id, note_id)
+                .await
+                .map_err(Into::into);
+        }
+        Ok(Some(payload.into_note(current_note.clone())))
+    }
+
     pub(crate) async fn list_note_metadata(
         &self,
         space_id: Uuid,
@@ -2240,8 +2269,8 @@ impl SpaceStore {
         let expected_version = expected_entry.components_version;
         let components = self
             .inner
-            .entry_component_cache
-            .get_or_load(&self.inner.db, entry_id, expected_version)
+            .space_payload_cache
+            .entry_components(&self.inner.db, entry_id, expected_version)
             .await?;
         let Some(current) = runtime.authoritative_snapshot_after_wait().await else {
             return Entry::get_by_id(&self.inner.db, scope_id, entry_id)
@@ -2483,8 +2512,8 @@ impl SpaceStore {
             .load(std::sync::atomic::Ordering::Relaxed)
     }
 
-    pub(crate) async fn close_entry_component_cache(&self) -> Result<(), foyer::Error> {
-        self.inner.entry_component_cache.close().await
+    pub(crate) async fn close_space_payload_cache(&self) -> Result<(), foyer::Error> {
+        self.inner.space_payload_cache.close().await
     }
 }
 
@@ -3019,6 +3048,13 @@ mod tests {
                 .get(&note.id),
             Some(&note.metadata)
         );
+        let initial = ctx
+            .space_store
+            .resolve_note(space.id, note.id)
+            .await
+            .expect("failed to resolve initial Note")
+            .expect("initial Note is missing");
+        assert_eq!(initial.text, "Initial content");
 
         let mutation = ctx
             .space_store
@@ -3059,9 +3095,11 @@ mod tests {
             .expect("Note metadata is missing");
         assert_eq!(resolved.title, "Updated Rules");
         assert_eq!(resolved.revision, 2);
-        let full = Note::get_by_id(&pool, space.id, note.id)
+        let full = ctx
+            .space_store
+            .resolve_note(space.id, note.id)
             .await
-            .expect("failed to query full Note")
+            .expect("failed to resolve full Note")
             .expect("full Note is missing");
         assert_eq!(full.text, "Updated content");
         assert!(full.entities.0.is_empty());

@@ -66,6 +66,7 @@ mod scopes;
 mod server_metrics;
 mod session;
 mod shutdown;
+mod space_payload_cache;
 mod space_runtime;
 mod spaces;
 mod ts;
@@ -489,24 +490,24 @@ struct ServeArgs {
     disk_cache_max_file_mb: u64,
     #[clap(
         long,
-        env = "ENTRY_COMPONENT_CACHE_MB",
-        default_value_t = 16,
-        help = "entry component memory cache size in MiB"
+        env = "SPACE_PAYLOAD_CACHE_MB",
+        default_value_t = space_payload_cache::DEFAULT_MEMORY_CACHE_BYTES / (1024 * 1024),
+        help = "Space payload memory cache size in MiB"
     )]
-    entry_component_cache_mb: usize,
+    space_payload_cache_mb: usize,
     #[clap(
         long,
-        env = "ENTRY_COMPONENT_DISK_CACHE_PATH",
-        help = "entry component foyer disk cache directory"
+        env = "SPACE_PAYLOAD_DISK_CACHE_PATH",
+        help = "Space payload foyer disk cache directory"
     )]
-    entry_component_disk_cache_path: Option<PathBuf>,
+    space_payload_disk_cache_path: Option<PathBuf>,
     #[clap(
         long,
-        env = "ENTRY_COMPONENT_DISK_CACHE_MB",
-        default_value_t = entries::component_cache::DEFAULT_DISK_CACHE_BYTES / (1024 * 1024),
-        help = "entry component foyer disk cache size in MiB; set to 0 to disable"
+        env = "SPACE_PAYLOAD_DISK_CACHE_MB",
+        default_value_t = space_payload_cache::DEFAULT_DISK_CACHE_BYTES / (1024 * 1024),
+        help = "Space payload foyer disk cache size in MiB; set to 0 to disable"
     )]
-    entry_component_disk_cache_mb: usize,
+    space_payload_disk_cache_mb: usize,
 }
 
 fn disk_cache_config(args: &ServeArgs) -> Option<disk_cache::Config> {
@@ -528,34 +529,32 @@ fn disk_cache_config(args: &ServeArgs) -> Option<disk_cache::Config> {
     })
 }
 
-async fn entry_component_cache(args: &ServeArgs) -> entries::component_cache::EntryComponentCache {
-    let memory_capacity = args.entry_component_cache_mb.saturating_mul(1024 * 1024);
+async fn space_payload_cache(args: &ServeArgs) -> space_payload_cache::SpacePayloadCache {
+    let memory_capacity = args.space_payload_cache_mb.saturating_mul(1024 * 1024);
     let disk_path = args
-        .entry_component_disk_cache_path
+        .space_payload_disk_cache_path
         .clone()
-        .unwrap_or_else(|| env::temp_dir().join("boluo-entry-components"));
-    if args.entry_component_disk_cache_mb == 0 || disk_path.as_os_str().is_empty() {
-        tracing::info!(memory_capacity, "Entry component disk cache is disabled");
-        return entries::component_cache::EntryComponentCache::memory_only(memory_capacity);
+        .unwrap_or_else(|| env::temp_dir().join("boluo-space-payloads"));
+    if args.space_payload_disk_cache_mb == 0 || disk_path.as_os_str().is_empty() {
+        tracing::info!(memory_capacity, "Space payload disk cache is disabled");
+        return space_payload_cache::SpacePayloadCache::memory_only(memory_capacity);
     }
 
-    let config = entries::component_cache::HybridCacheConfig {
+    let config = space_payload_cache::HybridCacheConfig {
         memory_capacity,
-        disk_capacity: args
-            .entry_component_disk_cache_mb
-            .saturating_mul(1024 * 1024),
+        disk_capacity: args.space_payload_disk_cache_mb.saturating_mul(1024 * 1024),
         disk_path,
     };
-    match entries::component_cache::EntryComponentCache::hybrid(config).await {
+    match space_payload_cache::SpacePayloadCache::hybrid(config).await {
         Ok(cache) => cache,
         Err(error) => {
             tracing::error!(
-                event = "entry_component_cache.start_failed",
+                event = "space_payload_cache.start_failed",
                 %error,
                 memory_capacity,
-                "Failed to start the entry component disk cache; using memory only"
+                "Failed to start the Space payload disk cache; using memory only"
             );
-            entries::component_cache::EntryComponentCache::memory_only(memory_capacity)
+            space_payload_cache::SpacePayloadCache::memory_only(memory_capacity)
         }
     }
 }
@@ -710,13 +709,13 @@ async fn main() {
             api_key: args.mailgun_api_key.clone(),
         },
     };
-    let entry_component_cache = entry_component_cache(&args).await;
-    let ctx = std::sync::Arc::new(context::AppContext::with_config_and_entry_component_cache(
+    let space_payload_cache = space_payload_cache(&args).await;
+    let ctx = std::sync::Arc::new(context::AppContext::with_config_and_space_payload_cache(
         pool.clone(),
         redis_conn,
         ctx_config,
         storage,
-        entry_component_cache,
+        space_payload_cache,
     ));
 
     if ctx.config.site_url.is_none() {
@@ -823,11 +822,11 @@ async fn main() {
     }
     shutdown::SHUTDOWN.notify_waiters();
     tokio::time::sleep(std::time::Duration::from_secs(4)).await;
-    if let Err(error) = ctx.space_store.close_entry_component_cache().await {
+    if let Err(error) = ctx.space_store.close_space_payload_cache().await {
         tracing::warn!(
-            event = "entry_component_cache.shutdown_failed",
+            event = "space_payload_cache.shutdown_failed",
             %error,
-            "Failed to close the entry component cache cleanly"
+            "Failed to close the Space payload cache cleanly"
         );
     }
     disk_cache::shutdown().await;

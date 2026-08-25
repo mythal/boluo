@@ -121,7 +121,7 @@ impl From<crate::space_runtime::SpaceRuntimeError> for AppError {
         match error {
             crate::space_runtime::SpaceRuntimeError::NotFound => AppError::NotFound("space"),
             crate::space_runtime::SpaceRuntimeError::Database(error) => error.into(),
-            crate::space_runtime::SpaceRuntimeError::EntryComponentCache(error) => {
+            crate::space_runtime::SpaceRuntimeError::SpacePayloadCache(error) => {
                 AppError::Unexpected(error.into())
             }
             crate::space_runtime::SpaceRuntimeError::Closed => AppError::Unexpected(

@@ -17,11 +17,7 @@ type LoadChannelMessagesOptions = LoadChannelMessagesBaseOptions &
       }
   );
 
-export type LoadChannelMessagesStatus =
-  | 'APPLIED'
-  | 'FAILED'
-  | 'STALE_PAGE'
-  | 'STALE_SESSION';
+export type LoadChannelMessagesStatus = 'APPLIED' | 'FAILED' | 'STALE_PAGE' | 'STALE_SESSION';
 
 const loadOutcome = <Result>(result: Result, status: LoadChannelMessagesStatus) => ({
   result,

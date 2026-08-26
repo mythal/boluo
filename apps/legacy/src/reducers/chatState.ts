@@ -217,22 +217,30 @@ const handleMessageDelete = (itemSet: ChatItemSet, messageId: Id): ChatItemSet =
   return deleteMessage(itemSet, messageId);
 };
 
+const applyMessageUpdate = (
+  chat: ChatState,
+  message: Message,
+  myId: Id | undefined,
+): ChatState => {
+  const currentItem = chat.itemSet.messages.find(
+    (item) => item.type === 'MESSAGE' && item.id === message.id,
+  );
+  if (
+    currentItem?.type === 'MESSAGE' &&
+    compareMessageVersion(currentItem.message, message) > 0
+  ) {
+    return chat;
+  }
+  return handleEditMessage(chat, message, myId);
+};
+
 const applyMessageMutation = (
   chat: ChatState,
   mutation: MessageMutation,
   myId: Id | undefined,
 ): ChatState => {
   if (mutation.type === 'MESSAGE_EDITED') {
-    const currentItem = chat.itemSet.messages.find(
-      (item) => item.type === 'MESSAGE' && item.id === mutation.message.id,
-    );
-    if (
-      currentItem?.type === 'MESSAGE' &&
-      compareMessageVersion(currentItem.message, mutation.message) > 0
-    ) {
-      return chat;
-    }
-    return handleEditMessage(chat, mutation.message, myId);
+    return applyMessageUpdate(chat, mutation.message, myId);
   }
   return { ...chat, itemSet: handleMessageDelete(chat.itemSet, mutation.messageId) };
 };
@@ -642,7 +650,7 @@ export const handleMoveFinish = (
 };
 
 export const handleRevealMessage = (state: ChatState, message: Message, myId?: Id): ChatState => {
-  return handleEditMessage(state, message, myId);
+  return applyMessageUpdate(state, message, myId);
 };
 
 export const checkMessagesOrder = (itemSet: ChatItemSet) => {

@@ -335,6 +335,46 @@ test('legacy chatReducer ignores a stale new-message event after a newer snapsho
   assert.strictEqual(item.message.rev, newerSnapshot.rev);
 });
 
+test('legacy chatReducer ignores an older revealed message', () => {
+  const current = makeMessage('message-1', 5, { rev: 2, text: 'current' });
+  const staleReveal = makeMessage(current.id, current.pos, { rev: 1, text: 'stale reveal' });
+  const state = finishInitialHistoryLoad(startInitialHistoryLoad(makeState()), [current]);
+
+  const nextState = applyAction(state, {
+    type: 'REVEAL_MESSAGE',
+    message: staleReveal,
+    pane: channelId,
+  });
+
+  assert.strictEqual(nextState, state);
+});
+
+test('legacy chatReducer applies an equal-version revealed message', () => {
+  const redacted = makeMessage('message-1', 5, {
+    rev: 2,
+    text: '',
+    whisperToUsers: [senderId],
+  });
+  const revealed = makeMessage(redacted.id, redacted.pos, {
+    rev: redacted.rev,
+    text: 'revealed',
+    entities: [{ type: 'Text', start: 0, len: 8 }],
+    whisperToUsers: redacted.whisperToUsers,
+  });
+  let state = finishInitialHistoryLoad(startInitialHistoryLoad(makeState()), [redacted]);
+
+  state = applyAction(state, {
+    type: 'REVEAL_MESSAGE',
+    message: revealed,
+    pane: channelId,
+  });
+
+  const item = state.itemSet.messages.first();
+  assert.ok(item?.type === 'MESSAGE');
+  assert.strictEqual(item.message.text, revealed.text);
+  assert.strictEqual(item.message.rev, revealed.rev);
+});
+
 test('legacy chatReducer replays an edit received during the initial history load', () => {
   const original = makeMessage('message-1', 5);
   const edited = { ...original, text: 'edited', rev: 1 };

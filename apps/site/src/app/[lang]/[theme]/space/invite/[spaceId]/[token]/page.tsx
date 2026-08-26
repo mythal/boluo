@@ -3,6 +3,7 @@ import { type Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import React from 'react';
 import { type Result } from '@boluo/utils/result';
+import { isUuid } from '@boluo/utils/id';
 import { get } from '@boluo/common/server/api';
 import { AcceptButton } from './AcceptButton';
 import { BackLink } from '../../../../../../../components/BackLink';
@@ -27,6 +28,11 @@ const getSpace = React.cache(
 export async function generateMetadata({ params }: { params: Promise<Params> }): Promise<Metadata> {
   const { spaceId, lang } = await params;
   const intl = await getIntl({ lang });
+  if (!isUuid(spaceId)) {
+    return {
+      title: intl.formatMessage({ defaultMessage: 'Invalid invitation link' }),
+    };
+  }
   const spaceResult = await getSpace(spaceId);
   if (spaceResult.isErr || spaceResult.some == null) {
     return {
@@ -46,14 +52,21 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
 export default async function Page({ params }: Props) {
   const { spaceId, token, lang } = await params;
   const intl = await getIntl({ lang });
+  if (!isUuid(spaceId) || !isUuid(token)) {
+    return (
+      <div className="p-4">
+        {intl.formatMessage({ defaultMessage: 'Invalid invitation link' })}
+      </div>
+    );
+  }
   const spaceResult = await getSpace(spaceId, token);
   if (spaceResult.isErr) {
     const { err } = spaceResult;
     if (err.code === 'NOT_FOUND') {
       return notFound();
     } else if (err.code === 'NO_PERMISSION') {
-      const invaild = intl.formatMessage({ defaultMessage: 'Invalid invitation link' });
-      return <div className="p-4">{invaild}</div>;
+      const invalid = intl.formatMessage({ defaultMessage: 'Invalid invitation link' });
+      return <div className="p-4">{invalid}</div>;
     }
     throw new Error(`Failed to load invited space: ${err.code}`, {
       cause: 'cause' in err ? err.cause : err,

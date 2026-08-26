@@ -1,6 +1,7 @@
 'use client';
 import { Provider as JotaiProvider } from 'jotai';
 import React, { type ReactNode, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { store } from '@boluo/store';
 import { SWRConfig, type SWRConfiguration } from 'swr';
 import type { IntlMessages } from '@boluo/locale';
@@ -27,9 +28,13 @@ const swrConfig: SWRConfiguration = {
 };
 
 export function ClientProviders({ children, lang, messages }: Props) {
-  const changeLocale = useCallback((locale: Locale) => {
-    location.href = `/${locale}${location.hash}`;
-  }, []);
+  const router = useRouter();
+  const changeLocale = useCallback(
+    (locale: Locale) => {
+      router.push(`/${locale}${location.hash}`);
+    },
+    [router],
+  );
   const handleIntlError: ResolvedIntlConfig['onError'] = useCallback((err) => {
     if (err.code === ReactIntlErrorCode.MISSING_TRANSLATION) {
       return;

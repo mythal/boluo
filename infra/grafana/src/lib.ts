@@ -78,8 +78,13 @@ interface TimeSeriesPanelOptions {
   min?: number;
   max?: number;
   fieldMinMax?: boolean;
+  drawStyle?: GraphDrawStyle;
   fillOpacity?: number;
+  legendCalcs?: string[];
+  lineInterpolation?: LineInterpolation;
+  stacking?: StackingMode;
   tooltipMode?: TooltipDisplayMode;
+  tooltipSort?: SortOrder;
   seriesNames?: string[];
   scale?: ScaleDistribution;
   scaleLog?: number;
@@ -200,7 +205,7 @@ export function timeSeriesPanel(options: TimeSeriesPanelOptions): PanelBuilder {
     .colorScheme(new FieldColorBuilder().mode(FieldColorModeId.PaletteClassic))
     .legend(
       new VizLegendOptionsBuilder()
-        .calcs([])
+        .calcs(options.legendCalcs ?? [])
         .displayMode(LegendDisplayMode.List)
         .placement(LegendPlacement.Bottom)
         .showLegend(true),
@@ -209,7 +214,7 @@ export function timeSeriesPanel(options: TimeSeriesPanelOptions): PanelBuilder {
       new VizTooltipOptionsBuilder()
         .hideZeros(false)
         .mode(options.tooltipMode ?? TooltipDisplayMode.Multi)
-        .sort(SortOrder.None),
+        .sort(options.tooltipSort ?? SortOrder.Descending),
     )
     .axisBorderShow(false)
     .axisCenteredZero(false)
@@ -218,18 +223,18 @@ export function timeSeriesPanel(options: TimeSeriesPanelOptions): PanelBuilder {
     .axisPlacement(AxisPlacement.Auto)
     .barAlignment(BarAlignment.Center)
     .barWidthFactor(0.6)
-    .drawStyle(GraphDrawStyle.Line)
+    .drawStyle(options.drawStyle ?? GraphDrawStyle.Line)
     .fillOpacity(options.fillOpacity ?? 0)
     .gradientMode(GraphGradientMode.None)
     .hideFrom(new HideSeriesConfigBuilder().legend(false).tooltip(false).viz(false))
     .insertNulls(false)
-    .lineInterpolation(LineInterpolation.Linear)
+    .lineInterpolation(options.lineInterpolation ?? LineInterpolation.Linear)
     .lineWidth(1)
     .pointSize(5)
     .scaleDistribution(scale)
     .showPoints(VisibilityMode.Auto)
     .spanNulls(false)
-    .stacking(new StackingConfigBuilder().group('A').mode(StackingMode.None))
+    .stacking(new StackingConfigBuilder().group('A').mode(options.stacking ?? StackingMode.None))
     .thresholdsStyle(new GraphThresholdsStyleConfigBuilder().mode(GraphThresholdsStyleMode.Off));
 
   if (options.unit !== undefined) {
@@ -454,4 +459,11 @@ export function dashboardTimeSettings(from: string): TimeSettingsBuilder {
     .fiscalYearStartMonth(0);
 }
 
-export { QueryEditorMode, ScaleDistribution, TooltipDisplayMode };
+export {
+  GraphDrawStyle,
+  LineInterpolation,
+  QueryEditorMode,
+  ScaleDistribution,
+  StackingMode,
+  TooltipDisplayMode,
+};

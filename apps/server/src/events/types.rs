@@ -19,6 +19,23 @@ use uuid::Uuid;
 
 use super::status::StatusMap;
 
+const ENCODE_METRICS_SAMPLE_INTERVAL: u8 = 64;
+
+thread_local! {
+    // Keep sampling off a shared atomic on the serialization hot path.
+    static ENCODE_METRICS_SAMPLE_COUNTER: std::cell::Cell<u8> = const {
+        std::cell::Cell::new(0)
+    };
+}
+
+fn should_sample_encode_metrics() -> bool {
+    ENCODE_METRICS_SAMPLE_COUNTER.with(|counter| {
+        let current = counter.get();
+        counter.set(current.wrapping_add(1));
+        current % ENCODE_METRICS_SAMPLE_INTERVAL == 0
+    })
+}
+
 pub type Seq = u32;
 
 #[derive(Deserialize, Serialize, Debug, Clone, Copy, PartialEq, Eq, Default, specta::Type)]
@@ -305,21 +322,23 @@ impl Update {
     }
 
     pub fn encode(&self) -> tungstenite::Utf8Bytes {
-        let started_at = std::time::Instant::now();
-        let update_name = self.name();
+        let started_at = should_sample_encode_metrics().then(std::time::Instant::now);
         let encoded: tungstenite::Utf8Bytes = sonic_rs::to_string(self)
             .expect("Failed to encode update")
             .into();
-        metrics::histogram!(
-            "boluo_server_events_encode_duration_ms",
-            "update" => update_name
-        )
-        .record(started_at.elapsed().as_secs_f64() * 1000.0);
-        metrics::histogram!(
-            "boluo_server_events_encoded_bytes",
-            "update" => update_name
-        )
-        .record(encoded.len() as f64);
+        if let Some(started_at) = started_at {
+            let update_name = self.name();
+            metrics::histogram!(
+                "boluo_server_events_encode_duration_ms",
+                "update" => update_name
+            )
+            .record(started_at.elapsed().as_secs_f64() * 1000.0);
+            metrics::histogram!(
+                "boluo_server_events_encoded_bytes",
+                "update" => update_name
+            )
+            .record(encoded.len() as f64);
+        }
         encoded
     }
 
@@ -584,16 +603,28 @@ impl Update {
 
     pub(super) async fn send(mailbox: Uuid, update_encoded: Utf8Bytes) {
         let table = crate::events::get_broadcast_table().pin();
-        let result = if let Some(tx) = table.get(&mailbox) {
+        let delivered = if let Some(tx) = table.get(&mailbox) {
             if tx.send(update_encoded).is_ok() {
-                "delivered"
+                true
             } else {
-                "no_receivers"
+                false
             }
         } else {
-            "no_receivers"
+            false
         };
-        metrics::counter!("boluo_server_events_broadcast_total", "result" => result).increment(1);
+        if delivered {
+            metrics::counter!(
+                "boluo_server_events_broadcast_total",
+                "result" => "delivered"
+            )
+            .increment(1);
+        } else {
+            metrics::counter!(
+                "boluo_server_events_broadcast_total",
+                "result" => "no_receivers"
+            )
+            .increment(1);
+        }
     }
 
     async fn fire_members(space_id: Uuid, channel_id: Uuid, members: Vec<MemberWithUser>) {

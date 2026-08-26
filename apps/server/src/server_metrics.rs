@@ -67,42 +67,30 @@ pub(crate) fn get_process_memory_snapshot() -> Option<ProcessMemorySnapshot> {
 
 #[derive(Debug, PartialEq, Eq)]
 pub(crate) struct AllocatorMemorySnapshot {
-    pub(crate) resident_bytes: usize,
-    peak_resident_bytes: usize,
     pub(crate) committed_bytes: usize,
     peak_committed_bytes: usize,
-    page_faults: usize,
 }
 
 pub(crate) fn get_allocator_memory_snapshot() -> AllocatorMemorySnapshot {
-    let mut elapsed_msecs = 0;
-    let mut user_msecs = 0;
-    let mut system_msecs = 0;
-    let mut current_rss = 0;
-    let mut peak_rss = 0;
     let mut current_commit = 0;
     let mut peak_commit = 0;
-    let mut page_faults = 0;
-    // SAFETY: All pointers refer to valid stack-allocated `usize` values for the duration of the
-    // call. `mi_process_info` only writes the process-wide allocator statistics to them.
+    // Linux aliases current RSS to committed memory; peak RSS and faults are process-wide.
+    // SAFETY: Unused outputs may be null; the remaining pointers are valid and writable.
     unsafe {
         libmimalloc_sys::mi_process_info(
-            &mut elapsed_msecs,
-            &mut user_msecs,
-            &mut system_msecs,
-            &mut current_rss,
-            &mut peak_rss,
+            std::ptr::null_mut(),
+            std::ptr::null_mut(),
+            std::ptr::null_mut(),
+            std::ptr::null_mut(),
+            std::ptr::null_mut(),
             &mut current_commit,
             &mut peak_commit,
-            &mut page_faults,
+            std::ptr::null_mut(),
         );
     }
     AllocatorMemorySnapshot {
-        resident_bytes: current_rss,
-        peak_resident_bytes: peak_rss,
         committed_bytes: current_commit,
         peak_committed_bytes: peak_commit,
-        page_faults,
     }
 }
 
@@ -164,13 +152,8 @@ pub async fn update_process_memory_metrics() {
 
 pub fn update_allocator_metrics() {
     let snapshot = get_allocator_memory_snapshot();
-    gauge!("boluo_server_allocator_resident_memory_bytes").set(snapshot.resident_bytes as f64);
-    gauge!("boluo_server_allocator_peak_resident_memory_bytes")
-        .set(snapshot.peak_resident_bytes as f64);
     gauge!("boluo_server_allocator_committed_bytes").set(snapshot.committed_bytes as f64);
     gauge!("boluo_server_allocator_peak_committed_bytes").set(snapshot.peak_committed_bytes as f64);
-    metrics::counter!("boluo_server_allocator_page_faults_total")
-        .absolute(snapshot.page_faults as u64);
 }
 
 pub fn update_db_pool_metrics(pool: &sqlx::PgPool) {

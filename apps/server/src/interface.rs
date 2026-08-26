@@ -76,13 +76,40 @@ pub const DEFAULT_JSON_BODY_LIMIT_BYTES: usize = 1024 * 1024;
 /// Maximum request size for message payloads, whose parsed entities may be substantially larger.
 pub const LARGE_JSON_BODY_LIMIT_BYTES: usize = 4 * 1024 * 1024;
 
+const RESPONSE_BODY_SIZE_SAMPLE_INTERVAL: u8 = 64;
+
+thread_local! {
+    // Keep sampling off a shared atomic on the response hot path.
+    static RESPONSE_BODY_SIZE_SAMPLE_COUNTER: std::cell::Cell<u8> = const {
+        std::cell::Cell::new(0)
+    };
+}
+
+fn should_sample_response_body_size() -> bool {
+    RESPONSE_BODY_SIZE_SAMPLE_COUNTER.with(|counter| {
+        let current = counter.get();
+        counter.set(current.wrapping_add(1));
+        current % RESPONSE_BODY_SIZE_SAMPLE_INTERVAL == 0
+    })
+}
+
 fn record_response_body(bytes: &ResponseBytes) {
-    metrics::histogram!("boluo_server_http_response_body_bytes").record(bytes.len() as f64);
-    metrics::counter!(
-        "boluo_server_http_response_body_total",
-        "storage" => if bytes.spilled() { "heap" } else { "inline" }
-    )
-    .increment(1);
+    if should_sample_response_body_size() {
+        metrics::histogram!("boluo_server_http_response_body_bytes").record(bytes.len() as f64);
+    }
+    if bytes.spilled() {
+        metrics::counter!(
+            "boluo_server_http_response_body_total",
+            "storage" => "heap"
+        )
+        .increment(1);
+    } else {
+        metrics::counter!(
+            "boluo_server_http_response_body_total",
+            "storage" => "inline"
+        )
+        .increment(1);
+    }
 }
 
 fn build_response(bytes: ResponseBytes, status: StatusCode) -> Response {
@@ -122,7 +149,6 @@ pub fn ok_response<T: Serialize>(value: T) -> Response {
         .unwrap_or_else(err_response)
 }
 
-/// Serialize an ordinary API response on the current runtime worker.
 pub async fn response<T: Serialize>(value: Result<T, AppError>) -> Result<Response, AppError> {
     let value = value?;
     Ok(ok_response(value))

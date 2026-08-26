@@ -13,6 +13,8 @@ use uuid::Uuid;
 
 use super::types::EventId;
 
+const ACTION_DURATION_SAMPLE_INTERVAL: u8 = 64;
+
 #[derive(Debug, Clone)]
 pub struct EncodedUpdate {
     pub update: Update,
@@ -878,6 +880,7 @@ impl MailBoxState {
             let mut cursor_floor = i64::MIN;
             let mut last_pending_actions_warned = 0;
             let action_duration_histogram = metrics::histogram!("boluo_server_events_update_duration_ms");
+            let mut action_duration_sample_sequence = id.as_u128() as u8;
             loop {
                 tokio::select! {
                     Some(action) = rx.recv() => {
@@ -957,7 +960,11 @@ impl MailBoxState {
                                     );
                                 }
                                 let elapsed = start.elapsed();
-                                action_duration_histogram.record(elapsed.as_millis() as f64);
+                                if action_duration_sample_sequence % ACTION_DURATION_SAMPLE_INTERVAL == 0 {
+                                    action_duration_histogram.record(elapsed.as_millis() as f64);
+                                }
+                                action_duration_sample_sequence =
+                                    action_duration_sample_sequence.wrapping_add(1);
                                 if elapsed > std::time::Duration::from_millis(25) {
                                     tracing::warn!(
                                         event = "mailbox.update.slow",

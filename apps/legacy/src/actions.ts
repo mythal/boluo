@@ -24,10 +24,34 @@ export interface CloseChat {
   id: Id;
 }
 
-export interface LoadMessages {
-  type: 'LOAD_MESSAGES';
-  messages: Message[];
-  finished: boolean;
+export type LoadMessages =
+  | {
+      type: 'LOAD_MESSAGES';
+      mode: 'INITIAL';
+      requestId: Id;
+      messages: Message[];
+      finished: boolean;
+      pane: Id;
+    }
+  | {
+      type: 'LOAD_MESSAGES';
+      mode: 'MORE';
+      before: number;
+      historyMutationGeneration: number;
+      messages: Message[];
+      finished: boolean;
+      pane: Id;
+    };
+
+export interface InitialHistoryLoadStarted {
+  type: 'INITIAL_HISTORY_LOAD_STARTED';
+  requestId: Id;
+  pane: Id;
+}
+
+export interface InitialHistoryLoadFailed {
+  type: 'INITIAL_HISTORY_LOAD_FAILED';
+  requestId: Id;
   pane: Id;
 }
 
@@ -432,6 +456,8 @@ export type Action =
   | ChatLoaded
   | CloseChat
   | ChatUpdate
+  | InitialHistoryLoadStarted
+  | InitialHistoryLoadFailed
   | LoadMessages
   | EventReceived
   | SwitchExploreSpace

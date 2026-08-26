@@ -38,12 +38,20 @@ export type ChatActionMap = {
   initialized: Empty;
   enterSpace: { spaceId: string };
   spaceUpdated: SpaceWithRelated;
-  messagesLoaded: {
+  initialHistoryLoaded: {
     messages: Message[];
-    before: number | null;
     channelId: string;
-    fullLoaded: boolean;
+    historyExhausted: boolean;
   };
+  olderMessagesLoaded: {
+    messages: Message[];
+    before: number;
+    channelId: string;
+    historyExhausted: boolean;
+    historyMutationGeneration: number;
+  };
+  initialHistoryLoadStarted: { channelId: string };
+  initialHistoryLoadFailed: { channelId: string };
   messageEdited: { message: Message; channelId: string; oldPos: number };
   connected: { connection: WebSocket; mailboxId: string };
   connecting: { mailboxId: string };
@@ -119,4 +127,15 @@ export const toChatAction = (update: Update): ChatActionUnion | null | undefined
     case 'APP_UPDATED':
       return null;
   }
+};
+
+type MessageMutationAction = ChatAction<'messageEdited'> | ChatAction<'messageDeleted'>;
+
+export const extractMessageMutationAction = (
+  action: ChatActionUnion,
+): MessageMutationAction | null => {
+  const normalizedAction = action.type === 'update' ? toChatAction(action.payload) : action;
+  return normalizedAction?.type === 'messageEdited' || normalizedAction?.type === 'messageDeleted'
+    ? normalizedAction
+    : null;
 };

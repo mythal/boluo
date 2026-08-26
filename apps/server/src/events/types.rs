@@ -324,7 +324,8 @@ impl Update {
         }
     }
 
-    pub async fn new_message(mailbox: Uuid, message: Message, preview_id: Option<Uuid>) {
+    pub async fn new_message(mailbox: Uuid, mut message: Message, preview_id: Option<Uuid>) {
+        message.hide(None);
         let channel_id = message.channel_id;
         let message = Box::new(message);
         Update::persistent_ordered(
@@ -350,7 +351,8 @@ impl Update {
         .await
     }
 
-    pub async fn message_edited(mailbox: Uuid, message: Message, old_pos: f64) {
+    pub async fn message_edited(mailbox: Uuid, mut message: Message, old_pos: f64) {
+        message.hide(None);
         let channel_id = message.channel_id;
         let message = Box::new(message);
         Update::persistent_ordered(

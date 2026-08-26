@@ -2,7 +2,12 @@ import { atom, useAtomValue } from 'jotai';
 import { selectAtom } from 'jotai/utils';
 import { useEffect, useMemo } from 'react';
 import { binarySearchPos } from '@boluo/sort';
-import { findMessage, type OptimisticItem, type ChannelState } from '../state/channel.reducer';
+import {
+  findMessage,
+  isChannelHistoryFull,
+  type OptimisticItem,
+  type ChannelState,
+} from '../state/channel.reducer';
 import { type ChatItem, type MessageItem, type PreviewItem } from '../state/channel.types';
 import { chatAtom } from '../state/chat.atoms';
 import { type ComposeState } from '../state/compose.reducer';
@@ -262,10 +267,8 @@ export const isMessageNewerThanOptimisticRef = (
   return Date.parse(item.modified) > Date.parse(ref.modified);
 };
 
-type ChannelSlice = Pick<
-  ChannelState,
-  'messages' | 'fullLoaded' | 'previewMap' | 'optimisticMessageMap'
-> & {
+type ChannelSlice = Pick<ChannelState, 'messages' | 'previewMap' | 'optimisticMessageMap'> & {
+  fullLoaded: boolean;
   scheduledGcLowerPos: number | null;
 };
 
@@ -475,7 +478,7 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
           if (!channel) return EMPTY_CHANNEL_SLICE;
           return {
             messages: channel.messages,
-            fullLoaded: channel.fullLoaded,
+            fullLoaded: isChannelHistoryFull(channel),
             previewMap: channel.previewMap,
             optimisticMessageMap: channel.optimisticMessageMap,
             scheduledGcLowerPos: channel.scheduledGc?.lowerPos ?? null,

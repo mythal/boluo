@@ -335,6 +335,7 @@ impl Message {
         self.seed = vec![0; 4];
         self.text = String::new();
         self.entities = Default::default();
+        self.media_id = None;
         self.character_id = None;
         self.portrait_id = None;
         self.has_entry_effects = false;
@@ -1101,13 +1102,14 @@ mod tests {
             false,
             true,
             Some(vec![other.id]),
-            None,
+            Some(audio_media.id),
             None,
             "preset:orange".to_string(),
         )
         .await
         .expect("failed to create whisper message");
         assert!(whisper_message.text.is_empty());
+        assert_eq!(whisper_message.media_id, None);
 
         let fetched = Message::get(&pool, &message.id, Some(&owner.id))
             .await
@@ -1120,6 +1122,7 @@ mod tests {
             .expect("get whisper failed")
             .expect("whisper message missing for master");
         assert_eq!(fetched_master.text, whisper_text);
+        assert_eq!(fetched_master.media_id, Some(audio_media.id));
         assert_eq!(fetched_master.character_id, Some(character.id));
         assert_eq!(fetched_master.portrait_id, Some(asset.id));
 
@@ -1128,6 +1131,7 @@ mod tests {
             .expect("get whisper for bystander failed")
             .expect("whisper message missing for bystander");
         assert!(fetched_hidden.text.is_empty());
+        assert_eq!(fetched_hidden.media_id, None);
         assert_eq!(fetched_hidden.character_id, None);
         assert_eq!(fetched_hidden.portrait_id, None);
 
@@ -1136,8 +1140,25 @@ mod tests {
             .expect("get whisper for member failed")
             .expect("whisper message missing for member");
         assert_eq!(fetched_visible.text, whisper_text);
+        assert_eq!(fetched_visible.media_id, Some(audio_media.id));
         assert_eq!(fetched_visible.character_id, Some(character.id));
         assert_eq!(fetched_visible.portrait_id, Some(asset.id));
+
+        let mut receiver = crate::events::get_mailbox_broadcast_rx(space.id);
+        crate::events::Update::message_edited(
+            space.id,
+            fetched_visible.clone(),
+            fetched_visible.pos,
+        )
+        .await;
+        let encoded = tokio::time::timeout(Duration::from_secs(1), receiver.recv())
+            .await
+            .expect("Whisper update timed out")
+            .expect("Whisper update sender was dropped");
+        let update: serde_json::Value =
+            serde_json::from_str(encoded.as_str()).expect("Whisper update is invalid JSON");
+        assert_eq!(update["body"]["message"]["text"], "");
+        assert!(update["body"]["message"].get("mediaId").is_none());
 
         let channel_messages_for_owner =
             Message::get_by_channel(&pool, &channel.id, None, 10, Some(&owner.id))

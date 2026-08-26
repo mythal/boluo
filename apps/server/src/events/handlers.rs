@@ -169,6 +169,20 @@ enum CompressCachedUpdatesError {
 }
 
 const CACHED_UPDATES_CHUNK_MAX_BYTES: usize = 64 * 1024;
+const CACHED_UPDATES_COMPRESSION_MIN_BYTES: usize = 8 * 1024;
+
+fn cached_updates_serialized_len(updates: &[Utf8Bytes]) -> usize {
+    updates
+        .iter()
+        .fold(updates.len().saturating_sub(1), |total, update| {
+            total.saturating_add(update.len())
+        })
+}
+
+fn should_compress_cached_updates(updates: &[Utf8Bytes], encoding: UpdateEncoding) -> bool {
+    !matches!(encoding, UpdateEncoding::Plain)
+        && cached_updates_serialized_len(updates) >= CACHED_UPDATES_COMPRESSION_MIN_BYTES
+}
 
 fn cached_updates_chunk_len(updates: &[Utf8Bytes], max_bytes: usize) -> usize {
     let mut payload_bytes = 0usize;
@@ -190,35 +204,42 @@ fn cached_updates_chunk_len(updates: &[Utf8Bytes], max_bytes: usize) -> usize {
 }
 
 fn serialize_cached_updates(cached_updates: &[Utf8Bytes]) -> Vec<u8> {
-    let total_len = cached_updates.iter().map(|x| x.len()).sum::<usize>();
-    let delimiter_count = cached_updates.len().saturating_sub(1);
-    let mut payload = Vec::with_capacity(total_len + delimiter_count);
-    for (index, update) in cached_updates.iter().enumerate() {
-        if index > 0 {
-            payload.push(b'\n');
-        }
-        payload.extend_from_slice(update.as_bytes());
-    }
+    let mut payload = Vec::with_capacity(cached_updates_serialized_len(cached_updates));
+    write_cached_updates(&mut payload, cached_updates)
+        .expect("writing cached updates to a Vec should not fail");
     payload
 }
 
+fn write_cached_updates(
+    writer: &mut impl Write,
+    cached_updates: &[Utf8Bytes],
+) -> Result<(), std::io::Error> {
+    for (index, update) in cached_updates.iter().enumerate() {
+        if index > 0 {
+            writer.write_all(b"\n")?;
+        }
+        writer.write_all(update.as_bytes())?;
+    }
+    Ok(())
+}
+
 fn compress_cached_updates_payload(
-    payload: &[u8],
+    cached_updates: &[Utf8Bytes],
     encoding: UpdateEncoding,
 ) -> Result<Vec<u8>, std::io::Error> {
     match encoding {
-        UpdateEncoding::Plain => Ok(payload.to_vec()),
+        UpdateEncoding::Plain => Ok(serialize_cached_updates(cached_updates)),
         UpdateEncoding::Gzip => {
             let mut encoder =
                 flate2::write::GzEncoder::new(Vec::new(), flate2::Compression::fast());
-            encoder.write_all(payload)?;
+            write_cached_updates(&mut encoder, cached_updates)?;
             encoder.finish()
         }
         UpdateEncoding::Brotli => {
             let mut compressed = Vec::new();
             {
-                let mut writer = brotli::CompressorWriter::new(&mut compressed, 4096, 5, 22);
-                writer.write_all(payload)?;
+                let mut writer = brotli::CompressorWriter::new(&mut compressed, 4096, 5, 16);
+                write_cached_updates(&mut writer, cached_updates)?;
                 writer.flush()?;
             }
             Ok(compressed)
@@ -231,12 +252,9 @@ async fn compress_cached_updates(
     encoding: UpdateEncoding,
 ) -> Result<Vec<u8>, CompressCachedUpdatesError> {
     let cached_updates = cached_updates.to_vec();
-    tokio::task::spawn_blocking(move || {
-        let payload = serialize_cached_updates(&cached_updates);
-        compress_cached_updates_payload(&payload, encoding)
-    })
-    .await?
-    .map_err(CompressCachedUpdatesError::from)
+    tokio::task::spawn_blocking(move || compress_cached_updates_payload(&cached_updates, encoding))
+        .await?
+        .map_err(CompressCachedUpdatesError::from)
 }
 
 async fn push_updates(
@@ -282,7 +300,7 @@ async fn push_updates(
     let initial_updates_in_flight = InitialUpdatesInFlight::new(&cached_updates);
     let cached_updates_count = cached_updates.len();
     if !cached_updates.is_empty() {
-        if matches!(encoding, UpdateEncoding::Plain) {
+        if !should_compress_cached_updates(&cached_updates, encoding) {
             for message in &cached_updates {
                 outgoing.feed(WsMessage::Text(message.clone())).await?;
             }

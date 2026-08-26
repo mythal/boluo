@@ -1,3 +1,4 @@
+import { getFrontendTelemetryIgnoreErrors } from '@boluo/utils/frontend-telemetry';
 import {
   ErrorsInstrumentation,
   FetchTransport,
@@ -52,9 +53,7 @@ export function initializeFrontendTelemetry(baseUrl: string): void {
         }
         return item;
       },
-      ignoreErrors: [
-        /ResizeObserver loop (?:limit exceeded|completed with undelivered notifications)/i,
-      ],
+      ignoreErrors: getFrontendTelemetryIgnoreErrors(),
       ignoreUrls: [/\/api\/telemetry(?:[/?#]|$)/],
       instrumentations: [
         new ErrorsInstrumentation(),

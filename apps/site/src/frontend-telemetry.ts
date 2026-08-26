@@ -1,5 +1,6 @@
 import { apiUrlAtom, setFaroSessionIdProvider } from '@boluo/api-browser';
 import { store } from '@boluo/store';
+import { getFrontendTelemetryIgnoreErrors } from '@boluo/utils/frontend-telemetry';
 import {
   ConsoleInstrumentation,
   ErrorsInstrumentation,
@@ -65,9 +66,7 @@ export function initializeFrontendTelemetry(): void {
       }
       return item;
     },
-    ignoreErrors: [
-      /ResizeObserver loop (?:limit exceeded|completed with undelivered notifications)/i,
-    ],
+    ignoreErrors: getFrontendTelemetryIgnoreErrors(),
     ignoreUrls: [/\/api\/telemetry(?:[/?#]|$)/],
     instrumentations: [
       new ConsoleInstrumentation(),

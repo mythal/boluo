@@ -169,7 +169,15 @@ enum CompressCachedUpdatesError {
 }
 
 const CACHED_UPDATES_CHUNK_MAX_BYTES: usize = 64 * 1024;
-const CACHED_UPDATES_COMPRESSION_MIN_BYTES: usize = 8 * 1024;
+const CACHED_UPDATES_COMPRESSION_MIN_BYTES: usize = 4 * 1024;
+static COMPRESSION_SEMAPHORE: std::sync::LazyLock<tokio::sync::Semaphore> =
+    std::sync::LazyLock::new(|| {
+        let permits = std::thread::available_parallelism()
+            .map(std::num::NonZeroUsize::get)
+            .unwrap_or(1)
+            .clamp(1, 8);
+        tokio::sync::Semaphore::new(permits)
+    });
 
 fn cached_updates_serialized_len(updates: &[Utf8Bytes]) -> usize {
     updates
@@ -251,10 +259,17 @@ async fn compress_cached_updates(
     cached_updates: &[Utf8Bytes],
     encoding: UpdateEncoding,
 ) -> Result<Vec<u8>, CompressCachedUpdatesError> {
+    let permit = COMPRESSION_SEMAPHORE
+        .acquire()
+        .await
+        .expect("compression semaphore must not be closed");
     let cached_updates = cached_updates.to_vec();
-    tokio::task::spawn_blocking(move || compress_cached_updates_payload(&cached_updates, encoding))
-        .await?
-        .map_err(CompressCachedUpdatesError::from)
+    tokio::task::spawn_blocking(move || {
+        let _compression_permit = permit;
+        compress_cached_updates_payload(&cached_updates, encoding)
+    })
+    .await?
+    .map_err(CompressCachedUpdatesError::from)
 }
 
 async fn push_updates(

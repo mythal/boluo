@@ -1,17 +1,17 @@
-import { get } from '@boluo/api-browser';
 import clsx from 'clsx';
 import ChevronDown from '@boluo/icons/ChevronDown';
 import CircleNotch from '@boluo/icons/CircleNotch';
-import { useSetAtom, useStore } from 'jotai';
+import { useAtomValue, useStore } from 'jotai';
 import { type FC, useEffect, useEffectEvent, useRef, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Button } from '@boluo/ui/Button';
 import { useSetBanner } from '../../hooks/useBanner';
 import { useChannelId } from '../../hooks/useChannelId';
 import { useMountedRef } from '@boluo/hooks/useMounted';
-import { chatAtom } from '../../state/chat.atoms';
+import { chatAtom, isChatInitializedAtom } from '../../state/chat.atoms';
 import { head } from 'list';
-import { useMember } from '../../hooks/useMember';
+import { loadChannelMessages } from '../../state/loadChannelMessages';
+import { isChannelHistoryInitialized } from '../../state/channel.reducer';
 
 const LOAD_MESSAGE_LIMIT = 51;
 const AUTO_LOAD = true;
@@ -27,30 +27,34 @@ const shouldTriggerLoad = (start: Point, end: Point) => {
 
 export const ChatContentHeaderLoadMore: FC = () => {
   const channelId = useChannelId();
-  const member = useMember();
   const mountedRef = useMountedRef();
   const loadMoreRef = useRef<HTMLButtonElement>(null);
   const store = useStore();
-  const dispatch = useSetAtom(chatAtom);
+  const chatInitialized = useAtomValue(isChatInitializedAtom);
   const [isLoading, setIsLoading] = useState(false);
   const isLoadingRef = useRef(false);
   const [touchState, setTouchState] = useState<'NONE' | 'START' | 'WILL_LOAD'>('NONE');
   const setBanner = useSetBanner();
 
   const loadMore = async () => {
-    if (isLoadingRef.current || !mountedRef.current) return;
-    isLoadingRef.current = true;
-    setIsLoading(true);
+    if (!chatInitialized || isLoadingRef.current || !mountedRef.current) return;
     const chatState = store.get(chatAtom);
     const channelState = chatState.channels[channelId];
+    if (channelState?.historyState === 'INITIAL_LOADING') return;
+
+    isLoadingRef.current = true;
+    setIsLoading(true);
     const before: number | null = channelState ? (head(channelState.messages)?.pos ?? null) : null;
     try {
-      const result = await get('/messages/by_channel', {
+      const baseOptions = {
         channelId,
-        spaceId: member?.space.spaceId ?? null,
-        before,
         limit: LOAD_MESSAGE_LIMIT,
-      });
+      };
+      const result = await loadChannelMessages(
+        channelState == null || !isChannelHistoryInitialized(channelState)
+          ? { ...baseOptions, mode: 'INITIAL' }
+          : { ...baseOptions, before, mode: 'LOAD_MORE' },
+      );
       if (result.isErr) {
         setBanner({
           level: 'ERROR',
@@ -63,16 +67,6 @@ export const ChatContentHeaderLoadMore: FC = () => {
         });
         return;
       }
-      const newMessages = result.some;
-      dispatch({
-        type: 'messagesLoaded',
-        payload: {
-          before,
-          channelId,
-          messages: newMessages,
-          fullLoaded: newMessages.length < LOAD_MESSAGE_LIMIT,
-        },
-      });
     } finally {
       isLoadingRef.current = false;
       if (mountedRef.current) {
@@ -152,7 +146,7 @@ export const ChatContentHeaderLoadMore: FC = () => {
       window.removeEventListener('touchend', handleTouchEnd);
       if (loadTimer !== undefined) clearTimeout(loadTimer);
     };
-  }, []);
+  }, [chatInitialized]);
 
   const willLoad = touchState === 'WILL_LOAD';
   return (

@@ -1,4 +1,3 @@
-import { get } from '@boluo/api-browser';
 import { useAtomValue, useSetAtom, useStore } from 'jotai';
 import { type RefObject, useEffect, useEffectEvent, useRef } from 'react';
 import type { VirtuosoHandle } from 'react-virtuoso';
@@ -8,20 +7,20 @@ import { type ChatItem } from '../state/channel.types';
 import { head } from 'list';
 import { useSetBanner } from './useBanner';
 import { recordWarn } from '../error';
+import { loadChannelMessages } from '../state/loadChannelMessages';
+import { isChannelHistoryFull, isChannelHistoryInitialized } from '../state/channel.reducer';
 
 const LOAD_MESSAGE_LIMIT = 51;
 const HIGHLIGHT_DURATION = 3000;
 
 interface UseScrollToMessageParams {
   channelId: string;
-  spaceId?: string;
   virtuosoRef: RefObject<VirtuosoHandle | null>;
   chatList: ChatItem[];
 }
 
 export const useScrollToMessage = ({
   channelId,
-  spaceId,
   virtuosoRef,
   chatList,
 }: UseScrollToMessageParams): void => {
@@ -35,7 +34,6 @@ export const useScrollToMessage = ({
   const setHighlightMessage = useSetAtom(highlightMessageAtom);
   const setFilter = useSetAtom(filterAtom);
   const setShowArchived = useSetAtom(showArchivedAtom);
-  const dispatch = useSetAtom(chatAtom);
 
   const isLoadingRef = useRef(false);
   const highlightTimeoutRef = useRef<number | undefined>(undefined);
@@ -149,7 +147,7 @@ export const useScrollToMessage = ({
         return;
       }
 
-      if (channelState.fullLoaded) {
+      if (isChannelHistoryFull(channelState)) {
         setBanner({
           level: 'WARNING',
           content: 'The message you are looking for is no longer available.',
@@ -169,17 +167,25 @@ export const useScrollToMessage = ({
 
       const chatState = store.get(chatAtom);
       const channelState = chatState.channels[channelId];
+      if (channelState?.historyState === 'INITIAL_LOADING') {
+        isLoadingRef.current = false;
+        scheduleRetry(500);
+        return;
+      }
       const before: number | null = channelState
         ? (head(channelState.messages)?.pos ?? null)
         : null;
 
       try {
-        const result = await get('/messages/by_channel', {
+        const baseOptions = {
           channelId,
-          spaceId: spaceId ?? null,
-          before,
           limit: LOAD_MESSAGE_LIMIT,
-        });
+        };
+        const result = await loadChannelMessages(
+          channelState == null || !isChannelHistoryInitialized(channelState)
+            ? { ...baseOptions, mode: 'INITIAL' }
+            : { ...baseOptions, before, mode: 'LOAD_MORE' },
+        );
 
         if (result.isErr) {
           recordWarn('Failed to load messages while scrolling', {
@@ -190,17 +196,6 @@ export const useScrollToMessage = ({
           isLoadingRef.current = false;
           return;
         }
-
-        const newMessages = result.some;
-        dispatch({
-          type: 'messagesLoaded',
-          payload: {
-            before,
-            channelId,
-            messages: newMessages,
-            fullLoaded: newMessages.length < LOAD_MESSAGE_LIMIT,
-          },
-        });
 
         isLoadingRef.current = false;
 
@@ -224,13 +219,11 @@ export const useScrollToMessage = ({
     };
   }, [
     channelId,
-    dispatch,
     scrollToMessage,
     scrollToMessageAtom,
     setBanner,
     setHighlightMessage,
     setScrollToMessage,
-    spaceId,
     store,
     virtuosoRef,
   ]);

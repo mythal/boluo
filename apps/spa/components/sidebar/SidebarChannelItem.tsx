@@ -5,12 +5,13 @@ import Hash from '@boluo/icons/Hash';
 import Lock from '@boluo/icons/Lock';
 import MoveVertical from '@boluo/icons/MoveVertical';
 import { type Atom, atom, useAtomValue } from 'jotai';
+import { selectAtom } from 'jotai/utils';
 import { type FC, useCallback, useMemo } from 'react';
 import { useIntl } from 'react-intl';
 import Icon from '@boluo/ui/Icon';
 import { usePaneReplace } from '../../hooks/usePaneReplace';
 import { paneHrefWithRoute } from '../../href';
-import { chatAtom } from '../../state/chat.atoms';
+import { chatAtom, chatSessionGenerationAtom, isChatInitializedAtom } from '../../state/chat.atoms';
 import { channelReadFamily } from '../../state/unread.atoms';
 import { useIsReordering } from '../../hooks/useIsReordering';
 import { findLast, last } from 'list';
@@ -18,6 +19,9 @@ import { type MessageItem } from '../../state/channel.types';
 import { SidebarChannelItemPreview } from './SidebarChannelItemPreview';
 import { SidebarChannelItemOrderableBox } from '../SidebarChannelItemOrderableBox';
 import { SidebarChannelItemButtons } from './SidebarChannelItemButtons';
+import { isChannelHistoryFull, isChannelHistoryInitialized } from '../../state/channel.reducer';
+import { panesAtom } from '../../state/view.atoms';
+import { useSidebarChannelMessages } from '../../hooks/useSidebarChannelMessages';
 
 interface Props {
   channel: Channel;
@@ -48,26 +52,73 @@ export const SidebarChannelItem: FC<Props> = ({
   const isReordering = useIsReordering();
   const isOrderingEnabled = isReordering && !disableOrderingContainer;
 
-  const messagesAtom = useMemo(
-    () => atom((read) => read(chatAtom).channels[channel.id]?.messages),
+  const channelStateAtom = useMemo(
+    () => atom((read) => read(chatAtom).channels[channel.id]),
     [channel.id],
   );
-  const fullLoadedAtom = useMemo(
-    () => atom((read) => read(chatAtom).channels[channel.id]?.fullLoaded ?? false),
+  const historyStateAtom = useMemo(
+    () => atom((read) => read(channelStateAtom)?.historyState),
+    [channelStateAtom],
+  );
+  const isChannelOpenAtom = useMemo(
+    () =>
+      selectAtom(panesAtom, (panes) =>
+        panes.some(
+          (pane) =>
+            (pane.type === 'CHANNEL' && pane.channelId === channel.id) ||
+            (pane.child?.pane.type === 'CHANNEL' && pane.child.pane.channelId === channel.id),
+        ),
+      ),
     [channel.id],
   );
+  const historyState = useAtomValue(historyStateAtom);
+  const chatInitialized = useAtomValue(isChatInitializedAtom);
+  const sessionGeneration = useAtomValue(chatSessionGenerationAtom);
+  const isChannelOpen = useAtomValue(isChannelOpenAtom);
+  const shouldPreload =
+    chatInitialized && !isChannelOpen && (historyState == null || historyState === 'UNINITIALIZED');
+  const { data: preloaded } = useSidebarChannelMessages(
+    channel.spaceId,
+    sessionGeneration,
+    channel.id,
+    shouldPreload,
+  );
+  const preloadedHistoryExhausted = preloaded?.historyExhausted ?? false;
+  const formalHistoryInitialized = historyState === 'PARTIAL' || historyState === 'FULL';
+  const preloadedMessages = formalHistoryInitialized ? undefined : preloaded?.messages;
   const latestMessageAtom: LatestMessageAtom = useMemo(
     () =>
       atom((read) => {
-        const messages = read(messagesAtom);
-        if (!messages) return 'UNLOAD';
-        const bottom = last(messages);
-        if (!bottom) {
-          return read(fullLoadedAtom) ? 'EMPTY' : 'UNLOAD';
+        const channelState = read(channelStateAtom);
+        const messages = channelState?.messages;
+        const latestMessage = messages
+          ? findLast((message) => !message.folded, messages)
+          : undefined;
+        if (channelState && isChannelHistoryInitialized(channelState)) {
+          return latestMessage ?? 'EMPTY';
         }
-        return findLast((message) => !message.folded, messages) ?? 'EMPTY';
+
+        const preloadedLatestMessage = preloadedMessages
+          ? findLast((message) => !message.folded, preloadedMessages)
+          : undefined;
+        if (latestMessage && preloadedLatestMessage) {
+          return latestMessage.pos >= preloadedLatestMessage.pos
+            ? latestMessage
+            : preloadedLatestMessage;
+        }
+        if (latestMessage) return latestMessage;
+        if (preloadedLatestMessage) return preloadedLatestMessage;
+        if (
+          (messages && last(messages)) ||
+          (preloadedMessages && last(preloadedMessages)) ||
+          (channelState && isChannelHistoryFull(channelState)) ||
+          preloadedHistoryExhausted
+        ) {
+          return 'EMPTY';
+        }
+        return 'UNLOAD';
       }),
-    [fullLoadedAtom, messagesAtom],
+    [channelStateAtom, preloadedHistoryExhausted, preloadedMessages],
   );
   const hasUnread = useAtomValue(
     useMemo(() => {
@@ -123,9 +174,10 @@ export const SidebarChannelItem: FC<Props> = ({
         latestMessageAtom={latestMessageAtom}
         channelId={channel.id}
         hasUnread={hasUnread}
+        preloadedMessages={preloadedMessages}
       />
     ),
-    [hasUnread, myId, latestMessageAtom, channel.id],
+    [channel.id, hasUnread, latestMessageAtom, myId, preloadedMessages],
   );
   const buttons = useMemo(
     () => (

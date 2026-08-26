@@ -13,7 +13,6 @@ import { PaneSpaceGreeting } from './PaneSpaceGreeting';
 import { useNotify } from '../hooks/useNotify';
 import { useBannerNode } from '../hooks/useBannerNode';
 import ReactDOM from 'react-dom';
-import { useInitialChannelMessages } from '../hooks/useInitialChannelMessages';
 
 interface Props {
   spaceId: string;
@@ -23,7 +22,6 @@ export const ChatSpace: FC<Props> = ({ spaceId }) => {
   useConnectionEffect(spaceId);
   useChatEffects();
   useNotify(spaceId);
-  useInitialChannelMessages(spaceId);
 
   const { data: space, error, isLoading } = useQuerySpace(spaceId);
   useTitle(spaceId, space);

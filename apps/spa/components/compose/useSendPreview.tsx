@@ -8,6 +8,7 @@ import { type ComposeParseResult } from '../../hooks/useChannelAtoms';
 import { type ComposeAtom } from '../../hooks/useComposeAtom';
 import { usePaneIsFocus } from '../../hooks/usePaneIsFocus';
 import { chatAtom, connectionStateAtom, isChatInitializedAtom } from '../../state/chat.atoms';
+import { isChannelHistoryFull } from '../../state/channel.reducer';
 import {
   areComposePreviewMetadataEqual,
   makeDesiredPreview,
@@ -57,7 +58,7 @@ export const useSendPreview = (
         const composeState = read(composeAtom);
         const chatState = read(chatAtom);
         const channelState = chatState.channels[channelId];
-        if (channelState == null || !channelState.fullLoaded) return false;
+        if (channelState == null || !isChannelHistoryFull(channelState)) return false;
         return channelState.collidedPreviewIdSet.has(composeState.previewId);
       }),
     [channelId, composeAtom],

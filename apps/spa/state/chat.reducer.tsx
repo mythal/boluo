@@ -12,6 +12,8 @@ import { createEffectId, mergeEffects } from './chat.effects';
 export interface ChatReducerContext {
   spaceId: string;
   initialized: boolean;
+  /** Changes when switching spaces or resetting chat state, but not on reconnect. */
+  sessionGeneration: number;
 }
 
 export interface ChatSpaceState {
@@ -40,11 +42,25 @@ export const initialChatState: ChatSpaceState = {
   context: {
     spaceId: '',
     initialized: false,
+    sessionGeneration: 0,
   },
   cursor: zeroEventId,
   notifyTimestamp: 0,
   effects: [],
 };
+
+export const makeChatState = (spaceId: string, sessionGeneration: number): ChatSpaceState => ({
+  channels: {},
+  connection: initialConnectionState,
+  context: {
+    spaceId,
+    initialized: false,
+    sessionGeneration,
+  },
+  cursor: zeroEventId,
+  notifyTimestamp: 0,
+  effects: [],
+});
 
 const channelsReducer = (
   channels: ChatSpaceState['channels'],
@@ -80,7 +96,7 @@ const handleSpaceUpdated = (
 ): ChatSpaceState => {
   const spaceId = spaceWithRelated.space.id;
   if (state.context.spaceId !== spaceId) {
-    state = { ...initialChatState, context: { initialized: false, spaceId } };
+    state = makeChatState(spaceId, state.context.sessionGeneration + 1);
   }
   const channels = { ...state.channels };
   // The payload lists every channel in the space, so anything else is deleted.
@@ -99,18 +115,6 @@ const handleSpaceUpdated = (
   }
   return { ...state, channels };
 };
-
-export const makeChatState = (spaceId: string): ChatSpaceState => ({
-  channels: {},
-  connection: initialConnectionState,
-  context: {
-    spaceId,
-    initialized: false,
-  },
-  cursor: zeroEventId,
-  notifyTimestamp: 0,
-  effects: [],
-});
 
 const handleChannelDeleted = (
   state: ChatSpaceState,
@@ -264,7 +268,7 @@ export const chatReducer: Reducer<ChatSpaceState, ChatActionUnion> = (
         reason: 'CHAT_STATE_RESET',
       });
     }
-    const nextState = makeChatState(context.spaceId);
+    const nextState = makeChatState(context.spaceId, context.sessionGeneration + 1);
     return effects.length === 0
       ? nextState
       : { ...nextState, effects: mergeEffects(nextState.effects, effects) };
@@ -284,10 +288,11 @@ export const chatReducer: Reducer<ChatSpaceState, ChatActionUnion> = (
     case 'enterSpace':
       return state.context.spaceId === action.payload.spaceId
         ? state
-        : makeChatState(action.payload.spaceId);
+        : makeChatState(action.payload.spaceId, context.sessionGeneration + 1);
     case 'channelDeleted':
       return handleChannelDeleted(state, action);
     case 'initialized':
+      if (context.initialized) return state;
       return { ...state, context: { ...context, initialized: true } };
   }
 

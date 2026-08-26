@@ -232,6 +232,23 @@ impl SpacePayloadCache {
         metrics::gauge!("boluo_server_space_payload_cache_memory_bytes").set(usage as f64);
         metrics::gauge!("boluo_server_space_payload_cache_memory_entries").set(entries as f64);
         metrics::gauge!("boluo_server_space_payload_cache_disk_enabled").set(hybrid as u8 as f64);
+
+        // Keep idle-cache counters visible to metrics consumers.
+        for payload in ["entry_components", "note"] {
+            for result in ["memory", "disk", "database"] {
+                metrics::counter!(
+                    "boluo_server_space_payload_cache_read_total",
+                    "payload" => payload,
+                    "result" => result,
+                )
+                .absolute(0);
+            }
+            metrics::counter!(
+                "boluo_server_space_payload_cache_storage_errors_total",
+                "payload" => payload,
+            )
+            .absolute(0);
+        }
     }
 
     pub(crate) async fn close(&self) -> Result<(), foyer::Error> {

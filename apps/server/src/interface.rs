@@ -2,17 +2,118 @@
 use hyper::StatusCode;
 use hyper::body::Body;
 use serde::{Deserialize, Serialize};
+use smallvec::SmallVec;
+use std::io;
 use std::time::{Duration, Instant};
 
 use crate::error::AppError;
-pub type Response = hyper::Response<Vec<u8>>;
+pub const INLINE_RESPONSE_BODY_BYTES: usize = 256;
+#[derive(Debug, Default)]
+pub struct ResponseBytes(SmallVec<[u8; INLINE_RESPONSE_BODY_BYTES]>);
+
+impl ResponseBytes {
+    pub fn new() -> Self {
+        Self(SmallVec::new())
+    }
+
+    pub fn from_slice(bytes: &[u8]) -> Self {
+        Self(SmallVec::from_slice(bytes))
+    }
+
+    pub fn from_serializable<T: Serialize>(value: &T) -> Result<Self, serde_json::Error> {
+        let mut bytes = Self::new();
+        serde_json::to_writer(&mut bytes, value)?;
+        Ok(bytes)
+    }
+
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
+
+    pub fn spilled(&self) -> bool {
+        self.0.spilled()
+    }
+}
+
+impl AsRef<[u8]> for ResponseBytes {
+    fn as_ref(&self) -> &[u8] {
+        self.0.as_slice()
+    }
+}
+
+impl From<Vec<u8>> for ResponseBytes {
+    fn from(bytes: Vec<u8>) -> Self {
+        Self(SmallVec::from_vec(bytes))
+    }
+}
+
+impl From<String> for ResponseBytes {
+    fn from(value: String) -> Self {
+        Self::from(value.into_bytes())
+    }
+}
+
+impl From<&str> for ResponseBytes {
+    fn from(value: &str) -> Self {
+        Self::from_slice(value.as_bytes())
+    }
+}
+
+impl io::Write for ResponseBytes {
+    fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
+        io::Write::write(&mut self.0, bytes)
+    }
+
+    fn flush(&mut self) -> io::Result<()> {
+        io::Write::flush(&mut self.0)
+    }
+}
+
+pub type Response = hyper::Response<ResponseBytes>;
 
 /// Maximum request size for ordinary JSON API payloads.
 pub const DEFAULT_JSON_BODY_LIMIT_BYTES: usize = 1024 * 1024;
 /// Maximum request size for message payloads, whose parsed entities may be substantially larger.
 pub const LARGE_JSON_BODY_LIMIT_BYTES: usize = 4 * 1024 * 1024;
 
-fn build_response(bytes: Vec<u8>, status: StatusCode) -> hyper::Response<Vec<u8>> {
+const RESPONSE_BODY_SIZE_SAMPLE_INTERVAL: u8 = 64;
+
+thread_local! {
+    // Keep sampling off a shared atomic on the response hot path.
+    static RESPONSE_BODY_SIZE_SAMPLE_COUNTER: std::cell::Cell<u8> = const {
+        std::cell::Cell::new(0)
+    };
+}
+
+fn should_sample_response_body_size() -> bool {
+    RESPONSE_BODY_SIZE_SAMPLE_COUNTER.with(|counter| {
+        let current = counter.get();
+        counter.set(current.wrapping_add(1));
+        current % RESPONSE_BODY_SIZE_SAMPLE_INTERVAL == 0
+    })
+}
+
+fn record_response_body(bytes: &ResponseBytes) {
+    if should_sample_response_body_size() {
+        metrics::histogram!("boluo_server_http_response_body_bytes").record(bytes.len() as f64);
+    }
+    if bytes.spilled() {
+        metrics::counter!(
+            "boluo_server_http_response_body_total",
+            "storage" => "heap"
+        )
+        .increment(1);
+    } else {
+        metrics::counter!(
+            "boluo_server_http_response_body_total",
+            "storage" => "inline"
+        )
+        .increment(1);
+    }
+}
+
+fn build_response(bytes: ResponseBytes, status: StatusCode) -> Response {
+    record_response_body(&bytes);
     hyper::Response::builder()
         .header(hyper::header::CONTENT_TYPE, "application/json")
         .status(status)
@@ -20,9 +121,9 @@ fn build_response(bytes: Vec<u8>, status: StatusCode) -> hyper::Response<Vec<u8>
         .expect("Failed to build response")
 }
 
-pub fn err_response(e: AppError) -> hyper::Response<Vec<u8>> {
+pub fn err_response(e: AppError) -> Response {
     let status = e.status_code();
-    sonic_rs::to_vec(&WebResult::<()>::err(e))
+    serialize(&WebResult::<()>::err(e))
         .map(|bytes| build_response(bytes, status))
         .unwrap_or_else(|e| {
             tracing::error!(
@@ -30,33 +131,27 @@ pub fn err_response(e: AppError) -> hyper::Response<Vec<u8>> {
                 "Failed to serialize error: {}",
                 e
             );
-            hyper::Response::builder()
-                .status(hyper::StatusCode::INTERNAL_SERVER_ERROR)
-                .body(
-                    include_str!("../text/error_serialize_error.json")
-                        .as_bytes()
-                        .to_vec(),
-                )
-                .expect("Failed to build serialize error response")
+            build_response(
+                ResponseBytes::from_slice(include_bytes!("../text/error_serialize_error.json")),
+                hyper::StatusCode::INTERNAL_SERVER_ERROR,
+            )
         })
 }
 
-pub fn ok_response<T: Serialize>(value: T) -> hyper::Response<Vec<u8>> {
-    sonic_rs::to_vec(&WebResult::ok(value))
+fn serialize<T: Serialize>(value: &T) -> Result<ResponseBytes, serde_json::Error> {
+    ResponseBytes::from_serializable(value)
+}
+
+pub fn ok_response<T: Serialize>(value: T) -> Response {
+    serialize(&WebResult::ok(value))
         .map(|bytes| build_response(bytes, hyper::StatusCode::OK))
         .map_err(AppError::Serialize)
         .unwrap_or_else(err_response)
 }
 
-/// Serialize the value in a blocking task.
-pub async fn response<T: Serialize + Send + 'static>(
-    value: Result<T, AppError>,
-) -> Result<hyper::Response<Vec<u8>>, AppError> {
+pub async fn response<T: Serialize>(value: Result<T, AppError>) -> Result<Response, AppError> {
     let value = value?;
-    let response = tokio::task::spawn_blocking(move || ok_response(value))
-        .await
-        .map_err(|e| AppError::Unexpected(e.into()))?;
-    Ok(response)
+    Ok(ok_response(value))
 }
 
 #[derive(Serialize, Debug, Clone)]
@@ -102,7 +197,7 @@ impl<T: Serialize> WebResult<T> {
     }
 }
 
-pub fn missing() -> Result<hyper::Response<Vec<u8>>, AppError> {
+pub fn missing() -> Result<Response, AppError> {
     Err(AppError::missing())
 }
 
@@ -261,6 +356,36 @@ mod body_tests {
     #[derive(Debug, Deserialize, Eq, PartialEq)]
     struct Payload {
         value: String,
+    }
+
+    #[test]
+    fn small_response_body_stays_inline() {
+        let body = ok_response("ok").into_body();
+
+        assert!(!body.spilled());
+        let value: serde_json::Value =
+            serde_json::from_slice(body.as_ref()).expect("response should contain valid JSON");
+        assert_eq!(value["ok"], "ok");
+    }
+
+    #[test]
+    fn ascii_string_response_uses_final_size_for_inline_storage() {
+        let payload = "x".repeat(100);
+        let body = ok_response(payload.as_str()).into_body();
+
+        assert!(body.len() < INLINE_RESPONSE_BODY_BYTES);
+        assert!(!body.spilled());
+    }
+
+    #[test]
+    fn large_response_body_spills_to_heap() {
+        let payload = "x".repeat(INLINE_RESPONSE_BODY_BYTES * 2);
+        let body = ok_response(payload.as_str()).into_body();
+
+        assert!(body.spilled());
+        let value: serde_json::Value =
+            serde_json::from_slice(body.as_ref()).expect("response should contain valid JSON");
+        assert_eq!(value["ok"], payload);
     }
 
     #[tokio::test]

@@ -22,6 +22,7 @@ use uuid::Uuid;
 // Limit the numeric value rather than the numerator. Keeping it far below
 // i32::MAX leaves more than two billion integer positions for server appends.
 pub(crate) const MAX_REQUEST_POSITION: i32 = 1_000_000;
+const ACTION_DURATION_SAMPLE_INTERVAL: u8 = 64;
 
 pub(crate) fn check_pos((p, q): (i32, i32)) -> Result<(), ValidationFailed> {
     if q == 0 {
@@ -350,6 +351,7 @@ impl ChannelPosActor {
         let mut changed_at = Instant::now();
         let action_duration_histogram = metrics::histogram!("boluo_server_pos_action_duration_ms");
         let positions_len_histogram = metrics::histogram!("boluo_server_pos_positions_len");
+        let mut action_duration_sample_sequence = self.channel_id.as_u128() as u8;
 
         while let Some(action) = self.receiver.recv().await {
             let pending = self.receiver.len();
@@ -444,7 +446,10 @@ impl ChannelPosActor {
             }
             self.entry_count.update(self.state.positions.len());
             let elapsed = start.elapsed();
-            action_duration_histogram.record(elapsed.as_millis() as f64);
+            if action_duration_sample_sequence % ACTION_DURATION_SAMPLE_INTERVAL == 0 {
+                action_duration_histogram.record(elapsed.as_millis() as f64);
+            }
+            action_duration_sample_sequence = action_duration_sample_sequence.wrapping_add(1);
             if elapsed > std::time::Duration::from_millis(8) {
                 tracing::warn!(
                     event = "channel_position.action.slow",
@@ -926,7 +931,10 @@ impl PosItem {
 pub enum FailToFindIntermediate {
     EqualFractions,
     OutOfRange,
+    SearchLimitReached,
 }
+
+const FIND_INTERMEDIATE_SEARCH_LIMIT: usize = 128;
 
 /// Find the intermediate fraction between p1/q1 and p2/q2.
 ///
@@ -979,8 +987,8 @@ pub fn find_intermediate(
     let p2 = p2 as i128;
     let q2 = q2 as i128;
 
-    // Jump until mediant lies strictly between (p1/q1, p2/q2)
-    loop {
+    // Bound executor time if convergence assumptions fail.
+    for _ in 0..FIND_INTERMEDIATE_SEARCH_LIMIT {
         // mediant m = (ln+rn)/(ld+rd)
         let mediant_p: i128 = left_p + right_p;
         let mediant_q: i128 = left_q + right_q;
@@ -1026,6 +1034,8 @@ pub fn find_intermediate(
             mediant_q.try_into().map_err(|_| OutOfRange)?,
         ));
     }
+
+    Err(FailToFindIntermediate::SearchLimitReached)
 }
 
 #[cfg(test)]

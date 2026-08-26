@@ -24,7 +24,7 @@ use crate::users::models::UserExt;
 use crate::utils::id;
 use governor::{DefaultDirectRateLimiter, DefaultKeyedRateLimiter, RateLimiter};
 use hyper::body::{Body, Incoming};
-use hyper::{Method, Request, Response};
+use hyper::{Method, Request};
 use uuid::Uuid;
 
 static LOGIN_LIMITER: LazyLock<DefaultKeyedRateLimiter<String>> =
@@ -183,7 +183,7 @@ pub async fn query_settings(
 pub async fn login<B: Body>(
     ctx: &crate::context::AppContext,
     req: Request<B>,
-) -> Result<Response<Vec<u8>>, AppError> {
+) -> Result<interface::Response, AppError> {
     use crate::session;
 
     let origin = req
@@ -296,7 +296,7 @@ pub async fn login<B: Body>(
 pub async fn logout(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
-) -> Result<Response<Vec<u8>>, AppError> {
+) -> Result<interface::Response, AppError> {
     use crate::session::authenticate;
 
     if let Ok(session) = authenticate(ctx, &req).await {
@@ -856,7 +856,7 @@ pub async fn confirm_email_change(
 pub async fn discourse_login(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
-) -> Result<Response<Vec<u8>>, AppError> {
+) -> Result<interface::Response, AppError> {
     use super::api::{DiscourseConnect, DiscoursePayload, DiscourseResponse};
     use crate::session::authenticate;
 
@@ -917,7 +917,7 @@ pub async fn discourse_login(
             return hyper::Response::builder()
                 .status(hyper::StatusCode::FOUND)
                 .header(hyper::header::LOCATION, redirect_url)
-                .body(Vec::new())
+                .body(interface::ResponseBytes::new())
                 .map_err(|e| AppError::Unexpected(e.into()));
         }
         Err(e) => return Err(e),
@@ -946,7 +946,7 @@ pub async fn discourse_login(
         return hyper::Response::builder()
             .status(hyper::StatusCode::FOUND)
             .header(hyper::header::LOCATION, redirect_url)
-            .body(Vec::new())
+            .body(interface::ResponseBytes::new())
             .map_err(|e| AppError::Unexpected(e.into()));
     }
 
@@ -1004,7 +1004,7 @@ pub async fn discourse_login(
     hyper::Response::builder()
         .status(hyper::StatusCode::FOUND)
         .header(hyper::header::LOCATION, redirect_url)
-        .body(Vec::new())
+        .body(interface::ResponseBytes::new())
         .map_err(|e| AppError::Unexpected(e.into()))
 }
 
@@ -1012,7 +1012,7 @@ pub async fn router(
     ctx: &crate::context::AppContext,
     req: Request<Incoming>,
     path: &str,
-) -> Result<Response<Vec<u8>>, AppError> {
+) -> Result<interface::Response, AppError> {
     match (path, req.method().clone()) {
         ("/login", Method::POST) => login(ctx, req).await,
         ("/register", Method::POST) => response(register(ctx, req).await).await,

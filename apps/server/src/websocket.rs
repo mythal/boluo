@@ -96,7 +96,7 @@ where
         );
         return hyper::Response::builder()
             .status(StatusCode::BAD_REQUEST)
-            .body(Vec::new())
+            .body(crate::interface::ResponseBytes::new())
             .unwrap_or_default();
     };
 
@@ -166,7 +166,7 @@ where
         .header(header::UPGRADE, "websocket")
         .header(header::CONNECTION, "Upgrade")
         .header(header::SEC_WEBSOCKET_ACCEPT, accept)
-        .body(Vec::new())
+        .body(crate::interface::ResponseBytes::new())
         .unwrap_or_else(|err| {
             tracing::error!(
                 event = "websocket.response.build_failed", error = %err, "Failed to build websocket response");

@@ -174,7 +174,7 @@ pub fn echo(req: Request<Incoming>) -> Response {
     hyper::Response::builder()
         .header(hyper::header::CONTENT_TYPE, "text/plain")
         .status(hyper::StatusCode::OK)
-        .body(format!("{:?}", req.headers()).into_bytes())
+        .body(format!("{:?}", req.headers()).into())
         .unwrap_or_default()
 }
 

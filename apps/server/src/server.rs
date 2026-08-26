@@ -608,8 +608,21 @@ fn start_log_drop_metrics(error_counter: tracing_appender::non_blocking::ErrorCo
     });
 }
 
-#[tokio::main(worker_threads = 5)]
-async fn main() {
+fn main() {
+    let worker_threads = std::thread::available_parallelism()
+        .map(std::num::NonZeroUsize::get)
+        .unwrap_or(1);
+    let max_blocking_threads = worker_threads.saturating_mul(4).clamp(4, 32);
+    let runtime = tokio::runtime::Builder::new_multi_thread()
+        .worker_threads(worker_threads)
+        .max_blocking_threads(max_blocking_threads)
+        .enable_all()
+        .build()
+        .expect("Failed to build Tokio runtime");
+    runtime.block_on(run_server(worker_threads, max_blocking_threads));
+}
+
+async fn run_server(worker_threads: usize, max_blocking_threads: usize) {
     use tracing_subscriber::filter::{EnvFilter, LevelFilter};
 
     let wants_help = std::env::args()
@@ -649,6 +662,11 @@ async fn main() {
         .with_writer(log_writer)
         .with_env_filter(filter)
         .init();
+    tracing::info!(
+        worker_threads,
+        max_blocking_threads,
+        "Tokio runtime configured"
+    );
     // Keep the guard alive until after the final log event so shutdown flushes
     // the queue before terminating the writer thread.
     let _log_guard = log_guard;

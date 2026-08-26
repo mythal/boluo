@@ -245,7 +245,7 @@ async fn move_between(
         expect_pos,
     )
     .await?;
-    let (mut moved_message, space_id, old_pos) = match move_outcome {
+    let (moved_message, space_id, old_pos) = match move_outcome {
         super::models::MessageMoveOutcome::Moved {
             message,
             space_id,
@@ -273,9 +273,6 @@ async fn move_between(
             ));
         }
     };
-    if moved_message.whisper_to_users.is_some() {
-        moved_message.hide(None);
-    }
     Update::message_edited(space_id, moved_message, old_pos).await;
     metrics::counter!("boluo_server_messages_moved_total").increment(1);
     Ok(true)
@@ -400,9 +397,7 @@ async fn toggle_fold(
     let edited_message = Message::set_folded(&ctx.db, &message.id, !message.folded)
         .await?
         .or_not_found()?;
-    let mut event_message = edited_message.clone();
-    event_message.hide(None);
-    Update::message_edited(channel.space_id, event_message, message.pos).await;
+    Update::message_edited(channel.space_id, edited_message.clone(), message.pos).await;
     metrics::counter!("boluo_server_messages_folded_total").increment(1);
     Ok(edited_message)
 }

@@ -7,6 +7,17 @@ const MEDIA_AUTOPLAY_BLOCKED =
 const RESIZE_OBSERVER_LOOP =
   /ResizeObserver loop (?:limit exceeded|completed with undelivered notifications)/i;
 
+export type FrontendLogContextValue = string | number | boolean | null | undefined;
+
+export const normalizeFrontendLogContext = (
+  context: Record<string, FrontendLogContextValue>,
+): Record<string, string> =>
+  Object.fromEntries(
+    Object.entries(context).flatMap(([key, value]) =>
+      value == null ? [] : [[key, String(value)] as const],
+    ),
+  );
+
 export function getFrontendTelemetryIgnoreErrors(
   additionalPatterns: Array<string | RegExp> = [],
 ): Array<string | RegExp> {

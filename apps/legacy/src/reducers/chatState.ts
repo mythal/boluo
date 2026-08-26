@@ -132,16 +132,86 @@ const compareMessageVersion = (a: Message, b: Message): number => {
   return Date.parse(a.modified) - Date.parse(b.modified);
 };
 
+const eventIdDiagnostic = ({ timestamp, node, seq }: EventId): string =>
+  `${timestamp}:${node}:${seq}`;
+
+const messageDiagnostic = (message: Message) => ({
+  id: message.id,
+  modified: message.modified,
+  pos: message.pos,
+  rev: message.rev ?? 0,
+});
+
+const chatItemDiagnostic = (item: ChatItem) => ({
+  id: item.id,
+  message: item.type === 'MESSAGE' ? messageDiagnostic(item.message) : undefined,
+  pos: item.pos,
+  previewId: item.type === 'PREVIEW' ? item.preview.id : undefined,
+  type: item.type,
+});
+
+const chatLogContext = (
+  chat: ChatState,
+  action: Action,
+  previousCursor: EventId = chat.eventAfter,
+) => {
+  const event = action.type === 'EVENT_RECEIVED' ? action.event : null;
+  return {
+    actionType: event?.body.type ?? action.type,
+    channelId: chat.channel.id,
+    finished: chat.finished,
+    historyMutationGeneration: chat.historyMutationGeneration,
+    initialHistoryLoading: chat.initialHistoryLoad != null,
+    messageCount: chat.itemSet.messages.size,
+    pendingMessageMutationCount: chat.initialHistoryLoad?.pendingMutations.length ?? 0,
+    previousCursor: event ? eventIdDiagnostic(previousCursor) : undefined,
+    requestId:
+      action.type === 'LOAD_MESSAGES' && action.mode === 'INITIAL' ? action.requestId : undefined,
+    requestedBefore:
+      action.type === 'LOAD_MESSAGES' && action.mode === 'MORE' ? action.before : undefined,
+    requestedHistoryMutationGeneration:
+      action.type === 'LOAD_MESSAGES' && action.mode === 'MORE'
+        ? action.historyMutationGeneration
+        : undefined,
+    spaceId: chat.channel.spaceId,
+    updateId: event ? eventIdDiagnostic(event.id) : undefined,
+    updateLive: event?.live,
+  };
+};
+
+const actionDiagnostic = (action: Action): Record<string, unknown> => {
+  if (action.type === 'LOAD_MESSAGES') {
+    const firstMessage = action.messages[0];
+    const lastMessage = action.messages[action.messages.length - 1];
+    return {
+      before: action.mode === 'MORE' ? action.before : null,
+      finished: action.finished,
+      firstMessage: firstMessage ? messageDiagnostic(firstMessage) : null,
+      lastMessage: lastMessage ? messageDiagnostic(lastMessage) : null,
+      messageCount: action.messages.length,
+      mode: action.mode,
+    };
+  }
+  if (action.type !== 'EVENT_RECEIVED') return {};
+  const { body } = action.event;
+  switch (body.type) {
+    case 'NEW_MESSAGE':
+      return { message: messageDiagnostic(body.message), previewId: body.previewId };
+    case 'MESSAGE_EDITED':
+      return { message: messageDiagnostic(body.message), oldPos: body.oldPos };
+    case 'MESSAGE_DELETED':
+      return { messageId: body.messageId, pos: body.pos };
+    default:
+      return {};
+  }
+};
+
 const loadMoreMessages = (
   chat: ChatState,
-  {
-    messages,
-    finished,
-    before,
-    historyMutationGeneration,
-  }: Extract<LoadMessages, { mode: 'MORE' }>,
+  action: Extract<LoadMessages, { mode: 'MORE' }>,
   myId: Id | undefined,
 ): ChatState => {
+  const { messages, finished, before, historyMutationGeneration } = action;
   if (
     getOldestMessage(chat.itemSet)?.pos !== before ||
     chat.historyMutationGeneration !== historyMutationGeneration
@@ -152,6 +222,14 @@ const loadMoreMessages = (
     return { ...chat, finished };
   }
   if (messages.some((message) => message.pos >= before)) {
+    const logContext = chatLogContext(chat, action);
+    recordWarning('Incorrect messages order in history response', {
+      source: 'chat-state',
+      context: logContext,
+      details: {
+        action: actionDiagnostic(action),
+      },
+    });
     throw new Error('Incorrect messages order');
   }
   return mergeLoadedMessages({ ...chat, finished }, messages, myId);
@@ -217,18 +295,11 @@ const handleMessageDelete = (itemSet: ChatItemSet, messageId: Id): ChatItemSet =
   return deleteMessage(itemSet, messageId);
 };
 
-const applyMessageUpdate = (
-  chat: ChatState,
-  message: Message,
-  myId: Id | undefined,
-): ChatState => {
+const applyMessageUpdate = (chat: ChatState, message: Message, myId: Id | undefined): ChatState => {
   const currentItem = chat.itemSet.messages.find(
     (item) => item.type === 'MESSAGE' && item.id === message.id,
   );
-  if (
-    currentItem?.type === 'MESSAGE' &&
-    compareMessageVersion(currentItem.message, message) > 0
-  ) {
+  if (currentItem?.type === 'MESSAGE' && compareMessageVersion(currentItem.message, message) > 0) {
     return chat;
   }
   return handleEditMessage(chat, message, myId);
@@ -577,6 +648,27 @@ const handleChannelEvent = (chat: ChatState, event: Events, myId: Id | undefined
   if ('channelId' in body && body.channelId !== channel.id) {
     return chat;
   }
+  if (body.type === 'NEW_MESSAGE' || body.type === 'MESSAGE_EDITED') {
+    const incomingMessage = body.message;
+    const itemIndexByPos = binarySearchPos(itemSet.messages, incomingMessage.pos);
+    const itemByPos = itemSet.messages.get(itemIndexByPos);
+    if (
+      itemByPos?.type === 'MESSAGE' &&
+      itemByPos.pos === incomingMessage.pos &&
+      itemByPos.id !== incomingMessage.id
+    ) {
+      const action: Action = { type: 'EVENT_RECEIVED', event };
+      const logContext = chatLogContext(chat, action);
+      recordWarning('Message position collision', {
+        source: 'chat-state',
+        context: logContext,
+        details: {
+          conflictingMessage: messageDiagnostic(itemByPos.message),
+          incomingMessage: messageDiagnostic(incomingMessage),
+        },
+      });
+    }
+  }
   switch (body.type) {
     case 'NEW_MESSAGE':
       itemSet = newMessage(itemSet, body.message, myId);
@@ -653,14 +745,77 @@ export const handleRevealMessage = (state: ChatState, message: Message, myId?: I
   return applyMessageUpdate(state, message, myId);
 };
 
-export const checkMessagesOrder = (itemSet: ChatItemSet) => {
-  let prevPos = -1.0;
-  for (const item of itemSet.messages) {
-    if (item.pos <= prevPos) {
-      recordWarning('Incorrect messages order', { source: 'chat-state' });
+const MESSAGE_ORDER_CHECK_LIMIT = 512;
+
+const messageOrderCheckAnchor = (chat: ChatState, action: Action): number | null => {
+  const { messages } = chat.itemSet;
+  switch (action.type) {
+    case 'LOAD_MESSAGES':
+      return 0;
+    case 'MOVING_MESSAGE':
+      return binarySearchPos(messages, action.targetItem?.pos ?? action.message.pos);
+    case 'RESET_MESSAGE_MOVING': {
+      const index = messages.findIndex((item) => item.id === action.messageId);
+      return index === -1 ? messages.size - 1 : index;
     }
-    prevPos = item.pos;
+    case 'REVEAL_MESSAGE':
+      return binarySearchPos(messages, action.message.pos);
+    case 'EVENT_RECEIVED': {
+      const { body } = action.event;
+      switch (body.type) {
+        case 'NEW_MESSAGE':
+        case 'MESSAGE_EDITED':
+          return binarySearchPos(messages, body.message.pos);
+        case 'MESSAGE_DELETED':
+          return binarySearchPos(messages, body.pos);
+        case 'MESSAGE_PREVIEW':
+          return binarySearchPos(messages, body.preview.pos);
+        default:
+          return null;
+      }
+    }
+    default:
+      return null;
   }
+};
+
+export const checkMessagesOrder = (
+  chat: ChatState,
+  action: Action,
+  previousChat: ChatState = chat,
+): boolean => {
+  const { messages } = chat.itemSet;
+  const anchor = messageOrderCheckAnchor(chat, action);
+  if (anchor == null) return true;
+  const start = Math.max(
+    0,
+    Math.min(
+      anchor - Math.floor(MESSAGE_ORDER_CHECK_LIMIT / 2),
+      messages.size - MESSAGE_ORDER_CHECK_LIMIT,
+    ),
+  );
+  const end = Math.min(messages.size, start + MESSAGE_ORDER_CHECK_LIMIT);
+  let previousItem: ChatItem | undefined = start === 0 ? undefined : messages.get(start - 1);
+  for (let index = start; index < end; index += 1) {
+    const item = messages.get(index);
+    if (item == null) break;
+    if (previousItem != null && item.pos <= previousItem.pos) {
+      const logContext = chatLogContext(chat, action, previousChat.eventAfter);
+      recordWarning('Incorrect messages order', {
+        source: 'chat-state',
+        context: logContext,
+        details: {
+          action: actionDiagnostic(action),
+          index,
+          item: chatItemDiagnostic(item),
+          previousItem: chatItemDiagnostic(previousItem),
+        },
+      });
+      return false;
+    }
+    previousItem = item;
+  }
+  return true;
 };
 
 const handleSpaceUpdate = (

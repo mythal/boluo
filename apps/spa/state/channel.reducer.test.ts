@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import test, { describe } from 'node:test';
+import test, { describe, type TestContext } from 'node:test';
 import type { Message, Preview, PreviewDiff, PreviewDiffOp, PreviewDiffPost } from '@boluo/api';
 import { parse } from '@boluo/interpreter';
 import * as L from 'list';
@@ -106,6 +106,10 @@ const makeDiff = (
 const positions = (list: L.List<MessageItem>): number[] =>
   Array.from(list, (message) => message.pos);
 
+const muteWarn = (t: TestContext): void => {
+  t.mock.method(console, 'warn', () => {});
+};
+
 const startInitialHistoryLoad = (state: ChannelState): ChannelState =>
   channelReducer(
     state,
@@ -182,7 +186,8 @@ describe('channelReducer', () => {
     assert.deepStrictEqual(positions(next.messages), [9, 10]);
   });
 
-  test('receiveMessage with duplicated pos resets messages and loading state', () => {
+  test('receiveMessage with duplicated pos resets messages and loading state', (t) => {
+    muteWarn(t);
     const preview = toPreviewItem(makePreview('preview-dup', 1));
     const state = {
       ...makeInitialChannelState(channelId),
@@ -281,7 +286,8 @@ describe('channelReducer', () => {
     assert.deepStrictEqual(next.previewMap, {});
   });
 
-  test('receiveMessage resets when pos equals bottom', () => {
+  test('receiveMessage resets when pos equals bottom', (t) => {
+    muteWarn(t);
     const state = {
       ...makeInitialChannelState(channelId),
       historyState: 'FULL' as const,
@@ -339,7 +345,8 @@ describe('channelReducer', () => {
     assert.strictEqual(next.historyState, 'FULL');
   });
 
-  test('receiveMessage different id at bottom boundary still resets', () => {
+  test('receiveMessage different id at bottom boundary still resets', (t) => {
+    muteWarn(t);
     const state = {
       ...makeInitialChannelState(channelId),
       historyState: 'FULL' as const,

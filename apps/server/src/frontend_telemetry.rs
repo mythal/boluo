@@ -13,6 +13,7 @@ use hyper::body::Body;
 use hyper::header::{CONTENT_ENCODING, CONTENT_TYPE};
 use hyper::{Method, Request, StatusCode};
 use serde::Deserialize;
+use sonic_rs::{JsonType, JsonValueTrait, LazyValue};
 
 use crate::error::AppError;
 use crate::interface::{Response, read_body_limited};
@@ -21,6 +22,7 @@ use crate::rate_limit::Ipv6Prefix64;
 const MAX_BODY_BYTES: usize = 64 * 1024;
 const MAX_SIGNALS_PER_BATCH: usize = 10;
 const MAX_MESSAGE_BYTES: usize = 2 * 1024;
+const MAX_LOG_CONTEXT_BYTES: usize = 8 * 1024;
 const MAX_STACKTRACE_BYTES: usize = 8 * 1024;
 
 static GLOBAL_LIMITER: LazyLock<DefaultDirectRateLimiter> = LazyLock::new(|| {
@@ -42,13 +44,13 @@ static CLIENT_IPV6_PREFIX_LIMITER: LazyLock<DefaultKeyedRateLimiter<Ipv6Prefix64
     });
 
 #[derive(Debug, Default, Deserialize)]
-struct FaroPayload {
+struct FaroPayload<'a> {
     #[serde(default)]
     meta: FaroMeta,
     #[serde(default)]
     exceptions: Vec<FaroException>,
-    #[serde(default)]
-    logs: Vec<FaroLog>,
+    #[serde(borrow, default)]
+    logs: Vec<FaroLog<'a>>,
     #[serde(default)]
     measurements: Vec<FaroMeasurement>,
 }
@@ -129,10 +131,12 @@ struct FaroStackFrame {
 }
 
 #[derive(Debug, Default, Deserialize)]
-struct FaroLog {
+struct FaroLog<'a> {
     timestamp: Option<String>,
     level: String,
     message: String,
+    #[serde(borrow, default)]
+    context: Option<LazyValue<'a>>,
 }
 
 #[derive(Debug, Default, Deserialize)]
@@ -145,7 +149,7 @@ struct FaroMeasurement {
     context: HashMap<String, String>,
 }
 
-impl FaroPayload {
+impl FaroPayload<'_> {
     fn signal_count(&self) -> usize {
         self.exceptions
             .len()
@@ -156,6 +160,21 @@ impl FaroPayload {
 
 fn truncated(value: &str, max_bytes: usize) -> &str {
     &value[..value.floor_char_boundary(max_bytes.min(value.len()))]
+}
+
+fn bounded_log_context(context: Option<&LazyValue<'_>>) -> HashMap<String, String> {
+    let Some(context) = context else {
+        return HashMap::new();
+    };
+    if context.get_type() != JsonType::Object {
+        return HashMap::new();
+    }
+    let raw = context.as_raw_str();
+    if raw.len() <= MAX_LOG_CONTEXT_BYTES {
+        sonic_rs::from_str(raw).unwrap_or_default()
+    } else {
+        HashMap::from([(String::from("_omitted"), String::from("too_large"))])
+    }
 }
 
 fn sanitized_page_path(raw_url: &str) -> String {
@@ -252,7 +271,7 @@ fn stacktrace(exception: &FaroException) -> String {
     output
 }
 
-fn process(payload: FaroPayload) -> Result<(), AppError> {
+fn process(payload: FaroPayload<'_>) -> Result<(), AppError> {
     let signal_count = payload.signal_count();
     if signal_count == 0 {
         return Err(AppError::BadRequest(
@@ -357,6 +376,7 @@ fn process(payload: FaroPayload) -> Result<(), AppError> {
 
     for log in &payload.logs {
         let message = truncated(&log.message, MAX_MESSAGE_BYTES);
+        let frontend_log_context = bounded_log_context(log.context.as_ref());
         match log.level.as_str() {
             "error" => {
                 tracing::error!(
@@ -374,6 +394,7 @@ fn process(payload: FaroPayload) -> Result<(), AppError> {
                     frontend_user_id,
                     faro_session_id,
                     frontend_page_path,
+                    frontend_log_context = tracing::field::valuable(&frontend_log_context),
                     "{}",
                     message
                 );
@@ -394,6 +415,7 @@ fn process(payload: FaroPayload) -> Result<(), AppError> {
                     frontend_user_id,
                     faro_session_id,
                     frontend_page_path,
+                    frontend_log_context = tracing::field::valuable(&frontend_log_context),
                     "{}",
                     message
                 );
@@ -548,7 +570,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn accepts_faro_exception_and_web_vitals() {
+    async fn accepts_faro_logs_exceptions_and_web_vitals() {
         let mut request = request(
             r#"{
                 "meta":{"app":{"name":"spa","version":"1"},"browser":{"name":"Firefox"}},
@@ -558,6 +580,18 @@ mod tests {
                     "value":"broken",
                     "fatal":false,
                     "context":{"event_id":"0198-test","component_stack":"at Chat"}
+                }],
+                "logs":[{
+                    "timestamp":"2026-08-24T00:00:00.000Z",
+                    "level":"warn",
+                    "message":"Messages are not sorted by pos",
+                    "context":{
+                        "spaceId":"space-1",
+                        "channelId":"channel-1",
+                        "updateId":"10:1:2",
+                        "previousCursor":"9:1:1",
+                        "actionType":"messageEdited"
+                    }
                 }],
                 "measurements":[{
                     "timestamp":"2026-08-24T00:00:00.000Z",

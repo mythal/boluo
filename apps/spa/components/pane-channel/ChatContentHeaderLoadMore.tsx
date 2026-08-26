@@ -14,6 +14,7 @@ import { loadChannelMessages } from '../../state/loadChannelMessages';
 import { isChannelHistoryInitialized } from '../../state/channel.reducer';
 
 const LOAD_MESSAGE_LIMIT = 51;
+const STALE_PAGE_RETRY_DELAY = 250;
 const AUTO_LOAD = true;
 
 interface Point {
@@ -29,6 +30,8 @@ export const ChatContentHeaderLoadMore: FC = () => {
   const channelId = useChannelId();
   const mountedRef = useMountedRef();
   const loadMoreRef = useRef<HTMLButtonElement>(null);
+  const isLoadMoreVisibleRef = useRef(false);
+  const stalePageRetryTimeoutRef = useRef<number | undefined>(undefined);
   const store = useStore();
   const chatInitialized = useAtomValue(isChatInitializedAtom);
   const [isLoading, setIsLoading] = useState(false);
@@ -38,6 +41,8 @@ export const ChatContentHeaderLoadMore: FC = () => {
 
   const loadMore = async () => {
     if (!chatInitialized || isLoadingRef.current || !mountedRef.current) return;
+    window.clearTimeout(stalePageRetryTimeoutRef.current);
+    stalePageRetryTimeoutRef.current = undefined;
     const chatState = store.get(chatAtom);
     const channelState = chatState.channels[channelId];
     if (channelState?.historyState === 'INITIAL_LOADING') return;
@@ -50,8 +55,10 @@ export const ChatContentHeaderLoadMore: FC = () => {
         channelId,
         limit: LOAD_MESSAGE_LIMIT,
       };
-      const result = await loadChannelMessages(
-        channelState == null || !isChannelHistoryInitialized(channelState)
+      const shouldLoadInitialHistory =
+        channelState == null || !isChannelHistoryInitialized(channelState) || before == null;
+      const { result, status } = await loadChannelMessages(
+        shouldLoadInitialHistory
           ? { ...baseOptions, mode: 'INITIAL' }
           : { ...baseOptions, before, mode: 'LOAD_MORE' },
       );
@@ -66,6 +73,12 @@ export const ChatContentHeaderLoadMore: FC = () => {
           ),
         });
         return;
+      }
+      if (status === 'STALE_PAGE' && isLoadMoreVisibleRef.current) {
+        stalePageRetryTimeoutRef.current = window.setTimeout(
+          () => void loadMore(),
+          STALE_PAGE_RETRY_DELAY,
+        );
       }
     } finally {
       isLoadingRef.current = false;
@@ -88,6 +101,7 @@ export const ChatContentHeaderLoadMore: FC = () => {
         if (entries.length === 0) return;
         const entry = entries[0]!;
         isVisible = entry.isIntersecting;
+        isLoadMoreVisibleRef.current = entry.isIntersecting;
         window.clearTimeout(autoLoadTimeout);
         if (AUTO_LOAD && entry.isIntersecting && !isTouchDevice) {
           autoLoadTimeout = window.setTimeout(loadMoreFromEffect, 100);
@@ -140,7 +154,9 @@ export const ChatContentHeaderLoadMore: FC = () => {
 
     return () => {
       observer.disconnect();
+      isLoadMoreVisibleRef.current = false;
       window.clearTimeout(autoLoadTimeout);
+      window.clearTimeout(stalePageRetryTimeoutRef.current);
       window.removeEventListener('touchstart', handleTouchStart);
       window.removeEventListener('touchmove', handleTouchMove);
       window.removeEventListener('touchend', handleTouchEnd);

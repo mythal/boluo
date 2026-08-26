@@ -152,6 +152,7 @@ export type ChannelHistoryState = 'UNINITIALIZED' | 'INITIAL_LOADING' | 'PARTIAL
 export interface ChannelState {
   id: string;
   historyState: ChannelHistoryState;
+  historyMutationGeneration: number;
   pendingMessageMutations: MessageMutationAction[];
   messages: List<MessageItem>;
   previewMap: Record<UserId, PreviewItem>;
@@ -164,6 +165,19 @@ export const isChannelHistoryInitialized = (state: ChannelState): boolean =>
   state.historyState === 'PARTIAL' || state.historyState === 'FULL';
 
 export const isChannelHistoryFull = (state: ChannelState): boolean => state.historyState === 'FULL';
+
+export interface OlderMessagesPageRequest {
+  before: number;
+  historyMutationGeneration: number;
+}
+
+export const isOlderMessagesPageCurrent = (
+  state: ChannelState | undefined,
+  request: OlderMessagesPageRequest,
+): boolean =>
+  state?.historyState === 'PARTIAL' &&
+  L.first(state.messages)?.pos === request.before &&
+  state.historyMutationGeneration === request.historyMutationGeneration;
 
 type MessageMutationAction = ChatAction<'messageEdited'> | ChatAction<'messageDeleted'>;
 
@@ -178,6 +192,7 @@ export const makeInitialChannelState = (id: string): ChannelState => {
     id,
     messages: L.empty(),
     historyState: 'UNINITIALIZED',
+    historyMutationGeneration: 0,
     pendingMessageMutations: [],
     previewMap: {},
     scheduledGc: null,
@@ -237,7 +252,7 @@ const handleNewMessage = (
   if (topMessage == null || bottomMessage == null) {
     // Keep the message even when the channel is not loaded yet. A history
     // load racing with this event may not contain the message (the snapshot
-    // was read before it committed); `handleMessagesLoaded` only merges
+    // was read before it committed); `mergeHistoryPage` only merges
     // payload messages below the top message, so keeping it here fills that
     // gap and never duplicates.
     return {
@@ -288,9 +303,9 @@ const handleNewMessage = (
   };
 };
 
-const mergeMessagesLoaded = (
+const mergeHistoryPage = (
   state: ChannelState,
-  { payload }: ChatAction<'messagesLoaded'>,
+  payload: Pick<ChatAction<'initialHistoryLoaded'>['payload'], 'messages' | 'historyExhausted'>,
 ): ChannelState => {
   // Note:
   // The payload.messages are sorted in descending order
@@ -301,9 +316,6 @@ const mergeMessagesLoaded = (
   let payloadMessages = L.from(payload.messages);
   const payloadLen = payloadMessages.length;
   const topMessage = L.first(state.messages);
-  if (topMessage && payload.before != null && topMessage.pos > payload.before) {
-    return state;
-  }
   const historyState: ChannelHistoryState = payload.historyExhausted ? 'FULL' : 'PARTIAL';
   if (historyState !== state.historyState) {
     state = { ...state, historyState };
@@ -329,14 +341,24 @@ const mergeMessagesLoaded = (
   };
 };
 
-const handleMessagesLoaded = (
+const handleInitialHistoryLoaded = (
   state: ChannelState,
-  action: ChatAction<'messagesLoaded'>,
+  { payload }: ChatAction<'initialHistoryLoaded'>,
 ): ChannelState => {
   const historyWasInitialized = isChannelHistoryInitialized(state);
-  const nextState = mergeMessagesLoaded(state, action);
+  const nextState = mergeHistoryPage(state, payload);
   if (historyWasInitialized || !isChannelHistoryInitialized(nextState)) return nextState;
   return replayPendingMessageMutations(nextState);
+};
+
+const handleOlderMessagesLoaded = (
+  state: ChannelState,
+  { payload }: ChatAction<'olderMessagesLoaded'>,
+): ChannelState => {
+  if (!isOlderMessagesPageCurrent(state, payload)) {
+    return state;
+  }
+  return mergeHistoryPage(state, payload);
 };
 
 const handleInitialHistoryLoadStarted = (state: ChannelState): ChannelState => {
@@ -898,11 +920,16 @@ const channelReducer$ = (
     case 'receiveMessage':
       return handleNewMessage(state, action);
     case 'messageEdited':
-    case 'messageDeleted':
-      if (state.historyState === 'INITIAL_LOADING') {
-        return bufferMessageMutation(state, action);
-      }
-      return applyMessageMutation(state, action);
+    case 'messageDeleted': {
+      const nextState =
+        state.historyState === 'INITIAL_LOADING'
+          ? bufferMessageMutation(state, action)
+          : applyMessageMutation(state, action);
+      return {
+        ...nextState,
+        historyMutationGeneration: state.historyMutationGeneration + 1,
+      };
+    }
     case 'messageSending':
       return handleMessageSending(state, action);
     case 'messageEditing':
@@ -911,11 +938,13 @@ const channelReducer$ = (
       return handleSetOptimisticMessage(state, action);
     case 'removeOptimisticMessage':
       return handleRemoveOptimisticMessage(state, action);
-    case 'messagesLoaded':
+    case 'initialHistoryLoaded':
       // This action is triggered by the user
       // and should be ignored if the chat state
       // has not been initialized.
-      return initialized ? handleMessagesLoaded(state, action) : state;
+      return initialized ? handleInitialHistoryLoaded(state, action) : state;
+    case 'olderMessagesLoaded':
+      return initialized ? handleOlderMessagesLoaded(state, action) : state;
     case 'initialHistoryLoadStarted':
       return initialized ? handleInitialHistoryLoadStarted(state) : state;
     case 'initialHistoryLoadFailed':

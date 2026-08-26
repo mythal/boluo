@@ -181,8 +181,10 @@ export const useScrollToMessage = ({
           channelId,
           limit: LOAD_MESSAGE_LIMIT,
         };
-        const result = await loadChannelMessages(
-          channelState == null || !isChannelHistoryInitialized(channelState)
+        const shouldLoadInitialHistory =
+          channelState == null || !isChannelHistoryInitialized(channelState) || before == null;
+        const { result } = await loadChannelMessages(
+          shouldLoadInitialHistory
             ? { ...baseOptions, mode: 'INITIAL' }
             : { ...baseOptions, before, mode: 'LOAD_MORE' },
         );

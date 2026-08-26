@@ -38,11 +38,17 @@ export type ChatActionMap = {
   initialized: Empty;
   enterSpace: { spaceId: string };
   spaceUpdated: SpaceWithRelated;
-  messagesLoaded: {
+  initialHistoryLoaded: {
     messages: Message[];
-    before: number | null;
     channelId: string;
     historyExhausted: boolean;
+  };
+  olderMessagesLoaded: {
+    messages: Message[];
+    before: number;
+    channelId: string;
+    historyExhausted: boolean;
+    historyMutationGeneration: number;
   };
   initialHistoryLoadStarted: { channelId: string };
   initialHistoryLoadFailed: { channelId: string };

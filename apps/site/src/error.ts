@@ -1,4 +1,5 @@
 import { isApiError, type ApiError } from '@boluo/api';
+import { describeThrownValue } from '@boluo/utils/errors';
 import { LogLevel, faro, getInternalFaroFromGlobalObject } from '@grafana/faro-web-sdk';
 import { IS_DEVELOPMENT } from './const';
 
@@ -47,7 +48,7 @@ const normalizeException = (value: unknown): Error => {
     const cause = 'cause' in value && value.cause instanceof Error ? value.cause : undefined;
     return cause ? new Error(message, { cause }) : new Error(message);
   }
-  return new Error(typeof value === 'string' ? value : 'Non-Error exception');
+  return new Error(`Non-Error exception: ${describeThrownValue(value)}`);
 };
 
 export function captureException(

@@ -6,6 +6,7 @@ import {
   NOT_JSON,
   UNEXPECTED,
 } from './api/error';
+import { describeThrownValue } from '@boluo/utils/errors';
 import { LogLevel, faro, getInternalFaroFromGlobalObject } from '@grafana/faro-web-sdk';
 
 const REPORT_THROTTLE_MS = 60_000;
@@ -63,7 +64,7 @@ const normalizeException = (value: unknown): Error => {
   if (isAppError(value)) {
     return new Error(`${value.code}: ${value.message}`);
   }
-  return new Error(typeof value === 'string' ? value : 'Non-Error exception');
+  return new Error(`Non-Error exception: ${describeThrownValue(value)}`);
 };
 
 export const isAppError = (value: unknown): value is AppError =>

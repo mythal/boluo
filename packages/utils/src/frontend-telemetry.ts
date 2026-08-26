@@ -1,3 +1,5 @@
+import { describeThrownValue } from './errors.js';
+
 const CLOUDFLARE_INSIGHTS_SCRIPT = /static\.cloudflareinsights\.com\/beacon\.min\.js/i;
 const OPAQUE_SCRIPT_ERROR = /^Script error\.$/i;
 const MEDIA_AUTOPLAY_BLOCKED =
@@ -16,3 +18,6 @@ export function getFrontendTelemetryIgnoreErrors(
     ...additionalPatterns,
   ];
 }
+
+export const serializeFrontendLogArguments = (args: unknown[]): string =>
+  args.map((arg) => (typeof arg === 'string' ? arg : describeThrownValue(arg))).join(' ');

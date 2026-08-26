@@ -1,4 +1,7 @@
-import { getFrontendTelemetryIgnoreErrors } from '@boluo/utils/frontend-telemetry';
+import {
+  getFrontendTelemetryIgnoreErrors,
+  serializeFrontendLogArguments,
+} from '@boluo/utils/frontend-telemetry';
 import {
   ErrorsInstrumentation,
   FetchTransport,
@@ -55,6 +58,7 @@ export function initializeFrontendTelemetry(baseUrl: string): void {
       },
       ignoreErrors: getFrontendTelemetryIgnoreErrors(),
       ignoreUrls: [/\/api\/telemetry(?:[/?#]|$)/],
+      logArgsSerializer: serializeFrontendLogArguments,
       instrumentations: [
         new ErrorsInstrumentation(),
         new WebVitalsInstrumentation(),

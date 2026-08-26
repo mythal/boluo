@@ -1,6 +1,9 @@
 import { apiUrlAtom, setFaroSessionIdProvider } from '@boluo/api-browser';
 import { store } from '@boluo/store';
-import { getFrontendTelemetryIgnoreErrors } from '@boluo/utils/frontend-telemetry';
+import {
+  getFrontendTelemetryIgnoreErrors,
+  serializeFrontendLogArguments,
+} from '@boluo/utils/frontend-telemetry';
 import {
   ErrorsInstrumentation,
   FetchTransport,
@@ -68,6 +71,7 @@ export function initializeFrontendTelemetry(): void {
     },
     ignoreErrors: getFrontendTelemetryIgnoreErrors(),
     ignoreUrls: [/\/api\/telemetry(?:[/?#]|$)/],
+    logArgsSerializer: serializeFrontendLogArguments,
     instrumentations: [
       new ErrorsInstrumentation(),
       new WebVitalsInstrumentation(),

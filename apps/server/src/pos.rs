@@ -926,7 +926,10 @@ impl PosItem {
 pub enum FailToFindIntermediate {
     EqualFractions,
     OutOfRange,
+    SearchLimitReached,
 }
+
+const FIND_INTERMEDIATE_SEARCH_LIMIT: usize = 128;
 
 /// Find the intermediate fraction between p1/q1 and p2/q2.
 ///
@@ -979,8 +982,10 @@ pub fn find_intermediate(
     let p2 = p2 as i128;
     let q2 = q2 as i128;
 
-    // Jump until mediant lies strictly between (p1/q1, p2/q2)
-    loop {
+    // Jump until the mediant lies strictly between (p1/q1, p2/q2). Valid i32
+    // inputs should converge well before this limit; the bound prevents a bug
+    // in the search from consuming the executor thread indefinitely.
+    for _ in 0..FIND_INTERMEDIATE_SEARCH_LIMIT {
         // mediant m = (ln+rn)/(ld+rd)
         let mediant_p: i128 = left_p + right_p;
         let mediant_q: i128 = left_q + right_q;
@@ -1026,6 +1031,8 @@ pub fn find_intermediate(
             mediant_q.try_into().map_err(|_| OutOfRange)?,
         ));
     }
+
+    Err(FailToFindIntermediate::SearchLimitReached)
 }
 
 #[cfg(test)]

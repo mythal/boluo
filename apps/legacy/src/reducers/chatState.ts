@@ -29,6 +29,8 @@ import {
   type EventId,
   eventIdMax,
   type Events,
+  type MessageDeleted,
+  type MessageEdited,
   type PreviewDiff,
   type Preview,
   shouldAdvanceCursor,
@@ -46,6 +48,7 @@ import {
   type PreviewItem,
   deleteMessage,
   editMessage,
+  getOldestMessage,
   makeMessageItem,
   markMessageMoving,
   resetMovingMessage,
@@ -81,13 +84,20 @@ export interface ChatState {
   itemSet: ChatItemSet;
   finished: boolean;
   eventAfter: EventId;
+  historyMutationGeneration: number;
   lastLoadBefore: number;
   filter: 'IN_GAME' | 'OUT_GAME' | 'NONE';
   showFolded: boolean;
   moving: boolean;
   postponed: List<Action>;
+  initialHistoryLoad: {
+    requestId: Id;
+    pendingMutations: MessageMutation[];
+  } | null;
   compose: Compose;
 }
+
+type MessageMutation = MessageEdited | MessageDeleted;
 
 const focusItemSet = O.optic<ChatState>().prop('itemSet');
 
@@ -114,29 +124,83 @@ export const closeChat = (state: ChatState, channelId: Id): ChatState | undefine
   return undefined;
 };
 
-const loadMessages = (
+const messageRev = (message: Message): number => message.rev ?? 0;
+
+const compareMessageVersion = (a: Message, b: Message): number => {
+  const revDiff = messageRev(a) - messageRev(b);
+  if (revDiff !== 0) return revDiff;
+  return Date.parse(a.modified) - Date.parse(b.modified);
+};
+
+const loadMoreMessages = (
   chat: ChatState,
-  { messages, finished }: LoadMessages,
+  {
+    messages,
+    finished,
+    before,
+    historyMutationGeneration,
+  }: Extract<LoadMessages, { mode: 'MORE' }>,
   myId: Id | undefined,
 ): ChatState => {
-  const len = messages.length;
-  if (len === 0) {
+  if (
+    getOldestMessage(chat.itemSet)?.pos !== before ||
+    chat.historyMutationGeneration !== historyMutationGeneration
+  ) {
+    return chat;
+  }
+  if (messages.length === 0) {
     return { ...chat, finished };
   }
-  const makeItem = makeMessageItem(myId);
-  const top = chat.itemSet.messages.first();
-  if (top && messages[0].pos >= top.pos) {
+  if (messages.some((message) => message.pos >= before)) {
     throw new Error('Incorrect messages order');
   }
-  messages.sort((a, b) => {
-    return b.pos - a.pos;
-  });
-  messages = messages.reverse();
-  const itemSet: ChatItemSet = {
-    ...chat.itemSet,
-    messages: chat.itemSet.messages.unshift(...messages.map(makeItem)),
-  };
-  return { ...chat, finished, itemSet };
+  return mergeLoadedMessages({ ...chat, finished }, messages, myId);
+};
+
+function mergeLoadedMessages(
+  chat: ChatState,
+  messages: Message[],
+  myId: Id | undefined,
+): ChatState {
+  let itemSet = chat.itemSet;
+  for (const message of [...messages].sort((a, b) => a.pos - b.pos)) {
+    itemSet = mergeMessage(itemSet, message, myId);
+  }
+  return { ...chat, itemSet };
+}
+
+const mergeMessage = (
+  itemSet: ChatItemSet,
+  message: Message,
+  myId: Id | undefined,
+): ChatItemSet => {
+  const existingIndex = itemSet.messages.findIndex(
+    (item) => item.type === 'MESSAGE' && item.id === message.id,
+  );
+  if (existingIndex === -1) {
+    return addItem(itemSet, makeMessageItem(myId)(message));
+  }
+  const existingItem = itemSet.messages.get(existingIndex);
+  if (
+    existingItem?.type !== 'MESSAGE' ||
+    compareMessageVersion(existingItem.message, message) >= 0
+  ) {
+    return itemSet;
+  }
+  return addItem(
+    { ...itemSet, messages: itemSet.messages.remove(existingIndex) },
+    makeMessageItem(myId)(message),
+  );
+};
+
+const startInitialHistoryLoad = (chat: ChatState, requestId: Id): ChatState => ({
+  ...chat,
+  initialHistoryLoad: { requestId, pendingMutations: [] },
+});
+
+const failInitialHistoryLoad = (chat: ChatState, requestId: Id): ChatState => {
+  if (chat.initialHistoryLoad?.requestId !== requestId) return chat;
+  return { ...chat, initialHistoryLoad: null };
 };
 
 const handleEditMessage = (
@@ -151,6 +215,74 @@ const handleEditMessage = (
 
 const handleMessageDelete = (itemSet: ChatItemSet, messageId: Id): ChatItemSet => {
   return deleteMessage(itemSet, messageId);
+};
+
+const applyMessageMutation = (
+  chat: ChatState,
+  mutation: MessageMutation,
+  myId: Id | undefined,
+): ChatState => {
+  if (mutation.type === 'MESSAGE_EDITED') {
+    const currentItem = chat.itemSet.messages.find(
+      (item) => item.type === 'MESSAGE' && item.id === mutation.message.id,
+    );
+    if (
+      currentItem?.type === 'MESSAGE' &&
+      compareMessageVersion(currentItem.message, mutation.message) > 0
+    ) {
+      return chat;
+    }
+    return handleEditMessage(chat, mutation.message, myId);
+  }
+  return { ...chat, itemSet: handleMessageDelete(chat.itemSet, mutation.messageId) };
+};
+
+const handleMessageMutation = (
+  chat: ChatState,
+  mutation: MessageMutation,
+  myId: Id | undefined,
+): ChatState => {
+  const initialHistoryLoad = chat.initialHistoryLoad;
+  if (initialHistoryLoad === null) {
+    return applyMessageMutation(chat, mutation, myId);
+  }
+  let nextChat: ChatState = {
+    ...chat,
+    initialHistoryLoad: {
+      ...initialHistoryLoad,
+      pendingMutations: [...initialHistoryLoad.pendingMutations, mutation],
+    },
+  };
+  const canApplyImmediately =
+    mutation.type === 'MESSAGE_DELETED' ||
+    chat.itemSet.messages.some(
+      (item) => item.type === 'MESSAGE' && item.id === mutation.message.id,
+    );
+  if (canApplyImmediately) {
+    nextChat = applyMessageMutation(nextChat, mutation, myId);
+  }
+  return nextChat;
+};
+
+const replayMessageMutations = (
+  chat: ChatState,
+  mutations: MessageMutation[],
+  myId: Id | undefined,
+): ChatState =>
+  mutations.reduce((state, mutation) => applyMessageMutation(state, mutation, myId), chat);
+
+const loadMessages = (chat: ChatState, action: LoadMessages, myId: Id | undefined): ChatState => {
+  if (action.mode === 'MORE') {
+    return loadMoreMessages(chat, action, myId);
+  }
+  const initialHistoryLoad = chat.initialHistoryLoad;
+  if (initialHistoryLoad?.requestId !== action.requestId) return chat;
+  const loadedChat = mergeLoadedMessages(
+    { ...chat, finished: action.finished, initialHistoryLoad: null },
+    action.messages,
+    myId,
+  );
+  return replayMessageMutations(loadedChat, initialHistoryLoad.pendingMutations, myId);
 };
 
 const applyPreviewDiff = (itemSet: ChatItemSet, diff: PreviewDiff): ChatItemSet => {
@@ -196,7 +328,7 @@ const newPreview = (itemSet: ChatItemSet, preview: Preview, myId: Id | undefined
 };
 
 const newMessage = (itemSet: ChatItemSet, message: Message, myId: Id | undefined): ChatItemSet => {
-  return addItem(itemSet, makeMessageItem(myId)(message));
+  return mergeMessage(itemSet, message, myId);
 };
 
 const handleStartEditMessage = (state: ChatState, { message }: StartEditMessage): ChatState => {
@@ -457,12 +589,11 @@ const handleChannelEvent = (chat: ChatState, event: Events, myId: Id | undefined
       itemSet = applyPreviewDiff(itemSet, body.diff);
       break;
     case 'MESSAGE_DELETED':
-      itemSet = handleMessageDelete(itemSet, body.messageId);
-      break;
     case 'MESSAGE_EDITED':
-      chat = handleEditMessage(chat, body.message, myId);
+      chat = handleMessageMutation(chat, body, myId);
       return {
         ...chat,
+        historyMutationGeneration: chat.historyMutationGeneration + 1,
         eventAfter: advanceCursor ? eventIdMax(eventAfter, event.id) : eventAfter,
       };
     case 'CHANNEL_EDITED':
@@ -603,6 +734,10 @@ export const chatReducer = (
       return { ...state, showFolded: !state.showFolded };
     case 'REVEAL_MESSAGE':
       return handleRevealMessage(state, action.message, myId);
+    case 'INITIAL_HISTORY_LOAD_STARTED':
+      return startInitialHistoryLoad(state, action.requestId);
+    case 'INITIAL_HISTORY_LOAD_FAILED':
+      return failInitialHistoryLoad(state, action.requestId);
     case 'LOAD_MESSAGES':
       return loadMessages(state, action, myId);
     case 'MOVING_MESSAGE':

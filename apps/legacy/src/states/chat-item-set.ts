@@ -45,6 +45,13 @@ export const initialChatItemSet: ChatItemSet = {
   previews: Map<Id, PreviewItem>(),
 };
 
+export const getOldestMessage = (itemSet: ChatItemSet): MessageItem | undefined => {
+  const item = itemSet.messages.find(
+    (candidate) => candidate.type === 'MESSAGE' && Number.isFinite(candidate.pos),
+  );
+  return item?.type === 'MESSAGE' ? item : undefined;
+};
+
 const insertItem = (
   messages: ChatItemSet['messages'],
   newItem: MessageItem | PreviewItem,
@@ -103,7 +110,7 @@ const findItem = (messages: ChatItemSet['messages'], id: Id): number => {
 export const addItem = ({ messages, previews }: ChatItemSet, item: ChatItem): ChatItemSet => {
   if (item.type === 'MESSAGE') {
     const previewItem = previews.get(item.message.senderId);
-    if (previewItem && item.message.id === previewItem.preview.id) {
+    if (previewItem && !previewItem.preview.edit && item.message.id === previewItem.preview.id) {
       messages = removeItem(messages, item.message.senderId);
       previews = previews.remove(item.message.senderId);
     }
@@ -151,13 +158,13 @@ export const editMessage = (
   finished: boolean,
 ): ChatItemSet => {
   let { messages } = itemSet;
-  const top = messages.first();
-  if (top === undefined) {
+  const oldestMessage = getOldestMessage(itemSet);
+  if (oldestMessage === undefined) {
     return itemSet;
   }
   const index = findItem(itemSet.messages, editedItem.id);
   if (index === -1) {
-    if (editedItem.pos < top.pos) {
+    if (editedItem.pos < oldestMessage.pos) {
       return itemSet;
     }
     return addItem(itemSet, editedItem);
@@ -166,7 +173,7 @@ export const editMessage = (
   if (target === undefined || target.type !== 'MESSAGE') {
     throw new Error('unexpected item type');
   }
-  if (editedItem.pos < top.pos) {
+  if (editedItem.pos < oldestMessage.pos) {
     messages = messages.remove(index);
     let nextItemSet: ChatItemSet = { ...itemSet, messages };
     if (finished) {

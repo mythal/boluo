@@ -1,5 +1,4 @@
 //! Cross-origin request handling for production frontends and local development.
-use bytes::Bytes;
 use http_body_util::Full;
 use hyper::body::Incoming;
 use hyper::header::{
@@ -8,6 +7,9 @@ use hyper::header::{
     ACCESS_CONTROL_REQUEST_HEADERS, HeaderValue, ORIGIN,
 };
 use hyper::{Request, Response};
+use std::io::Cursor;
+
+use crate::interface::ResponseBytes;
 
 pub fn is_allowed_origin(origin: &str) -> bool {
     let Ok(origin) = url::Url::parse(origin) else {
@@ -53,7 +55,7 @@ pub fn is_allowed_origin(origin: &str) -> bool {
     .any(|suffix| host.ends_with(suffix))
 }
 
-pub fn allow_origin(origin: Option<&str>, mut res: Response<Full<Bytes>>) -> Response<Full<Bytes>> {
+pub fn allow_origin<B>(origin: Option<&str>, mut res: Response<B>) -> Response<B> {
     let header = res.headers_mut();
     if let Some(origin) = origin.filter(|origin| is_allowed_origin(origin)) {
         match HeaderValue::from_str(origin) {
@@ -81,7 +83,7 @@ pub fn allow_origin(origin: Option<&str>, mut res: Response<Full<Bytes>>) -> Res
     res
 }
 
-pub fn preflight_requests(res: Request<Incoming>) -> Response<Full<Bytes>> {
+pub fn preflight_requests(res: Request<Incoming>) -> Response<Full<Cursor<ResponseBytes>>> {
     let headers = res.headers();
     let allow_headers = headers
         .get(ACCESS_CONTROL_REQUEST_HEADERS)
@@ -93,7 +95,7 @@ pub fn preflight_requests(res: Request<Incoming>) -> Response<Full<Bytes>> {
             HeaderValue::from_static("GET, POST, PUT, DELETE, PATCH"),
         )
         .header(ACCESS_CONTROL_ALLOW_HEADERS, allow_headers)
-        .body(Full::new(Bytes::new()))
+        .body(Full::new(Cursor::new(ResponseBytes::new())))
         .unwrap();
     let origin = res.headers().get(ORIGIN).and_then(|x| x.to_str().ok());
     allow_origin(origin, response)
@@ -102,6 +104,7 @@ pub fn preflight_requests(res: Request<Incoming>) -> Response<Full<Bytes>> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use bytes::Bytes;
 
     #[test]
     fn accepts_production_and_preview_origins() {

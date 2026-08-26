@@ -1039,7 +1039,7 @@ pub async fn router(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
     path: &str,
-) -> Result<hyper::Response<Vec<u8>>, AppError> {
+) -> Result<interface::Response, AppError> {
     use hyper::Method;
 
     match (path, req.method().clone()) {

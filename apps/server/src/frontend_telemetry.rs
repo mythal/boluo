@@ -511,7 +511,7 @@ where
 
     hyper::Response::builder()
         .status(StatusCode::ACCEPTED)
-        .body(Vec::new())
+        .body(crate::interface::ResponseBytes::new())
         .map_err(|error| AppError::Unexpected(error.into()))
 }
 

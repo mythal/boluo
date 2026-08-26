@@ -947,7 +947,7 @@ async fn sse(ctx: &crate::context::AppContext, req: Request<Incoming>) -> Respon
         .status(StatusCode::OK)
         .header(header::CONTENT_TYPE, "text/event-stream")
         .header(header::CACHE_CONTROL, "no-cache")
-        .body(body)
+        .body(body.into())
         .expect("Failed to build SSE response")
 }
 

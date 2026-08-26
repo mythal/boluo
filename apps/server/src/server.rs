@@ -8,6 +8,7 @@
 )]
 
 use std::env;
+use std::io::Cursor;
 use std::net::{IpAddr, SocketAddr};
 use std::path::PathBuf;
 use std::sync::LazyLock;
@@ -118,7 +119,7 @@ async fn router(
         return hyper::Response::builder()
             .status(302)
             .header("Location", target)
-            .body(Vec::new())
+            .body(interface::ResponseBytes::new())
             .map_err(|err| AppError::Unexpected(err.into()));
     }
 
@@ -155,7 +156,7 @@ async fn router(
 async fn handler(
     ctx: &context::AppContext,
     req: Request<Incoming>,
-) -> Result<hyper::Response<Full<hyper::body::Bytes>>, hyper::Error> {
+) -> Result<hyper::Response<Full<Cursor<interface::ResponseBytes>>>, hyper::Error> {
     use tracing::Instrument as _;
 
     let method = req.method().clone();
@@ -237,7 +238,7 @@ async fn handler(
                     } else {
                         tracing::debug!(event = "http.request.completed", "Request completed");
                     }
-                    response.map(|bytes| Full::new(bytes.into()))
+                    response.map(|bytes| Full::new(Cursor::new(bytes)))
                 }
                 Err(e) => {
                     let status_code = e.status_code().as_u16();
@@ -247,7 +248,7 @@ async fn handler(
 
                     error::log_error(&e, &path);
 
-                    err_response(e).map(|bytes| Full::new(bytes.into()))
+                    err_response(e).map(|bytes| Full::new(Cursor::new(bytes)))
                 }
             },
         );
@@ -763,6 +764,16 @@ async fn main() {
                 &[0.01, 0.025, 0.05, 0.1, 0.15, 0.25, 0.5, 1.0, 2.0],
             )
             .expect("frontend CLS buckets are valid")
+            .set_buckets_for_metric(
+                metrics_exporter_prometheus::Matcher::Full(
+                    "boluo_server_http_response_body_bytes".to_owned(),
+                ),
+                &[
+                    32.0, 64.0, 96.0, 128.0, 192.0, 256.0, 384.0, 512.0, 1024.0, 2048.0, 4096.0,
+                    8192.0, 16384.0, 65536.0, 262144.0, 1048576.0,
+                ],
+            )
+            .expect("HTTP response body size buckets are valid")
             .with_http_listener(addr)
             .install()
             .expect("Failed to install Prometheus metrics exporter");

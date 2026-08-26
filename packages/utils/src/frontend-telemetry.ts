@@ -1,4 +1,4 @@
-import { describeThrownValue } from './errors.js';
+import { describeThrownValue } from '@boluo/utils/errors';
 
 const CLOUDFLARE_INSIGHTS_SCRIPT = /static\.cloudflareinsights\.com\/beacon\.min\.js/i;
 const OPAQUE_SCRIPT_ERROR = /^Script error\.$/i;

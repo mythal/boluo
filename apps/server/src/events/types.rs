@@ -1,7 +1,7 @@
 use crate::channels::Channel;
 use crate::channels::api::MemberWithUser;
 
-use crate::events::context::{CachedUpdates, EncodedUpdate};
+use crate::events::context::CachedUpdates;
 use crate::events::models::{StatusKind, UserStatus};
 use crate::events::preview::{Preview, PreviewDiff, PreviewDiffPost, PreviewPost};
 use crate::info::BasicInfo;
@@ -305,9 +305,22 @@ impl Update {
     }
 
     pub fn encode(&self) -> tungstenite::Utf8Bytes {
-        let serialized = sonic_rs::to_string(self).expect("Failed to encode update");
-        let bytes = tungstenite::Bytes::from_owner(serialized);
-        unsafe { tungstenite::Utf8Bytes::from_bytes_unchecked(bytes) }
+        let started_at = std::time::Instant::now();
+        let update_name = self.name();
+        let encoded: tungstenite::Utf8Bytes = sonic_rs::to_string(self)
+            .expect("Failed to encode update")
+            .into();
+        metrics::histogram!(
+            "boluo_server_events_encode_duration_ms",
+            "update" => update_name
+        )
+        .record(started_at.elapsed().as_secs_f64() * 1000.0);
+        metrics::histogram!(
+            "boluo_server_events_encoded_bytes",
+            "update" => update_name
+        )
+        .record(encoded.len() as f64);
+        encoded
     }
 
     pub fn error(mailbox: Uuid, error: ConnectionError) -> Update {
@@ -419,13 +432,7 @@ impl Update {
             tracing::info_span!("push_members", space_id = %space_id, channel_id = %channel_id);
         spawn(
             async move {
-                if let Err(e) = Update::fire_members(space_id, channel_id, members).await {
-                    tracing::warn!(
-                        event = "event.member_list.fetch_failed",
-                        "Failed to fetch member list: {}",
-                        e
-                    );
-                }
+                Update::fire_members(space_id, channel_id, members).await;
             }
             .instrument(span),
         );
@@ -589,38 +596,18 @@ impl Update {
         metrics::counter!("boluo_server_events_broadcast_total", "result" => result).increment(1);
     }
 
-    async fn fire_members(
-        space_id: Uuid,
-        channel_id: Uuid,
-        members: Vec<MemberWithUser>,
-    ) -> Result<(), anyhow::Error> {
-        let Ok(payload) = tokio::task::spawn_blocking(move || {
-            let encoded_update = EncodedUpdate::new(Update {
-                mailbox: space_id,
-                body: UpdateBody::Members {
-                    members,
-                    channel_id,
-                },
-                id: EventId::new(),
-                live: UpdateLifetime::Transient,
-            });
-            encoded_update.encoded.clone()
-        })
-        .await
-        else {
-            return Err(anyhow::anyhow!("Failed to build update"));
-        };
-        Update::send(space_id, payload).await;
-        Ok(())
-    }
-
-    fn build(body: UpdateBody, mailbox: Uuid, live: UpdateLifetime) -> Box<EncodedUpdate> {
-        Box::new(EncodedUpdate::new(Update {
-            mailbox,
-            body,
+    async fn fire_members(space_id: Uuid, channel_id: Uuid, members: Vec<MemberWithUser>) {
+        let payload = Update {
+            mailbox: space_id,
+            body: UpdateBody::Members {
+                members,
+                channel_id,
+            },
             id: EventId::new(),
-            live,
-        }))
+            live: UpdateLifetime::Transient,
+        }
+        .encode();
+        Update::send(space_id, payload).await;
     }
 
     /// Directly send the update to the mailbox.
@@ -630,15 +617,14 @@ impl Update {
         let span = tracing::info_span!("Fire Transient Update", mailbox = %mailbox);
         spawn(
             async move {
-                let Ok(update) = tokio::task::spawn_blocking(move || {
-                    Update::build(body, mailbox, UpdateLifetime::Transient)
-                })
-                .await
-                else {
-                    tracing::error!(event = "event.build_failed", "Failed to build update");
-                    return;
-                };
-                Update::send(mailbox, update.encoded.clone()).await;
+                let encoded = Update {
+                    mailbox,
+                    body,
+                    id: EventId::new(),
+                    live: UpdateLifetime::Transient,
+                }
+                .encode();
+                Update::send(mailbox, encoded).await;
             }
             .instrument(span),
         );

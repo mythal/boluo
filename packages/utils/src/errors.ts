@@ -5,9 +5,7 @@ export const isChunkLoadError = (error: unknown): error is Error => {
 const MAX_THROWN_VALUE_LENGTH = 2_000;
 
 const truncated = (value: string): string =>
-  value.length <= MAX_THROWN_VALUE_LENGTH
-    ? value
-    : `${value.slice(0, MAX_THROWN_VALUE_LENGTH)}…`;
+  value.length <= MAX_THROWN_VALUE_LENGTH ? value : `${value.slice(0, MAX_THROWN_VALUE_LENGTH)}…`;
 
 export const describeThrownValue = (value: unknown): string => {
   if (typeof value === 'string') return truncated(value);

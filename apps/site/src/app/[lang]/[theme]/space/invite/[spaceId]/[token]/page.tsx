@@ -54,9 +54,7 @@ export default async function Page({ params }: Props) {
   const intl = await getIntl({ lang });
   if (!isUuid(spaceId) || !isUuid(token)) {
     return (
-      <div className="p-4">
-        {intl.formatMessage({ defaultMessage: 'Invalid invitation link' })}
-      </div>
+      <div className="p-4">{intl.formatMessage({ defaultMessage: 'Invalid invitation link' })}</div>
     );
   }
   const spaceResult = await getSpace(spaceId, token);

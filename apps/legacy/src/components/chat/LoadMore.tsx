@@ -1,12 +1,18 @@
 import styled from '@emotion/styled';
 import * as React from 'react';
 import { useEffect, useRef, useState } from 'react';
-import { type LoadMessages } from '../../actions';
+import {
+  type InitialHistoryLoadFailed,
+  type InitialHistoryLoadStarted,
+  type LoadMessages,
+} from '../../actions';
 import { get } from '../../api/request';
 import RotateCw from '@boluo/icons/legacy/RotateCw';
 import { useChannelId } from '../../hooks/useChannelId';
 import { useDispatch, useSelector } from '../../store';
+import { getOldestMessage } from '../../states/chat-item-set';
 import { bgColor } from '../../styles/colors';
+import { newId } from '../../utils/id';
 import Button from '../atoms/Button';
 import Icon from '../atoms/Icon';
 
@@ -25,16 +31,13 @@ function LoadMore() {
   const channelId = useSelector((state) => state.chatStates.get(pane)!.channel.id);
   const spaceId = useSelector((state) => state.chatStates.get(pane)!.channel.spaceId);
   const before = useSelector((state) => {
-    const messages = state.chatStates.get(pane)?.itemSet.messages;
-    if (!messages) {
-      return undefined;
-    }
-    const oldestMessage = messages.find(
-      (item) => item.type === 'MESSAGE' && Number.isFinite(item.pos),
-    );
-    return oldestMessage?.pos;
+    const itemSet = state.chatStates.get(pane)?.itemSet;
+    return itemSet ? getOldestMessage(itemSet)?.pos : undefined;
   });
   const finished = useSelector((state) => state.chatStates.get(pane)!.finished);
+  const historyMutationGeneration = useSelector(
+    (state) => state.chatStates.get(pane)!.historyMutationGeneration,
+  );
   const moving = useSelector((state) => state.chatStates.get(pane)!.moving);
   const dispatch = useDispatch();
   const button = useRef<HTMLButtonElement | null>(null);
@@ -72,6 +75,14 @@ function LoadMore() {
   }
   const loadMore = async () => {
     const limit = 32;
+    const requestId = newId();
+    if (before === undefined) {
+      dispatch<InitialHistoryLoadStarted>({
+        type: 'INITIAL_HISTORY_LOAD_STARTED',
+        requestId,
+        pane,
+      });
+    }
     if (mounted.current) {
       setLoading(true);
     }
@@ -85,6 +96,13 @@ function LoadMore() {
       setLoading(false);
     }
     if (!result.isOk) {
+      if (before === undefined) {
+        dispatch<InitialHistoryLoadFailed>({
+          type: 'INITIAL_HISTORY_LOAD_FAILED',
+          requestId,
+          pane,
+        });
+      }
       return;
     }
     const messages = result.value;
@@ -93,7 +111,26 @@ function LoadMore() {
       messages.pop();
       finished = false;
     }
-    dispatch<LoadMessages>({ type: 'LOAD_MESSAGES', messages, finished, pane });
+    const action: LoadMessages =
+      before !== undefined
+        ? {
+            type: 'LOAD_MESSAGES',
+            mode: 'MORE',
+            before,
+            historyMutationGeneration,
+            messages,
+            finished,
+            pane,
+          }
+        : {
+            type: 'LOAD_MESSAGES',
+            mode: 'INITIAL',
+            requestId,
+            messages,
+            finished,
+            pane,
+          };
+    dispatch(action);
   };
   return (
     <LoadMoreContainer>

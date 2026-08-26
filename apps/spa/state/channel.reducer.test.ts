@@ -1,14 +1,19 @@
 import assert from 'node:assert/strict';
-import test, { describe } from 'node:test';
+import test, { describe, type TestContext } from 'node:test';
 import type { Message, Preview, PreviewDiff, PreviewDiffOp, PreviewDiffPost } from '@boluo/api';
 import { parse } from '@boluo/interpreter';
 import * as L from 'list';
 import type { ChatReducerContext } from './chat.reducer';
+import type { ChatAction } from './chat.actions';
 import type { PreviewItem, MessageItem } from './channel.types';
-import type { OptimisticItem, OptimisticMessage } from './channel.reducer';
+import type { ChannelState, OptimisticItem, OptimisticMessage } from './channel.reducer';
 import { channelReducer, makeInitialChannelState } from './channel.reducer';
 
-const context: ChatReducerContext = { initialized: true, spaceId: 'space-1' };
+const context: ChatReducerContext = {
+  initialized: true,
+  sessionGeneration: 1,
+  spaceId: 'space-1',
+};
 const baseTime = '2024-01-01T00:00:00.000Z';
 const userId = '9f8a416a-39ce-4ec9-8f6a-0d5a7b03b8b9';
 const channelId = '0108d348-10f3-4dd9-9108-3ab969629f41';
@@ -101,6 +106,17 @@ const makeDiff = (
 const positions = (list: L.List<MessageItem>): number[] =>
   Array.from(list, (message) => message.pos);
 
+const muteWarn = (t: TestContext): void => {
+  t.mock.method(console, 'warn', () => {});
+};
+
+const startInitialHistoryLoad = (state: ChannelState): ChannelState =>
+  channelReducer(
+    state,
+    { type: 'initialHistoryLoadStarted', payload: { channelId: state.id } },
+    context,
+  );
+
 describe('channelReducer', () => {
   test('receiveMessage inserts in order and clears preview/optimistic entry', () => {
     const preview = toPreviewItem(makePreview(previewId1, 3));
@@ -114,7 +130,7 @@ describe('channelReducer', () => {
     };
     const state = {
       ...makeInitialChannelState(channelId),
-      fullLoaded: true,
+      historyState: 'FULL' as const,
       messages: L.from([
         makeMessageItem(makeMessage(messageId1, 1)),
         makeMessageItem(makeMessage(messageId2, 5)),
@@ -148,7 +164,7 @@ describe('channelReducer', () => {
     const initial = makeInitialChannelState(channelId);
     const state = {
       ...initial,
-      fullLoaded: true,
+      historyState: 'FULL' as const,
       messages: L.from([message1, message2]),
     };
 
@@ -170,11 +186,12 @@ describe('channelReducer', () => {
     assert.deepStrictEqual(positions(next.messages), [9, 10]);
   });
 
-  test('receiveMessage with duplicated pos resets messages and loading state', () => {
+  test('receiveMessage with duplicated pos resets messages and loading state', (t) => {
+    muteWarn(t);
     const preview = toPreviewItem(makePreview('preview-dup', 1));
     const state = {
       ...makeInitialChannelState(channelId),
-      fullLoaded: true,
+      historyState: 'FULL' as const,
       messages: L.from([
         makeMessageItem(makeMessage(messageId1, 1)),
         makeMessageItem(makeMessage(messageId2, 3)),
@@ -207,7 +224,7 @@ describe('channelReducer', () => {
     );
 
     assert.strictEqual(next.messages.length, 0);
-    assert.strictEqual(next.fullLoaded, false);
+    assert.strictEqual(next.historyState, 'UNINITIALIZED');
     assert.deepStrictEqual(next.previewMap, {});
     assert.deepStrictEqual(next.optimisticMessageMap, {});
   });
@@ -215,7 +232,7 @@ describe('channelReducer', () => {
   test('receiveMessage prepends when pos is above current top and fully loaded', () => {
     const state = {
       ...makeInitialChannelState(channelId),
-      fullLoaded: true,
+      historyState: 'FULL' as const,
       messages: L.from([
         makeMessageItem(makeMessage(messageId1, 10)),
         makeMessageItem(makeMessage(messageId2, 20)),
@@ -243,7 +260,7 @@ describe('channelReducer', () => {
     const preview = toPreviewItem(makePreview(previewId1, 5));
     const state = {
       ...makeInitialChannelState(channelId),
-      fullLoaded: true,
+      historyState: 'FULL' as const,
       messages: L.from([
         makeMessageItem(makeMessage(messageId1, 10)),
         makeMessageItem(makeMessage(messageId2, 20)),
@@ -269,10 +286,11 @@ describe('channelReducer', () => {
     assert.deepStrictEqual(next.previewMap, {});
   });
 
-  test('receiveMessage resets when pos equals bottom', () => {
+  test('receiveMessage resets when pos equals bottom', (t) => {
+    muteWarn(t);
     const state = {
       ...makeInitialChannelState(channelId),
-      fullLoaded: true,
+      historyState: 'FULL' as const,
       messages: L.from([
         makeMessageItem(makeMessage(messageId1, 10)),
         makeMessageItem(makeMessage(messageId2, 20)),
@@ -294,7 +312,7 @@ describe('channelReducer', () => {
     );
 
     assert.strictEqual(next.messages.length, 0);
-    assert.strictEqual(next.fullLoaded, false);
+    assert.strictEqual(next.historyState, 'UNINITIALIZED');
   });
 
   test('receiveMessage duplicate at bottom boundary is ignored without resetting', () => {
@@ -302,7 +320,7 @@ describe('channelReducer', () => {
     // for M then arrives with the same pos — must not wipe the whole list.
     const state = {
       ...makeInitialChannelState(channelId),
-      fullLoaded: true,
+      historyState: 'FULL' as const,
       messages: L.from([
         makeMessageItem(makeMessage(messageId1, 10)),
         makeMessageItem(makeMessage(messageId2, 20)),
@@ -324,13 +342,14 @@ describe('channelReducer', () => {
     );
 
     assert.deepStrictEqual(positions(next.messages), [10, 20]);
-    assert.strictEqual(next.fullLoaded, true);
+    assert.strictEqual(next.historyState, 'FULL');
   });
 
-  test('receiveMessage different id at bottom boundary still resets', () => {
+  test('receiveMessage different id at bottom boundary still resets', (t) => {
+    muteWarn(t);
     const state = {
       ...makeInitialChannelState(channelId),
-      fullLoaded: true,
+      historyState: 'FULL' as const,
       messages: L.from([
         makeMessageItem(makeMessage(messageId1, 10)),
         makeMessageItem(makeMessage(messageId2, 20)),
@@ -352,7 +371,7 @@ describe('channelReducer', () => {
     );
 
     assert.strictEqual(next.messages.length, 0);
-    assert.strictEqual(next.fullLoaded, false);
+    assert.strictEqual(next.historyState, 'UNINITIALIZED');
   });
 
   test('receiveMessage before initial load keeps the message', () => {
@@ -373,11 +392,10 @@ describe('channelReducer', () => {
     );
 
     assert.deepStrictEqual(positions(next.messages), [5]);
-    assert.strictEqual(next.fullLoaded, false);
-    assert.strictEqual(next.historyInitialized, false);
+    assert.strictEqual(next.historyState, 'UNINITIALIZED');
   });
 
-  test('messagesLoaded merges below a message received while the load was in flight', () => {
+  test('initialHistoryLoaded merges below a message received while the load was in flight', () => {
     // Regression: the snapshot was read before the raced-in message committed,
     // so the payload does not contain it. The kept message must survive the
     // merge with no gap and no duplication.
@@ -398,36 +416,303 @@ describe('channelReducer', () => {
     const staleSnapshot = channelReducer(
       afterReceive,
       {
-        type: 'messagesLoaded',
+        type: 'initialHistoryLoaded',
         payload: {
           messages: [makeMessage('m-4', 4), makeMessage('m-3', 3)],
-          before: null,
           channelId,
-          fullLoaded: false,
+          historyExhausted: false,
         },
       },
       context,
     );
     assert.deepStrictEqual(positions(staleSnapshot.messages), [3, 4, 5]);
-    assert.strictEqual(staleSnapshot.historyInitialized, true);
+    assert.strictEqual(staleSnapshot.historyState, 'PARTIAL');
 
     // The snapshot read after the commit contains the message; it must be
     // deduplicated by the merge.
     const freshSnapshot = channelReducer(
       afterReceive,
       {
-        type: 'messagesLoaded',
+        type: 'initialHistoryLoaded',
         payload: {
           messages: [makeMessage('raced-in', 5), makeMessage('m-4', 4), makeMessage('m-3', 3)],
-          before: null,
           channelId,
-          fullLoaded: false,
+          historyExhausted: false,
         },
       },
       context,
     );
     assert.deepStrictEqual(positions(freshSnapshot.messages), [3, 4, 5]);
-    assert.strictEqual(freshSnapshot.historyInitialized, true);
+    assert.strictEqual(freshSnapshot.historyState, 'PARTIAL');
+  });
+
+  test('initialHistoryLoaded replays buffered edits and deletes over a stale snapshot', () => {
+    let state = startInitialHistoryLoad(makeInitialChannelState(channelId));
+    state = channelReducer(
+      state,
+      {
+        type: 'messageEdited',
+        payload: {
+          channelId,
+          message: makeMessage(messageId2, 6, { rev: 1 }),
+          oldPos: 2,
+        },
+      },
+      context,
+    );
+    state = channelReducer(
+      state,
+      {
+        type: 'messageDeleted',
+        payload: { channelId, messageId: messageId2, pos: 6 },
+      },
+      context,
+    );
+
+    assert.strictEqual(state.messages.length, 0);
+    assert.strictEqual(state.pendingMessageMutations.length, 2);
+
+    const next = channelReducer(
+      state,
+      {
+        type: 'initialHistoryLoaded',
+        payload: {
+          messages: [makeMessage(messageId3, 8), makeMessage(messageId2, 2)],
+          channelId,
+          historyExhausted: true,
+        },
+      },
+      context,
+    );
+
+    assert.deepStrictEqual(positions(next.messages), [8]);
+    assert.strictEqual(L.first(next.messages)?.id, messageId3);
+    assert.strictEqual(next.historyState, 'FULL');
+    assert.deepStrictEqual(next.pendingMessageMutations, []);
+  });
+
+  test('initialHistoryLoaded applies a buffered edit to a live new message', () => {
+    let state = channelReducer(
+      startInitialHistoryLoad(makeInitialChannelState(channelId)),
+      {
+        type: 'receiveMessage',
+        payload: {
+          type: 'NEW_MESSAGE',
+          channelId,
+          previewId: null,
+          message: makeMessage(messageId2, 5),
+        },
+      },
+      context,
+    );
+    state = channelReducer(
+      state,
+      {
+        type: 'messageEdited',
+        payload: {
+          channelId,
+          message: makeMessage(messageId2, 7, { rev: 1 }),
+          oldPos: 5,
+        },
+      },
+      context,
+    );
+
+    assert.deepStrictEqual(positions(state.messages), [7]);
+    assert.strictEqual(state.pendingMessageMutations.length, 1);
+
+    const next = channelReducer(
+      state,
+      {
+        type: 'initialHistoryLoaded',
+        payload: {
+          messages: [makeMessage(messageId2, 5), makeMessage(messageId1, 3)],
+          channelId,
+          historyExhausted: false,
+        },
+      },
+      context,
+    );
+
+    assert.deepStrictEqual(positions(next.messages), [3, 7]);
+    assert.strictEqual(L.last(next.messages)?.id, messageId2);
+    assert.deepStrictEqual(next.pendingMessageMutations, []);
+  });
+
+  test('initialHistoryLoaded preserves a newer snapshot version', () => {
+    const pendingState = channelReducer(
+      startInitialHistoryLoad(makeInitialChannelState(channelId)),
+      {
+        type: 'messageEdited',
+        payload: {
+          channelId,
+          message: makeMessage(messageId2, 6, { rev: 1 }),
+          oldPos: 2,
+        },
+      },
+      context,
+    );
+
+    const next = channelReducer(
+      pendingState,
+      {
+        type: 'initialHistoryLoaded',
+        payload: {
+          messages: [makeMessage(messageId2, 8, { rev: 2 }), makeMessage(messageId1, 3)],
+          channelId,
+          historyExhausted: true,
+        },
+      },
+      context,
+    );
+
+    assert.deepStrictEqual(positions(next.messages), [3, 8]);
+    assert.strictEqual(L.last(next.messages)?.rev, 2);
+    assert.deepStrictEqual(next.pendingMessageMutations, []);
+  });
+
+  test('initialHistoryLoaded retains the buffered edit that resets replay state', (t) => {
+    const warn = t.mock.method(console, 'warn', () => {});
+    const editAction = {
+      type: 'messageEdited',
+      payload: {
+        channelId,
+        message: makeMessage(messageId2, 10, { rev: 1 }),
+        oldPos: 20,
+      },
+    } as const;
+    let state = channelReducer(
+      startInitialHistoryLoad(makeInitialChannelState(channelId)),
+      editAction,
+      context,
+    );
+
+    state = channelReducer(
+      state,
+      {
+        type: 'initialHistoryLoaded',
+        payload: {
+          messages: [makeMessage(messageId2, 20), makeMessage(messageId1, 10)],
+          channelId,
+          historyExhausted: true,
+        },
+      },
+      context,
+    );
+
+    assert.strictEqual(state.historyState, 'UNINITIALIZED');
+    assert.strictEqual(state.messages.length, 0);
+    assert.deepStrictEqual(state.pendingMessageMutations, [editAction]);
+    assert.strictEqual(warn.mock.callCount(), 1);
+
+    state = channelReducer(
+      startInitialHistoryLoad(state),
+      {
+        type: 'initialHistoryLoaded',
+        payload: {
+          messages: [makeMessage(messageId2, 10, { rev: 1 }), makeMessage(messageId1, 5)],
+          channelId,
+          historyExhausted: true,
+        },
+      },
+      context,
+    );
+
+    assert.strictEqual(state.historyState, 'FULL');
+    assert.deepStrictEqual(positions(state.messages), [5, 10]);
+    assert.deepStrictEqual(state.pendingMessageMutations, []);
+  });
+
+  test('initialHistoryLoaded silently replays a buffered delete with a stale position', (t) => {
+    const warn = t.mock.method(console, 'warn', () => {});
+    const pendingState = channelReducer(
+      startInitialHistoryLoad(makeInitialChannelState(channelId)),
+      {
+        type: 'messageDeleted',
+        payload: { channelId, messageId: messageId2, pos: 6 },
+      },
+      context,
+    );
+
+    const next = channelReducer(
+      pendingState,
+      {
+        type: 'initialHistoryLoaded',
+        payload: {
+          messages: [makeMessage(messageId2, 2), makeMessage(messageId1, 1)],
+          channelId,
+          historyExhausted: true,
+        },
+      },
+      context,
+    );
+
+    assert.deepStrictEqual(positions(next.messages), [1]);
+    assert.strictEqual(warn.mock.callCount(), 0);
+  });
+
+  test('initialHistoryLoadFailed stops buffering while preserving live mutations', () => {
+    let state = channelReducer(
+      startInitialHistoryLoad(makeInitialChannelState(channelId)),
+      {
+        type: 'receiveMessage',
+        payload: {
+          type: 'NEW_MESSAGE',
+          channelId,
+          previewId: null,
+          message: makeMessage(messageId2, 5),
+        },
+      },
+      context,
+    );
+    state = channelReducer(
+      state,
+      {
+        type: 'messageEdited',
+        payload: {
+          channelId,
+          message: makeMessage(messageId2, 7, { rev: 1 }),
+          oldPos: 5,
+        },
+      },
+      context,
+    );
+
+    assert.deepStrictEqual(positions(state.messages), [7]);
+    assert.strictEqual(state.historyState, 'INITIAL_LOADING');
+    assert.strictEqual(state.pendingMessageMutations.length, 1);
+
+    state = channelReducer(
+      state,
+      { type: 'initialHistoryLoadFailed', payload: { channelId } },
+      context,
+    );
+
+    assert.strictEqual(state.historyState, 'UNINITIALIZED');
+    assert.deepStrictEqual(state.pendingMessageMutations, []);
+
+    state = channelReducer(
+      state,
+      {
+        type: 'messageDeleted',
+        payload: { channelId, messageId: messageId2, pos: 7 },
+      },
+      context,
+    );
+    assert.strictEqual(state.messages.length, 0);
+    assert.deepStrictEqual(state.pendingMessageMutations, []);
+  });
+
+  test('initialHistoryLoadStarted is ignored before chat initialization', () => {
+    const state = makeInitialChannelState(channelId);
+    const next = channelReducer(
+      state,
+      { type: 'initialHistoryLoadStarted', payload: { channelId } },
+      { ...context, initialized: false },
+    );
+
+    assert.strictEqual(next, state);
+    assert.strictEqual(next.historyState, 'UNINITIALIZED');
   });
 
   test('messageEdited moves message to new position and removes optimistic placeholder', () => {
@@ -444,7 +729,7 @@ describe('channelReducer', () => {
     };
     const state = {
       ...makeInitialChannelState(channelId),
-      fullLoaded: true,
+      historyState: 'FULL' as const,
       messages: L.from([message1, message2, message3]),
       optimisticMessageMap: { [message2.id]: optimisticMessage },
     };
@@ -475,7 +760,7 @@ describe('channelReducer', () => {
     const message3 = makeMessageItem(makeMessage(messageId3, 220));
     const state = {
       ...makeInitialChannelState(channelId),
-      fullLoaded: false,
+      historyState: 'PARTIAL' as const,
       messages: L.from([message1, message2, message3]),
     };
 
@@ -506,7 +791,7 @@ describe('channelReducer', () => {
     const message3 = makeMessageItem(makeMessage(messageId3, 7));
     const state = {
       ...makeInitialChannelState(channelId),
-      fullLoaded: true,
+      historyState: 'FULL' as const,
       messages: L.from([message1, message2, message3]),
     };
 
@@ -528,7 +813,7 @@ describe('channelReducer', () => {
     const stored = L.nth(1, next.messages);
     assert.strictEqual(stored?.id, messageId2);
     assert.strictEqual(stored?.text, 'updated');
-    assert.strictEqual(next.fullLoaded, true);
+    assert.strictEqual(next.historyState, 'FULL');
   });
 
   test('messageEdited move keeps optimistic edit at the new position', () => {
@@ -550,7 +835,7 @@ describe('channelReducer', () => {
     };
     const state = {
       ...makeInitialChannelState(channelId),
-      fullLoaded: true,
+      historyState: 'FULL' as const,
       messages: L.from([message1, message2, message3]),
       optimisticMessageMap: { [message2.id]: optimisticMessage },
     };
@@ -599,7 +884,7 @@ describe('channelReducer', () => {
     };
     const state = {
       ...makeInitialChannelState(channelId),
-      fullLoaded: true,
+      historyState: 'FULL' as const,
       messages: L.from([message]),
       optimisticMessageMap: { [message.id]: optimisticMessage },
     };
@@ -636,7 +921,7 @@ describe('channelReducer', () => {
     };
     const state = {
       ...makeInitialChannelState(channelId),
-      fullLoaded: true,
+      historyState: 'FULL' as const,
       messages: L.from([message]),
       optimisticMessageMap: { [message.id]: optimisticMessage },
     };
@@ -663,7 +948,7 @@ describe('channelReducer', () => {
     );
     const state = {
       ...makeInitialChannelState(channelId),
-      fullLoaded: true,
+      historyState: 'FULL' as const,
       messages: L.from([message]),
     };
 
@@ -677,14 +962,15 @@ describe('channelReducer', () => {
       context,
     );
 
-    assert.strictEqual(next, state);
+    assert.strictEqual(next.messages, state.messages);
+    assert.strictEqual(next.historyMutationGeneration, state.historyMutationGeneration + 1);
   });
 
   test('messageEdited ignores stale move events by rev', () => {
     const message = makeMessageItem(makeMessage(messageId1, 4, { rev: 2 }));
     const state = {
       ...makeInitialChannelState(channelId),
-      fullLoaded: true,
+      historyState: 'FULL' as const,
       messages: L.from([message]),
     };
 
@@ -695,7 +981,8 @@ describe('channelReducer', () => {
       context,
     );
 
-    assert.strictEqual(next, state);
+    assert.strictEqual(next.messages, state.messages);
+    assert.strictEqual(next.historyMutationGeneration, state.historyMutationGeneration + 1);
   });
 
   test('messageEdited move follows edit previews to the new position', () => {
@@ -714,7 +1001,7 @@ describe('channelReducer', () => {
     );
     const state = {
       ...makeInitialChannelState(channelId),
-      fullLoaded: true,
+      historyState: 'FULL' as const,
       messages: L.from([message1, message2]),
       previewMap: {
         [editPreview.senderId]: editPreview,
@@ -749,7 +1036,7 @@ describe('channelReducer', () => {
     );
     const state = {
       ...makeInitialChannelState(channelId),
-      fullLoaded: true,
+      historyState: 'FULL' as const,
       messages: L.from([message]),
       previewMap: { [editPreview.senderId]: editPreview },
     };
@@ -775,7 +1062,7 @@ describe('channelReducer', () => {
     const message2 = makeMessageItem(makeMessage(messageId2, 3));
     const state = {
       ...makeInitialChannelState(channelId),
-      fullLoaded: true,
+      historyState: 'FULL' as const,
       messages: L.from([message1, message2]),
     };
 
@@ -787,7 +1074,7 @@ describe('channelReducer', () => {
     );
 
     assert.strictEqual(next.messages.length, 0);
-    assert.strictEqual(next.fullLoaded, false);
+    assert.strictEqual(next.historyState, 'UNINITIALIZED');
     assert.strictEqual(warn.mock.callCount(), 1);
     assert.strictEqual(warn.mock.calls[0]?.arguments[0], 'Unexpected message position in editing');
   });
@@ -801,7 +1088,7 @@ describe('channelReducer', () => {
     );
     const state = {
       ...makeInitialChannelState(channelId),
-      fullLoaded: true,
+      historyState: 'FULL' as const,
       messages: longMessages,
     };
 
@@ -828,7 +1115,7 @@ describe('channelReducer', () => {
     );
 
     assert.strictEqual(readyForGc.scheduledGc, null);
-    assert.strictEqual(readyForGc.fullLoaded, false);
+    assert.strictEqual(readyForGc.historyState, 'PARTIAL');
     assert.strictEqual(readyForGc.messages.length, 82);
     assert.strictEqual(L.first(readyForGc.messages)?.pos, 49);
     assert.strictEqual(debug.mock.callCount(), 1);
@@ -847,8 +1134,7 @@ describe('channelReducer', () => {
     );
     const state = {
       ...makeInitialChannelState(channelId),
-      fullLoaded: true,
-      historyInitialized: true,
+      historyState: 'FULL' as const,
       messages,
       scheduledGc: { countdown: 0, lowerPos: 50 },
     };
@@ -1353,7 +1639,7 @@ describe('channelReducer', () => {
     const warn = t.mock.method(console, 'warn', () => {});
     const state = {
       ...makeInitialChannelState(channelId),
-      fullLoaded: true,
+      historyState: 'FULL' as const,
       messages: L.from([
         makeMessageItem(makeMessage(messageId1, 3)),
         makeMessageItem(makeMessage(messageId2, 1)),
@@ -1368,7 +1654,7 @@ describe('channelReducer', () => {
     );
 
     assert.strictEqual(next.messages.length, 0);
-    assert.strictEqual(next.fullLoaded, false);
+    assert.strictEqual(next.historyState, 'UNINITIALIZED');
     assert.strictEqual(warn.mock.callCount(), 1);
     assert.strictEqual(warn.mock.calls[0]?.arguments[0], 'Messages are not sorted by pos');
   });
@@ -1508,6 +1794,7 @@ describe('channelReducer', () => {
     };
     const state = {
       ...makeInitialChannelState(channelId),
+      historyState: 'PARTIAL' as const,
       messages: L.from([message]),
       optimisticMessageMap: { [message.id]: optimistic },
     };
@@ -1525,7 +1812,7 @@ describe('channelReducer', () => {
     assert.deepStrictEqual(next.optimisticMessageMap, {});
   });
 
-  test('messageDeleted miss keeps state unchanged', () => {
+  test('messageDeleted miss keeps loaded data but advances history generation', () => {
     const message = makeMessageItem(makeMessage(messageId1, 1));
     const optimistic: OptimisticMessage = {
       ref: message,
@@ -1533,6 +1820,7 @@ describe('channelReducer', () => {
     };
     const state = {
       ...makeInitialChannelState(channelId),
+      historyState: 'PARTIAL' as const,
       messages: L.from([message]),
       optimisticMessageMap: { [message.id]: optimistic },
     };
@@ -1548,26 +1836,169 @@ describe('channelReducer', () => {
 
     assert.strictEqual(next.messages.length, 1);
     assert.ok(next.optimisticMessageMap[message.id]);
+    assert.strictEqual(next.historyMutationGeneration, state.historyMutationGeneration + 1);
   });
 
-  test('messagesLoaded prepends older messages only', () => {
+  test('olderMessagesLoaded rejects a snapshot after an unseen message is edited', () => {
+    const state = {
+      ...makeInitialChannelState(channelId),
+      messages: L.from([
+        makeMessageItem(makeMessage('m-boundary', 10)),
+        makeMessageItem(makeMessage('m-latest', 20)),
+      ]),
+      historyState: 'PARTIAL' as const,
+    };
+    const requestedGeneration = state.historyMutationGeneration;
+    const afterEdit = channelReducer(
+      state,
+      {
+        type: 'messageEdited',
+        payload: {
+          channelId,
+          message: makeMessage('m-unseen', 5, { rev: 1, text: 'edited' }),
+          oldPos: 5,
+        },
+      },
+      context,
+    );
+
+    const next = channelReducer(
+      afterEdit,
+      {
+        type: 'olderMessagesLoaded',
+        payload: {
+          messages: [makeMessage('m-unseen', 5, { text: 'stale' })],
+          before: 10,
+          channelId,
+          historyExhausted: true,
+          historyMutationGeneration: requestedGeneration,
+        },
+      },
+      context,
+    );
+
+    assert.strictEqual(afterEdit.historyMutationGeneration, requestedGeneration + 1);
+    assert.strictEqual(next, afterEdit);
+  });
+
+  test('olderMessagesLoaded rejects a snapshot after an unseen message is deleted', () => {
+    const state = {
+      ...makeInitialChannelState(channelId),
+      messages: L.from([makeMessageItem(makeMessage('m-boundary', 10))]),
+      historyState: 'PARTIAL' as const,
+    };
+    const requestedGeneration = state.historyMutationGeneration;
+    const afterDelete = channelReducer(
+      state,
+      {
+        type: 'messageDeleted',
+        payload: { channelId, messageId: 'm-unseen', pos: 5 },
+      },
+      context,
+    );
+
+    const next = channelReducer(
+      afterDelete,
+      {
+        type: 'olderMessagesLoaded',
+        payload: {
+          messages: [makeMessage('m-unseen', 5)],
+          before: 10,
+          channelId,
+          historyExhausted: true,
+          historyMutationGeneration: requestedGeneration,
+        },
+      },
+      context,
+    );
+
+    assert.strictEqual(afterDelete.historyMutationGeneration, requestedGeneration + 1);
+    assert.strictEqual(next, afterDelete);
+  });
+
+  test('olderMessagesLoaded remains valid when a new message arrives', () => {
+    const state = {
+      ...makeInitialChannelState(channelId),
+      messages: L.from([makeMessageItem(makeMessage('m-boundary', 10))]),
+      historyState: 'PARTIAL' as const,
+    };
+    const requestedGeneration = state.historyMutationGeneration;
+    const afterReceive = channelReducer(
+      state,
+      {
+        type: 'receiveMessage',
+        payload: {
+          type: 'NEW_MESSAGE',
+          channelId,
+          previewId: null,
+          message: makeMessage('m-new', 20),
+        },
+      },
+      context,
+    );
+
+    const next = channelReducer(
+      afterReceive,
+      {
+        type: 'olderMessagesLoaded',
+        payload: {
+          messages: [makeMessage('m-old', 5)],
+          before: 10,
+          channelId,
+          historyExhausted: true,
+          historyMutationGeneration: requestedGeneration,
+        },
+      },
+      context,
+    );
+
+    assert.strictEqual(afterReceive.historyMutationGeneration, requestedGeneration);
+    assert.deepStrictEqual(positions(next.messages), [5, 10, 20]);
+  });
+
+  test('olderMessagesLoaded rejects a second response for the previous boundary', () => {
+    const state = {
+      ...makeInitialChannelState(channelId),
+      messages: L.from([makeMessageItem(makeMessage('m-boundary', 10))]),
+      historyState: 'PARTIAL' as const,
+    };
+    const action: ChatAction<'olderMessagesLoaded'> = {
+      type: 'olderMessagesLoaded',
+      payload: {
+        messages: [makeMessage('m-9', 9), makeMessage('m-8', 8)],
+        before: 10,
+        channelId,
+        historyExhausted: false,
+        historyMutationGeneration: state.historyMutationGeneration,
+      },
+    };
+
+    const first = channelReducer(state, action, context);
+    const second = channelReducer(first, action, context);
+
+    assert.deepStrictEqual(positions(first.messages), [8, 9, 10]);
+    assert.strictEqual(second, first);
+  });
+
+  test('olderMessagesLoaded prepends older messages only', () => {
     const existing = makeMessageItem(makeMessage('m-existing', 10));
     const payloadMessages = [makeMessage('m-newer', 12), makeMessage('m-older', 9)];
     const state = {
       ...makeInitialChannelState(channelId),
       messages: L.from([existing]),
-      fullLoaded: false,
+      historyState: 'PARTIAL' as const,
     };
 
     const next = channelReducer(
       state,
       {
-        type: 'messagesLoaded',
+        type: 'olderMessagesLoaded',
         payload: {
           messages: payloadMessages,
           before: existing.pos,
           channelId,
-          fullLoaded: true,
+          historyExhausted: true,
+          historyMutationGeneration: state.historyMutationGeneration,
         },
       },
       context,
@@ -1575,29 +2006,29 @@ describe('channelReducer', () => {
 
     assert.strictEqual(L.first(next.messages)?.pos, 9);
     assert.strictEqual(L.last(next.messages)?.pos, 10);
-    assert.strictEqual(next.fullLoaded, true);
-    assert.strictEqual(next.historyInitialized, true);
+    assert.strictEqual(next.historyState, 'FULL');
   });
 
-  test('messagesLoaded ignores stale load-more response after GC moved the top', () => {
+  test('olderMessagesLoaded ignores a response after GC moved the boundary', () => {
     const state = {
       ...makeInitialChannelState(channelId),
       messages: L.from([
         makeMessageItem(makeMessage('m-current-top', 120)),
         makeMessageItem(makeMessage('m-bottom', 150)),
       ]),
-      fullLoaded: false,
+      historyState: 'PARTIAL' as const,
     };
 
     const next = channelReducer(
       state,
       {
-        type: 'messagesLoaded',
+        type: 'olderMessagesLoaded',
         payload: {
           messages: [makeMessage('m-old-49', 49), makeMessage('m-old-48', 48)],
           before: 50,
           channelId,
-          fullLoaded: true,
+          historyExhausted: true,
+          historyMutationGeneration: state.historyMutationGeneration,
         },
       },
       context,
@@ -1606,22 +2037,23 @@ describe('channelReducer', () => {
     assert.strictEqual(next, state);
   });
 
-  test('messagesLoaded is no-op when already fullLoaded', () => {
+  test('olderMessagesLoaded is a no-op when history is already exhausted', () => {
     const state = {
       ...makeInitialChannelState(channelId),
-      fullLoaded: true,
+      historyState: 'FULL' as const,
       messages: L.from([makeMessageItem(makeMessage('m-existing', 10))]),
     };
 
     const next = channelReducer(
       state,
       {
-        type: 'messagesLoaded',
+        type: 'olderMessagesLoaded',
         payload: {
           messages: [makeMessage('ignored', 5)],
-          before: null,
+          before: 10,
           channelId,
-          fullLoaded: true,
+          historyExhausted: true,
+          historyMutationGeneration: state.historyMutationGeneration,
         },
       },
       context,
@@ -1630,20 +2062,25 @@ describe('channelReducer', () => {
     assert.strictEqual(next, state);
   });
 
-  test('messagesLoaded with empty payload keeps state unchanged', () => {
+  test('olderMessagesLoaded with an empty non-final page keeps state unchanged', () => {
     const existing = makeMessageItem(makeMessage('m-existing', 10));
     const state = {
       ...makeInitialChannelState(channelId),
-      historyInitialized: true,
+      historyState: 'PARTIAL' as const,
       messages: L.from([existing]),
-      fullLoaded: false,
     };
 
     const next = channelReducer(
       state,
       {
-        type: 'messagesLoaded',
-        payload: { messages: [], before: null, channelId, fullLoaded: false },
+        type: 'olderMessagesLoaded',
+        payload: {
+          messages: [],
+          before: existing.pos,
+          channelId,
+          historyExhausted: false,
+          historyMutationGeneration: state.historyMutationGeneration,
+        },
       },
       context,
     );
@@ -1651,20 +2088,19 @@ describe('channelReducer', () => {
     assert.strictEqual(next, state);
   });
 
-  test('messagesLoaded with empty initial payload marks history initialized', () => {
+  test('initialHistoryLoaded with an empty payload marks history initialized', () => {
     const state = makeInitialChannelState(channelId);
 
     const next = channelReducer(
       state,
       {
-        type: 'messagesLoaded',
-        payload: { messages: [], before: null, channelId, fullLoaded: true },
+        type: 'initialHistoryLoaded',
+        payload: { messages: [], channelId, historyExhausted: true },
       },
       context,
     );
 
     assert.strictEqual(next.messages.length, 0);
-    assert.strictEqual(next.fullLoaded, true);
-    assert.strictEqual(next.historyInitialized, true);
+    assert.strictEqual(next.historyState, 'FULL');
   });
 });

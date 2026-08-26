@@ -1,4 +1,4 @@
-import type { EditMessage, Message, NewMessage, Preview } from '@boluo/api';
+import type { EditMessage, NewMessage, Preview } from '@boluo/api';
 import {
   equalPreviewEdit,
   isClearedPreviewContent,
@@ -14,6 +14,7 @@ import { recordWarn } from '../error';
 import type { List } from 'list';
 import * as L from 'list';
 import { type ComposeState } from './compose.reducer';
+import { toMessageItem } from './message';
 
 export type UserId = string;
 
@@ -146,10 +147,13 @@ const newMessageOptimisticItem = (
   return { ref: preview, item };
 };
 
+export type ChannelHistoryState = 'UNINITIALIZED' | 'INITIAL_LOADING' | 'PARTIAL' | 'FULL';
+
 export interface ChannelState {
   id: string;
-  fullLoaded: boolean;
-  historyInitialized: boolean;
+  historyState: ChannelHistoryState;
+  historyMutationGeneration: number;
+  pendingMessageMutations: MessageMutationAction[];
   messages: List<MessageItem>;
   previewMap: Record<UserId, PreviewItem>;
   optimisticMessageMap: Record<string, OptimisticMessage>;
@@ -157,30 +161,104 @@ export interface ChannelState {
   collidedPreviewIdSet: Set<string>;
 }
 
+export const isChannelHistoryInitialized = (state: ChannelState): boolean =>
+  state.historyState === 'PARTIAL' || state.historyState === 'FULL';
+
+export const isChannelHistoryFull = (state: ChannelState): boolean => state.historyState === 'FULL';
+
+export interface OlderMessagesPageRequest {
+  before: number;
+  historyMutationGeneration: number;
+}
+
+export const isOlderMessagesPageCurrent = (
+  state: ChannelState | undefined,
+  request: OlderMessagesPageRequest,
+): boolean =>
+  state?.historyState === 'PARTIAL' &&
+  L.first(state.messages)?.pos === request.before &&
+  state.historyMutationGeneration === request.historyMutationGeneration;
+
+const messageDiagnostic = (message: Pick<MessageItem, 'id' | 'modified' | 'pos' | 'rev'>) => ({
+  id: message.id,
+  modified: message.modified,
+  pos: message.pos,
+  rev: message.rev,
+});
+
+const channelLogContext = (state: ChannelState, action: ChatActionUnion) => ({
+  actionType: action.type,
+  channelId: state.id,
+  firstPos: L.first(state.messages)?.pos,
+  historyMutationGeneration: state.historyMutationGeneration,
+  historyState: state.historyState,
+  lastPos: L.last(state.messages)?.pos,
+  messageCount: state.messages.length,
+  pendingMessageMutationCount: state.pendingMessageMutations.length,
+});
+
+const actionDiagnostic = (action: ChatActionUnion): Record<string, unknown> => {
+  switch (action.type) {
+    case 'receiveMessage':
+      return {
+        message: messageDiagnostic(action.payload.message),
+        previewId: action.payload.previewId,
+      };
+    case 'messageEdited':
+      return {
+        message: messageDiagnostic(action.payload.message),
+        oldPos: action.payload.oldPos,
+      };
+    case 'messageDeleted':
+      return {
+        messageId: action.payload.messageId,
+        pos: action.payload.pos,
+      };
+    case 'initialHistoryLoaded':
+    case 'olderMessagesLoaded': {
+      const firstMessage = action.payload.messages[0];
+      const lastMessage = action.payload.messages.at(-1);
+      return {
+        before: 'before' in action.payload ? action.payload.before : null,
+        firstMessage: firstMessage ? messageDiagnostic(firstMessage) : null,
+        historyExhausted: action.payload.historyExhausted,
+        lastMessage: lastMessage ? messageDiagnostic(lastMessage) : null,
+        messageCount: action.payload.messages.length,
+      };
+    }
+    default:
+      return {};
+  }
+};
+
+type MessageMutationAction = ChatAction<'messageEdited'> | ChatAction<'messageDeleted'>;
+
 export interface ScheduledGc {
   countdown: number;
   /** Messages with pos < lower will be deleted */
   lowerPos: number;
 }
 
-const makeMessageItem = (message: Message): MessageItem => ({
-  ...message,
-  type: 'MESSAGE',
-  key: message.id,
-});
-
 export const makeInitialChannelState = (id: string): ChannelState => {
   return {
     id,
     messages: L.empty(),
-    fullLoaded: false,
-    historyInitialized: false,
+    historyState: 'UNINITIALIZED',
+    historyMutationGeneration: 0,
+    pendingMessageMutations: [],
     previewMap: {},
     scheduledGc: null,
     collidedPreviewIdSet: new Set(),
     optimisticMessageMap: {},
   };
 };
+
+const invalidateMessageHistory = (state: ChannelState): ChannelState => ({
+  ...state,
+  historyState: 'UNINITIALIZED',
+  messages: L.empty(),
+  scheduledGc: null,
+});
 
 const filterPreviewMap = (
   previewId: string | null | undefined,
@@ -211,33 +289,23 @@ const filterOptimisticMessages = (
 
 const handleNewMessage = (
   state: ChannelState,
-  { payload }: ChatAction<'receiveMessage'>,
+  action: ChatAction<'receiveMessage'>,
 ): ChannelState => {
+  const { payload } = action;
   const { messages } = state;
-  const message = makeMessageItem(payload.message);
+  const message = toMessageItem(payload.message);
   const previewMap = filterPreviewMap(payload.previewId, state.previewMap);
   const optimisticMessageMap = filterOptimisticMessages(
     payload.previewId,
     state.optimisticMessageMap,
   );
 
-  const resetMessagesState = (state: ChannelState): ChannelState => {
-    return {
-      ...state,
-      previewMap,
-      optimisticMessageMap,
-      messages: L.empty(),
-      fullLoaded: false,
-      historyInitialized: false,
-    };
-  };
-
   const topMessage = L.first(messages);
   const bottomMessage = L.last(messages);
   if (topMessage == null || bottomMessage == null) {
     // Keep the message even when the channel is not loaded yet. A history
     // load racing with this event may not contain the message (the snapshot
-    // was read before it committed); `handleMessagesLoaded` only merges
+    // was read before it committed); `mergeHistoryPage` only merges
     // payload messages below the top message, so keeping it here fills that
     // gap and never duplicates.
     return {
@@ -255,10 +323,20 @@ const handleNewMessage = (
     return { ...state, previewMap, optimisticMessageMap };
   }
   if (message.pos === topMessage.pos || message.pos === bottomMessage.pos) {
-    return resetMessagesState(state);
+    const itemByPos = message.pos === topMessage.pos ? topMessage : bottomMessage;
+    const logContext = channelLogContext(state, action);
+    recordWarn(
+      'Unexpected new message at history boundary',
+      {
+        conflictingMessage: messageDiagnostic(itemByPos),
+        incomingMessage: messageDiagnostic(message),
+      },
+      { context: logContext },
+    );
+    return invalidateMessageHistory({ ...state, previewMap, optimisticMessageMap });
   }
   if (message.pos < topMessage.pos) {
-    if (!state.fullLoaded) {
+    if (!isChannelHistoryFull(state)) {
       return { ...state, previewMap, optimisticMessageMap };
     }
     return {
@@ -274,8 +352,17 @@ const handleNewMessage = (
   const [insertIndex, itemByPos] = binarySearchPosList(messages, message.pos);
   if (itemByPos) {
     if (itemByPos.id !== message.id || itemByPos.modified !== message.modified) {
-      recordWarn('Unexpected new message position', { message, itemByPos });
-      return resetMessagesState(state);
+      const logContext = channelLogContext(state, action);
+      recordWarn(
+        'Unexpected new message position',
+        {
+          conflictingMessage: messageDiagnostic(itemByPos),
+          incomingMessage: messageDiagnostic(message),
+          insertIndex,
+        },
+        { context: logContext },
+      );
+      return invalidateMessageHistory({ ...state, previewMap, optimisticMessageMap });
     }
     // Duplicate message
     return { ...state, optimisticMessageMap };
@@ -288,34 +375,28 @@ const handleNewMessage = (
   };
 };
 
-const handleMessagesLoaded = (
+const mergeHistoryPage = (
   state: ChannelState,
-  { payload }: ChatAction<'messagesLoaded'>,
+  payload: Pick<ChatAction<'initialHistoryLoaded'>['payload'], 'messages' | 'historyExhausted'>,
 ): ChannelState => {
   // Note:
   // The payload.messages are sorted in descending order
   // But the state.messages are sorted in ascending order
-  if (state.fullLoaded) {
+  if (isChannelHistoryFull(state)) {
     return state;
   }
   let payloadMessages = L.from(payload.messages);
   const payloadLen = payloadMessages.length;
   const topMessage = L.first(state.messages);
-  if (topMessage && payload.before != null && topMessage.pos > payload.before) {
-    return state;
-  }
-  const { fullLoaded } = payload;
-  if (fullLoaded !== state.fullLoaded) {
-    state = { ...state, fullLoaded };
-  }
-  if (!state.historyInitialized) {
-    state = { ...state, historyInitialized: true };
+  const historyState: ChannelHistoryState = payload.historyExhausted ? 'FULL' : 'PARTIAL';
+  if (historyState !== state.historyState) {
+    state = { ...state, historyState };
   }
   if (payloadLen === 0) {
     return state;
   }
   if (!topMessage) {
-    const messages = L.reverse(L.map(makeMessageItem, payloadMessages));
+    const messages = L.reverse(L.map(toMessageItem, payloadMessages));
     return {
       ...state,
       messages,
@@ -325,10 +406,44 @@ const handleMessagesLoaded = (
   if (payloadMessages.length === 0) {
     return state;
   }
-  const prependedMessages = L.reverse(L.map(makeMessageItem, payloadMessages));
+  const prependedMessages = L.reverse(L.map(toMessageItem, payloadMessages));
   return {
     ...state,
     messages: L.concat(prependedMessages, state.messages),
+  };
+};
+
+const handleInitialHistoryLoaded = (
+  state: ChannelState,
+  { payload }: ChatAction<'initialHistoryLoaded'>,
+): ChannelState => {
+  const historyWasInitialized = isChannelHistoryInitialized(state);
+  const nextState = mergeHistoryPage(state, payload);
+  if (historyWasInitialized || !isChannelHistoryInitialized(nextState)) return nextState;
+  return replayPendingMessageMutations(nextState);
+};
+
+const handleOlderMessagesLoaded = (
+  state: ChannelState,
+  { payload }: ChatAction<'olderMessagesLoaded'>,
+): ChannelState => {
+  if (!isOlderMessagesPageCurrent(state, payload)) {
+    return state;
+  }
+  return mergeHistoryPage(state, payload);
+};
+
+const handleInitialHistoryLoadStarted = (state: ChannelState): ChannelState => {
+  if (state.historyState !== 'UNINITIALIZED') return state;
+  return { ...state, historyState: 'INITIAL_LOADING' };
+};
+
+const handleInitialHistoryLoadFailed = (state: ChannelState): ChannelState => {
+  if (state.historyState !== 'INITIAL_LOADING') return state;
+  return {
+    ...state,
+    historyState: 'UNINITIALIZED',
+    pendingMessageMutations: [],
   };
 };
 
@@ -468,24 +583,15 @@ const syncEditPreviewsWithMessage = (
 
 const handleMessageEdited = (
   state: ChannelState,
-  { payload }: ChatAction<'messageEdited'>,
+  action: ChatAction<'messageEdited'>,
 ): ChannelState => {
-  const message: MessageItem = makeMessageItem(payload.message);
+  const { payload } = action;
+  const message: MessageItem = toMessageItem(payload.message);
   const optimisticMessageMap = reconcileOptimisticMessageEdited(
     state.optimisticMessageMap,
     message,
   );
   const previewMap = syncEditPreviewsWithMessage(state.previewMap, message);
-  const resetMessagesState = (state: ChannelState): ChannelState => {
-    return {
-      ...state,
-      optimisticMessageMap,
-      previewMap,
-      messages: L.empty(),
-      fullLoaded: false,
-      historyInitialized: false,
-    };
-  };
   const originalTopMessage = L.head(state.messages);
   if (!originalTopMessage) {
     return { ...state, optimisticMessageMap };
@@ -526,7 +632,7 @@ const handleMessageEdited = (
   if (!topMessage || !bottomMessage) {
     // The only message has been removed in the previous step
     const moveUp = message.pos < originalTopMessage.pos;
-    const movedOut = moveUp && !state.fullLoaded;
+    const movedOut = moveUp && !isChannelHistoryFull(state);
     return {
       ...state,
       optimisticMessageMap,
@@ -541,7 +647,7 @@ const handleMessageEdited = (
       ...state,
       optimisticMessageMap,
       previewMap,
-      messages: state.fullLoaded
+      messages: isChannelHistoryFull(state)
         ? L.prepend(message, messages)
         : // The message has been moved out of the loaded range
           messages,
@@ -568,8 +674,18 @@ const handleMessageEdited = (
         messages: L.update(insertIndex, message, messages),
       };
     }
-    recordWarn('Unexpected message position in editing', { message, itemByPos, insertIndex });
-    return resetMessagesState(state);
+    const logContext = channelLogContext(state, action);
+    recordWarn(
+      'Unexpected message position in editing',
+      {
+        conflictingMessage: messageDiagnostic(itemByPos),
+        incomingMessage: messageDiagnostic(message),
+        insertIndex,
+        oldPos: payload.oldPos,
+      },
+      { context: logContext },
+    );
+    return invalidateMessageHistory({ ...state, optimisticMessageMap, previewMap });
   }
   return {
     ...state,
@@ -739,6 +855,7 @@ export const findMessage = (
 const handleMessageDeleted = (
   state: ChannelState,
   { payload: { messageId, pos } }: ChatAction<'messageDeleted'>,
+  { warnOnStalePos = true }: { warnOnStalePos?: boolean } = {},
 ): ChannelState => {
   let optimisticMessageMap: typeof state.optimisticMessageMap;
   if (messageId in state.optimisticMessageMap) {
@@ -747,7 +864,7 @@ const handleMessageDeleted = (
   } else {
     optimisticMessageMap = state.optimisticMessageMap;
   }
-  const findResult = findMessage(state.messages, messageId, pos);
+  const findResult = findMessage(state.messages, messageId, pos, { warnOnStalePos });
   if (findResult == null) {
     return { ...state, optimisticMessageMap };
   }
@@ -758,6 +875,53 @@ const handleMessageDeleted = (
     optimisticMessageMap,
     messages,
   };
+};
+
+const applyMessageMutation = (
+  state: ChannelState,
+  action: MessageMutationAction,
+  { warnOnStaleDeletePos = true }: { warnOnStaleDeletePos?: boolean } = {},
+): ChannelState =>
+  action.type === 'messageEdited'
+    ? handleMessageEdited(state, action)
+    : handleMessageDeleted(state, action, { warnOnStalePos: warnOnStaleDeletePos });
+
+const bufferMessageMutation = (
+  state: ChannelState,
+  action: MessageMutationAction,
+): ChannelState => {
+  const pendingState = {
+    ...state,
+    pendingMessageMutations: [...state.pendingMessageMutations, action],
+  };
+  if (action.type === 'messageDeleted') {
+    return applyMessageMutation(pendingState, action, {
+      warnOnStaleDeletePos: false,
+    });
+  }
+  const hasLoadedMessage =
+    L.findIndex((message) => message.id === action.payload.message.id, state.messages) !== -1;
+  return hasLoadedMessage ? applyMessageMutation(pendingState, action) : pendingState;
+};
+
+const replayPendingMessageMutations = (state: ChannelState): ChannelState => {
+  const { pendingMessageMutations } = state;
+  if (pendingMessageMutations.length === 0) return state;
+
+  let nextState: ChannelState = { ...state, pendingMessageMutations: [] };
+  for (const [index, action] of pendingMessageMutations.entries()) {
+    nextState = applyMessageMutation(nextState, action, {
+      warnOnStaleDeletePos: false,
+    });
+    if (!isChannelHistoryInitialized(nextState)) {
+      return {
+        ...nextState,
+        // The mutation that reset history was not applied; retry it after the next snapshot.
+        pendingMessageMutations: pendingMessageMutations.slice(index),
+      };
+    }
+  }
+  return nextState;
 };
 
 const handleResetGc = (
@@ -843,9 +1007,16 @@ const channelReducer$ = (
     case 'receiveMessage':
       return handleNewMessage(state, action);
     case 'messageEdited':
-      return handleMessageEdited(state, action);
-    case 'messageDeleted':
-      return handleMessageDeleted(state, action);
+    case 'messageDeleted': {
+      const nextState =
+        state.historyState === 'INITIAL_LOADING'
+          ? bufferMessageMutation(state, action)
+          : applyMessageMutation(state, action);
+      return {
+        ...nextState,
+        historyMutationGeneration: state.historyMutationGeneration + 1,
+      };
+    }
     case 'messageSending':
       return handleMessageSending(state, action);
     case 'messageEditing':
@@ -854,11 +1025,17 @@ const channelReducer$ = (
       return handleSetOptimisticMessage(state, action);
     case 'removeOptimisticMessage':
       return handleRemoveOptimisticMessage(state, action);
-    case 'messagesLoaded':
+    case 'initialHistoryLoaded':
       // This action is triggered by the user
       // and should be ignored if the chat state
       // has not been initialized.
-      return initialized ? handleMessagesLoaded(state, action) : state;
+      return initialized ? handleInitialHistoryLoaded(state, action) : state;
+    case 'olderMessagesLoaded':
+      return initialized ? handleOlderMessagesLoaded(state, action) : state;
+    case 'initialHistoryLoadStarted':
+      return initialized ? handleInitialHistoryLoadStarted(state) : state;
+    case 'initialHistoryLoadFailed':
+      return handleInitialHistoryLoadFailed(state);
     case 'fail':
       return handleFail(state, action);
     case 'resetGc':
@@ -882,39 +1059,34 @@ const handleGc = (state: ChannelState): ChannelState => {
   console.debug(`[Messages GC] Start GC. Lower index: ${gcLowerIndex} Power Pos: ${lowerPos}`);
   const messages = L.drop(gcLowerIndex, state.messages);
   const scheduledGc = null;
-  const fullLoaded = false;
-  return { ...state, messages, scheduledGc, fullLoaded };
+  const historyState = state.historyState === 'FULL' ? 'PARTIAL' : state.historyState;
+  return { ...state, messages, scheduledGc, historyState };
 };
 
-const CHECK_COUNT = 512;
+const MESSAGE_ORDER_CHECK_LIMIT = 512;
 const checkOrder = (state: ChannelState, action: ChatActionUnion): ChannelState => {
   let prevPos = Number.MAX_SAFE_INTEGER;
+  let previousMessage: MessageItem | undefined;
   let i = 0;
   const messages = state.messages;
-  const firstPos = L.first(messages)?.pos;
-  const lastPos = L.last(messages)?.pos;
   for (const message of L.backwards(messages)) {
-    if (i > CHECK_COUNT) break;
+    if (i >= MESSAGE_ORDER_CHECK_LIMIT) break;
     if (message.pos >= prevPos) {
-      recordWarn('Messages are not sorted by pos', {
-        actionType: action.type,
-        actionPayload: action.payload,
-        message,
-        pos: message.pos,
-        prevPos,
-        firstPos,
-        lastPos,
-        index: i,
-        size: messages.length,
-      });
-      return {
-        ...state,
-        messages: L.empty(),
-        fullLoaded: false,
-        historyInitialized: false,
-      };
+      const logContext = channelLogContext(state, action);
+      recordWarn(
+        'Messages are not sorted by pos',
+        {
+          action: actionDiagnostic(action),
+          index: i,
+          message: messageDiagnostic(message),
+          previousMessage: previousMessage ? messageDiagnostic(previousMessage) : null,
+        },
+        { context: logContext },
+      );
+      return invalidateMessageHistory(state);
     }
     prevPos = message.pos;
+    previousMessage = message;
     i += 1;
   }
   return state;

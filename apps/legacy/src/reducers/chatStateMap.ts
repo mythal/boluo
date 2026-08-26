@@ -4,7 +4,7 @@ import { type Channel, type ChannelMember, makeMembers } from '../api/channels';
 import { type SpaceMemberWithUser } from '../api/spaces';
 import { initialChatItemSet } from '../states/chat-item-set';
 import { type Id, newId } from '../utils/id';
-import { chatReducer, type ChatState } from './chatState';
+import { chatReducer, checkMessagesOrder, type ChatState } from './chatState';
 
 export type ChatStateMap = Map<Id, ChatState | undefined>;
 const initChatState = (
@@ -18,12 +18,14 @@ const initChatState = (
     members,
     colorMap: Map<Id, string>(),
     postponed: List(),
+    initialHistoryLoad: null,
     moving: false,
     showFolded: false,
     filter: 'NONE',
     finished: false,
     initialized: false,
     eventAfter: { seq: 0, node: 0, timestamp: 0 },
+    historyMutationGeneration: 0,
     itemSet: initialChatItemSet,
     lastLoadBefore: Number.MAX_SAFE_INTEGER,
     compose: {
@@ -92,9 +94,21 @@ export const chatStateMapReducer = (
   } else if (action.type === 'SPACE_UPDATED') {
     state = handleSpaceUpdate(state, action);
   } else if ('pane' in action) {
-    state = state.update(action.pane, (chatState) => chatReducer(chatState, action, userId));
+    state = state.update(action.pane, (chatState) => reduceChatState(chatState, action, userId));
   } else {
-    state = state.map((chat) => chatReducer(chat, action, userId));
+    state = state.map((chat) => reduceChatState(chat, action, userId));
   }
   return state;
+};
+
+const reduceChatState = (
+  chatState: ChatState | undefined,
+  action: Action,
+  userId: Id | undefined,
+): ChatState | undefined => {
+  const nextState = chatReducer(chatState, action, userId);
+  if (chatState != null && nextState != null && nextState !== chatState) {
+    checkMessagesOrder(nextState, action, chatState);
+  }
+  return nextState;
 };

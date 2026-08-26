@@ -1,4 +1,8 @@
 import {
+  getFrontendTelemetryIgnoreErrors,
+  serializeFrontendLogArguments,
+} from '@boluo/utils/frontend-telemetry';
+import {
   ErrorsInstrumentation,
   FetchTransport,
   LogLevel,
@@ -52,10 +56,9 @@ export function initializeFrontendTelemetry(baseUrl: string): void {
         }
         return item;
       },
-      ignoreErrors: [
-        /ResizeObserver loop (?:limit exceeded|completed with undelivered notifications)/i,
-      ],
+      ignoreErrors: getFrontendTelemetryIgnoreErrors(),
       ignoreUrls: [/\/api\/telemetry(?:[/?#]|$)/],
+      logArgsSerializer: serializeFrontendLogArguments,
       instrumentations: [
         new ErrorsInstrumentation(),
         new WebVitalsInstrumentation(),

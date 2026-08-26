@@ -7,7 +7,7 @@ use crate::channels::{ChannelMember, handlers::push_refreshed_members};
 use crate::committed_changes::CommittedChanges;
 use crate::csrf::{authenticate, authenticate_optional};
 use crate::error::{AppError, Find};
-use crate::interface::{missing, parse_body, parse_query, response};
+use crate::interface::{Response, missing, parse_body, parse_query, response};
 use crate::scopes::models::Scope;
 use crate::spaces::{SpaceMember, resolve_resource_access_context, resolve_space_access};
 use hyper::Request;
@@ -422,7 +422,7 @@ pub async fn router(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
     path: &str,
-) -> Result<hyper::Response<Vec<u8>>, AppError> {
+) -> Result<Response, AppError> {
     use hyper::Method;
 
     match (path, req.method().clone()) {

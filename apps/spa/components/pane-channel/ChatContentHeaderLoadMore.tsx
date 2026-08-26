@@ -1,19 +1,20 @@
-import { get } from '@boluo/api-browser';
 import clsx from 'clsx';
 import ChevronDown from '@boluo/icons/ChevronDown';
 import CircleNotch from '@boluo/icons/CircleNotch';
-import { useSetAtom, useStore } from 'jotai';
+import { useAtomValue, useStore } from 'jotai';
 import { type FC, useEffect, useEffectEvent, useRef, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Button } from '@boluo/ui/Button';
 import { useSetBanner } from '../../hooks/useBanner';
 import { useChannelId } from '../../hooks/useChannelId';
 import { useMountedRef } from '@boluo/hooks/useMounted';
-import { chatAtom } from '../../state/chat.atoms';
+import { chatAtom, isChatInitializedAtom } from '../../state/chat.atoms';
 import { head } from 'list';
-import { useMember } from '../../hooks/useMember';
+import { loadChannelMessages } from '../../state/loadChannelMessages';
+import { isChannelHistoryInitialized } from '../../state/channel.reducer';
 
 const LOAD_MESSAGE_LIMIT = 51;
+const STALE_PAGE_RETRY_DELAY = 250;
 const AUTO_LOAD = true;
 
 interface Point {
@@ -27,30 +28,40 @@ const shouldTriggerLoad = (start: Point, end: Point) => {
 
 export const ChatContentHeaderLoadMore: FC = () => {
   const channelId = useChannelId();
-  const member = useMember();
   const mountedRef = useMountedRef();
   const loadMoreRef = useRef<HTMLButtonElement>(null);
+  const isLoadMoreVisibleRef = useRef(false);
+  const stalePageRetryTimeoutRef = useRef<number | undefined>(undefined);
   const store = useStore();
-  const dispatch = useSetAtom(chatAtom);
+  const chatInitialized = useAtomValue(isChatInitializedAtom);
   const [isLoading, setIsLoading] = useState(false);
   const isLoadingRef = useRef(false);
   const [touchState, setTouchState] = useState<'NONE' | 'START' | 'WILL_LOAD'>('NONE');
   const setBanner = useSetBanner();
 
   const loadMore = async () => {
-    if (isLoadingRef.current || !mountedRef.current) return;
-    isLoadingRef.current = true;
-    setIsLoading(true);
+    if (!chatInitialized || isLoadingRef.current || !mountedRef.current) return;
+    window.clearTimeout(stalePageRetryTimeoutRef.current);
+    stalePageRetryTimeoutRef.current = undefined;
     const chatState = store.get(chatAtom);
     const channelState = chatState.channels[channelId];
+    if (channelState?.historyState === 'INITIAL_LOADING') return;
+
+    isLoadingRef.current = true;
+    setIsLoading(true);
     const before: number | null = channelState ? (head(channelState.messages)?.pos ?? null) : null;
     try {
-      const result = await get('/messages/by_channel', {
+      const baseOptions = {
         channelId,
-        spaceId: member?.space.spaceId ?? null,
-        before,
         limit: LOAD_MESSAGE_LIMIT,
-      });
+      };
+      const shouldLoadInitialHistory =
+        channelState == null || !isChannelHistoryInitialized(channelState) || before == null;
+      const { result, status } = await loadChannelMessages(
+        shouldLoadInitialHistory
+          ? { ...baseOptions, mode: 'INITIAL' }
+          : { ...baseOptions, before, mode: 'LOAD_MORE' },
+      );
       if (result.isErr) {
         setBanner({
           level: 'ERROR',
@@ -63,16 +74,12 @@ export const ChatContentHeaderLoadMore: FC = () => {
         });
         return;
       }
-      const newMessages = result.some;
-      dispatch({
-        type: 'messagesLoaded',
-        payload: {
-          before,
-          channelId,
-          messages: newMessages,
-          fullLoaded: newMessages.length < LOAD_MESSAGE_LIMIT,
-        },
-      });
+      if (status === 'STALE_PAGE' && isLoadMoreVisibleRef.current) {
+        stalePageRetryTimeoutRef.current = window.setTimeout(
+          () => void loadMore(),
+          STALE_PAGE_RETRY_DELAY,
+        );
+      }
     } finally {
       isLoadingRef.current = false;
       if (mountedRef.current) {
@@ -94,6 +101,7 @@ export const ChatContentHeaderLoadMore: FC = () => {
         if (entries.length === 0) return;
         const entry = entries[0]!;
         isVisible = entry.isIntersecting;
+        isLoadMoreVisibleRef.current = entry.isIntersecting;
         window.clearTimeout(autoLoadTimeout);
         if (AUTO_LOAD && entry.isIntersecting && !isTouchDevice) {
           autoLoadTimeout = window.setTimeout(loadMoreFromEffect, 100);
@@ -146,13 +154,15 @@ export const ChatContentHeaderLoadMore: FC = () => {
 
     return () => {
       observer.disconnect();
+      isLoadMoreVisibleRef.current = false;
       window.clearTimeout(autoLoadTimeout);
+      window.clearTimeout(stalePageRetryTimeoutRef.current);
       window.removeEventListener('touchstart', handleTouchStart);
       window.removeEventListener('touchmove', handleTouchMove);
       window.removeEventListener('touchend', handleTouchEnd);
       if (loadTimer !== undefined) clearTimeout(loadTimer);
     };
-  }, []);
+  }, [chatInitialized]);
 
   const willLoad = touchState === 'WILL_LOAD';
   return (

@@ -5,7 +5,7 @@ use super::Asset;
 use super::api::{CreateAsset, DeleteAsset, ListAssets, QueryAsset, UpdateAsset};
 use crate::csrf::{authenticate, authenticate_optional};
 use crate::error::{AppError, Find};
-use crate::interface::{missing, parse_body, parse_query, response};
+use crate::interface::{Response, missing, parse_body, parse_query, response};
 use crate::media::models::Media;
 use crate::spaces::{SpaceMember, resolve_space_access};
 
@@ -157,7 +157,7 @@ pub async fn router(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
     path: &str,
-) -> Result<hyper::Response<Vec<u8>>, AppError> {
+) -> Result<Response, AppError> {
     use hyper::Method;
 
     match (path, req.method().clone()) {

@@ -194,29 +194,20 @@ async fn members<B: Body>(
         Member::get_by_channel(&ctx.db, channel.space_id, channel.id).await?
     };
 
-    let Ok((members, self_index)) = tokio::task::spawn_blocking(move || {
-        members.sort_unstable_by(|a, b| {
-            if !a.channel.character_name.is_empty() && b.channel.character_name.is_empty() {
-                std::cmp::Ordering::Less
-            } else if a.channel.character_name.is_empty() && !b.channel.character_name.is_empty() {
-                std::cmp::Ordering::Greater
-            } else {
-                a.channel.join_date.cmp(&b.channel.join_date)
-            }
-        });
-        let self_index: Option<usize> = current_user_id.and_then(|current_user_id| {
-            members
-                .iter()
-                .position(|member| member.channel.user_id == current_user_id)
-        });
-        (members, self_index)
-    })
-    .await
-    else {
-        return Err(AppError::Unexpected(anyhow::anyhow!(
-            "Failed to sort members"
-        )));
-    };
+    members.sort_unstable_by(|a, b| {
+        if !a.channel.character_name.is_empty() && b.channel.character_name.is_empty() {
+            std::cmp::Ordering::Less
+        } else if a.channel.character_name.is_empty() && !b.channel.character_name.is_empty() {
+            std::cmp::Ordering::Greater
+        } else {
+            a.channel.join_date.cmp(&b.channel.join_date)
+        }
+    });
+    let self_index: Option<usize> = current_user_id.and_then(|current_user_id| {
+        members
+            .iter()
+            .position(|member| member.channel.user_id == current_user_id)
+    });
 
     if !channel.is_public && self_index.is_none() {
         let owner_id = if let Some(snapshot) = runtime_snapshot {
@@ -1039,7 +1030,7 @@ pub async fn router(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
     path: &str,
-) -> Result<hyper::Response<Vec<u8>>, AppError> {
+) -> Result<interface::Response, AppError> {
     use hyper::Method;
 
     match (path, req.method().clone()) {

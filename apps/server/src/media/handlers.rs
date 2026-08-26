@@ -164,7 +164,7 @@ async fn get(
     let response = hyper::Response::builder()
         .status(hyper::StatusCode::MOVED_PERMANENTLY)
         .header(header::LOCATION, url)
-        .body(Vec::new())
+        .body(crate::interface::ResponseBytes::new())
         .map_err(error_unexpected!("Failed to build media redirect response"))?;
     Ok(response)
 }

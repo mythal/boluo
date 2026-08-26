@@ -5,7 +5,10 @@ import {
   gridItem,
 } from '@grafana/grafana-foundation-sdk/dashboardv2';
 import {
+  GraphDrawStyle,
+  LineInterpolation,
   QueryEditorMode,
+  StackingMode,
   TooltipDisplayMode,
   dashboardTimeSettings,
   defaultAnnotations,
@@ -21,7 +24,6 @@ export const DEFAULT_VICTORIALOGS_DATASOURCE_UID = 'victorialogs';
 const RATE_INTERVAL = '$__rate_interval';
 const CACHE_RATIO_INTERVAL = '30m';
 const HTTP_STATUS_CODES = ['200', '204', '304', '400', '401', '403', '404', '429', '500', '502'];
-const CACHE_NAMES = ['Session', 'User', 'UserExt', 'UserSpaces'];
 
 const panels = {
   httpTraffic: 'panel-13',
@@ -31,9 +33,8 @@ const panels = {
   appConnections: 'panel-7',
   applicationPool: 'panel-17',
   cacheHitRatio: 'panel-15',
-  cacheCapacityUtilization: 'panel-19',
-  spacePayloadCacheMemory: 'panel-34',
   spacePayloadCacheReads: 'panel-35',
+  serializedPayloadSizes: 'panel-37',
   messages: 'panel-9',
   messageLatency: 'panel-16',
   diskCacheCapacity: 'panel-20',
@@ -43,7 +44,6 @@ const panels = {
   eventDelivery: 'panel-26',
   runtimePopulation: 'panel-27',
   snapshotPopulation: 'panel-31',
-  allocatorMemory: 'panel-32',
   processMemory: 'panel-29',
   websocketLifecycle: 'panel-33',
   applicationLogs: 'panel-30',
@@ -167,6 +167,7 @@ export function buildBoluoDashboard(
         datasourceUid,
         unit: 'percentunit',
         min: 0,
+        legendCalcs: ['lastNotNull', 'max'],
         targets: [
           {
             refId: 'memory',
@@ -201,6 +202,7 @@ export function buildBoluoDashboard(
         id: 7,
         title: 'Live connections',
         datasourceUid,
+        lineInterpolation: LineInterpolation.StepAfter,
         tooltipMode: TooltipDisplayMode.Multi,
         targets: [
           {
@@ -255,18 +257,31 @@ export function buildBoluoDashboard(
       panels.cacheHitRatio,
       timeSeriesPanel({
         id: 15,
-        title: 'Cache hit ratio',
-        description: 'Gaps mean there were no cache requests in the rolling window.',
+        title: 'In-process cache effectiveness',
+        description: 'Idle caches have no hit-ratio series.',
         datasourceUid,
         unit: 'percentunit',
         min: 0,
         max: 1,
+        tooltipMode: TooltipDisplayMode.Multi,
         targets: [
           {
-            refId: 'ratio',
+            refId: 'hit-ratio',
             editorMode: QueryEditorMode.Code,
             expr: `sum by(cache) (increase(boluo_server_cache_hits_total{app="${APP}"}[${CACHE_RATIO_INTERVAL}])) / (sum by(cache) (increase(boluo_server_cache_hits_total{app="${APP}"}[${CACHE_RATIO_INTERVAL}])) + sum by(cache) (increase(boluo_server_cache_misses_total{app="${APP}"}[${CACHE_RATIO_INTERVAL}])))`,
-            legendFormat: '{{cache}}',
+            legendFormat: '{{cache}} hit ratio',
+          },
+          {
+            refId: 'capacity',
+            editorMode: QueryEditorMode.Code,
+            expr: `sum by(cache) (boluo_server_cache_items{app="${APP}"}) / clamp_min(sum by(cache) (boluo_server_cache_capacity{app="${APP}"}), 1)`,
+            legendFormat: '{{cache}} capacity',
+          },
+        ],
+        overrides: [
+          {
+            matcher: { id: 'byFrameRefID', options: 'capacity' },
+            properties: [{ id: 'custom.lineInterpolation', value: LineInterpolation.StepAfter }],
           },
         ],
       }),
@@ -277,14 +292,12 @@ export function buildBoluoDashboard(
         id: 17,
         title: 'Database pool connections',
         datasourceUid,
+        fillOpacity: 20,
+        legendCalcs: ['lastNotNull', 'max'],
+        lineInterpolation: LineInterpolation.StepAfter,
+        stacking: StackingMode.Normal,
         tooltipMode: TooltipDisplayMode.Multi,
         targets: [
-          {
-            refId: 'total',
-            editorMode: QueryEditorMode.Code,
-            expr: `sum(boluo_server_db_pool_connections_total{app="${APP}"})`,
-            legendFormat: 'total',
-          },
           {
             refId: 'used',
             editorMode: QueryEditorMode.Code,
@@ -297,47 +310,21 @@ export function buildBoluoDashboard(
             expr: `sum(boluo_server_db_pool_connections_idle{app="${APP}"})`,
             legendFormat: 'idle',
           },
-        ],
-      }),
-    )
-    .element(
-      panels.cacheCapacityUtilization,
-      timeSeriesPanel({
-        id: 19,
-        title: 'Cache capacity utilization',
-        description: 'Cached item count divided by configured capacity.',
-        datasourceUid,
-        unit: 'percentunit',
-        min: 0,
-        max: 1,
-        tooltipMode: TooltipDisplayMode.Multi,
-        seriesNames: CACHE_NAMES,
-        targets: [
           {
-            refId: 'utilization',
+            refId: 'max',
             editorMode: QueryEditorMode.Code,
-            expr: `sum by(cache) (boluo_server_cache_items{app="${APP}"}) / clamp_min(sum by(cache) (boluo_server_cache_capacity{app="${APP}"}), 1)`,
-            legendFormat: '{{cache}}',
+            expr: `sum(boluo_server_db_pool_connections_max{app="${APP}"})`,
+            legendFormat: 'max',
           },
         ],
-      }),
-    )
-    .element(
-      panels.spacePayloadCacheMemory,
-      timeSeriesPanel({
-        id: 34,
-        title: 'Space payload cache memory',
-        description: 'Combined Foyer memory tier for versioned Entry components and Note payloads.',
-        datasourceUid,
-        unit: 'bytes',
-        min: 0,
-        tooltipMode: TooltipDisplayMode.Multi,
-        targets: [
+        overrides: [
           {
-            refId: 'memory',
-            editorMode: QueryEditorMode.Code,
-            expr: `boluo_server_space_payload_cache_memory_bytes{app="${APP}"}`,
-            legendFormat: '{{instance}}',
+            matcher: { id: 'byFrameRefID', options: 'max' },
+            properties: [
+              { id: 'custom.fillOpacity', value: 0 },
+              { id: 'custom.lineWidth', value: 2 },
+              { id: 'custom.stacking', value: { group: 'B', mode: StackingMode.None } },
+            ],
           },
         ],
       }),
@@ -346,9 +333,8 @@ export function buildBoluoDashboard(
       panels.spacePayloadCacheReads,
       timeSeriesPanel({
         id: 35,
-        title: 'Space payload cache reads',
-        description:
-          'Reads by payload type and source. Storage errors fall back to PostgreSQL when possible.',
+        title: 'Space payload cache activity (30m)',
+        description: 'Zero reads means the cache is idle, not that telemetry is missing.',
         datasourceUid,
         unit: 'ops',
         min: 0,
@@ -357,14 +343,50 @@ export function buildBoluoDashboard(
           {
             refId: 'reads',
             editorMode: QueryEditorMode.Code,
-            expr: `sum by(instance, payload, result) (rate(boluo_server_space_payload_cache_read_total{app="${APP}"}[${RATE_INTERVAL}]))`,
-            legendFormat: '{{instance}} {{payload}} {{result}}/s',
+            expr: `sum by(result) (increase(boluo_server_space_payload_cache_read_total{app="${APP}"}[${CACHE_RATIO_INTERVAL}]))`,
+            legendFormat: '{{result}} reads',
           },
           {
             refId: 'storage-errors',
             editorMode: QueryEditorMode.Code,
-            expr: `sum by(instance, payload) (rate(boluo_server_space_payload_cache_storage_errors_total{app="${APP}"}[${RATE_INTERVAL}]))`,
-            legendFormat: '{{instance}} {{payload}} storage errors/s',
+            expr: `sum(increase(boluo_server_space_payload_cache_storage_errors_total{app="${APP}"}[${CACHE_RATIO_INTERVAL}]))`,
+            legendFormat: 'storage errors',
+          },
+          {
+            refId: 'hit-ratio',
+            editorMode: QueryEditorMode.Code,
+            expr: `sum(increase(boluo_server_space_payload_cache_read_total{app="${APP}",result=~"memory|disk"}[${CACHE_RATIO_INTERVAL}])) / clamp_min(sum(increase(boluo_server_space_payload_cache_read_total{app="${APP}"}[${CACHE_RATIO_INTERVAL}])), 1)`,
+            legendFormat: 'hit ratio',
+          },
+        ],
+        overrides: [
+          {
+            matcher: { id: 'byFrameRefID', options: 'reads' },
+            properties: [
+              { id: 'custom.fillOpacity', value: 20 },
+              { id: 'custom.stacking', value: { group: 'reads', mode: StackingMode.Normal } },
+            ],
+          },
+          {
+            matcher: { id: 'byFrameRefID', options: 'storage-errors' },
+            properties: [
+              { id: 'color', value: { fixedColor: 'red', mode: 'fixed' } },
+              { id: 'custom.drawStyle', value: GraphDrawStyle.Bars },
+              { id: 'custom.fillOpacity', value: 50 },
+              { id: 'custom.lineWidth', value: 0 },
+            ],
+          },
+          {
+            matcher: { id: 'byFrameRefID', options: 'hit-ratio' },
+            properties: [
+              { id: 'unit', value: 'percentunit' },
+              { id: 'min', value: 0 },
+              { id: 'max', value: 1 },
+              { id: 'custom.axisPlacement', value: 'right' },
+              { id: 'custom.fillOpacity', value: 0 },
+              { id: 'custom.lineWidth', value: 2 },
+              { id: 'custom.stacking', value: { group: 'ratio', mode: StackingMode.None } },
+            ],
           },
         ],
       }),
@@ -390,18 +412,11 @@ export function buildBoluoDashboard(
       panels.messageLatency,
       timeSeriesPanel({
         id: 16,
-        title: 'Message operation latency',
-        description: 'Gaps mean there were no recent operations in the rolling window.',
+        title: 'Application operation latency',
         datasourceUid,
         unit: 'ms',
         tooltipMode: TooltipDisplayMode.Multi,
         targets: [
-          {
-            refId: 'create-p50',
-            editorMode: QueryEditorMode.Code,
-            expr: summaryQuantile(0.5, 'boluo_server_messages_create_duration_ms'),
-            legendFormat: '{{instance}} create p50',
-          },
           {
             refId: 'create-p95',
             editorMode: QueryEditorMode.Code,
@@ -413,6 +428,74 @@ export function buildBoluoDashboard(
             editorMode: QueryEditorMode.Code,
             expr: summaryQuantile(0.95, 'boluo_server_messages_edit_duration_ms'),
             legendFormat: '{{instance}} edit p95',
+          },
+          {
+            refId: 'encode-p95',
+            editorMode: QueryEditorMode.Code,
+            expr: `topk(3, ${summaryQuantile(0.95, 'boluo_server_events_encode_duration_ms')})`,
+            legendFormat: '{{update}} encode p95',
+          },
+          {
+            refId: 'mailbox-update-p95',
+            editorMode: QueryEditorMode.Code,
+            expr: summaryQuantile(0.95, 'boluo_server_events_update_duration_ms'),
+            legendFormat: '{{instance}} mailbox update p95',
+          },
+          {
+            refId: 'position-action-p95',
+            editorMode: QueryEditorMode.Code,
+            expr: summaryQuantile(0.95, 'boluo_server_pos_action_duration_ms'),
+            legendFormat: '{{instance}} position action p95',
+          },
+          {
+            refId: 'replay-p95',
+            editorMode: QueryEditorMode.Code,
+            expr: summaryQuantile(0.95, 'boluo_server_events_push_initial_updates_duration_ms'),
+            legendFormat: '{{instance}} initial replay p95',
+          },
+        ],
+      }),
+    )
+    .element(
+      panels.serializedPayloadSizes,
+      timeSeriesPanel({
+        id: 37,
+        title: 'Serialized payload sizes',
+        datasourceUid,
+        unit: 'bytes',
+        min: 0,
+        legendCalcs: ['lastNotNull', 'max'],
+        tooltipMode: TooltipDisplayMode.Multi,
+        targets: [
+          {
+            refId: 'update-p95',
+            editorMode: QueryEditorMode.Code,
+            expr: `topk(4, ${summaryQuantile(0.95, 'boluo_server_events_encoded_bytes')})`,
+            legendFormat: '{{update}} update p95',
+          },
+          {
+            refId: 'replay-p95',
+            editorMode: QueryEditorMode.Code,
+            expr: summaryQuantile(0.95, 'boluo_server_events_push_initial_updates_payload_bytes'),
+            legendFormat: '{{instance}} replay p95',
+          },
+          {
+            refId: 'response-p95',
+            editorMode: QueryEditorMode.Code,
+            expr: histogramQuantile(0.95, 'boluo_server_http_response_body_bytes'),
+            legendFormat: 'HTTP response p95',
+          },
+          {
+            refId: 'replay-in-flight',
+            editorMode: QueryEditorMode.Code,
+            expr: `boluo_server_events_initial_updates_in_flight_bytes{app="${APP}"}`,
+            legendFormat: '{{instance}} replay in flight',
+          },
+        ],
+        overrides: [
+          {
+            matcher: { id: 'byFrameRefID', options: 'replay-in-flight' },
+            properties: [{ id: 'custom.lineInterpolation', value: LineInterpolation.StepAfter }],
           },
         ],
       }),
@@ -427,6 +510,7 @@ export function buildBoluoDashboard(
         unit: 'percentunit',
         min: 0,
         max: 1,
+        legendCalcs: ['lastNotNull', 'max'],
         tooltipMode: TooltipDisplayMode.Multi,
         targets: [
           {
@@ -478,6 +562,8 @@ export function buildBoluoDashboard(
         datasourceUid,
         unit: 'short',
         min: 0,
+        legendCalcs: ['lastNotNull', 'max'],
+        lineInterpolation: LineInterpolation.StepAfter,
         tooltipMode: TooltipDisplayMode.Multi,
         targets: [
           {
@@ -531,6 +617,9 @@ export function buildBoluoDashboard(
         id: 26,
         title: 'Backpressure events',
         datasourceUid,
+        drawStyle: GraphDrawStyle.Bars,
+        fillOpacity: 50,
+        stacking: StackingMode.Normal,
         unit: 'ops',
         tooltipMode: TooltipDisplayMode.Multi,
         targets: [
@@ -589,6 +678,8 @@ export function buildBoluoDashboard(
         title: 'Runtime population',
         datasourceUid,
         unit: 'short',
+        legendCalcs: ['lastNotNull', 'max'],
+        lineInterpolation: LineInterpolation.StepAfter,
         tooltipMode: TooltipDisplayMode.Multi,
         targets: [
           {
@@ -621,6 +712,24 @@ export function buildBoluoDashboard(
             expr: `boluo_server_events_token_store_entries{app="${APP}"}`,
             legendFormat: '{{instance}} token store',
           },
+          {
+            refId: 'space-payload-cache-entries',
+            editorMode: QueryEditorMode.Code,
+            expr: `boluo_server_space_payload_cache_memory_entries{app="${APP}"}`,
+            legendFormat: '{{instance}} payload cache entries',
+          },
+          {
+            refId: 'tokio-live-tasks',
+            editorMode: QueryEditorMode.Code,
+            expr: `tokio_live_tasks_count{app="${APP}"}`,
+            legendFormat: '{{instance}} Tokio live tasks',
+          },
+          {
+            refId: 'process-threads',
+            editorMode: QueryEditorMode.Code,
+            expr: `boluo_server_process_threads{app="${APP}"}`,
+            legendFormat: '{{instance}} process threads',
+          },
         ],
       }),
     )
@@ -628,12 +737,12 @@ export function buildBoluoDashboard(
       panels.processMemory,
       timeSeriesPanel({
         id: 29,
-        title: 'Process memory breakdown',
-        description:
-          'Linux process RSS with its anonymous and file-backed components, plus process swap.',
+        title: 'Process and cache memory',
+        description: 'mimalloc committed is address space, not RSS.',
         datasourceUid,
         unit: 'bytes',
         min: 0,
+        legendCalcs: ['lastNotNull', 'max'],
         tooltipMode: TooltipDisplayMode.Multi,
         targets: [
           {
@@ -660,6 +769,24 @@ export function buildBoluoDashboard(
             expr: `boluo_server_process_swap_bytes{app="${APP}"}`,
             legendFormat: '{{instance}} process swap',
           },
+          {
+            refId: 'allocator-committed',
+            editorMode: QueryEditorMode.Code,
+            expr: `boluo_server_allocator_committed_bytes{app="${APP}"}`,
+            legendFormat: '{{instance}} mimalloc committed',
+          },
+          {
+            refId: 'space-payload-cache',
+            editorMode: QueryEditorMode.Code,
+            expr: `boluo_server_space_payload_cache_memory_bytes{app="${APP}"}`,
+            legendFormat: '{{instance}} Space payload cache',
+          },
+          {
+            refId: 'mailbox-cache',
+            editorMode: QueryEditorMode.Code,
+            expr: `boluo_server_disk_cache_memory_bytes{app="${APP}"}`,
+            legendFormat: '{{instance}} mailbox cache',
+          },
         ],
       }),
     )
@@ -668,10 +795,11 @@ export function buildBoluoDashboard(
       timeSeriesPanel({
         id: 31,
         title: 'Loaded snapshot contents',
-        description: 'Total items retained by all currently loaded Space snapshots.',
         datasourceUid,
         unit: 'short',
         min: 0,
+        legendCalcs: ['lastNotNull', 'max'],
+        lineInterpolation: LineInterpolation.StepAfter,
         tooltipMode: TooltipDisplayMode.Multi,
         targets: [
           {
@@ -679,27 +807,6 @@ export function buildBoluoDashboard(
             editorMode: QueryEditorMode.Code,
             expr: `boluo_server_space_runtime_snapshot_items{app="${APP}"}`,
             legendFormat: '{{instance}} {{kind}}',
-          },
-        ],
-      }),
-    )
-    .element(
-      panels.allocatorMemory,
-      timeSeriesPanel({
-        id: 32,
-        title: 'Allocator committed address space',
-        description:
-          'mimalloc committed estimate on Linux. This is allocator-managed address space, not physical RSS, and must not be added to process memory.',
-        datasourceUid,
-        unit: 'bytes',
-        min: 0,
-        tooltipMode: TooltipDisplayMode.Multi,
-        targets: [
-          {
-            refId: 'committed',
-            editorMode: QueryEditorMode.Code,
-            expr: `boluo_server_allocator_committed_bytes{app="${APP}"}`,
-            legendFormat: '{{instance}} committed',
           },
         ],
       }),
@@ -750,16 +857,14 @@ export function buildBoluoDashboard(
         gridItem(panels.cpuUtilization).x(0).y(6).width(8).height(8),
         gridItem(panels.memoryUtilization).x(8).y(6).width(8).height(8),
         gridItem(panels.processMemory).x(16).y(6).width(8).height(8),
-        gridItem(panels.allocatorMemory).x(0).y(14).width(8).height(8),
-        gridItem(panels.runtimePopulation).x(8).y(14).width(8).height(8),
-        gridItem(panels.snapshotPopulation).x(16).y(14).width(8).height(8),
+        gridItem(panels.runtimePopulation).x(0).y(14).width(12).height(8),
+        gridItem(panels.snapshotPopulation).x(12).y(14).width(12).height(8),
         gridItem(panels.appConnections).x(0).y(22).width(12).height(8),
         gridItem(panels.websocketLifecycle).x(12).y(22).width(12).height(8),
         gridItem(panels.applicationPool).x(0).y(30).width(8).height(8),
-        gridItem(panels.cacheHitRatio).x(8).y(30).width(8).height(8),
-        gridItem(panels.cacheCapacityUtilization).x(16).y(30).width(8).height(8),
-        gridItem(panels.spacePayloadCacheMemory).x(0).y(38).width(8).height(8),
-        gridItem(panels.spacePayloadCacheReads).x(8).y(38).width(16).height(8),
+        gridItem(panels.cacheHitRatio).x(8).y(30).width(16).height(8),
+        gridItem(panels.spacePayloadCacheReads).x(0).y(38).width(12).height(8),
+        gridItem(panels.serializedPayloadSizes).x(12).y(38).width(12).height(8),
         gridItem(panels.messages).x(0).y(46).width(12).height(8),
         gridItem(panels.messageLatency).x(12).y(46).width(12).height(8),
         gridItem(panels.queueDepths).x(0).y(54).width(12).height(8),

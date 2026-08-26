@@ -8,6 +8,7 @@
     "@boluo/api": "0.0.0",
     "@boluo/backend-proxy": "0.0.0",
     "@boluo/icons": "0.0.0",
+    "@boluo/utils": "0.0.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@hello-pangea/dnd": "^18.0.1",

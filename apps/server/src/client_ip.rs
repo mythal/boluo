@@ -672,14 +672,14 @@ pub fn handle_probe(
         .ok_or_else(|| {
             crate::error::AppError::Unexpected(anyhow::anyhow!("missing observed client path"))
         })?;
-    let body = sonic_rs::to_vec(&ProbeResponse {
+    let body = crate::interface::ResponseBytes::from_serializable(&ProbeResponse {
         proxy_url: claims.proxy_url,
         nonce: claims.nonce,
         observed,
     })
     .map_err(crate::error::AppError::Serialize)?;
     let signature =
-        sign_probe_body(ctx.signer(), &body).map_err(crate::error::AppError::Unexpected)?;
+        sign_probe_body(ctx.signer(), body.as_ref()).map_err(crate::error::AppError::Unexpected)?;
     Ok(hyper::Response::builder()
         .status(hyper::StatusCode::OK)
         .header(hyper::header::CONTENT_TYPE, "application/json")

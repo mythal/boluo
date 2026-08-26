@@ -6,6 +6,11 @@ import {
   NOT_JSON,
   UNEXPECTED,
 } from './api/error';
+import { describeThrownValue } from '@boluo/utils/errors';
+import {
+  normalizeFrontendLogContext,
+  type FrontendLogContextValue,
+} from '@boluo/utils/frontend-telemetry';
 import { LogLevel, faro, getInternalFaroFromGlobalObject } from '@grafana/faro-web-sdk';
 
 const REPORT_THROTTLE_MS = 60_000;
@@ -15,6 +20,11 @@ const UUID_PATH_SEGMENT = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9
 interface ReportOptions {
   requestPath?: string;
   source: string;
+}
+
+interface WarningOptions extends ReportOptions {
+  context?: Record<string, FrontendLogContextValue>;
+  details?: Record<string, unknown>;
 }
 
 interface CaptureOptions extends ReportOptions {
@@ -63,7 +73,7 @@ const normalizeException = (value: unknown): Error => {
   if (isAppError(value)) {
     return new Error(`${value.code}: ${value.message}`);
   }
-  return new Error(typeof value === 'string' ? value : 'Non-Error exception');
+  return new Error(`Non-Error exception: ${describeThrownValue(value)}`);
 };
 
 export const isAppError = (value: unknown): value is AppError =>
@@ -95,11 +105,21 @@ export function captureRecoverableException(value: unknown, options: CaptureOpti
   captureException(value, options);
 }
 
-export function recordWarning(message: string, { requestPath, source }: ReportOptions): void {
+export function recordWarning(
+  message: string,
+  { context = {}, details, requestPath, source }: WarningOptions,
+): void {
   if (!canSendTelemetry()) return;
+  const logContext = normalizeFrontendLogContext({
+    ...context,
+    requestPath,
+    source,
+  });
   const key = `warning:${source}:${requestPath ?? ''}:${message}`;
   if (!shouldReport(key)) return;
-  faro.api.pushLog([`${message} (${source}${requestPath ? ` ${requestPath}` : ''})`], {
+  const formattedMessage = `${message} (${source}${requestPath ? ` ${requestPath}` : ''})`;
+  faro.api.pushLog(details ? [formattedMessage, details] : [formattedMessage], {
+    context: logContext,
     level: LogLevel.WARN,
   });
 }

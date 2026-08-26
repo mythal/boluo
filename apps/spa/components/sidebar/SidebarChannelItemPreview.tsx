@@ -5,23 +5,26 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import { messageToParsed, toSimpleText } from '@boluo/interpreter';
 import { binarySearchPosList } from '@boluo/sort';
 import { type LatestMessageAtom } from './SidebarChannelItem';
-import { type PreviewItem } from '../../state/channel.types';
+import { type MessageItem, type PreviewItem } from '../../state/channel.types';
 import clsx from 'clsx';
+import type { List } from 'list';
 
 interface Props {
   hasUnread: boolean;
   latestMessageAtom: LatestMessageAtom;
   channelId: string;
   myId: string | null | undefined;
+  preloadedMessages: List<MessageItem> | undefined;
 }
 
-const TYPEING_TIMEOUT = 2000;
+const TYPING_TIMEOUT = 2000;
 
 export const SidebarChannelItemPreview: FC<Props> = ({
   hasUnread,
   channelId,
   latestMessageAtom,
   myId,
+  preloadedMessages,
 }) => {
   const intl = useIntl();
   const store = useStore();
@@ -42,16 +45,22 @@ export const SidebarChannelItemPreview: FC<Props> = ({
     const previewMap = store.get(previewMapAtom) ?? {};
     const messages = store.get(messagesAtom);
     const hasMessageAtPos = (pos: number): boolean => {
-      if (!messages) return false;
-      const [, message] = binarySearchPosList(messages, pos);
-      return message != null;
+      if (messages) {
+        const [, message] = binarySearchPosList(messages, pos);
+        if (message) return true;
+      }
+      if (preloadedMessages) {
+        const [, message] = binarySearchPosList(preloadedMessages, pos);
+        if (message) return true;
+      }
+      return false;
     };
     const previews = Object.values(previewMap).filter(
       (preview) =>
         preview.senderId !== myId &&
         preview.edit == null &&
         !hasMessageAtPos(preview.pos) &&
-        now - preview.timestamp < TYPEING_TIMEOUT &&
+        now - preview.timestamp < TYPING_TIMEOUT &&
         (preview.text == null || preview.text.length > 0),
     );
     previews.sort((a, b) => a.timestamp - b.timestamp);
@@ -68,7 +77,7 @@ export const SidebarChannelItemPreview: FC<Props> = ({
       }
       return oldPreviews;
     });
-  }, [messagesAtom, myId, previewMapAtom, store]);
+  }, [messagesAtom, myId, preloadedMessages, previewMapAtom, store]);
 
   // Update recent previews when previewMap/messages changes
   useEffect(() => {
@@ -88,7 +97,7 @@ export const SidebarChannelItemPreview: FC<Props> = ({
     if (oldestRecentPreviewTimestamp == null) return;
     const now = Date.now();
     const distance = now - oldestRecentPreviewTimestamp;
-    const delay = distance < TYPEING_TIMEOUT ? TYPEING_TIMEOUT - distance : 0;
+    const delay = distance < TYPING_TIMEOUT ? TYPING_TIMEOUT - distance : 0;
     const handle = window.setTimeout(updateRecentPreviews, delay);
     return () => window.clearTimeout(handle);
   }, [oldestRecentPreviewTimestamp, updateRecentPreviews]);

@@ -307,16 +307,11 @@ async fn get_session_from_token(
     ctx: &crate::context::AppContext,
     token: &str,
 ) -> Result<Session, AppError> {
-    let token = token.to_string();
-    let signer = ctx.signer().clone();
-    let session_id = tokio::task::spawn_blocking(move || token_verify(&signer, &token))
-        .await
-        .map_err(|err| AppError::Unexpected(err.into()))?
-        .map_err(|err| {
-            tracing::warn!(
-                event = "authentication.token.verification_failed", error = %err, "Failed to verify the token");
-            AuthenticateFail::CheckSignFail
-        })?;
+    let session_id = token_verify(ctx.signer(), token).map_err(|err| {
+        tracing::warn!(
+            event = "authentication.token.verification_failed", error = %err, "Failed to verify the token");
+        AuthenticateFail::CheckSignFail
+    })?;
 
     fetch_entry(&CACHE.Session, session_id, async {
         get_session_from_db(&ctx.db, session_id).await

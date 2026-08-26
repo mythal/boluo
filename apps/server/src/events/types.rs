@@ -1,7 +1,7 @@
 use crate::channels::Channel;
 use crate::channels::api::MemberWithUser;
 
-use crate::events::context::{CachedUpdates, EncodedUpdate};
+use crate::events::context::CachedUpdates;
 use crate::events::models::{StatusKind, UserStatus};
 use crate::events::preview::{Preview, PreviewDiff, PreviewDiffPost, PreviewPost};
 use crate::info::BasicInfo;
@@ -18,6 +18,23 @@ use tracing::Instrument as _;
 use uuid::Uuid;
 
 use super::status::StatusMap;
+
+const ENCODE_METRICS_SAMPLE_INTERVAL: u8 = 64;
+
+thread_local! {
+    // Keep sampling off a shared atomic on the serialization hot path.
+    static ENCODE_METRICS_SAMPLE_COUNTER: std::cell::Cell<u8> = const {
+        std::cell::Cell::new(0)
+    };
+}
+
+fn should_sample_encode_metrics() -> bool {
+    ENCODE_METRICS_SAMPLE_COUNTER.with(|counter| {
+        let current = counter.get();
+        counter.set(current.wrapping_add(1));
+        current % ENCODE_METRICS_SAMPLE_INTERVAL == 0
+    })
+}
 
 pub type Seq = u32;
 
@@ -305,9 +322,24 @@ impl Update {
     }
 
     pub fn encode(&self) -> tungstenite::Utf8Bytes {
-        let serialized = sonic_rs::to_string(self).expect("Failed to encode update");
-        let bytes = tungstenite::Bytes::from_owner(serialized);
-        unsafe { tungstenite::Utf8Bytes::from_bytes_unchecked(bytes) }
+        let started_at = should_sample_encode_metrics().then(std::time::Instant::now);
+        let encoded: tungstenite::Utf8Bytes = sonic_rs::to_string(self)
+            .expect("Failed to encode update")
+            .into();
+        if let Some(started_at) = started_at {
+            let update_name = self.name();
+            metrics::histogram!(
+                "boluo_server_events_encode_duration_ms",
+                "update" => update_name
+            )
+            .record(started_at.elapsed().as_secs_f64() * 1000.0);
+            metrics::histogram!(
+                "boluo_server_events_encoded_bytes",
+                "update" => update_name
+            )
+            .record(encoded.len() as f64);
+        }
+        encoded
     }
 
     pub fn error(mailbox: Uuid, error: ConnectionError) -> Update {
@@ -324,7 +356,8 @@ impl Update {
         }
     }
 
-    pub async fn new_message(mailbox: Uuid, message: Message, preview_id: Option<Uuid>) {
+    pub async fn new_message(mailbox: Uuid, mut message: Message, preview_id: Option<Uuid>) {
+        message.hide(None);
         let channel_id = message.channel_id;
         let message = Box::new(message);
         Update::persistent_ordered(
@@ -350,7 +383,8 @@ impl Update {
         .await
     }
 
-    pub async fn message_edited(mailbox: Uuid, message: Message, old_pos: f64) {
+    pub async fn message_edited(mailbox: Uuid, mut message: Message, old_pos: f64) {
+        message.hide(None);
         let channel_id = message.channel_id;
         let message = Box::new(message);
         Update::persistent_ordered(
@@ -417,13 +451,7 @@ impl Update {
             tracing::info_span!("push_members", space_id = %space_id, channel_id = %channel_id);
         spawn(
             async move {
-                if let Err(e) = Update::fire_members(space_id, channel_id, members).await {
-                    tracing::warn!(
-                        event = "event.member_list.fetch_failed",
-                        "Failed to fetch member list: {}",
-                        e
-                    );
-                }
+                Update::fire_members(space_id, channel_id, members).await;
             }
             .instrument(span),
         );
@@ -575,50 +603,42 @@ impl Update {
 
     pub(super) async fn send(mailbox: Uuid, update_encoded: Utf8Bytes) {
         let table = crate::events::get_broadcast_table().pin();
-        let result = if let Some(tx) = table.get(&mailbox) {
+        let delivered = if let Some(tx) = table.get(&mailbox) {
             if tx.send(update_encoded).is_ok() {
-                "delivered"
+                true
             } else {
-                "no_receivers"
+                false
             }
         } else {
-            "no_receivers"
+            false
         };
-        metrics::counter!("boluo_server_events_broadcast_total", "result" => result).increment(1);
+        if delivered {
+            metrics::counter!(
+                "boluo_server_events_broadcast_total",
+                "result" => "delivered"
+            )
+            .increment(1);
+        } else {
+            metrics::counter!(
+                "boluo_server_events_broadcast_total",
+                "result" => "no_receivers"
+            )
+            .increment(1);
+        }
     }
 
-    async fn fire_members(
-        space_id: Uuid,
-        channel_id: Uuid,
-        members: Vec<MemberWithUser>,
-    ) -> Result<(), anyhow::Error> {
-        let Ok(payload) = tokio::task::spawn_blocking(move || {
-            let encoded_update = EncodedUpdate::new(Update {
-                mailbox: space_id,
-                body: UpdateBody::Members {
-                    members,
-                    channel_id,
-                },
-                id: EventId::new(),
-                live: UpdateLifetime::Transient,
-            });
-            encoded_update.encoded.clone()
-        })
-        .await
-        else {
-            return Err(anyhow::anyhow!("Failed to build update"));
-        };
-        Update::send(space_id, payload).await;
-        Ok(())
-    }
-
-    fn build(body: UpdateBody, mailbox: Uuid, live: UpdateLifetime) -> Box<EncodedUpdate> {
-        Box::new(EncodedUpdate::new(Update {
-            mailbox,
-            body,
+    async fn fire_members(space_id: Uuid, channel_id: Uuid, members: Vec<MemberWithUser>) {
+        let payload = Update {
+            mailbox: space_id,
+            body: UpdateBody::Members {
+                members,
+                channel_id,
+            },
             id: EventId::new(),
-            live,
-        }))
+            live: UpdateLifetime::Transient,
+        }
+        .encode();
+        Update::send(space_id, payload).await;
     }
 
     /// Directly send the update to the mailbox.
@@ -628,15 +648,14 @@ impl Update {
         let span = tracing::info_span!("Fire Transient Update", mailbox = %mailbox);
         spawn(
             async move {
-                let Ok(update) = tokio::task::spawn_blocking(move || {
-                    Update::build(body, mailbox, UpdateLifetime::Transient)
-                })
-                .await
-                else {
-                    tracing::error!(event = "event.build_failed", "Failed to build update");
-                    return;
-                };
-                Update::send(mailbox, update.encoded.clone()).await;
+                let encoded = Update {
+                    mailbox,
+                    body,
+                    id: EventId::new(),
+                    live: UpdateLifetime::Transient,
+                }
+                .encode();
+                Update::send(mailbox, encoded).await;
             }
             .instrument(span),
         );

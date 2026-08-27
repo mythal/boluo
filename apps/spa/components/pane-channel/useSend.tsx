@@ -136,6 +136,7 @@ export const useSend = () => {
       type: 'sent',
       payload: { edit: composeState.edit != null, collapseCharacterReference },
     });
+    const composeStateAfterSent = store.get(composeAtom);
     const { inGame, name, characterId, color: speakerColor } = speaker;
     let payload:
       { type: 'NEW'; newMessage: NewMessage } | { type: 'EDIT'; editMessage: EditMessage };
@@ -210,6 +211,33 @@ export const useSend = () => {
     }
 
     let uploadResult: Awaited<ReturnType<typeof upload>> | null = null;
+    const handleEditFailure = (messageId: string, failTo: Extract<FailTo, { type: 'EDIT' }>) => {
+      const optimisticEdit =
+        store.get(chatAtom).channels[channelId]?.optimisticMessageMap[messageId];
+      if (optimisticEdit?.item.timestamp !== sendStartTime) return;
+
+      chatDispatch({
+        type: 'fail',
+        payload: { failTo, key: messageId, timestamp: sendStartTime },
+      });
+      const canRestoreEdit = store.get(composeAtom) === composeStateAfterSent;
+      if (canRestoreEdit) {
+        composeDispatch({ type: 'restoreFailedEdit', payload: composeState });
+      } else if (composeState.source.trim() !== '') {
+        saveDraftInWorker(channelId, composeState.source);
+      }
+      setBanner({
+        level: 'WARNING',
+        content: canRestoreEdit
+          ? intl.formatMessage({
+              defaultMessage: 'The edit could not be submitted. Your edits have been restored.',
+            })
+          : intl.formatMessage({
+              defaultMessage:
+                'The edit could not be submitted. Your edits have been saved as a draft.',
+            }),
+      });
+    };
     if (composeState.media instanceof File) {
       uploadResult = await upload(composeState.media);
     }
@@ -220,8 +248,11 @@ export const useSend = () => {
         key = composeState.previewId;
         failTo = { type: 'SEND', onUpload: uploadResult.err };
       } else {
-        key = payload.editMessage.messageId;
-        failTo = { type: 'EDIT', onUpload: uploadResult.err };
+        handleEditFailure(payload.editMessage.messageId, {
+          type: 'EDIT',
+          onUpload: uploadResult.err,
+        });
+        return;
       }
       chatDispatch({ type: 'fail', payload: { failTo, key } });
       return;
@@ -260,13 +291,7 @@ export const useSend = () => {
           }),
         });
       } else if (result === 'TIMEOUT' || !result.isOk) {
-        chatDispatch({
-          type: 'fail',
-          payload: {
-            failTo: { type: 'EDIT' },
-            key: payload.editMessage.messageId,
-          },
-        });
+        handleEditFailure(payload.editMessage.messageId, { type: 'EDIT' });
       }
     } else {
       if (mediaId) {

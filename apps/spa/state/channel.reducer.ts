@@ -957,7 +957,7 @@ const handleRemoveOptimisticMessage = (
 };
 
 const handleFail = (state: ChannelState, { payload }: ChatAction<'fail'>): ChannelState => {
-  const { failTo, key, baseRev, basePos } = payload;
+  const { failTo, key, timestamp, baseRev, basePos } = payload;
   if (failTo.type === 'SEND') {
     const optimisticMessage = state.optimisticMessageMap[key];
     if (!optimisticMessage) return state;
@@ -970,6 +970,12 @@ const handleFail = (state: ChannelState, { payload }: ChatAction<'fail'>): Chann
       [optimisticMessage.ref.id]: { ...optimisticMessage, item: optimisticItem },
     };
     return { ...state, optimisticMessageMap };
+  }
+  if (failTo.type === 'EDIT') {
+    return handleRemoveOptimisticMessage(state, {
+      type: 'removeOptimisticMessage',
+      payload: { id: key, timestamp },
+    });
   }
   const messageIndex = L.findIndex((message) => message.id === key, state.messages);
   let messages = state.messages;

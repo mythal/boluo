@@ -34,7 +34,13 @@ export type ChatActionMap = {
   };
   setOptimisticMessage: OptimisticMessage;
   removeOptimisticMessage: { id: string; timestamp?: number };
-  fail: { failTo: FailTo; key: string; baseRev?: number; basePos?: [number, number] };
+  fail: {
+    failTo: FailTo;
+    key: string;
+    timestamp?: number;
+    baseRev?: number;
+    basePos?: [number, number];
+  };
   initialized: Empty;
   enterSpace: { spaceId: string };
   spaceUpdated: SpaceWithRelated;

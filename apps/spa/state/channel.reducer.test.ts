@@ -1546,7 +1546,7 @@ describe('channelReducer', () => {
     assert.strictEqual(updated.failTo?.type, 'SEND');
   });
 
-  test('fail attaches failTo to stored message and clears optimistic map', () => {
+  test('matching EDIT fail clears optimistic edit without marking the stored message', () => {
     const message = makeMessageItem(makeMessage(messageId1, 1));
     const optimistic: OptimisticMessage = {
       ref: message,
@@ -1560,13 +1560,42 @@ describe('channelReducer', () => {
 
     const next = channelReducer(
       state,
-      { type: 'fail', payload: { failTo: { type: 'EDIT' }, key: message.id } },
+      {
+        type: 'fail',
+        payload: { failTo: { type: 'EDIT' }, key: message.id, timestamp: 1 },
+      },
       context,
     );
 
     const stored = L.first(next.messages);
-    assert.strictEqual(stored?.failTo?.type, 'EDIT');
+    assert.strictEqual(stored?.failTo, undefined);
     assert.deepStrictEqual(next.optimisticMessageMap, {});
+  });
+
+  test('stale EDIT fail does not clear a newer optimistic edit', () => {
+    const message = makeMessageItem(makeMessage(messageId1, 1));
+    const optimistic: OptimisticMessage = {
+      ref: message,
+      item: { optimisticPos: 1, timestamp: 2, item: { ...message, optimistic: true } },
+    };
+    const state = {
+      ...makeInitialChannelState(channelId),
+      messages: L.from([message]),
+      optimisticMessageMap: { [message.id]: optimistic },
+    };
+
+    const next = channelReducer(
+      state,
+      {
+        type: 'fail',
+        payload: { failTo: { type: 'EDIT' }, key: message.id, timestamp: 1 },
+      },
+      context,
+    );
+
+    assert.strictEqual(next, state);
+    assert.strictEqual(next.optimisticMessageMap[message.id], optimistic);
+    assert.strictEqual(L.first(next.messages)?.failTo, undefined);
   });
 
   test('stale MOVE fail is ignored after the message rev advances', () => {

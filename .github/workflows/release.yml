@@ -174,7 +174,7 @@ jobs:
       - site
       - spa
     if: >-
-      always() &&
+      !cancelled() &&
       github.ref_name == 'production' &&
       needs.production_avatar.result == 'success' &&
       needs.legacy.result == 'success' &&
@@ -217,7 +217,7 @@ jobs:
       - site
       - spa
     if: >-
-      always() &&
+      !cancelled() &&
       github.ref_name == 'production' &&
       needs.frontend_build.result == 'success' &&
       needs.legacy.result == 'success' &&
@@ -268,7 +268,7 @@ jobs:
       - server_image
       - staging_site_image
     if: >-
-      always() &&
+      !cancelled() &&
       needs.prepare.result == 'success' &&
       needs.server_image.result == 'success' &&
       (github.ref_name == 'production' ||
@@ -308,6 +308,11 @@ jobs:
       - backend
       - prepare
       - frontend_build
+    if: >-
+      !cancelled() &&
+      needs.backend.result == 'success' &&
+      needs.prepare.result == 'success' &&
+      needs.frontend_build.result == 'success'
     environment:
       name: ${{ needs.prepare.outputs.deployment_environment }}
       deployment: false
@@ -363,6 +368,11 @@ jobs:
       - backend
       - prepare
       - frontend_build
+    if: >-
+      !cancelled() &&
+      needs.backend.result == 'success' &&
+      needs.prepare.result == 'success' &&
+      needs.frontend_build.result == 'success'
     environment:
       name: ${{ needs.prepare.outputs.deployment_environment }}
       deployment: false
@@ -417,7 +427,11 @@ jobs:
     needs:
       - backend
       - frontend_build
-    if: github.ref_name == 'master'
+    if: >-
+      !cancelled() &&
+      github.ref_name == 'master' &&
+      needs.backend.result == 'success' &&
+      needs.frontend_build.result == 'success'
     environment:
       name: staging
       deployment: false
@@ -450,6 +464,11 @@ jobs:
       - backend
       - prepare
       - frontend_build
+    if: >-
+      !cancelled() &&
+      needs.backend.result == 'success' &&
+      needs.prepare.result == 'success' &&
+      needs.frontend_build.result == 'success'
     environment:
       name: ${{ needs.prepare.outputs.deployment_environment }}
       deployment: false
@@ -481,7 +500,10 @@ jobs:
     permissions:
       contents: read
     needs: backend
-    if: github.ref_name == 'production'
+    if: >-
+      !cancelled() &&
+      github.ref_name == 'production' &&
+      needs.backend.result == 'success'
     environment:
       name: production
       deployment: false
@@ -506,7 +528,10 @@ jobs:
     permissions:
       contents: read
     needs: backend
-    if: github.ref_name == 'production'
+    if: >-
+      !cancelled() &&
+      github.ref_name == 'production' &&
+      needs.backend.result == 'success'
     environment:
       name: production
       deployment: false

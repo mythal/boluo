@@ -12,12 +12,14 @@ import { decodeUuid } from '../../utils/id';
 import Title from '../atoms/Title';
 import Avatar from '../molecules/Avatar';
 import { RenderError } from '../molecules/RenderError';
+import NotFound from './NotFound';
 
 function Profile() {
-  let { id } = useParams();
-  id = id ? decodeUuid(id) : undefined;
+  const { id: encodedId } = useParams();
+  let id = encodedId ? decodeUuid(encodedId, { parameter: 'user_id' }) : undefined;
+  const invalidRouteId = Boolean(encodedId && !id);
   const myId = useSelector((state) => state.profile?.user.id);
-  id = id ?? myId;
+  id = encodedId ? id : myId;
   const dispatch = useDispatch();
   useEffect(() => {
     if (!id) {
@@ -32,6 +34,9 @@ function Profile() {
     return state.ui.userSet.get(id, errLoading<User>());
   });
   useTitleWithResult<User>(result, (user) => user.nickname);
+  if (invalidRouteId) {
+    return <NotFound />;
+  }
   if (!result.isOk) {
     return <RenderError error={result.value} more404 />;
   }

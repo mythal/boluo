@@ -115,7 +115,11 @@ export function recordWarning(
     requestPath,
     source,
   });
-  const key = `warning:${source}:${requestPath ?? ''}:${message}`;
+  const contextKey = Object.entries(logContext)
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([key, value]) => `${key}=${value}`)
+    .join('&');
+  const key = `warning:${source}:${requestPath ?? ''}:${message}:${contextKey}`;
   if (!shouldReport(key)) return;
   const formattedMessage = `${message} (${source}${requestPath ? ` ${requestPath}` : ''})`;
   faro.api.pushLog(details ? [formattedMessage, details] : [formattedMessage], {

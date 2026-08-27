@@ -26,5 +26,5 @@ zonePair.workersCustomDomain('app', ({ hostname }) => ({
 
 zonePair.workersCustomDomain('old', ({ hostname }) => ({
   hostname: hostname('old'),
-  service: 'boluo-legacy-staging',
+  service: 'boluo-legacy-production',
 }));

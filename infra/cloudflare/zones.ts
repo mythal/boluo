@@ -80,8 +80,8 @@ zonePair.dnsRecord('aaaa-proxy-3', ({ hostname, select }) => ({
   type: 'AAAA',
 }));
 zonePair.dnsRecord('a-proxy-4', ({ hostname }) => ({
-  comment: '星尘的海外主机',
-  content: '31.57.172.170',
+  comment: 'DMIT Perilla',
+  content: '154.12.191.152',
   name: hostname('proxy-4'),
   type: 'A',
 }));
@@ -166,12 +166,6 @@ boluochatCom.dnsRecord('cname-app-preview', {
 zonePair.dnsRecord('aaaa-next', ({ hostname }) => ({
   content: '100::',
   name: hostname('next'),
-  proxied: true,
-  type: 'AAAA',
-}));
-zonePair.dnsRecord('aaaa-old', ({ hostname }) => ({
-  content: '100::',
-  name: hostname('old'),
   proxied: true,
   type: 'AAAA',
 }));

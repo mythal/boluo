@@ -6,11 +6,7 @@ import { useProxies } from '../../hooks/useProxies';
 import { BaseUrlSelectorItem } from './BaseUrlSelectorItem';
 import useSWR from 'swr';
 import { backendUrlChangeReasonAtom, backendUrlConfigAtom, testProxies } from '../../base-url';
-import {
-  getRouteScore,
-  recordRouteProbe,
-  toRouteProbeResult,
-} from '../../route-selection-state';
+import { getRouteScore, recordRouteProbe, toRouteProbeResult } from '../../route-selection-state';
 
 export const BaseUrlSelector: FC = () => {
   const proxies = useProxies();

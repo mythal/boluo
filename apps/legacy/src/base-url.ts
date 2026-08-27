@@ -63,9 +63,7 @@ const probeRoutes = (activeUrl: string, eligibleUrls: readonly string[]) => {
   const existing = inFlightProbeCycles.get(key);
   if (existing) return existing;
 
-  const cycle = Promise.all(
-    targets.map(async (url) => [url, await measureBaseUrl(url)] as const),
-  )
+  const cycle = Promise.all(targets.map(async (url) => [url, await measureBaseUrl(url)] as const))
     .then((results) => new Map<string, RouteProbeResult>(results))
     .finally(() => inFlightProbeCycles.delete(key));
   inFlightProbeCycles.set(key, cycle);

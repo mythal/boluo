@@ -149,10 +149,7 @@ export const reduceRouteProbeCycle = (
     })[0]!;
     stats.set(cycle.activeUrl, {
       ...activeStats,
-      cooldownUntil: Math.max(
-        activeStats.cooldownUntil,
-        cycle.now + FAILED_ROUTE_COOLDOWN_MS,
-      ),
+      cooldownUntil: Math.max(activeStats.cooldownUntil, cycle.now + FAILED_ROUTE_COOLDOWN_MS),
     });
     return {
       state: nextState,
@@ -161,8 +158,7 @@ export const reduceRouteProbeCycle = (
   }
 
   const allowPerformanceSwitch =
-    cycle.trigger === 'INITIAL' ||
-    (cycle.trigger === 'PERIODIC' && cycle.allowPerformanceSwitch);
+    cycle.trigger === 'INITIAL' || (cycle.trigger === 'PERIODIC' && cycle.allowPerformanceSwitch);
   if (!allowPerformanceSwitch || !isSuccess(cycle.activeResult)) {
     return { state: nextState, decision: null };
   }
@@ -193,23 +189,15 @@ export const reduceRouteProbeCycle = (
   return { state: nextState, decision };
 };
 
-export const getRouteStats = (
-  state: RouteSelectionState,
-  url: string,
-): RouteStats | undefined => {
+export const getRouteStats = (state: RouteSelectionState, url: string): RouteStats | undefined => {
   const stats = state.stats.get(url);
   return stats ? { ...stats } : undefined;
 };
 
-export const getRouteScore = (
-  state: RouteSelectionState,
-  url: string,
-  now: number,
-): number => {
+export const getRouteScore = (state: RouteSelectionState, url: string, now: number): number => {
   const stats = state.stats.get(url);
   if (!stats) return 10_000;
-  let score =
-    stats.ema + (1 - stats.successRate) * ROUTE_SCORE_UNRELIABILITY_PENALTY_MS;
+  let score = stats.ema + (1 - stats.successRate) * ROUTE_SCORE_UNRELIABILITY_PENALTY_MS;
   if (stats.sampleCount < ROUTE_SCORE_FULL_CONFIDENCE_SAMPLES) {
     score +=
       (ROUTE_SCORE_FULL_CONFIDENCE_SAMPLES - stats.sampleCount) *

@@ -21,9 +21,7 @@ import { type ConnectionState } from '../state/connection.reducer';
 import { useProxies } from './useProxies';
 
 type RouteChangeReason =
-  | 'API_ENDPOINT_CHANGED'
-  | 'SPA_FAILOVER_ROUTE_CHANGED'
-  | 'SPA_PERFORMANCE_ROUTE_CHANGED';
+  'API_ENDPOINT_CHANGED' | 'SPA_FAILOVER_ROUTE_CHANGED' | 'SPA_PERFORMANCE_ROUTE_CHANGED';
 type InitialSelectionState = 'IDLE' | 'RUNNING' | 'COMPLETE';
 
 interface ProbeCycleResults {
@@ -31,9 +29,7 @@ interface ProbeCycleResults {
   candidateResults: Map<string, RouteProbeResult>;
 }
 
-const toSelectionConnectionState = (
-  state: ConnectionState,
-): RouteProbeCycle['connectionState'] => {
+const toSelectionConnectionState = (state: ConnectionState): RouteProbeCycle['connectionState'] => {
   if (state.type === 'CONNECTED') return 'CONNECTED';
   if (state.type === 'ERROR') return 'ERROR';
   return 'DISCONNECTED';

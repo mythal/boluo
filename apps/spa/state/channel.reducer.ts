@@ -948,10 +948,7 @@ const handleRemoveOptimisticMessage = (
   state: ChannelState,
   { payload: { id, timestamp } }: ChatAction<'removeOptimisticMessage'>,
 ): ChannelState => {
-  if (
-    timestamp != null &&
-    state.optimisticMessageMap[id]?.item.timestamp !== timestamp
-  ) {
+  if (timestamp != null && state.optimisticMessageMap[id]?.item.timestamp !== timestamp) {
     return state;
   }
   const optimisticMessageMap = { ...state.optimisticMessageMap };

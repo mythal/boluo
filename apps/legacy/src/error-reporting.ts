@@ -1,10 +1,4 @@
-import {
-  type AppError,
-  FETCH_FAIL,
-  NOT_FOUND,
-  NO_PERMISSION,
-  UNAUTHENTICATED,
-} from './api/error';
+import { type AppError, FETCH_FAIL, NOT_FOUND, NO_PERMISSION, UNAUTHENTICATED } from './api/error';
 import { describeThrownValue } from '@boluo/utils/errors';
 import {
   normalizeFrontendLogContext,

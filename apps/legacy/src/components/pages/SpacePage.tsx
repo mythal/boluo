@@ -151,9 +151,7 @@ function SpacePage() {
     return null;
   }
   const id = decodeUuid(encodedId, { parameter: 'space_id' });
-  const token = encodedToken
-    ? decodeUuid(encodedToken, { parameter: 'invite_token' })
-    : undefined;
+  const token = encodedToken ? decodeUuid(encodedToken, { parameter: 'invite_token' }) : undefined;
   if (!id || (encodedToken && !token)) {
     return <NotFound />;
   }

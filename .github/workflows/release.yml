@@ -274,10 +274,10 @@ jobs:
       (github.ref_name == 'production' ||
       (github.ref_name == 'master' && needs.staging_site_image.result == 'success'))
     environment:
-      name: &deployment-environment ${{ needs.prepare.outputs.deployment_environment }}
+      name: ${{ needs.prepare.outputs.deployment_environment }}
       deployment: false
     env:
-      DEPLOYMENT_ENV: *deployment-environment
+      DEPLOYMENT_ENV: ${{ needs.prepare.outputs.deployment_environment }}
     steps:
       - name: Check out the repo
         uses: actions/checkout@v7
@@ -309,10 +309,10 @@ jobs:
       - prepare
       - frontend_build
     environment:
-      name: *deployment-environment
+      name: ${{ needs.prepare.outputs.deployment_environment }}
       deployment: false
     env:
-      DEPLOYMENT_ENV: *deployment-environment
+      DEPLOYMENT_ENV: ${{ needs.prepare.outputs.deployment_environment }}
     steps:
       - name: Check out the repo
         uses: actions/checkout@v7
@@ -364,10 +364,10 @@ jobs:
       - prepare
       - frontend_build
     environment:
-      name: *deployment-environment
+      name: ${{ needs.prepare.outputs.deployment_environment }}
       deployment: false
     env:
-      DEPLOYMENT_ENV: *deployment-environment
+      DEPLOYMENT_ENV: ${{ needs.prepare.outputs.deployment_environment }}
     steps:
       - name: Check out the repo
         uses: actions/checkout@v7
@@ -451,10 +451,10 @@ jobs:
       - prepare
       - frontend_build
     environment:
-      name: *deployment-environment
+      name: ${{ needs.prepare.outputs.deployment_environment }}
       deployment: false
     env:
-      DEPLOYMENT_ENV: *deployment-environment
+      DEPLOYMENT_ENV: ${{ needs.prepare.outputs.deployment_environment }}
     steps:
       - name: Check out the repo
         uses: actions/checkout@v7

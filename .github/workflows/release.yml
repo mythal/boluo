@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions: {}
     outputs:
-    deployment_environment: ${{ steps.deployment.outputs.environment }}
+      deployment_environment: ${{ steps.deployment.outputs.environment }}
     steps:
       - name: Resolve deployment environment
         id: deployment

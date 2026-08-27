@@ -245,6 +245,10 @@ export const useSend = () => {
         timeout(SEND_TIMEOUT),
       ]);
       if (result !== 'TIMEOUT' && !result.isOk && result.err.code === 'CONFLICT') {
+        chatDispatch({
+          type: 'removeOptimisticMessage',
+          payload: { id: payload.editMessage.messageId, timestamp: sendStartTime },
+        });
         if (composeState.source.trim() !== '') {
           saveDraftInWorker(channelId, composeState.source);
         }

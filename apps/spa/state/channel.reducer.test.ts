@@ -1705,10 +1705,33 @@ describe('channelReducer', () => {
 
     const cleared = channelReducer(
       withEntry,
-      { type: 'removeOptimisticMessage', payload: { id: optimistic.ref.id } },
+      {
+        type: 'removeOptimisticMessage',
+        payload: { id: optimistic.ref.id, timestamp: optimistic.item.timestamp },
+      },
       context,
     );
     assert.deepStrictEqual(cleared.optimisticMessageMap, {});
+  });
+
+  test('removeOptimisticMessage does not remove a newer optimistic operation', () => {
+    const optimistic: OptimisticMessage = {
+      ref: makeMessageItem(makeMessage('ref', 1)),
+      item: { optimisticPos: 1, timestamp: 2, item: makeMessageItem(makeMessage('ref', 1)) },
+    };
+    const state = {
+      ...makeInitialChannelState(channelId),
+      optimisticMessageMap: { [optimistic.ref.id]: optimistic },
+    };
+
+    const next = channelReducer(
+      state,
+      { type: 'removeOptimisticMessage', payload: { id: optimistic.ref.id, timestamp: 1 } },
+      context,
+    );
+
+    assert.strictEqual(next, state);
+    assert.strictEqual(next.optimisticMessageMap[optimistic.ref.id], optimistic);
   });
 
   test('messageSending without preview does not set optimistic message', () => {

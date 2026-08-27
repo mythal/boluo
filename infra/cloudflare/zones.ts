@@ -169,12 +169,6 @@ zonePair.dnsRecord('aaaa-next', ({ hostname }) => ({
   proxied: true,
   type: 'AAAA',
 }));
-zonePair.dnsRecord('aaaa-old', ({ hostname }) => ({
-  content: '100::',
-  name: hostname('old'),
-  proxied: true,
-  type: 'AAAA',
-}));
 zonePair.dnsRecord('cname-old-master', ({ hostname }) => ({
   content: 'master.boluo-legacy.pages.dev',
   name: hostname('old-master'),

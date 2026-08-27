@@ -13,6 +13,7 @@ runs:
       uses: actions/download-artifact@v8
       with:
         name: ${{ inputs.artifact-name }}
+        path: .tmp
 
     - name: Unpack frontend build
       shell: bash

@@ -13,8 +13,12 @@ pub enum ClientWebSocketCloseReason {
     DebugDisconnect,
     LegacyBaseUrlChanged,
     LegacyConnectorDisposed,
+    LegacyFailoverRouteChanged,
+    LegacyPerformanceRouteChanged,
     ReconnectStarted,
     RetryRequested,
+    SpaFailoverRouteChanged,
+    SpaPerformanceRouteChanged,
     Unknown,
 }
 
@@ -30,8 +34,12 @@ impl ClientWebSocketCloseReason {
             Self::DebugDisconnect => "DEBUG_DISCONNECT",
             Self::LegacyBaseUrlChanged => "LEGACY_BASE_URL_CHANGED",
             Self::LegacyConnectorDisposed => "LEGACY_CONNECTOR_DISPOSED",
+            Self::LegacyFailoverRouteChanged => "LEGACY_FAILOVER_ROUTE_CHANGED",
+            Self::LegacyPerformanceRouteChanged => "LEGACY_PERFORMANCE_ROUTE_CHANGED",
             Self::ReconnectStarted => "RECONNECT_STARTED",
             Self::RetryRequested => "RETRY_REQUESTED",
+            Self::SpaFailoverRouteChanged => "SPA_FAILOVER_ROUTE_CHANGED",
+            Self::SpaPerformanceRouteChanged => "SPA_PERFORMANCE_ROUTE_CHANGED",
             Self::Unknown => "UNKNOWN",
         }
     }
@@ -75,8 +83,12 @@ mod tests {
             ClientWebSocketCloseReason::DebugDisconnect,
             ClientWebSocketCloseReason::LegacyBaseUrlChanged,
             ClientWebSocketCloseReason::LegacyConnectorDisposed,
+            ClientWebSocketCloseReason::LegacyFailoverRouteChanged,
+            ClientWebSocketCloseReason::LegacyPerformanceRouteChanged,
             ClientWebSocketCloseReason::ReconnectStarted,
             ClientWebSocketCloseReason::RetryRequested,
+            ClientWebSocketCloseReason::SpaFailoverRouteChanged,
+            ClientWebSocketCloseReason::SpaPerformanceRouteChanged,
             ClientWebSocketCloseReason::Unknown,
         ];
 

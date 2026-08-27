@@ -112,6 +112,7 @@ export const useOnSend = () => {
           text,
           entities,
           mediaId,
+          expectModified: edit.time,
         };
         result = await withTimeout(
           patch('/messages/edit', editPayload),

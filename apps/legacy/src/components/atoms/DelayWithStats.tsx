@@ -1,9 +1,5 @@
 import { type MeasureResult } from '../../hooks/useBaseUrlDelay';
-import {
-  getRouteScore,
-  getRouteSuccessRate,
-  getAllRouteStats,
-} from '../../hooks/useBaseUrlMovingAverage';
+import { getRouteScore, getRouteStats } from '../../route-selection';
 
 interface Props {
   delay: MeasureResult | 'LOADING';
@@ -27,9 +23,7 @@ export const DelayWithStats = ({ delay, url, showStats = false }: Props) => {
     if (!showStats) return null;
 
     const score = getRouteScore(url);
-    const successRate = getRouteSuccessRate(url);
-    const allStats = getAllRouteStats();
-    const stats = allStats.get(url);
+    const stats = getRouteStats(url);
 
     if (!stats) {
       return <div style={{ fontSize: '10px', color: '#888' }}>No data</div>;
@@ -38,7 +32,7 @@ export const DelayWithStats = ({ delay, url, showStats = false }: Props) => {
     return (
       <div style={{ fontSize: '10px', color: '#888', marginTop: '2px' }}>
         <div>Moving Avg: {stats.ema.toFixed(1)}ms</div>
-        <div>Success Rate: {(successRate * 100).toFixed(1)}%</div>
+        <div>Success Rate: {(stats.successRate * 100).toFixed(1)}%</div>
         <div>Score: {score.toFixed(0)}</div>
         <div>Samples: {stats.sampleCount}</div>
       </div>

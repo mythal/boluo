@@ -21,6 +21,7 @@ export function GuestRouter() {
         <Route path="/sign-up" element={<SignUp />} />
         <Route path="/profile/:id" element={<Profile />} />
         <Route path="/space/explore" element={<ExploreSpace />} />
+        <Route path="/space/new" element={<Navigate to="/login" replace />} />
         <Route path="/space/:id" element={<SpacePage />} />
         <Route path="/join/space/:id/:token" element={<Navigate to="/login" />} />
         <Route path="/" element={<GuestHome />} />

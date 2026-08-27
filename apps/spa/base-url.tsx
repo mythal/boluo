@@ -4,12 +4,13 @@ import { timeout } from '@boluo/utils/async';
 import { atomWithStorage } from 'jotai/utils';
 import { IS_DEVELOPMENT } from './const';
 import { atom } from 'jotai';
+import type { ClientWebSocketCloseReason } from '@boluo/api/websocket/close';
 
 export interface BaseUrlTestResult {
   proxy: Proxy;
   rtt: number | 'FAILED' | 'TIMEOUT';
 }
-export const TIMEOUT = 1500;
+export const TIMEOUT = 3000;
 
 export const testProxy = async (proxy: Proxy): Promise<BaseUrlTestResult> => {
   const { url } = proxy;
@@ -44,3 +45,6 @@ export const backendUrlConfigAtom = atomWithStorage(
 );
 
 export const shouldAutoSelectAtom = atom((get) => get(backendUrlConfigAtom) === 'auto');
+
+export const backendUrlChangeReasonAtom =
+  atom<Exclude<ClientWebSocketCloseReason, 'UNKNOWN'>>('API_ENDPOINT_CHANGED');

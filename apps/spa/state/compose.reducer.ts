@@ -114,6 +114,11 @@ const handleRecoverState = (
   return { ...action.payload, previewId: makeId(), media: null, composingAt: null };
 };
 
+const handleRestoreFailedEdit = (
+  _state: ComposeState,
+  action: ComposeAction<'restoreFailedEdit'>,
+): ComposeState => ({ ...action.payload, composingAt: null });
+
 const handleAddDice = (
   state: ComposeState,
   { payload: { defaultRollCommand } }: ComposeAction<'addDice'>,
@@ -475,6 +480,8 @@ export const composeReducer = (state: ComposeState, action: ComposeActionUnion):
       return handleSetInGame(state, action);
     case 'recoverState':
       return handleRecoverState(state, action);
+    case 'restoreFailedEdit':
+      return handleRestoreFailedEdit(state, action);
     case 'collided':
       return handleCollided(state, action);
     case 'addDice':

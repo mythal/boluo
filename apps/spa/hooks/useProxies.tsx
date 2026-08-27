@@ -1,4 +1,5 @@
 import { type Proxy } from '@boluo/api';
+import { normalizeProxyUrlForOrigin } from '@boluo/api/origin-map';
 import { getDefaultBaseUrl, withFaroSessionId } from '@boluo/api-browser';
 import { useMemo } from 'react';
 import { useIntl } from 'react-intl';
@@ -8,13 +9,10 @@ const fetcher = async (): Promise<Proxy[]> => {
   try {
     const res = await fetch(`${getDefaultBaseUrl()}/api/info/proxies`, withFaroSessionId());
     const proxies = (await res.json()) as Proxy[];
-    return proxies.map((proxy) => {
-      // TODO: Remove this hack
-      if (proxy.url.endsWith('boluo.chat') && window.location.origin.endsWith('boluochat.com')) {
-        return { ...proxy, url: proxy.url.replace('boluo.chat', 'boluochat.com') };
-      }
-      return proxy;
-    });
+    return proxies.map((proxy) => ({
+      ...proxy,
+      url: normalizeProxyUrlForOrigin(proxy.url, window.location.origin),
+    }));
   } catch (error) {
     return [];
   }

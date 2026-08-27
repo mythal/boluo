@@ -1,5 +1,6 @@
 import { apiUrlAtom } from '@boluo/api-browser';
 import { closeWebSocketNormally } from '@boluo/api/websocket/close';
+import { backendUrlChangeReasonAtom } from '../base-url';
 import { atom } from 'jotai';
 import type { useSetAtom } from 'jotai';
 import { selectAtom } from 'jotai/utils';
@@ -63,6 +64,6 @@ export const chatEffectsAtom = selectAtom(chatAtom, (chatState) => chatState.eff
 store.sub(apiUrlAtom, () => {
   const connection = store.get(connectionStateAtom);
   if (connection.type === 'CONNECTED') {
-    closeWebSocketNormally(connection.connection, 'API_ENDPOINT_CHANGED');
+    closeWebSocketNormally(connection.connection, store.get(backendUrlChangeReasonAtom));
   }
 });

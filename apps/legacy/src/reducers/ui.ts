@@ -28,11 +28,16 @@ export interface UiState {
   spaceId: Id | undefined;
   focusChannelList: Id[];
   baseUrl: string;
+  baseUrlChangeReason:
+    | 'LEGACY_BASE_URL_CHANGED'
+    | 'LEGACY_FAILOVER_ROUTE_CHANGED'
+    | 'LEGACY_PERFORMANCE_ROUTE_CHANGED';
 }
 
 export const initUiState: UiState = {
   spaceId: undefined,
   baseUrl: getDefaultBaseUrl(),
+  baseUrlChangeReason: 'LEGACY_BASE_URL_CHANGED',
   exploreSpaceList: errLoading(),
   spaceSet: Map<Id, AppResult<SpaceWithRelated>>(),
   userSet: Map<Id, AppResult<User>>(),
@@ -165,9 +170,9 @@ const handleFocusChannel = (state: UiState, { pane }: FocusChannel): UiState => 
   }
 };
 
-const handleChangeBaseUrl = (state: UiState, { baseUrl }: ChangeBaseUrl): UiState => {
+const handleChangeBaseUrl = (state: UiState, { baseUrl, reason }: ChangeBaseUrl): UiState => {
   if (state.baseUrl === baseUrl) return state;
-  return { ...state, baseUrl };
+  return { ...state, baseUrl, baseUrlChangeReason: reason ?? 'LEGACY_BASE_URL_CHANGED' };
 };
 
 const handleUnfocusChannel = (state: UiState, { pane }: UnfocusChannel): UiState => {

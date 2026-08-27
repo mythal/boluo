@@ -99,6 +99,33 @@
             "org.opencontainers.image.licenses" = "AGPL-3.0";
           };
 
+          mkPushImage =
+            { imageName, imageArchive }:
+            pkgs.writeShellScriptBin "push-${imageName}-image" ''
+              set -euo pipefail
+
+              TMPDIR="''${TMPDIR:-/tmp}"
+              REGISTRY_TEMP_DIR="$(${pkgs.coreutils}/bin/mktemp -d "$TMPDIR/boluo-skopeo.XXXXXX")"
+              trap '${pkgs.coreutils}/bin/rm -rf "$REGISTRY_TEMP_DIR"' EXIT
+
+              export XDG_CONFIG_HOME="$REGISTRY_TEMP_DIR/config"
+              export XDG_RUNTIME_DIR="$REGISTRY_TEMP_DIR/runtime"
+              ${pkgs.coreutils}/bin/mkdir -p "$XDG_CONFIG_HOME/containers" "$XDG_RUNTIME_DIR"
+              ${pkgs.coreutils}/bin/chmod 700 "$XDG_RUNTIME_DIR"
+              ${pkgs.coreutils}/bin/printf '%s\n' \
+                'unqualified-search-registries = []' \
+                'short-name-mode = "disabled"' \
+                > "$XDG_CONFIG_HOME/containers/registries.conf"
+
+              AUTH_FILE="$XDG_CONFIG_HOME/containers/auth.json"
+              ${pkgs.skopeo}/bin/skopeo login --authfile "$AUTH_FILE" ghcr.io -u "$GITHUB_ACTOR" -p "$GITHUB_TOKEN"
+              IMAGE_TAG="$(${pkgs.python3}/bin/python3 ${./scripts/image-tag.py})"
+              IMAGE_DESTINATION="ghcr.io/mythal/boluo/${imageName}"
+              echo "Pushing ${imageName} image with tag: $IMAGE_TAG"
+              ${pkgs.skopeo}/bin/skopeo copy --dest-authfile "$AUTH_FILE" docker-archive:"${imageArchive}" "docker://$IMAGE_DESTINATION:$IMAGE_TAG"
+              ${pkgs.skopeo}/bin/skopeo copy --dest-authfile "$AUTH_FILE" docker-archive:"${imageArchive}" "docker://$IMAGE_DESTINATION:v${rev}"
+            '';
+
           # https://crane.dev/source-filtering.html#fileset-filtering
           # https://nixos.org/manual/nixpkgs/unstable/#sec-functions-library-fileset
           cargoSource =
@@ -345,6 +372,21 @@
               '';
             };
 
+            siteBuild = pkgs.buildNpmPackage {
+              pname = "boluo-site";
+              src = npmWorkspaceSource;
+              inherit version npmDeps;
+              npmConfigHook = pkgs.importNpmLock.npmConfigHook;
+              TURBO_TELEMETRY_DISABLED = 1;
+              NEXT_TELEMETRY_DISABLED = 1;
+              npmBuildScript = "build:site";
+              installPhase = ''
+                mkdir -p $out
+                cp -r apps/site/.next/standalone/* $out/
+                cp -r apps/site/.next/static $out/apps/site/.next/static
+              '';
+            };
+
             legacy = pkgs.runCommand "boluo-legacy" { } ''
               cp -r ${self'.packages.frontendBuild}/legacy $out
             '';
@@ -408,11 +450,11 @@
 
             site =
               let
-                raw = self'.packages.frontendBuild;
+                raw = self'.packages.siteBuild;
               in
               pkgs.runCommand "boluo-site" { } ''
                 mkdir -p $out/bin
-                cp -r ${raw}/site/* $out/
+                cp -r ${raw}/* $out/
                 echo '#!/bin/sh' > $out/bin/boluo-site
                 echo 'exec ${pkgs.nodejs}/bin/node "$(dirname "$0")/../apps/site/server.js"' >> $out/bin/boluo-site
                 chmod +x $out/bin/boluo-site
@@ -509,44 +551,15 @@
                 };
               };
 
-            push-images =
-              let
-                tagPrefix = "ghcr.io/mythal/boluo";
-                serverImage = "${tagPrefix}/server";
-                legacyImage = "${tagPrefix}/legacy";
-                siteImage = "${tagPrefix}/site";
-                spaImage = "${tagPrefix}/spa";
-              in
-              pkgs.writeShellScriptBin "push-images" ''
-                set -euo pipefail
+            push-server-image = mkPushImage {
+              imageName = "server";
+              imageArchive = self'.packages.server-image;
+            };
 
-                TMPDIR="''${TMPDIR:-/tmp}"
-                CONTAINERS_HOME="$(${pkgs.coreutils}/bin/mktemp -d "$TMPDIR/boluo-skopeo.XXXXXX")"
-                trap '${pkgs.coreutils}/bin/rm -rf "$CONTAINERS_HOME"' EXIT
-
-                export HOME="$CONTAINERS_HOME/home"
-                export XDG_CONFIG_HOME="$HOME/.config"
-                export XDG_RUNTIME_DIR="$CONTAINERS_HOME/runtime"
-                ${pkgs.coreutils}/bin/mkdir -p "$XDG_CONFIG_HOME/containers" "$XDG_RUNTIME_DIR"
-                ${pkgs.coreutils}/bin/chmod 700 "$XDG_RUNTIME_DIR"
-                ${pkgs.coreutils}/bin/printf '%s\n' \
-                  'unqualified-search-registries = []' \
-                  'short-name-mode = "disabled"' \
-                  > "$XDG_CONFIG_HOME/containers/registries.conf"
-
-                AUTH_FILE="$XDG_CONFIG_HOME/containers/auth.json"
-                ${pkgs.skopeo}/bin/skopeo login --authfile "$AUTH_FILE" ghcr.io -u "$GITHUB_ACTOR" -p "$GITHUB_TOKEN"
-                IMAGE_TAG="$(${pkgs.python3}/bin/python3 ${./scripts/image-tag.py})"
-                echo "Pushing images with tag: $IMAGE_TAG"
-                ${pkgs.skopeo}/bin/skopeo copy --dest-authfile "$AUTH_FILE" docker-archive:"${self'.packages.server-image}" "docker://${serverImage}:$IMAGE_TAG"
-                ${pkgs.skopeo}/bin/skopeo copy --dest-authfile "$AUTH_FILE" docker-archive:"${self'.packages.server-image}" "docker://${serverImage}:v${rev}"
-                ${pkgs.skopeo}/bin/skopeo copy --dest-authfile "$AUTH_FILE" docker-archive:"${self'.packages.legacy-image}" "docker://${legacyImage}:$IMAGE_TAG"
-                ${pkgs.skopeo}/bin/skopeo copy --dest-authfile "$AUTH_FILE" docker-archive:"${self'.packages.legacy-image}" "docker://${legacyImage}:v${rev}"
-                ${pkgs.skopeo}/bin/skopeo copy --dest-authfile "$AUTH_FILE" docker-archive:"${self'.packages.site-image}" "docker://${siteImage}:$IMAGE_TAG"
-                ${pkgs.skopeo}/bin/skopeo copy --dest-authfile "$AUTH_FILE" docker-archive:"${self'.packages.site-image}" "docker://${siteImage}:v${rev}"
-                ${pkgs.skopeo}/bin/skopeo copy --dest-authfile "$AUTH_FILE" docker-archive:"${self'.packages.spa-image}" "docker://${spaImage}:$IMAGE_TAG"
-                ${pkgs.skopeo}/bin/skopeo copy --dest-authfile "$AUTH_FILE" docker-archive:"${self'.packages.spa-image}" "docker://${spaImage}:v${rev}"
-              '';
+            push-site-image = mkPushImage {
+              imageName = "site";
+              imageArchive = self'.packages.site-image;
+            };
 
             deploy-server-staging = pkgs.writeShellScriptBin "deploy-server-staging" ''
               ${pkgs.flyctl}/bin/flyctl deploy --config ${apps/server/fly.toml} --image ghcr.io/mythal/boluo/server:v${self.rev} --remote-only

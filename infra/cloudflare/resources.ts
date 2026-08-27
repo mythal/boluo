@@ -149,6 +149,28 @@ export function r2Bucket(identity: string, args: Omit<cloudflare.R2BucketArgs, '
   );
 }
 
+export function r2BucketLifecycle(
+  identity: string,
+  args: Omit<cloudflare.R2BucketLifecycleArgs, 'accountId'>,
+) {
+  const name = `r2-bucket-lifecycle-${toKebabCase(identity)}`;
+  return new cloudflare.R2BucketLifecycle(name, {
+    ...args,
+    accountId,
+  });
+}
+
+export function r2CustomDomain(
+  identity: string,
+  args: Omit<cloudflare.R2CustomDomainArgs, 'accountId'>,
+) {
+  const name = `r2-custom-domain-${toKebabCase(identity)}`;
+  return new cloudflare.R2CustomDomain(name, {
+    ...args,
+    accountId,
+  });
+}
+
 export function tunnel(
   identity: string,
   args: Omit<cloudflare.ZeroTrustTunnelCloudflaredArgs, 'accountId'>,

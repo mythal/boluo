@@ -65,33 +65,30 @@ pub(crate) fn get_process_memory_snapshot() -> Option<ProcessMemorySnapshot> {
     None
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
 pub(crate) struct AllocatorMemorySnapshot {
-    pub(crate) committed_bytes: usize,
-    peak_committed_bytes: usize,
+    pub(crate) allocated_bytes: usize,
+    pub(crate) active_bytes: usize,
+    pub(crate) resident_bytes: usize,
+    pub(crate) mapped_bytes: usize,
+    pub(crate) retained_bytes: usize,
+    pub(crate) metadata_bytes: usize,
 }
 
-pub(crate) fn get_allocator_memory_snapshot() -> AllocatorMemorySnapshot {
-    let mut current_commit = 0;
-    let mut peak_commit = 0;
-    // Linux aliases current RSS to committed memory; peak RSS and faults are process-wide.
-    // SAFETY: Unused outputs may be null; the remaining pointers are valid and writable.
-    unsafe {
-        libmimalloc_sys::mi_process_info(
-            std::ptr::null_mut(),
-            std::ptr::null_mut(),
-            std::ptr::null_mut(),
-            std::ptr::null_mut(),
-            std::ptr::null_mut(),
-            &mut current_commit,
-            &mut peak_commit,
-            std::ptr::null_mut(),
-        );
-    }
-    AllocatorMemorySnapshot {
-        committed_bytes: current_commit,
-        peak_committed_bytes: peak_commit,
-    }
+pub(crate) fn get_allocator_memory_snapshot()
+-> Result<AllocatorMemorySnapshot, tikv_jemalloc_ctl::Error> {
+    use tikv_jemalloc_ctl::{epoch, stats};
+
+    epoch::advance()?;
+    Ok(AllocatorMemorySnapshot {
+        allocated_bytes: stats::allocated::read()?,
+        active_bytes: stats::active::read()?,
+        resident_bytes: stats::resident::read()?,
+        mapped_bytes: stats::mapped::read()?,
+        retained_bytes: stats::retained::read()?,
+        metadata_bytes: stats::metadata::read()?,
+    })
 }
 
 fn get_file_descriptor_snapshot() -> (u64, Option<u64>) {
@@ -132,28 +129,43 @@ pub async fn update_file_descriptor_metrics() {
     }
 }
 
-pub async fn update_process_memory_metrics() {
-    let Some(snapshot) = tokio::task::spawn_blocking(get_process_memory_snapshot)
-        .await
-        .ok()
-        .flatten()
+pub async fn update_memory_metrics() {
+    let Ok((process, allocator)) = tokio::task::spawn_blocking(|| {
+        (
+            get_process_memory_snapshot(),
+            get_allocator_memory_snapshot(),
+        )
+    })
+    .await
     else {
         return;
     };
-    gauge!("boluo_server_process_memory_bytes", "kind" => "rss").set(snapshot.rss_bytes as f64);
-    gauge!("boluo_server_process_memory_bytes", "kind" => "anonymous")
-        .set(snapshot.anonymous_bytes as f64);
-    gauge!("boluo_server_process_memory_bytes", "kind" => "file").set(snapshot.file_bytes as f64);
-    gauge!("boluo_server_process_memory_bytes", "kind" => "shared")
-        .set(snapshot.shared_bytes as f64);
-    gauge!("boluo_server_process_swap_bytes").set(snapshot.swap_bytes as f64);
-    gauge!("boluo_server_process_threads").set(snapshot.threads as f64);
-}
-
-pub fn update_allocator_metrics() {
-    let snapshot = get_allocator_memory_snapshot();
-    gauge!("boluo_server_allocator_committed_bytes").set(snapshot.committed_bytes as f64);
-    gauge!("boluo_server_allocator_peak_committed_bytes").set(snapshot.peak_committed_bytes as f64);
+    if let Some(snapshot) = process {
+        gauge!("boluo_server_process_memory_bytes", "kind" => "rss").set(snapshot.rss_bytes as f64);
+        gauge!("boluo_server_process_memory_bytes", "kind" => "anonymous")
+            .set(snapshot.anonymous_bytes as f64);
+        gauge!("boluo_server_process_memory_bytes", "kind" => "file")
+            .set(snapshot.file_bytes as f64);
+        gauge!("boluo_server_process_memory_bytes", "kind" => "shared")
+            .set(snapshot.shared_bytes as f64);
+        gauge!("boluo_server_process_swap_bytes").set(snapshot.swap_bytes as f64);
+        gauge!("boluo_server_process_threads").set(snapshot.threads as f64);
+    }
+    match allocator {
+        Ok(snapshot) => {
+            for (kind, bytes) in [
+                ("allocated", snapshot.allocated_bytes),
+                ("active", snapshot.active_bytes),
+                ("resident", snapshot.resident_bytes),
+                ("mapped", snapshot.mapped_bytes),
+                ("retained", snapshot.retained_bytes),
+                ("metadata", snapshot.metadata_bytes),
+            ] {
+                gauge!("boluo_server_allocator_memory_bytes", "kind" => kind).set(bytes as f64);
+            }
+        }
+        Err(error) => tracing::debug!(?error, "Failed to read jemalloc statistics"),
+    }
 }
 
 pub fn update_db_pool_metrics(pool: &sqlx::PgPool) {
@@ -287,8 +299,7 @@ pub fn start_update_metrics(
             tokio::select! {
                 _ = interval_4s.tick() => {
                     update_file_descriptor_metrics().await;
-                    update_process_memory_metrics().await;
-                    update_allocator_metrics();
+                    update_memory_metrics().await;
                     update_db_pool_metrics(&pool);
                     update_database_health_metrics(&pool).await;
                     update_redis_health_metrics(redis.clone()).await;

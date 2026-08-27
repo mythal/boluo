@@ -24,6 +24,7 @@ import MemberDialog from '../chat/MemberDialog';
 import Sidebar from '../chat/Sidebar';
 import { RenderError } from '../molecules/RenderError';
 import BasePage from '../templates/BasePage';
+import NotFound from './NotFound';
 
 // noinspection CssInvalidPropertyValue
 const viewHeight = css`
@@ -99,11 +100,8 @@ function useLoadSpace(spaceId: Id) {
   }, [spaceId, dispatch]);
 }
 
-function Chat() {
-  const params = useParams();
+function ChatRender({ channelId, spaceId }: { channelId: Id | undefined; spaceId: Id }) {
   const [userDialog, setUserDialog] = useAtom(userDialogAtom);
-  const spaceId: Id = decodeUuid(params?.spaceId ?? '');
-  const channelId: Id | undefined = params.channelId && decodeUuid(params.channelId);
   const prevChannelId = useRef<typeof channelId>(channelId);
   const myId: Id | undefined = useMyId();
   const navigate = useNavigate();
@@ -203,6 +201,25 @@ function Chat() {
       )}
     </Container>
   );
+}
+
+function Chat() {
+  const { channelId: encodedChannelId, spaceId: encodedSpaceId } = useParams();
+  const spaceId = encodedSpaceId
+    ? decodeUuid(encodedSpaceId, { parameter: 'space_id' })
+    : undefined;
+  const channelId = encodedChannelId
+    ? decodeUuid(encodedChannelId, { parameter: 'channel_id' })
+    : undefined;
+
+  if (!spaceId || (encodedChannelId && !channelId)) {
+    return (
+      <BasePage>
+        <NotFound />
+      </BasePage>
+    );
+  }
+  return <ChatRender spaceId={spaceId} channelId={channelId} />;
 }
 
 export default Chat;

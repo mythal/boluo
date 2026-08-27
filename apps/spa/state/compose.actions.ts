@@ -15,6 +15,7 @@ export type ComposeActionMap = {
   link: { text: string; href: string };
   bold: { text: string };
   recoverState: ComposeState;
+  restoreFailedEdit: ComposeState;
   media: { media: File | null };
   editMessage: { message: Message };
   sent: { edit?: boolean; collapseCharacterReference?: boolean };

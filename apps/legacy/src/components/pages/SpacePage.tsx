@@ -36,6 +36,7 @@ import JoinSpaceButton from '../molecules/JoinSpaceButton';
 import LeaveSpaceButton from '../molecules/LeaveSpaceButton';
 import { RenderError } from '../molecules/RenderError';
 import ManageSpace from '../organisms/ManageSpace';
+import NotFound from './NotFound';
 
 const OperatorBar = styled.div`
   ${mT(2)};
@@ -141,16 +142,19 @@ function SpacePageRender({ id, token }: { id: string; token: string | undefined 
 }
 
 function SpacePage() {
-  let { id, token } = useParams();
-  if (!id) {
+  const { id: encodedId, token: encodedToken } = useParams();
+  if (!encodedId) {
     const result: AppResult<SpaceWithRelated> = errLoading();
     if (!result.isOk) {
       return <RenderError error={result.value} more404 />;
     }
     return null;
   }
-  id = decodeUuid(id);
-  token = token ? decodeUuid(token) : undefined;
+  const id = decodeUuid(encodedId, { parameter: 'space_id' });
+  const token = encodedToken ? decodeUuid(encodedToken, { parameter: 'invite_token' }) : undefined;
+  if (!id || (encodedToken && !token)) {
+    return <NotFound />;
+  }
   return <SpacePageRender id={id} token={token} />;
 }
 

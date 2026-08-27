@@ -1,11 +1,4 @@
-import {
-  type AppError,
-  FETCH_FAIL,
-  LIMIT_EXCEEDED,
-  METHOD_NOT_ALLOWED,
-  NOT_JSON,
-  UNEXPECTED,
-} from './api/error';
+import { type AppError, FETCH_FAIL, NOT_FOUND, NO_PERMISSION, UNAUTHENTICATED } from './api/error';
 import { describeThrownValue } from '@boluo/utils/errors';
 import {
   normalizeFrontendLogContext,
@@ -115,7 +108,11 @@ export function recordWarning(
     requestPath,
     source,
   });
-  const key = `warning:${source}:${requestPath ?? ''}:${message}`;
+  const contextKey = Object.entries(logContext)
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([key, value]) => `${key}=${value}`)
+    .join('&');
+  const key = `warning:${source}:${requestPath ?? ''}:${message}:${contextKey}`;
   if (!shouldReport(key)) return;
   const formattedMessage = `${message} (${source}${requestPath ? ` ${requestPath}` : ''})`;
   faro.api.pushLog(details ? [formattedMessage, details] : [formattedMessage], {
@@ -125,16 +122,16 @@ export function recordWarning(
 }
 
 export function reportApiError(error: AppError, options: ReportOptions): void {
-  if (error.code === FETCH_FAIL || error.code === LIMIT_EXCEEDED) {
-    recordWarning(`API request failed: ${error.code}`, options);
-  } else if (
-    error.code === NOT_JSON ||
-    error.code === UNEXPECTED ||
-    error.code === METHOD_NOT_ALLOWED
+  if (
+    error.code === UNAUTHENTICATED ||
+    error.code === NOT_FOUND ||
+    error.code === NO_PERMISSION ||
+    error.code === FETCH_FAIL
   ) {
-    captureRecoverableException(error, {
-      ...options,
-      context: { api_error_code: error.code },
-    });
+    return;
   }
+  captureRecoverableException(error, {
+    ...options,
+    context: { api_error_code: error.code },
+  });
 }

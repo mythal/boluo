@@ -1,4 +1,5 @@
-import { r2Bucket } from './resources.js';
+import { zones } from './config.js';
+import { r2Bucket, r2BucketLifecycle, r2CustomDomain } from './resources.js';
 
 r2Bucket('boluo', {
   jurisdiction: 'default',
@@ -19,4 +20,46 @@ r2Bucket('boluo-development', {
   location: 'APAC',
   name: 'boluo-development',
   storageClass: 'Standard',
+});
+
+const sourceMaps = r2Bucket('boluo-source-maps', {
+  jurisdiction: 'default',
+  location: 'APAC',
+  name: 'boluo-source-maps',
+  storageClass: 'Standard',
+});
+
+r2BucketLifecycle('boluo-source-maps', {
+  bucketName: sourceMaps.name,
+  jurisdiction: 'default',
+  rules: [
+    {
+      id: 'Move source maps to infrequent access after 30 days',
+      conditions: { prefix: '' },
+      enabled: true,
+      storageClassTransitions: [
+        {
+          condition: { maxAge: 30 * 24 * 60 * 60, type: 'Age' },
+          storageClass: 'InfrequentAccess',
+        },
+      ],
+    },
+    {
+      id: 'Delete source maps after one year',
+      conditions: { prefix: '' },
+      enabled: true,
+      deleteObjectsTransition: {
+        condition: { maxAge: 365 * 24 * 60 * 60, type: 'Age' },
+      },
+    },
+  ],
+});
+
+r2CustomDomain('boluo-source-maps', {
+  bucketName: sourceMaps.name,
+  domain: 'sourcemaps.boluo.chat',
+  enabled: true,
+  jurisdiction: 'default',
+  minTls: '1.2',
+  zoneId: zones.boluoChat.id,
 });

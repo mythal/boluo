@@ -12,20 +12,27 @@ export async function appFetch<T>(url: string, params: RequestInit): Promise<Res
     const error: FetchFailError = { code: 'FETCH_FAIL', cause };
     return new Err(error);
   }
+  let body: string;
+  try {
+    body = await response.text();
+  } catch (cause) {
+    const error: FetchFailError = { code: 'FETCH_FAIL', cause };
+    return new Err(error);
+  }
   if (response.headers.get('content-type') !== 'application/json') {
     const error: NotJsonError = {
       code: 'NOT_JSON',
       cause: new Error('Response is not JSON'),
-      body: await response.text(),
+      body,
     };
     return new Err(error);
   }
 
   let data: unknown;
   try {
-    data = await response.json();
+    data = JSON.parse(body);
   } catch (cause) {
-    const error: NotJsonError = { code: 'NOT_JSON', cause };
+    const error: NotJsonError = { code: 'NOT_JSON', cause, body };
     return new Err(error);
   }
   if (isAppResponse(data)) {

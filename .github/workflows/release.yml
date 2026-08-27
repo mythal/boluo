@@ -15,33 +15,27 @@ env:
   TURBO_TELEMETRY_DISABLED: 1
 
 jobs:
-  changes:
+  prepare:
+    name: Prepare release
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    if: github.ref == 'refs/heads/production'
+    permissions: {}
     outputs:
-      cloudflare: ${{ steps.changes.outputs.cloudflare }}
+      deployment_environment: ${{ steps.deployment.outputs.environment }}
     steps:
-      - name: Check out the repo
-        uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-
-      - name: Detect Cloudflare changes
-        id: changes
+      - name: Resolve deployment environment
+        id: deployment
         env:
-          AFTER_SHA: ${{ github.sha }}
-          BEFORE_SHA: ${{ github.event.before }}
+          BRANCH_NAME: ${{ github.ref_name }}
         run: |
-          if git cat-file -e "${BEFORE_SHA}^{commit}" 2>/dev/null && \
-            git diff --quiet "$BEFORE_SHA" "$AFTER_SHA" -- infra/cloudflare/; then
-            echo "cloudflare=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "cloudflare=true" >> "$GITHUB_OUTPUT"
-          fi
+          case "$BRANCH_NAME" in
+            master) environment=staging ;;
+            production) environment=production ;;
+            *) echo "Unsupported release branch: $BRANCH_NAME" >&2; exit 1 ;;
+          esac
+          echo "environment=$environment" >> "$GITHUB_OUTPUT"
 
-  images:
+  server_image:
+    name: Server image
     runs-on: ubuntu-latest
     timeout-minutes: 60
     permissions:
@@ -70,8 +64,8 @@ jobs:
           sudo chown -R "$(id -u):$(id -g)" /tmp/sccache
           chmod -R a+rwX /tmp/sccache
 
-      - name: Push images
-        run: nix run --quiet --no-update-lock-file --print-build-logs ".#push-images"
+      - name: Push server image
+        run: nix run --quiet --no-update-lock-file --print-build-logs ".#push-server-image"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_ACTOR: ${{ github.actor }}
@@ -85,17 +79,107 @@ jobs:
             chmod -R u+rwX,go+rX /tmp/sccache
           fi
 
+  staging_site_image:
+    name: Staging site image
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      packages: write
+      contents: read
+    if: github.ref_name == 'master'
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v7
+
+      - name: Nix Setup
+        uses: ./.github/actions/nix-setup
+        with:
+          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
+
+      - name: Push site image
+        run: nix run --quiet --no-update-lock-file --print-build-logs ".#push-site-image"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_ACTOR: ${{ github.actor }}
+          BRANCH_NAME: ${{ github.ref_name }}
+
+  frontend_build:
+    name: Frontend build
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v7
+
+      - name: Node.js Setup
+        uses: ./.github/actions/node-setup
+
+      - name: Build legacy
+        run: npm run build:legacy
+
+      - name: Build SPA
+        run: npm run build:spa
+
+      - name: Build Storybook
+        if: github.ref_name == 'master'
+        run: npm run build:storybook
+
+      - name: Build site Worker
+        working-directory: apps/site
+        run: npm --prefix ../.. run build:site && npx --yes @opennextjs/cloudflare build --skipNextBuild
+
+      # GitHub Artifacts reject characters used in OpenNext cache filenames, such as colons.
+      - name: Pack frontend build
+        run: |
+          set -euo pipefail
+          mkdir -p .tmp/frontend-build
+          build_paths=(
+            apps/legacy/dist
+            apps/spa/out
+            apps/site/.open-next
+            packages/backend-proxy/dist
+          )
+          if [[ -d apps/storybook/storybook-static ]]; then
+            build_paths+=(apps/storybook/storybook-static)
+          fi
+          {
+            printf '%s\0' "${build_paths[@]}"
+            find apps/site/.next/static -type f -name '*.map' -print0
+          } | tar \
+            --create \
+            --file .tmp/frontend-build.tar \
+            --null \
+            --files-from=-
+
+      - name: Upload frontend build
+        uses: actions/upload-artifact@v7
+        with:
+          name: frontend-${{ github.run_id }}
+          path: .tmp/frontend-build.tar
+          if-no-files-found: error
+          retention-days: 7
+          overwrite: true
+
   cloudflare:
+    name: Cloudflare infrastructure
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
       contents: read
     needs:
-      - changes
-      - production
+      - production_avatar
+      - legacy
+      - site
+      - spa
     if: >-
-      needs.production.result == 'success' &&
-      needs.changes.outputs.cloudflare == 'true'
+      always() &&
+      github.ref_name == 'production' &&
+      needs.production_avatar.result == 'success' &&
+      needs.legacy.result == 'success' &&
+      needs.site.result == 'success' &&
+      needs.spa.result == 'success'
     environment:
       name: production
     steps:
@@ -120,16 +204,80 @@ jobs:
           PULUMI_BACKEND_URL: ${{ secrets.PULUMI_BACKEND_URL }}
           PULUMI_CONFIG_PASSPHRASE: ${{ secrets.PULUMI_CONFIG_PASSPHRASE }}
 
-  staging:
+  source_maps:
+    name: Publish source maps
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    needs:
+      - cloudflare
+      - frontend_build
+      - legacy
+      - site
+      - spa
+    if: >-
+      always() &&
+      github.ref_name == 'production' &&
+      needs.frontend_build.result == 'success' &&
+      needs.legacy.result == 'success' &&
+      needs.site.result == 'success' &&
+      needs.spa.result == 'success' &&
+      needs.cloudflare.result == 'success'
+    environment:
+      name: production
+      deployment: false
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v7
+
+      - name: Node.js Setup
+        uses: ./.github/actions/node-setup
+
+      - name: Download frontend build
+        uses: ./.github/actions/download-frontend-build
+        with:
+          artifact-name: frontend-${{ github.run_id }}
+
+      - name: Compress source maps
+        run: bash scripts/archive-frontend-source-maps.sh
+
+      - name: Upload source maps to R2
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          for archive in .tmp/source-maps/*.tar.gz; do
+            filename="${archive##*/}"
+            npx wrangler r2 object put \
+              "boluo-source-maps/releases/${GITHUB_SHA}/${filename}" \
+              --remote \
+              --file "$archive" \
+              --content-type application/gzip \
+              --cache-control 'public, max-age=31536000, immutable'
+          done
+
+  backend:
+    name: Backend
     runs-on: ubuntu-latest
     timeout-minutes: 60
     permissions:
       contents: read
-    needs: images
-    if: github.ref == 'refs/heads/master'
+    needs:
+      - prepare
+      - server_image
+      - staging_site_image
+    if: >-
+      always() &&
+      needs.prepare.result == 'success' &&
+      needs.server_image.result == 'success' &&
+      (github.ref_name == 'production' ||
+      (github.ref_name == 'master' && needs.staging_site_image.result == 'success'))
     environment:
-      name: staging
+      name: ${{ needs.prepare.outputs.deployment_environment }}
       deployment: false
+    env:
+      DEPLOYMENT_ENV: ${{ needs.prepare.outputs.deployment_environment }}
     steps:
       - name: Check out the repo
         uses: actions/checkout@v7
@@ -140,44 +288,150 @@ jobs:
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
 
       - name: Deploy site to staging
+        if: github.ref_name == 'master'
         run: nix run --quiet --no-update-lock-file .#deploy-site-staging
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_IO_TOKEN }}
 
-      - name: Deploy server to staging
-        run: nix run --quiet --no-update-lock-file .#deploy-server-staging
+      - name: Deploy server
+        run: nix run --quiet --no-update-lock-file ".#deploy-server-${DEPLOYMENT_ENV}"
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_IO_TOKEN }}
+
+  legacy:
+    name: Legacy
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    needs:
+      - backend
+      - prepare
+      - frontend_build
+    environment:
+      name: ${{ needs.prepare.outputs.deployment_environment }}
+      deployment: false
+    env:
+      DEPLOYMENT_ENV: ${{ needs.prepare.outputs.deployment_environment }}
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v7
 
       - name: Node.js Setup
         uses: ./.github/actions/node-setup
 
-      - name: Build legacy
-        run: npm run build:legacy
+      - name: Download frontend build
+        uses: ./.github/actions/download-frontend-build
+        with:
+          artifact-name: frontend-${{ github.run_id }}
 
-      - name: Build SPA
-        run: npm run build:spa
+      - name: Restore legacy asset history
+        id: legacy-assets
+        uses: actions/cache/restore@v6
+        with:
+          path: .tmp/frontend-assets/${{ env.DEPLOYMENT_ENV }}/legacy
+          key: frontend-assets-${{ env.DEPLOYMENT_ENV }}-legacy-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: frontend-assets-${{ env.DEPLOYMENT_ENV }}-legacy-
 
-      - name: Build Storybook
-        run: npm run build:storybook
+      - name: Merge legacy asset history
+        run: |
+          node scripts/merge-frontend-assets.mjs \
+            --archive ".tmp/frontend-assets/${DEPLOYMENT_ENV}/legacy" \
+            --assets apps/legacy/dist/assets \
+            --version "$GITHUB_SHA"
 
-      - name: Build site Worker
-        working-directory: apps/site
-        run: npm --prefix ../.. run build:site && npx --yes @opennextjs/cloudflare build --skipNextBuild
-
-      - name: Deploy legacy to staging
+      - name: Deploy legacy
         working-directory: apps/legacy
-        run: npx wrangler deploy --env staging
+        run: npx wrangler deploy --env "$DEPLOYMENT_ENV"
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
-      - name: Deploy SPA to staging
+      - name: Save legacy asset history
+        uses: actions/cache/save@v6
+        with:
+          path: .tmp/frontend-assets/${{ env.DEPLOYMENT_ENV }}/legacy
+          key: ${{ steps.legacy-assets.outputs.cache-primary-key }}
+
+  spa:
+    name: SPA
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    needs:
+      - backend
+      - prepare
+      - frontend_build
+    environment:
+      name: ${{ needs.prepare.outputs.deployment_environment }}
+      deployment: false
+    env:
+      DEPLOYMENT_ENV: ${{ needs.prepare.outputs.deployment_environment }}
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v7
+
+      - name: Node.js Setup
+        uses: ./.github/actions/node-setup
+
+      - name: Download frontend build
+        uses: ./.github/actions/download-frontend-build
+        with:
+          artifact-name: frontend-${{ github.run_id }}
+
+      - name: Restore SPA asset history
+        id: spa-assets
+        uses: actions/cache/restore@v6
+        with:
+          path: .tmp/frontend-assets/${{ env.DEPLOYMENT_ENV }}/spa
+          key: frontend-assets-${{ env.DEPLOYMENT_ENV }}-spa-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: frontend-assets-${{ env.DEPLOYMENT_ENV }}-spa-
+
+      - name: Merge SPA asset history
+        run: |
+          node scripts/merge-frontend-assets.mjs \
+            --archive ".tmp/frontend-assets/${DEPLOYMENT_ENV}/spa" \
+            --assets apps/spa/out/_next/static \
+            --version "$GITHUB_SHA"
+
+      - name: Deploy SPA
         working-directory: apps/spa
-        run: npx wrangler deploy --env staging
+        run: npx wrangler deploy --env "$DEPLOYMENT_ENV"
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+      - name: Save SPA asset history
+        uses: actions/cache/save@v6
+        with:
+          path: .tmp/frontend-assets/${{ env.DEPLOYMENT_ENV }}/spa
+          key: ${{ steps.spa-assets.outputs.cache-primary-key }}
+
+  staging_storybook:
+    name: Staging Storybook
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    needs:
+      - backend
+      - frontend_build
+    if: github.ref_name == 'master'
+    environment:
+      name: staging
+      deployment: false
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v7
+
+      - name: Node.js Setup
+        uses: ./.github/actions/node-setup
+
+      - name: Download frontend build
+        uses: ./.github/actions/download-frontend-build
+        with:
+          artifact-name: frontend-${{ github.run_id }}
 
       - name: Deploy Storybook
         working-directory: apps/storybook
@@ -186,26 +440,48 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
-      - name: Deploy site Worker to staging
+  site:
+    name: Site Worker
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    needs:
+      - backend
+      - prepare
+      - frontend_build
+    environment:
+      name: ${{ needs.prepare.outputs.deployment_environment }}
+      deployment: false
+    env:
+      DEPLOYMENT_ENV: ${{ needs.prepare.outputs.deployment_environment }}
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v7
+
+      - name: Node.js Setup
+        uses: ./.github/actions/node-setup
+
+      - name: Download frontend build
+        uses: ./.github/actions/download-frontend-build
+        with:
+          artifact-name: frontend-${{ github.run_id }}
+
+      - name: Deploy site Worker
         working-directory: apps/site
-        run: npx @opennextjs/cloudflare deploy --env staging
+        run: npx @opennextjs/cloudflare deploy --env "$DEPLOYMENT_ENV"
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
-  production:
+  production_avatar:
+    name: Production avatar Worker
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 30
     permissions:
       contents: read
-    needs:
-      - changes
-      - images
-    if: >-
-      always() &&
-      github.ref == 'refs/heads/production' &&
-      needs.changes.result == 'success' &&
-      needs.images.result == 'success'
+    needs: backend
+    if: github.ref_name == 'production'
     environment:
       name: production
       deployment: false
@@ -213,49 +489,8 @@ jobs:
       - name: Check out the repo
         uses: actions/checkout@v7
 
-      - name: Nix Setup
-        uses: ./.github/actions/nix-setup
-        with:
-          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
-
-      - name: Deploy server to production
-        run: nix run --quiet --no-update-lock-file .#deploy-server-production
-        env:
-          FLY_API_TOKEN: ${{ secrets.FLY_IO_TOKEN }}
-
       - name: Node.js Setup
         uses: ./.github/actions/node-setup
-
-      - name: Build legacy
-        run: npm run build:legacy
-
-      - name: Build SPA
-        run: npm run build:spa
-
-      - name: Build site Worker
-        working-directory: apps/site
-        run: npm --prefix ../.. run build:site && npx --yes @opennextjs/cloudflare build --skipNextBuild
-
-      - name: Deploy legacy to production
-        working-directory: apps/legacy
-        run: npx wrangler deploy --env production
-        env:
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-
-      - name: Deploy SPA to production
-        working-directory: apps/spa
-        run: npx wrangler deploy --env production
-        env:
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-
-      - name: Deploy site Worker to production
-        working-directory: apps/site
-        run: npx @opennextjs/cloudflare deploy --env production
-        env:
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
       - name: Deploy avatar Worker to production
         working-directory: apps/avatars
@@ -263,6 +498,24 @@ jobs:
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+  production_grafana:
+    name: Production Grafana resources
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    needs: backend
+    if: github.ref_name == 'production'
+    environment:
+      name: production
+      deployment: false
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v7
+
+      - name: Node.js Setup
+        uses: ./.github/actions/node-setup
 
       - name: Import Grafana resources
         run: npm run import --workspace=@boluo/grafana -- --yes

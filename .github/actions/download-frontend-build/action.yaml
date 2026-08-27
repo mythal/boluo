@@ -1,0 +1,20 @@
+name: Download frontend build
+description: Download and unpack the frontend release build
+
+inputs:
+  artifact-name:
+    description: Name of the frontend build artifact
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Download frontend build artifact
+      uses: actions/download-artifact@v8
+      with:
+        name: ${{ inputs.artifact-name }}
+        path: .tmp
+
+    - name: Unpack frontend build
+      shell: bash
+      run: tar --extract --file .tmp/frontend-build.tar

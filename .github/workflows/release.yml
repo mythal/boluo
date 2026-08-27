@@ -145,6 +145,7 @@ jobs:
             apps/legacy/dist
             apps/spa/out
             apps/site/.open-next
+            apps/site/.next/static/**/*.map
             apps/storybook/storybook-static
             packages/backend-proxy/dist
           if-no-files-found: error
@@ -193,6 +194,59 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PULUMI_API_TOKEN }}
           PULUMI_BACKEND_URL: ${{ secrets.PULUMI_BACKEND_URL }}
           PULUMI_CONFIG_PASSPHRASE: ${{ secrets.PULUMI_CONFIG_PASSPHRASE }}
+
+  source_maps:
+    name: Publish source maps
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    needs:
+      - cloudflare
+      - frontend_build
+      - production_legacy
+      - production_site
+      - production_spa
+    if: >-
+      always() &&
+      github.ref == 'refs/heads/production' &&
+      needs.frontend_build.result == 'success' &&
+      needs.production_legacy.result == 'success' &&
+      needs.production_site.result == 'success' &&
+      needs.production_spa.result == 'success' &&
+      (needs.cloudflare.result == 'success' || needs.cloudflare.result == 'skipped')
+    environment:
+      name: production
+      deployment: false
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v7
+
+      - name: Node.js Setup
+        uses: ./.github/actions/node-setup
+
+      - name: Download frontend build
+        uses: actions/download-artifact@v8
+        with:
+          name: frontend-${{ github.run_id }}
+
+      - name: Compress source maps
+        run: bash scripts/archive-frontend-source-maps.sh
+
+      - name: Upload source maps to R2
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          for archive in .tmp/source-maps/*.tar.gz; do
+            filename="${archive##*/}"
+            npx wrangler r2 object put \
+              "boluo-source-maps/releases/${GITHUB_SHA}/${filename}" \
+              --remote \
+              --file "$archive" \
+              --content-type application/gzip \
+              --cache-control 'public, max-age=31536000, immutable'
+          done
 
   staging_backend:
     name: Staging backend

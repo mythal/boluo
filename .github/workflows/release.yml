@@ -137,19 +137,34 @@ jobs:
         working-directory: apps/site
         run: npm --prefix ../.. run build:site && npx --yes @opennextjs/cloudflare build --skipNextBuild
 
+      # GitHub Artifacts reject characters used in OpenNext cache filenames, such as colons.
+      - name: Pack frontend build
+        run: |
+          mkdir -p .tmp/frontend-build
+          build_paths=(
+            apps/legacy/dist
+            apps/spa/out
+            apps/site/.open-next
+            packages/backend-proxy/dist
+          )
+          if [[ -d apps/storybook/storybook-static ]]; then
+            build_paths+=(apps/storybook/storybook-static)
+          fi
+          {
+            printf '%s\0' "${build_paths[@]}"
+            find apps/site/.next/static -type f -name '*.map' -print0
+          } | tar \
+            --create \
+            --file .tmp/frontend-build.tar \
+            --null \
+            --files-from=-
+
       - name: Upload frontend build
         uses: actions/upload-artifact@v7
         with:
           name: frontend-${{ github.run_id }}
-          path: |
-            apps/legacy/dist
-            apps/spa/out
-            apps/site/.open-next
-            apps/site/.next/static/**/*.map
-            apps/storybook/storybook-static
-            packages/backend-proxy/dist
+          path: .tmp/frontend-build.tar
           if-no-files-found: error
-          include-hidden-files: true
           retention-days: 1
           overwrite: true
 
@@ -226,9 +241,9 @@ jobs:
         uses: ./.github/actions/node-setup
 
       - name: Download frontend build
-        uses: actions/download-artifact@v8
+        uses: ./.github/actions/download-frontend-build
         with:
-          name: frontend-${{ github.run_id }}
+          artifact-name: frontend-${{ github.run_id }}
 
       - name: Compress source maps
         run: bash scripts/archive-frontend-source-maps.sh
@@ -301,9 +316,9 @@ jobs:
         uses: ./.github/actions/node-setup
 
       - name: Download frontend build
-        uses: actions/download-artifact@v8
+        uses: ./.github/actions/download-frontend-build
         with:
-          name: frontend-${{ github.run_id }}
+          artifact-name: frontend-${{ github.run_id }}
 
       - name: Restore staging legacy asset history
         id: staging-legacy-assets
@@ -354,9 +369,9 @@ jobs:
         uses: ./.github/actions/node-setup
 
       - name: Download frontend build
-        uses: actions/download-artifact@v8
+        uses: ./.github/actions/download-frontend-build
         with:
-          name: frontend-${{ github.run_id }}
+          artifact-name: frontend-${{ github.run_id }}
 
       - name: Restore staging SPA asset history
         id: staging-spa-assets
@@ -407,9 +422,9 @@ jobs:
         uses: ./.github/actions/node-setup
 
       - name: Download frontend build
-        uses: actions/download-artifact@v8
+        uses: ./.github/actions/download-frontend-build
         with:
-          name: frontend-${{ github.run_id }}
+          artifact-name: frontend-${{ github.run_id }}
 
       - name: Deploy Storybook
         working-directory: apps/storybook
@@ -439,9 +454,9 @@ jobs:
         uses: ./.github/actions/node-setup
 
       - name: Download frontend build
-        uses: actions/download-artifact@v8
+        uses: ./.github/actions/download-frontend-build
         with:
-          name: frontend-${{ github.run_id }}
+          artifact-name: frontend-${{ github.run_id }}
 
       - name: Deploy site Worker to staging
         working-directory: apps/site
@@ -502,9 +517,9 @@ jobs:
         uses: ./.github/actions/node-setup
 
       - name: Download frontend build
-        uses: actions/download-artifact@v8
+        uses: ./.github/actions/download-frontend-build
         with:
-          name: frontend-${{ github.run_id }}
+          artifact-name: frontend-${{ github.run_id }}
 
       - name: Restore production legacy asset history
         id: production-legacy-assets
@@ -555,9 +570,9 @@ jobs:
         uses: ./.github/actions/node-setup
 
       - name: Download frontend build
-        uses: actions/download-artifact@v8
+        uses: ./.github/actions/download-frontend-build
         with:
-          name: frontend-${{ github.run_id }}
+          artifact-name: frontend-${{ github.run_id }}
 
       - name: Restore production SPA asset history
         id: production-spa-assets
@@ -608,9 +623,9 @@ jobs:
         uses: ./.github/actions/node-setup
 
       - name: Download frontend build
-        uses: actions/download-artifact@v8
+        uses: ./.github/actions/download-frontend-build
         with:
-          name: frontend-${{ github.run_id }}
+          artifact-name: frontend-${{ github.run_id }}
 
       - name: Deploy site Worker to production
         working-directory: apps/site

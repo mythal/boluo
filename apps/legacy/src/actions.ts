@@ -422,6 +422,10 @@ export interface UnfocusChannel {
 export interface ChangeBaseUrl {
   type: 'CHANGE_BASE_URL';
   baseUrl: string;
+  reason?:
+    | 'LEGACY_BASE_URL_CHANGED'
+    | 'LEGACY_FAILOVER_ROUTE_CHANGED'
+    | 'LEGACY_PERFORMANCE_ROUTE_CHANGED';
 }
 
 export type Action =

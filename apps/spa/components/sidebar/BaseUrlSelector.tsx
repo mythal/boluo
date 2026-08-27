@@ -5,34 +5,32 @@ import { FormattedMessage } from 'react-intl';
 import { useProxies } from '../../hooks/useProxies';
 import { BaseUrlSelectorItem } from './BaseUrlSelectorItem';
 import useSWR from 'swr';
-import { backendUrlConfigAtom, testProxies } from '../../base-url';
+import { backendUrlChangeReasonAtom, backendUrlConfigAtom, testProxies } from '../../base-url';
 import {
-  updateRouteStats,
-  convertTestResult,
   getRouteScore,
-} from '../../hooks/useRouteMovingAverage';
+  recordRouteProbe,
+  toRouteProbeResult,
+} from '../../route-selection-state';
 
 export const BaseUrlSelector: FC = () => {
   const proxies = useProxies();
-  const { data: testReuslt } = useSWR(['proxies', proxies], () => testProxies(proxies), {
+  const { data: testResults } = useSWR(['proxies', proxies], () => testProxies(proxies), {
     refreshInterval: 2000,
     fallbackData: [],
     suspense: false,
-    onSuccess: (testResults) => {
-      // Update EMA statistics when UI test results are received
-      if (testResults) {
-        testResults.forEach((record) => {
-          const measureResult = convertTestResult(record.rtt);
-          updateRouteStats(record.proxy.url, measureResult);
-        });
-      }
+    onSuccess: (results) => {
+      results.forEach((record) => {
+        recordRouteProbe(record.proxy.url, toRouteProbeResult(record.rtt));
+      });
     },
   });
   const [backendUrlConfig, setBackendUrlConfig] = useAtom(backendUrlConfigAtom);
   const [backendUrl, setBackendUrl] = useAtom(backendUrlAtom);
-  const handleSelect = (backendUrl: string) => {
-    setBackendUrlConfig(backendUrl);
-    setBackendUrl(backendUrl);
+  const [, setBackendUrlChangeReason] = useAtom(backendUrlChangeReasonAtom);
+  const handleSelect = (url: string) => {
+    setBackendUrlConfig(url);
+    setBackendUrlChangeReason('API_ENDPOINT_CHANGED');
+    setBackendUrl(url);
   };
   return (
     <div className="flex flex-col gap-2">
@@ -48,7 +46,7 @@ export const BaseUrlSelector: FC = () => {
       </label>
       <div className="text-text-primary flex flex-col">
         {proxies.map((proxy) => {
-          const result = testReuslt.find((item) => item.proxy.name === proxy.name);
+          const result = testResults.find((item) => item.proxy.name === proxy.name);
           return (
             <BaseUrlSelectorItem
               key={`${proxy.name}:${proxy.url}`}

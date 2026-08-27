@@ -5,6 +5,7 @@ import { closeWebSocketNormally } from '@boluo/api/websocket/close';
 import { useEffect, useRef, useState } from 'react';
 import { connectSpace } from '../../actions';
 import { connect } from '../../api/connect';
+import { selectFailoverBaseUrl } from '../../base-url';
 import {
   compareEvents,
   type EventId,
@@ -128,6 +129,7 @@ const DEVELOPMENT = false;
 export const Connector = ({ spaceId, myId }: Props) => {
   const dispatch = useDispatch();
   const baseUrl = useSelector((state) => state.ui.baseUrl);
+  const baseUrlChangeReason = useSelector((state) => state.ui.baseUrlChangeReason);
   const [state, setState] = useAtom(connectionStateAtom);
   const stateRef = useRef<ConnectState>(state);
   const [retrySec, setRetrySec] = useState<number>(0);
@@ -153,7 +155,7 @@ export const Connector = ({ spaceId, myId }: Props) => {
       connectionRef.current.onclose = null;
       connectionRef.current.onerror = null;
       connectionRef.current.onmessage = null;
-      closeWebSocketNormally(connectionRef.current, 'LEGACY_BASE_URL_CHANGED');
+      closeWebSocketNormally(connectionRef.current, baseUrlChangeReason);
       connectionRef.current = null;
     }
     retryCount.current = 0;
@@ -161,7 +163,7 @@ export const Connector = ({ spaceId, myId }: Props) => {
     // eslint-disable-next-line @eslint-react/set-state-in-effect
     setRetrySec(0);
     setState('CLOSED');
-  }, [baseUrl, setState]);
+  }, [baseUrl, baseUrlChangeReason, setState]);
 
   useEffect(() => {
     return () => {
@@ -227,8 +229,39 @@ export const Connector = ({ spaceId, myId }: Props) => {
         cursor.current.seq,
       );
       connectionRef.current = connection;
-      connection.onclose = () => {
-        retry();
+      connection.onclose = (event) => {
+        if (event.code === 1000) {
+          retry();
+          return;
+        }
+        setState('CONNECTING');
+        const failedBaseUrl = baseUrlRef.current;
+        void selectFailoverBaseUrl(failedBaseUrl)
+          .then((selectedUrl) => {
+            const isCurrentFailure =
+              mountedRef.current &&
+              connectionRef.current === connection &&
+              store.getState().ui.baseUrl === failedBaseUrl;
+            if (!isCurrentFailure) return;
+            if (selectedUrl && selectedUrl !== failedBaseUrl) {
+              dispatch({
+                type: 'CHANGE_BASE_URL',
+                baseUrl: selectedUrl,
+                reason: 'LEGACY_FAILOVER_ROUTE_CHANGED',
+              });
+            } else {
+              retry();
+            }
+          })
+          .catch(() => {
+            if (
+              mountedRef.current &&
+              connectionRef.current === connection &&
+              store.getState().ui.baseUrl === failedBaseUrl
+            ) {
+              retry();
+            }
+          });
       };
       connection.onmessage = (onMessageEvent) => {
         retryCount.current = 0;

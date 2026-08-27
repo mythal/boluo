@@ -214,7 +214,9 @@ const connect = async (
   connectionState: ConnectionState,
   cursor: EventId,
   dispatch: ChatDispatch,
+  isDisposed: () => boolean,
 ): Promise<WebSocket | null> => {
+  if (isDisposed()) return null;
   if (!isUuid(mailboxId)) return null;
   if (connectionState.type !== 'CLOSED') return null;
   if (connectionState.countdown > 0) {
@@ -228,6 +230,7 @@ const connect = async (
   }
   dispatch({ type: 'connecting', payload: { mailboxId } });
   const tokenResult = await getToken({ spaceId: mailboxId, userId });
+  if (isDisposed()) return null;
   if (typeof tokenResult === 'string') {
     dispatch({
       type: 'connectionError',
@@ -302,10 +305,14 @@ export const useConnectionEffect = (mailboxId: string) => {
   }, [connectionState, logout, user]);
 
   useEffect(() => {
-    if (mailboxId === '') return;
+    if (!isUuid(mailboxId)) return;
     if (isQueryingUser) return;
+    let disposed = false;
+    let connectInFlight = false;
     let currentConnection: WebSocket | null = null;
-    const performConnect = () => {
+    const performConnect = (): void => {
+      if (connectInFlight) return;
+      connectInFlight = true;
       const chatState = store.get(chatAtom);
       void connect(
         webSocketEndpoint,
@@ -314,9 +321,26 @@ export const useConnectionEffect = (mailboxId: string) => {
         chatState.connection,
         chatState.cursor,
         dispatch,
-      ).then((connectionResult) => {
-        currentConnection = connectionResult;
-      });
+        () => disposed,
+      )
+        .then((connectionResult) => {
+          if (disposed && connectionResult) {
+            closeWebSocketNormally(connectionResult, 'CHAT_CONTEXT_DISPOSED');
+            return;
+          }
+          currentConnection = connectionResult;
+        })
+        .finally(() => {
+          connectInFlight = false;
+          const latestConnectionState = store.get(connectionStateAtom);
+          if (
+            !disposed &&
+            latestConnectionState.type === 'CLOSED' &&
+            latestConnectionState.countdown === 0
+          ) {
+            window.queueMicrotask(performConnect);
+          }
+        });
     };
     const unsub = store.sub(connectionStateAtom, () => {
       performConnect();
@@ -329,8 +353,12 @@ export const useConnectionEffect = (mailboxId: string) => {
       }
     }, 0);
     return () => {
+      disposed = true;
       window.clearTimeout(handle);
       unsub();
+      if (connectInFlight) {
+        dispatch({ type: 'retryConnection', payload: { mailboxId } });
+      }
       if (currentConnection) {
         closeWebSocketNormally(currentConnection, 'CHAT_CONTEXT_DISPOSED');
       }

@@ -158,6 +158,36 @@ jobs:
       - name: Build SPA
         run: npm run build:spa
 
+      - name: Restore staging legacy asset history
+        id: staging-legacy-assets
+        uses: actions/cache/restore@v6
+        with:
+          path: .tmp/frontend-assets/staging/legacy
+          key: frontend-assets-staging-legacy-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: frontend-assets-staging-legacy-
+
+      - name: Merge staging legacy asset history
+        run: |
+          node scripts/merge-frontend-assets.mjs \
+            --archive .tmp/frontend-assets/staging/legacy \
+            --assets apps/legacy/dist/assets \
+            --version "$GITHUB_SHA"
+
+      - name: Restore staging SPA asset history
+        id: staging-spa-assets
+        uses: actions/cache/restore@v6
+        with:
+          path: .tmp/frontend-assets/staging/spa
+          key: frontend-assets-staging-spa-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: frontend-assets-staging-spa-
+
+      - name: Merge staging SPA asset history
+        run: |
+          node scripts/merge-frontend-assets.mjs \
+            --archive .tmp/frontend-assets/staging/spa \
+            --assets apps/spa/out/_next/static \
+            --version "$GITHUB_SHA"
+
       - name: Build Storybook
         run: npm run build:storybook
 
@@ -172,12 +202,24 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
+      - name: Save staging legacy asset history
+        uses: actions/cache/save@v6
+        with:
+          path: .tmp/frontend-assets/staging/legacy
+          key: ${{ steps.staging-legacy-assets.outputs.cache-primary-key }}
+
       - name: Deploy SPA to staging
         working-directory: apps/spa
         run: npx wrangler deploy --env staging
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+      - name: Save staging SPA asset history
+        uses: actions/cache/save@v6
+        with:
+          path: .tmp/frontend-assets/staging/spa
+          key: ${{ steps.staging-spa-assets.outputs.cache-primary-key }}
 
       - name: Deploy Storybook
         working-directory: apps/storybook
@@ -232,6 +274,36 @@ jobs:
       - name: Build SPA
         run: npm run build:spa
 
+      - name: Restore production legacy asset history
+        id: production-legacy-assets
+        uses: actions/cache/restore@v6
+        with:
+          path: .tmp/frontend-assets/production/legacy
+          key: frontend-assets-production-legacy-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: frontend-assets-production-legacy-
+
+      - name: Merge production legacy asset history
+        run: |
+          node scripts/merge-frontend-assets.mjs \
+            --archive .tmp/frontend-assets/production/legacy \
+            --assets apps/legacy/dist/assets \
+            --version "$GITHUB_SHA"
+
+      - name: Restore production SPA asset history
+        id: production-spa-assets
+        uses: actions/cache/restore@v6
+        with:
+          path: .tmp/frontend-assets/production/spa
+          key: frontend-assets-production-spa-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: frontend-assets-production-spa-
+
+      - name: Merge production SPA asset history
+        run: |
+          node scripts/merge-frontend-assets.mjs \
+            --archive .tmp/frontend-assets/production/spa \
+            --assets apps/spa/out/_next/static \
+            --version "$GITHUB_SHA"
+
       - name: Build site Worker
         working-directory: apps/site
         run: npm --prefix ../.. run build:site && npx --yes @opennextjs/cloudflare build --skipNextBuild
@@ -243,12 +315,24 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
+      - name: Save production legacy asset history
+        uses: actions/cache/save@v6
+        with:
+          path: .tmp/frontend-assets/production/legacy
+          key: ${{ steps.production-legacy-assets.outputs.cache-primary-key }}
+
       - name: Deploy SPA to production
         working-directory: apps/spa
         run: npx wrangler deploy --env production
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+      - name: Save production SPA asset history
+        uses: actions/cache/save@v6
+        with:
+          path: .tmp/frontend-assets/production/spa
+          key: ${{ steps.production-spa-assets.outputs.cache-primary-key }}
 
       - name: Deploy site Worker to production
         working-directory: apps/site

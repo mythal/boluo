@@ -1,10 +1,9 @@
 import {
   type AppError,
   FETCH_FAIL,
-  LIMIT_EXCEEDED,
-  METHOD_NOT_ALLOWED,
-  NOT_JSON,
-  UNEXPECTED,
+  NOT_FOUND,
+  NO_PERMISSION,
+  UNAUTHENTICATED,
 } from './api/error';
 import { describeThrownValue } from '@boluo/utils/errors';
 import {
@@ -129,16 +128,16 @@ export function recordWarning(
 }
 
 export function reportApiError(error: AppError, options: ReportOptions): void {
-  if (error.code === FETCH_FAIL || error.code === LIMIT_EXCEEDED) {
-    recordWarning(`API request failed: ${error.code}`, options);
-  } else if (
-    error.code === NOT_JSON ||
-    error.code === UNEXPECTED ||
-    error.code === METHOD_NOT_ALLOWED
+  if (
+    error.code === UNAUTHENTICATED ||
+    error.code === NOT_FOUND ||
+    error.code === NO_PERMISSION ||
+    error.code === FETCH_FAIL
   ) {
-    captureRecoverableException(error, {
-      ...options,
-      context: { api_error_code: error.code },
-    });
+    return;
   }
+  captureRecoverableException(error, {
+    ...options,
+    context: { api_error_code: error.code },
+  });
 }

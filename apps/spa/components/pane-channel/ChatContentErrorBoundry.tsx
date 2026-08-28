@@ -16,6 +16,8 @@ export const ShowError: FC<{ error: unknown; eventId: string }> = ({ error, even
   return (
     <div className="p-pane">
       {isChunkLoadError(error) ? (
+        <LoadFailed />
+      ) : (
         <Failed
           title={<FormattedMessage defaultMessage="Oops" />}
           code={isApiError(error) ? error.code : undefined}
@@ -26,8 +28,6 @@ export const ShowError: FC<{ error: unknown; eventId: string }> = ({ error, even
             />
           }
         />
-      ) : (
-        <LoadFailed />
       )}
     </div>
   );

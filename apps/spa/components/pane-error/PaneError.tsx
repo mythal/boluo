@@ -13,18 +13,20 @@ import { LoadFailed } from '@boluo/ui/LoadFailed';
 export const PaneError: FC<{ children: React.ReactNode }> = ({ children }) => {
   const fallback: FallbackRender = ({ error, eventId }) => {
     if (isChunkLoadError(error)) {
-      <PaneBox
-        initSizeLevel={1}
-        header={
-          <PaneHeaderBox>
-            <FormattedMessage defaultMessage="Oops!" />
-          </PaneHeaderBox>
-        }
-      >
-        <div className="p-pane">
-          <LoadFailed />
-        </div>
-      </PaneBox>;
+      return (
+        <PaneBox
+          initSizeLevel={1}
+          header={
+            <PaneHeaderBox>
+              <FormattedMessage defaultMessage="Oops!" />
+            </PaneHeaderBox>
+          }
+        >
+          <div className="p-pane">
+            <LoadFailed />
+          </div>
+        </PaneBox>
+      );
     } else if (isApiError(error)) {
       if (error.code === 'NOT_FOUND') {
         return <PaneErrorNotFound error={error} />;

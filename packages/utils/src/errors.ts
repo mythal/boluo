@@ -1,6 +1,17 @@
-export const isChunkLoadError = (error: unknown): error is Error => {
-  return error instanceof Error && error.message.includes('Loading chunk');
-};
+const CHUNK_LOAD_ERROR_PATTERNS = [
+  /Loading (?:CSS )?chunk/i,
+  /Failed to load chunk/i,
+  /Failed to fetch dynamically imported module/i,
+  /Error loading dynamically imported module/i,
+  /Importing a module script failed/i,
+  /Unable to preload CSS/i,
+  /is not a valid JavaScript MIME type/i,
+];
+
+export const isChunkLoadError = (error: unknown): error is Error =>
+  error instanceof Error &&
+  (error.name === 'ChunkLoadError' ||
+    CHUNK_LOAD_ERROR_PATTERNS.some((pattern) => pattern.test(error.message)));
 
 const MAX_THROWN_VALUE_LENGTH = 2_000;
 

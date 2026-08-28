@@ -174,7 +174,7 @@
               pkgs.sccache
               pkgs.clang
             ]
-            ++ lib.optionals stdenv.isLinux [ pkgs.wild ];
+            ++ lib.optionals stdenv.hostPlatform.isLinux [ pkgs.wild ];
             RUSTC_WRAPPER = "${pkgs.sccache}/bin/sccache";
             SCCACHE_DIR = "/tmp/sccache";
           };
@@ -592,7 +592,7 @@
                 clang
                 pgformatter
                 gnumake
-                nixfmt-rfc-style
+                nixfmt
                 sqlx-cli
                 ast-grep
                 flyctl

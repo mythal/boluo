@@ -1,6 +1,48 @@
+use quick_cache::sync::Cache;
 use serde::{Deserialize, Serialize};
+use std::sync::LazyLock;
 use time::OffsetDateTime;
 use uuid::Uuid;
+
+const MEDIA_INFO_CACHE_CAPACITY: usize = 4096;
+
+static MEDIA_INFO_CACHE: LazyLock<Cache<Uuid, MediaInfo>> =
+    LazyLock::new(|| Cache::new(MEDIA_INFO_CACHE_CAPACITY));
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, specta::Type, sqlx::FromRow)]
+#[serde(rename_all = "camelCase")]
+pub struct MediaInfo {
+    pub id: Uuid,
+    pub mime_type: String,
+    pub original_filename: String,
+    pub size: i32,
+}
+
+impl MediaInfo {
+    pub async fn get_with_cache(
+        pool: &sqlx::PgPool,
+        media_id: Uuid,
+    ) -> Result<Option<Self>, sqlx::Error> {
+        if let Some(media) = MEDIA_INFO_CACHE.get(&media_id) {
+            return Ok(Some(media));
+        }
+
+        let media = Self::get(pool, media_id).await?;
+        if let Some(media) = &media {
+            MEDIA_INFO_CACHE.insert(media_id, media.clone());
+        }
+        Ok(media)
+    }
+
+    pub async fn get<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
+        media_id: Uuid,
+    ) -> Result<Option<Self>, sqlx::Error> {
+        sqlx::query_file_as!(MediaInfo, "sql/media/get_info_by_id.sql", media_id)
+            .fetch_optional(db)
+            .await
+    }
+}
 
 pub struct MediaFile {
     pub id: Uuid,
@@ -124,6 +166,54 @@ mod tests {
         assert_eq!(created.hash, hash);
         assert_eq!(created.size, size as i32);
         assert_eq!(created.source, source);
+    }
+
+    #[sqlx::test(migrator = "crate::db::MIGRATOR")]
+    async fn db_test_media_info_cache_hit_returns_loaded_info(pool: sqlx::PgPool) {
+        let user = create_test_user(&pool, "mediainfo").await;
+        let media_id = Uuid::new_v4();
+        Media::create(
+            &pool,
+            &media_id,
+            "application/pdf",
+            user.id,
+            &media_id.to_string(),
+            "rulebook.pdf",
+            String::new(),
+            4096,
+            "upload",
+        )
+        .await
+        .expect("create Media");
+
+        let expected = MediaInfo {
+            id: media_id,
+            mime_type: "application/pdf".to_string(),
+            original_filename: "rulebook.pdf".to_string(),
+            size: 4096,
+        };
+        let first = MediaInfo::get_with_cache(&pool, media_id)
+            .await
+            .expect("load Media info")
+            .expect("Media info exists");
+        assert_eq!(first, expected);
+
+        sqlx::query("DELETE FROM media WHERE id = $1")
+            .bind(media_id)
+            .execute(&pool)
+            .await
+            .expect("delete Media after priming cache");
+
+        let uncached = MediaInfo::get(&pool, media_id)
+            .await
+            .expect("query deleted Media info without cache");
+        assert_eq!(uncached, None);
+
+        let cached = MediaInfo::get_with_cache(&pool, media_id)
+            .await
+            .expect("load cached Media info")
+            .expect("cached Media info exists");
+        assert_eq!(cached, expected);
     }
 }
 

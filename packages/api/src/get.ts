@@ -27,6 +27,8 @@ import type {
   ListEntries,
   ListNotes,
   MakeToken,
+  MediaInfo,
+  MediaInfoQuery,
   Message,
   Note,
   NoteContentRevision,
@@ -87,6 +89,8 @@ export interface Get {
     query: SearchMessagesParams;
     result: SearchMessagesResult;
   };
+  // media
+  '/media/info': { query: MediaInfoQuery; result: MediaInfo };
   // notes
   '/notes/query': { query: QueryNote; result: Note };
   '/notes/by_space': { query: ListNotes; result: NoteMetadata[] };

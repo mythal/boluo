@@ -16,7 +16,7 @@ interface Props {
   child?: false | ChildPaneRatio;
 }
 
-const isSamePane = (pane: PaneData, target: PaneData) => {
+export const isSamePane = (pane: PaneData, target: PaneData) => {
   if (pane.type !== target.type) {
     return false;
   }
@@ -31,6 +31,9 @@ const isSamePane = (pane: PaneData, target: PaneData) => {
   }
   if (pane.type === 'CHARACTER' && target.type === 'CHARACTER') {
     return pane.spaceId === target.spaceId && pane.characterId === target.characterId;
+  }
+  if (pane.type === 'MEDIA_PREVIEW' && target.type === 'MEDIA_PREVIEW') {
+    return pane.mediaId === target.mediaId;
   }
   if (pane.type === 'SPACE_SETTINGS' && target.type === 'SPACE_SETTINGS') {
     return pane.spaceId === target.spaceId;

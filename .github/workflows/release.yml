@@ -21,6 +21,7 @@ jobs:
     permissions: {}
     outputs:
       deployment_environment: ${{ steps.deployment.outputs.environment }}
+      skip_server: ${{ contains(github.event.head_commit.message, '[skip-server]') }}
     steps:
       - name: Resolve deployment environment
         id: deployment
@@ -38,6 +39,8 @@ jobs:
     name: Server image
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    needs: prepare
+    if: needs.prepare.outputs.skip_server != 'true'
     permissions:
       packages: write
       contents: read
@@ -270,7 +273,9 @@ jobs:
     if: >-
       !cancelled() &&
       needs.prepare.result == 'success' &&
-      needs.server_image.result == 'success' &&
+      (needs.server_image.result == 'success' ||
+      (needs.prepare.outputs.skip_server == 'true' &&
+      needs.server_image.result == 'skipped')) &&
       (github.ref_name == 'production' ||
       (github.ref_name == 'master' && needs.staging_site_image.result == 'success'))
     environment:
@@ -280,9 +285,11 @@ jobs:
       DEPLOYMENT_ENV: ${{ needs.prepare.outputs.deployment_environment }}
     steps:
       - name: Check out the repo
+        if: github.ref_name == 'master' || needs.prepare.outputs.skip_server != 'true'
         uses: actions/checkout@v7
 
       - name: Nix Setup
+        if: github.ref_name == 'master' || needs.prepare.outputs.skip_server != 'true'
         uses: ./.github/actions/nix-setup
         with:
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
@@ -294,9 +301,14 @@ jobs:
           FLY_API_TOKEN: ${{ secrets.FLY_IO_TOKEN }}
 
       - name: Deploy server
+        if: needs.prepare.outputs.skip_server != 'true'
         run: nix run --quiet --no-update-lock-file ".#deploy-server-${DEPLOYMENT_ENV}"
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_IO_TOKEN }}
+
+      - name: Report skipped server deployment
+        if: needs.prepare.outputs.skip_server == 'true'
+        run: echo "Skipped server deployment because the commit message contains [skip-server]."
 
   legacy:
     name: Legacy

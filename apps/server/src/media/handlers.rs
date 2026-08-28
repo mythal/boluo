@@ -3,8 +3,8 @@ use super::models::Media;
 use crate::csrf::authenticate;
 use crate::error::{AppError, Find, ValidationFailed};
 use crate::interface::{Response, missing, ok_response, parse_query};
-use crate::media::api::{MediaQuery, PreSign, PreSignResult};
-use crate::media::models::MediaFile;
+use crate::media::api::{MediaInfoQuery, MediaQuery, PreSign, PreSignResult};
+use crate::media::models::{MediaFile, MediaInfo};
 use crate::rate_limit;
 use crate::utils::id;
 use governor::{DefaultKeyedRateLimiter, RateLimiter};
@@ -14,6 +14,14 @@ use hyper::{Request, Uri};
 use rusty_s3::S3Action;
 use std::sync::LazyLock;
 use uuid::Uuid;
+
+const SUPPORTED_MEDIA_TYPES: [&str; 5] = [
+    "image/png",
+    "image/jpeg",
+    "image/gif",
+    "image/webp",
+    "application/pdf",
+];
 
 static UPLOAD_LIMITER: LazyLock<DefaultKeyedRateLimiter<Uuid>> =
     LazyLock::new(|| RateLimiter::keyed(rate_limit::per_hour(rate_limit::UPLOAD_USER_PER_HOUR)));
@@ -48,16 +56,28 @@ fn filename_sanitizer(filename: String) -> String {
     filename_replace.replace_all(&filename, "_").to_string()
 }
 
+fn validate_filename(filename: String) -> Result<String, AppError> {
+    if filename.len() > 200 {
+        return Err(ValidationFailed("File Name is too long").into());
+    }
+    Ok(filename_sanitizer(filename))
+}
+
+fn validate_media_type(mime_type: &str) -> Result<(), AppError> {
+    if SUPPORTED_MEDIA_TYPES.contains(&mime_type) {
+        Ok(())
+    } else {
+        Err(ValidationFailed("Unsupported media type").into())
+    }
+}
+
 pub fn upload_params(uri: &Uri) -> Result<Upload, AppError> {
     let Upload {
         filename,
         mime_type,
         size,
     } = parse_query(uri)?;
-    if filename.len() > 200 {
-        return Err(ValidationFailed("File Name is too long").into());
-    }
-    let filename = filename_sanitizer(filename);
+    let filename = validate_filename(filename)?;
     Ok(Upload {
         filename,
         mime_type,
@@ -126,6 +146,7 @@ async fn media_upload(
     let session = authenticate(ctx, &req).await?;
     check_upload_rate_limit(&session.user_id)?;
     let params = upload_params(req.uri())?;
+    validate_media_type(params.mime_type.as_deref().unwrap_or_default())?;
     let media_id = id();
     let media_file = upload(ctx.storage(), req, media_id, params, 1024 * 1024 * 16).await?;
     media_file
@@ -141,32 +162,79 @@ async fn get(
     let MediaQuery {
         id,
         filename,
-        download: _,
+        download,
     } = parse_query(req.uri())?;
     metrics::counter!("boluo_server_media_get_total").increment(1);
-    let _method = req.method().clone();
 
-    let mut media: Option<Media> = None;
-    if let Some(id) = id {
-        media = Some(Media::get_by_id(&ctx.db, &id).await.or_not_found()?);
+    let media = if let Some(id) = id {
+        MediaInfo::get_with_cache(&ctx.db, id)
+            .await
+            .or_not_found()?
     } else if let Some(filename) = filename {
-        media = Some(
-            Media::get_by_filename(&ctx.db, &filename)
-                .await
-                .or_not_found()?,
-        );
-    }
-    let media = media.ok_or_else(|| {
-        AppError::BadRequest("Filename or media id must be specified.".to_string())
-    })?;
+        let media = Media::get_by_filename(&ctx.db, &filename)
+            .await
+            .or_not_found()?;
+        MediaInfo {
+            id: media.id,
+            mime_type: media.mime_type,
+            original_filename: media.original_filename,
+            size: media.size,
+        }
+    } else {
+        return Err(AppError::BadRequest(
+            "Filename or media id must be specified.".to_string(),
+        ));
+    };
 
-    let url = format!("{}/{}", ctx.media_public_url(), media.id);
-    let response = hyper::Response::builder()
-        .status(hyper::StatusCode::MOVED_PERMANENTLY)
-        .header(header::LOCATION, url)
+    let is_download_redirect = download && req.method() == hyper::Method::GET;
+    let (status, url) = if is_download_redirect {
+        (
+            hyper::StatusCode::TEMPORARY_REDIRECT,
+            get_object_download_url(ctx.storage(), &media),
+        )
+    } else {
+        (
+            hyper::StatusCode::MOVED_PERMANENTLY,
+            format!("{}/{}", ctx.media_public_url(), media.id),
+        )
+    };
+    let mut response = hyper::Response::builder()
+        .status(status)
+        .header(header::LOCATION, url);
+    if is_download_redirect {
+        response = response.header(header::CACHE_CONTROL, "private, no-store");
+    }
+    let response = response
         .body(crate::interface::ResponseBytes::new())
         .map_err(error_unexpected!("Failed to build media redirect response"))?;
     Ok(response)
+}
+
+async fn info(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<MediaInfo, AppError> {
+    let MediaInfoQuery { id } = parse_query(req.uri())?;
+    metrics::counter!("boluo_server_media_info_total").increment(1);
+    MediaInfo::get_with_cache(&ctx.db, id).await.or_not_found()
+}
+
+fn get_object_download_url(storage: &crate::s3::Storage, media: &MediaInfo) -> String {
+    let disposition = content_disposition(true, &media.original_filename);
+    let object_key = media.id.to_string();
+    let mut action = storage
+        .bucket()
+        .get_object(Some(storage.credentials()), &object_key);
+    action.query_mut().insert(
+        "response-content-disposition",
+        disposition
+            .to_str()
+            .expect("Content-Disposition is valid ASCII")
+            .to_owned(),
+    );
+    action
+        .sign(std::time::Duration::from_secs(EXPIRES_IN_SEC))
+        .to_string()
 }
 
 async fn put_object(
@@ -226,6 +294,8 @@ async fn presigned(
         mime_type,
         size,
     } = parse_query(req.uri())?;
+    let filename = validate_filename(filename)?;
+    validate_media_type(&mime_type)?;
     check_upload_rate_limit(&session.user_id)?;
     metrics::counter!("boluo_server_media_presigned_total").increment(1);
     metrics::histogram!("boluo_server_media_upload_size_bytes").record(size as f64);
@@ -271,8 +341,67 @@ pub async fn router(
     match (path, req.method().clone()) {
         ("/get", Method::GET) => get(ctx, req).await,
         ("/get", Method::HEAD) => get(ctx, req).await,
+        ("/info", Method::GET) => info(ctx, req).await.map(ok_response),
         ("/upload", Method::POST) => media_upload(ctx, req).await.map(ok_response),
         ("/presigned", Method::POST) => presigned(ctx, req).await.map(ok_response),
         _ => missing(),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::s3::{Storage, StorageConfig};
+
+    fn test_storage() -> Storage {
+        Storage::new(StorageConfig {
+            endpoint_url: Some("https://example.r2.cloudflarestorage.com".to_string()),
+            bucket_name: Some("media".to_string()),
+            access_key_id: Some("access-key".to_string()),
+            secret_access_key: Some("secret-key".to_string()),
+        })
+    }
+
+    #[test]
+    fn accepts_pdf_and_supported_image_media_types() {
+        for mime_type in SUPPORTED_MEDIA_TYPES {
+            assert!(
+                validate_media_type(mime_type).is_ok(),
+                "expected {mime_type} to be supported"
+            );
+        }
+    }
+
+    #[test]
+    fn rejects_unlisted_media_types() {
+        for mime_type in ["application/octet-stream", "image/svg+xml", "text/html"] {
+            assert!(
+                validate_media_type(mime_type).is_err(),
+                "expected {mime_type} to be rejected"
+            );
+        }
+    }
+
+    #[test]
+    fn download_url_overrides_content_disposition() {
+        let media = MediaInfo {
+            id: Uuid::parse_str("0199359d-9890-7ba3-8984-5d4613483c8f").unwrap(),
+            mime_type: "application/pdf".to_string(),
+            original_filename: "冒险手册.pdf".to_string(),
+            size: 1024,
+        };
+
+        let url = url::Url::parse(&get_object_download_url(&test_storage(), &media)).unwrap();
+        let disposition = url
+            .query_pairs()
+            .find_map(|(key, value)| {
+                (key == "response-content-disposition").then(|| value.into_owned())
+            })
+            .expect("response-content-disposition query");
+
+        assert_eq!(
+            disposition,
+            "attachment; filename*=utf-8''%E5%86%92%E9%99%A9%E6%89%8B%E5%86%8C%2Epdf"
+        );
     }
 }

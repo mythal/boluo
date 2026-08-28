@@ -22,6 +22,12 @@ pub struct MediaQuery {
 
 #[derive(Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
+pub struct MediaInfoQuery {
+    pub id: Uuid,
+}
+
+#[derive(Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
 pub struct PreSign {
     pub filename: String,
     pub mime_type: String,

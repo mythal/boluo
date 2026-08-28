@@ -1,6 +1,6 @@
 import { makeId } from '@boluo/utils/id';
 import { MAX_CHARACTER_IDENTIFIER_LENGTH, type Modifier, parseModifiers } from '@boluo/interpreter';
-import { type MediaError, validateMedia } from '../media';
+import { type MediaError, validateMessageMedia } from '../media';
 import { type ComposeAction, type ComposeActionUnion } from './compose.actions';
 import { type PreviewEdit } from '@boluo/api';
 import type { CharacterPortraitSelection } from './characterPortraitSelection';
@@ -535,7 +535,7 @@ export const checkCompose =
     if (effectiveInGame && needsDefaultName && characterName === '' && !hasBoundEditCharacter) {
       return 'NO_NAME';
     }
-    const mediaResult = validateMedia(media);
+    const mediaResult = validateMessageMedia(media);
     if (mediaResult.isErr) {
       return mediaResult.err;
     }

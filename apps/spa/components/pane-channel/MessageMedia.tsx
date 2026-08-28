@@ -1,21 +1,25 @@
-/* eslint-disable @next/next/no-img-element */
-import clsx from 'clsx';
-import Paperclip from '@boluo/icons/Paperclip';
-import Refresh from '@boluo/icons/Refresh';
+import { mediaUrl } from '@boluo/api-browser';
+import { useQueryAppSettings } from '@boluo/hooks/useQueryAppSettings';
+import { useQueryMediaInfo } from '@boluo/hooks/useQueryMediaInfo';
 import {
-  type ReactNode,
+  MessageMediaDisplay,
+  type MessageMediaLoadState,
+} from '@boluo/ui/chat/MessageMediaDisplay';
+import {
   type MouseEvent as ReactMouseEvent,
+  type ReactNode,
   memo,
   useCallback,
   useMemo,
   useState,
 } from 'react';
-import Icon from '@boluo/ui/Icon';
-import { showFileSize } from '@boluo/utils/files';
-import { getMediaUrl, supportedMediaType } from '../../media';
-import { useQueryAppSettings } from '@boluo/hooks/useQueryAppSettings';
-import { type ImagePreviewSource, useImagePreview } from './ImagePreviewOverlay';
+import { useIntl } from 'react-intl';
+import { usePaneLimit } from '../../hooks/useMaxPane';
 import { useObjectUrl } from '../../hooks/useObjectUrl';
+import { usePaneKey } from '../../hooks/usePaneKey';
+import { usePaneToggle } from '../../hooks/usePaneToggle';
+import { getMediaUrl, supportedImageMediaTypes } from '../../media';
+import { type ImagePreviewSource, useImagePreview } from './ImagePreviewOverlay';
 
 type Props = {
   className?: string;
@@ -23,98 +27,17 @@ type Props = {
   children?: ReactNode;
 };
 
-const Attachment = ({
-  className,
-  name,
-  size,
-  children,
-}: {
-  className?: string;
-  name: string;
-  size: number;
-  children?: ReactNode;
-}) => {
-  return (
-    <div className={className}>
-      <div className="bg-surface-default border-border-default flex h-24 flex-col justify-between rounded border px-3 py-2">
-        <div className="flex items-center gap-1 font-mono text-lg">
-          <Paperclip />
-          {name}
-        </div>
-        <div className="text-text-secondary text-right">{showFileSize(size)}</div>
-      </div>
-      {children}
-    </div>
-  );
-};
-
-const LoadError = ({ onClick }: { onClick?: () => void }) => {
-  if (onClick == null) {
-    return (
-      <div className="flex h-full w-full items-center justify-center">
-        <Icon icon={Refresh} />
-      </div>
-    );
-  }
-  return (
-    <button
-      className="flex h-full w-full items-center justify-center"
-      type="button"
-      onClick={onClick}
-    >
-      <Icon icon={Refresh} />
-    </button>
-  );
-};
-
-const Loading = () => {
-  return (
-    <div className="flex h-full w-full items-center justify-center">
-      <Icon icon={Refresh} />
-    </div>
-  );
-};
-
-type LoadState = 'LOADING' | 'LOADED' | 'ERROR';
-
-const MediaContainer = ({
-  className,
-  loadState,
-  mediaContent,
-  children,
-}: {
-  className?: string;
-  loadState: LoadState;
-  mediaContent: ReactNode;
-  children: ReactNode;
-}) => (
-  <div className={className}>
-    <div
-      className={clsx(
-        'h-24 rounded-sm',
-        loadState === 'LOADING' ? 'bg-surface-interactive-active w-24 animate-pulse' : '',
-        loadState === 'ERROR' ? 'bg-state-danger-bg w-24' : '',
-      )}
-    >
-      {mediaContent}
-    </div>
-    {children}
-  </div>
-);
-
-const ResolvedImageMedia = ({
-  src,
-  previewSource,
-  className,
-  children,
-}: {
+interface ImageMediaProps {
   src: string;
   previewSource: ImagePreviewSource;
   className?: string;
-  children: ReactNode;
-}) => {
+  children?: ReactNode;
+}
+
+const ImageMedia = ({ src, previewSource, className, children }: ImageMediaProps) => {
+  const intl = useIntl();
   const { open } = useImagePreview();
-  const [loadState, setLoadState] = useState<LoadState>('LOADING');
+  const [loadState, setLoadState] = useState<MessageMediaLoadState>('LOADING');
   const handlePreview = useCallback(
     (event: ReactMouseEvent<HTMLButtonElement>) => {
       event.preventDefault();
@@ -123,74 +46,198 @@ const ResolvedImageMedia = ({
     },
     [open, previewSource],
   );
-  const content =
-    loadState === 'ERROR' ? (
-      <LoadError onClick={() => setLoadState('LOADING')} />
-    ) : (
-      <button
-        type="button"
-        className="block h-full w-fit cursor-zoom-in overflow-hidden"
-        onClick={handlePreview}
-        onPointerDown={(e) => e.stopPropagation()}
-      >
-        <img
-          src={src}
-          alt="media"
-          className="block h-full rounded-sm"
-          onError={() => setLoadState('ERROR')}
-          onLoad={() => setLoadState('LOADED')}
-        />
-      </button>
-    );
   return (
-    <MediaContainer className={className} loadState={loadState} mediaContent={content}>
+    <MessageMediaDisplay
+      type="IMAGE"
+      className={className}
+      src={src}
+      alt={intl.formatMessage({ defaultMessage: 'Message attachment' })}
+      loadState={loadState}
+      onLoad={() => setLoadState('LOADED')}
+      onError={() => setLoadState('ERROR')}
+      onRetry={() => setLoadState('LOADING')}
+      onPreview={handlePreview}
+    >
       {children}
-    </MediaContainer>
+    </MessageMediaDisplay>
   );
 };
 
-export const MessageMedia = memo<Props>(({ media, className, children = null }: Props) => {
-  const { data: appSettings, isLoading: isLoadingAppSettings } = useQueryAppSettings();
-  const isLocalImage =
-    media instanceof File &&
-    media.type.startsWith('image/') &&
-    supportedMediaType.includes(media.type);
-  const objectUrl = useObjectUrl(isLocalImage ? media : null);
-  const src =
-    media instanceof File
-      ? objectUrl
-      : appSettings?.mediaUrl
-        ? getMediaUrl(appSettings.mediaUrl, media)
-        : null;
-  const previewSource = useMemo<ImagePreviewSource | null>(() => {
-    if (media instanceof File) return { type: 'BLOB', blob: media };
-    if (src != null) return { type: 'URL', url: src };
-    return null;
-  }, [media, src]);
-
-  if (media instanceof File && !isLocalImage) {
+const LocalMessageMedia = ({
+  media,
+  className,
+  children,
+}: Omit<Props, 'media'> & { media: File }) => {
+  const isImage = supportedImageMediaTypes.includes(media.type);
+  const objectUrl = useObjectUrl(isImage ? media : null);
+  const previewSource = useMemo<ImagePreviewSource>(() => ({ type: 'BLOB', blob: media }), [media]);
+  if (isImage) {
+    if (objectUrl == null) {
+      return (
+        <MessageMediaDisplay type="LOADING" className={className}>
+          {children}
+        </MessageMediaDisplay>
+      );
+    }
     return (
-      <Attachment name={media.name} size={media.size} className={className}>
-        {children}
-      </Attachment>
-    );
-  }
-  if (src == null || previewSource == null) {
-    const loadState = isLoadingAppSettings || media instanceof File ? 'LOADING' : 'ERROR';
-    return (
-      <MediaContainer
+      <ImageMedia
+        key={objectUrl}
+        src={objectUrl}
+        previewSource={previewSource}
         className={className}
-        loadState={loadState}
-        mediaContent={loadState === 'LOADING' ? <Loading /> : <LoadError />}
       >
         {children}
-      </MediaContainer>
+      </ImageMedia>
     );
   }
   return (
-    <ResolvedImageMedia key={src} src={src} previewSource={previewSource} className={className}>
+    <MessageMediaDisplay
+      type="ATTACHMENT"
+      className={className}
+      name={media.name}
+      size={media.size}
+      mimeType={media.type || undefined}
+    >
       {children}
-    </ResolvedImageMedia>
+    </MessageMediaDisplay>
+  );
+};
+
+const RemoteImageMedia = ({
+  mediaId,
+  className,
+  children,
+}: Omit<Props, 'media'> & { mediaId: string }) => {
+  const {
+    data: appSettings,
+    error: appSettingsError,
+    isLoading: isLoadingAppSettings,
+    mutate: reloadAppSettings,
+  } = useQueryAppSettings();
+  const src = appSettings?.mediaUrl ? getMediaUrl(appSettings.mediaUrl, mediaId) : null;
+  if (src == null) {
+    return (
+      <MessageMediaDisplay
+        type={isLoadingAppSettings && appSettingsError == null ? 'LOADING' : 'ERROR'}
+        className={className}
+        onRetry={() => void reloadAppSettings()}
+      >
+        {children}
+      </MessageMediaDisplay>
+    );
+  }
+  return (
+    <ImageMedia key={src} src={src} previewSource={{ type: 'URL', url: src }} className={className}>
+      {children}
+    </ImageMedia>
+  );
+};
+
+interface RemoteAttachmentMediaProps extends Omit<Props, 'media'> {
+  mediaId: string;
+  name: string;
+  size: number;
+  mimeType: string;
+}
+
+const RemoteAttachmentMedia = ({
+  mediaId,
+  name,
+  size,
+  mimeType,
+  className,
+  children,
+}: RemoteAttachmentMediaProps) => {
+  const paneKey = usePaneKey();
+  const maxPane = usePaneLimit();
+  const togglePane = usePaneToggle();
+  const handlePdfPreview = useCallback(
+    (event: ReactMouseEvent<HTMLButtonElement>) => {
+      event.preventDefault();
+      event.stopPropagation();
+      togglePane(
+        { type: 'MEDIA_PREVIEW', mediaId },
+        paneKey == null ? 'TAIL' : { refKey: paneKey },
+      );
+    },
+    [mediaId, paneKey, togglePane],
+  );
+  return (
+    <MessageMediaDisplay
+      type="ATTACHMENT"
+      className={className}
+      name={name}
+      size={size}
+      mimeType={mimeType}
+      downloadHref={mediaUrl(mediaId, true)}
+      onPreview={mimeType === 'application/pdf' && maxPane > 1 ? handlePdfPreview : undefined}
+    >
+      {children}
+    </MessageMediaDisplay>
+  );
+};
+
+const RemoteMessageMedia = ({
+  mediaId,
+  className,
+  children,
+}: Omit<Props, 'media'> & { mediaId: string }) => {
+  const intl = useIntl();
+  const { data: mediaInfo, error: mediaInfoError } = useQueryMediaInfo(mediaId);
+
+  if (mediaInfo == null) {
+    if (mediaInfoError == null) {
+      return (
+        <MessageMediaDisplay type="LOADING" className={className}>
+          {children}
+        </MessageMediaDisplay>
+      );
+    }
+    return (
+      <MessageMediaDisplay
+        type="ATTACHMENT"
+        className={className}
+        name={intl.formatMessage({ defaultMessage: 'Attachment' })}
+        downloadHref={mediaUrl(mediaId, true)}
+      >
+        {children}
+      </MessageMediaDisplay>
+    );
+  }
+
+  if (supportedImageMediaTypes.includes(mediaInfo.mimeType)) {
+    return (
+      <RemoteImageMedia mediaId={mediaId} className={className}>
+        {children}
+      </RemoteImageMedia>
+    );
+  }
+
+  return (
+    <RemoteAttachmentMedia
+      mediaId={mediaId}
+      className={className}
+      name={mediaInfo.originalFilename}
+      size={mediaInfo.size}
+      mimeType={mediaInfo.mimeType}
+    >
+      {children}
+    </RemoteAttachmentMedia>
+  );
+};
+
+export const MessageMedia = memo<Props>(({ media, className, children = null }) => {
+  if (media instanceof File) {
+    return (
+      <LocalMessageMedia media={media} className={className}>
+        {children}
+      </LocalMessageMedia>
+    );
+  }
+  return (
+    <RemoteMessageMedia mediaId={media} className={className}>
+      {children}
+    </RemoteMessageMedia>
   );
 });
 

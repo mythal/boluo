@@ -27,6 +27,7 @@ const PaneSignUp = React.lazy(() => import('./PaneSignUp'));
 const PaneResetPassword = React.lazy(() => import('./PaneResetPassword'));
 const PaneHelp = React.lazy(() => import('./PaneHelp'));
 const PaneCharacter = React.lazy(() => import('./pane-character/PaneCharacter'));
+const PaneMediaPreview = React.lazy(() => import('./pane-media-preview/PaneMediaPreview'));
 
 interface Props {
   pane: Pane;
@@ -51,6 +52,7 @@ const PANE_MAP = {
   CHANNEL_TOPIC: PaneChannelTopic,
   CHANNEL_EXPORT: PaneChannelExport,
   CHARACTER: PaneCharacter,
+  MEDIA_PREVIEW: PaneMediaPreview,
   EMPTY: PaneEmpty,
 } satisfies Record<Pane['type'], unknown>;
 
@@ -97,6 +99,8 @@ const Switch: FC<Props> = ({ pane }) => {
       return <PaneSpaceGreeting spaceId={pane.spaceId} />;
     case 'CHANNEL_EXPORT':
       return <PaneChannelExport channelId={pane.channelId} spaceId={spaceId} />;
+    case 'MEDIA_PREVIEW':
+      return <PaneMediaPreview mediaId={pane.mediaId} />;
     default: {
       const Component = PANE_MAP[pane.type] ?? PaneEmpty;
       return <Component />;

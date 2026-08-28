@@ -744,6 +744,17 @@ export type Media = {
   created: string;
 };
 
+export type MediaInfo = {
+  id: string;
+  mimeType: string;
+  originalFilename: string;
+  size: number;
+};
+
+export type MediaInfoQuery = {
+  id: string;
+};
+
 export type MediaQuery = {
   filename: string | null;
   id: string | null;

@@ -204,6 +204,9 @@ export const Connector = ({ spaceId, myId }: Props) => {
     const makeConnection = async () => {
       setState('CONNECTING');
       const tokenResult = await getConnectionToken(spaceId, myId);
+      if (!mountedRef.current) {
+        return;
+      }
       if (tokenResult === 'UNAUTHENTICATED') {
         retry();
         return;
@@ -298,6 +301,9 @@ export const Connector = ({ spaceId, myId }: Props) => {
     };
     if (state === 'CLOSED' && retrySec === 0) {
       void makeConnection().catch((error: unknown) => {
+        if (!mountedRef.current) {
+          return;
+        }
         captureRecoverableException(error, { source: 'websocket-connect' });
         retry();
       });

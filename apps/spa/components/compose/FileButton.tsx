@@ -7,6 +7,7 @@ import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { InComposeButton } from './InComposeButton';
 import { useTooltip } from '@boluo/ui/hooks/useTooltip';
 import { TooltipBox } from '@boluo/ui/TooltipBox';
+import { supportedMessageMediaTypes } from '../../media';
 
 interface Props {
   className?: string;
@@ -57,6 +58,7 @@ export const FileButton: FC<Props> = () => {
       </InComposeButton>
       <input
         type="file"
+        accept={supportedMessageMediaTypes.join(',')}
         ref={inputRef}
         className="hidden"
         aria-hidden

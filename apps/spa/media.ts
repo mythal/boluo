@@ -7,7 +7,8 @@ import { recordError, recordWarn } from './error';
 export const mediaMaxSizeMb = 8;
 export const mediaMaxSizeByte = mediaMaxSizeMb * 1024 * 1024;
 
-export const supportedMediaType = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'];
+export const supportedImageMediaTypes = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'];
+export const supportedMessageMediaTypes = [...supportedImageMediaTypes, 'application/pdf'];
 
 interface S3Error {
   type: 'S3_ERROR';
@@ -34,11 +35,11 @@ export function getMediaUrl(mediaPublicUrl: string, mediaId: string): string {
   return `${mediaPublicUrl}/${mediaId}`;
 }
 
-async function uploadImageToS3(
+async function uploadFileToS3(
   file: File,
   presignedUrl: string,
 ): Promise<Result<void, S3Error | FetchFailError>> {
-  // Use the fetch API to upload the image
+  // Use the fetch API to upload the file.
   let response: Response;
   try {
     response = await fetch(presignedUrl, {
@@ -54,7 +55,7 @@ async function uploadImageToS3(
   }
 
   if (!response.ok) {
-    recordWarn('Failed to upload the image to S3', { response });
+    recordWarn('Failed to upload the file to S3', { response });
     return new Err({ type: 'S3_ERROR', err: response });
   }
   return new Ok(undefined);
@@ -62,7 +63,10 @@ async function uploadImageToS3(
 
 export type MediaError = 'MEDIA_TOO_LARGE' | 'MEDIA_TYPE_NOT_SUPPORTED';
 
-export const validateMedia = (file: File | string | null | undefined): Result<void, MediaError> => {
+const validateMedia = (
+  file: File | string | null | undefined,
+  supportedTypes: string[],
+): Result<void, MediaError> => {
   if (typeof file === 'string') {
     return new Ok(undefined);
   }
@@ -72,11 +76,19 @@ export const validateMedia = (file: File | string | null | undefined): Result<vo
   if (file.size > mediaMaxSizeByte) {
     return new Err('MEDIA_TOO_LARGE');
   }
-  if (!supportedMediaType.includes(file.type)) {
+  if (!supportedTypes.includes(file.type)) {
     return new Err('MEDIA_TYPE_NOT_SUPPORTED');
   }
   return new Ok(undefined);
 };
+
+export const validateImageMedia = (
+  file: File | string | null | undefined,
+): Result<void, MediaError> => validateMedia(file, supportedImageMediaTypes);
+
+export const validateMessageMedia = (
+  file: File | string | null | undefined,
+): Result<void, MediaError> => validateMedia(file, supportedMessageMediaTypes);
 
 interface PreSignFail {
   type: 'PRESIGN_FAIL';
@@ -100,10 +112,11 @@ export type UploadError =
 
 const TIMEOUT = 'TIMEOUT';
 
-export const presign = async (
+const presign = async (
   file: File,
+  supportedTypes: string[],
 ): Promise<Result<{ url: string; mediaId: string }, UploadError>> => {
-  const validateResult = validateMedia(file);
+  const validateResult = validateMedia(file, supportedTypes);
   if (!validateResult.isOk) {
     return new Err({ type: 'MEDIA_VALIDATION_ERROR', err: validateResult.err });
   }
@@ -126,20 +139,29 @@ export const presign = async (
   return new Ok({ url, mediaId });
 };
 
-export const upload = async (file: File): Promise<Result<{ mediaId: string }, UploadError>> => {
-  const validateResult = validateMedia(file);
+const uploadMedia = async (
+  file: File,
+  supportedTypes: string[],
+): Promise<Result<{ mediaId: string }, UploadError>> => {
+  const validateResult = validateMedia(file, supportedTypes);
   if (!validateResult.isOk) {
     return new Err({ type: 'MEDIA_VALIDATION_ERROR', err: validateResult.err });
   }
-  const presignResult = await presign(file);
+  const presignResult = await presign(file, supportedTypes);
   if (!presignResult.isOk) {
     return new Err(presignResult.err);
   }
   const { url, mediaId } = presignResult.some;
-  const uploadResult = await Promise.race([uploadImageToS3(file, url), timeout(UPLOAD_TIMEOUT)]);
+  const uploadResult = await Promise.race([uploadFileToS3(file, url), timeout(UPLOAD_TIMEOUT)]);
   if (uploadResult === TIMEOUT) {
     return new Err({ type: TIMEOUT });
   }
   if (uploadResult.isErr) return uploadResult;
   return new Ok({ mediaId });
 };
+
+export const upload = (file: File): Promise<Result<{ mediaId: string }, UploadError>> =>
+  uploadMedia(file, supportedImageMediaTypes);
+
+export const uploadMessageMedia = (file: File): Promise<Result<{ mediaId: string }, UploadError>> =>
+  uploadMedia(file, supportedMessageMediaTypes);

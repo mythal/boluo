@@ -67,6 +67,11 @@ export interface ChannelTopicPane {
   channelId: string;
 }
 
+export interface MediaPreviewPane {
+  type: 'MEDIA_PREVIEW';
+  mediaId: string;
+}
+
 export interface CreateChannelPane {
   type: 'CREATE_CHANNEL';
   spaceId: string;
@@ -97,6 +102,7 @@ export type PaneData =
   | SpaceGreetingPane
   | ChannelSettingsPane
   | ChannelTopicPane
+  | MediaPreviewPane
   | CreateChannelPane
   | CreateSpacePane
   | LoginPane

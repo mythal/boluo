@@ -24,7 +24,7 @@ import {
 import { type ChangeEvent, type FC, useMemo, useRef, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useObjectUrl } from '../../hooks/useObjectUrl';
-import { mediaMaxSizeMb, supportedMediaType } from '../../media';
+import { mediaMaxSizeMb, supportedImageMediaTypes } from '../../media';
 import {
   CharacterPortrait,
   characterPortraitSizeClassName,
@@ -44,7 +44,7 @@ interface Props {
   portraitQueryLoading: boolean;
 }
 
-const ACCEPTED_IMAGE_TYPES = supportedMediaType.join(',');
+const ACCEPTED_IMAGE_TYPES = supportedImageMediaTypes.join(',');
 
 type PortraitUploadState =
   | { type: 'IDLE' }

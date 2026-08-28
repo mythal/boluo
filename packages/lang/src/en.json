@@ -68,6 +68,9 @@
   "198Skw": {
     "message": "Customization"
   },
+  "1J/azF": {
+    "message": "Failed to load media information"
+  },
   "1QosTr": {
     "message": "Used by"
   },
@@ -163,6 +166,9 @@
   },
   "5lqSZ6": {
     "message": "The message you are trying to move is no longer available."
+  },
+  "5q3qC0": {
+    "message": "Download"
   },
   "5sg7KC": {
     "message": "Password"
@@ -557,6 +563,9 @@
   "L01rMU": {
     "message": "By default member will speak on their own behalf."
   },
+  "LA04i5": {
+    "message": "Failed to load media"
+  },
   "LNrIhY": {
     "message": "Failed to load character information."
   },
@@ -794,6 +803,9 @@
   "TDaF6J": {
     "message": "Dismiss"
   },
+  "TJo5E6": {
+    "message": "Preview"
+  },
   "TThIOM": {
     "message": "Not found"
   },
@@ -962,6 +974,9 @@
   "a+BhVZ": {
     "message": "Regenerated"
   },
+  "a+g/IN": {
+    "message": "Retry loading media"
+  },
   "a5msuh": {
     "message": "Yes"
   },
@@ -1000,6 +1015,9 @@
   },
   "cLIHUg": {
     "message": "Hard Success"
+  },
+  "cNS3Tj": {
+    "message": "Message attachment"
   },
   "cXUE4o": {
     "message": "Basic information"
@@ -1289,6 +1307,9 @@
   "lx+ssX": {
     "message": "Leave Space"
   },
+  "mACPAh": {
+    "message": "Loading media"
+  },
   "mLZ+cF": {
     "message": "Your email has been verified."
   },
@@ -1408,6 +1429,9 @@
   },
   "qvc9uM": {
     "message": "This cannot be undone."
+  },
+  "r+ndQB": {
+    "message": "Media preview"
   },
   "r2rV1X": {
     "message": "Out-Of-Character"
@@ -1586,6 +1610,9 @@
   "xpqynr": {
     "message": "No more messages"
   },
+  "xrEmxn": {
+    "message": "This file cannot be previewed as PDF"
+  },
   "xrKHS6": {
     "message": "Success"
   },
@@ -1606,6 +1633,9 @@
   },
   "z16Lmv": {
     "message": "Character usage could not be loaded."
+  },
+  "z4qMx5": {
+    "message": "Open in a new tab"
   },
   "z9LRLa": {
     "message": "Edited at"

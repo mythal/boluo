@@ -6,7 +6,7 @@ import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { useChannelId } from '../../hooks/useChannelId';
 import { useQueryChannelMembers } from '@boluo/hooks/useQueryChannelMembers';
 import { parse } from '@boluo/interpreter';
-import { upload } from '../../media';
+import { uploadMessageMedia } from '../../media';
 import { type ComposeActionUnion } from '../../state/compose.actions';
 import { useDefaultInGame } from '../../hooks/useDefaultInGame';
 import { recordWarn } from '../../error';
@@ -210,7 +210,7 @@ export const useSend = () => {
       });
     }
 
-    let uploadResult: Awaited<ReturnType<typeof upload>> | null = null;
+    let uploadResult: Awaited<ReturnType<typeof uploadMessageMedia>> | null = null;
     const handleEditFailure = (messageId: string, failTo: Extract<FailTo, { type: 'EDIT' }>) => {
       const optimisticEdit =
         store.get(chatAtom).channels[channelId]?.optimisticMessageMap[messageId];
@@ -239,7 +239,7 @@ export const useSend = () => {
       });
     };
     if (composeState.media instanceof File) {
-      uploadResult = await upload(composeState.media);
+      uploadResult = await uploadMessageMedia(composeState.media);
     }
     if (uploadResult?.isOk === false) {
       let key: string;

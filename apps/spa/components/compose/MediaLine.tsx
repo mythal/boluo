@@ -8,7 +8,7 @@ import Icon from '@boluo/ui/Icon';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { mediaUrl } from '@boluo/api-browser';
 import { showFileSize } from '@boluo/utils/files';
-import { mediaMaxSizeByte, supportedMediaType } from '../../media';
+import { mediaMaxSizeByte, supportedMessageMediaTypes } from '../../media';
 import * as classes from '@boluo/ui/classes';
 import { ButtonInline } from '@boluo/ui/ButtonInline';
 
@@ -29,13 +29,13 @@ export const MediaLine: FC = () => {
     composeMedia instanceof File ? (
       <>
         <div
-          data-valid={supportedMediaType.includes(composeMedia.type)}
+          data-valid={supportedMessageMediaTypes.includes(composeMedia.type)}
           className="data-[valid=false]:text-state-danger-text truncate"
         >
           {composeMedia.name}
         </div>
         <div
-          data-valid={composeMedia.size < mediaMaxSizeByte}
+          data-valid={composeMedia.size <= mediaMaxSizeByte}
           className="text-text-secondary data-[valid=false]:text-state-danger-text shrink-0"
         >
           ({showFileSize(composeMedia.size)})

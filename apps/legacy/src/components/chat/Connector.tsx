@@ -168,6 +168,8 @@ export const Connector = ({ spaceId, myId }: Props) => {
   useEffect(() => {
     return () => {
       mountedRef.current = false;
+      stateRef.current = 'CLOSED';
+      setState('CLOSED');
       const connection = connectionRef.current;
       if (connection) {
         connection.onclose = null;
@@ -177,7 +179,7 @@ export const Connector = ({ spaceId, myId }: Props) => {
         connectionRef.current = null;
       }
     };
-  }, []);
+  }, [setState]);
 
   useEffect(() => {
     const retry = () => {

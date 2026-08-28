@@ -588,6 +588,7 @@
               [
                 rustToolchain
                 nil
+                nixd
                 nodejs
                 clang
                 pgformatter

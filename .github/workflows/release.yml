@@ -204,59 +204,6 @@ jobs:
           PULUMI_BACKEND_URL: ${{ secrets.PULUMI_BACKEND_URL }}
           PULUMI_CONFIG_PASSPHRASE: ${{ secrets.PULUMI_CONFIG_PASSPHRASE }}
 
-  source_maps:
-    name: Publish source maps
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    permissions:
-      contents: read
-    needs:
-      - cloudflare
-      - frontend_build
-      - legacy
-      - site
-      - spa
-    if: >-
-      !cancelled() &&
-      github.ref_name == 'production' &&
-      needs.frontend_build.result == 'success' &&
-      needs.legacy.result == 'success' &&
-      needs.site.result == 'success' &&
-      needs.spa.result == 'success' &&
-      needs.cloudflare.result == 'success'
-    environment:
-      name: production
-      deployment: false
-    steps:
-      - name: Check out the repo
-        uses: actions/checkout@v7
-
-      - name: Node.js Setup
-        uses: ./.github/actions/node-setup
-
-      - name: Download frontend build
-        uses: ./.github/actions/download-frontend-build
-        with:
-          artifact-name: frontend-${{ github.run_id }}
-
-      - name: Compress source maps
-        run: bash scripts/archive-frontend-source-maps.sh
-
-      - name: Upload source maps to R2
-        env:
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: |
-          for archive in .tmp/source-maps/*.tar.gz; do
-            filename="${archive##*/}"
-            npx wrangler r2 object put \
-              "boluo-source-maps/releases/${GITHUB_SHA}/${filename}" \
-              --remote \
-              --file "$archive" \
-              --content-type application/gzip \
-              --cache-control 'public, max-age=31536000, immutable'
-          done
-
   backend:
     name: Backend
     runs-on: ubuntu-latest
@@ -330,20 +277,15 @@ jobs:
         with:
           artifact-name: frontend-${{ github.run_id }}
 
-      - name: Restore legacy asset history
-        id: legacy-assets
-        uses: actions/cache/restore@v6
-        with:
-          path: .tmp/frontend-assets/${{ env.DEPLOYMENT_ENV }}/legacy
-          key: frontend-assets-${{ env.DEPLOYMENT_ENV }}-legacy-${{ github.run_id }}-${{ github.run_attempt }}
-          restore-keys: frontend-assets-${{ env.DEPLOYMENT_ENV }}-legacy-
-
-      - name: Merge legacy asset history
+      - name: Upload legacy asset history
         run: |
-          node scripts/merge-frontend-assets.mjs \
-            --archive ".tmp/frontend-assets/${DEPLOYMENT_ENV}/legacy" \
+          node scripts/upload-frontend-assets.mjs \
             --assets apps/legacy/dist/assets \
-            --version "$GITHUB_SHA"
+            --bucket boluo-history-files \
+            --prefix "${DEPLOYMENT_ENV}/legacy/assets"
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
       - name: Deploy legacy
         working-directory: apps/legacy
@@ -351,12 +293,6 @@ jobs:
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-
-      - name: Save legacy asset history
-        uses: actions/cache/save@v6
-        with:
-          path: .tmp/frontend-assets/${{ env.DEPLOYMENT_ENV }}/legacy
-          key: ${{ steps.legacy-assets.outputs.cache-primary-key }}
 
   spa:
     name: SPA
@@ -390,20 +326,15 @@ jobs:
         with:
           artifact-name: frontend-${{ github.run_id }}
 
-      - name: Restore SPA asset history
-        id: spa-assets
-        uses: actions/cache/restore@v6
-        with:
-          path: .tmp/frontend-assets/${{ env.DEPLOYMENT_ENV }}/spa
-          key: frontend-assets-${{ env.DEPLOYMENT_ENV }}-spa-${{ github.run_id }}-${{ github.run_attempt }}
-          restore-keys: frontend-assets-${{ env.DEPLOYMENT_ENV }}-spa-
-
-      - name: Merge SPA asset history
+      - name: Upload SPA asset history
         run: |
-          node scripts/merge-frontend-assets.mjs \
-            --archive ".tmp/frontend-assets/${DEPLOYMENT_ENV}/spa" \
+          node scripts/upload-frontend-assets.mjs \
             --assets apps/spa/out/_next/static \
-            --version "$GITHUB_SHA"
+            --bucket boluo-history-files \
+            --prefix "${DEPLOYMENT_ENV}/spa/_next/static"
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
       - name: Deploy SPA
         working-directory: apps/spa
@@ -411,12 +342,6 @@ jobs:
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-
-      - name: Save SPA asset history
-        uses: actions/cache/save@v6
-        with:
-          path: .tmp/frontend-assets/${{ env.DEPLOYMENT_ENV }}/spa
-          key: ${{ steps.spa-assets.outputs.cache-primary-key }}
 
   staging_storybook:
     name: Staging Storybook
@@ -485,6 +410,16 @@ jobs:
         uses: ./.github/actions/download-frontend-build
         with:
           artifact-name: frontend-${{ github.run_id }}
+
+      - name: Upload site source maps
+        run: |
+          node scripts/upload-frontend-assets.mjs \
+            --assets apps/site/.next/static \
+            --bucket boluo-history-files \
+            --prefix "${DEPLOYMENT_ENV}/site/_next/static"
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
       - name: Deploy site Worker
         working-directory: apps/site

@@ -1,8 +1,94 @@
 import type { ExportedHandler } from '@cloudflare/workers-types';
 
+interface Env {
+  ASSETS: Fetcher;
+  DEPLOYMENT_ENV: 'production' | 'staging';
+  BACKEND_URL: string;
+  FRONTEND_APP: 'legacy' | 'spa';
+  HISTORY_FILES: R2Bucket;
+}
+
+const isStaticAssetPath = (pathname: string): boolean =>
+  pathname === '/assets' ||
+  pathname.startsWith('/assets/') ||
+  pathname === '/_next/static' ||
+  pathname.startsWith('/_next/static/');
+
+const isApiPath = (pathname: string): boolean =>
+  pathname === '/api' || pathname.startsWith('/api/');
+
+const notFound = (method: string): Response =>
+  new Response(method === 'HEAD' ? null : 'Not Found', {
+    status: 404,
+    headers: {
+      'Cache-Control': 'no-store',
+      'Content-Type': 'text/plain; charset=utf-8',
+      'X-Content-Type-Options': 'nosniff',
+    },
+  });
+
+const historyKey = (url: URL, env: Env): string =>
+  `${env.DEPLOYMENT_ENV}/${env.FRONTEND_APP}${url.pathname}`;
+
+const isNotModifiedRequest = (request: Request): boolean =>
+  request.headers.has('If-None-Match') || request.headers.has('If-Modified-Since');
+
+const historyAsset = async (request: Request, url: URL, env: Env): Promise<Response> => {
+  if (request.method !== 'GET' && request.method !== 'HEAD') {
+    return notFound(request.method);
+  }
+
+  const object = await env.HISTORY_FILES.get(historyKey(url, env), {
+    onlyIf: request.headers,
+  });
+  if (object === null) return notFound(request.method);
+
+  const headers = new Headers();
+  object.writeHttpMetadata(headers);
+  headers.set('ETag', object.httpEtag);
+  headers.set('X-Content-Type-Options', 'nosniff');
+  if (!headers.has('Cache-Control')) {
+    headers.set('Cache-Control', 'public, max-age=15552000, immutable');
+  }
+
+  if (!('body' in object)) {
+    return new Response(null, {
+      status: isNotModifiedRequest(request) ? 304 : 412,
+      headers,
+    });
+  }
+
+  headers.set('Content-Length', String(object.size));
+
+  return new Response(request.method === 'HEAD' ? null : object.body, {
+    status: 200,
+    headers,
+  });
+};
+
+const frontendNotFound = async (request: Request, url: URL, env: Env): Promise<Response> => {
+  const pathname = env.FRONTEND_APP === 'spa' ? '/404' : '/';
+  const response = await env.ASSETS.fetch(new Request(new URL(pathname, url), request));
+  if (env.FRONTEND_APP === 'legacy') return response;
+  return new Response(request.method === 'HEAD' ? null : response.body, {
+    status: 404,
+    statusText: 'Not Found',
+    headers: response.headers,
+  });
+};
+
 export default {
   async fetch(request, env): Promise<Response> {
     const url = new URL(request.url);
+
+    if (isStaticAssetPath(url.pathname)) {
+      return await historyAsset(request, url, env);
+    }
+
+    if (!isApiPath(url.pathname)) {
+      return await frontendNotFound(request, url, env);
+    }
+
     const BACKEND_URL = new URL(env.BACKEND_URL);
     url.host = BACKEND_URL.host;
     url.protocol = BACKEND_URL.protocol;
@@ -10,6 +96,4 @@ export default {
     const backendRequest = new Request(url, request);
     return await fetch(backendRequest);
   },
-} satisfies ExportedHandler<{
-  BACKEND_URL: string;
-}>;
+} satisfies ExportedHandler<Env>;

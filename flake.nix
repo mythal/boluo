@@ -89,8 +89,6 @@
 
           craneLib = (crane.mkLib pkgs).overrideToolchain rustToolchain;
 
-          versionEnv = "APP_VERSION=${rev}";
-
           imageLabel = {
             "org.opencontainers.image.url" = "https://github.com/mythal/boluo";
             "org.opencontainers.image.version" = version;
@@ -475,7 +473,6 @@
               '';
               config = {
                 Env = [
-                  versionEnv
                   "NEXT_TELEMETRY_DISABLED=1"
                   "NODE_ENV=production"
                 ];
@@ -571,7 +568,9 @@
             '';
 
             deploy-site-staging = pkgs.writeShellScriptBin "deploy-site-staging" ''
-              ${pkgs.flyctl}/bin/flyctl deploy --config ${apps/site/fly.toml} --image ghcr.io/mythal/boluo/site:v${self.rev} --remote-only
+              set -euo pipefail
+              : "''${APP_VERSION:?APP_VERSION must be set}"
+              ${pkgs.flyctl}/bin/flyctl deploy --config ${apps/site/fly.toml} --image "ghcr.io/mythal/boluo/site:v''${APP_VERSION}" --env "APP_VERSION=''${APP_VERSION}" --remote-only
             '';
 
           };

@@ -18,9 +18,16 @@ jobs:
   prepare:
     name: Prepare release
     runs-on: ubuntu-latest
-    permissions: {}
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    environment:
+      name: ${{ github.ref_name == 'master' && 'staging' || github.ref_name }}
+      deployment: false
     outputs:
       deployment_environment: ${{ steps.deployment.outputs.environment }}
+      server_required: ${{ steps.server_deployment.outputs.required }}
+      site_required: ${{ steps.site_deployment.outputs.required }}
     steps:
       - name: Resolve deployment environment
         id: deployment
@@ -33,6 +40,35 @@ jobs:
             *) echo "Unsupported release branch: $BRANCH_NAME" >&2; exit 1 ;;
           esac
           echo "environment=$environment" >> "$GITHUB_OUTPUT"
+          echo "DEPLOYMENT_ENV=$environment" >> "$GITHUB_ENV"
+
+      - name: Check out the repo
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Nix Setup
+        uses: ./.github/actions/nix-setup
+        with:
+          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
+
+      - name: Check whether server deployment changed
+        id: server_deployment
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_IO_TOKEN }}
+        run: >-
+          nix develop --quiet --no-update-lock-file --command
+          python3 scripts/check-server-deployment.py
+
+      - name: Check whether site deployment changed
+        if: github.ref_name == 'master'
+        id: site_deployment
+        env:
+          DEPLOYMENT_SERVICE: site
+          FLY_API_TOKEN: ${{ secrets.FLY_IO_TOKEN }}
+        run: >-
+          nix develop --quiet --no-update-lock-file --command
+          python3 scripts/check-server-deployment.py
 
   server_image:
     name: Server image
@@ -41,6 +77,8 @@ jobs:
     permissions:
       packages: write
       contents: read
+    needs: prepare
+    if: needs.prepare.outputs.server_required == 'true'
     steps:
       - name: Check out the repo
         uses: actions/checkout@v7
@@ -86,7 +124,10 @@ jobs:
     permissions:
       packages: write
       contents: read
-    if: github.ref_name == 'master'
+    needs: prepare
+    if: >-
+      github.ref_name == 'master' &&
+      needs.prepare.outputs.site_required == 'true'
     steps:
       - name: Check out the repo
         uses: actions/checkout@v7
@@ -217,9 +258,16 @@ jobs:
     if: >-
       !cancelled() &&
       needs.prepare.result == 'success' &&
-      needs.server_image.result == 'success' &&
+      ((needs.prepare.outputs.server_required == 'true' &&
+      needs.server_image.result == 'success') ||
+      (needs.prepare.outputs.server_required == 'false' &&
+      needs.server_image.result == 'skipped')) &&
       (github.ref_name == 'production' ||
-      (github.ref_name == 'master' && needs.staging_site_image.result == 'success'))
+      (github.ref_name == 'master' &&
+      ((needs.prepare.outputs.site_required == 'true' &&
+      needs.staging_site_image.result == 'success') ||
+      (needs.prepare.outputs.site_required == 'false' &&
+      needs.staging_site_image.result == 'skipped'))))
     environment:
       name: ${{ needs.prepare.outputs.deployment_environment }}
       deployment: false
@@ -237,21 +285,16 @@ jobs:
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
 
       - name: Deploy site to staging
-        if: github.ref_name == 'master'
+        if: >-
+          github.ref_name == 'master' &&
+          needs.prepare.outputs.site_required == 'true'
         run: nix run --quiet --no-update-lock-file .#deploy-site-staging
         env:
+          APP_VERSION: ${{ github.sha }}
           FLY_API_TOKEN: ${{ secrets.FLY_IO_TOKEN }}
-
-      - name: Check whether server deployment changed
-        id: server_deployment
-        env:
-          FLY_API_TOKEN: ${{ secrets.FLY_IO_TOKEN }}
-        run: >-
-          nix develop --quiet --no-update-lock-file --command
-          python3 scripts/check-server-deployment.py
 
       - name: Deploy server
-        if: steps.server_deployment.outputs.required == 'true'
+        if: needs.prepare.outputs.server_required == 'true'
         run: nix run --quiet --no-update-lock-file ".#deploy-server-${DEPLOYMENT_ENV}"
         env:
           APP_VERSION: ${{ github.sha }}
@@ -301,7 +344,7 @@ jobs:
 
       - name: Deploy legacy
         working-directory: apps/legacy
-        run: npx wrangler deploy --env "$DEPLOYMENT_ENV"
+        run: npx wrangler deploy --env "$DEPLOYMENT_ENV" --tag "$GITHUB_SHA"
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -350,7 +393,7 @@ jobs:
 
       - name: Deploy SPA
         working-directory: apps/spa
-        run: npx wrangler deploy --env "$DEPLOYMENT_ENV"
+        run: npx wrangler deploy --env "$DEPLOYMENT_ENV" --tag "$GITHUB_SHA"
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -386,7 +429,7 @@ jobs:
 
       - name: Deploy Storybook
         working-directory: apps/storybook
-        run: npx wrangler deploy
+        run: npx wrangler deploy --tag "$GITHUB_SHA"
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -435,7 +478,9 @@ jobs:
 
       - name: Deploy site Worker
         working-directory: apps/site
-        run: npx @opennextjs/cloudflare deploy --env "$DEPLOYMENT_ENV"
+        run: >-
+          npx @opennextjs/cloudflare deploy --env "$DEPLOYMENT_ENV"
+          --tag "$GITHUB_SHA"
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -463,7 +508,7 @@ jobs:
 
       - name: Deploy avatar Worker to production
         working-directory: apps/avatars
-        run: npx wrangler deploy
+        run: npx wrangler deploy --tag "$GITHUB_SHA"
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

@@ -1,4 +1,8 @@
 # Required for tracing's experimental structured `Valuable` fields.
+[env]
+CFLAGS = "-Wno-error=cpp"
+JEMALLOC_SYS_WITH_MALLOC_CONF = "prof:true,prof_active:false"
+
 [build]
 rustflags = ["--cfg", "tracing_unstable"]
 

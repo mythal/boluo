@@ -10,6 +10,7 @@ members = [
 metadata.crane.name = "boluo"
 
 [profile.release]
+debug = 1
 panic = "abort"
 
 [profile.dev.package.sqlx-macros]

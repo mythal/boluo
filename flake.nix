@@ -271,6 +271,7 @@
               commonArgs
               // {
                 pname = "server";
+                separateDebugInfo = true;
 
                 cargoArtifacts = serverReleaseArtifacts;
                 cargoExtraArgs = "--locked --package=server";

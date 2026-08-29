@@ -106,7 +106,7 @@ static APP_VERSION: LazyLock<String> = LazyLock::new(|| {
 });
 
 #[global_allocator]
-static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
+static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
 
 async fn router(
     ctx: &context::AppContext,

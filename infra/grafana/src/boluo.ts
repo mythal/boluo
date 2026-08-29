@@ -738,7 +738,8 @@ export function buildBoluoDashboard(
       timeSeriesPanel({
         id: 29,
         title: 'Process and cache memory',
-        description: 'mimalloc committed is address space, not RSS.',
+        description:
+          'jemalloc active includes page slack; resident also includes metadata and dirty pages.',
         datasourceUid,
         unit: 'bytes',
         min: 0,
@@ -770,10 +771,10 @@ export function buildBoluoDashboard(
             legendFormat: '{{instance}} process swap',
           },
           {
-            refId: 'allocator-committed',
+            refId: 'allocator',
             editorMode: QueryEditorMode.Code,
-            expr: `boluo_server_allocator_committed_bytes{app="${APP}"}`,
-            legendFormat: '{{instance}} mimalloc committed',
+            expr: `boluo_server_allocator_memory_bytes{app="${APP}",kind=~"allocated|active|resident"}`,
+            legendFormat: '{{instance}} jemalloc {{kind}}',
           },
           {
             refId: 'space-payload-cache',

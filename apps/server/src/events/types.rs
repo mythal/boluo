@@ -139,6 +139,10 @@ pub enum UpdateBody {
         #[serde(rename = "channelId")]
         channel_id: Uuid,
     },
+    ChannelInvalidated {
+        #[serde(rename = "channelId")]
+        channel_id: Uuid,
+    },
     ChannelEdited {
         #[serde(rename = "channelId")]
         channel_id: Uuid,
@@ -159,6 +163,10 @@ pub enum UpdateBody {
     SpaceUpdated {
         #[serde(rename = "spaceWithRelated")]
         space_with_related: Box<SpaceWithRelated>,
+    },
+    SpaceInvalidated {
+        #[serde(rename = "spaceId")]
+        space_id: Uuid,
     },
     EntryChanged {
         #[serde(rename = "scopeId")]
@@ -231,11 +239,13 @@ impl UpdateBody {
             | ChannelEdited { channel_id, .. } => Some(*channel_id),
             | Members { channel_id, .. } => Some(*channel_id),
             | ChannelDeleted { channel_id } => Some(*channel_id),
+            | ChannelInvalidated { channel_id } => Some(*channel_id),
             | Diff { channel_id, .. } => Some(*channel_id),
 
             | Initialized
             | StatusMap { .. }
             | SpaceUpdated { .. }
+            | SpaceInvalidated { .. }
             | EntryChanged { .. }
             | CharacterChanged { .. }
             | NoteChanged { .. }
@@ -256,10 +266,12 @@ impl UpdateBody {
             | Diff { .. }
             | ChannelEdited { .. }
             | ChannelDeleted { .. }
+            | ChannelInvalidated { .. }
             | Members { .. }
             | Initialized
             | StatusMap { .. }
             | SpaceUpdated { .. }
+            | SpaceInvalidated { .. }
             | EntryChanged { .. }
             | CharacterChanged { .. }
             | NoteChanged { .. }
@@ -737,11 +749,13 @@ impl Update {
             UpdateBody::MessagePreview { .. } => "MessagePreview",
             UpdateBody::Diff { .. } => "Diff",
             UpdateBody::ChannelDeleted { .. } => "ChannelDeleted",
+            UpdateBody::ChannelInvalidated { .. } => "ChannelInvalidated",
             UpdateBody::ChannelEdited { .. } => "ChannelEdited",
             UpdateBody::Members { .. } => "Members",
             UpdateBody::Initialized => "Initialized",
             UpdateBody::StatusMap { .. } => "StatusMap",
             UpdateBody::SpaceUpdated { .. } => "SpaceUpdated",
+            UpdateBody::SpaceInvalidated { .. } => "SpaceInvalidated",
             UpdateBody::EntryChanged { .. } => "EntryChanged",
             UpdateBody::CharacterChanged { .. } => "CharacterChanged",
             UpdateBody::NoteChanged { .. } => "NoteChanged",

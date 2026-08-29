@@ -48,24 +48,23 @@ export const handleSpaceUpdate = (state: ChatStateMap, action: SpaceUpdated): Ch
   const spaceWithRelated = action.spaceWithRelated;
   let chatStates = Map<Id, ChatState | undefined>();
   for (const channel of spaceWithRelated.channels) {
-    chatStates = state.update(channel.id, (prevChatState) => {
-      if (prevChatState === undefined) {
-        const nextState = initChatState(
-          channel,
-          spaceWithRelated.channelMembers,
-          spaceWithRelated.members,
-        );
-        nextState.initialized = true;
-        return nextState;
-      } else {
-        const members = makeMembers(
-          channel.id,
-          spaceWithRelated.members,
-          spaceWithRelated.channelMembers,
-        );
-        return { ...prevChatState, channel, members };
-      }
-    });
+    const prevChatState = state.get(channel.id);
+    if (prevChatState === undefined) {
+      const nextState = initChatState(
+        channel,
+        spaceWithRelated.channelMembers,
+        spaceWithRelated.members,
+      );
+      nextState.initialized = true;
+      chatStates = chatStates.set(channel.id, nextState);
+    } else {
+      const members = makeMembers(
+        channel.id,
+        spaceWithRelated.members,
+        spaceWithRelated.channelMembers,
+      );
+      chatStates = chatStates.set(channel.id, { ...prevChatState, channel, members });
+    }
   }
   return chatStates;
 };

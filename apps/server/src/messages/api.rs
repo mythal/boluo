@@ -10,24 +10,63 @@ pub use shared_types::messages::NewMessage;
 #[derive(Deserialize, Debug, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct EditMessage {
+    #[serde(default)]
+    pub space_id: Option<Uuid>,
     pub message_id: Uuid,
-    pub name: String,
+    #[serde(default)]
+    pub attribution: Option<EditMessageAttribution>,
+    #[serde(flatten)]
+    pub legacy_attribution: LegacyEditAttribution,
     pub text: String,
     #[serde(default)]
     pub entities: Entities,
     #[serde(default)]
-    pub in_game: bool,
-    #[serde(default)]
     pub is_action: bool,
     #[serde(default)]
     pub media_id: Option<Uuid>,
-    #[serde(default)]
-    pub color: String,
     /// The `modified` timestamp of the message at the time the client started editing it.
     #[serde(default)]
     #[specta(type = Option<String>)]
     #[serde(with = "time::serde::rfc3339::option")]
     pub expect_modified: Option<OffsetDateTime>,
+}
+
+#[derive(Deserialize, Debug, Default, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct LegacyEditAttribution {
+    /// Legacy sender name. New clients should use `attribution` instead.
+    #[serde(default)]
+    pub name: Option<String>,
+    /// Legacy in-game state. New clients should use `attribution` instead.
+    #[serde(default)]
+    pub in_game: Option<bool>,
+    /// Legacy sender color. New clients should use `attribution` instead.
+    #[serde(default)]
+    pub color: Option<String>,
+}
+
+impl LegacyEditAttribution {
+    pub(super) fn is_supplied(&self) -> bool {
+        self.name.is_some() || self.in_game.is_some() || self.color.is_some()
+    }
+}
+
+#[derive(Deserialize, Debug, specta::Type)]
+#[serde(
+    tag = "type",
+    rename_all = "camelCase",
+    rename_all_fields = "camelCase"
+)]
+pub enum EditMessageAttribution {
+    Character {
+        character_id: Uuid,
+        portrait_id: Option<Uuid>,
+    },
+    Custom {
+        name: String,
+        color: String,
+        in_game: bool,
+    },
 }
 
 #[derive(Deserialize, Debug, specta::Type)]
@@ -66,6 +105,44 @@ pub struct MessageIdQuery {
     pub id: Uuid,
     #[serde(default)]
     pub space_id: Option<Uuid>,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{EditMessage, EditMessageAttribution};
+
+    #[test]
+    fn edit_message_accepts_legacy_and_explicit_attribution_payloads() {
+        let legacy: EditMessage = serde_json::from_value(serde_json::json!({
+            "messageId": "018f6fd8-9897-7b29-9c3e-769dbb1d1c37",
+            "name": "Player",
+            "text": "Edited text"
+        }))
+        .expect("legacy EditMessage should deserialize");
+
+        assert_eq!(legacy.space_id, None);
+        assert_eq!(legacy.legacy_attribution.name.as_deref(), Some("Player"));
+        assert!(legacy.attribution.is_none());
+
+        let explicit: EditMessage = serde_json::from_value(serde_json::json!({
+            "messageId": "018f6fd8-9897-7b29-9c3e-769dbb1d1c37",
+            "text": "Edited text",
+            "attribution": {
+                "type": "character",
+                "characterId": "018f6fd8-9897-7b29-9c3e-769dbb1d1c38",
+                "portraitId": null
+            }
+        }))
+        .expect("new EditMessage should deserialize");
+
+        assert!(matches!(
+            explicit.attribution,
+            Some(EditMessageAttribution::Character {
+                character_id,
+                portrait_id: None,
+            }) if character_id.to_string() == "018f6fd8-9897-7b29-9c3e-769dbb1d1c38"
+        ));
+    }
 }
 
 #[derive(Deserialize, Debug, Clone, Copy, specta::Type)]

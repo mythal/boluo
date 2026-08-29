@@ -1,4 +1,9 @@
-import { type NewMessage, type EditMessage, type MemberWithUser } from '@boluo/api';
+import {
+  type NewMessage,
+  type EditMessage,
+  type MemberWithUser,
+  type EditMessageAttribution,
+} from '@boluo/api';
 import { patch, post } from '@boluo/api-browser';
 import { useStore } from 'jotai';
 import { useCallback, useLayoutEffect, useMemo, useRef } from 'react';
@@ -97,30 +102,30 @@ export const useSend = () => {
       },
     });
     const { text, entities, whisperToUsernames } = parsedForSend;
-    const speaker = resolveSpeaker({
+    const { speaker, issue: speakerIssue } = resolveSpeaker({
       nickname,
       defaultInGame,
       parsedInGame: parsedForSend.inGame,
       asTarget: parsedForSend.asTarget,
-      editingAttribution: composeState.editingAttribution,
+      originalMessageAttribution: composeState.originalMessageAttribution,
       channelCharacterId: myMember.channel.characterId,
       channelCharacterName,
       resolveCharacter: resolve,
     });
-    if (speaker.type === 'InvalidCharacterReference') {
+    if (speakerIssue != null) {
       const content =
-        speaker.reason === 'Loading'
+        speakerIssue.reason === 'Loading'
           ? intl.formatMessage({
               defaultMessage: 'Characters are still loading. Please try again.',
             })
-          : speaker.reason === 'Error'
+          : speakerIssue.reason === 'Error'
             ? intl.formatMessage({ defaultMessage: 'Characters could not be loaded.' })
             : intl.formatMessage(
                 {
                   defaultMessage:
                     'Character “@{identifier}” is unavailable or cannot be portrayed.',
                 },
-                { identifier: speaker.identifier },
+                { identifier: speakerIssue.identifier },
               );
       setBanner({
         level: 'ERROR',
@@ -138,6 +143,20 @@ export const useSend = () => {
     });
     const composeStateAfterSent = store.get(composeAtom);
     const { inGame, name, characterId, color: speakerColor } = speaker;
+    const selectedPortraitId = selectedPortraitIdForCharacter(
+      characterId,
+      composeState.selectedCharacterPortrait,
+    );
+    const portraitId =
+      selectedPortraitId ??
+      (speaker.source === 'Editing' && characterId != null ? (speaker.portraitId ?? null) : null);
+    const speakerPresentation = {
+      name,
+      characterId,
+      portraitId,
+      inGame,
+      color: speakerColor ?? '',
+    };
     let payload:
       { type: 'NEW'; newMessage: NewMessage } | { type: 'EDIT'; editMessage: EditMessage };
     if (composeState.edit == null) {
@@ -160,10 +179,7 @@ export const useSend = () => {
           spaceId: myMember.space.spaceId,
           name,
           characterId,
-          portraitId: selectedPortraitIdForCharacter(
-            characterId,
-            composeState.selectedCharacterPortrait,
-          ),
+          portraitId,
           text,
           entities,
           inGame,
@@ -184,18 +200,42 @@ export const useSend = () => {
         },
       });
     } else {
+      const originalAttribution = composeState.originalMessageAttribution;
+      const attributionUnchanged =
+        originalAttribution != null &&
+        originalAttribution.name === name &&
+        originalAttribution.characterId === characterId &&
+        originalAttribution.portraitId === portraitId &&
+        originalAttribution.inGame === inGame &&
+        originalAttribution.color === speakerPresentation.color;
+      let attribution: EditMessageAttribution | null | undefined;
+      if (attributionUnchanged) {
+        attribution = undefined;
+      } else if (characterId == null) {
+        attribution = {
+          type: 'custom',
+          name,
+          color: speakerPresentation.color,
+          inGame,
+        };
+      } else {
+        attribution = {
+          type: 'character',
+          characterId,
+          portraitId,
+        };
+      }
       payload = {
         type: 'EDIT',
         editMessage: {
           // In edit mode, the `compose.previewId` is the message id.
+          spaceId: myMember.space.spaceId,
           messageId: composeState.previewId,
-          name,
+          attribution,
           text,
           entities,
-          inGame,
           isAction: parsedForSend.isAction,
           mediaId: typeof composeState.media === 'string' ? composeState.media : null,
-          color: speakerColor ?? '',
           expectModified: composeState.edit.time,
         },
       };
@@ -203,6 +243,7 @@ export const useSend = () => {
         type: 'messageEditing',
         payload: {
           editMessage: payload.editMessage,
+          speaker: speakerPresentation,
           sendTime: sendStartTime,
           media: composeState.media instanceof File ? composeState.media : null,
           composeState,
@@ -265,6 +306,7 @@ export const useSend = () => {
           type: 'messageEditing',
           payload: {
             editMessage: payload.editMessage,
+            speaker: speakerPresentation,
             sendTime: sendStartTime,
             media: null,
             composeState,

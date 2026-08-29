@@ -3,6 +3,7 @@ import { equalPreviewEdit, isClearedPreviewContent } from '@boluo/api/preview/di
 import { type DesiredPreview } from '@boluo/api/preview/publisher';
 import { type ComposeParseResult } from '../../hooks/useChannelAtoms';
 import { type ComposeState } from '../../state/compose.reducer';
+import { resolveSpeaker, type CharacterResolution } from '../../characters/resolveSpeaker';
 
 export type ComposePreviewMetadata = Pick<ComposeState, 'previewId' | 'edit'>;
 
@@ -23,7 +24,7 @@ interface MakeDesiredPreviewOptions {
   defaultInGame: boolean;
   compose: ComposeState;
   parsed: ComposeParseResult;
-  characterNameForIdentifier?: (identifier: string) => string | null;
+  resolveCharacter?: (identifier: string) => CharacterResolution;
 }
 
 export const makeDesiredPreview = ({
@@ -33,43 +34,22 @@ export const makeDesiredPreview = ({
   defaultInGame,
   compose,
   parsed,
-  characterNameForIdentifier,
+  resolveCharacter = () => ({ status: 'NotFound' }),
 }: MakeDesiredPreviewOptions): DesiredPreview | null => {
   if (parsed.source !== compose.source) return null;
 
   const { previewId, edit } = compose;
-  const { isAction, broadcast, whisperToUsernames, inGame: parsedInGame, asTarget } = parsed;
-  const referencedCharacterName =
-    asTarget?.type === 'CharacterReference'
-      ? (characterNameForIdentifier?.(asTarget.identifier) ?? null)
-      : null;
-  if (asTarget?.type === 'CharacterReference' && referencedCharacterName == null) {
-    return {
-      preview: {
-        id: previewId,
-        channelId,
-        name: '',
-        mediaId: null,
-        inGame: true,
-        isAction,
-        text: '',
-        clear: true,
-        entities: [],
-        editFor: null,
-        edit,
-      },
-    };
-  }
-  const asTargetName =
-    asTarget?.type === 'CharacterReference'
-      ? referencedCharacterName
-      : asTarget?.type === 'TemporaryName'
-        ? asTarget.name
-        : undefined;
-  const editingAttribution = compose.editingAttribution ?? null;
-  const inGame =
-    editingAttribution?.inGame ?? (asTarget != null ? true : (parsedInGame ?? defaultInGame));
-  const inGameName = editingAttribution?.name ?? (asTargetName || defaultCharacterName);
+  const { isAction, broadcast, whisperToUsernames } = parsed;
+  const { speaker } = resolveSpeaker({
+    nickname,
+    defaultInGame,
+    parsedInGame: parsed.inGame,
+    asTarget: parsed.asTarget,
+    originalMessageAttribution: compose.originalMessageAttribution,
+    channelCharacterId: null,
+    channelCharacterName: defaultCharacterName,
+    resolveCharacter,
+  });
   const shouldHideContent = !broadcast || whisperToUsernames != null;
   const clearedPreview = isClearedPreviewContent(parsed);
   const text: string | null = clearedPreview ? '' : shouldHideContent ? null : parsed.text;
@@ -77,9 +57,9 @@ export const makeDesiredPreview = ({
   const preview: PreviewPost = {
     id: previewId,
     channelId,
-    name: inGame ? inGameName : nickname,
+    name: speaker.name,
     mediaId: null,
-    inGame,
+    inGame: speaker.inGame,
     isAction,
     text,
     clear: false,

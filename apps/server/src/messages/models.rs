@@ -78,6 +78,14 @@ fn is_zero(value: &i32) -> bool {
 
 type MessagePositionRange = (Option<(i32, i32)>, Option<(i32, i32)>);
 
+pub(super) struct MessageAttributionUpdate {
+    pub(super) name: String,
+    pub(super) character_id: Option<Uuid>,
+    pub(super) portrait_id: Option<Uuid>,
+    pub(super) in_game: bool,
+    pub(super) color: String,
+}
+
 impl Message {
     pub async fn get<'c, T: sqlx::PgExecutor<'c>>(
         db: T,
@@ -615,23 +623,38 @@ impl Message {
     pub(super) async fn edit(
         db: &sqlx::PgPool,
         user_id: Uuid,
-        name: &str,
+        attribution: Option<MessageAttributionUpdate>,
+        space_id: Uuid,
         id: &Uuid,
         text: &str,
         entities: Entities,
-        in_game: bool,
         is_action: bool,
         media_id: Option<Uuid>,
-        color: String,
         expect_modified: Option<OffsetDateTime>,
     ) -> Result<MessageEditOutcome, ModelError> {
         let entities = serde_json::to_value(entities).unwrap_or(JsonValue::Array(vec![]));
-        let name = merge_blank(name);
-        CHARACTER_NAME.run(&name)?;
+        let update_attribution = attribution.is_some();
+        let (name, character_id, portrait_id, in_game, color) = match attribution {
+            Some(attribution) => {
+                let name = merge_blank(&attribution.name);
+                CHARACTER_NAME.run(&name)?;
+                (
+                    Some(name),
+                    attribution.character_id,
+                    attribution.portrait_id,
+                    Some(attribution.in_game),
+                    Some(attribution.color),
+                )
+            }
+            None => (None, None, None, None, None),
+        };
         let result = sqlx::query_file!(
             "sql/messages/edit.sql",
             id,
-            &name,
+            update_attribution,
+            name,
+            character_id,
+            portrait_id,
             text,
             entities,
             in_game,
@@ -639,7 +662,8 @@ impl Message {
             media_id,
             color,
             expect_modified,
-            user_id
+            user_id,
+            space_id
         )
         .fetch_optional(db)
         .await?;
@@ -816,6 +840,22 @@ mod tests {
             len: text.chars().count() as i32,
         };
         Entities(vec![RichEntity::Text(span)])
+    }
+
+    fn attribution(
+        name: &str,
+        character_id: Option<Uuid>,
+        portrait_id: Option<Uuid>,
+        in_game: bool,
+        color: &str,
+    ) -> MessageAttributionUpdate {
+        MessageAttributionUpdate {
+            name: name.to_string(),
+            character_id,
+            portrait_id,
+            in_game,
+            color: color.to_string(),
+        }
     }
 
     async fn create_position_test_message(
@@ -1214,14 +1254,13 @@ mod tests {
         let edited = Message::edit(
             &pool,
             owner.id,
-            "GM Updated",
+            None,
+            space.id,
             &message.id,
             "Updated text",
             edited_entities,
-            false,
             true,
             None,
-            "char:GM".to_string(),
             None,
         )
         .await
@@ -1236,9 +1275,34 @@ mod tests {
         assert_eq!(space_id, space.id);
         assert_eq!(edited.text, "Updated text");
         assert_eq!(edited.character_id, Some(character.id));
+        assert_eq!(edited.portrait_id, Some(asset.id));
         assert!(edited.is_action);
         assert_eq!(edited.rev, folded.rev + 1);
         assert!(edited.modified > folded.modified);
+
+        let cleared_attribution = Message::edit(
+            &pool,
+            owner.id,
+            Some(attribution("GM Updated", None, None, false, "char:GM")),
+            space.id,
+            &message.id,
+            "Updated text",
+            sample_entities("Updated text"),
+            true,
+            None,
+            Some(edited.modified),
+        )
+        .await
+        .expect("clearing message attribution failed");
+        let MessageEditOutcome::Updated {
+            message: cleared_attribution,
+            ..
+        } = cleared_attribution
+        else {
+            panic!("cleared message missing");
+        };
+        assert_eq!(cleared_attribution.character_id, None);
+        assert_eq!(cleared_attribution.portrait_id, None);
 
         let deleted = Message::delete(&pool, &message.id)
             .await
@@ -1258,14 +1322,13 @@ mod tests {
         let edited_after_delete = Message::edit(
             &pool,
             owner.id,
-            "Deleted",
+            Some(attribution("Deleted", None, None, false, "")),
+            space.id,
             &message.id,
             "Deleted text",
             sample_entities("Deleted text"),
             false,
-            false,
             None,
-            String::new(),
             None,
         )
         .await
@@ -2099,14 +2162,13 @@ mod tests {
         let edited_by_a = Message::edit(
             &pool,
             owner.id,
-            "GM",
+            Some(attribution("GM", None, None, false, "#abcdef")),
+            space.id,
             &message.id,
             "Tab A's text",
             sample_entities("Tab A's text"),
             false,
-            false,
             None,
-            "#abcdef".to_string(),
             Some(stale_modified),
         )
         .await
@@ -2126,14 +2188,13 @@ mod tests {
         let edited_by_b = Message::edit(
             &pool,
             owner.id,
-            "GM",
+            Some(attribution("GM", None, None, false, "#abcdef")),
+            space.id,
             &message.id,
             "Tab B's text",
             sample_entities("Tab B's text"),
             false,
-            false,
             None,
-            "#abcdef".to_string(),
             Some(stale_modified),
         )
         .await
@@ -2156,14 +2217,13 @@ mod tests {
         let edited_without_precondition = Message::edit(
             &pool,
             owner.id,
-            "GM",
+            Some(attribution("GM", None, None, false, "#abcdef")),
+            space.id,
             &message.id,
             "Tab C's text",
             sample_entities("Tab C's text"),
             false,
-            false,
             None,
-            "#abcdef".to_string(),
             None,
         )
         .await
@@ -2221,14 +2281,13 @@ mod tests {
             Message::edit(
                 &pool,
                 user_id,
-                "Player",
+                Some(attribution("Player", None, None, false, "#abcdef")),
+                space.id,
                 &message.id,
                 "Unauthorized edit",
                 sample_entities("Unauthorized edit"),
                 false,
-                false,
                 None,
-                "#abcdef".to_string(),
                 None,
             )
         };
@@ -2296,14 +2355,13 @@ mod tests {
         let document_outcome = Message::edit(
             &pool,
             member.id,
-            "Player",
+            Some(attribution("Player", None, None, false, "#abcdef")),
+            space.id,
             &document_message.id,
             "Member edit",
             sample_entities("Member edit"),
             false,
-            false,
             None,
-            "#abcdef".to_string(),
             None,
         )
         .await
@@ -2316,14 +2374,13 @@ mod tests {
         let missing_outcome = Message::edit(
             &pool,
             owner.id,
-            "GM",
+            Some(attribution("GM", None, None, false, "#abcdef")),
+            space.id,
             &Uuid::new_v4(),
             "Missing",
             sample_entities("Missing"),
             false,
-            false,
             None,
-            "#abcdef".to_string(),
             None,
         )
         .await

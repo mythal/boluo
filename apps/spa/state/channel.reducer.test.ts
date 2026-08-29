@@ -8,6 +8,7 @@ import type { ChatAction } from './chat.actions';
 import type { PreviewItem, MessageItem } from './channel.types';
 import type { ChannelState, OptimisticItem, OptimisticMessage } from './channel.reducer';
 import { channelReducer, makeInitialChannelState } from './channel.reducer';
+import { makeInitialComposeState } from './compose.reducer';
 
 const context: ChatReducerContext = {
   initialized: true,
@@ -118,6 +119,58 @@ const startInitialHistoryLoad = (state: ChannelState): ChannelState =>
   );
 
 describe('channelReducer', () => {
+  test('uses the local speaker presentation for an optimistic edit', () => {
+    const previous = makeMessageItem(
+      makeMessage(messageId1, 1, {
+        characterId: 'character-old',
+        portraitId: 'portrait-old',
+        inGame: false,
+      }),
+    );
+    const state = {
+      ...makeInitialChannelState(channelId),
+      messages: L.from([previous]),
+    };
+
+    const next = channelReducer(
+      state,
+      {
+        type: 'messageEditing',
+        payload: {
+          editMessage: {
+            messageId: messageId1,
+            text: 'edited text',
+            attribution: {
+              type: 'character',
+              characterId: 'character-new',
+              portraitId: 'portrait-new',
+            },
+          },
+          speaker: {
+            name: 'New Character',
+            characterId: 'character-new',
+            portraitId: 'portrait-new',
+            inGame: true,
+            color: 'preset:orange',
+          },
+          sendTime: 2,
+          media: null,
+          composeState: makeInitialComposeState(),
+        },
+      },
+      context,
+    );
+
+    const optimistic = next.optimisticMessageMap[messageId1]?.item.item;
+    if (optimistic?.type !== 'MESSAGE') assert.fail('expected an optimistic message');
+    assert.equal(optimistic.name, 'New Character');
+    assert.equal(optimistic.characterId, 'character-new');
+    assert.equal(optimistic.portraitId, 'portrait-new');
+    assert.equal(optimistic.color, 'preset:orange');
+    assert.equal(optimistic.inGame, true);
+    assert.equal(optimistic.text, 'edited text');
+  });
+
   test('receiveMessage inserts in order and clears preview/optimistic entry', () => {
     const preview = toPreviewItem(makePreview(previewId1, 3));
     const optimisticMessage: OptimisticMessage = {

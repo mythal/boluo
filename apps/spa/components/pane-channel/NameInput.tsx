@@ -7,6 +7,7 @@ import { useEditChannelCharacterName } from '../../hooks/useEditChannelCharacter
 import { FormattedMessage } from 'react-intl';
 import { useSWRConfig } from 'swr';
 import { usePortrayableCharacters } from '../../hooks/usePortrayableCharacters';
+import { resolveSpeaker } from '../../characters/resolveSpeaker';
 
 export const NameEditInput: FC<{
   id?: string;
@@ -15,30 +16,43 @@ export const NameEditInput: FC<{
   setInGame?: boolean;
   defaultName: string;
   characterId: string | null;
-}> = ({ id, channelId, spaceId, setInGame = false, defaultName, characterId }) => {
+}> = ({
+  id,
+  channelId,
+  spaceId,
+  setInGame = false,
+  defaultName: providedDefaultName,
+  characterId: providedCharacterId,
+}) => {
   const { composeAtom, asTargetAtom, asTargetTextAtom } = useChannelAtoms();
+  const originalMessageAttribution = useAtomValue(composeAtom).originalMessageAttribution;
   const asTarget = useAtomValue(asTargetAtom);
   const targetText = useAtomValue(asTargetTextAtom);
   const { resolve } = usePortrayableCharacters(spaceId);
-  const referencedCharacter =
-    asTarget?.type === 'CharacterReference' ? resolve(asTarget.identifier) : null;
-  const hasResolvedCharacter = referencedCharacter?.status === 'Found';
-  const resolvedCharacter = hasResolvedCharacter ? referencedCharacter.character : null;
   const usesDefaultCharacter = asTarget?.type === 'DefaultCharacter';
-  const displayValue = hasResolvedCharacter || usesDefaultCharacter ? '' : targetText;
-  const placeholder = hasResolvedCharacter ? referencedCharacter.character.name : defaultName;
+  const { speaker, issue: speakerIssue } = resolveSpeaker({
+    nickname: '',
+    defaultInGame: true,
+    parsedInGame: true,
+    asTarget,
+    originalMessageAttribution,
+    channelCharacterId: providedCharacterId,
+    channelCharacterName: providedDefaultName,
+    resolveCharacter: resolve,
+  });
+  const resolvedCharacter =
+    asTarget?.type === 'CharacterReference' && speakerIssue == null
+      ? (speaker.character ?? null)
+      : null;
+  const displayValue = resolvedCharacter != null || usesDefaultCharacter ? '' : targetText;
+  const placeholder = speaker.name;
   const { trigger: setDefault, isMutating, error } = useEditChannelCharacterName(channelId);
   const { mutate } = useSWRConfig();
   const [localName, setLocalName] = useState(displayValue);
   const [previousDisplayValue, setPreviousDisplayValue] = useState(displayValue);
   const hasTemporaryName = asTarget?.type === 'TemporaryName';
-  const hasCharacterReference =
-    asTarget?.type === 'CharacterReference' || asTarget?.type === 'DefaultCharacter';
-  const displaysTemporaryName =
-    hasTemporaryName ||
-    (characterId == null && defaultName.trim() !== '' && !hasCharacterReference);
-  const statusCharacterName =
-    resolvedCharacter?.name ?? (characterId != null ? defaultName : undefined);
+  const displaysTemporaryName = speaker.characterId == null && speaker.name.trim() !== '';
+  const statusCharacterName = speaker.characterId != null ? speaker.name : undefined;
   const dispatch = useSetAtom(composeAtom);
   if (previousDisplayValue !== displayValue) {
     setPreviousDisplayValue(displayValue);
@@ -77,24 +91,19 @@ export const NameEditInput: FC<{
         <span className="min-w-0 truncate text-right" title={statusCharacterName}>
           {displaysTemporaryName ? (
             <FormattedMessage defaultMessage="As this name" />
-          ) : resolvedCharacter != null ? (
+          ) : speaker.characterId != null ? (
             <FormattedMessage
               defaultMessage="As character “{name}”"
-              values={{ name: resolvedCharacter.name }}
+              values={{ name: speaker.name }}
             />
-          ) : characterId != null ? (
-            <FormattedMessage
-              defaultMessage="As character “{name}”"
-              values={{ name: defaultName }}
-            />
-          ) : hasCharacterReference ? (
+          ) : usesDefaultCharacter ? (
             <FormattedMessage defaultMessage="As character" />
           ) : (
             <FormattedMessage defaultMessage="Not set" />
           )}
         </span>
         {(hasTemporaryName ||
-          (resolvedCharacter != null && resolvedCharacter.id !== characterId)) && (
+          (resolvedCharacter != null && resolvedCharacter.id !== providedCharacterId)) && (
           <ButtonInline
             disabled={isMutating}
             onClick={() => void handleSetDefault()}

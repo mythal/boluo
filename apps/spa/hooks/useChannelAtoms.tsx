@@ -12,6 +12,7 @@ import type { ComposeActionUnion } from '../state/compose.actions';
 import { checkCompose, type ComposeError, type ComposeState } from '../state/compose.reducer';
 import { usePaneKey } from './usePaneKey';
 import { composeAtomFamily } from '../state/compose.atoms';
+import { resolveSpeakerMode } from '../characters/resolveSpeaker';
 
 export type ChannelFilter = 'ALL' | 'IN_GAME' | 'OOC';
 
@@ -189,17 +190,28 @@ export const useMakeChannelAtoms = (
       highlightMessageAtom: atom<string | null>(null),
     };
   }, [channelId, composeAtom]);
+  const originalMessageInGameAtom = useMemo(
+    () =>
+      selectAtom(
+        composeAtom,
+        ({ originalMessageAttribution }) => originalMessageAttribution?.inGame,
+      ),
+    [composeAtom],
+  );
   const inGameAtom = useMemo(
     () =>
       atom((read) => {
         const parsed = read(atoms.parsedAtom);
-        if (parsed.asTarget != null) return true;
-        if (parsed.inGame == null) {
-          return defaultInGame;
-        }
-        return parsed.inGame;
+        const originalMessageInGame = read(originalMessageInGameAtom);
+        return resolveSpeakerMode({
+          defaultInGame,
+          parsedInGame: parsed.inGame,
+          asTarget: parsed.asTarget,
+          originalMessageAttribution:
+            originalMessageInGame == null ? undefined : { inGame: originalMessageInGame },
+        }).inGame;
       }),
-    [atoms.parsedAtom, defaultInGame],
+    [atoms.parsedAtom, defaultInGame, originalMessageInGameAtom],
   );
   return { ...atoms, checkComposeAtom, composeAtom, inGameAtom, defaultDiceFaceRef };
 };

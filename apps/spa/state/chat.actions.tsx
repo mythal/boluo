@@ -18,6 +18,14 @@ import type { ChatEffect } from './chat.types';
 
 export type ClientConnectionError = ConnectionError | 'NETWORK_ERROR';
 
+export interface MessageSpeakerPresentation {
+  name: string;
+  characterId: string | null;
+  portraitId: string | null;
+  inGame: boolean;
+  color: string;
+}
+
 export type ChatActionMap = {
   receiveMessage: UpdateBody & { type: 'NEW_MESSAGE' };
   messageSending: {
@@ -28,6 +36,7 @@ export type ChatActionMap = {
   };
   messageEditing: {
     editMessage: EditMessage;
+    speaker: MessageSpeakerPresentation;
     sendTime: number;
     media: File | null;
     composeState: ComposeState;

@@ -890,6 +890,9 @@
   "Wy+RsN": {
     "message": "Message cannot be empty."
   },
+  "X0da4E": {
+    "message": "A new version of Boluo is available."
+  },
   "X2YA3V": {
     "message": "The data submitted did not pass validation."
   },
@@ -1414,6 +1417,9 @@
   },
   "r4YqDx": {
     "message": "Such as CSS Container Queries."
+  },
+  "rELDbB": {
+    "message": "Refresh"
   },
   "rK7cTy": {
     "message": "Initial Channel Name"

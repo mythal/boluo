@@ -11,7 +11,7 @@ const swrKeyStartsWith =
   (key: unknown): boolean =>
     Array.isArray(key) && prefix.every((value, index) => key[index] === value);
 
-const applyEffect = async (
+export const applyEffect = async (
   effect: ChatEffect,
   mutate: ReturnType<typeof useSWRConfig>['mutate'],
 ): Promise<void> => {
@@ -29,8 +29,21 @@ const applyEffect = async (
       await mutate(['/channels/by_space', effect.spaceId]);
       await mutate(['/channels/query', effect.channelId], effect.channel);
       return;
+    case 'CHANNEL_INVALIDATED':
+      await mutate(['/channels/by_space', effect.spaceId]);
+      await mutate(['/channels/query', effect.channelId]);
+      await mutate(['/channels/members', effect.channelId]);
+      await mutate(swrKeyStartsWith('/characters/usages'));
+      return;
     case 'SPACE_CHANGED':
       await mutate(['/spaces/query', effect.spaceId], effect.space);
+      await mutate(['/channels/by_space', effect.spaceId]);
+      return;
+    case 'SPACE_INVALIDATED':
+      await mutate(['/spaces/query', effect.spaceId]);
+      await mutate(['/spaces/members', effect.spaceId]);
+      await mutate(['/spaces/my_space_member', effect.spaceId]);
+      await mutate(['/spaces/users_status', effect.spaceId]);
       await mutate(['/channels/by_space', effect.spaceId]);
       return;
     case 'MEMBERS_UPDATED':

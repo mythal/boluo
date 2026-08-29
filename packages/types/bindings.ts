@@ -1284,11 +1284,13 @@ export type UpdateBody =
   | { type: 'MESSAGE_PREVIEW'; channelId: string; preview: Preview }
   | { type: 'DIFF'; channelId: string; diff: PreviewDiff }
   | { type: 'CHANNEL_DELETED'; channelId: string }
+  | { type: 'CHANNEL_INVALIDATED'; channelId: string }
   | { type: 'CHANNEL_EDITED'; channelId: string; channel: Channel }
   | { type: 'MEMBERS'; channelId: string; members: MemberWithUser[] }
   | { type: 'INITIALIZED' }
   | { type: 'STATUS_MAP'; statusMap: { [key in string]: UserStatus }; spaceId: string }
   | { type: 'SPACE_UPDATED'; spaceWithRelated: SpaceWithRelated }
+  | { type: 'SPACE_INVALIDATED'; spaceId: string }
   | { type: 'ENTRY_CHANGED'; scopeId: string; entryId: string }
   | { type: 'CHARACTER_CHANGED'; characterId: string }
   | { type: 'NOTE_CHANGED'; noteId: string }

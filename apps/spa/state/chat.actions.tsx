@@ -124,6 +124,8 @@ export const toChatAction = (update: Update): ChatActionUnion | null | undefined
         },
       };
     case 'CHANNEL_EDITED':
+    case 'CHANNEL_INVALIDATED':
+    case 'SPACE_INVALIDATED':
     case 'MEMBERS':
     case 'STATUS_MAP':
     case 'APP_INFO':

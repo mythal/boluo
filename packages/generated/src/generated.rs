@@ -333,6 +333,10 @@ pub enum UpdateBody {
         #[serde(rename = "channelId")]
         channel_id: ::uuid::Uuid,
     },
+    ChannelInvalidated {
+        #[serde(rename = "channelId")]
+        channel_id: ::uuid::Uuid,
+    },
     ChannelEdited {
         #[serde(rename = "channelId")]
         channel_id: ::uuid::Uuid,
@@ -353,6 +357,10 @@ pub enum UpdateBody {
     SpaceUpdated {
         #[serde(rename = "spaceWithRelated")]
         space_with_related: SpaceWithRelated,
+    },
+    SpaceInvalidated {
+        #[serde(rename = "spaceId")]
+        space_id: ::uuid::Uuid,
     },
     EntryChanged {
         #[serde(rename = "scopeId")]

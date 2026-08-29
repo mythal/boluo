@@ -39,6 +39,8 @@ export type PreviewDiffUpdate = Extract<UpdateBody, { type: 'DIFF' }>;
 export type AppUpdated = Extract<UpdateBody, { type: 'APP_UPDATED' }>;
 export type ChannelEdited = Extract<UpdateBody, { type: 'CHANNEL_EDITED' }>;
 export type ChannelDeleted = Extract<UpdateBody, { type: 'CHANNEL_DELETED' }>;
+export type ChannelInvalidated = Extract<UpdateBody, { type: 'CHANNEL_INVALIDATED' }>;
+export type SpaceInvalidated = Extract<UpdateBody, { type: 'SPACE_INVALIDATED' }>;
 export type PushMembers = Extract<UpdateBody, { type: 'MEMBERS' }>;
 export type StatusMap = Extract<UpdateBody, { type: 'STATUS_MAP' }>;
 

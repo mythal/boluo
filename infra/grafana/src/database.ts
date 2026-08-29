@@ -2,10 +2,13 @@ import {
   DashboardBuilder,
   DashboardCursorSync,
   GridBuilder,
+  RowBuilder,
+  RowsBuilder,
   gridItem,
 } from '@grafana/grafana-foundation-sdk/dashboardv2';
 import {
   QueryEditorMode,
+  StackingMode,
   TooltipDisplayMode,
   dashboardTimeSettings,
   defaultAnnotations,
@@ -13,13 +16,7 @@ import {
   tablePanel,
   timeSeriesPanel,
 } from './lib.js';
-import {
-  DATABASE_APP,
-  DATABASE_NAME,
-  backupMetric,
-  databaseVolumeUtilization,
-  memoryUtilization,
-} from './metrics.js';
+import { DATABASE_APP, DATABASE_NAME, backupMetric, databaseVolumeUtilization } from './metrics.js';
 
 export const DATABASE_DASHBOARD_RESOURCE_NAME = 'd0f4f08d-8d6e-4afc-b738-f3d503c9e389';
 
@@ -263,6 +260,15 @@ export function buildDatabaseDashboard(datasourceUid: string): DashboardBuilder 
             legendFormat: 'WAL directory',
           },
         ],
+        overrides: [
+          {
+            matcher: { id: 'byFrameRefID', options: 'wal' },
+            properties: [
+              { id: 'custom.axisPlacement', value: 'right' },
+              { id: 'custom.axisLabel', value: 'WAL directory' },
+            ],
+          },
+        ],
       }),
     )
     .element(
@@ -413,13 +419,33 @@ export function buildDatabaseDashboard(datasourceUid: string): DashboardBuilder 
         datasourceUid,
         unit: 'percentunit',
         min: 0,
-        max: 1,
+        axisSoftMax: 0.2,
         targets: [
           {
             refId: 'cpu',
             editorMode: QueryEditorMode.Code,
             expr: `1 - avg by(instance) (rate(fly_instance_cpu{app="${DATABASE_APP}",mode="idle"}[${RATE_INTERVAL}])) / 100`,
             legendFormat: '{{instance}}',
+          },
+          {
+            refId: 'baseline',
+            editorMode: QueryEditorMode.Code,
+            expr: `mode(fly_instance_cpu_baseline{app="${DATABASE_APP}"}) / mode(count(fly_instance_cpu{app="${DATABASE_APP}",mode="idle"}) without(cpu_id, mode))`,
+            legendFormat: 'baseline',
+          },
+        ],
+        overrides: [
+          {
+            matcher: { id: 'byFrameRefID', options: 'baseline' },
+            properties: [
+              { id: 'color', value: { fixedColor: 'yellow', mode: 'fixed' } },
+              { id: 'custom.fillOpacity', value: 0 },
+              { id: 'custom.lineStyle', value: { fill: 'dot', dash: [0, 10] } },
+              {
+                id: 'custom.hideFrom',
+                value: { legend: true, tooltip: false, viz: false },
+              },
+            ],
           },
         ],
       }),
@@ -428,17 +454,69 @@ export function buildDatabaseDashboard(datasourceUid: string): DashboardBuilder 
       panels.memoryUtilization,
       timeSeriesPanel({
         id: 21,
-        title: 'Database memory utilization',
+        title: 'Database machine memory',
+        description:
+          'Memory composition aggregated across all Fly Machines. Available is reclaimable memory beyond completely free pages.',
         datasourceUid,
-        unit: 'percentunit',
+        unit: 'bytes',
         min: 0,
-        max: 1,
+        fillOpacity: 50,
+        stacking: StackingMode.Normal,
+        legendCalcs: ['lastNotNull'],
+        tooltipMode: TooltipDisplayMode.Multi,
         targets: [
           {
-            refId: 'memory',
+            refId: 'total',
             editorMode: QueryEditorMode.Code,
-            expr: memoryUtilization(DATABASE_APP),
-            legendFormat: '{{instance}}',
+            expr: `sum(fly_instance_memory_mem_total{app="${DATABASE_APP}"})`,
+            legendFormat: 'Total',
+          },
+          {
+            refId: 'used',
+            editorMode: QueryEditorMode.Code,
+            expr: `sum(fly_instance_memory_mem_total{app="${DATABASE_APP}"} - fly_instance_memory_mem_available{app="${DATABASE_APP}"})`,
+            legendFormat: 'Used',
+          },
+          {
+            refId: 'available',
+            editorMode: QueryEditorMode.Code,
+            expr: `sum(clamp_min(fly_instance_memory_mem_available{app="${DATABASE_APP}"} - fly_instance_memory_mem_free{app="${DATABASE_APP}"}, 0))`,
+            legendFormat: 'Available',
+          },
+          {
+            refId: 'free',
+            editorMode: QueryEditorMode.Code,
+            expr: `sum(fly_instance_memory_mem_free{app="${DATABASE_APP}"})`,
+            legendFormat: 'Free',
+          },
+        ],
+        overrides: [
+          {
+            matcher: { id: 'byName', options: 'Total' },
+            properties: [
+              { id: 'custom.stacking', value: { group: 'total', mode: StackingMode.None } },
+              { id: 'custom.fillOpacity', value: 0 },
+              { id: 'custom.lineWidth', value: 2 },
+            ],
+          },
+          {
+            matcher: { id: 'byName', options: 'Used' },
+            properties: [{ id: 'custom.lineStyle', value: { fill: 'solid' } }],
+          },
+          {
+            matcher: { id: 'byName', options: 'Available' },
+            properties: [
+              { id: 'color', value: { fixedColor: '#0c2750', mode: 'fixed' } },
+              { id: 'custom.lineStyle', value: { fill: 'solid' } },
+            ],
+          },
+          {
+            matcher: { id: 'byName', options: 'Free' },
+            properties: [
+              { id: 'color', value: { fixedColor: 'dark-green', mode: 'fixed' } },
+              { id: 'custom.fillOpacity', value: 10 },
+              { id: 'custom.lineStyle', value: { fill: 'solid' } },
+            ],
           },
         ],
       }),
@@ -463,26 +541,54 @@ export function buildDatabaseDashboard(datasourceUid: string): DashboardBuilder 
       }),
     )
     .layout(
-      new GridBuilder().items([
-        gridItem(panels.connections).x(0).y(0).width(12).height(6),
-        gridItem(panels.transactions).x(12).y(0).width(12).height(6),
-        gridItem(panels.cacheHitRatio).x(0).y(6).width(8).height(8),
-        gridItem(panels.longestTransaction).x(8).y(6).width(8).height(8),
-        gridItem(panels.databaseErrors).x(16).y(6).width(8).height(8),
-        gridItem(panels.locks).x(0).y(14).width(8).height(8),
-        gridItem(panels.temporaryData).x(8).y(14).width(8).height(8),
-        gridItem(panels.databaseAndWalSize).x(16).y(14).width(8).height(8),
-        gridItem(panels.tupleOperations).x(0).y(22).width(8).height(8),
-        gridItem(panels.scanRate).x(8).y(22).width(8).height(8),
-        gridItem(panels.walArchiving).x(16).y(22).width(8).height(8),
-        gridItem(panels.tableSizes).x(0).y(30).width(12).height(8),
-        gridItem(panels.deadTuples).x(12).y(30).width(12).height(8),
-        gridItem(panels.deadTupleCounts).x(0).y(38).width(8).height(8),
-        gridItem(panels.backupDuration).x(8).y(38).width(8).height(8),
-        gridItem(panels.backupSize).x(16).y(38).width(8).height(8),
-        gridItem(panels.cpuUtilization).x(0).y(46).width(8).height(8),
-        gridItem(panels.memoryUtilization).x(8).y(46).width(8).height(8),
-        gridItem(panels.filesystemUtilization).x(16).y(46).width(8).height(8),
+      new RowsBuilder().rows([
+        new RowBuilder()
+          .title('Overview')
+          .collapse(false)
+          .layout(
+            new GridBuilder().items([
+              gridItem(panels.connections).x(0).y(0).width(8).height(6),
+              gridItem(panels.transactions).x(8).y(0).width(8).height(6),
+              gridItem(panels.cacheHitRatio).x(16).y(0).width(8).height(6),
+              gridItem(panels.cpuUtilization).x(0).y(6).width(8).height(8),
+              gridItem(panels.memoryUtilization).x(8).y(6).width(8).height(8),
+              gridItem(panels.filesystemUtilization).x(16).y(6).width(8).height(8),
+            ]),
+          ),
+        new RowBuilder()
+          .title('Activity & contention')
+          .collapse(true)
+          .layout(
+            new GridBuilder().items([
+              gridItem(panels.longestTransaction).x(0).y(0).width(8).height(8),
+              gridItem(panels.locks).x(8).y(0).width(8).height(8),
+              gridItem(panels.databaseErrors).x(16).y(0).width(8).height(8),
+              gridItem(panels.tupleOperations).x(0).y(8).width(8).height(8),
+              gridItem(panels.scanRate).x(8).y(8).width(8).height(8),
+              gridItem(panels.temporaryData).x(16).y(8).width(8).height(8),
+            ]),
+          ),
+        new RowBuilder()
+          .title('Tables & vacuum')
+          .collapse(true)
+          .layout(
+            new GridBuilder().items([
+              gridItem(panels.tableSizes).x(0).y(0).width(12).height(8),
+              gridItem(panels.deadTupleCounts).x(12).y(0).width(12).height(8),
+              gridItem(panels.deadTuples).x(0).y(8).width(24).height(8),
+            ]),
+          ),
+        new RowBuilder()
+          .title('Storage & backups')
+          .collapse(true)
+          .layout(
+            new GridBuilder().items([
+              gridItem(panels.databaseAndWalSize).x(0).y(0).width(12).height(8),
+              gridItem(panels.walArchiving).x(12).y(0).width(12).height(8),
+              gridItem(panels.backupDuration).x(0).y(8).width(12).height(8),
+              gridItem(panels.backupSize).x(12).y(8).width(12).height(8),
+            ]),
+          ),
       ]),
     )
     .links([])

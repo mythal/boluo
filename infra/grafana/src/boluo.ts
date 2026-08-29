@@ -2,6 +2,8 @@ import {
   DashboardBuilder,
   DashboardCursorSync,
   GridBuilder,
+  RowBuilder,
+  RowsBuilder,
   gridItem,
 } from '@grafana/grafana-foundation-sdk/dashboardv2';
 import {
@@ -15,19 +17,21 @@ import {
   logsPanel,
   timeSeriesPanel,
 } from './lib.js';
-import { SERVER_APP as APP, memoryUtilization } from './metrics.js';
+import { SERVER_APP as APP } from './metrics.js';
 
 export const BOLUO_DASHBOARD_RESOURCE_NAME = 'c35465c7-1203-42c4-9bcc-5b5cb012d67b';
 export const DEFAULT_PROMETHEUS_DATASOURCE_UID = 'bfuvhahaptkw0d';
 export const DEFAULT_VICTORIALOGS_DATASOURCE_UID = 'victorialogs';
 
 const RATE_INTERVAL = '$__rate_interval';
+const HTTP_LATENCY_INTERVAL = '5m';
 const CACHE_RATIO_INTERVAL = '30m';
 const HTTP_STATUS_CODES = ['200', '204', '304', '400', '401', '403', '404', '429', '500', '502'];
 
 const panels = {
   httpTraffic: 'panel-13',
   httpLatency: 'panel-14',
+  networkIo: 'panel-34',
   cpuUtilization: 'panel-2',
   memoryUtilization: 'panel-3',
   appConnections: 'panel-7',
@@ -65,7 +69,7 @@ function rate(metric: string): string {
 
 function histogramQuantile(quantile: number, metric: string, extraLabels = ''): string {
   const labels = extraLabels ? `,${extraLabels}` : '';
-  return `histogram_quantile(${quantile}, sum by(le) (rate(${metric}_bucket{app="${APP}"${labels}}[${RATE_INTERVAL}])))`;
+  return `histogram_quantile(${quantile}, sum by(le) (increase(${metric}_bucket{app="${APP}"${labels}}[${HTTP_LATENCY_INTERVAL}])))`;
 }
 
 function summaryQuantile(quantile: number, metric: string): string {
@@ -113,10 +117,16 @@ export function buildBoluoDashboard(
       timeSeriesPanel({
         id: 14,
         title: 'HTTP response latency',
-        description: 'Measured at the Fly edge.',
+        description: 'Measured at the Fly edge over a rolling five-minute window.',
         datasourceUid,
         unit: 's',
         targets: [
+          {
+            refId: 'average',
+            editorMode: QueryEditorMode.Code,
+            expr: `sum(increase(fly_edge_http_response_time_seconds_sum{app="${APP}"}[${HTTP_LATENCY_INTERVAL}])) / sum(increase(fly_edge_http_response_time_seconds_count{app="${APP}"}[${HTTP_LATENCY_INTERVAL}]))`,
+            legendFormat: 'avg',
+          },
           {
             refId: 'p50',
             editorMode: QueryEditorMode.Code,
@@ -124,16 +134,73 @@ export function buildBoluoDashboard(
             legendFormat: 'p50',
           },
           {
-            refId: 'p95',
+            refId: 'p90',
             editorMode: QueryEditorMode.Code,
-            expr: histogramQuantile(0.95, 'fly_edge_http_response_time_seconds'),
-            legendFormat: 'p95',
+            expr: histogramQuantile(0.9, 'fly_edge_http_response_time_seconds'),
+            legendFormat: 'p90',
           },
           {
             refId: 'p99',
             editorMode: QueryEditorMode.Code,
             expr: histogramQuantile(0.99, 'fly_edge_http_response_time_seconds'),
             legendFormat: 'p99',
+          },
+        ],
+      }),
+    )
+    .element(
+      panels.networkIo,
+      timeSeriesPanel({
+        id: 34,
+        title: 'Network I/O',
+        description: 'Traffic through each Fly Machine eth0 interface; sent traffic is below zero.',
+        datasourceUid,
+        unit: 'Bps',
+        fillOpacity: 20,
+        stacking: StackingMode.Normal,
+        tooltipMode: TooltipDisplayMode.Multi,
+        targets: [
+          {
+            refId: 'received-total',
+            editorMode: QueryEditorMode.Code,
+            expr: `sum(rate(fly_instance_net_recv_bytes{app="${APP}",device="eth0"}[${RATE_INTERVAL}]))`,
+            legendFormat: 'Total received',
+          },
+          {
+            refId: 'received-instances',
+            editorMode: QueryEditorMode.Code,
+            expr: `sum by(instance, region) (rate(fly_instance_net_recv_bytes{app="${APP}",device="eth0"}[${RATE_INTERVAL}]))`,
+            legendFormat: '{{instance}} - {{region}} received',
+          },
+          {
+            refId: 'sent-total',
+            editorMode: QueryEditorMode.Code,
+            expr: `sum(rate(fly_instance_net_sent_bytes{app="${APP}",device="eth0"}[${RATE_INTERVAL}]))`,
+            legendFormat: 'Total sent',
+          },
+          {
+            refId: 'sent-instances',
+            editorMode: QueryEditorMode.Code,
+            expr: `sum by(instance, region) (rate(fly_instance_net_sent_bytes{app="${APP}",device="eth0"}[${RATE_INTERVAL}]))`,
+            legendFormat: '{{instance}} - {{region}} sent',
+          },
+        ],
+        overrides: [
+          {
+            matcher: { id: 'byRegexp', options: 'Total.*' },
+            properties: [
+              { id: 'custom.fillOpacity', value: 0 },
+              { id: 'custom.lineWidth', value: 2 },
+              { id: 'custom.stacking', value: { group: 'totals', mode: StackingMode.None } },
+            ],
+          },
+          {
+            matcher: { id: 'byFrameRefID', options: 'sent-total' },
+            properties: [{ id: 'custom.transform', value: 'negative-Y' }],
+          },
+          {
+            matcher: { id: 'byFrameRefID', options: 'sent-instances' },
+            properties: [{ id: 'custom.transform', value: 'negative-Y' }],
           },
         ],
       }),
@@ -146,13 +213,33 @@ export function buildBoluoDashboard(
         datasourceUid,
         unit: 'percentunit',
         min: 0,
-        max: 1,
+        axisSoftMax: 0.2,
         targets: [
           {
             refId: 'usage',
             editorMode: QueryEditorMode.Code,
             expr: `1 - avg by(instance) (rate(fly_instance_cpu{app="${APP}",mode="idle"}[${RATE_INTERVAL}])) / 100`,
             legendFormat: '{{instance}}',
+          },
+          {
+            refId: 'baseline',
+            editorMode: QueryEditorMode.Code,
+            expr: `mode(fly_instance_cpu_baseline{app="${APP}"}) / mode(count(fly_instance_cpu{app="${APP}",mode="idle"}) without(cpu_id, mode))`,
+            legendFormat: 'baseline',
+          },
+        ],
+        overrides: [
+          {
+            matcher: { id: 'byFrameRefID', options: 'baseline' },
+            properties: [
+              { id: 'color', value: { fixedColor: 'yellow', mode: 'fixed' } },
+              { id: 'custom.fillOpacity', value: 0 },
+              { id: 'custom.lineStyle', value: { fill: 'dot', dash: [0, 10] } },
+              {
+                id: 'custom.hideFrom',
+                value: { legend: true, tooltip: false, viz: false },
+              },
+            ],
           },
         ],
       }),
@@ -161,37 +248,42 @@ export function buildBoluoDashboard(
       panels.memoryUtilization,
       timeSeriesPanel({
         id: 3,
-        title: 'Instance memory utilization',
+        title: 'Machine memory',
         description:
-          'Memory is cgroup utilization. RSS is the server process resident share. RSS projected is the one-hour linear forecast from the latest hour.',
+          'Used memory per Fly Machine. Total is the most common Machine capacity and is not summed during overlapping deployments.',
         datasourceUid,
-        unit: 'percentunit',
+        unit: 'bytes',
         min: 0,
         legendCalcs: ['lastNotNull', 'max'],
+        tooltipMode: TooltipDisplayMode.Multi,
         targets: [
           {
-            refId: 'memory',
+            refId: 'total',
             editorMode: QueryEditorMode.Code,
-            expr: memoryUtilization(APP),
-            legendFormat: '{{instance}} memory',
+            expr: `mode(fly_instance_memory_mem_total{app="${APP}"})`,
+            legendFormat: 'Total',
           },
           {
-            refId: 'rss',
+            refId: 'used',
             editorMode: QueryEditorMode.Code,
-            expr: `(max by(instance) (boluo_server_process_memory_bytes{app="${APP}",kind="rss"})) / clamp_min(max by(instance) (fly_instance_memory_mem_total{app="${APP}"}), 1)`,
-            legendFormat: '{{instance}} process RSS',
+            expr: `fly_instance_memory_mem_total{app="${APP}"} - fly_instance_memory_mem_available{app="${APP}"}`,
+            legendFormat: '{{instance}} - {{region}} used',
+          },
+        ],
+        overrides: [
+          {
+            matcher: { id: 'byName', options: 'Total' },
+            properties: [
+              { id: 'custom.fillOpacity', value: 0 },
+              { id: 'custom.lineStyle', value: { fill: 'dot', dash: [0, 10] } },
+            ],
           },
           {
-            refId: 'rss-projected',
-            editorMode: QueryEditorMode.Code,
-            expr: `clamp_min(predict_linear(max by(instance) (boluo_server_process_memory_bytes{app="${APP}",kind="rss"})[1h:], 3600), 0) / clamp_min(max by(instance) (fly_instance_memory_mem_total{app="${APP}"}), 1)`,
-            legendFormat: '{{instance}} RSS projected +1h',
-          },
-          {
-            refId: 'swap',
-            editorMode: QueryEditorMode.Code,
-            expr: `(fly_instance_memory_swap_total{app="${APP}"} - fly_instance_memory_swap_free{app="${APP}"}) / clamp_min(fly_instance_memory_swap_total{app="${APP}"}, 1)`,
-            legendFormat: '{{instance}} swap',
+            matcher: { id: 'byFrameRefID', options: 'used' },
+            properties: [
+              { id: 'custom.lineStyle', value: { fill: 'solid' } },
+              { id: 'custom.fillOpacity', value: 15 },
+            ],
           },
         ],
       }),
@@ -738,7 +830,7 @@ export function buildBoluoDashboard(
       timeSeriesPanel({
         id: 29,
         title: 'Process and cache memory',
-        description: 'mimalloc committed is address space, not RSS.',
+        description: 'mimalloc committed is address space, not RSS, and uses the right axis.',
         datasourceUid,
         unit: 'bytes',
         min: 0,
@@ -786,6 +878,15 @@ export function buildBoluoDashboard(
             editorMode: QueryEditorMode.Code,
             expr: `boluo_server_disk_cache_memory_bytes{app="${APP}"}`,
             legendFormat: '{{instance}} mailbox cache',
+          },
+        ],
+        overrides: [
+          {
+            matcher: { id: 'byFrameRefID', options: 'allocator-committed' },
+            properties: [
+              { id: 'custom.axisPlacement', value: 'right' },
+              { id: 'custom.axisLabel', value: 'mimalloc committed' },
+            ],
           },
         ],
       }),
@@ -847,32 +948,75 @@ export function buildBoluoDashboard(
         id: 30,
         title: 'Application logs',
         datasourceUid: logsDatasourceUid,
-        expr: `{app="${APP}"} -event:="maintenance.token_rotated"`,
+        expr: `{app="${APP}"} -level:="info" -level:="debug" -event:="maintenance.token_rotated"`,
       }),
     )
     .layout(
-      new GridBuilder().items([
-        gridItem(panels.httpTraffic).x(0).y(0).width(12).height(6),
-        gridItem(panels.httpLatency).x(12).y(0).width(12).height(6),
-        gridItem(panels.cpuUtilization).x(0).y(6).width(8).height(8),
-        gridItem(panels.memoryUtilization).x(8).y(6).width(8).height(8),
-        gridItem(panels.processMemory).x(16).y(6).width(8).height(8),
-        gridItem(panels.runtimePopulation).x(0).y(14).width(12).height(8),
-        gridItem(panels.snapshotPopulation).x(12).y(14).width(12).height(8),
-        gridItem(panels.appConnections).x(0).y(22).width(12).height(8),
-        gridItem(panels.websocketLifecycle).x(12).y(22).width(12).height(8),
-        gridItem(panels.applicationPool).x(0).y(30).width(8).height(8),
-        gridItem(panels.cacheHitRatio).x(8).y(30).width(16).height(8),
-        gridItem(panels.spacePayloadCacheReads).x(0).y(38).width(12).height(8),
-        gridItem(panels.serializedPayloadSizes).x(12).y(38).width(12).height(8),
-        gridItem(panels.messages).x(0).y(46).width(12).height(8),
-        gridItem(panels.messageLatency).x(12).y(46).width(12).height(8),
-        gridItem(panels.queueDepths).x(0).y(54).width(12).height(8),
-        gridItem(panels.eventDelivery).x(12).y(54).width(12).height(8),
-        gridItem(panels.diskCacheCapacity).x(0).y(62).width(8).height(8),
-        gridItem(panels.diskCacheIo).x(8).y(62).width(8).height(8),
-        gridItem(panels.diskCacheLatency).x(16).y(62).width(8).height(8),
-        gridItem(panels.applicationLogs).x(0).y(70).width(24).height(10),
+      new RowsBuilder().rows([
+        new RowBuilder()
+          .title('Logs')
+          .collapse(true)
+          .layout(
+            new GridBuilder().items([
+              gridItem(panels.applicationLogs).x(0).y(0).width(24).height(8),
+            ]),
+          ),
+        new RowBuilder()
+          .title('Overview')
+          .collapse(false)
+          .layout(
+            new GridBuilder().items([
+              gridItem(panels.httpTraffic).x(0).y(0).width(8).height(6),
+              gridItem(panels.httpLatency).x(8).y(0).width(8).height(6),
+              gridItem(panels.networkIo).x(16).y(0).width(8).height(6),
+              gridItem(panels.cpuUtilization).x(0).y(6).width(8).height(8),
+              gridItem(panels.memoryUtilization).x(8).y(6).width(8).height(8),
+              gridItem(panels.processMemory).x(16).y(6).width(8).height(8),
+            ]),
+          ),
+        new RowBuilder()
+          .title('Connections')
+          .collapse(true)
+          .layout(
+            new GridBuilder().items([
+              gridItem(panels.appConnections).x(0).y(0).width(12).height(8),
+              gridItem(panels.websocketLifecycle).x(12).y(0).width(12).height(8),
+            ]),
+          ),
+        new RowBuilder()
+          .title('Runtime & caches')
+          .collapse(true)
+          .layout(
+            new GridBuilder().items([
+              gridItem(panels.runtimePopulation).x(0).y(0).width(12).height(8),
+              gridItem(panels.snapshotPopulation).x(12).y(0).width(12).height(8),
+              gridItem(panels.queueDepths).x(0).y(8).width(12).height(8),
+              gridItem(panels.eventDelivery).x(12).y(8).width(12).height(8),
+              gridItem(panels.cacheHitRatio).x(0).y(16).width(12).height(8),
+              gridItem(panels.spacePayloadCacheReads).x(12).y(16).width(12).height(8),
+            ]),
+          ),
+        new RowBuilder()
+          .title('Messages')
+          .collapse(true)
+          .layout(
+            new GridBuilder().items([
+              gridItem(panels.messages).x(0).y(0).width(12).height(8),
+              gridItem(panels.messageLatency).x(12).y(0).width(12).height(8),
+              gridItem(panels.serializedPayloadSizes).x(0).y(8).width(24).height(8),
+            ]),
+          ),
+        new RowBuilder()
+          .title('Storage')
+          .collapse(true)
+          .layout(
+            new GridBuilder().items([
+              gridItem(panels.applicationPool).x(0).y(0).width(24).height(8),
+              gridItem(panels.diskCacheCapacity).x(0).y(8).width(8).height(8),
+              gridItem(panels.diskCacheIo).x(8).y(8).width(8).height(8),
+              gridItem(panels.diskCacheLatency).x(16).y(8).width(8).height(8),
+            ]),
+          ),
       ]),
     )
     .links([])

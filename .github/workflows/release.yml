@@ -57,7 +57,7 @@ jobs:
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_IO_TOKEN }}
         run: >-
-          nix develop --quiet --no-update-lock-file --command
+          nix develop --quiet --no-update-lock-file .#deployment --command
           python3 scripts/check-server-deployment.py
 
       - name: Check whether site deployment changed
@@ -67,7 +67,7 @@ jobs:
           DEPLOYMENT_SERVICE: site
           FLY_API_TOKEN: ${{ secrets.FLY_IO_TOKEN }}
         run: >-
-          nix develop --quiet --no-update-lock-file --command
+          nix develop --quiet --no-update-lock-file .#deployment --command
           python3 scripts/check-server-deployment.py
 
   server_image:
@@ -237,9 +237,11 @@ jobs:
 
       - name: Deploy Cloudflare infrastructure
         run: |
-          nix develop --quiet --no-update-lock-file --command pulumi login "$PULUMI_BACKEND_URL"
-          nix develop --quiet --no-update-lock-file --command \
-            pulumi --cwd infra/cloudflare up --stack main --refresh --yes --non-interactive
+          nix develop --quiet --no-update-lock-file .#infra --command \
+            bash -e -u -o pipefail -c '
+              pulumi login "$PULUMI_BACKEND_URL"
+              pulumi --cwd infra/cloudflare up --stack main --refresh --yes --non-interactive
+            '
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PULUMI_API_TOKEN }}
           PULUMI_BACKEND_URL: ${{ secrets.PULUMI_BACKEND_URL }}

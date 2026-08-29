@@ -87,6 +87,15 @@
             }
           );
 
+          rustfmtToolchain = pkgs.rust-bin.selectLatestNightlyWith (
+            toolchain:
+            toolchain.minimal.override {
+              extensions = [ "rustfmt" ];
+            }
+          );
+
+          pulumiToolchain = pkgs.pulumi.withPackages (pulumiPackages: [ pulumiPackages.pulumi-nodejs ]);
+
           craneLib = (crane.mkLib pkgs).overrideToolchain rustToolchain;
 
           imageLabel = {
@@ -599,7 +608,7 @@
                 flyctl
                 cargo-nextest
                 postgresql
-                (pulumi.withPackages (pulumiPackages: [ pulumiPackages.pulumi-nodejs ]))
+                pulumiToolchain
                 python3
                 gh
               ]
@@ -607,6 +616,18 @@
             shellHook = ''
               export PATH="node_modules/.bin:$PATH"
             '';
+          };
+          devShells.format = pkgs.mkShell {
+            packages = [ rustfmtToolchain ];
+          };
+          devShells.deployment = pkgs.mkShell {
+            packages = with pkgs; [
+              flyctl
+              python3
+            ];
+          };
+          devShells.infra = pkgs.mkShell {
+            packages = [ pulumiToolchain ];
           };
         };
     };

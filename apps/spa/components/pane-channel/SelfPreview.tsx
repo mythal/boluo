@@ -24,21 +24,26 @@ import { useScrollerRef } from '../../hooks/useScrollerRef';
 import { useVirtuosoRef } from '../../hooks/useVirtuosoRef';
 import { useMember } from '../../hooks/useMember';
 import { useChannelCharacter } from '../../hooks/useChannelCharacter';
-import { Name } from './Name';
 import { usePortrayableCharacters } from '../../hooks/usePortrayableCharacters';
 import { resolveSpeaker } from '../../characters/resolveSpeaker';
 import { useDefaultInGame } from '../../hooks/useDefaultInGame';
 
-type ComposeDrived = Pick<ComposeState, 'media' | 'editingAttribution'> & {
+type ComposeStateForSelfPreview = Pick<ComposeState, 'media' | 'originalMessageAttribution'> & {
   editMode: boolean;
 };
 
-const isEqual = (a: ComposeDrived, b: ComposeDrived) =>
-  a.editMode === b.editMode && a.media === b.media && a.editingAttribution === b.editingAttribution;
+const isEqual = (a: ComposeStateForSelfPreview, b: ComposeStateForSelfPreview) =>
+  a.editMode === b.editMode &&
+  a.media === b.media &&
+  a.originalMessageAttribution === b.originalMessageAttribution;
 
-const selector = ({ edit, editingAttribution, media }: ComposeState): ComposeDrived => {
+const selector = ({
+  edit,
+  originalMessageAttribution,
+  media,
+}: ComposeState): ComposeStateForSelfPreview => {
   const editMode = edit != null;
-  return { editMode, editingAttribution, media };
+  return { editMode, originalMessageAttribution, media };
 };
 
 // Keep the self preview fully visible when its own height or the scroller height changes.
@@ -151,60 +156,40 @@ export const SelfPreview: FC<Props> = ({ preview, isLast, displayIndex }) => {
   const isFocused = usePaneIsFocus();
   const member = useMember()!;
   const isMaster = member.channel.isMaster;
-  const { composeAtom, isActionAtom, parsedAtom, selfPreviewHoverAtom } = useChannelAtoms();
+  const { composeAtom, inGameAtom, isActionAtom, parsedAtom, selfPreviewHoverAtom } =
+    useChannelAtoms();
   const setSelfPreviewHover = useSetAtom(selfPreviewHoverAtom);
   const { hidePlaceholder, hideToolbox } = useSelfPreviewAutoHide();
-  const compose: ComposeDrived = useAtomValue(
+  const compose: ComposeStateForSelfPreview = useAtomValue(
     useMemo(() => selectAtom(composeAtom, selector, isEqual), [composeAtom]),
   );
   const isAction = useAtomValue(isActionAtom);
   const defaultInGame = useDefaultInGame();
   const parsed = useAtomValue(parsedAtom);
+  const composeInGame = useAtomValue(inGameAtom);
   const { resolve } = usePortrayableCharacters(member.space.spaceId);
-  const { editingAttribution, editMode, media } = compose;
-  const parsedInGame = parsed.asTarget != null ? true : (parsed.inGame ?? defaultInGame);
-  const usesChannelCharacter =
-    parsed.asTarget == null || parsed.asTarget.type === 'DefaultCharacter';
-  const shouldResolveChannelCharacter =
-    editingAttribution == null && parsedInGame && usesChannelCharacter;
-  const { character, name: channelCharacterName } = useChannelCharacter(
-    member,
-    shouldResolveChannelCharacter,
-  );
-  const speaker = resolveSpeaker({
+  const { originalMessageAttribution, editMode, media } = compose;
+  const { character, name: channelCharacterName } = useChannelCharacter(member, composeInGame);
+  const { speaker } = resolveSpeaker({
     nickname: member.user.nickname,
     defaultInGame,
     parsedInGame: parsed.inGame,
     asTarget: parsed.asTarget,
-    editingAttribution,
+    originalMessageAttribution,
     channelCharacterId: member.channel.characterId,
     channelCharacterName,
     channelCharacter: character,
     resolveCharacter: resolve,
   });
-  const inGame = speaker.type === 'Resolved' ? speaker.inGame : true;
-  const messageColor = speaker.type === 'Resolved' ? speaker.color : undefined;
-  const colorSeed = speaker.type === 'Resolved' ? speaker.characterId : undefined;
+  const inGame = speaker.inGame;
+  const messageColor = speaker.color;
+  const colorSeed = speaker.characterId;
   const color = useMessageColor(member.user.id, inGame, messageColor, colorSeed);
-  const name =
-    speaker.type === 'InvalidCharacterReference' ? `@${speaker.identifier}` : speaker.name;
+  const name = speaker.name;
+  const portraitCharacterId =
+    speaker.source === 'Character' || speaker.source === 'Editing' ? speaker.characterId : null;
+  const originalPortraitId = speaker.source === 'Editing' ? speaker.portraitId : null;
   const nameNode = useMemo(() => {
-    if (speaker.type === 'Resolved' && speaker.source === 'Editing') {
-      return (
-        <Name
-          inGame={inGame}
-          name={name}
-          isMaster={isMaster}
-          self
-          userId={member.user.id}
-          messageColor={messageColor}
-          colorSeed={colorSeed}
-          characterId={speaker.characterId}
-          portraitId={speaker.portraitId}
-          isPreview
-        />
-      );
-    }
     return (
       <NameEditable
         inGame={inGame}
@@ -214,26 +199,11 @@ export const SelfPreview: FC<Props> = ({ preview, isLast, displayIndex }) => {
         color={color}
         isPreview
         self
-        portraitCharacterId={
-          speaker.type === 'Resolved' && speaker.source === 'Character'
-            ? speaker.characterId
-            : usesChannelCharacter
-              ? member.channel.characterId
-              : null
-        }
+        portraitCharacterId={portraitCharacterId}
+        originalPortraitId={originalPortraitId}
       />
     );
-  }, [
-    speaker,
-    color,
-    colorSeed,
-    inGame,
-    isMaster,
-    member,
-    messageColor,
-    name,
-    usesChannelCharacter,
-  ]);
+  }, [color, inGame, isMaster, member, name, originalPortraitId, portraitCharacterId]);
   const { onDrop } = useMediaDrop();
   const mediaNode = useMemo(() => {
     if (media == null) return null;

@@ -15,29 +15,58 @@ export interface SpeakerAttribution {
   inGame: boolean;
 }
 
-export type ResolvedSpeaker =
-  | {
-      type: 'Resolved';
-      source: 'User' | 'TemporaryName' | 'Character' | 'Editing';
-      name: string;
-      inGame: boolean;
-      characterId: string | null;
-      color?: string;
-      portraitId?: string | null;
-      character?: Character;
-    }
-  | {
-      type: 'InvalidCharacterReference';
-      identifier: string;
-      reason: Exclude<CharacterResolution['status'], 'Found'>;
-    };
+export interface Speaker {
+  source: 'User' | 'TemporaryName' | 'Character' | 'Editing';
+  name: string;
+  inGame: boolean;
+  characterId: string | null;
+  color?: string;
+  portraitId?: string | null;
+  character?: Character;
+}
+
+export interface SpeakerIssue {
+  type: 'CharacterReferenceUnavailable';
+  identifier: string;
+  reason: Exclude<CharacterResolution['status'], 'Found'>;
+}
+
+export interface SpeakerResolution {
+  speaker: Speaker;
+  issue: SpeakerIssue | null;
+}
+
+interface ResolveSpeakerModeOptions {
+  defaultInGame: boolean;
+  parsedInGame: boolean | null;
+  asTarget: AsTarget | null;
+  originalMessageAttribution?: Pick<SpeakerAttribution, 'inGame'>;
+}
+
+export const resolveSpeakerMode = ({
+  defaultInGame,
+  parsedInGame,
+  asTarget,
+  originalMessageAttribution,
+}: ResolveSpeakerModeOptions): {
+  inGame: boolean;
+  usesOriginalMessageAttribution: boolean;
+} => {
+  const usesOriginalMessageAttribution =
+    originalMessageAttribution != null &&
+    asTarget == null &&
+    (parsedInGame == null || parsedInGame === originalMessageAttribution.inGame);
+  const inGame =
+    asTarget != null ? true : (parsedInGame ?? originalMessageAttribution?.inGame ?? defaultInGame);
+  return { inGame, usesOriginalMessageAttribution };
+};
 
 interface ResolveSpeakerOptions {
   nickname: string;
   defaultInGame: boolean;
   parsedInGame: boolean | null;
   asTarget: AsTarget | null;
-  editingAttribution?: SpeakerAttribution;
+  originalMessageAttribution?: SpeakerAttribution;
   channelCharacterId: string | null;
   channelCharacterName: string;
   channelCharacter?: Character;
@@ -49,77 +78,96 @@ export const resolveSpeaker = ({
   defaultInGame,
   parsedInGame,
   asTarget,
-  editingAttribution,
+  originalMessageAttribution,
   channelCharacterId,
   channelCharacterName,
   channelCharacter,
   resolveCharacter,
-}: ResolveSpeakerOptions): ResolvedSpeaker => {
-  if (editingAttribution != null) {
+}: ResolveSpeakerOptions): SpeakerResolution => {
+  const { inGame, usesOriginalMessageAttribution } = resolveSpeakerMode({
+    defaultInGame,
+    parsedInGame,
+    asTarget,
+    originalMessageAttribution,
+  });
+  if (usesOriginalMessageAttribution && originalMessageAttribution != null) {
     return {
-      type: 'Resolved',
-      source: 'Editing',
-      name: editingAttribution.name,
-      inGame: editingAttribution.inGame,
-      characterId: editingAttribution.characterId,
-      color: editingAttribution.color,
-      portraitId: editingAttribution.portraitId,
+      speaker: {
+        source: 'Editing',
+        name: originalMessageAttribution.name,
+        inGame,
+        characterId: originalMessageAttribution.characterId,
+        color: originalMessageAttribution.color,
+        portraitId: originalMessageAttribution.portraitId,
+      },
+      issue: null,
     };
   }
-  const inGame = asTarget != null ? true : (parsedInGame ?? defaultInGame);
   if (!inGame) {
     return {
-      type: 'Resolved',
-      source: 'User',
-      name: nickname,
-      inGame: false,
-      characterId: null,
+      speaker: {
+        source: 'User',
+        name: nickname,
+        inGame: false,
+        characterId: null,
+      },
+      issue: null,
     };
   }
   if (asTarget?.type === 'TemporaryName') {
     return {
-      type: 'Resolved',
-      source: 'TemporaryName',
-      name: asTarget.name,
-      inGame: true,
-      characterId: null,
+      speaker: {
+        source: 'TemporaryName',
+        name: asTarget.name,
+        inGame: true,
+        characterId: null,
+      },
+      issue: null,
     };
   }
+  let issue: SpeakerIssue | null = null;
   if (asTarget?.type === 'CharacterReference') {
     const resolution = resolveCharacter(asTarget.identifier);
     if (resolution.status !== 'Found') {
-      return {
-        type: 'InvalidCharacterReference',
+      issue = {
+        type: 'CharacterReferenceUnavailable',
         identifier: asTarget.identifier,
         reason: resolution.status,
       };
+    } else {
+      return {
+        speaker: {
+          source: 'Character',
+          name: resolution.character.name,
+          inGame: true,
+          characterId: resolution.character.id,
+          color: resolution.character.color,
+          character: resolution.character,
+        },
+        issue: null,
+      };
     }
-    return {
-      type: 'Resolved',
-      source: 'Character',
-      name: resolution.character.name,
-      inGame: true,
-      characterId: resolution.character.id,
-      color: resolution.character.color,
-      character: resolution.character,
-    };
   }
   if (channelCharacterId != null) {
     return {
-      type: 'Resolved',
-      source: 'Character',
-      name: channelCharacter?.name ?? channelCharacterName,
-      inGame: true,
-      characterId: channelCharacterId,
-      color: channelCharacter?.color,
-      character: channelCharacter,
+      speaker: {
+        source: 'Character',
+        name: channelCharacter?.name ?? channelCharacterName,
+        inGame: true,
+        characterId: channelCharacterId,
+        color: channelCharacter?.color,
+        character: channelCharacter,
+      },
+      issue,
     };
   }
   return {
-    type: 'Resolved',
-    source: 'TemporaryName',
-    name: channelCharacterName,
-    inGame: true,
-    characterId: null,
+    speaker: {
+      source: 'TemporaryName',
+      name: channelCharacterName,
+      inGame: true,
+      characterId: null,
+    },
+    issue,
   };
 };

@@ -4,12 +4,13 @@ import { type MediaError, validateMedia } from '../media';
 import { type ComposeAction, type ComposeActionUnion } from './compose.actions';
 import { type PreviewEdit } from '@boluo/api';
 import type { CharacterPortraitSelection } from './characterPortraitSelection';
+import { resolveSpeakerMode } from '../characters/resolveSpeaker';
 
 export type ComposeError = 'TEXT_EMPTY' | 'NO_NAME' | MediaError;
 
 export type ComposeRange = [number, number];
 
-export interface EditingAttribution {
+export interface OriginalMessageAttribution {
   characterId: string | null;
   portraitId: string | null;
   name: string;
@@ -34,7 +35,7 @@ export interface ComposeState {
   backup?: ComposeState;
   edit: PreviewEdit | null;
   selectedCharacterPortrait: CharacterPortraitSelection | null;
-  editingAttribution?: EditingAttribution;
+  originalMessageAttribution?: OriginalMessageAttribution;
 }
 
 export const makeInitialComposeState = (): ComposeState => ({
@@ -81,7 +82,11 @@ const handleToggleInGame = (
     const command = modifier.inGame ? '.out ' : '.in ';
     nextSource = command + (before + after).trimStart();
   }
-  return { ...state, source: nextSource, range: [nextSource.length, nextSource.length] };
+  return {
+    ...state,
+    source: nextSource,
+    range: [nextSource.length, nextSource.length],
+  };
 };
 
 const handleSetInGame = (
@@ -104,7 +109,11 @@ const handleSetInGame = (
     const command = payload.inGame ? '.in ' : '.out ';
     nextSource = command + (before + after).trimStart();
   }
-  return { ...state, source: nextSource, range: [nextSource.length, nextSource.length] };
+  return {
+    ...state,
+    source: nextSource,
+    range: [nextSource.length, nextSource.length],
+  };
 };
 
 const handleRecoverState = (
@@ -205,7 +214,7 @@ const handleEditMessage = (
     ...makeInitialComposeState(),
     previewId,
     edit: { time: modified, p: posP, q: posQ },
-    editingAttribution: {
+    originalMessageAttribution: {
       characterId: message.characterId ?? null,
       portraitId: message.portraitId ?? null,
       name: message.name,
@@ -276,7 +285,11 @@ const handleSetAsTargetText = (
 ): ComposeState => {
   const nextSource = setAsTargetText(state.source, payload.text);
   const nextRange: ComposeRange = [nextSource.length, nextSource.length];
-  const nextState: ComposeState = { ...state, source: nextSource, range: nextRange };
+  const nextState: ComposeState = {
+    ...state,
+    source: nextSource,
+    range: nextRange,
+  };
   if (payload.setInGame) {
     return handleSetInGame(nextState, { type: 'setInGame', payload: { inGame: true } });
   }
@@ -521,18 +534,24 @@ export const composeReducer = (state: ComposeState, action: ComposeActionUnion):
   }
 };
 
+type ComposeValidationInput = Pick<ComposeState, 'source' | 'media' | 'originalMessageAttribution'>;
+
 export const checkCompose =
-  (characterName: string, defaultInGame: boolean) =>
-  ({
-    source,
-    media,
-    editingAttribution,
-  }: Pick<ComposeState, 'source' | 'media' | 'editingAttribution'>): ComposeError | null => {
-    const { inGame, rest, asTarget } = parseModifiers(source);
-    const effectiveInGame = asTarget != null ? true : inGame ? inGame.inGame : defaultInGame;
-    const hasBoundEditCharacter = editingAttribution?.characterId != null;
+  (defaultCharacterName: string, defaultInGame: boolean) =>
+  ({ source, media, originalMessageAttribution }: ComposeValidationInput): ComposeError | null => {
+    const { inGame: inGameModifier, rest, asTarget } = parseModifiers(source);
+    const { inGame, usesOriginalMessageAttribution } = resolveSpeakerMode({
+      defaultInGame,
+      parsedInGame: inGameModifier === false ? null : inGameModifier.inGame,
+      asTarget,
+      originalMessageAttribution,
+    });
+    const characterName =
+      usesOriginalMessageAttribution && originalMessageAttribution != null
+        ? originalMessageAttribution.name
+        : defaultCharacterName;
     const needsDefaultName = asTarget == null || asTarget.type === 'DefaultCharacter';
-    if (effectiveInGame && needsDefaultName && characterName === '' && !hasBoundEditCharacter) {
+    if (inGame && needsDefaultName && characterName === '') {
       return 'NO_NAME';
     }
     const mediaResult = validateMedia(media);

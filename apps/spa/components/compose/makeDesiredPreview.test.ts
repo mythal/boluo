@@ -3,6 +3,7 @@ import test from 'node:test';
 import { composeInitialParseResult, parse } from '@boluo/interpreter';
 import { atom, createStore } from 'jotai';
 import { selectAtom } from 'jotai/utils';
+import type { Character } from '@boluo/api';
 import { makeInitialComposeState } from '../../state/compose.reducer';
 import {
   areComposePreviewMetadataEqual,
@@ -92,29 +93,35 @@ test('uses the resolved character name for a character-reference preview', () =>
     defaultInGame: false,
     compose,
     parsed,
-    characterNameForIdentifier: (identifier) => (identifier === 'alice' ? 'Alice' : null),
+    resolveCharacter: (identifier) =>
+      identifier === 'alice'
+        ? {
+            status: 'Found',
+            character: { id: 'character-alice', name: 'Alice' } as Character,
+          }
+        : { status: 'NotFound' },
   });
 
   assert.equal(desired?.preview.name, 'Alice');
   assert.equal(desired?.preview.clear, false);
 });
 
-test('clears a character-reference preview until the character resolves', () => {
+test('falls back to the default preview until a character reference resolves', () => {
   const source = '.as @alice; hello';
   const compose = { ...makeInitialComposeState(), source };
   const parsed = { ...parse(source), source };
   const desired = makeDesiredPreview({
     channelId: 'channel',
     nickname: 'Player',
-    defaultCharacterName: '',
+    defaultCharacterName: 'Default Name',
     defaultInGame: false,
     compose,
     parsed,
-    characterNameForIdentifier: () => null,
+    resolveCharacter: () => ({ status: 'Loading' }),
   });
 
-  assert.equal(desired?.preview.clear, true);
-  assert.equal(desired?.preview.text, '');
+  assert.equal(desired?.preview.clear, false);
+  assert.equal(desired?.preview.name, 'Default Name');
 });
 
 test('makes a cleared preview for the initial empty parse result', () => {
@@ -161,60 +168,28 @@ test('hides non-broadcast content in the preview payload', () => {
   assert.deepEqual(desired?.preview.entities, []);
 });
 
-test('preserves a bound character identity while editing', () => {
+test('uses the restored original attribution in an edit preview', () => {
+  const originalMessageAttribution = {
+    characterId: 'character-a',
+    portraitId: 'portrait-a',
+    name: 'Character A',
+    color: 'preset:orange',
+    inGame: true,
+  };
   const compose = {
     ...makeInitialComposeState(),
-    previewId: 'message-id',
-    source: 'edited text',
-    edit: { time: '2026-08-06T00:00:00Z', p: 1, q: 1 },
-    editingAttribution: {
-      characterId: 'character-a',
-      portraitId: null,
-      name: 'Character A',
-      color: 'seed:character-a',
-      inGame: true,
-    },
+    source: '.in edited text',
+    originalMessageAttribution,
   };
-  const parsed = {
-    ...parse(compose.source),
-    source: compose.source,
-  };
-
-  const desired = makeDesiredPreview({
-    channelId: 'channel',
-    nickname: 'Alice',
-    defaultCharacterName: 'Character B',
-    defaultInGame: false,
-    compose,
-    parsed,
-  });
-
-  assert.equal(desired?.preview.name, 'Character A');
-  assert.equal(desired?.preview.inGame, true);
-});
-
-test('preserves a temporary speaker name while editing', () => {
-  const compose = {
-    ...makeInitialComposeState(),
-    source: 'edited text',
-    editingAttribution: {
-      characterId: null,
-      portraitId: null,
-      name: 'Temporary Name',
-      color: '',
-      inGame: true,
-    },
-  };
-  const parsed = { ...parse(compose.source), source: compose.source };
   const desired = makeDesiredPreview({
     channelId: 'channel',
     nickname: 'Player',
-    defaultCharacterName: 'Default Name',
+    defaultCharacterName: 'Character B',
     defaultInGame: false,
     compose,
-    parsed,
+    parsed: { ...parse(compose.source), source: compose.source },
   });
 
-  assert.equal(desired?.preview.name, 'Temporary Name');
+  assert.equal(desired?.preview.name, 'Character A');
   assert.equal(desired?.preview.inGame, true);
 });

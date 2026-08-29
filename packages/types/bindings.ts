@@ -379,17 +379,20 @@ export type EditEntryComponents = {
 };
 
 export type EditMessage = {
+  spaceId?: string | null;
   messageId: string;
-  name: string;
+  attribution?: EditMessageAttribution | null;
   text: string;
   entities?: Entities;
-  inGame?: boolean;
   isAction?: boolean;
   mediaId?: string | null;
-  color?: string;
   /**  The `modified` timestamp of the message at the time the client started editing it. */
   expectModified?: string | null;
-};
+} & LegacyEditAttribution;
+
+export type EditMessageAttribution =
+  | { type: 'character'; characterId: string; portraitId: string | null }
+  | { type: 'custom'; name: string; color: string; inGame: boolean };
 
 export type EditNote = {
   spaceId: string;
@@ -676,6 +679,15 @@ export type KickFromChannel = {
 export type KickFromSpace = {
   spaceId: string;
   userId: string;
+};
+
+export type LegacyEditAttribution = {
+  /**  Legacy sender name. New clients should use `attribution` instead. */
+  name?: string | null;
+  /**  Legacy in-game state. New clients should use `attribution` instead. */
+  inGame?: boolean | null;
+  /**  Legacy sender color. New clients should use `attribution` instead. */
+  color?: string | null;
 };
 
 export type LinkEntity = {

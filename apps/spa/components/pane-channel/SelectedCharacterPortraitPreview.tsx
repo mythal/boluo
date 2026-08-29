@@ -6,7 +6,11 @@ import { type CSSProperties, type FC, useEffect, useMemo, useState } from 'react
 import { useIntl } from 'react-intl';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { shouldClearCharacterPortraitSelection } from '../../state/characterPortraitSelection';
-import { CharacterPortrait, portraitSourceFromEntry } from '../pane-character/CharacterPortrait';
+import {
+  CharacterPortrait,
+  type CharacterPortraitSource,
+  portraitSourceFromEntry,
+} from '../pane-character/CharacterPortrait';
 import {
   parsePortraitComponent,
   PORTRAIT_COMPONENT_TYPE,
@@ -16,11 +20,22 @@ import {
 interface Props {
   spaceId: string;
   characterId: string | null;
+  defaultPortraitId?: string | null;
 }
 
 const PORTRAIT_PICKER_GAP_REM = 0.5;
 
-export const SelectedCharacterPortraitPreview: FC<Props> = ({ spaceId, characterId }) => {
+interface PortraitChoice {
+  key: string;
+  portraitId: string;
+  source: CharacterPortraitSource;
+}
+
+export const SelectedCharacterPortraitPreview: FC<Props> = ({
+  spaceId,
+  characterId,
+  defaultPortraitId,
+}) => {
   const intl = useIntl();
   const { composeAtom, asTargetAtom } = useChannelAtoms();
   const asTarget = useAtomValue(asTargetAtom);
@@ -34,18 +49,40 @@ export const SelectedCharacterPortraitPreview: FC<Props> = ({ spaceId, character
     PORTRAIT_COMPONENT_TYPE,
   );
   const portraits = useMemo(() => sortPortraitEntries(portraitEntries), [portraitEntries]);
+  const portraitChoices = useMemo<PortraitChoice[]>(() => {
+    const choices = portraits.flatMap((entry): PortraitChoice[] => {
+      const portrait = parsePortraitComponent(entry.component);
+      if (portrait == null) return [];
+      return [
+        {
+          key: `entry:${entry.id}`,
+          portraitId: portrait.assetId,
+          source: portraitSourceFromEntry(entry),
+        },
+      ];
+    });
+    if (
+      defaultPortraitId != null &&
+      !choices.some((choice) => choice.portraitId === defaultPortraitId)
+    ) {
+      choices.unshift({
+        key: `original:${defaultPortraitId}`,
+        portraitId: defaultPortraitId,
+        source: { type: 'ASSET', assetId: defaultPortraitId },
+      });
+    }
+    return choices;
+  }, [defaultPortraitId, portraits]);
+  const selectedPortraitId =
+    selectedCharacterPortrait?.characterId === characterId
+      ? selectedCharacterPortrait.portraitId
+      : defaultPortraitId;
   const selectedPortrait =
-    portraits.find(
-      (entry) =>
-        selectedCharacterPortrait?.characterId === characterId &&
-        parsePortraitComponent(entry.component)?.assetId === selectedCharacterPortrait.portraitId,
-    ) ?? portraits[0];
+    portraitChoices.find((choice) => choice.portraitId === selectedPortraitId) ??
+    portraitChoices[0];
 
   useEffect(() => {
-    const availablePortraitIds = portraits.flatMap((entry) => {
-      const portrait = parsePortraitComponent(entry.component);
-      return portrait == null ? [] : [portrait.assetId];
-    });
+    const availablePortraitIds = portraitChoices.map((choice) => choice.portraitId);
     if (
       portraitEntries != null &&
       shouldClearCharacterPortraitSelection(
@@ -56,12 +93,14 @@ export const SelectedCharacterPortraitPreview: FC<Props> = ({ spaceId, character
     ) {
       dispatch({ type: 'selectCharacterPortrait', payload: null });
     }
-  }, [characterId, dispatch, portraitEntries, portraits, selectedCharacterPortrait]);
+  }, [characterId, dispatch, portraitChoices, portraitEntries, selectedCharacterPortrait]);
 
   if (asTarget?.type === 'TemporaryName' || character == null || selectedPortrait == null)
     return null;
 
-  const portraitOptions = portraits.filter((portrait) => portrait.id !== selectedPortrait.id);
+  const portraitOptions = portraitChoices.filter(
+    (portrait) => portrait.portraitId !== selectedPortrait.portraitId,
+  );
   const multiple = portraitOptions.length > 0;
 
   return (
@@ -78,11 +117,9 @@ export const SelectedCharacterPortraitPreview: FC<Props> = ({ spaceId, character
           }
         >
           {portraitOptions.map((portrait, index) => {
-            const portraitId = parsePortraitComponent(portrait.component)?.assetId;
-            if (portraitId == null) return null;
             return (
               <button
-                key={portrait.id}
+                key={portrait.key}
                 type="button"
                 tabIndex={expanded ? 0 : -1}
                 aria-label={intl.formatMessage(
@@ -92,7 +129,7 @@ export const SelectedCharacterPortraitPreview: FC<Props> = ({ spaceId, character
                 onClick={() => {
                   dispatch({
                     type: 'selectCharacterPortrait',
-                    payload: { characterId: character.id, portraitId },
+                    payload: { characterId: character.id, portraitId: portrait.portraitId },
                   });
                   setExpanded(false);
                 }}
@@ -109,7 +146,7 @@ export const SelectedCharacterPortraitPreview: FC<Props> = ({ spaceId, character
                 <CharacterPortrait
                   spaceId={spaceId}
                   characterName={character.name}
-                  source={portraitSourceFromEntry(portrait)}
+                  source={portrait.source}
                   size="popover"
                   loading="lazy"
                 />
@@ -132,7 +169,7 @@ export const SelectedCharacterPortraitPreview: FC<Props> = ({ spaceId, character
         <CharacterPortrait
           spaceId={spaceId}
           characterName={character.name}
-          source={portraitSourceFromEntry(selectedPortrait)}
+          source={selectedPortrait.source}
           size="popover"
         />
       </button>

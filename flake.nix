@@ -94,7 +94,6 @@
           imageLabel = {
             "org.opencontainers.image.url" = "https://github.com/mythal/boluo";
             "org.opencontainers.image.version" = version;
-            "org.opencontainers.image.revision" = rev;
             "org.opencontainers.image.vendor" = "Mythal";
             "org.opencontainers.image.licenses" = "AGPL-3.0";
           };
@@ -323,7 +322,6 @@
               };
               config = {
                 Env = [
-                  "APP_VERSION=${rev}"
                   "PATH=/bin:/usr/bin"
                 ];
                 Cmd = [ "/bin/bash" ];
@@ -342,7 +340,6 @@
                 ];
               };
               config = {
-                Env = [ versionEnv ];
                 Cmd = [
                   "/bin/server"
                   "serve"
@@ -562,11 +559,15 @@
             };
 
             deploy-server-staging = pkgs.writeShellScriptBin "deploy-server-staging" ''
-              ${pkgs.flyctl}/bin/flyctl deploy --config ${apps/server/fly.toml} --image ghcr.io/mythal/boluo/server:v${self.rev} --remote-only
+              set -euo pipefail
+              : "''${APP_VERSION:?APP_VERSION must be set}"
+              ${pkgs.flyctl}/bin/flyctl deploy --config ${apps/server/fly.toml} --image "ghcr.io/mythal/boluo/server:v''${APP_VERSION}" --env "APP_VERSION=''${APP_VERSION}" --remote-only
             '';
 
             deploy-server-production = pkgs.writeShellScriptBin "deploy-server-production" ''
-              ${pkgs.flyctl}/bin/flyctl deploy --config ${apps/server/production/fly.toml} --image ghcr.io/mythal/boluo/server:v${self.rev} --remote-only
+              set -euo pipefail
+              : "''${APP_VERSION:?APP_VERSION must be set}"
+              ${pkgs.flyctl}/bin/flyctl deploy --config ${apps/server/production/fly.toml} --image "ghcr.io/mythal/boluo/server:v''${APP_VERSION}" --env "APP_VERSION=''${APP_VERSION}" --remote-only
             '';
 
             deploy-site-staging = pkgs.writeShellScriptBin "deploy-site-staging" ''

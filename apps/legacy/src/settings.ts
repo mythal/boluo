@@ -1,6 +1,5 @@
 export const LOCAL_BACKEND = false;
 
-export const HEARTBEAT_INTERVAL = 2000;
 export const ONLINE_TIMEOUT = 12000;
 
 export const isCrossOrigin = (() => {

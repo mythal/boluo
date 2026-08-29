@@ -36,7 +36,7 @@ jobs:
         uses: ./.github/actions/node-setup
 
       - name: Check Rust formatting
-        run: nix develop --quiet --no-update-lock-file --command cargo fmt --check
+        run: nix develop --quiet --no-update-lock-file .#format --command cargo fmt --check
 
       - name: Check Node.js formatting
         run: npm run format:check

@@ -11,6 +11,9 @@
     "not_found_handling": "none",
     "run_worker_first": ["/api/*"],
   },
+  "version_metadata": {
+    "binding": "WORKER_VERSION",
+  },
   "r2_buckets": [
     {
       "binding": "HISTORY_FILES",
@@ -24,6 +27,9 @@
   },
   "env": {
     "production": {
+      "version_metadata": {
+        "binding": "WORKER_VERSION",
+      },
       "r2_buckets": [
         {
           "binding": "HISTORY_FILES",
@@ -37,6 +43,9 @@
       },
     },
     "staging": {
+      "version_metadata": {
+        "binding": "WORKER_VERSION",
+      },
       "r2_buckets": [
         {
           "binding": "HISTORY_FILES",

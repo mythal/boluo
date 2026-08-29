@@ -1,4 +1,4 @@
-import type { ExportedHandler } from '@cloudflare/workers-types';
+import type { ExportedHandler, WorkerVersionMetadata } from '@cloudflare/workers-types';
 
 interface Env {
   ASSETS: Fetcher;
@@ -6,7 +6,10 @@ interface Env {
   BACKEND_URL: string;
   FRONTEND_APP: 'legacy' | 'spa';
   HISTORY_FILES: R2Bucket;
+  WORKER_VERSION?: WorkerVersionMetadata;
 }
+
+const FRONTEND_VERSION_PATH = '/api/info/frontend-version';
 
 const isStaticAssetPath = (pathname: string): boolean =>
   pathname === '/assets' ||
@@ -25,6 +28,21 @@ const notFound = (method: string): Response =>
       'X-Content-Type-Options': 'nosniff',
     },
   });
+
+const frontendVersion = (request: Request, env: Env): Response => {
+  if (request.method !== 'GET' && request.method !== 'HEAD') {
+    return notFound(request.method);
+  }
+
+  const tag = env.WORKER_VERSION?.tag;
+  const body = tag == null ? {} : { frontendVersion: tag };
+  return new Response(request.method === 'HEAD' ? null : JSON.stringify(body), {
+    headers: {
+      'Cache-Control': 'no-store',
+      'Content-Type': 'application/json; charset=utf-8',
+    },
+  });
+};
 
 const historyKey = (url: URL, env: Env): string =>
   `${env.DEPLOYMENT_ENV}/${env.FRONTEND_APP}${url.pathname}`;
@@ -79,6 +97,10 @@ const frontendNotFound = async (request: Request, url: URL, env: Env): Promise<R
 export default {
   async fetch(request, env): Promise<Response> {
     const url = new URL(request.url);
+
+    if (url.pathname === FRONTEND_VERSION_PATH) {
+      return frontendVersion(request, env);
+    }
 
     if (isStaticAssetPath(url.pathname)) {
       return await historyAsset(request, url, env);

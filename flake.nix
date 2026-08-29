@@ -87,9 +87,16 @@
             }
           );
 
-          craneLib = (crane.mkLib pkgs).overrideToolchain rustToolchain;
+          rustfmtToolchain = pkgs.rust-bin.selectLatestNightlyWith (
+            toolchain:
+            toolchain.minimal.override {
+              extensions = [ "rustfmt" ];
+            }
+          );
 
-          versionEnv = "APP_VERSION=${rev}";
+          pulumiToolchain = pkgs.pulumi.withPackages (pulumiPackages: [ pulumiPackages.pulumi-nodejs ]);
+
+          craneLib = (crane.mkLib pkgs).overrideToolchain rustToolchain;
 
           imageLabel = {
             "org.opencontainers.image.url" = "https://github.com/mythal/boluo";
@@ -475,7 +482,6 @@
               '';
               config = {
                 Env = [
-                  versionEnv
                   "NEXT_TELEMETRY_DISABLED=1"
                   "NODE_ENV=production"
                 ];
@@ -571,7 +577,9 @@
             '';
 
             deploy-site-staging = pkgs.writeShellScriptBin "deploy-site-staging" ''
-              ${pkgs.flyctl}/bin/flyctl deploy --config ${apps/site/fly.toml} --image ghcr.io/mythal/boluo/site:v${self.rev} --remote-only
+              set -euo pipefail
+              : "''${APP_VERSION:?APP_VERSION must be set}"
+              ${pkgs.flyctl}/bin/flyctl deploy --config ${apps/site/fly.toml} --image "ghcr.io/mythal/boluo/site:v''${APP_VERSION}" --env "APP_VERSION=''${APP_VERSION}" --remote-only
             '';
 
           };
@@ -600,7 +608,7 @@
                 flyctl
                 cargo-nextest
                 postgresql
-                (pulumi.withPackages (pulumiPackages: [ pulumiPackages.pulumi-nodejs ]))
+                pulumiToolchain
                 python3
                 gh
               ]
@@ -608,6 +616,18 @@
             shellHook = ''
               export PATH="node_modules/.bin:$PATH"
             '';
+          };
+          devShells.format = pkgs.mkShell {
+            packages = [ rustfmtToolchain ];
+          };
+          devShells.deployment = pkgs.mkShell {
+            packages = with pkgs; [
+              flyctl
+              python3
+            ];
+          };
+          devShells.infra = pkgs.mkShell {
+            packages = [ pulumiToolchain ];
           };
         };
     };

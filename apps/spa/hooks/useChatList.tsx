@@ -33,7 +33,12 @@ export interface VirtualChatListState {
   viewKey: string;
 }
 
-export const virtualChatItemKey = (item: ChatItem): string => `${item.type}:${item.key}`;
+export const virtualChatItemKey = (item: ChatItem): string => {
+  if (item.type === 'PREVIEW' && item.edit != null) {
+    return `MESSAGE:${item.id}`;
+  }
+  return `${item.type}:${item.key}`;
+};
 
 export const areChatListsReferentiallyEqual = (a: ChatItem[], b: ChatItem[]): boolean =>
   a === b || (a.length === b.length && a.every((item, index) => item === b[index]));

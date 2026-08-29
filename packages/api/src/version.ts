@@ -3,9 +3,9 @@ const normalizeVersion = (version: string | null | undefined): string | null => 
   return normalized && normalized !== 'unknown' ? normalized : null;
 };
 
-export const readVersion = (value: unknown): string | null => {
-  if (typeof value !== 'object' || value == null || !('version' in value)) return null;
-  return typeof value.version === 'string' ? value.version : null;
+export const readFrontendVersion = (value: unknown): string | null => {
+  if (typeof value !== 'object' || value == null || !('frontendVersion' in value)) return null;
+  return typeof value.frontendVersion === 'string' ? value.frontendVersion : null;
 };
 
 export const findNewVersion = (

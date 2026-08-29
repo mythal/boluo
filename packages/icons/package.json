@@ -16,7 +16,8 @@
   "homepage": "https://github.com/mythal/boluo",
   "scripts": {
     "check": "tsc --noEmit",
-    "generate": "node scripts/generate.ts"
+    "codegen": "node scripts/generate.ts",
+    "prepare": "npm run codegen"
   },
   "sideEffects": false,
   "type": "module"

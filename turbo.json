@@ -17,7 +17,7 @@
     },
     "lint": { "dependsOn": ["@boluo/icons#generate"] },
     "test": { "dependsOn": ["check"] },
-    "check": { "dependsOn": ["@boluo/icons#generate"] },
+    "check": { "dependsOn": ["^check", "@boluo/icons#generate"] },
     "storybook": {
       "dependsOn": ["^generate"],
       "cache": false,
@@ -63,7 +63,7 @@
       "outputs": [".next/**", "!.next/cache/**"]
     },
     "legacy#build": {
-      "dependsOn": ["@boluo/backend-proxy#build", "@boluo/icons#generate"],
+      "dependsOn": ["^generate", "@boluo/backend-proxy#build"],
       "env": ["APP_VERSION", "GITHUB_SHA"],
       "inputs": [
         "$TURBO_DEFAULT$",

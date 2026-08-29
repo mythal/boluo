@@ -1,5 +1,6 @@
 use super::Message;
-use super::api::{EditMessage, NewMessage};
+use super::api::{EditMessage, EditMessageAttribution, LegacyEditAttribution, NewMessage};
+use super::models::MessageAttributionUpdate;
 use crate::channels::{Channel, ChannelMember};
 use crate::csrf::authenticate;
 use crate::error::{AppError, Find};
@@ -161,6 +162,117 @@ async fn send(
     Ok(message)
 }
 
+enum EditAttributionIntent {
+    Preserve,
+    LegacyCustom(LegacyEditAttribution),
+    Explicit(EditMessageAttribution),
+}
+
+fn edit_attribution_intent(
+    attribution: Option<EditMessageAttribution>,
+    legacy: LegacyEditAttribution,
+) -> EditAttributionIntent {
+    match attribution {
+        Some(attribution) => EditAttributionIntent::Explicit(attribution),
+        None if legacy.is_supplied() => EditAttributionIntent::LegacyCustom(legacy),
+        // Omitting attribution is a text-only edit and deliberately skips portrayal checks.
+        None => EditAttributionIntent::Preserve,
+    }
+}
+
+fn resolve_legacy_edit_attribution(
+    legacy: LegacyEditAttribution,
+    message: &Message,
+) -> MessageAttributionUpdate {
+    MessageAttributionUpdate {
+        name: legacy.name.unwrap_or_else(|| message.name.to_string()),
+        // Legacy clients have no explicit attribution field, so edits intentionally switch a
+        // character message to custom attribution.
+        character_id: None,
+        portrait_id: None,
+        in_game: legacy.in_game.unwrap_or(message.in_game),
+        color: legacy.color.unwrap_or_else(|| message.color.to_string()),
+    }
+}
+
+async fn resolve_character_edit_attribution(
+    ctx: &crate::context::AppContext,
+    space_id: Uuid,
+    user_id: Uuid,
+    character_id: Uuid,
+    requested_portrait_id: Option<Uuid>,
+) -> Result<MessageAttributionUpdate, AppError> {
+    let character = crate::characters::handlers::resolve_character_for_portrayal(
+        ctx,
+        space_id,
+        character_id,
+        user_id,
+    )
+    .await?;
+    let portrait_id = match requested_portrait_id {
+        Some(portrait_id) => Some(portrait_id),
+        None => {
+            crate::entries::models::Entry::first_asset_by_component(
+                &ctx.db,
+                character.scope_id,
+                crate::entries::models::CORE_PORTRAIT_COMPONENT_TYPE,
+            )
+            .await?
+        }
+    };
+    if let Some(portrait_id) = portrait_id {
+        let portrait = crate::assets::Asset::get_by_id_in_space(&ctx.db, space_id, portrait_id)
+            .await
+            .or_not_found()?;
+        if !portrait.mime_type.starts_with("image/") {
+            return Err(AppError::BadRequest(
+                "A Message portrait must reference an image Asset".to_string(),
+            ));
+        }
+    }
+    Ok(MessageAttributionUpdate {
+        name: character.name.to_string(),
+        character_id: Some(character_id),
+        portrait_id,
+        in_game: true,
+        color: character.color.to_string(),
+    })
+}
+
+async fn resolve_edit_attribution(
+    ctx: &crate::context::AppContext,
+    space_id: Uuid,
+    user_id: Uuid,
+    current_message: &Message,
+    intent: EditAttributionIntent,
+) -> Result<Option<MessageAttributionUpdate>, AppError> {
+    match intent {
+        EditAttributionIntent::Preserve => Ok(None),
+        EditAttributionIntent::LegacyCustom(legacy) => Ok(Some(resolve_legacy_edit_attribution(
+            legacy,
+            current_message,
+        ))),
+        EditAttributionIntent::Explicit(EditMessageAttribution::Custom {
+            name,
+            color,
+            in_game,
+        }) => Ok(Some(MessageAttributionUpdate {
+            name,
+            character_id: None,
+            portrait_id: None,
+            in_game,
+            color,
+        })),
+        EditAttributionIntent::Explicit(EditMessageAttribution::Character {
+            character_id,
+            portrait_id,
+        }) => Ok(Some(
+            resolve_character_edit_attribution(ctx, space_id, user_id, character_id, portrait_id)
+                .await?,
+        )),
+    }
+}
+
 async fn edit(
     ctx: &crate::context::AppContext,
     req: Request<impl Body>,
@@ -169,29 +281,58 @@ async fn edit(
     let session = authenticate(ctx, &req).await?;
     let edit_message = interface::parse_large_body::<EditMessage>(req).await?;
     let EditMessage {
+        space_id: space_id_from_request,
         message_id,
-        name,
+        attribution,
+        legacy_attribution,
         text,
         entities,
-        in_game,
         is_action,
         media_id,
-        color,
         expect_modified,
     } = *edit_message;
+    let uses_legacy_attribution = attribution.is_none() && legacy_attribution.is_supplied();
+    if uses_legacy_attribution {
+        metrics::counter!(
+            "boluo_server_messages_edit_compat_total",
+            "kind" => "legacy_attribution_fields"
+        )
+        .increment(1);
+    }
+    let current_message = Message::get(&ctx.db, &message_id, Some(&session.user_id))
+        .await?
+        .or_not_found()?;
+    let resolved_channel = ctx
+        .space_store
+        .resolve_channel(current_message.channel_id, space_id_from_request)
+        .await?
+        .or_not_found()?;
+    let space_id = resolved_channel.channel.space_id;
+    if space_id_from_request.is_some_and(|requested_space_id| requested_space_id != space_id) {
+        return Err(AppError::BadRequest(
+            "The message does not belong to the requested Space".to_string(),
+        ));
+    }
+    let attribution_intent = edit_attribution_intent(attribution, legacy_attribution);
+    let attribution = resolve_edit_attribution(
+        ctx,
+        space_id,
+        session.user_id,
+        &current_message,
+        attribution_intent,
+    )
+    .await?;
     let text = &*text;
-    let name = &*name;
     let edit_outcome = Message::edit(
         &ctx.db,
         session.user_id,
-        name,
+        attribution,
+        space_id,
         &message_id,
         text,
         entities,
-        in_game,
         is_action,
         media_id,
-        color,
         expect_modified,
     )
     .await?;

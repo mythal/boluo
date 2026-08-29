@@ -72,7 +72,8 @@ const removePreviewBySender = (
 };
 
 const editMessageOptimisticItem = (
-  { name, text, entities = [], inGame, isAction, mediaId, color }: EditMessage,
+  { text, entities = [], isAction, mediaId }: EditMessage,
+  speaker: ChatAction<'messageEditing'>['payload']['speaker'],
   previousMessage: MessageItem,
   sendTime: number,
   media: File | null,
@@ -82,13 +83,15 @@ const editMessageOptimisticItem = (
     ...previousMessage,
     optimistic: true,
     optimisticMedia: media,
-    name,
+    name: speaker.name,
+    characterId: speaker.characterId,
+    portraitId: speaker.portraitId,
     text,
     entities,
-    inGame,
+    inGame: speaker.inGame,
     isAction,
     mediaId,
-    color: color ?? '',
+    color: speaker.color,
   };
   const item: OptimisticItem = {
     optimisticPos: previousMessage.pos,
@@ -471,12 +474,15 @@ const handleMessageSending = (
 
 const handleMessageEditing = (
   state: ChannelState,
-  { payload: { editMessage, sendTime, media, composeState } }: ChatAction<'messageEditing'>,
+  {
+    payload: { editMessage, speaker, sendTime, media, composeState },
+  }: ChatAction<'messageEditing'>,
 ): ChannelState => {
   const previousMessage = L.find(({ id }) => id === editMessage.messageId, state.messages);
   if (!previousMessage) return state;
   const optimisticItem = editMessageOptimisticItem(
     editMessage,
+    speaker,
     previousMessage,
     sendTime,
     media,

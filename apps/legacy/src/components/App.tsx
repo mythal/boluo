@@ -16,6 +16,7 @@ import { useGetMe } from '../hooks/useGetMe';
 import { autoSelectAtom } from '../states/connection';
 import { Router } from './Router';
 import Button from './atoms/Button';
+import { NewVersionBanner } from './molecules/NewVersionBanner';
 
 export const App: React.FC = () => {
   const dispatch = useDispatch();
@@ -91,6 +92,7 @@ export const App: React.FC = () => {
   }
   return (
     <Suspense fallback={<PageLoading text="load modules" />}>
+      <NewVersionBanner />
       <BrowserRouter>
         <Router />
       </BrowserRouter>

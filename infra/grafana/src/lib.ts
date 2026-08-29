@@ -77,6 +77,7 @@ interface TimeSeriesPanelOptions {
   unit?: string;
   min?: number;
   max?: number;
+  axisSoftMax?: number;
   fieldMinMax?: boolean;
   drawStyle?: GraphDrawStyle;
   fillOpacity?: number;
@@ -263,6 +264,9 @@ export function timeSeriesPanel(options: TimeSeriesPanelOptions): PanelBuilder {
       const result = visualization.build();
       const custom = result.spec.fieldConfig.defaults.custom as Record<string, unknown>;
       custom.showValues = false;
+      if (options.axisSoftMax !== undefined) {
+        custom.axisSoftMax = options.axisSoftMax;
+      }
       return result;
     })(),
   );
@@ -301,7 +305,7 @@ export function logsPanel(options: LogsPanelOptions): PanelBuilder {
     .showCommonLabels(false)
     .showTime(true)
     .showLogContextToggle(true)
-    .wrapLogMessage(true)
+    .wrapLogMessage(false)
     .prettifyLogMessage(false)
     .enableLogDetails(true)
     .sortOrder(LogsSortOrder.Descending)
@@ -310,7 +314,7 @@ export function logsPanel(options: LogsPanelOptions): PanelBuilder {
     .showControls(true)
     .showFieldSelector(true)
     .syntaxHighlighting(true)
-    .fontSize('default')
+    .fontSize('small')
     .detailsMode('sidebar');
 
   return new PanelBuilder()

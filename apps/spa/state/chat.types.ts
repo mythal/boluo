@@ -17,6 +17,13 @@ export type ChatEffect =
       dedupeKey: string;
     }
   | {
+      type: 'CHANNEL_INVALIDATED';
+      id: string;
+      spaceId: string;
+      channelId: string;
+      dedupeKey: string;
+    }
+  | {
       type: 'MEMBERS_UPDATED';
       id: string;
       channelId: string;
@@ -24,6 +31,7 @@ export type ChatEffect =
       dedupeKey: string;
     }
   | { type: 'SPACE_CHANGED'; id: string; spaceId: string; space: Space; dedupeKey: string }
+  | { type: 'SPACE_INVALIDATED'; id: string; spaceId: string; dedupeKey: string }
   | {
       type: 'STATUS_UPDATED';
       id: string;

@@ -162,6 +162,16 @@ const handleUpdate = (
             dedupeKey: `channel:${update.mailbox}:${update.body.channelId}`,
           },
         ];
+      case 'CHANNEL_INVALIDATED':
+        return [
+          {
+            type: 'CHANNEL_INVALIDATED',
+            id: createEffectId(),
+            spaceId: update.mailbox,
+            channelId: update.body.channelId,
+            dedupeKey: `channel-invalidation:${update.mailbox}:${update.body.channelId}`,
+          },
+        ];
       case 'SPACE_UPDATED': {
         const { space } = update.body.spaceWithRelated;
         return [
@@ -174,6 +184,15 @@ const handleUpdate = (
           },
         ];
       }
+      case 'SPACE_INVALIDATED':
+        return [
+          {
+            type: 'SPACE_INVALIDATED',
+            id: createEffectId(),
+            spaceId: update.body.spaceId,
+            dedupeKey: `space-invalidation:${update.body.spaceId}`,
+          },
+        ];
       case 'MEMBERS':
         return [
           {

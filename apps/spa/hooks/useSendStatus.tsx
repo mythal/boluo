@@ -1,11 +1,13 @@
 import { type StatusKind } from '@boluo/api';
+import { normalizeStatusFocus, STATUS_REFRESH_INTERVAL_MS } from '@boluo/api/status';
 import { useAtomValue, useStore } from 'jotai';
 import { useEffect } from 'react';
 import { connectionStateAtom } from '../state/chat.atoms';
 import { panesAtom } from '../state/view.atoms';
 import { type ChannelPane } from '../state/view.types';
 
-const SEND_STATUS_INTERVAL = 2000;
+const getFocusedChannels = (panes: ChannelPane[]): string[] =>
+  normalizeStatusFocus(panes.map((pane) => pane.channelId));
 
 function sendStatus(connection: WebSocket, status: StatusKind, focus: string[]) {
   if (connection.readyState !== WebSocket.OPEN) {
@@ -29,34 +31,25 @@ export function useSendStatus() {
       return;
     }
     const connection = connectionState.connection;
-    // TODO: Activity tracking based on user input (#200)
-    const pulse = window.setInterval(() => {
-      if (document.visibilityState !== 'visible') {
-        return;
-      }
+    const sendCurrentStatus = () => {
       const panes = store.get(panesAtom);
       const channelPanes: ChannelPane[] = panes.filter((pane) => pane.type === 'CHANNEL');
       sendStatus(
         connection,
-        'ONLINE',
-        channelPanes.map((pane) => pane.channelId),
+        document.visibilityState === 'visible' ? 'ONLINE' : 'AWAY',
+        getFocusedChannels(channelPanes),
       );
-    }, SEND_STATUS_INTERVAL);
-    const visibilityListener = () => {
-      const panes = store.get(panesAtom);
-      const channelPanes: ChannelPane[] = panes.filter((pane) => pane.type === 'CHANNEL');
-      const state = document.visibilityState;
-      const focus = channelPanes.map((pane) => pane.channelId);
-      if (state === 'visible') {
-        sendStatus(connection, 'ONLINE', focus);
-      } else if (state === 'hidden') {
-        sendStatus(connection, 'AWAY', focus);
-      }
     };
-    document.addEventListener('visibilitychange', visibilityListener);
+    sendCurrentStatus();
+    const unsubscribePanes = store.sub(panesAtom, sendCurrentStatus);
+    const pulse = window.setInterval(() => {
+      if (document.visibilityState === 'visible') sendCurrentStatus();
+    }, STATUS_REFRESH_INTERVAL_MS);
+    document.addEventListener('visibilitychange', sendCurrentStatus);
     return () => {
       window.clearInterval(pulse);
-      document.removeEventListener('visibilitychange', visibilityListener);
+      unsubscribePanes();
+      document.removeEventListener('visibilitychange', sendCurrentStatus);
     };
   }, [connectionState, store]);
 }

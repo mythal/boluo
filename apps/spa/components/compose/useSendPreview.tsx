@@ -97,10 +97,7 @@ export const useSendPreview = (
       defaultInGame,
       compose,
       parsed,
-      characterNameForIdentifier: (identifier) => {
-        const resolution = resolve(identifier);
-        return resolution.status === 'Found' ? resolution.character.name : null;
-      },
+      resolveCharacter: resolve,
     });
     if (desired == null) return;
     publisher.dispatch({

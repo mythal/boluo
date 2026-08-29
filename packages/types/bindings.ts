@@ -379,17 +379,20 @@ export type EditEntryComponents = {
 };
 
 export type EditMessage = {
+  spaceId?: string | null;
   messageId: string;
-  name: string;
+  attribution?: EditMessageAttribution | null;
   text: string;
   entities?: Entities;
-  inGame?: boolean;
   isAction?: boolean;
   mediaId?: string | null;
-  color?: string;
   /**  The `modified` timestamp of the message at the time the client started editing it. */
   expectModified?: string | null;
-};
+} & LegacyEditAttribution;
+
+export type EditMessageAttribution =
+  | { type: 'character'; characterId: string; portraitId: string | null }
+  | { type: 'custom'; name: string; color: string; inGame: boolean };
 
 export type EditNote = {
   spaceId: string;
@@ -676,6 +679,15 @@ export type KickFromChannel = {
 export type KickFromSpace = {
   spaceId: string;
   userId: string;
+};
+
+export type LegacyEditAttribution = {
+  /**  Legacy sender name. New clients should use `attribution` instead. */
+  name?: string | null;
+  /**  Legacy in-game state. New clients should use `attribution` instead. */
+  inGame?: boolean | null;
+  /**  Legacy sender color. New clients should use `attribution` instead. */
+  color?: string | null;
 };
 
 export type LinkEntity = {
@@ -1284,11 +1296,13 @@ export type UpdateBody =
   | { type: 'MESSAGE_PREVIEW'; channelId: string; preview: Preview }
   | { type: 'DIFF'; channelId: string; diff: PreviewDiff }
   | { type: 'CHANNEL_DELETED'; channelId: string }
+  | { type: 'CHANNEL_INVALIDATED'; channelId: string }
   | { type: 'CHANNEL_EDITED'; channelId: string; channel: Channel }
   | { type: 'MEMBERS'; channelId: string; members: MemberWithUser[] }
   | { type: 'INITIALIZED' }
   | { type: 'STATUS_MAP'; statusMap: { [key in string]: UserStatus }; spaceId: string }
   | { type: 'SPACE_UPDATED'; spaceWithRelated: SpaceWithRelated }
+  | { type: 'SPACE_INVALIDATED'; spaceId: string }
   | { type: 'ENTRY_CHANGED'; scopeId: string; entryId: string }
   | { type: 'CHARACTER_CHANGED'; characterId: string }
   | { type: 'NOTE_CHANGED'; noteId: string }

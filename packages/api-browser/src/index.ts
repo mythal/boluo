@@ -7,6 +7,7 @@ import { type ApiError } from '@boluo/api/errors';
 import type { LoginReturn, Media, User } from '@boluo/types/bindings';
 import type { StringKeyOf } from '@boluo/types';
 import { originMap } from '@boluo/api/origin-map';
+import { readVersion } from '@boluo/api/version';
 
 export const backendUrlAtom = atom('');
 
@@ -99,6 +100,15 @@ export function get<P extends StringKeyOf<Get>>(
 
   const params: RequestInit = addToken({ credentials: 'include' });
   return appFetch(url, params);
+}
+
+export async function getServerVersion(): Promise<string | null> {
+  const response = await fetch(
+    `${store.get(apiUrlAtom)}/info`,
+    withFaroSessionId({ cache: 'no-store' }),
+  );
+  if (!response.ok) return null;
+  return readVersion(await response.json());
 }
 
 const headers = new Headers({

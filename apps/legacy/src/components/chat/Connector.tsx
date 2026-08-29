@@ -75,6 +75,7 @@ const handleEvent = (
   setState: (state: ConnectState) => void,
   event: Events,
   resetCursor: () => void,
+  refreshInvalidatedSpace: (spaceId: Id) => void,
 ) => {
   const { body } = event;
   if (body.type === 'APP_UPDATED') {
@@ -97,6 +98,9 @@ const handleEvent = (
     const { spaceWithRelated } = body;
     const action: SpaceUpdated = { type: 'SPACE_UPDATED', spaceWithRelated };
     dispatch(action);
+  } else if (body.type === 'CHANNEL_INVALIDATED' || body.type === 'SPACE_INVALIDATED') {
+    const invalidatedSpaceId = body.type === 'SPACE_INVALIDATED' ? body.spaceId : event.mailbox;
+    refreshInvalidatedSpace(invalidatedSpaceId);
   } else if (body.type === 'STATUS_MAP') {
     const { statusMap, spaceId } = body;
     const spaceResult = store.getState().ui.spaceSet.get(spaceId);
@@ -139,6 +143,7 @@ export const Connector = ({ spaceId, myId }: Props) => {
 
   const retryCount = useRef(0);
   const cursor = useRef<EventId>({ timestamp: 0, node: 0, seq: 0 });
+  const spaceRefreshIdRef = useRef(0);
 
   useEffect(() => {
     stateRef.current = state;
@@ -234,6 +239,27 @@ export const Connector = ({ spaceId, myId }: Props) => {
         cursor.current.seq,
       );
       connectionRef.current = connection;
+      const refreshInvalidatedSpace = (invalidatedSpaceId: Id) => {
+        if (invalidatedSpaceId !== spaceId) {
+          return;
+        }
+        const refreshId = ++spaceRefreshIdRef.current;
+        void get('/spaces/query_with_related', { id: invalidatedSpaceId }).then((result) => {
+          if (
+            !mountedRef.current ||
+            connectionRef.current !== connection ||
+            spaceRefreshIdRef.current !== refreshId ||
+            result.isErr
+          ) {
+            return;
+          }
+          const action: SpaceUpdated = {
+            type: 'SPACE_UPDATED',
+            spaceWithRelated: result.value,
+          };
+          dispatch(action);
+        });
+      };
       connection.onclose = (event) => {
         if (event.code === 1000) {
           retry();
@@ -293,9 +319,15 @@ export const Connector = ({ spaceId, myId }: Props) => {
         }
 
         publishOwnPreviewAcknowledgement(event, myId, connection);
-        handleEvent(dispatch, setState, event, () => {
-          cursor.current = { timestamp: 0, node: 0, seq: 0 };
-        });
+        handleEvent(
+          dispatch,
+          setState,
+          event,
+          () => {
+            cursor.current = { timestamp: 0, node: 0, seq: 0 };
+          },
+          refreshInvalidatedSpace,
+        );
       };
       dispatch(connectSpace(spaceId, connection));
     };

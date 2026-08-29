@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { composeReducer, makeInitialComposeState } from './compose.reducer';
+import { checkCompose, composeReducer, makeInitialComposeState } from './compose.reducer';
 
 test('selects and clears a character portrait', () => {
   const selection = { characterId: 'character-a', portraitId: 'portrait-a' };
@@ -65,4 +65,53 @@ test('restores a failed edit without changing its message id or media', () => {
   assert.equal(restored.media, media);
   assert.deepEqual(restored.edit, failedEdit.edit);
   assert.equal(restored.composingAt, null);
+});
+
+test('keeps the original message attribution while applying speaker overrides', () => {
+  const originalMessageAttribution = {
+    characterId: null,
+    portraitId: null,
+    name: 'Original Name',
+    color: 'preset:orange',
+    inGame: true,
+  };
+  const state = {
+    ...makeInitialComposeState(),
+    source: 'hello',
+    edit: { time: '2026-08-27T00:00:00.000Z', p: 3, q: 1 },
+    originalMessageAttribution,
+  };
+  assert.equal(checkCompose('', false)(state), null);
+
+  const renamed = composeReducer(state, {
+    type: 'setAsTargetText',
+    payload: { text: '@character-b', setInGame: true },
+  });
+  assert.equal(renamed.originalMessageAttribution, originalMessageAttribution);
+  assert.equal(renamed.source, '.as @character-b; hello');
+
+  const outOfGame = composeReducer(state, {
+    type: 'setInGame',
+    payload: { inGame: false },
+  });
+  assert.equal(outOfGame.originalMessageAttribution, originalMessageAttribution);
+  assert.equal(outOfGame.source, '.out hello');
+
+  const restoredInGame = composeReducer(outOfGame, {
+    type: 'setInGame',
+    payload: { inGame: true },
+  });
+  assert.equal(restoredInGame.originalMessageAttribution, originalMessageAttribution);
+  assert.equal(restoredInGame.source, '.in hello');
+
+  const originalOutOfGame = {
+    ...state,
+    source: '.in hello',
+    originalMessageAttribution: {
+      ...originalMessageAttribution,
+      name: 'Player',
+      inGame: false,
+    },
+  };
+  assert.equal(checkCompose('', false)(originalOutOfGame), 'NO_NAME');
 });

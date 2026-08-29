@@ -414,6 +414,13 @@ async fn ws_session(bridge: &Bridge, binding: Binding) -> Result<()> {
                     UpdateBody::ChannelDeleted { channel_id } => {
                         telegram::delete_channel_topic(bridge, binding, channel_id).await?;
                     }
+                    UpdateBody::ChannelInvalidated { channel_id } => {
+                        if let Some(channel) = visible_channel(bridge, binding, channel_id).await? {
+                            telegram::sync_channel(bridge, binding, &channel).await?;
+                        } else {
+                            telegram::delete_channel_topic(bridge, binding, channel_id).await?;
+                        }
+                    }
                     UpdateBody::SpaceUpdated { space_with_related } => {
                         telegram::sync_space_channels(
                             bridge,
@@ -421,6 +428,14 @@ async fn ws_session(bridge: &Bridge, binding: Binding) -> Result<()> {
                             &space_with_related.channels,
                         )
                         .await?;
+                    }
+                    UpdateBody::SpaceInvalidated { .. } => {
+                        let channels = bridge
+                            .boluo
+                            .channels_by_space(binding.space_id)
+                            .await
+                            .context("failed to refresh invalidated space channels")?;
+                        telegram::sync_space_channels(bridge, binding, &channels).await?;
                     }
                     UpdateBody::Error {
                         code: generated::ConnectionError::CursorTooOld,

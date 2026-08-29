@@ -194,7 +194,8 @@ impl Action {
             Self::Query { .. } => "query",
             Self::Update { .. } => "update",
             Self::Status(super::status::StatusAction::Query(_)) => "status_query",
-            Self::Status(super::status::StatusAction::Update(_, _)) => "status_update",
+            Self::Status(super::status::StatusAction::Update { .. }) => "status_update",
+            Self::Status(super::status::StatusAction::Disconnect { .. }) => "status_disconnect",
             Self::Status(super::status::StatusAction::Broadcast) => "status_broadcast",
         }
     }
@@ -356,14 +357,55 @@ impl MailboxManager {
 
     pub fn update_status(
         &self,
+        connection_id: Uuid,
         user_id: Uuid,
         status: UserStatus,
     ) -> Result<(), MailboxManageError> {
-        let action = Action::Status(StatusAction::Update(user_id, status));
-        if let Err(TrySendError::Closed(_)) = self.sender.try_send(action) {
-            return Err(MailboxManageError::Closed);
+        let action = Action::Status(StatusAction::Update {
+            connection_id,
+            user_id,
+            status,
+        });
+        match self.sender.try_send(action) {
+            Ok(()) => {
+                metrics::counter!(
+                    "boluo_server_events_status_updates_total",
+                    "result" => "accepted"
+                )
+                .increment(1);
+                Ok(())
+            }
+            Err(TrySendError::Full(_)) => {
+                metrics::counter!(
+                    "boluo_server_events_status_updates_total",
+                    "result" => "dropped_queue_full"
+                )
+                .increment(1);
+                Ok(())
+            }
+            Err(TrySendError::Closed(_)) => {
+                metrics::counter!(
+                    "boluo_server_events_status_updates_total",
+                    "result" => "closed"
+                )
+                .increment(1);
+                Err(MailboxManageError::Closed)
+            }
         }
-        Ok(())
+    }
+
+    pub async fn remove_connection_presence(
+        &self,
+        connection_id: Uuid,
+        user_id: Uuid,
+        timestamp: i64,
+    ) -> Result<(), MailboxManageError> {
+        let action = Action::Status(StatusAction::Disconnect {
+            connection_id,
+            user_id,
+            timestamp,
+        });
+        self.send_write_action(action).await
     }
 }
 

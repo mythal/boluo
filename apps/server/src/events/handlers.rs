@@ -5,7 +5,6 @@ use crate::csrf::authenticate_optional;
 use crate::error::{AppError, Find};
 use crate::events::api::MakeToken;
 use crate::events::get_mailbox_broadcast_rx;
-use crate::events::models::StatusKind;
 use crate::events::token::SessionError;
 use crate::events::types::{ClientEvent, ConnectionError, GetFromStateError};
 use crate::interface::{Response, err_response, missing, ok_response, parse_query};
@@ -35,6 +34,12 @@ enum ReceiveClientEventsTermination {
     PeerClose { code: u16, reason: Utf8Bytes },
     PeerCloseWithoutStatus,
     StreamEnded,
+}
+
+#[derive(Clone, Copy)]
+enum ClientEventSource {
+    WebSocket { connection_id: Uuid },
+    Stateless,
 }
 
 fn websocket_close_code_group(code: u16) -> &'static str {
@@ -426,6 +431,7 @@ async fn push_updates(
 async fn handle_client_event(
     ctx: &crate::context::AppContext,
     mailbox: Uuid,
+    source: ClientEventSource,
     error_sender: tokio::sync::mpsc::Sender<ConnectionError>,
     session: Option<Session>,
     message: Utf8Bytes,
@@ -503,12 +509,25 @@ async fn handle_client_event(
         }
         ClientEvent::Status { kind, focus } => {
             if let Some(session) = session {
-                if let Err(err) =
-                    Update::status(mailbox, session.user_id, kind, timestamp(), focus).await
+                // Stateless event delivery has no connection identity, so retain its historical
+                // last-write-wins behavior in a user-scoped slot. WebSockets use their own slot.
+                let connection_id = match source {
+                    ClientEventSource::WebSocket { connection_id } => connection_id,
+                    ClientEventSource::Stateless => session.user_id,
+                };
+                if let Err(err) = Update::status(
+                    mailbox,
+                    connection_id,
+                    session.user_id,
+                    kind,
+                    timestamp(),
+                    focus,
+                )
+                .await
                 {
                     tracing::warn!(
-                        event = "event_delivery.status.broadcast_failed",
-                        "Failed to broadcast status update: {}",
+                        event = "event_delivery.status.update_failed",
+                        "Failed to update connection status: {}",
                         err
                     );
                 }
@@ -529,7 +548,7 @@ fn connection_error(
         "WebSocket connection error"
     );
     let error_update = Update::error(mailbox, error).encode();
-    establish_web_socket(req, |ws_stream| async move {
+    establish_web_socket(req, |_connection_id, ws_stream| async move {
         let (mut outgoing, _incoming) = ws_stream.split();
         outgoing.send(WsMessage::Text(error_update)).await.ok();
     })
@@ -639,7 +658,7 @@ async fn connect(ctx: &crate::context::AppContext, req: hyper::Request<Incoming>
     }
 
     let ctx = ctx.clone();
-    establish_web_socket(req, move |ws_stream| async move {
+    establish_web_socket(req, move |connection_id, ws_stream| async move {
         let event_connections_active = metrics::gauge!("boluo_server_events_connections_active");
         event_connections_active.increment(1);
         let (mut outgoing, incoming) = ws_stream.split();
@@ -723,6 +742,7 @@ async fn connect(ctx: &crate::context::AppContext, req: hyper::Request<Incoming>
                         handle_client_event(
                             &ctx,
                             mailbox,
+                            ClientEventSource::WebSocket { connection_id },
                             error_sender.clone(),
                             session.ok(),
                             message,
@@ -854,18 +874,17 @@ async fn connect(ctx: &crate::context::AppContext, req: hyper::Request<Incoming>
         record_websocket_close(close_outcome, client_close_reason, close_code_group);
         if let Ok(session) = session {
             if !mailbox.is_nil() {
-                if let Err(e) = Update::status(
+                if let Err(e) = Update::remove_connection_presence(
                     mailbox,
+                    connection_id,
                     session.user_id,
-                    StatusKind::Offline,
                     timestamp(),
-                    vec![],
                 )
                 .await
                 {
                     tracing::warn!(
-                        event = "event_delivery.offline_status.broadcast_failed",
-                        "Failed to broadcast offline status: {}",
+                        event = "event_delivery.status.disconnect_failed",
+                        "Failed to remove connection status: {}",
                         e
                     );
                 }
@@ -1020,7 +1039,15 @@ async fn receive_events(ctx: &crate::context::AppContext, req: Request<Incoming>
 
     let (error_sender, _error_receiver) = tokio::sync::mpsc::channel(1);
 
-    handle_client_event(ctx, mailbox, error_sender, session, body_str.into()).await;
+    handle_client_event(
+        ctx,
+        mailbox,
+        ClientEventSource::Stateless,
+        error_sender,
+        session,
+        body_str.into(),
+    )
+    .await;
 
     ok_response(serde_json::json!({ "ok": true }))
 }

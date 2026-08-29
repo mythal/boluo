@@ -31,6 +31,7 @@ import type { Settings } from '@boluo/settings';
 import { useUpdateViewHeight } from '../hooks/useUpdateViewHeight';
 import type { ResolvedTheme, Theme } from '@boluo/types';
 import { useCustomThemeOverrides } from '../hooks/useCustomThemeOverrides';
+import { NewVersionBanner } from './NewVersionBanner';
 
 const useThemeSetup = (settings: Settings | undefined | null): ResolvedTheme => {
   const themeFromSettings = settings?.theme;
@@ -83,7 +84,10 @@ const Chat: FC = () => {
           <IsTouchContext value={isTouch}>
             <BreakpointProvider>
               <div className="view-height accent-brand-strong grid grid-cols-[auto_1fr] grid-rows-[auto_1fr]">
-                <div ref={bannerRef} className="col-span-full"></div>
+                <div className="col-span-full">
+                  <NewVersionBanner />
+                  <div ref={bannerRef}></div>
+                </div>
                 <Sidebar spaceId={route.type === 'SPACE' ? route.spaceId : undefined} />
                 <ChatContentBox>
                   {!isClient ? (

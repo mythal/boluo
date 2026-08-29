@@ -479,6 +479,9 @@
   "Ibwf8a": {
     "message": "The compose box crashed."
   },
+  "Igiyjo": {
+    "message": "The edit could not be submitted. Your edits have been restored."
+  },
   "IvBid4": {
     "message": "Use the {enter} key to send messages"
   },
@@ -730,9 +733,6 @@
   },
   "R59CS8": {
     "message": "Remove Avatar"
-  },
-  "R5iTJ0": {
-    "message": "If you see this text, please try to swipe down ↓ to display the content."
   },
   "RZme30": {
     "message": "Entry key"
@@ -1417,6 +1417,9 @@
   },
   "r4YqDx": {
     "message": "Such as CSS Container Queries."
+  },
+  "r5RhP0": {
+    "message": "The edit could not be submitted. Your edits have been saved as a draft."
   },
   "rELDbB": {
     "message": "Refresh"

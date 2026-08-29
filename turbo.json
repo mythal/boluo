@@ -10,10 +10,15 @@
       "inputs": ["$TURBO_DEFAULT$"],
       "outputs": ["dist/**"]
     },
-    "lang-sources": {
-      "dependsOn": ["^lang-sources"],
-      "description": "Tracks i18n source changes through the site/spa dependency graph so @boluo/lang#generate follows newly added shared packages without repeating package globs here.",
-      "inputs": ["$TURBO_DEFAULT$"]
+    "//#lang:extract": {
+      "inputs": [
+        "apps/{site,spa}/**/*.{ts,tsx,js,jsx}",
+        "packages/**/*.{ts,tsx,js,jsx}",
+        "packages/lang/package.json",
+        "!**/{node_modules,out,.next,storybook-static,dist,.turbo}/**/*",
+        "!**/*.d.ts"
+      ],
+      "outputs": ["packages/lang/src/en.json"]
     },
     "lint": { "dependsOn": ["@boluo/icons#generate"] },
     "test": { "dependsOn": ["check"] },
@@ -80,8 +85,9 @@
       "outputs": ["storybook-static/**"]
     },
     "@boluo/lang#generate": {
-      "dependsOn": ["site#lang-sources", "spa#lang-sources"],
-      "outputs": ["src/en.json", "dist/**"]
+      "dependsOn": ["//#lang:extract"],
+      "inputs": ["src/**/*.json", "package.json"],
+      "outputs": ["dist/**"]
     },
     "@boluo/icons#generate": {
       "inputs": ["icons/**", "scripts/**", "package.json"],

@@ -14,8 +14,7 @@ const isStaticAssetPath = (pathname: string): boolean =>
   pathname === '/_next/static' ||
   pathname.startsWith('/_next/static/');
 
-const isApiPath = (pathname: string): boolean =>
-  pathname === '/api' || pathname.startsWith('/api/');
+const isApiPath = (pathname: string): boolean => pathname.startsWith('/api/');
 
 const notFound = (method: string): Response =>
   new Response(method === 'HEAD' ? null : 'Not Found', {
@@ -83,6 +82,12 @@ export default {
 
     if (isStaticAssetPath(url.pathname)) {
       return await historyAsset(request, url, env);
+    }
+
+    // The backend only recognizes `/api/` subpaths. Forwarding bare `/api`
+    // makes it redirect back to the legacy frontend, creating a redirect loop.
+    if (url.pathname === '/api') {
+      return notFound(request.method);
     }
 
     if (!isApiPath(url.pathname)) {

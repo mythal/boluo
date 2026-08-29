@@ -228,6 +228,8 @@ jobs:
     steps:
       - name: Check out the repo
         uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
       - name: Nix Setup
         uses: ./.github/actions/nix-setup
@@ -240,9 +242,19 @@ jobs:
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_IO_TOKEN }}
 
+      - name: Check whether server deployment changed
+        id: server_deployment
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_IO_TOKEN }}
+        run: >-
+          nix develop --quiet --no-update-lock-file --command
+          python3 scripts/check-server-deployment.py
+
       - name: Deploy server
+        if: steps.server_deployment.outputs.required == 'true'
         run: nix run --quiet --no-update-lock-file ".#deploy-server-${DEPLOYMENT_ENV}"
         env:
+          APP_VERSION: ${{ github.sha }}
           FLY_API_TOKEN: ${{ secrets.FLY_IO_TOKEN }}
 
   legacy:

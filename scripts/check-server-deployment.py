@@ -8,6 +8,32 @@ from typing import Any, NoReturn
 REVISION_LABEL = "org.opencontainers.image.revision"
 WORKSPACE = Path(os.environ.get("GITHUB_WORKSPACE", Path.cwd())).resolve()
 
+DEPLOYMENTS = {
+    ("server", "production"): (
+        "boluo-server",
+        [
+            "packages.x86_64-linux.server-image.drvPath",
+            "packages.x86_64-linux.deploy-server-production.outPath",
+        ],
+    ),
+    ("server", "staging"): (
+        "boluo-server-staging",
+        [
+            "packages.x86_64-linux.server-image.drvPath",
+            "packages.x86_64-linux.deploy-server-staging.outPath",
+        ],
+    ),
+    ("site", "staging"): (
+        "boluo-site-staging",
+        [
+            "packages.x86_64-linux.site-image.drvPath",
+            "packages.x86_64-linux.deploy-site-staging.outPath",
+        ],
+    ),
+}
+
+deployment_service = "server"
+
 
 def required_environment_variable(name: str) -> str:
     value = os.environ.get(name)
@@ -42,7 +68,7 @@ def write_result(required: bool, message: str) -> None:
             output_file.write(output)
     else:
         sys.stdout.write(output)
-    print(f"::notice title=Server deployment::{message}")
+    print(f"::notice title={deployment_service.title()} deployment::{message}")
 
 
 def require_deployment(message: str) -> NoReturn:
@@ -84,16 +110,17 @@ def evaluate_fingerprint(flake: str, attributes: list[str]) -> list[str]:
 
 
 def main() -> None:
+    global deployment_service
+
+    deployment_service = os.environ.get("DEPLOYMENT_SERVICE", "server")
     deployment_environment = required_environment_variable("DEPLOYMENT_ENV")
-    fly_apps = {
-        "production": "boluo-server",
-        "staging": "boluo-server-staging",
-    }
-    fly_app = fly_apps.get(deployment_environment)
-    if not fly_app:
+    deployment = DEPLOYMENTS.get((deployment_service, deployment_environment))
+    if deployment is None:
         raise RuntimeError(
-            f"Unsupported deployment environment: {deployment_environment}"
+            "Unsupported deployment: "
+            f"{deployment_service} in {deployment_environment}"
         )
+    fly_app, deployment_attributes = deployment
 
     try:
         machine_data: object = json.loads(
@@ -117,7 +144,9 @@ def main() -> None:
     revisions = [revision_for(machine) for machine in active_machines]
     unique_revisions = set(revisions)
     if not active_machines or None in unique_revisions or len(unique_revisions) != 1:
-        require_deployment("The deployed server revision is missing or inconsistent.")
+        require_deployment(
+            f"The deployed {deployment_service} revision is missing or inconsistent."
+        )
 
     deployed_revision = unique_revisions.pop()
     if (
@@ -125,12 +154,10 @@ def main() -> None:
         or len(deployed_revision) != 40
         or any(character not in "0123456789abcdef" for character in deployed_revision)
     ):
-        require_deployment("The deployed server revision is invalid.")
+        require_deployment(
+            f"The deployed {deployment_service} revision is invalid."
+        )
 
-    deployment_attributes = [
-        "packages.x86_64-linux.server-image.drvPath",
-        f"packages.x86_64-linux.deploy-server-{deployment_environment}.outPath",
-    ]
     current_fingerprint = evaluate_fingerprint(".", deployment_attributes)
     deployed_flake = f"git+{WORKSPACE.as_uri()}?rev={deployed_revision}"
     try:
@@ -139,18 +166,22 @@ def main() -> None:
         )
     except (OSError, RuntimeError) as error:
         print(error, file=sys.stderr)
-        require_deployment("Could not evaluate the deployed server revision.")
+        require_deployment(
+            f"Could not evaluate the deployed {deployment_service} revision."
+        )
 
-    print(f"Deployed server revision: {deployed_revision}")
+    print(f"Deployed {deployment_service} revision: {deployed_revision}")
     if current_fingerprint == deployed_fingerprint:
         write_result(
             False,
-            f"Server deployment is unchanged from {deployed_revision}; skipping Fly deploy.",
+            f"{deployment_service.title()} deployment is unchanged from "
+            f"{deployed_revision}; skipping Fly deploy.",
         )
     else:
         write_result(
             True,
-            f"Server deployment changed from {deployed_revision}; Fly deploy is required.",
+            f"{deployment_service.title()} deployment changed from "
+            f"{deployed_revision}; Fly deploy is required.",
         )
 
 

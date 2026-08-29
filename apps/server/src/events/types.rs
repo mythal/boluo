@@ -427,6 +427,7 @@ impl Update {
 
     pub async fn status(
         space_id: Uuid,
+        connection_id: Uuid,
         user_id: Uuid,
         kind: StatusKind,
         timestamp: i64,
@@ -442,7 +443,22 @@ impl Update {
             // It's ok if the mailbox is not be created yet
             return Ok(());
         };
-        mailbox_manager.update_status(user_id, heartbeat)?;
+        mailbox_manager.update_status(connection_id, user_id, heartbeat)?;
+        Ok(())
+    }
+
+    pub async fn remove_connection_presence(
+        space_id: Uuid,
+        connection_id: Uuid,
+        user_id: Uuid,
+        timestamp: i64,
+    ) -> Result<(), anyhow::Error> {
+        let Some(mailbox_manager) = super::context::store().get_manager(&space_id) else {
+            return Ok(());
+        };
+        mailbox_manager
+            .remove_connection_presence(connection_id, user_id, timestamp)
+            .await?;
         Ok(())
     }
 

@@ -63,7 +63,7 @@ pub fn check_websocket_header(headers: &HeaderMap) -> Result<HeaderValue, AppErr
 
 pub fn establish_web_socket<H, F>(req: hyper::Request<Incoming>, handler: H) -> Response
 where
-    H: FnOnce(WebSocketStream<TokioIo<Upgraded>>) -> F,
+    H: FnOnce(uuid::Uuid, WebSocketStream<TokioIo<Upgraded>>) -> F,
     H: Send + 'static,
     F: Future<Output = ()> + Send,
 {
@@ -71,7 +71,7 @@ where
     use tokio_tungstenite::tungstenite::protocol::Role;
 
     // Extract connection info for tracing
-    let connection_id = uuid::Uuid::new_v4();
+    let connection_id = uuid::Uuid::now_v7();
     let user_agent = req
         .headers()
         .get(header::USER_AGENT)
@@ -135,7 +135,7 @@ where
                     drop(user_agent);
 
                     // Run the handler within this span context
-                    handler(ws_stream).await;
+                    handler(connection_id, ws_stream).await;
 
                     span.record("duration_ms", start_time.elapsed().as_millis() as u64);
                     tracing::info!(

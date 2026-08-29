@@ -278,12 +278,19 @@ test('reconcileVirtualChatList rebuilds when the pane filter changes', () => {
   assert.strictEqual(next.epoch, previous.epoch + 1);
 });
 
-test('virtualChatItemKey namespaces message and preview keys', () => {
+test('virtualChatItemKey namespaces message and regular preview keys', () => {
   const message = makeMessageItem('same', 1, { key: 'same' });
   const preview = { ...makePreview('preview', 'same'), type: 'PREVIEW' as const, key: 'same' };
 
   assert.strictEqual(virtualChatItemKey(message), 'MESSAGE:same');
   assert.strictEqual(virtualChatItemKey(preview), 'PREVIEW:same');
+});
+
+test('virtualChatItemKey preserves a message identity for its edit preview', () => {
+  const message = makeMessageItem('m-edit', 1);
+  const editPreview = makeEditPreview('m-edit', 1);
+
+  assert.strictEqual(virtualChatItemKey(editPreview), virtualChatItemKey(message));
 });
 
 const makeEditPreview = (id: string, pos: number, editTime = modified): PreviewItem =>

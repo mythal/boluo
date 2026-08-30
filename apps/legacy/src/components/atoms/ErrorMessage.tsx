@@ -1,10 +1,12 @@
-import styled from '@emotion/styled';
-import { lighten } from 'polished';
-import { textSm } from '../../styles/atoms';
-import { errorColor } from '../../styles/colors';
+import React from 'react';
+import { cls } from '../../utils/classnames';
 
-export const ErrorMessage = styled.p`
-  margin: 0;
-  ${textSm};
-  color: ${lighten(0.5, errorColor)};
-`;
+export function ErrorMessage({ className, ref, ...props }: React.ComponentPropsWithRef<'p'>) {
+  return (
+    <p
+      ref={ref}
+      className={cls('legacy-error-message text-legacy-error-text text-[0.875rem]', className)}
+      {...props}
+    />
+  );
+}

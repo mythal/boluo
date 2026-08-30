@@ -1,28 +1,14 @@
-import { css } from '@emotion/react';
-import { darken, lighten } from 'polished';
 import * as React from 'react';
 import { Link } from 'react-router-dom';
 import PlusCircle from '@boluo/icons/legacy/PlusCircle';
-import { flex, pY, roundedPx, text3Xl } from '../../styles/atoms';
-import { bgColor, textColor } from '../../styles/colors';
 import Icon from '../atoms/Icon';
-
-const style = css`
-  ${[flex, roundedPx, pY(4), text3Xl]};
-  background-color: ${lighten(0.025, bgColor)};
-  color: ${darken(0.1, textColor)};
-  text-decoration: none;
-  align-items: center;
-  justify-content: center;
-
-  &:hover {
-    background-color: ${lighten(0.05, bgColor)};
-  }
-`;
 
 function NewSpaceCard() {
   return (
-    <Link to="/space/new" css={style}>
+    <Link
+      className="bg-legacy-new-space-background text-legacy-sidebar-item hover:bg-legacy-card-background flex items-center justify-center rounded-[1px] py-4 text-[1.875rem] no-underline"
+      to="/space/new"
+    >
       <Icon icon={PlusCircle} />
     </Link>
   );

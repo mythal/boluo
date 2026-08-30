@@ -4,7 +4,6 @@ import { loadExploreSpace, searchSpaces } from '../../actions';
 import { type Space } from '../../api/spaces';
 import StarSattelites from '@boluo/icons/legacy/StarSattelites';
 import { useDispatch, useSelector } from '../../store';
-import { mY } from '../../styles/atoms';
 import Icon from '../atoms/Icon';
 import { SpaceGrid } from '../atoms/SpaceGrid';
 import Title from '../atoms/Title';
@@ -31,7 +30,7 @@ function ExploreSpace() {
       <Title>
         <Icon icon={StarSattelites} /> 探索位面
       </Title>
-      <SpaceSearchInput css={mY(4)} search={setSearchText} />
+      <SpaceSearchInput className="my-4" search={setSearchText} />
       {result.isOk ? (
         <SpaceGrid>
           {isLoggedIn && <NewSpaceCard />}

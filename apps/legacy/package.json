@@ -9,10 +9,8 @@
     "@boluo/backend-proxy": "0.0.0",
     "@boluo/icons": "0.0.0",
     "@boluo/utils": "0.0.0",
-    "@emotion/react": "^11.14.0",
-    "@emotion/styled": "^11.14.1",
-    "@hello-pangea/dnd": "^18.0.1",
     "@grafana/faro-web-sdk": "^2.10.0",
+    "@hello-pangea/dnd": "^18.0.1",
     "@redux-devtools/extension": "^4.0.0",
     "dotenv": "^17.4.2",
     "immutable": "^5.1.9",
@@ -35,10 +33,8 @@
     "uuid": "^14"
   },
   "devDependencies": {
-    "@babel/core": "^8.0.1",
-    "@boluo/emotion-babel-plugin": "0.0.0",
     "@boluo/eslint-config": "0.0.0",
-    "@rolldown/plugin-babel": "^0.2.3",
+    "@boluo/tailwind-config": "0.0.0",
     "@types/node": "^26.1.1",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
@@ -46,6 +42,8 @@
     "@types/react-transition-group": "^4.4.12",
     "@vitejs/plugin-react": "^6.0.3",
     "eslint": "^10.6.0",
+    "postcss": "^8.5.16",
+    "tailwindcss": "^4.3.2",
     "tsx": "^4.23.0",
     "typescript": "^6",
     "vite": "^8.1.4"

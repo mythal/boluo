@@ -21,7 +21,7 @@ function Avatar({ className, size, id, src, onClick }: Props) {
         alt="用户头像"
         onClick={onClick}
         className={className}
-        css={[{ height: size, width: size }]}
+        style={{ height: size, width: size }}
         src={src}
       />
     );

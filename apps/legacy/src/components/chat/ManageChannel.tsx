@@ -1,4 +1,3 @@
-import { css } from '@emotion/react';
 import { Set } from 'immutable';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -9,18 +8,7 @@ import { type Channel, type EditChannel, type MemberWithUser } from '../../api/c
 import { type AppError } from '../../api/error';
 import { post } from '../../api/request';
 import { useDispatch, useSelector } from '../../store';
-import {
-  breakpoint,
-  largeInput,
-  mB,
-  mediaQuery,
-  mT,
-  mY,
-  selectTheme,
-  spacingN,
-  textSm,
-  widthFull,
-} from '../../styles/atoms';
+import { reactSelectTheme } from '../../styles/reactSelectTheme';
 import { type Id } from '../../utils/id';
 import { chatPath } from '../../utils/path';
 import { channelNameValidation, channelTopicValidation } from '../../validators';
@@ -42,20 +30,7 @@ interface Props {
   dismiss: () => void;
 }
 
-const buttons = css`
-  display: flex;
-`;
-
-const field = css`
-  ${[mB(2)]};
-`;
-
-const panelStyle = css`
-  width: ${spacingN(64)};
-  ${mediaQuery(breakpoint.md)} {
-    width: ${spacingN(100)};
-  }
-`;
+const panelClassName = 'w-64 md:w-[25rem]';
 
 interface FormData {
   name: string;
@@ -93,7 +68,7 @@ function ManageChannel({ channel, dismiss }: Props) {
   const memberOptions = members.map(makeMemberOption);
   if (!spaceMember || !spaceMember.isAdmin) {
     return (
-      <Panel css={panelStyle} dismiss={dismiss} mask>
+      <Panel className={panelClassName} dismiss={dismiss} mask>
         <PanelTitle>管理频道</PanelTitle>
         <Text>没有权限管理频道</Text>
       </Panel>
@@ -142,21 +117,21 @@ function ManageChannel({ channel, dismiss }: Props) {
     setSelectedMember([...values]);
   };
   return (
-    <Panel css={panelStyle} dismiss={dismiss} mask>
+    <Panel className={panelClassName} dismiss={dismiss} mask>
       <PanelTitle>管理频道</PanelTitle>
       {editError && <RenderError error={editError} variant="component" />}
       <form onSubmit={handleSubmit(onSubmit)}>
-        <div css={field}>
+        <div className="mb-2">
           <Label htmlFor="name">频道名</Label>
           <Input
-            css={largeInput}
+            inputSize="large"
             id="name"
             defaultValue={channel.name}
             {...register('name', channelNameValidation(channel.spaceId, channel.name))}
           />
           {errors.name && <ErrorMessage>{errors.name.message}</ErrorMessage>}
         </div>
-        <div css={field}>
+        <div className="mb-2">
           <Label htmlFor="defaultDiceType">默认骰子</Label>
           <DiceSelect
             id="defaultDiceType"
@@ -169,18 +144,18 @@ function ManageChannel({ channel, dismiss }: Props) {
             当输入 <code>1d20</code> 的时候可以简化成 <code>1d</code>。
           </HelpText>
         </div>
-        <div css={field}>
+        <div className="mb-2">
           <Label htmlFor="defaultRollCommand">默认投骰子指令</Label>
           <Input
-            css={largeInput}
+            inputSize="large"
             id="defaultRollCommand"
             defaultValue={channel.defaultRollCommand}
             {...register('defaultRollCommand')}
           />
           <HelpText>「插入骰子」按钮自动插入的指令</HelpText>
         </div>
-        <div css={field}>
-          <Label>话题</Label>
+        <div className="mb-2">
+          <Label htmlFor="topic">话题</Label>
           <TextArea
             id="topic"
             defaultValue={channel.topic}
@@ -190,17 +165,17 @@ function ManageChannel({ channel, dismiss }: Props) {
           <HelpText>话题可以用来记录和提醒你们当前专注于什么。</HelpText>
           {errors.topic && <ErrorMessage>{errors.topic.message}</ErrorMessage>}
         </div>
-        <div css={field}>
+        <div className="mb-2">
           <Label>游戏主持人</Label>
           <Select
             isMulti
             value={selectedMember}
             onChange={handleChange}
             options={memberOptions}
-            theme={selectTheme}
+            theme={reactSelectTheme}
           />
         </div>
-        <div css={field}>
+        <div className="mb-2">
           <Label>
             <input
               id="isPrivate"
@@ -212,10 +187,10 @@ function ManageChannel({ channel, dismiss }: Props) {
           </Label>
           <HelpText>秘密频道通过邀请进入。</HelpText>
         </div>
-        <div css={[mY(2), buttons]}>
+        <div className="my-2 flex">
           <Button
-            css={[textSm]}
-            data-variant="danger"
+            className="text-[0.875rem]"
+            variant="danger"
             disabled={submitting}
             onClick={openDeleteDialog}
             type="button"
@@ -223,8 +198,8 @@ function ManageChannel({ channel, dismiss }: Props) {
             删除频道
           </Button>
         </div>
-        <div css={[buttons, mT(4)]}>
-          <Button css={[widthFull]} data-variant="primary" disabled={submitting} type="submit">
+        <div className="mt-4 flex">
+          <Button className="w-full" variant="primary" disabled={submitting} type="submit">
             提交修改
           </Button>
         </div>

@@ -5,7 +5,7 @@ import { get } from '../../api/request';
 import FileExport from '@boluo/icons/legacy/FileExport';
 import { bbCodeTextBlob, csvBlob, exportMessage, jsonBlob, txtBlob } from '../../export';
 import { useDispatch } from '../../store';
-import { mB, mT, selectTheme, uiShadow, widthFull } from '../../styles/atoms';
+import { reactSelectTheme } from '../../styles/reactSelectTheme';
 import { throwErr } from '../../utils/errors';
 import { fileNameDateTimeFormat } from '../../utils/time';
 import Button from '../atoms/Button';
@@ -36,6 +36,8 @@ const daysOptions: DaysOption[] = [
 ];
 
 type DaysOption = { label: string; value: number | undefined };
+
+const selectClassName = 'mb-2 shadow-legacy-ui';
 
 function ExportDialog({ dismiss, channel }: Props) {
   const linkRef = useRef<HTMLAnchorElement>(null);
@@ -119,9 +121,9 @@ function ExportDialog({ dismiss, channel }: Props) {
           onChange={(format) => {
             if (format) setFormat(format);
           }}
-          css={[uiShadow, mB(2)]}
+          className={selectClassName}
           options={options}
-          theme={selectTheme}
+          theme={reactSelectTheme}
           placeholder="选择导出格式…"
         />
       </div>
@@ -133,9 +135,9 @@ function ExportDialog({ dismiss, channel }: Props) {
           onChange={(afterDays) => {
             if (afterDays) setAfterDays(afterDays);
           }}
-          css={[uiShadow, mB(2)]}
+          className={selectClassName}
           options={daysOptions}
-          theme={selectTheme}
+          theme={reactSelectTheme}
         />
       </div>
       <Label>
@@ -171,16 +173,13 @@ function ExportDialog({ dismiss, channel }: Props) {
         </Label>
       )}
       <a hidden href="#" ref={linkRef} download={filename} />
-      <Button
-        css={[widthFull, mT(4)]}
-        data-variant="primary"
-        onClick={exportData}
-        disabled={loading}
-      >
-        <span>
-          <Icon loading={loading} icon={FileExport} /> 导出
-        </span>
-      </Button>
+      <div className="mt-4">
+        <Button className="w-full" variant="primary" onClick={exportData} disabled={loading}>
+          <span>
+            <Icon loading={loading} icon={FileExport} /> 导出
+          </span>
+        </Button>
+      </div>
     </Dialog>
   );
 }

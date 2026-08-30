@@ -3,7 +3,7 @@ import { useCallback } from 'react';
 import D20 from '@boluo/icons/legacy/D20';
 import { useChannelId } from '../../../hooks/useChannelId';
 import { useDispatch, useSelector } from '../../../store';
-import { mL } from '../../../styles/atoms';
+import { cls } from '../../../utils/classnames';
 import ChatItemToolbarButton from '../ChatItemToolbarButton';
 
 interface Props {
@@ -23,8 +23,7 @@ export const AddDiceButton = ({ inCompose = false, className }: Props) => {
   }, [channelId, dice, dispatch]);
   return (
     <ChatItemToolbarButton
-      className={className}
-      css={mL(1)}
+      className={cls('ml-1', className)}
       size={inCompose ? 'large' : 'normal'}
       onClick={addDice}
       title="添加骰子"

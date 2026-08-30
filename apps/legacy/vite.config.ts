@@ -1,14 +1,12 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import babel from '@rolldown/plugin-babel';
-import emotionBabelPlugin from '@boluo/emotion-babel-plugin';
 import path from 'path';
 import dotenv from 'dotenv';
 
 dotenv.config({
   path: ['.env.local', '.env'].flatMap((filename) => [
-    path.join(__dirname, filename),
-    path.join(__dirname, '../..', filename),
+    path.join(import.meta.dirname, filename),
+    path.join(import.meta.dirname, '../..', filename),
   ]),
 });
 
@@ -18,18 +16,11 @@ export default defineConfig({
       process.env.APP_VERSION ?? process.env.GITHUB_SHA ?? 'unknown',
     ),
   },
-  plugins: [
-    react({
-      jsxImportSource: '@emotion/react',
-    }),
-    babel({
-      plugins: [emotionBabelPlugin],
-    }),
-  ],
+  plugins: [react()],
 
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
+      '@': path.resolve(import.meta.dirname, './src'),
     },
   },
 

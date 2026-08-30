@@ -1,4 +1,3 @@
-import { css } from '@emotion/react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
@@ -10,16 +9,6 @@ import Implosion from '@boluo/icons/legacy/Implosion';
 import NightSky from '@boluo/icons/legacy/NightSky';
 import { useTitle } from '../../hooks/useTitle';
 import { useDispatch } from '../../store';
-import {
-  alignRight,
-  gridColumn,
-  largeInput,
-  md,
-  mT,
-  mY,
-  spacingN,
-  textLg,
-} from '../../styles/atoms';
 import { encodeUuid } from '../../utils/id';
 import {
   channelNameValidation,
@@ -36,12 +25,6 @@ import TextArea from '../atoms/TextArea';
 import Title from '../atoms/Title';
 import DiceSelect, { type DiceOption } from '../molecules/DiceSelect';
 import { RenderError } from '../molecules/RenderError';
-
-export const fieldsLayout = css`
-  display: grid;
-  gap: ${spacingN(2)};
-  grid-template-columns: repeat(4, 1fr);
-`;
 
 function NewSpace() {
   useTitle('新建位面');
@@ -81,13 +64,18 @@ function NewSpace() {
       {creationError && <RenderError error={creationError} variant="component" />}
 
       <form onSubmit={handleSubmit(onSubmit)}>
-        <div css={[md(fieldsLayout)]}>
-          <div css={[mY(2), gridColumn(1, 3)]}>
+        <div className="md:grid md:grid-cols-4 md:gap-2">
+          <div className="my-2 md:col-start-1 md:col-end-3">
             <Label htmlFor="name">位面名</Label>
-            <Input css={largeInput} id="name" {...register('name', spaceNameValidation)} />
+            <Input
+              className="h-10"
+              id="name"
+              inputSize="large"
+              {...register('name', spaceNameValidation)}
+            />
             {errors.name && <ErrorMessage>{errors.name.message}</ErrorMessage>}
           </div>
-          <div css={mY(2)}>
+          <div className="my-2">
             <Label htmlFor="defaultDiceType">默认骰子</Label>
 
             <DiceSelect
@@ -102,17 +90,18 @@ function NewSpace() {
               当输入 <code>1d20</code> 的时候可以简化成 <code>1d</code>。
             </HelpText>
           </div>
-          <div css={[mY(2)]}>
+          <div className="my-2">
             <Label htmlFor="firstChannelName">初始频道名</Label>
             <Input
-              css={largeInput}
+              className="h-10"
               defaultValue="综合"
               id="firstChannelName"
+              inputSize="large"
               {...register('firstChannelName', channelNameValidation())}
             />
             <HelpText>频道中可以发送各种消息。</HelpText>
           </div>
-          <div css={[mY(2), gridColumn(1, -1)]}>
+          <div className="my-2 md:col-start-1 md:col-end-[-1]">
             <Label htmlFor="description">简介</Label>
             <TextArea
               placeholder="（选填）简要描述一下这个位面。"
@@ -121,8 +110,8 @@ function NewSpace() {
             />
           </div>
         </div>
-        <div css={[alignRight]}>
-          <Button css={[mT(4), textLg]} type="submit" data-variant="primary" disabled={submitting}>
+        <div className="pt-4 text-right">
+          <Button size="large" type="submit" variant="primary" disabled={submitting}>
             <Icon icon={NightSky} loading={submitting} />
             创建位面
           </Button>

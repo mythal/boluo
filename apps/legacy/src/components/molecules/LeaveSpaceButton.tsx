@@ -5,14 +5,13 @@ import DoorOpen from '@boluo/icons/legacy/DoorOpen';
 import Dialog from '../../components/molecules/Dialog';
 import { useDispatch, useSelector } from '../../store';
 import { type Id } from '../../utils/id';
+import Button, { type ButtonProps } from '../atoms/Button';
 import Icon from '../atoms/Icon';
 import Text from '../atoms/Text';
 
-interface Props {
+interface Props extends Omit<ButtonProps, 'children' | 'disabled' | 'onClick' | 'variant'> {
   id: Id;
   name: string;
-  className?: string;
-  'data-small'?: boolean;
 }
 
 function LeaveSpaceButton({ id, name, ...props }: Props) {
@@ -35,15 +34,10 @@ function LeaveSpaceButton({ id, name, ...props }: Props) {
 
   return (
     <>
-      <button
-        data-variant="danger"
-        onClick={() => setConfirmDialog(true)}
-        disabled={leaving}
-        {...props}
-      >
+      <Button {...props} variant="danger" disabled={leaving} onClick={() => setConfirmDialog(true)}>
         <Icon icon={DoorOpen} loading={leaving} />
         退出
-      </button>
+      </Button>
       {confirmDialog && (
         <Dialog
           confirm={leave}

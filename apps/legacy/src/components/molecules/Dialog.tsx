@@ -1,9 +1,7 @@
-import { css } from '@emotion/react';
 import * as React from 'react';
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import RotateCw from '@boluo/icons/legacy/RotateCw';
-import { breakpoint, mediaQuery, pX, pY, roundedMd, spacingN, textXl } from '../../styles/atoms';
-import { dialogBgColor, dialogShadowColor, dialogTitleColor } from '../../styles/colors';
+import { cls } from '../../utils/classnames';
 import Button, { type ButtonVariant } from '../atoms/Button';
 import Icon from '../atoms/Icon';
 import Modal from '../atoms/Modal';
@@ -19,49 +17,8 @@ interface Props {
   noOverflow?: boolean;
   loading?: boolean;
   confirmButtonVariant?: ButtonVariant;
+  className?: string;
 }
-
-const style = css`
-  background-color: ${dialogBgColor};
-  ${roundedMd};
-  box-shadow: 0 0 0 ${spacingN(2)} ${dialogShadowColor};
-  transform: translate(-50%, -50%);
-  min-width: 18em;
-  display: flex;
-  flex-direction: column;
-
-  &[data-no-overflow='false'] {
-    max-height: 80vh;
-  }
-  ${mediaQuery(breakpoint.md)} {
-    min-width: 24em;
-  }
-`;
-
-const buttonAreaStyle = css`
-  text-align: right;
-  padding-top: ${spacingN(4)};
-  padding: ${spacingN(4)};
-`;
-
-const headerStyle = css`
-  ${[textXl, pX(4), pY(3)]};
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-`;
-
-const titleStyle = css`
-  color: ${dialogTitleColor};
-`;
-
-const contentStyle = css`
-  padding: ${spacingN(4)};
-  &[data-no-overflow='false'] {
-    height: 100%;
-    overflow-y: auto;
-  }
-`;
 
 function Dialog({
   children,
@@ -73,11 +30,17 @@ function Dialog({
   noOverflow = false,
   loading = false,
   confirmButtonVariant = 'primary',
+  className,
 }: Props) {
   confirmText = confirmText || '确定';
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const [previousFocus] = useState(() =>
+    document.activeElement instanceof HTMLElement ? document.activeElement : null,
+  );
+  const titleId = useId();
   const handleKey = useCallback(
-    (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && dismiss) {
+    (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && dismiss) {
         dismiss();
       }
     },
@@ -85,28 +48,55 @@ function Dialog({
   );
 
   useEffect(() => {
+    if (!dialogRef.current?.contains(document.activeElement)) {
+      dialogRef.current?.focus();
+    }
+    return () => {
+      previousFocus?.focus();
+    };
+  }, [previousFocus]);
+
+  useEffect(() => {
     document.addEventListener('keydown', handleKey);
     return () => document.removeEventListener('keydown', handleKey);
   }, [handleKey]);
 
   return (
-    <Modal css={style} mask={mask} data-no-overflow={noOverflow} onClickMask={dismiss}>
+    <Modal
+      ref={dialogRef}
+      role="dialog"
+      aria-modal={mask || undefined}
+      aria-labelledby={title ? titleId : undefined}
+      tabIndex={-1}
+      className={cls(
+        'bg-legacy-dialog-background flex min-w-[18em] flex-col rounded-[5px] [box-shadow:0_0_0_0.5rem_var(--color-legacy-dialog-shadow)] data-[no-overflow=false]:max-h-[80vh] md:min-w-[24em]',
+        className,
+      )}
+      mask={mask}
+      data-no-overflow={noOverflow}
+      onClickMask={dismiss}
+    >
       {title && (
-        <div css={headerStyle}>
-          <span css={titleStyle}>{title}</span>
-          {dismiss && <CloseButton onClick={dismiss} />}
+        <div className="flex items-center justify-between px-4 py-3 text-[1.25rem]">
+          <span id={titleId} className="text-legacy-dialog-title">
+            {title}
+          </span>
+          {dismiss && <CloseButton aria-label="关闭" onClick={dismiss} />}
         </div>
       )}
-      <div css={contentStyle} data-no-overflow={noOverflow}>
+      <div
+        className="p-4 data-[no-overflow=false]:h-full data-[no-overflow=false]:overflow-y-auto"
+        data-no-overflow={noOverflow}
+      >
         {children}
       </div>
       {confirm && (
-        <div css={buttonAreaStyle}>
+        <div className="p-4 text-right">
           <Button
-            data-small
+            size="small"
             autoFocus
             disabled={loading}
-            data-variant={confirmButtonVariant}
+            variant={confirmButtonVariant}
             onClick={confirm}
           >
             {loading && <Icon icon={RotateCw} spin />}

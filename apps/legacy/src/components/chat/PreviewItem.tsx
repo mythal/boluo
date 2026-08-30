@@ -1,23 +1,13 @@
-import { css } from '@emotion/react';
 import * as React from 'react';
 import { type Preview } from '../../api/events';
-import { textXs } from '../../styles/atoms';
-import { chatItemContainer } from './ChatItemContainer';
 import { ChatItemContentContainer } from './ChatItemContentContainer';
 import ChatItemName from './ChatItemName';
 import ChatItemContent from './ItemContent';
-import { nameContainer, previewInGame, previewOutGame } from './styles';
+import { chatItemContainerClassName, chatItemNameContainerClassName } from './classNames';
 
 interface Props {
   preview: Preview;
 }
-
-const previewChatItem = css`
-  & .roll::before {
-    content: '未定';
-    ${textXs}
-  }
-`;
 
 function PreviewItem({ preview }: Props) {
   let { text, isAction = false, entities } = preview;
@@ -40,10 +30,12 @@ function PreviewItem({ preview }: Props) {
 
   return (
     <div
-      css={[chatItemContainer, previewChatItem, preview.inGame ? previewInGame : previewOutGame]}
+      className={`${chatItemContainerClassName} legacy-chat-preview ${
+        preview.inGame ? 'legacy-chat-preview-in-game' : 'legacy-chat-preview-out-game'
+      }`}
       data-in-game={preview.inGame ?? false}
     >
-      {!isAction && <div css={nameContainer}>{name}</div>}
+      {!isAction && <div className={chatItemNameContainerClassName}>{name}</div>}
       <ChatItemContentContainer data-action={isAction} data-in-game={preview.inGame ?? false}>
         {isAction && name}
         <ChatItemContent entities={entities} text={text} />

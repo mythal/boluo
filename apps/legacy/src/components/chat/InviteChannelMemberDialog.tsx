@@ -4,7 +4,7 @@ import Select from 'react-select';
 import { post } from '../../api/request';
 import { type User } from '../../api/users';
 import { useDispatch, useSelector } from '../../store';
-import { selectTheme } from '../../styles/atoms';
+import { reactSelectTheme } from '../../styles/reactSelectTheme';
 import { throwErr } from '../../utils/errors';
 import { type Id } from '../../utils/id';
 import Dialog from '../molecules/Dialog';
@@ -71,7 +71,7 @@ function InviteChannelMemberDialog({ channelId, dismiss, spaceId }: Props) {
       <Select
         isMulti
         options={memberOptions}
-        theme={selectTheme}
+        theme={reactSelectTheme}
         value={membersToInvite}
         onChange={handleChange}
       />

@@ -1,9 +1,15 @@
-import styled from '@emotion/styled';
-import { p, roundedSm, textSm } from '../../styles/atoms';
-import { blue } from '../../styles/colors';
+import * as React from 'react';
+import { cls } from '../../utils/classnames';
 
-export const News = styled.div`
-  ${[roundedSm, p(2), textSm]};
-  background-color: ${blue['900']};
-  border: 1px solid ${blue['800']};
-`;
+export function News({ className, ref, ...props }: React.ComponentPropsWithRef<'div'>) {
+  return (
+    <div
+      ref={ref}
+      className={cls(
+        'border-legacy-blue-800 bg-legacy-blue-900 rounded-[3px] border border-solid p-2 text-[0.875rem]',
+        className,
+      )}
+      {...props}
+    />
+  );
+}

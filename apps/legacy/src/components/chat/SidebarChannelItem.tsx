@@ -1,11 +1,7 @@
-import { css } from '@emotion/react';
-import styled from '@emotion/styled';
 import * as React from 'react';
 import { type Channel } from '../../api/channels';
 import Lock from '@boluo/icons/legacy/Lock';
 import { useSelector } from '../../store';
-import { fontMono, mR, pY, textSm } from '../../styles/atoms';
-import { gray } from '../../styles/colors';
 import { chatPath } from '../../utils/path';
 import Icon from '../atoms/Icon';
 import { SidebarItemLink } from '../atoms/SidebarItem';
@@ -13,34 +9,6 @@ import { SidebarItemLink } from '../atoms/SidebarItem';
 interface Props {
   channel: Channel;
 }
-
-const ChannelName = styled.div`
-  position: relative;
-  &::before {
-    content: '#';
-    ${fontMono};
-    position: absolute;
-    left: -1em;
-
-    color: ${gray['500']};
-  }
-`;
-
-const LatestText = styled.div`
-  color: ${gray['600']};
-  ${textSm};
-`;
-
-const NameText = styled.span`
-  font-style: italic;
-`;
-
-const itemStyle = css`
-  height: fit-content;
-  align-items: flex-start;
-  flex-direction: column;
-  ${pY(3)};
-`;
 
 export function SidebarChannelItem({ channel }: Props) {
   const latestMessage = useSelector((state) => {
@@ -61,15 +29,15 @@ export function SidebarChannelItem({ channel }: Props) {
     }
   }
   return (
-    <SidebarItemLink css={itemStyle} to={chatPath(channel.spaceId, channel.id)}>
-      <ChannelName>
-        {!channel.isPublic && <Icon css={mR(1)} icon={Lock} />}
+    <SidebarItemLink multiline to={chatPath(channel.spaceId, channel.id)}>
+      <div className="before:font-legacy-mono before:text-legacy-gray-500 relative before:absolute before:-left-[1em] before:content-['#']">
+        {!channel.isPublic && <Icon className="mr-1" icon={Lock} />}
         {channel.name}
-      </ChannelName>
+      </div>
       {channel.isPublic && name && text && (
-        <LatestText>
-          <NameText>{name}:</NameText> {text}
-        </LatestText>
+        <div className="text-legacy-gray-600 text-[0.875rem]">
+          <span className="italic">{name}:</span> {text}
+        </div>
       )}
     </SidebarItemLink>
   );

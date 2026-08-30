@@ -1,5 +1,3 @@
-import { css } from '@emotion/react';
-import styled from '@emotion/styled';
 import * as React from 'react';
 import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
@@ -11,30 +9,9 @@ import HelpIcon from '@boluo/icons/legacy/Help';
 import PlusCircle from '@boluo/icons/legacy/PlusCircle';
 import { useNotificationSwitch } from '../../states/notify';
 import { useSelector } from '../../store';
-import {
-  fontBold,
-  fontMono,
-  mB,
-  mR,
-  mT,
-  p,
-  pR,
-  pX,
-  pY,
-  textBase,
-  textSm,
-} from '../../styles/atoms';
-import {
-  gray,
-  sidebarItemActiveBgColor,
-  sidebarItemHoverBgColor,
-  textColor,
-} from '../../styles/colors';
 import { encodeUuid } from '../../utils/id';
-import { chatPath } from '../../utils/path';
 import Icon from '../atoms/Icon';
 import { SidebarButton } from '../atoms/SidebarButton';
-import { SidebarItemLink } from '../atoms/SidebarItem';
 import CreateChannel from '../organisms/CreateChannel';
 import ChatHeaderButton from './ChatHeaderButton';
 import Help from './Help';
@@ -46,41 +23,6 @@ interface Props {
   channels: Channel[];
 }
 
-const SidebarSectionTitle = styled.h3`
-  ${[textBase, textSm, fontBold, mT(2), mB(2), pX(8), pR(2)]};
-  display: flex;
-  justify-content: space-between;
-`;
-
-const sidebarTitle = css`
-  ${[fontBold, pY(4), pX(8)]};
-  color: ${textColor};
-  text-decoration: none;
-  display: flex;
-  align-items: center;
-
-  &:hover {
-    background-color: ${sidebarItemHoverBgColor};
-  }
-`;
-
-const SpaceName = styled.span``;
-
-const footer = css`
-  flex: 1 1;
-  width: 100%;
-  display: flex;
-  align-items: flex-end;
-  justify-content: flex-end;
-  ${p(2)};
-`;
-
-const channelList = css`
-  overflow-y: auto;
-  overflow-x: hidden;
-  height: 100%;
-`;
-
 function SidebarExpandItems({ space, channels }: Props) {
   const [createChannel, setCreateChannel] = useState(false);
   const [helpDialog, setHelpDialog] = useState(false);
@@ -90,35 +32,36 @@ function SidebarExpandItems({ space, channels }: Props) {
     <React.Fragment>
       <SidebarConnectionDisplay />
       <NavLink
-        css={sidebarTitle}
-        style={({ isActive }) =>
-          isActive ? { backgroundColor: sidebarItemActiveBgColor } : undefined
-        }
+        className="text-legacy-text hover:bg-legacy-sidebar-item-hover-background aria-[current=page]:bg-legacy-sidebar-item-active-background flex items-center px-8 py-4 font-bold no-underline"
         end
         to={`/chat/${encodeUuid(space.id)}`}
       >
-        <SpaceName>{space.name}</SpaceName>
+        <span>{space.name}</span>
       </NavLink>
-      <SidebarSectionTitle>
+      <h3 className="legacy-sidebar-section-title flex justify-between px-8 pr-2 text-[0.875rem] font-bold">
         <span>频道</span>
         <div>
-          <SidebarButton data-active={canNotify} onClick={canNotify ? stopNotify : startNotify}>
+          <SidebarButton
+            aria-label={canNotify ? '关闭通知' : '开启通知'}
+            data-active={canNotify}
+            onClick={canNotify ? stopNotify : startNotify}
+          >
             <Icon icon={canNotify ? BellSolid : BellSlashSolid} />
           </SidebarButton>
           {isSpaceAdmin && (
-            <SidebarButton onClick={() => setCreateChannel(true)}>
+            <SidebarButton aria-label="创建频道" onClick={() => setCreateChannel(true)}>
               <Icon icon={PlusCircle} />
             </SidebarButton>
           )}
         </div>
-      </SidebarSectionTitle>
-      <div css={channelList}>
+      </h3>
+      <div className="h-full overflow-x-hidden overflow-y-auto">
         {channels.map((channel) => (
           <SidebarChannelItem channel={channel} key={channel.id} />
         ))}
       </div>
-      <div css={footer}>
-        <ChatHeaderButton css={[textBase]} onClick={() => setHelpDialog(true)}>
+      <div className="flex w-full flex-1 items-end justify-end p-2">
+        <ChatHeaderButton onClick={() => setHelpDialog(true)} className="text-[1rem]">
           <Icon icon={HelpIcon} /> 格式
         </ChatHeaderButton>
       </div>

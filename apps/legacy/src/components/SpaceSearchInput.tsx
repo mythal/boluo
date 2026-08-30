@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import SearchSpaces from '@boluo/icons/legacy/SearchSpaces';
-import { flex, mR } from '../styles/atoms';
+import { cls } from '../utils/classnames';
 import Icon from './atoms/Icon';
 import Input from './atoms/Input';
 
@@ -24,8 +24,8 @@ function SpaceSearchInput({ search, className }: Props) {
   }, [search, searchValue]);
 
   return (
-    <div css={flex} className={className}>
-      <Icon css={mR(2)} icon={SearchSpaces} />
+    <div className={cls('flex', className)}>
+      <Icon className="mr-2" icon={SearchSpaces} />
       <Input
         value={searchValue}
         placeholder="搜索公开位面"

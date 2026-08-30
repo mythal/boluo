@@ -1,9 +1,8 @@
-import styled from '@emotion/styled';
-import { m, p, pB, textXl } from '../../styles/atoms';
+import React from 'react';
+import { cls } from '../../utils/classnames';
 
-const Title = styled.h1`
-  ${[textXl, p(0), pB(6), m(0)]};
-  font-weight: normal;
-`;
+function Title({ className, ref, ...props }: React.ComponentPropsWithRef<'h1'>) {
+  return <h1 ref={ref} className={cls('legacy-title', className)} {...props} />;
+}
 
 export default Title;

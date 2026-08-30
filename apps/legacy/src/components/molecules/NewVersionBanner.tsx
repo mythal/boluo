@@ -1,52 +1,20 @@
-import { css, keyframes } from '@emotion/react';
 import { useNewVersion } from '../../hooks/useNewVersion';
-import { flex, gap, spacingN, textSm } from '../../styles/atoms';
 import Button from '../atoms/Button';
 import InformationBar from './InformationBar';
-
-const enter = keyframes`
-  from {
-    opacity: 0;
-    transform: translate(-50%, calc(-100% - ${spacingN(2)}));
-  }
-  to {
-    opacity: 1;
-    transform: translate(-50%, 0);
-  }
-`;
-
-const position = css`
-  position: fixed;
-  z-index: 200;
-  top: ${spacingN(2)};
-  left: 50%;
-  width: max-content;
-  max-width: calc(100% - ${spacingN(4)});
-  animation: ${enter} 160ms ease-out both;
-
-  @media (prefers-reduced-motion: reduce) {
-    animation: none;
-    transform: translateX(-50%);
-  }
-`;
-
-const content = css`
-  ${[flex, gap(3), textSm]};
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-`;
 
 export const NewVersionBanner = () => {
   const { available, dismiss } = useNewVersion();
   if (!available) return null;
 
   return (
-    <div role="status" css={position}>
+    <div
+      role="status"
+      className="animate-legacy-version-enter fixed top-2 left-1/2 z-[200] w-max max-w-[calc(100%-1rem)] motion-reduce:-translate-x-1/2 motion-reduce:animate-none"
+    >
       <InformationBar variant="INFO" dismiss={dismiss}>
-        <div css={content}>
+        <div className="flex flex-wrap items-center justify-center gap-3 text-[0.875rem]">
           <span>菠萝有新版本可用。</span>
-          <Button data-small data-variant="primary" onClick={() => location.reload()}>
+          <Button size="small" variant="primary" onClick={() => location.reload()}>
             刷新页面
           </Button>
         </div>

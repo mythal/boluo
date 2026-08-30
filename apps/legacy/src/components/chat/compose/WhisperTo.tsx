@@ -14,7 +14,7 @@ function WhisperTo({ className }: Props) {
   const [dialog, setDialog] = useState(false);
   return (
     <span className={className}>
-      <Button data-variant="normal" data-size="small" onClick={() => setDialog(true)}>
+      <Button variant="normal" size="small" onClick={() => setDialog(true)}>
         {whisperTo == null || whisperTo === undefined ? (
           <span>对所有人...</span>
         ) : (

@@ -1,4 +1,3 @@
-import { css } from '@emotion/react';
 import * as React from 'react';
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from '../../store';
@@ -8,21 +7,12 @@ import ChatList from './ChatList';
 import Compose from './compose/Compose';
 import Header from './Header';
 import { PrivateChat } from './PrivateChat';
-import { chatRight } from './styles';
 
 interface Props {
   spaceId: Id;
   channelId: Id;
   focus: () => void;
 }
-
-const composePlaceHolder = css`
-  grid-row: compose-start / compose-end;
-  padding: 0.5em 1em;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-`;
 
 function ChannelChat({ channelId, focus }: Props) {
   const loading = useSelector((state) => state.chatStates.get(channelId) === undefined);
@@ -39,7 +29,7 @@ function ChannelChat({ channelId, focus }: Props) {
 
   if (loading) {
     return (
-      <div css={chatRight}>
+      <div className="[grid-row:header-start/compose-end]">
         <Loading text="load channel data" />
       </div>
     );
@@ -60,7 +50,9 @@ function ChannelChat({ channelId, focus }: Props) {
       {initialized && myMember ? (
         <Compose channelId={channelId} member={myMember} />
       ) : (
-        <div css={composePlaceHolder}>你现在没有权限发言</div>
+        <div className="[grid-row:compose-start/compose-end] flex items-center justify-center px-[1em] py-[0.5em]">
+          你现在没有权限发言
+        </div>
       )}
     </React.Fragment>
   );

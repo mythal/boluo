@@ -1,6 +1,3 @@
-import { css } from '@emotion/react';
-import styled from '@emotion/styled';
-import { darken } from 'polished';
 import * as React from 'react';
 import { useState } from 'react';
 import Columns from '@boluo/icons/legacy/Columns';
@@ -13,19 +10,6 @@ import { useChannelId, usePane } from '../../hooks/useChannelId';
 import { useTitle } from '../../hooks/useTitle';
 import { useNotify } from '../../states/notify';
 import { useSelector } from '../../store';
-import {
-  flex,
-  fontBold,
-  fontMono,
-  fontNormal,
-  mL,
-  mR,
-  pR,
-  textBase,
-  textLg,
-  textSm,
-} from '../../styles/atoms';
-import { textColor } from '../../styles/colors';
 import Icon from '../atoms/Icon';
 import ChannelMemberButton from './ChannelMemberButton';
 import ChatHeaderButton from './ChatHeaderButton';
@@ -33,43 +17,9 @@ import ExportDialog from './ExportDialog';
 import Filter from './Filter';
 import InviteChannelMemberDialog from './InviteChannelMemberDialog';
 import ManageChannel from './ManageChannel';
-import { chatHeaderStyle, chatHeaderToolbar } from './styles';
+import { chatHeaderClassName } from './classNames';
 
-const Topic = styled.span`
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  ${[textSm, fontNormal, mL(1)]};
-  color: ${darken(0.2, textColor)};
-`;
-
-const toolbar = css`
-  ${[flex, chatHeaderToolbar]};
-  align-items: stretch;
-`;
-
-const ChannelName = styled.div`
-  ${[textSm]};
-  color: ${textColor};
-  ${pR(1)};
-  ${mR(1)};
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  color: ${darken(0.2, textColor)};
-
-  &::before {
-    content: '#';
-    ${fontMono};
-    color: ${darken(0.2, textColor)};
-    ${[pR(1)]};
-  }
-`;
-
-const name = css`
-  ${[textBase, fontBold, textLg]};
-  color: ${textColor};
-`;
+const toolbarClassName = 'flex h-full [grid-area:toolbar] items-stretch';
 
 interface Props {
   focus: () => void;
@@ -89,45 +39,60 @@ function Header({ focus }: Props) {
   useNotify();
   useTitle(channel.name);
   return (
-    <div css={chatHeaderStyle} onClick={focus}>
-      <ChannelName>
-        {!channel.isPublic && <Icon icon={Lock} css={mR(1)} />}
-        <span css={name}>{channel.name}</span>
-        <Topic>{channel.topic}</Topic>
-      </ChannelName>
-      <div css={toolbar}>
-        {/*<ChatHeaderButton css={[mL(1), showOnMd]} data-active={isPaneSplit} onClick={toggleSplit}>*/}
-        {/*  <Icon icon={columns} />*/}
-        {/*</ChatHeaderButton>*/}
+    <div className={chatHeaderClassName} onClick={focus}>
+      <div className="text-legacy-text-minor before:font-legacy-mono before:text-legacy-text-minor mr-1 overflow-hidden pr-1 text-[0.875rem] text-ellipsis whitespace-nowrap before:pr-1 before:content-['#']">
+        {!channel.isPublic && <Icon icon={Lock} className="mr-1" />}
+        <span className="text-legacy-text text-[1.125rem] font-bold">{channel.name}</span>
+        <span className="text-legacy-text-minor ml-1 overflow-hidden text-[0.875rem] font-normal text-ellipsis whitespace-nowrap">
+          {channel.topic}
+        </span>
+      </div>
+      <div className={toolbarClassName}>
         {isSpaceAdmin && (
-          <ChatHeaderButton css={[mL(1)]} onClick={() => setManagePanel(true)}>
+          <ChatHeaderButton
+            aria-label="管理频道"
+            className="legacy-chat-header-action"
+            onClick={() => setManagePanel(true)}
+          >
             <Icon icon={Sliders} />
           </ChatHeaderButton>
         )}
         {(isSpaceAdmin || myMember?.isMaster) && (
-          <ChatHeaderButton css={[mL(1)]} onClick={() => showExportDialog(true)}>
+          <ChatHeaderButton
+            aria-label="导出频道"
+            className="legacy-chat-header-action"
+            onClick={() => showExportDialog(true)}
+          >
             <Icon icon={FileExport} />
           </ChatHeaderButton>
         )}
 
-        <Filter css={[mL(1)]} />
+        <Filter className="legacy-chat-header-action" />
         {(isSpaceAdmin || myMember?.isMaster) && (
-          <ChatHeaderButton css={[mL(1)]} onClick={() => showInviteDialog(true)}>
+          <ChatHeaderButton
+            aria-label="邀请频道成员"
+            className="legacy-chat-header-action"
+            onClick={() => showInviteDialog(true)}
+          >
             <Icon icon={UserPlus} />
           </ChatHeaderButton>
         )}
 
-        <ChatHeaderButton css={[mL(1)]} onClick={split}>
+        <ChatHeaderButton aria-label="分屏" className="legacy-chat-header-action" onClick={split}>
           <Icon icon={Columns} />
         </ChatHeaderButton>
 
         {close && (
-          <ChatHeaderButton css={[mL(1)]} onClick={close}>
+          <ChatHeaderButton
+            aria-label="关闭分屏"
+            className="legacy-chat-header-action"
+            onClick={close}
+          >
             <Icon icon={X} />
           </ChatHeaderButton>
         )}
 
-        <ChannelMemberButton css={mL(1)} />
+        <ChannelMemberButton className="legacy-chat-header-action" />
       </div>
       {managePanel && <ManageChannel channel={channel} dismiss={() => setManagePanel(false)} />}
       {exportDialog && <ExportDialog channel={channel} dismiss={() => showExportDialog(false)} />}

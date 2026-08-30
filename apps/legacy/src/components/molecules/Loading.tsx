@@ -1,51 +1,22 @@
-import { css, keyframes } from '@emotion/react';
-import styled from '@emotion/styled';
 import React from 'react';
 import RotateCw from '@boluo/icons/legacy/RotateCw';
-import { fontMono, pY, spacingN, textSm, textXl } from '../../styles/atoms';
+import { cls } from '../../utils/classnames';
 import TextIcon from '../atoms/Icon';
 
-interface Props {
-  className?: string;
+interface Props extends React.HTMLAttributes<HTMLDivElement> {
   text?: string;
 }
 
-const loadingKeyframes = keyframes`
-  0% {
-    opacity: 40%;
-  }
-
-  80% {
-    opacity: 100%;
-  }
-
-  100% {
-    opacity: 40%;
-  }
-`;
-
-const Container = styled.div`
-  width: 100%;
-  height: 100%;
-  ${pY(2)};
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  ${fontMono};
-  ${textSm};
-  white-space: pre;
-  animation: ${loadingKeyframes} 2s linear infinite;
-`;
-
-const rotateIconStyle = css`
-  ${textXl};
-  margin-inline-end: ${spacingN(1)};
-`;
-
-export default function Loading({ className, text = 'loading' }: Props) {
+export default function Loading({ className, text = 'loading', ...props }: Props) {
   return (
-    <Container className={className}>
-      <TextIcon icon={RotateCw} spin css={rotateIconStyle} /> <span>{text}</span>
-    </Container>
+    <div
+      className={cls(
+        'font-legacy-mono animate-legacy-loading-pulse flex h-full w-full items-center justify-center py-2 text-[0.875rem] whitespace-pre',
+        className,
+      )}
+      {...props}
+    >
+      <TextIcon className="me-1 text-[1.25rem]" icon={RotateCw} spin /> <span>{text}</span>
+    </div>
   );
 }

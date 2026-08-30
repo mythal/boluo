@@ -1,7 +1,8 @@
 import * as React from 'react';
 import Select from 'react-select';
 import { type Props as SelectProps } from 'react-select';
-import { selectTheme, uiShadow } from '../../styles/atoms';
+import { reactSelectTheme } from '../../styles/reactSelectTheme';
+import { cls } from '../../utils/classnames';
 
 interface Props extends Omit<SelectProps<DiceOption, false>, 'options'> {
   defaultDiceType?: string;
@@ -18,14 +19,14 @@ export const dictOptions: DiceOption[] = [
   { value: 'd6', label: 'D6' },
 ];
 
-function DiceSelect({ defaultDiceType, ...rest }: Props) {
+function DiceSelect({ className, defaultDiceType, ...rest }: Props) {
   const defaultDice = dictOptions.filter((item) => item.value === defaultDiceType);
   if (defaultDice.length === 0) {
     defaultDice.push(dictOptions[0]);
   }
   return (
     <Select
-      css={[uiShadow]}
+      className={cls('shadow-legacy-ui', className)}
       defaultValue={defaultDice}
       options={[
         { value: 'd20', label: 'D20' },
@@ -36,7 +37,7 @@ function DiceSelect({ defaultDiceType, ...rest }: Props) {
         { value: 'd6', label: 'D6' },
         { value: 'd4', label: 'D4' },
       ]}
-      theme={selectTheme}
+      theme={reactSelectTheme}
       {...rest}
     />
   );

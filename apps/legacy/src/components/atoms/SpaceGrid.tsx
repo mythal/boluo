@@ -1,8 +1,12 @@
-import styled from '@emotion/styled';
-import { grid, spacingN } from '../../styles/atoms';
+import * as React from 'react';
+import { cls } from '../../utils/classnames';
 
-export const SpaceGrid = styled.div`
-  ${grid};
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: ${spacingN(2)};
-`;
+export function SpaceGrid({ className, ref, ...props }: React.ComponentPropsWithRef<'div'>) {
+  return (
+    <div
+      ref={ref}
+      className={cls('grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-2', className)}
+      {...props}
+    />
+  );
+}

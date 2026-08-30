@@ -1,15 +1,12 @@
-import { css } from '@emotion/react';
 import * as React from 'react';
 import { useMemo } from 'react';
 import { type Preview } from '../../../api/events';
 import { useChannelId } from '../../../hooks/useChannelId';
 import { useParse } from '../../../hooks/useParse';
 import { useSelector } from '../../../store';
-import { mL, mR, textXs } from '../../../styles/atoms';
-import { chatItemContainer } from '../ChatItemContainer';
 import { ChatItemContentContainer } from '../ChatItemContentContainer';
 import ChatItemContent from '../ItemContent';
-import { nameContainer, previewInGame, previewOutGame } from '../styles';
+import { chatItemContainerClassName, chatItemNameContainerClassName } from '../classNames';
 import { AddDiceButton } from './AddDiceButton';
 import { BroadcastAreClosed } from './BroadcastAreClosed';
 import ChatImageUploadButton from './ImageUploadButton';
@@ -20,13 +17,6 @@ import WhisperTo from './WhisperTo';
 interface Props {
   preview: Preview;
 }
-
-const previewChatItem = css`
-  & .roll::before {
-    content: '未定';
-    ${textXs}
-  }
-`;
 
 function MyPreview({ preview }: Props) {
   const enableBroadcast = preview.text != null;
@@ -40,19 +30,21 @@ function MyPreview({ preview }: Props) {
 
   return (
     <div
-      css={[chatItemContainer, previewChatItem, preview.inGame ? previewInGame : previewOutGame]}
+      className={`${chatItemContainerClassName} legacy-chat-preview ${
+        preview.inGame ? 'legacy-chat-preview-in-game' : 'legacy-chat-preview-out-game'
+      }`}
       data-in-game={preview.inGame ?? false}
     >
-      {!isAction && <div css={nameContainer}>{name}</div>}
+      {!isAction && <div className={chatItemNameContainerClassName}>{name}</div>}
       <ChatItemContentContainer data-action={isAction} data-in-game={preview.inGame ?? false}>
         {isAction && name}
-        {!enableBroadcast && <BroadcastAreClosed css={mR(1)} />}
+        {!enableBroadcast && <BroadcastAreClosed className="mr-1" />}
         {text && <ChatItemContent entities={entities} text={text} />}
         <AddDiceButton />
         <div>
           <WhisperTo />
-          <InPreviewActionButton css={mL(1)} />
-          <ChatImageUploadButton css={[mL(1)]} />
+          <InPreviewActionButton className="ml-1" />
+          <ChatImageUploadButton className="ml-1" />
         </div>
       </ChatItemContentContainer>
     </div>

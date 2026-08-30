@@ -35,7 +35,12 @@ function MemberListButton({ className, spaceId, folded, active, toggle }: Props)
   );
 
   return (
-    <ChatHeaderButton data-active={active} onClick={toggle} className={className}>
+    <ChatHeaderButton
+      aria-label={active ? '关闭成员列表' : '打开成员列表'}
+      data-active={active}
+      onClick={toggle}
+      className={className}
+    >
       <Icon icon={Members} />
       {!folded && (
         <Fragment>

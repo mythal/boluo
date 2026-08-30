@@ -1,4 +1,3 @@
-import { css } from '@emotion/react';
 import * as React from 'react';
 import { useCallback, useRef, useState } from 'react';
 import { type Channel } from '../../api/channels';
@@ -8,13 +7,15 @@ import BellSolid from '@boluo/icons/legacy/BellSolid';
 import HelpIcon from '@boluo/icons/legacy/Help';
 import NightSky from '@boluo/icons/legacy/NightSky';
 import { useNotificationSwitch } from '../../states/notify';
-import { mB, pY } from '../../styles/atoms';
 import { chatPath } from '../../utils/path';
 import Icon from '../atoms/Icon';
 import Menu from '../atoms/Menu';
 import { MenuItemLink } from '../atoms/MenuItem';
 import Overlay from '../atoms/Overlay';
-import ChatHeaderButton, { ChatHeaderButtonNavLink, sidebarIconButton } from './ChatHeaderButton';
+import ChatHeaderButton, {
+  ChatHeaderButtonNavLink,
+  sidebarIconButtonClassName,
+} from './ChatHeaderButton';
 import Help from './Help';
 import UserStatusButton from './UserStatusButton';
 
@@ -22,14 +23,6 @@ interface Props {
   space: Space;
   channels: Channel[];
 }
-
-const footer = css`
-  flex: 1 1 100%;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  ${[pY(2)]};
-`;
 
 function SidebarFoldedItems({ space, channels }: Props) {
   const [channelMenu, setChannelMenu] = useState(false);
@@ -43,32 +36,42 @@ function SidebarFoldedItems({ space, channels }: Props) {
   return (
     <React.Fragment>
       <ChatHeaderButtonNavLink
-        className={({ isActive }) => (isActive ? 'active' : '')}
+        aria-label="位面首页"
+        className={`${sidebarIconButtonClassName} mb-1`}
         end
-        css={[mB(1), sidebarIconButton]}
         to={chatPath(space.id)}
       >
         <Icon icon={NightSky} />
       </ChatHeaderButtonNavLink>
-      <ChatHeaderButton ref={channelButton} css={[mB(1), sidebarIconButton]} onClick={toggleMenu}>
+      <ChatHeaderButton
+        aria-label="选择频道"
+        className={`${sidebarIconButtonClassName} legacy-sidebar-icon-spaced`}
+        ref={channelButton}
+        onClick={toggleMenu}
+      >
         #
       </ChatHeaderButton>
       <UserStatusButton
         spaceId={space.id}
         folded
-        css={[sidebarIconButton, mB(1)]}
+        className={`${sidebarIconButtonClassName} legacy-sidebar-icon-spaced`}
         active={false}
         toggle={toggleMemberList}
       />
       <ChatHeaderButton
+        aria-label={canNotify ? '关闭通知' : '开启通知'}
         data-active={canNotify}
-        css={[sidebarIconButton]}
+        className={sidebarIconButtonClassName}
         onClick={canNotify ? stopNotify : startNotify}
       >
         <Icon icon={canNotify ? BellSolid : BellSlashSolid} />
       </ChatHeaderButton>
-      <div css={footer}>
-        <ChatHeaderButton onClick={() => setHelpDialog(true)} css={[sidebarIconButton]}>
+      <div className="flex flex-[1_1_100%] items-end justify-center py-2">
+        <ChatHeaderButton
+          aria-label="查看格式帮助"
+          onClick={() => setHelpDialog(true)}
+          className={sidebarIconButtonClassName}
+        >
           <Icon icon={HelpIcon} />
         </ChatHeaderButton>
       </div>

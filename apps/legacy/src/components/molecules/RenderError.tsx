@@ -7,7 +7,6 @@ import {
   LOADING,
   NOT_FOUND,
 } from '../../api/error';
-import { mY, pY, textSm } from '../../styles/atoms';
 import Title from '../atoms/Title';
 import NotFound from '../pages/NotFound';
 import InformationBar from './InformationBar';
@@ -24,7 +23,7 @@ export function RenderError({ error, more404, variant = 'page', rewrite = {} }: 
   if (error.code === LOADING) {
     if (variant === 'page') {
       return (
-        <div css={pY(2)}>
+        <div className="py-2">
           <Loading />
         </div>
       );
@@ -47,12 +46,12 @@ export function RenderError({ error, more404, variant = 'page', rewrite = {} }: 
     return (
       <InformationBar variant="ERROR">
         <div>{description}</div>
-        {detail && <div css={[textSm, mY(1)]}>{detail}</div>}
+        {detail && <div className="my-1 text-[0.875rem]">{detail}</div>}
       </InformationBar>
     );
   }
   return (
-    <div css={[pY(2)]}>
+    <div className="py-2">
       <Title>{description}</Title>
       {detail && <p>{detail}</p>}
     </div>

@@ -1,7 +1,7 @@
-import { css } from '@emotion/react';
 import * as React from 'react';
 import { useRef, useState } from 'react';
 import { mediaUrl } from '../../api/request';
+import { cls } from '../../utils/classnames';
 import { type Id } from '../../utils/id';
 import Avatar from '../molecules/Avatar';
 
@@ -13,14 +13,6 @@ interface Props {
 }
 
 const MAX_SIZE = 1024 * 1024;
-
-const avatarStyle = css`
-  cursor: pointer;
-
-  &:hover {
-    filter: brightness(65%);
-  }
-`;
 
 function EditAvatar({ className, mediaId, selectFile, size }: Props) {
   const input = useRef<HTMLInputElement | null>(null);
@@ -62,8 +54,7 @@ function EditAvatar({ className, mediaId, selectFile, size }: Props) {
         src={uri}
         size={size}
         onClick={onClick}
-        css={avatarStyle}
-        className={className}
+        className={cls('cursor-pointer hover:brightness-[65%]', className)}
       />
     </>
   );

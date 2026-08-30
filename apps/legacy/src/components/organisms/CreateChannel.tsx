@@ -1,4 +1,3 @@
-import { css } from '@emotion/react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { type JoinedChannel } from '../../actions';
@@ -11,7 +10,6 @@ import Input from '../../components/atoms/Input';
 import Dialog from '../../components/molecules/Dialog';
 import DiceSelect, { type DiceOption } from '../../components/molecules/DiceSelect';
 import { useDispatch, useSelector } from '../../store';
-import { alignRight, breakpoint, largeInput, mediaQuery, mT, spacingN } from '../../styles/atoms';
 import { channelNameValidation, characterNameValidation } from '../../validators';
 import { ErrorMessage } from '../atoms/ErrorMessage';
 import { HelpText } from '../atoms/HelpText';
@@ -22,13 +20,6 @@ interface Props {
   space: Space;
   dismiss: () => void;
 }
-
-const panelStyle = css`
-  width: ${spacingN(64)};
-  ${mediaQuery(breakpoint.md)} {
-    width: ${spacingN(80)};
-  }
-`;
 
 interface FormData {
   name: string;
@@ -77,12 +68,17 @@ function CreateChannel({ space, dismiss }: Props) {
     dismiss();
   };
   return (
-    <Dialog title="创建频道" css={panelStyle} dismiss={dismiss} mask>
+    <Dialog title="创建频道" className="w-64 md:w-80" dismiss={dismiss} mask>
       {editError && <RenderError error={editError} variant="component" />}
       <form onSubmit={handleSubmit(onSubmit)}>
         <div>
           <Label htmlFor="name">频道名</Label>
-          <Input css={largeInput} id="name" {...register('name', channelNameValidation())} />
+          <Input
+            className="h-10"
+            id="name"
+            inputSize="large"
+            {...register('name', channelNameValidation())}
+          />
           {errors.name && <ErrorMessage>{errors.name.message}</ErrorMessage>}
         </div>
         <div>
@@ -119,8 +115,8 @@ function CreateChannel({ space, dismiss }: Props) {
           </Label>
           <HelpText>秘密频道通过邀请进入。</HelpText>
         </div>
-        <div css={[mT(4), alignRight]}>
-          <Button data-variant="primary" disabled={submitting} type="submit">
+        <div className="mt-4 text-right">
+          <Button variant="primary" disabled={submitting} type="submit">
             创建
           </Button>
         </div>

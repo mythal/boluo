@@ -1,10 +1,11 @@
-import styled from '@emotion/styled';
-import { inputStyle } from './Input';
+import React from 'react';
+import { cls } from '../../utils/classnames';
+import { inputClassName } from './Input';
 
-const TextArea = styled.textarea`
-  ${inputStyle};
-  resize: none;
-  width: 100%;
-`;
+function TextArea({ className, ref, ...props }: React.ComponentPropsWithRef<'textarea'>) {
+  return (
+    <textarea ref={ref} className={cls(inputClassName, 'legacy-textarea', className)} {...props} />
+  );
+}
 
 export default TextArea;

@@ -5,12 +5,11 @@ import Rocket from '@boluo/icons/legacy/Rocket';
 import { useIsLoggedIn } from '../../hooks/useIsLoggedIn';
 import { useDispatch, useSelector } from '../../store';
 import { type Id } from '../../utils/id';
+import Button, { type ButtonProps } from '../atoms/Button';
 import Icon from '../atoms/Icon';
 
-interface Props {
+interface Props extends Omit<ButtonProps, 'children' | 'disabled' | 'onClick' | 'variant'> {
   id: Id;
-  className?: string;
-  'data-small'?: boolean;
   token?: string;
 }
 
@@ -35,9 +34,9 @@ function JoinSpaceButton({ id, token, ...props }: Props) {
   };
 
   return (
-    <button onClick={join} {...props} data-variant="primary" disabled={loading}>
+    <Button {...props} variant="primary" disabled={loading} onClick={join}>
       <Icon icon={Rocket} loading={loading} /> 加入位面
-    </button>
+    </Button>
   );
 }
 

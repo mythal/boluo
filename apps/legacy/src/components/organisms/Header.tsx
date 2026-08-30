@@ -1,5 +1,3 @@
-import { css } from '@emotion/react';
-import styled from '@emotion/styled';
 import * as React from 'react';
 import { useRef, useState } from 'react';
 import ChevronDown from '@boluo/icons/legacy/ChevronDown';
@@ -10,8 +8,6 @@ import PlusCircle from '@boluo/icons/legacy/PlusCircle';
 import Logo from '@boluo/icons/legacy/Logo';
 import { useIsLoggedIn } from '../../hooks/useIsLoggedIn';
 import { useSelector } from '../../store';
-import { headerHeight, headerShadow, mainP, mainWidth, mR } from '../../styles/atoms';
-import { headerBgColor } from '../../styles/colors';
 import { recordNext } from '../../utils/browser';
 import HeaderLink, { HeaderButton } from '../atoms/HeaderLink';
 import Icon from '../atoms/Icon';
@@ -19,40 +15,29 @@ import Menu from '../atoms/Menu';
 import { MenuItemLink } from '../atoms/MenuItem';
 import Overlay from '../atoms/Overlay';
 
-export const headerStyle = css`
-  display: flex;
-  align-items: center;
-  justify-content: stretch;
-  height: ${headerHeight};
-  background-color: ${headerBgColor};
-  ${headerShadow};
-`;
+export const headerClassName =
+  'flex h-12 items-center justify-stretch bg-legacy-header-background px-6 py-4 shadow-[0_-1px_4px_rgba(0,0,0,0.5)]';
 
-export const HeaderInner = styled.div`
-  display: flex;
-  flex: 1 1 auto;
-  margin: 0 auto;
-  ${mainWidth};
-  justify-content: space-between;
-`;
+export function HeaderInner({ children }: React.PropsWithChildren) {
+  return <div className="mx-auto flex max-w-[50em] flex-auto justify-between">{children}</div>;
+}
 
-const Nav = styled.nav`
-  display: flex;
-  align-items: center;
-`;
+function Nav({ children }: React.PropsWithChildren) {
+  return <nav className="flex items-center">{children}</nav>;
+}
 
 function Guest() {
   return (
     <HeaderInner>
       <Nav>
-        <HeaderLink css={mR(1)} exact to="/">
-          <Icon css={mR(1)} icon={Logo} />
+        <HeaderLink className="mr-1" exact to="/">
+          <Icon className="mr-1" icon={Logo} />
           菠萝
         </HeaderLink>
         <HeaderLink to="/space/explore">探索位面</HeaderLink>
       </Nav>
       <Nav>
-        <HeaderLink css={mR(1)} to="/login" onClick={recordNext}>
+        <HeaderLink className="mr-1" to="/login" onClick={recordNext}>
           登录
         </HeaderLink>
         <HeaderLink to="/sign-up" onClick={recordNext}>
@@ -73,11 +58,11 @@ function User() {
   return (
     <HeaderInner>
       <Nav>
-        <HeaderLink css={mR(1)} exact to="/">
-          <Icon css={mR(1)} icon={Logo} />
+        <HeaderLink className="mr-1" exact to="/">
+          <Icon className="mr-1" icon={Logo} />
           我的
         </HeaderLink>
-        <HeaderLink css={mR(1)} to="/space/explore">
+        <HeaderLink className="mr-1" to="/space/explore">
           探索位面
         </HeaderLink>
         <HeaderLink to="/space/new">
@@ -85,7 +70,7 @@ function User() {
         </HeaderLink>
       </Nav>
       <Nav>
-        <HeaderButton css={mR(1)} onClick={toggle} ref={menuAnchor}>
+        <HeaderButton onClick={toggle} ref={menuAnchor}>
           {nickname} <Icon icon={menu ? ChevronUp : ChevronDown} />
         </HeaderButton>
         {menu && (
@@ -108,7 +93,7 @@ function User() {
 
 function Header() {
   const isLoggedIn = useIsLoggedIn();
-  return <header css={[headerStyle, mainP]}>{isLoggedIn ? <User /> : <Guest />}</header>;
+  return <header className={headerClassName}>{isLoggedIn ? <User /> : <Guest />}</header>;
 }
 
 export default Header;

@@ -1,4 +1,3 @@
-import { css } from '@emotion/react';
 import { useAtom } from 'jotai';
 import * as React from 'react';
 import { useState } from 'react';
@@ -7,8 +6,6 @@ import { post } from '../../api/request';
 import UserMinus from '@boluo/icons/legacy/UserMinus';
 import { userDialogAtom } from '../../states/userDialog';
 import { useDispatch, useSelector } from '../../store';
-import { color, flex, fontBold, mB, mR, mT, pX, roundedSm, textXl } from '../../styles/atoms';
-import { gray, primary } from '../../styles/colors';
 import { throwErr } from '../../utils/errors';
 import { encodeUuid, type Id } from '../../utils/id';
 import Button from '../atoms/Button';
@@ -25,25 +22,7 @@ interface Props {
   dismiss: () => void;
 }
 
-const nameLink = css`
-  ${[fontBold, textXl, mR(1)]};
-  text-decoration: none;
-  color: ${primary['400']};
-  line-height: 1em;
-`;
-
-const nameContainer = css`
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  ${pX(4)};
-`;
-
-const bio = css`
-  line-height: 1.4em;
-`;
-
-function MemberDialog({ userId, spaceId, dismiss }: Props) {
+function MemberDialog({ userId, spaceId, className, dismiss }: Props) {
   const myId = useSelector((state) => state.profile?.user.id);
 
   const spaceOwnerId = useSelector((state) => {
@@ -95,26 +74,29 @@ function MemberDialog({ userId, spaceId, dismiss }: Props) {
   };
   return (
     <React.Fragment>
-      <Dialog dismiss={dismiss} mask>
-        <div css={[mB(4), flex]}>
-          <Avatar css={roundedSm} size="5rem" id={user.avatarId} />
-          <div css={nameContainer}>
+      <Dialog className={className} dismiss={dismiss} mask>
+        <div className="mb-4 flex">
+          <Avatar className="rounded-[3px]" size="5rem" id={user.avatarId} />
+          <div className="flex flex-col justify-end px-4">
             <div>
-              <Link to={`/profile/${encodeUuid(user.id)}`} css={[nameLink]}>
+              <Link
+                className="text-legacy-primary-400 mr-1 text-[1.25rem] leading-[1em] font-bold no-underline"
+                to={`/profile/${encodeUuid(user.id)}`}
+              >
                 {user.nickname}
               </Link>
               <MemberTags spaceMember={spaceMember} spaceOwnerId={spaceOwnerId} />
             </div>
-            <div css={[color(gray['500'])]}>{user.username}</div>
+            <div className="text-legacy-gray-500">{user.username}</div>
           </div>
         </div>
-        <div css={bio}>{user.bio}</div>
+        <div className="leading-[1.4em]">{user.bio}</div>
 
         {imAdmin && (
-          <div css={[mT(4)]}>
+          <div className="mt-4">
             {!spaceMember.isAdmin && (
-              <Button data-variant="danger" onClick={() => showKickDialog(true)}>
-                <Icon css={mR(1)} icon={UserMinus} />
+              <Button variant="danger" onClick={() => showKickDialog(true)}>
+                <Icon className="mr-1" icon={UserMinus} />
                 从位面中放逐
               </Button>
             )}

@@ -1,8 +1,5 @@
-import { css } from '@emotion/react';
 import React from 'react';
-import { type SpaceMemberWithUser, StatusKind } from '../../api/spaces';
-import { color, pL, pX, pY } from '../../styles/atoms';
-import { gray, green } from '../../styles/colors';
+import { type SpaceMemberWithUser } from '../../api/spaces';
 import { type Id } from '../../utils/id';
 
 interface Props {
@@ -11,37 +8,15 @@ interface Props {
   onClick: (userId: Id) => void;
 }
 
-const itemStyle = css`
-  ${pL(8)};
-  ${pY(4)};
-  display: flex;
-  align-items: center;
-  position: relative;
-  &[data-online='true']::before {
-    content: ' ';
-    display: inline-block;
-    position: absolute;
-    width: 0.5em;
-    height: 0.5em;
-    border-radius: 999px;
-    background-color: ${green['400']};
-    left: 1em;
-  }
-  &[data-online='true'] {
-    ${color(gray['200'])};
-  }
-  &[data-online='false'] {
-    ${color(gray['700'])};
-  }
-  &:hover {
-    background-color: ${gray['800']};
-  }
-`;
-
 export const SidebarMemberListItem = ({ member, online, onClick }: Props) => {
   return (
-    <div css={itemStyle} data-online={String(online)} onClick={() => onClick(member.user.id)}>
+    <button
+      className="legacy-sidebar-member-button text-legacy-gray-700 before:bg-legacy-green-400 hover:bg-legacy-gray-800 data-[online=true]:text-legacy-gray-200 relative flex w-full cursor-pointer items-center border-0 bg-transparent py-4 pl-8 text-left before:absolute before:left-[1em] before:hidden before:size-[0.5em] before:rounded-full before:content-[''] data-[online=true]:before:inline-block"
+      data-online={String(online)}
+      onClick={() => onClick(member.user.id)}
+      type="button"
+    >
       {member.user.username}
-    </div>
+    </button>
   );
 };

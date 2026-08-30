@@ -15,13 +15,13 @@ function GotoSpaceLink({ isMember, spaceId, className }: Props) {
   const chatPath = `/chat/${encodeUuid(spaceId)}`;
   if (isMember) {
     return (
-      <ButtonLink data-small data-variant="primary" className={className} to={chatPath}>
+      <ButtonLink size="small" variant="primary" className={className} to={chatPath}>
         <Icon icon={Teleport} /> 进入位面
       </ButtonLink>
     );
   } else {
     return (
-      <ButtonLink data-small className={className} to={chatPath}>
+      <ButtonLink size="small" className={className} to={chatPath}>
         <Icon icon={Binoculars} /> 作为旁观者进入
       </ButtonLink>
     );

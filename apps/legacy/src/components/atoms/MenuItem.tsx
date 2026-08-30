@@ -1,58 +1,30 @@
-import { css } from '@emotion/react';
-import styled from '@emotion/styled';
-import { darken } from 'polished';
 import * as React from 'react';
 import { NavLink } from 'react-router-dom';
 import TextIcon, { type SvgIcon } from '../../components/atoms/Icon';
-import { mY, roundedSm, spacingN } from '../../styles/atoms';
-import { menuItemHoverColor, textColor } from '../../styles/colors';
+import { cls } from '../../utils/classnames';
 
 export interface IMenuItem {
   children: React.ReactNode;
   icon?: SvgIcon;
-  onClick?: () => void;
+  onClick?: React.MouseEventHandler<HTMLButtonElement>;
 }
 
-const menuItemStyle = css`
-  display: flex;
-  text-decoration: none;
-  color: ${textColor};
-  justify-content: space-between;
-  padding: ${spacingN(2)} ${spacingN(2.5)};
-  ${mY(1)};
-  cursor: pointer;
-  user-select: none;
-  transition-property: background-color;
-  transition-timing-function: ease-out;
-  transition-duration: 100ms;
-  ${roundedSm}
-  &:hover {
-    background-color: ${menuItemHoverColor};
-  }
-  &.active,
-  &:active {
-    background-color: ${darken(0.15, menuItemHoverColor)};
-  }
-  &[data-disabled='true'] {
-    cursor: not-allowed;
-    filter: brightness(50%);
-    &:hover,
-    &:active {
-      background-color: transparent;
-    }
-  }
-`;
+const menuItemClassName =
+  'my-1 flex cursor-pointer select-none justify-between rounded-[3px] px-2.5 py-2 text-legacy-text no-underline transition-colors duration-100 ease-out hover:bg-legacy-menu-item-hover active:bg-legacy-menu-item-active';
 
-export const MenuItemLinkContainer = styled(NavLink)(menuItemStyle);
-
-export const MenuItemContainer = styled.div(menuItemStyle);
+const menuItemButtonClassName =
+  'legacy-menu-item-button w-full border-0 bg-transparent text-left disabled:cursor-not-allowed disabled:brightness-50 disabled:hover:bg-transparent disabled:active:bg-transparent';
 
 export function MenuItem({ children, icon, onClick }: IMenuItem) {
   return (
-    <MenuItemContainer onClick={onClick}>
-      <div>{children}</div>
+    <button
+      type="button"
+      className={cls(menuItemClassName, menuItemButtonClassName)}
+      onClick={onClick}
+    >
+      <span>{children}</span>
       {icon && <TextIcon icon={icon} />}
-    </MenuItemContainer>
+    </button>
   );
 }
 
@@ -65,14 +37,14 @@ export interface IMenuItemLink {
 
 export function MenuItemLink({ children, icon, to, exact }: IMenuItemLink) {
   return (
-    <MenuItemLinkContainer
+    <NavLink
       to={to}
       end={exact}
-      className={({ isActive }) => (isActive ? 'active' : '')}
+      className={({ isActive }) => cls(menuItemClassName, isActive && 'bg-legacy-menu-item-active')}
     >
-      <div>{children}</div>
+      <span>{children}</span>
       {icon && <TextIcon icon={icon} />}
-    </MenuItemLinkContainer>
+    </NavLink>
   );
 }
 
@@ -83,9 +55,9 @@ export interface IMenuItemDisabled {
 
 export function MenuItemDisabled({ children, icon }: IMenuItemDisabled) {
   return (
-    <MenuItemContainer data-disabled={true} onClick={(e) => e.stopPropagation()}>
-      <div>{children}</div>
+    <button type="button" className={cls(menuItemClassName, menuItemButtonClassName)} disabled>
+      <span>{children}</span>
       {icon && <TextIcon icon={icon} />}
-    </MenuItemContainer>
+    </button>
   );
 }

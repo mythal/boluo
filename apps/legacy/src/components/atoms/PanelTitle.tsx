@@ -1,8 +1,6 @@
-import styled from '@emotion/styled';
-import { fontNormal, mY, textXl } from '../../styles/atoms';
+import React from 'react';
+import { cls } from '../../utils/classnames';
 
-export const PanelTitle = styled.h1`
-  ${textXl};
-  ${fontNormal};
-  ${mY(2)};
-`;
+export function PanelTitle({ className, ref, ...props }: React.ComponentPropsWithRef<'h1'>) {
+  return <h1 ref={ref} className={cls('legacy-panel-title', className)} {...props} />;
+}

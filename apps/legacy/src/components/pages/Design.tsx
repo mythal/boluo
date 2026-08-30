@@ -2,12 +2,9 @@ import React, { useRef, useState } from 'react';
 import Icon from '../atoms/Icon';
 import 'sanitize.css';
 import 'sanitize.css/typography.css';
-import { css, Global } from '@emotion/react';
-import styled from '@emotion/styled';
 import ChevronDown from '@boluo/icons/legacy/ChevronDown';
 import Fan from '@boluo/icons/legacy/Fan';
 import X from '@boluo/icons/legacy/X';
-import { baseStyle, flex, flexCol, gap, mY, spacingN } from '../../styles/atoms';
 import Button from '../atoms/Button';
 import Input from '../atoms/Input';
 import Menu from '../atoms/Menu';
@@ -17,19 +14,7 @@ import Dialog from '../molecules/Dialog';
 import UiMessage from '../molecules/InformationBar';
 import Panel from '../molecules/Panel';
 
-function BaseStyle() {
-  return <Global styles={baseStyle} />;
-}
-
-const ButtonList = styled.div`
-  display: flex;
-  gap: ${spacingN(2)};
-  ${mY(2)};
-`;
-
-const View = styled.div`
-  padding: ${spacingN(4)};
-`;
+const buttonListClassName = 'my-2 flex gap-2';
 
 function Design() {
   const overlayAnchor = useRef<HTMLDivElement | null>(null);
@@ -39,58 +24,50 @@ function Design() {
   const [showModel, setShowModel] = useState(false);
   const [showPanel, setShowPanel] = useState(true);
   return (
-    <View>
-      <BaseStyle />
+    <div className="p-4">
       <h1>组件设计页面</h1>
-      <div
-        css={css`
-          width: 10em;
-          height: 10em;
-        `}
-      >
-        {/*<Loading />*/}
-      </div>
+      <div className="size-[10em]">{/*<Loading />*/}</div>
       <div>
         <h2 className="title">按钮</h2>
 
-        <ButtonList>
+        <div className={buttonListClassName}>
           <Button>普通</Button>
           <Button>
             <Icon icon={Fan} />
             图标
           </Button>
-          <Button data-variant="dark">
+          <Button variant="dark">
             <Icon icon={Fan} />
             图标
           </Button>
-          <Button data-variant="primary">Primary</Button>
-          <Button data-variant="danger">危险</Button>
+          <Button variant="primary">Primary</Button>
+          <Button variant="danger">危险</Button>
           <Button disabled>禁用</Button>
-        </ButtonList>
+        </div>
 
-        <ButtonList>
-          <Button data-small>普通</Button>
-          <Button data-small>
+        <div className={buttonListClassName}>
+          <Button size="small">普通</Button>
+          <Button size="small">
             <Icon icon={Fan} />
             图标
           </Button>
-          <Button data-small data-icon>
+          <Button size="small" iconOnly>
             <Icon icon={X} />
           </Button>
-          <Button data-small data-variant="primary">
+          <Button size="small" variant="primary">
             主要
           </Button>
-          <Button data-small data-variant="danger">
+          <Button size="small" variant="danger">
             危险
           </Button>
-          <Button data-small disabled>
+          <Button size="small" disabled>
             禁用
           </Button>
-        </ButtonList>
+        </div>
       </div>
       <div>
         <h2>输入框</h2>
-        <div css={[flexCol, gap(2)]}>
+        <div className="flex flex-col gap-2">
           <Input placeholder="hello, world" />
           <Input placeholder="hello, world" disabled />
           <Input placeholder="错误的内容" data-variant="error" />
@@ -98,7 +75,7 @@ function Design() {
       </div>
       <section>
         <h2>警告/信息</h2>
-        <div css={[flexCol, gap(2)]}>
+        <div className="flex flex-col gap-2">
           <UiMessage variant="INFO">信息</UiMessage>
           <UiMessage variant="INFO">
             氣交節滿歷一區即。企所相發媽何河重軍聲的統不。無主利設念明電取發自化人上送得業工好上表管多賣，此明光，的突圖亮張會意行基飯在，有性那管形能深老魚自文、紀放仍現只而大個調轉質美委或下放，不也酒實節班、等層體識時於種出營。十許治失家關但我，用明先提經在；朋他山當兒關府兩無、全連家存，地高他關頭。城足學升源微者！下基保素公、寫手學所在是的而
@@ -117,15 +94,7 @@ function Design() {
 
       <section>
         <div>
-          <div
-            css={css`
-              width: 10em;
-              height: 10em;
-              background-color: tomato;
-              margin-left: 20em;
-            `}
-            ref={overlayAnchor}
-          />
+          <div className="ml-[20em] size-[10em] bg-[tomato]" ref={overlayAnchor} />
           <Overlay anchor={overlayAnchor} x={-1} y={-1}>
             LT
           </Overlay>
@@ -156,7 +125,7 @@ function Design() {
         </div>
       </section>
 
-      <section css={[flex, gap(2)]}>
+      <section className="flex gap-2">
         <Button onClick={() => setShowModel(true)}>打开对话框</Button>
         {showModel && (
           <Dialog
@@ -176,10 +145,7 @@ function Design() {
 
         <Button
           ref={menuAnchor}
-          css={css`
-            width: ${spacingN(32)};
-            justify-content: space-between;
-          `}
+          className="w-32 justify-between"
           onClick={() => setShowMenu((value) => !value)}
         >
           菜单
@@ -204,7 +170,7 @@ function Design() {
           </Overlay>
         )}
       </section>
-    </View>
+    </div>
   );
 }
 

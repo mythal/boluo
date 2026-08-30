@@ -7,7 +7,6 @@ import { type AppResult } from '../../api/request';
 import { type User } from '../../api/users';
 import { useTitleWithResult } from '../../hooks/useTitle';
 import { useDispatch, useSelector } from '../../store';
-import { floatRight, roundedSm } from '../../styles/atoms';
 import { decodeUuid } from '../../utils/id';
 import Title from '../atoms/Title';
 import Avatar from '../molecules/Avatar';
@@ -45,7 +44,7 @@ function Profile() {
   const { avatarId } = user;
   return (
     <>
-      <Avatar id={avatarId} css={[floatRight, roundedSm]} size="8rem" />
+      <Avatar className="float-right rounded-[3px]" id={avatarId} size="8rem" />
       <div>
         <Title>{user.nickname}</Title>
       </div>

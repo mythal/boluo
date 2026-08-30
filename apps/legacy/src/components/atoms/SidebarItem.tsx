@@ -1,35 +1,25 @@
-import styled from '@emotion/styled';
+import * as React from 'react';
 import { NavLink } from 'react-router-dom';
-import { pL, pR, spacingN } from '../../styles/atoms';
-import {
-  primaryColor,
-  sidebarItemActiveBgColor,
-  sidebarItemColor,
-  sidebarItemHoverBgColor,
-} from '../../styles/colors';
-import { sidebarWidth } from '../chat/styles';
+import { cls } from '../../utils/classnames';
 
-export const SidebarItemLink = styled(NavLink)`
-  display: flex;
-  flex-shrink: 0;
-  flex-grow: 0;
-  height: 2.5rem;
-  align-items: center;
-  color: ${sidebarItemColor};
-  text-decoration: none;
-  white-space: nowrap;
-  word-break: break-all;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  ${[pL(8), pR(4), sidebarWidth]};
+interface Props extends Omit<React.ComponentPropsWithRef<typeof NavLink>, 'className'> {
+  className?: string;
+  multiline?: boolean;
+}
 
-  &:hover {
-    background-color: ${sidebarItemHoverBgColor};
-  }
+const sidebarItemClassName =
+  'flex w-[200px] shrink-0 grow-0 overflow-hidden px-4 pl-8 text-ellipsis whitespace-nowrap break-all text-legacy-sidebar-item no-underline hover:bg-legacy-sidebar-item-hover-background active:bg-legacy-sidebar-item-active-background active:shadow-[inset_4px_0_0_0_var(--color-legacy-brand-primary)] aria-[current=page]:bg-legacy-sidebar-item-active-background aria-[current=page]:shadow-[inset_4px_0_0_0_var(--color-legacy-brand-primary)]';
 
-  &:active,
-  &.active {
-    box-shadow: ${spacingN(1)} 0 0 0 ${primaryColor} inset;
-    background-color: ${sidebarItemActiveBgColor};
-  }
-`;
+export function SidebarItemLink({ className, multiline = false, ref, ...props }: Props) {
+  return (
+    <NavLink
+      className={cls(
+        sidebarItemClassName,
+        multiline ? 'h-fit flex-col items-start py-3' : 'h-10 items-center',
+        className,
+      )}
+      ref={ref}
+      {...props}
+    />
+  );
+}

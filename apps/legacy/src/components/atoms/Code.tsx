@@ -1,29 +1,13 @@
-import { css } from '@emotion/react';
 import React, { useRef } from 'react';
-import { fontMono, fontNormal, pX, pY, roundedSm, textSm } from '../../styles/atoms';
-import { black, primary } from '../../styles/colors';
-
-const style = css`
-  background-color: ${black};
-  cursor: pointer;
-  ${[roundedSm, textSm, fontNormal, fontMono, pX(2), pY(1)]};
-  &:hover {
-    box-shadow: 0 0 0 1px ${primary['700']} inset;
-  }
-  &:active {
-    box-shadow: 0 0 0 1px ${primary['500']} inset;
-  }
-`;
 
 interface Props {
   children: React.ReactNode;
 }
 
 export function Code({ children }: Props) {
-  const ref = useRef<HTMLElement>(null);
+  const ref = useRef<HTMLButtonElement>(null);
 
-  const onClick = () => {
-    const node = ref.current!;
+  const copyWithSelection = (node: HTMLButtonElement) => {
     const selection = window.getSelection();
     if (!selection) {
       return;
@@ -36,9 +20,27 @@ export function Code({ children }: Props) {
     selection.removeAllRanges();
   };
 
+  const onClick = async () => {
+    const node = ref.current;
+    if (!node) {
+      return;
+    }
+    const text = node.textContent ?? '';
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      copyWithSelection(node);
+    }
+  };
+
   return (
-    <code ref={ref} onClick={onClick} css={style}>
+    <button
+      type="button"
+      ref={ref}
+      className="bg-legacy-black font-legacy-mono inline cursor-pointer rounded-[3px] border-0 px-2 py-1 text-[0.875rem] font-normal text-inherit hover:shadow-[inset_0_0_0_1px_var(--color-legacy-primary-700)] focus-visible:shadow-[inset_0_0_0_1px_var(--color-legacy-primary-700)] focus-visible:outline-none active:shadow-[inset_0_0_0_1px_var(--color-legacy-primary-500)]"
+      onClick={onClick}
+    >
       {children}
-    </code>
+    </button>
   );
 }

@@ -1,4 +1,3 @@
-import { css } from '@emotion/react';
 import { useAtom } from 'jotai';
 import { useCallback, useState } from 'react';
 import { type Proxy } from '../../base-url';
@@ -6,8 +5,7 @@ import { useBaseUrlDelay } from '../../hooks/useBaseUrlDelay';
 import { useProxyList } from '../../hooks/useProxyList';
 import { autoSelectAtom } from '../../states/connection';
 import { useDispatch, useSelector } from '../../store';
-import { flexCol, gap, pT, pX, pY, textXl } from '../../styles/atoms';
-import { primary } from '../../styles/colors';
+import { cls } from '../../utils/classnames';
 import { Delay } from '../atoms/Delay';
 import { DelayWithStats } from '../atoms/DelayWithStats';
 import Dialog from '../molecules/Dialog';
@@ -15,29 +13,6 @@ import Dialog from '../molecules/Dialog';
 interface Props {
   dismiss: () => void;
 }
-
-const proxyItemStyle = css`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  ${pY(2)};
-  ${pX(2)};
-  cursor: pointer;
-  ${textXl};
-  border-radius: 0.25rem;
-`;
-
-const currentItemStyle = css`
-  background-color: ${primary[600]};
-`;
-
-const nonCurrentItemStyle = css`
-  background-color: rgba(255, 255, 255, 0.3);
-
-  &:hover {
-    background-color: rgba(255, 255, 255, 0.5);
-  }
-`;
 
 const ProxyItem = ({
   proxy,
@@ -52,9 +27,15 @@ const ProxyItem = ({
 }) => {
   const delay = useBaseUrlDelay(proxy.url);
   return (
-    <div
-      css={[proxyItemStyle, current ? currentItemStyle : nonCurrentItemStyle]}
+    <button
+      className={cls(
+        'legacy-connection-option flex w-full cursor-pointer items-center justify-between rounded-sm border-0 px-2 py-2 text-[1.25rem]',
+        current
+          ? 'bg-legacy-primary-600'
+          : 'bg-[rgba(255,255,255,0.3)] hover:bg-[rgba(255,255,255,0.5)]',
+      )}
       onClick={() => changeBaseUrl(proxy.url)}
+      type="button"
     >
       <span>{proxy.name}</span>
       {showStats ? (
@@ -62,7 +43,7 @@ const ProxyItem = ({
       ) : (
         <Delay delay={delay} />
       )}
-    </div>
+    </button>
   );
 };
 
@@ -86,7 +67,7 @@ export const ConnectionSelectDialog = ({ dismiss }: Props) => {
         />{' '}
         自动选择线路
       </label>
-      <label style={{ marginLeft: '16px' }}>
+      <label className="ml-4">
         <input
           type="checkbox"
           checked={showStats}
@@ -94,7 +75,7 @@ export const ConnectionSelectDialog = ({ dismiss }: Props) => {
         />{' '}
         显示统计信息
       </label>
-      <div css={[flexCol, gap(1), pT(2)]}>
+      <div className="flex flex-col gap-1 pt-2">
         {proxyList.map((proxy) => (
           <ProxyItem
             key={proxy.name}

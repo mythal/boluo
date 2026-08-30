@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useForceUpdate } from '../../hooks/useForceUpdate';
 import { useOutside } from '../../hooks/useOutside';
-import { overlayZIndex } from '../../styles/atoms';
 import { Portal } from './Portal';
+
+const defaultOverlayZIndex = 20;
 
 function useRerenderWhenResize() {
   const forceUpdate = useForceUpdate();
@@ -63,7 +64,7 @@ function Overlay({
   const rect = node.getBoundingClientRect();
   const style: React.CSSProperties = {
     position: 'absolute',
-    zIndex: zIndex || overlayZIndex,
+    zIndex: zIndex || defaultOverlayZIndex,
   };
   const documentElement = document.documentElement;
   const { scrollTop, scrollLeft } = documentElement;

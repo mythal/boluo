@@ -1,13 +1,29 @@
-import styled from '@emotion/styled';
-import { spacingN, textBase } from '../../styles/atoms';
-import { textColor } from '../../styles/colors';
+import React from 'react';
+import { cls } from '../../utils/classnames';
 
-export const Text = styled.p`
-  color: ${textColor};
-  font-size: ${textBase};
-  margin: 0;
-  line-height: 1.75rem;
-  padding: ${spacingN(1)} 0;
-`;
+type TextSize = 'normal' | 'small';
+
+const textSizeClassNames: Record<TextSize, string> = {
+  normal: 'text-[1rem]',
+  small: 'text-[0.875rem]',
+};
+
+type Props = React.ComponentPropsWithRef<'p'> & {
+  textSize?: TextSize;
+};
+
+export function Text({ className, ref, textSize = 'normal', ...props }: Props) {
+  return (
+    <p
+      ref={ref}
+      className={cls(
+        'text-legacy-text m-0 py-1 leading-7',
+        textSizeClassNames[textSize],
+        className,
+      )}
+      {...props}
+    />
+  );
+}
 
 export default Text;

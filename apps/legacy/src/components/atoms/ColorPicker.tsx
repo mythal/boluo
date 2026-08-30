@@ -1,6 +1,4 @@
-import styled from '@emotion/styled';
 import * as React from 'react';
-import { controlHeight, controlRounded } from '../../styles/atoms';
 
 interface Props {
   id: string;
@@ -9,20 +7,24 @@ interface Props {
   ref: React.Ref<HTMLInputElement>;
 }
 
-const ColorDisplay = styled.div`
-  ${[controlHeight, controlRounded]};
-  box-shadow: 0 0 2px #000000 inset;
-`;
-
-const ColorPicker: React.FC<Props> = ({ value, onChange, id, ref }) => {
+function ColorPicker({ value, onChange, id, ref }: Props) {
   return (
-    <React.Fragment>
+    <>
       <label htmlFor={id}>
-        <ColorDisplay css={{ backgroundColor: value }} />
+        <div
+          className="h-10 rounded-[1px] [box-shadow:0_0_2px_var(--color-legacy-black)_inset]"
+          style={{ backgroundColor: value }}
+        />
       </label>
-      <input id={id} type="color" onChange={(e) => onChange(e.target.value)} ref={ref} hidden />
-    </React.Fragment>
+      <input
+        id={id}
+        type="color"
+        onChange={(event) => onChange(event.target.value)}
+        ref={ref}
+        hidden
+      />
+    </>
   );
-};
+}
 
 export default ColorPicker;

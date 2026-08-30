@@ -1,4 +1,3 @@
-import { css } from '@emotion/react';
 import { useAtom } from 'jotai';
 import { publishOwnPreviewAcknowledgement } from '@boluo/api/preview/ack';
 import { closeWebSocketNormally } from '@boluo/api/websocket/close';
@@ -16,7 +15,6 @@ import {
 import { get } from '../../api/request';
 import { connectionStateAtom } from '../../states/connection';
 import store, { type Dispatch, useDispatch, useSelector } from '../../store';
-import { shadowXl, spacingN, textSm } from '../../styles/atoms';
 import { type Id } from '../../utils/id';
 import Button from '../atoms/Button';
 import { captureRecoverableException, recordWarning } from '../../error-reporting';
@@ -24,19 +22,8 @@ import { captureRecoverableException, recordWarning } from '../../error-reportin
 export const PING = '♥';
 export const PONG = '♡';
 
-export const style = css`
-  z-index: 999;
-  position: fixed;
-  border-radius: 0.25rem;
-  ${shadowXl};
-  ${textSm};
-  top: ${spacingN(6)};
-  right: 50%;
-  transform: translateX(50%);
-  padding: ${spacingN(2)} ${spacingN(4)};
-  background-color: aqua;
-  color: #1a202c;
-`;
+export const connectionStatusClassName =
+  'fixed top-6 right-1/2 z-[999] translate-x-1/2 rounded-[0.25rem] bg-[aqua] px-4 py-2 text-[0.875rem] text-legacy-gray-900 shadow-[0_0_24px_#000]';
 
 const RETRY_SLEEP_MS = [0, 20, 100];
 const TOKEN_VALIDITY_MS = 60_000;
@@ -357,7 +344,7 @@ export const Connector = ({ spaceId, myId }: Props) => {
   if (state === 'OPEN') {
     if (DEVELOPMENT) {
       return (
-        <div css={style}>
+        <div className={connectionStatusClassName}>
           <Button
             onClick={() => {
               retryCount.current = 10;
@@ -376,7 +363,7 @@ export const Connector = ({ spaceId, myId }: Props) => {
     return null;
   }
   if (state === 'CLOSED' && retrySec > 0) {
-    return <div css={style}>链接出错，等待重连 ({retrySec})</div>;
+    return <div className={connectionStatusClassName}>链接出错，等待重连 ({retrySec})</div>;
   }
-  return <div css={style}>连接中……</div>;
+  return <div className={connectionStatusClassName}>连接中……</div>;
 };

@@ -50,9 +50,38 @@ const historyKey = (url: URL, env: Env): string =>
 const isNotModifiedRequest = (request: Request): boolean =>
   request.headers.has('If-None-Match') || request.headers.has('If-Modified-Since');
 
-const historyAsset = async (request: Request, url: URL, env: Env): Promise<Response> => {
+const historyCacheRequest = (url: URL, request?: Request): Request => {
+  const cacheUrl = new URL(url);
+  // R2 keys are based on the pathname, ignore query string.
+  cacheUrl.search = '';
+
+  return new Request(cacheUrl, {
+    method: 'GET',
+    headers: request?.headers,
+  });
+};
+
+const withoutBody = (response: Response): Response =>
+  new Response(null, {
+    status: response.status,
+    statusText: response.statusText,
+    headers: response.headers,
+  });
+
+const historyAsset = async (
+  request: Request,
+  url: URL,
+  env: Env,
+  ctx: ExecutionContext,
+): Promise<Response> => {
   if (request.method !== 'GET' && request.method !== 'HEAD') {
     return notFound(request.method);
+  }
+
+  const cacheRequest = historyCacheRequest(url, request);
+  const cachedResponse = await caches.default.match(cacheRequest);
+  if (cachedResponse) {
+    return request.method === 'HEAD' ? withoutBody(cachedResponse) : cachedResponse;
   }
 
   const object = await env.HISTORY_FILES.get(historyKey(url, env), {
@@ -77,10 +106,13 @@ const historyAsset = async (request: Request, url: URL, env: Env): Promise<Respo
 
   headers.set('Content-Length', String(object.size));
 
-  return new Response(request.method === 'HEAD' ? null : object.body, {
+  const response = new Response(object.body, {
     status: 200,
     headers,
   });
+  ctx.waitUntil(caches.default.put(historyCacheRequest(url), response.clone()));
+
+  return request.method === 'HEAD' ? withoutBody(response) : response;
 };
 
 const frontendNotFound = async (request: Request, url: URL, env: Env): Promise<Response> => {
@@ -95,7 +127,7 @@ const frontendNotFound = async (request: Request, url: URL, env: Env): Promise<R
 };
 
 export default {
-  async fetch(request, env): Promise<Response> {
+  async fetch(request, env, ctx): Promise<Response> {
     const url = new URL(request.url);
 
     if (url.pathname === FRONTEND_VERSION_PATH) {
@@ -103,7 +135,7 @@ export default {
     }
 
     if (isStaticAssetPath(url.pathname)) {
-      return await historyAsset(request, url, env);
+      return await historyAsset(request, url, env, ctx);
     }
 
     // The backend only recognizes `/api/` subpaths. Forwarding bare `/api`

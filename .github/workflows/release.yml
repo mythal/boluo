@@ -325,7 +325,7 @@ jobs:
       - name: Upload legacy asset history
         if: github.ref_name == 'production'
         run: |
-          node scripts/upload-frontend-assets.mjs \
+          node scripts/upload-frontend-assets.ts \
             --assets apps/legacy/dist/assets \
             --bucket boluo-history-files \
             --prefix "${DEPLOYMENT_ENV}/legacy/assets"
@@ -380,7 +380,7 @@ jobs:
       - name: Upload SPA asset history
         if: github.ref_name == 'production'
         run: |
-          node scripts/upload-frontend-assets.mjs \
+          node scripts/upload-frontend-assets.ts \
             --assets apps/spa/out/_next/static \
             --bucket boluo-history-files \
             --prefix "${DEPLOYMENT_ENV}/spa/_next/static"
@@ -475,7 +475,7 @@ jobs:
       - name: Upload site source maps
         if: github.ref_name == 'production'
         run: |
-          node scripts/upload-frontend-assets.mjs \
+          node scripts/upload-frontend-assets.ts \
             --assets apps/site/.open-next/assets/_next/static \
             --bucket boluo-history-files \
             --prefix "${DEPLOYMENT_ENV}/site/_next/static"

@@ -57,19 +57,55 @@
             extraSourceFiles = [ (unfilteredRoot + "/turbo.json") ];
           };
 
-          frontendBuildArgs = target: {
-            pname = "boluo-${target}";
-            src = npmWorkspaceLib.sourceFor target;
-            npmDeps = npmWorkspaceLib.mkNpmDepsFor target {
-              pname = "boluo-${target}-npm-deps";
-              inherit version;
+          frontendBuildArgs =
+            target:
+            let
+              src = npmWorkspaceLib.sourceFor target;
+              npmDeps = npmWorkspaceLib.mkNpmDepsFor target {
+                pname = "boluo-${target}-npm-deps";
+                inherit version;
+              };
+              frontendVersion = builtins.substring 0 40 (builtins.hashString "sha256" "${src}:${npmDeps}");
+            in
+            {
+              pname = "boluo-${target}";
+              inherit src npmDeps version;
+              npmConfigHook = pkgs.importNpmLock.npmConfigHook;
+              TURBO_TELEMETRY_DISABLED = 1;
+              NEXT_TELEMETRY_DISABLED = 1;
+              APP_VERSION = frontendVersion;
+              npmBuildScript = "build:${target}";
+              passthru = {
+                inherit frontendVersion;
+              };
             };
-            inherit version;
-            npmConfigHook = pkgs.importNpmLock.npmConfigHook;
-            TURBO_TELEMETRY_DISABLED = 1;
-            NEXT_TELEMETRY_DISABLED = 1;
-            npmBuildScript = "build:${target}";
-          };
+
+          mkFrontendRelease =
+            {
+              includeStorybook ? false,
+            }:
+            pkgs.runCommand "boluo-frontend-release${lib.optionalString includeStorybook "-staging"}" { } ''
+              mkdir -p \
+                $out/.frontend-versions \
+                $out/apps/legacy/dist \
+                $out/apps/spa/out \
+                $out/packages/backend-proxy/dist
+
+              cp -r ${self'.packages.legacy}/. $out/apps/legacy/dist/
+              cp -r ${self'.packages.spa}/. $out/apps/spa/out/
+              cp -r ${self'.packages.spa.backendProxy}/. $out/packages/backend-proxy/dist/
+              cp -r ${self'.packages.siteBuild.worker}/. $out/
+
+              printf '%s\n' '${self'.packages.legacy.frontendVersion}' > $out/.frontend-versions/legacy
+              printf '%s\n' '${self'.packages.spa.frontendVersion}' > $out/.frontend-versions/spa
+              printf '%s\n' '${self'.packages.siteBuild.frontendVersion}' > $out/.frontend-versions/site
+
+              ${lib.optionalString includeStorybook ''
+                mkdir -p $out/apps/storybook/storybook-static
+                cp -r ${self'.packages.storybook}/. $out/apps/storybook/storybook-static/
+                printf '%s\n' '${self'.packages.storybook.frontendVersion}' > $out/.frontend-versions/storybook
+              ''}
+            '';
 
           rustToolchain = pkgs.rust-bin.selectLatestNightlyWith (
             toolchain:
@@ -359,13 +395,23 @@
             siteBuild = pkgs.buildNpmPackage (
               frontendBuildArgs "site"
               // {
+                outputs = [
+                  "out"
+                  "worker"
+                ];
+                postBuild = ''
+                  (cd apps/site && ../../node_modules/.bin/opennextjs-cloudflare build --skipNextBuild)
+                '';
                 installPhase = ''
-                  mkdir -p $out
+                  mkdir -p $out $worker/apps/site/.open-next
                   cp -r apps/site/.next/standalone/* $out/
                   cp -r apps/site/.next/static $out/apps/site/.next/static
+                  cp -r apps/site/.open-next/. $worker/apps/site/.open-next/
                 '';
               }
             );
+
+            site-worker = self'.packages.siteBuild.worker;
 
             legacy-image =
               let
@@ -468,12 +514,37 @@
             spa = pkgs.buildNpmPackage (
               frontendBuildArgs "spa"
               // {
+                outputs = [
+                  "out"
+                  "backendProxy"
+                ];
                 installPhase = ''
-                  mkdir -p $out
+                  mkdir -p $out $backendProxy
                   cp -r apps/spa/out/* $out/
+                  cp -r packages/backend-proxy/dist/* $backendProxy/
                 '';
               }
             );
+
+            backend-proxy = self'.packages.spa.backendProxy;
+
+            storybook = pkgs.buildNpmPackage (
+              frontendBuildArgs "boluo-storybook"
+              // {
+                pname = "boluo-storybook";
+                npmBuildScript = "build:storybook";
+                installPhase = ''
+                  mkdir -p $out
+                  cp -r apps/storybook/storybook-static/* $out/
+                '';
+              }
+            );
+
+            frontend-release = mkFrontendRelease { };
+
+            frontend-release-staging = mkFrontendRelease {
+              includeStorybook = true;
+            };
 
             spa-image =
               let

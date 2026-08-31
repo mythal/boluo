@@ -78,7 +78,7 @@ specta.workspace = true
 specta-serde.workspace = true
 specta-typescript.workspace = true
 specta-rust.workspace = true
-shared-types = { version = "0.1.0", path = "../../packages/shared-types", features = [
+shared-types = { version = "0.1.0", path = "../shared-types", features = [
   "sqlx",
 ] }
 governor = "0.10.0"

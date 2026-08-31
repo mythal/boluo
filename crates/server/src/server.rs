@@ -572,7 +572,7 @@ async fn init_database(args: InitArgs) {
         .expect("Failed to run database migrations");
 
     if args.fixtures {
-        let mut paths: Vec<std::fs::DirEntry> = std::fs::read_dir("./apps/server/fixtures")
+        let mut paths: Vec<std::fs::DirEntry> = std::fs::read_dir("./crates/server/fixtures")
             .expect("Cannot read fixtures directory")
             .map(|res| res.expect("Cannot read fixture file"))
             .collect();

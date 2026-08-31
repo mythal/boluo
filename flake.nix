@@ -186,8 +186,8 @@
                 (craneLib.fileset.commonCargoSources unfilteredRoot)
                 (fileFilter (file: file.hasExt "sql") unfilteredRoot)
                 (maybeMissing ./.sqlx)
-                (maybeMissing ./apps/bridge/.sqlx)
-                (maybeMissing ./apps/server/text)
+                (maybeMissing ./crates/bridge/.sqlx)
+                (maybeMissing ./crates/server/text)
                 (maybeMissing ./.config/nextest.toml)
                 (maybeMissing ./scripts/setup-test-db.sh)
               ]) filesetToIgnore;
@@ -329,7 +329,7 @@
             );
 
             # The bridge stores state in SQLite and verifies its queries against
-            # the committed `apps/bridge/.sqlx` cache, so it needs no database at
+            # the committed `crates/bridge/.sqlx` cache, so it needs no database at
             # build time.
             bridge = craneLib.buildPackage (
               commonArgs
@@ -516,13 +516,13 @@
             deploy-server-staging = pkgs.writeShellScriptBin "deploy-server-staging" ''
               set -euo pipefail
               : "''${APP_VERSION:?APP_VERSION must be set}"
-              ${pkgs.flyctl}/bin/flyctl deploy --config ${apps/server/fly.toml} --image "ghcr.io/mythal/boluo/server:v''${APP_VERSION}" --env "APP_VERSION=''${APP_VERSION}" --remote-only
+              ${pkgs.flyctl}/bin/flyctl deploy --config ${crates/server/fly.toml} --image "ghcr.io/mythal/boluo/server:v''${APP_VERSION}" --env "APP_VERSION=''${APP_VERSION}" --remote-only
             '';
 
             deploy-server-production = pkgs.writeShellScriptBin "deploy-server-production" ''
               set -euo pipefail
               : "''${APP_VERSION:?APP_VERSION must be set}"
-              ${pkgs.flyctl}/bin/flyctl deploy --config ${apps/server/production/fly.toml} --image "ghcr.io/mythal/boluo/server:v''${APP_VERSION}" --env "APP_VERSION=''${APP_VERSION}" --remote-only
+              ${pkgs.flyctl}/bin/flyctl deploy --config ${crates/server/production/fly.toml} --image "ghcr.io/mythal/boluo/server:v''${APP_VERSION}" --env "APP_VERSION=''${APP_VERSION}" --remote-only
             '';
 
             deploy-site-staging = pkgs.writeShellScriptBin "deploy-site-staging" ''

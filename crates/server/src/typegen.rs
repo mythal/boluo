@@ -20,7 +20,7 @@ pub(crate) fn run() {
     );
 
     crate::rs::export();
-    run_optional_command("rustfmt", &["./packages/generated/src/generated.rs"]);
+    run_optional_command("rustfmt", &["./crates/generated/src/generated.rs"]);
 
     run_command(
         "cargo",
@@ -32,7 +32,7 @@ fn workspace_root() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
         .parent()
         .and_then(Path::parent)
-        .expect("server crate should be under apps/server")
+        .expect("server crate should be under crates/server")
         .to_path_buf()
 }
 

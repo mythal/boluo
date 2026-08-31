@@ -18,11 +18,11 @@ The observability stack includes:
 
 ---
 
-## Backend (`apps/server`)
+## Backend (`crates/server`)
 
 The backend is written in Rust using **hyper** and **tokio**. PostgreSQL 18 is accessed through **sqlx**.
 
-The standalone database schema is located in `apps/db/schema.sql`. Migrations are in `apps/server/migrations`.
+The standalone database schema is located in `apps/db/schema.sql`. Migrations are in `crates/server/migrations`.
 
 While multi-node support is planned, currently only single-node deployment is available.
 

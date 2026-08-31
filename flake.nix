@@ -50,34 +50,25 @@
           unfilteredRoot = ./.;
           rev = if (self ? rev) then self.rev else lib.warn "Dirty workspace" "unknown";
 
-          npmWorkspaceSource =
-            let
-              inherit (lib.fileset) unions toSource maybeMissing;
-            in
-            toSource {
-              root = unfilteredRoot;
-              fileset = unions [
-                (maybeMissing (unfilteredRoot + "/package.json"))
-                (maybeMissing (unfilteredRoot + "/package-lock.json"))
-                (maybeMissing (unfilteredRoot + "/turbo.json"))
-                (unfilteredRoot + "/packages")
-                (unfilteredRoot + "/apps/avatars")
-                (unfilteredRoot + "/apps/interpreter-cli")
-                (unfilteredRoot + "/apps/legacy")
-                (unfilteredRoot + "/apps/site")
-                (unfilteredRoot + "/apps/spa")
-                (unfilteredRoot + "/apps/storybook")
-                (unfilteredRoot + "/infra/grafana")
-                (unfilteredRoot + "/infra/cloudflare")
-              ];
-            };
+          npmWorkspaceLib = import ./packages/nix-npm-workspaces {
+            inherit pkgs;
+            root = unfilteredRoot;
+            rootDependencyNames = [ "turbo" ];
+            extraSourceFiles = [ (unfilteredRoot + "/turbo.json") ];
+          };
 
-          npmDeps = pkgs.importNpmLock {
-            pname = "boluo-npm-deps";
-            npmRoot = npmWorkspaceSource;
-            package = lib.importJSON ./package.json;
-            packageLock = lib.importJSON ./package-lock.json;
+          frontendBuildArgs = target: {
+            pname = "boluo-${target}";
+            src = npmWorkspaceLib.sourceFor target;
+            npmDeps = npmWorkspaceLib.mkNpmDepsFor target {
+              pname = "boluo-${target}-npm-deps";
+              inherit version;
+            };
             inherit version;
+            npmConfigHook = pkgs.importNpmLock.npmConfigHook;
+            TURBO_TELEMETRY_DISABLED = 1;
+            NEXT_TELEMETRY_DISABLED = 1;
+            npmBuildScript = "build:${target}";
           };
 
           rustToolchain = pkgs.rust-bin.selectLatestNightlyWith (
@@ -355,45 +346,26 @@
               };
             };
 
-            # Build all frontend apps in a single derivation
-            frontendBuild = pkgs.buildNpmPackage {
-              pname = "boluo-frontend";
-              src = npmWorkspaceSource;
-              inherit version npmDeps;
-              npmConfigHook = pkgs.importNpmLock.npmConfigHook;
-              TURBO_TELEMETRY_DISABLED = 1;
-              NEXT_TELEMETRY_DISABLED = 1;
-              npmBuildScript = "build:deploy";
-              installPhase = ''
-                mkdir -p $out/{legacy,spa,site}
+            legacy = pkgs.buildNpmPackage (
+              frontendBuildArgs "legacy"
+              // {
+                installPhase = ''
+                  mkdir -p $out
+                  cp -r apps/legacy/dist/* $out/
+                '';
+              }
+            );
 
-                cp -r apps/legacy/dist/* $out/legacy/
-
-                cp -r apps/spa/out/* $out/spa/
-
-                cp -r apps/site/.next/standalone/* $out/site/
-                cp -r apps/site/.next/static $out/site/apps/site/.next/static
-              '';
-            };
-
-            siteBuild = pkgs.buildNpmPackage {
-              pname = "boluo-site";
-              src = npmWorkspaceSource;
-              inherit version npmDeps;
-              npmConfigHook = pkgs.importNpmLock.npmConfigHook;
-              TURBO_TELEMETRY_DISABLED = 1;
-              NEXT_TELEMETRY_DISABLED = 1;
-              npmBuildScript = "build:site";
-              installPhase = ''
-                mkdir -p $out
-                cp -r apps/site/.next/standalone/* $out/
-                cp -r apps/site/.next/static $out/apps/site/.next/static
-              '';
-            };
-
-            legacy = pkgs.runCommand "boluo-legacy" { } ''
-              cp -r ${self'.packages.frontendBuild}/legacy $out
-            '';
+            siteBuild = pkgs.buildNpmPackage (
+              frontendBuildArgs "site"
+              // {
+                installPhase = ''
+                  mkdir -p $out
+                  cp -r apps/site/.next/standalone/* $out/
+                  cp -r apps/site/.next/static $out/apps/site/.next/static
+                '';
+              }
+            );
 
             legacy-image =
               let
@@ -493,9 +465,15 @@
               };
             };
 
-            spa = pkgs.runCommand "boluo-spa" { } ''
-              cp -r ${self'.packages.frontendBuild}/spa $out
-            '';
+            spa = pkgs.buildNpmPackage (
+              frontendBuildArgs "spa"
+              // {
+                installPhase = ''
+                  mkdir -p $out
+                  cp -r apps/spa/out/* $out/
+                '';
+              }
+            );
 
             spa-image =
               let

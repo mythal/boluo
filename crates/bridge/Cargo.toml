@@ -5,7 +5,7 @@ edition = "2024"
 publish = false
 
 [dependencies]
-frankenstein = { git = "https://github.com/ayrat555/frankenstein", features = [
+frankenstein = { version = "0.52.0", features = [
   "client-reqwest",
 ] }
 tokio = { version = "1", features = ["full"] }

@@ -5,7 +5,7 @@ edition = "2024"
 publish = false
 
 [dependencies]
-frankenstein = { git = "https://github.com/ayrat555/frankenstein", features = [
+frankenstein = { version = "0.52.0", features = [
   "client-reqwest",
 ] }
 tokio = { version = "1", features = ["full"] }
@@ -31,8 +31,8 @@ sqlx = { version = "0.9.0", default-features = false, features = [
   "migrate",
   "sqlx-toml",
 ] }
-shared-types = { version = "0.1.0", path = "../../packages/shared-types" }
-generated = { version = "0.1.0", path = "../../packages/generated" }
+shared-types = { version = "0.1.0", path = "../shared-types" }
+generated = { version = "0.1.0", path = "../generated" }
 anyhow = "1"
 clap = { version = "4.4.12", features = ["derive"] }
 thiserror = "2"

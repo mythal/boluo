@@ -1,8 +1,6 @@
-import { css, Global } from '@emotion/react';
-import styled from '@emotion/styled';
 import { useAtom, useSetAtom } from 'jotai';
 import * as React from 'react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { loadSpace } from '../../actions';
 import { errLoading, LOADING } from '../../api/error';
@@ -13,7 +11,7 @@ import { PaneContext } from '../../hooks/useChannelId';
 import { useMyId } from '../../hooks/useMyId';
 import { userDialogAtom } from '../../states/userDialog';
 import { useDispatch, useSelector } from '../../store';
-import { breakpoint, mediaQuery } from '../../styles/atoms';
+import { cls } from '../../utils/classnames';
 import { decodeUuid, encodeUuid, type Id } from '../../utils/id';
 import { chatPath } from '../../utils/path';
 import ChannelChat from '../chat/ChannelChat';
@@ -26,72 +24,27 @@ import { RenderError } from '../molecules/RenderError';
 import BasePage from '../templates/BasePage';
 import NotFound from './NotFound';
 
-// noinspection CssInvalidPropertyValue
-const viewHeight = css`
-  html,
-  body,
-  #root {
-    height: 100%;
-    scroll-behavior: none;
-    font-size: 14px;
+const containerClassName = 'grid h-full grid-rows-[3rem_1fr_auto]';
 
-    ${mediaQuery(breakpoint.md)} {
-      font-size: 16px;
-    }
-  }
-`;
+const defaultSplitClassName =
+  "grid-cols-[auto_1fr_1fr] [grid-template-areas:'sidebar-header_header'_'sidebar-body_list'_'sidebar-body_compose']";
 
-const Container = styled.div`
-  display: grid;
-  height: 100%;
-  grid-template-rows: 3rem 1fr auto;
+const splitClassNames: Record<number, string> = {
+  0: "grid-cols-[auto_1fr] [grid-template-areas:'sidebar-header_header'_'sidebar-body_list'_'sidebar-body_compose']",
+  1: "grid-cols-[auto_1fr] [grid-template-areas:'sidebar-header_header'_'sidebar-body_list'_'sidebar-body_compose']",
+  2: "grid-cols-[auto_1fr_1fr] [grid-template-areas:'sidebar-header_header_header'_'sidebar-body_list_list'_'sidebar-body_compose_compose']",
+  3: "grid-cols-[auto_1fr_1fr_1fr] [grid-template-areas:'sidebar-header_header_header_header'_'sidebar-body_list_list_list'_'sidebar-body_compose_compose_compose']",
+  4: "grid-cols-[auto_1fr_1fr_1fr_1fr] [grid-template-areas:'sidebar-header_header_header_header_header'_'sidebar-body_list_list_list_list'_'sidebar-body_compose_compose_compose_compose']",
+  5: "grid-cols-[auto_1fr_1fr_1fr_1fr_1fr] [grid-template-areas:'sidebar-header_header_header_header_header_header'_'sidebar-body_list_list_list_list_list'_'sidebar-body_compose_compose_compose_compose_compose']",
+};
 
-  grid-template-columns: auto 1fr 1fr;
-  grid-template-areas:
-    'sidebar-header header'
-    'sidebar-body list'
-    'sidebar-body compose';
-  &[data-split='1'],
-  &[data-split='0'] {
-    grid-template-columns: auto 1fr;
-    grid-template-areas:
-      'sidebar-header header'
-      'sidebar-body list'
-      'sidebar-body compose';
-  }
-
-  &[data-split='2'] {
-    grid-template-columns: auto 1fr 1fr;
-    grid-template-areas:
-      'sidebar-header header header'
-      'sidebar-body list list'
-      'sidebar-body compose compose';
-  }
-
-  &[data-split='3'] {
-    grid-template-columns: auto 1fr 1fr 1fr;
-    grid-template-areas:
-      'sidebar-header header header header'
-      'sidebar-body list list list'
-      'sidebar-body compose compose compose';
-  }
-
-  &[data-split='4'] {
-    grid-template-columns: auto 1fr 1fr 1fr 1fr;
-    grid-template-areas:
-      'sidebar-header header header header header'
-      'sidebar-body list list list list'
-      'sidebar-body compose compose compose compose';
-  }
-
-  &[data-split='5'] {
-    grid-template-columns: auto 1fr 1fr 1fr 1fr 1fr;
-    grid-template-areas:
-      'sidebar-header header header header header header'
-      'sidebar-body list list list list list'
-      'sidebar-body compose compose compose compose compose';
-  }
-`;
+function ChatViewStyle() {
+  useLayoutEffect(() => {
+    document.documentElement.classList.add('legacy-chat-view');
+    return () => document.documentElement.classList.remove('legacy-chat-view');
+  }, []);
+  return null;
+}
 
 function useLoadSpace(spaceId: Id) {
   const dispatch = useDispatch();
@@ -148,9 +101,12 @@ function ChatRender({ channelId, spaceId }: { channelId: Id | undefined; spaceId
     navigate(`/space/${encodeUuid(spaceId)}`, { replace: true });
   }
   return (
-    <Container data-split={paneList.length}>
+    <div
+      className={cls(containerClassName, splitClassNames[paneList.length] ?? defaultSplitClassName)}
+      data-split={paneList.length}
+    >
       <Connector key={spaceId} spaceId={spaceId} myId={myId} />
-      <Global styles={viewHeight} />
+      <ChatViewStyle />
       <Sidebar space={space} channels={channels} />
 
       {channelId ? (
@@ -199,7 +155,7 @@ function ChatRender({ channelId, spaceId }: { channelId: Id | undefined; spaceId
       {userDialog && (
         <MemberDialog userId={userDialog} spaceId={spaceId} dismiss={() => setUserDialog(null)} />
       )}
-    </Container>
+    </div>
   );
 }
 

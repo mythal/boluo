@@ -1,9 +1,9 @@
-import { css } from '@emotion/react';
 import * as React from 'react';
 import { type Ref, useCallback, useEffect, useRef, useState } from 'react';
 import { useAutoHeight } from '../../../hooks/useAutoHeight';
 import { useChannelId } from '../../../hooks/useChannelId';
 import { useDispatch, useSelector } from '../../../store';
+import { cls } from '../../../utils/classnames';
 
 interface Props {
   initialValue?: string;
@@ -12,12 +12,6 @@ interface Props {
   autoSize?: boolean;
   ref?: Ref<ComposeInputAction>;
 }
-
-const style = css`
-  &[data-dragging='true'] {
-    filter: blur(1px);
-  }
-`;
 
 export interface ComposeInputAction {
   appendDice: (command: string) => void;
@@ -105,8 +99,7 @@ function ComposeInput({ autoFocus = false, autoSize = false, className }: Props)
       onDragLeave={onDragLeave}
       onDrop={onDrop}
       ref={inputRef}
-      css={style}
-      className={className}
+      className={cls('data-[dragging=true]:blur-[1px]', className)}
       value={source}
       readOnly={sending}
       placeholder={placeholder}

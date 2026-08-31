@@ -1,9 +1,14 @@
-import styled from '@emotion/styled';
-import { lineColor } from '../../styles/colors';
+import React from 'react';
+import { cls } from '../../utils/classnames';
 
-const Separator = styled.hr`
-  border: none;
-  border-bottom: 1px solid ${lineColor};
-`;
+function Separator({ className, ref, ...props }: React.ComponentPropsWithRef<'hr'>) {
+  return (
+    <hr
+      ref={ref}
+      className={cls('border-legacy-line border-0 border-b border-solid', className)}
+      {...props}
+    />
+  );
+}
 
 export default Separator;

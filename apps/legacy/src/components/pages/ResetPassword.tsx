@@ -4,7 +4,6 @@ import { showFlash } from '../../actions';
 import { post } from '../../api/request';
 import { useTitle } from '../../hooks/useTitle';
 import { useDispatch } from '../../store';
-import { alignRight, flex, largeInput, mT, mY, textLg } from '../../styles/atoms';
 import { required } from '../../validators';
 import Button from '../atoms/Button';
 import Input from '../atoms/Input';
@@ -45,25 +44,26 @@ function ResetPassword() {
     <>
       <Title>重设密码</Title>
       <form onSubmit={handleSubmit(onSubmit)}>
-        <div css={[mY(2)]}>
+        <div className="my-2">
           <Label htmlFor="email">邮箱地址</Label>
-          <div css={flex}>
+          <div className="flex">
             <Input
-              css={largeInput}
+              className="h-10"
               type="email"
               id="email"
+              inputSize="large"
               placeholder="someone@example.com"
               {...register('email', { required })}
             />
           </div>
           {state === 'sent' && (
-            <div css={mY(2)}>已发送，请在邮箱查收，如果找不到请检查垃圾邮箱。</div>
+            <div className="my-2">已发送，请在邮箱查收，如果找不到请检查垃圾邮箱。</div>
           )}
-          <div css={[alignRight]}>
+          <div className="pt-2 text-right">
             <Button
-              css={[textLg, mT(2)]}
               disabled={state === 'loading' || state === 'error'}
-              data-variant="primary"
+              size="large"
+              variant="primary"
               type="submit"
             >
               {state === 'loading' ? <Loading text="发送中…" /> : '发送密码重置邮件'}

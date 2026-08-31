@@ -1,37 +1,5 @@
-import { css } from '@emotion/react';
-import styled from '@emotion/styled';
 import React from 'react';
-import { pX, pY } from '../../styles/atoms';
-import { floatPanel } from './styles';
-
-export const toolbarRadius = css`
-  border-radius: 4px;
-`;
-
-const Container = styled.div`
-  position: absolute;
-  width: max-content;
-  z-index: 20;
-  top: 0;
-  right: 50%;
-  transform: translateY(-65%) translateX(50%);
-  ${[pY(2), pX(4)]};
-
-  &[data-position='bottom'] {
-    top: unset;
-    bottom: 0;
-    transform: translateY(80%);
-  }
-  &[data-x='left'] {
-    right: unset;
-    left: 0;
-  }
-`;
-
-const Toolbar = styled.div`
-  width: max-content;
-  ${[pY(1), pX(1), floatPanel]};
-`;
+import { cls } from '../../utils/classnames';
 
 export interface Props {
   className?: string;
@@ -42,9 +10,18 @@ export interface Props {
 
 export function ItemToolbar({ children, className, position = 'top', x = 'right' }: Props) {
   return (
-    <Container className={className} data-position={position} data-x={x}>
-      <Toolbar>{children}</Toolbar>
-    </Container>
+    <div
+      className={cls(
+        'absolute top-0 right-1/2 z-20 w-max translate-x-1/2 -translate-y-[65%] px-4 py-2 data-[position=bottom]:top-auto data-[position=bottom]:bottom-0 data-[position=bottom]:translate-y-[80%] data-[x=left]:right-auto data-[x=left]:left-0',
+        className,
+      )}
+      data-position={position}
+      data-x={x}
+    >
+      <div className="shadow-legacy-ui w-max rounded-[3px] bg-[rgba(0,0,0,0.4)] px-1 py-1 backdrop-blur-[1px]">
+        {children}
+      </div>
+    </div>
   );
 }
 

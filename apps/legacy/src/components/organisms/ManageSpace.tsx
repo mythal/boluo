@@ -1,4 +1,3 @@
-import { css } from '@emotion/react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
@@ -13,17 +12,6 @@ import {
 } from '../../api/spaces';
 import EarthCrack from '@boluo/icons/legacy/EarthCrack';
 import { useDispatch } from '../../store';
-import {
-  alignRight,
-  breakpoint,
-  flexCol,
-  largeInput,
-  mediaQuery,
-  mY,
-  pB,
-  spacingN,
-  widthFull,
-} from '../../styles/atoms';
 import { type Id } from '../../utils/id';
 import { descriptionValidation, required, spaceNameValidation } from '../../validators';
 import Button from '../atoms/Button';
@@ -56,13 +44,6 @@ interface FormData {
   isPublic?: boolean;
   allowSpectator?: boolean;
 }
-
-const panelStyle = css`
-  width: ${spacingN(64)};
-  ${mediaQuery(breakpoint.md)} {
-    width: ${spacingN(80)};
-  }
-`;
 
 function ManageSpace({ space, my, dismiss }: Props) {
   const {
@@ -110,7 +91,7 @@ function ManageSpace({ space, my, dismiss }: Props) {
   };
 
   return (
-    <Panel css={panelStyle} dismiss={dismiss} mask>
+    <Panel className="w-64 md:w-80" dismiss={dismiss} mask>
       <PanelTitle>管理位面</PanelTitle>
       {editError && <RenderError error={editError} variant="component" />}
       <form onSubmit={handleSubmit(onSubmit)}>
@@ -118,9 +99,10 @@ function ManageSpace({ space, my, dismiss }: Props) {
         <div>
           <Label htmlFor="name">位面名</Label>
           <Input
-            css={largeInput}
+            className="h-10"
             id="name"
             defaultValue={space.name}
+            inputSize="large"
             {...register('name', spaceNameValidation)}
           />
           {errors.name && <ErrorMessage>{errors.name.message}</ErrorMessage>}
@@ -138,7 +120,7 @@ function ManageSpace({ space, my, dismiss }: Props) {
             当输入 <code>1d20</code> 的时候可以简化成 <code>1d</code>。
           </HelpText>
         </div>
-        <div css={[mY(2), flexCol]}>
+        <div className="my-2 flex flex-col">
           <Label htmlFor="description">简介</Label>
           <TextArea
             id="description"
@@ -148,7 +130,7 @@ function ManageSpace({ space, my, dismiss }: Props) {
           <HelpText>简要描述一下这个位面。</HelpText>
           {errors.description && <ErrorMessage>{errors.description.message}</ErrorMessage>}
         </div>
-        <div css={[mY(2)]}>
+        <div className="my-2">
           <Label>
             <input
               type="checkbox"
@@ -159,8 +141,8 @@ function ManageSpace({ space, my, dismiss }: Props) {
             在「探索位面」中列出
           </Label>
         </div>
-        <div css={[mY(2)]}>
-          <Label css={pB(0)}>
+        <div className="my-2">
+          <Label className="legacy-label-no-bottom-padding">
             <input
               type="checkbox"
               defaultChecked={space.isPublic}
@@ -171,7 +153,7 @@ function ManageSpace({ space, my, dismiss }: Props) {
           </Label>
           <HelpText>非公开位面只能通过邀请链接来加入</HelpText>
         </div>
-        <div css={[mY(2)]}>
+        <div className="my-2">
           <Label>
             <input
               type="checkbox"
@@ -182,9 +164,9 @@ function ManageSpace({ space, my, dismiss }: Props) {
             允许旁观者
           </Label>
         </div>
-        <div css={[mY(4), alignRight]}>
+        <div className="my-4 text-right">
           <Button
-            data-variant="danger"
+            variant="danger"
             disabled={submitting}
             type="button"
             onClick={() => showDeleteDialog(true)}
@@ -192,7 +174,7 @@ function ManageSpace({ space, my, dismiss }: Props) {
             <Icon icon={EarthCrack} /> 摧毁位面
           </Button>
         </div>
-        <Button data-variant="primary" disabled={submitting} css={widthFull} type="submit">
+        <Button className="w-full" variant="primary" disabled={submitting} type="submit">
           提交修改
         </Button>
       </form>

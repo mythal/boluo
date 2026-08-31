@@ -12,21 +12,10 @@ import { clearProfileQueryCache } from '../../hooks/profileCache';
 import { useTitle } from '../../hooks/useTitle';
 import { useDispatch } from '../../store';
 import { setAuthToken } from '../../utils/token';
-import {
-  alignRight,
-  flex,
-  flex1,
-  largeInput,
-  link,
-  mR,
-  mT,
-  mY,
-  sm,
-  textLg,
-} from '../../styles/atoms';
 import { popNext } from '../../utils/browser';
 import Button from '../atoms/Button';
 import { ErrorMessage } from '../atoms/ErrorMessage';
+import { linkClassName } from '../atoms/ExternalLink';
 import Input from '../atoms/Input';
 import { Label } from '../atoms/Label';
 import Title from '../atoms/Title';
@@ -92,34 +81,36 @@ function Login() {
       {loginError && <RenderError error={loginError} variant="component" rewrite={errorRewrite} />}
 
       <form onSubmit={handleSubmit(onSubmit)}>
-        <div css={[sm(flex)]}>
-          <div css={[mY(2), sm(mR(2), flex1)]}>
+        <div className="sm:flex">
+          <div className="my-2 flex-1 sm:mr-2">
             <Label htmlFor="username">用户名 / 邮箱</Label>
             <Input
-              css={largeInput}
+              className="h-10"
               id="username"
+              inputSize="large"
               autoComplete="username"
               {...register('username', { required })}
             />
             {errors.username && <ErrorMessage>{errors.username.message}</ErrorMessage>}
           </div>
-          <div css={[mY(2), flex1]}>
+          <div className="my-2 flex-1">
             <Label htmlFor="password">密码</Label>
             <Input
-              css={largeInput}
+              className="h-10"
               type="password"
               id="password"
+              inputSize="large"
               autoComplete="current-password"
               {...register('password', { required })}
             />
             {errors.password && <ErrorMessage>{errors.password.message}</ErrorMessage>}
           </div>
         </div>
-        <div css={alignRight}>
-          <Link to="/reset-password" css={[link, mR(2)]}>
+        <div className="pt-4 text-right">
+          <Link className={`${linkClassName} mr-2`} to="/reset-password">
             忘记密码？
           </Link>
-          <Button css={[mT(4), textLg]} data-variant="primary" type="submit" disabled={loggingIn}>
+          <Button size="large" variant="primary" type="submit" disabled={loggingIn}>
             <Icon icon={SignIn} loading={loggingIn} />
             登录
           </Button>

@@ -5,6 +5,7 @@
     "esbuild@0.28.1": true
   },
   "devDependencies": {
+    "@types/node": "^26.1.1",
     "prettier": "^3.9.4",
     "prettier-plugin-tailwindcss": "^0.8.0",
     "turbo": "^2.10.4",

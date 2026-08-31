@@ -11,7 +11,7 @@ use std::env;
 use std::io::Cursor;
 use std::net::{IpAddr, SocketAddr};
 use std::path::PathBuf;
-use std::sync::LazyLock;
+use std::sync::{Arc, LazyLock};
 
 use clap::{Args as ClapArgs, Parser, Subcommand};
 use futures::pin_mut;
@@ -155,13 +155,16 @@ async fn router(
 
 async fn handler(
     ctx: &context::AppContext,
-    req: Request<Incoming>,
+    mut req: Request<Incoming>,
 ) -> Result<hyper::Response<Full<Cursor<interface::ResponseBytes>>>, hyper::Error> {
     use tracing::Instrument as _;
 
     let method = req.method().clone();
     let path = req.uri().path().to_owned();
     let request_id = request_id(req.headers(), ctx.config.platform.request_id_header());
+    let request_body_read_tracker = Arc::new(interface::RequestBodyReadTracker::new());
+    req.extensions_mut()
+        .insert(Arc::clone(&request_body_read_tracker));
 
     let client_version = req
         .headers()
@@ -234,7 +237,21 @@ async fn handler(
                     if response.status().is_server_error() {
                         tracing::error!(event = "http.request.server_error", "Request failed");
                     } else if duration.as_millis() > 500 {
-                        tracing::warn!(event = "http.request.slow", "Slow request");
+                        let duration_ms = duration.as_millis() as u64;
+                        let body_read_ms = request_body_read_tracker.duration_ms();
+                        if body_read_ms.saturating_mul(2) >= duration_ms {
+                            tracing::info!(
+                                event = "http.request.slow",
+                                request_slow_reason = "request_body",
+                                "Slow request"
+                            );
+                        } else {
+                            tracing::warn!(
+                                event = "http.request.slow",
+                                request_slow_reason = "handler",
+                                "Slow request"
+                            );
+                        }
                     } else {
                         tracing::debug!(event = "http.request.completed", "Request completed");
                     }
@@ -572,7 +589,7 @@ async fn init_database(args: InitArgs) {
         .expect("Failed to run database migrations");
 
     if args.fixtures {
-        let mut paths: Vec<std::fs::DirEntry> = std::fs::read_dir("./apps/server/fixtures")
+        let mut paths: Vec<std::fs::DirEntry> = std::fs::read_dir("./crates/server/fixtures")
             .expect("Cannot read fixtures directory")
             .map(|res| res.expect("Cannot read fixture file"))
             .collect();

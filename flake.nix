@@ -48,37 +48,78 @@
           inherit (pkgs) lib stdenv;
           version = "0.0.0";
           unfilteredRoot = ./.;
-          rev = if (self ? rev) then self.rev else lib.warn "Dirty workspace" "unknown";
 
-          npmWorkspaceSource =
-            let
-              inherit (lib.fileset) unions toSource maybeMissing;
-            in
-            toSource {
-              root = unfilteredRoot;
-              fileset = unions [
-                (maybeMissing (unfilteredRoot + "/package.json"))
-                (maybeMissing (unfilteredRoot + "/package-lock.json"))
-                (maybeMissing (unfilteredRoot + "/turbo.json"))
-                (unfilteredRoot + "/packages")
-                (unfilteredRoot + "/apps/avatars")
-                (unfilteredRoot + "/apps/interpreter-cli")
-                (unfilteredRoot + "/apps/legacy")
-                (unfilteredRoot + "/apps/site")
-                (unfilteredRoot + "/apps/spa")
-                (unfilteredRoot + "/apps/storybook")
-                (unfilteredRoot + "/infra/grafana")
-                (unfilteredRoot + "/infra/cloudflare")
+          npmWorkspaceLib = import ./packages/nix-workspaces/npm.nix {
+            inherit pkgs;
+            root = unfilteredRoot;
+            rootDependencyNames = [ "turbo" ];
+            extraSourceFiles = [ (unfilteredRoot + "/turbo.json") ];
+          };
+
+          cargoWorkspaceLib = import ./packages/nix-workspaces/cargo.nix {
+            inherit pkgs;
+            root = unfilteredRoot;
+            extraSourceFiles =
+              target:
+              lib.optionals (target == "server") [
+                ./apps/db/schema.sql
+                ./.sqlx
+                ./.config/nextest.toml
+                ./scripts/setup-test-db.sh
               ];
+          };
+
+          mkStaticSpaImage = import ./packages/nix-static-spa-image { inherit pkgs; };
+
+          frontendBuildArgs =
+            target:
+            let
+              src = npmWorkspaceLib.sourceFor target;
+              npmDeps = npmWorkspaceLib.mkNpmDepsFor target {
+                pname = "boluo-${target}-npm-deps";
+                inherit version;
+              };
+              frontendVersion = builtins.substring 0 40 (builtins.hashString "sha256" "${src}:${npmDeps}");
+            in
+            {
+              pname = "boluo-${target}";
+              inherit src npmDeps version;
+              npmConfigHook = pkgs.importNpmLock.npmConfigHook;
+              TURBO_TELEMETRY_DISABLED = 1;
+              NEXT_TELEMETRY_DISABLED = 1;
+              APP_VERSION = frontendVersion;
+              npmBuildScript = "build:${target}";
+              passthru = {
+                inherit frontendVersion;
+              };
             };
 
-          npmDeps = pkgs.importNpmLock {
-            pname = "boluo-npm-deps";
-            npmRoot = npmWorkspaceSource;
-            package = lib.importJSON ./package.json;
-            packageLock = lib.importJSON ./package-lock.json;
-            inherit version;
-          };
+          mkFrontendRelease =
+            {
+              includeStorybook ? false,
+            }:
+            pkgs.runCommand "boluo-frontend-release${lib.optionalString includeStorybook "-staging"}" { } ''
+              mkdir -p \
+                $out/.frontend-versions \
+                $out/apps/legacy/dist \
+                $out/apps/spa/out \
+                $out/packages/backend-proxy/dist
+
+              cp -r ${self'.packages.legacy}/. $out/apps/legacy/dist/
+              cp -r ${self'.packages.spa}/. $out/apps/spa/out/
+              cp -r ${self'.packages.spa.backendProxy}/. $out/packages/backend-proxy/dist/
+              cp -r ${self'.packages.siteBuild.worker}/. $out/
+
+              printf '%s\n' '${self'.packages.legacy.frontendVersion}' > $out/.frontend-versions/legacy
+              printf '%s\n' '${self'.packages.spa.frontendVersion}' > $out/.frontend-versions/spa
+              printf '%s\n' '${self'.packages.siteBuild.frontendVersion}' > $out/.frontend-versions/site
+
+              ${lib.optionalString includeStorybook ''
+                mkdir -p $out/apps/storybook/storybook-static
+                cp -r ${self'.packages.storybook}/. $out/apps/storybook/storybook-static/
+                printf '%s\n' '${self'.packages.storybook.frontendVersion}' > $out/.frontend-versions/storybook
+              ''}
+            '';
 
           rustToolchain = pkgs.rust-bin.selectLatestNightlyWith (
             toolchain:
@@ -125,53 +166,16 @@
 
               AUTH_FILE="$XDG_CONFIG_HOME/containers/auth.json"
               ${pkgs.skopeo}/bin/skopeo login --authfile "$AUTH_FILE" ghcr.io -u "$GITHUB_ACTOR" -p "$GITHUB_TOKEN"
+              : "''${GITHUB_SHA:?GITHUB_SHA must be set}"
               IMAGE_TAG="$(${pkgs.python3}/bin/python3 ${./scripts/image-tag.py})"
               IMAGE_DESTINATION="ghcr.io/mythal/boluo/${imageName}"
               echo "Pushing ${imageName} image with tag: $IMAGE_TAG"
               ${pkgs.skopeo}/bin/skopeo copy --dest-authfile "$AUTH_FILE" docker-archive:"${imageArchive}" "docker://$IMAGE_DESTINATION:$IMAGE_TAG"
-              ${pkgs.skopeo}/bin/skopeo copy --dest-authfile "$AUTH_FILE" docker-archive:"${imageArchive}" "docker://$IMAGE_DESTINATION:v${rev}"
+              ${pkgs.skopeo}/bin/skopeo copy --dest-authfile "$AUTH_FILE" docker-archive:"${imageArchive}" "docker://$IMAGE_DESTINATION:v''${GITHUB_SHA}"
             '';
 
-          # https://crane.dev/source-filtering.html#fileset-filtering
-          # https://nixos.org/manual/nixpkgs/unstable/#sec-functions-library-fileset
-          cargoSource =
-            let
-              inherit (lib.fileset)
-                unions
-                difference
-                fileFilter
-                maybeMissing
-                ;
-              ignoreFilenames = [
-                "wrangler.jsonc"
-                ".rustfmt.toml"
-                ".taplo.toml"
-                "fly.toml"
-                "fly.staging.toml"
-                "schema.sql"
-              ];
-              filesetToIgnore = unions (
-                map (name: fileFilter (file: file.name == name) unfilteredRoot) ignoreFilenames
-              );
-              fileset = difference (unions [
-                (craneLib.fileset.commonCargoSources unfilteredRoot)
-                (fileFilter (file: file.hasExt "sql") unfilteredRoot)
-                (maybeMissing ./.sqlx)
-                (maybeMissing ./apps/bridge/.sqlx)
-                (maybeMissing ./apps/server/text)
-                (maybeMissing ./.config/nextest.toml)
-                (maybeMissing ./scripts/setup-test-db.sh)
-              ]) filesetToIgnore;
-            in
-            lib.fileset.toSource {
-              root = unfilteredRoot;
-              inherit fileset;
-              # Debugging:
-              # fileset = lib.fileset.trace fileset fileset;
-            };
-
-          commonArgs = {
-            src = cargoSource;
+          commonArgs = target: {
+            src = cargoWorkspaceLib.sourceFor target;
             inherit version;
             strictDeps = true;
 
@@ -185,8 +189,13 @@
             SCCACHE_DIR = "/tmp/sccache";
           };
 
+          bridgeCommonArgs = commonArgs "bridge";
+          serverCommonArgs = (commonArgs "server") // {
+            RUSTFLAGS = "--cfg tracing_unstable";
+          };
+
           bridgeReleaseArtifacts = craneLib.buildDepsOnly (
-            commonArgs
+            bridgeCommonArgs
             // {
               pname = "bridge";
               cargoExtraArgs = "--locked --package=bridge";
@@ -198,7 +207,7 @@
 
           # CI checks only need the test profile.
           bridgeTestArtifacts = craneLib.buildDepsOnly (
-            commonArgs
+            bridgeCommonArgs
             // {
               pname = "bridge-tests";
               CARGO_PROFILE = "";
@@ -208,24 +217,24 @@
               cargoTestCommand = "cargo nextest run";
               cargoTestExtraArgs = "--no-run";
               SQLX_OFFLINE = "true";
-              nativeBuildInputs = commonArgs.nativeBuildInputs ++ [ pkgs.cargo-nextest ];
+              nativeBuildInputs = bridgeCommonArgs.nativeBuildInputs ++ [ pkgs.cargo-nextest ];
             }
           );
 
           bridgeCheck = craneLib.cargoNextest (
-            commonArgs
+            bridgeCommonArgs
             // {
               pname = "bridge";
               cargoArtifacts = bridgeTestArtifacts;
               CARGO_PROFILE = "";
               cargoExtraArgs = "--locked --package=bridge";
               SQLX_OFFLINE = "true";
-              nativeBuildInputs = commonArgs.nativeBuildInputs ++ [ pkgs.cargo-nextest ];
+              nativeBuildInputs = bridgeCommonArgs.nativeBuildInputs ++ [ pkgs.cargo-nextest ];
             }
           );
 
           serverReleaseArtifacts = craneLib.buildDepsOnly (
-            commonArgs
+            serverCommonArgs
             // {
               pname = "server";
               cargoExtraArgs = "--locked --package=server";
@@ -236,7 +245,7 @@
 
           # CI checks only need the test profile.
           serverTestArtifacts = craneLib.buildDepsOnly (
-            commonArgs
+            serverCommonArgs
             // {
               pname = "server-tests";
               CARGO_PROFILE = "";
@@ -245,19 +254,19 @@
               cargoBuildCommand = "true";
               cargoTestCommand = "cargo nextest run";
               cargoTestExtraArgs = "--no-run";
-              nativeBuildInputs = commonArgs.nativeBuildInputs ++ [ pkgs.cargo-nextest ];
+              nativeBuildInputs = serverCommonArgs.nativeBuildInputs ++ [ pkgs.cargo-nextest ];
             }
           );
 
           serverCheck = craneLib.cargoNextest (
-            commonArgs
+            serverCommonArgs
             // {
               pname = "server";
               cargoArtifacts = serverTestArtifacts;
               CARGO_PROFILE = "";
               cargoExtraArgs = "--locked --package=server";
               cargoNextestExtraArgs = "--retries 2";
-              nativeBuildInputs = commonArgs.nativeBuildInputs ++ [
+              nativeBuildInputs = serverCommonArgs.nativeBuildInputs ++ [
                 pkgs.postgresql
                 pkgs.cargo-nextest
               ];
@@ -275,14 +284,14 @@
 
           packages = {
             server = craneLib.buildPackage (
-              commonArgs
+              serverCommonArgs
               // {
                 pname = "server";
 
                 cargoArtifacts = serverReleaseArtifacts;
                 cargoExtraArgs = "--locked --package=server";
                 doCheck = false;
-                nativeBuildInputs = commonArgs.nativeBuildInputs ++ [
+                nativeBuildInputs = serverCommonArgs.nativeBuildInputs ++ [
                   pkgs.postgresql
                 ];
                 preBuild = ''
@@ -300,10 +309,10 @@
             );
 
             # The bridge stores state in SQLite and verifies its queries against
-            # the committed `apps/bridge/.sqlx` cache, so it needs no database at
+            # the committed `crates/bridge/.sqlx` cache, so it needs no database at
             # build time.
             bridge = craneLib.buildPackage (
-              commonArgs
+              bridgeCommonArgs
               // {
                 pname = "bridge";
 
@@ -355,102 +364,42 @@
               };
             };
 
-            # Build all frontend apps in a single derivation
-            frontendBuild = pkgs.buildNpmPackage {
-              pname = "boluo-frontend";
-              src = npmWorkspaceSource;
-              inherit version npmDeps;
-              npmConfigHook = pkgs.importNpmLock.npmConfigHook;
-              TURBO_TELEMETRY_DISABLED = 1;
-              NEXT_TELEMETRY_DISABLED = 1;
-              npmBuildScript = "build:deploy";
-              installPhase = ''
-                mkdir -p $out/{legacy,spa,site}
-
-                cp -r apps/legacy/dist/* $out/legacy/
-
-                cp -r apps/spa/out/* $out/spa/
-
-                cp -r apps/site/.next/standalone/* $out/site/
-                cp -r apps/site/.next/static $out/site/apps/site/.next/static
-              '';
-            };
-
-            siteBuild = pkgs.buildNpmPackage {
-              pname = "boluo-site";
-              src = npmWorkspaceSource;
-              inherit version npmDeps;
-              npmConfigHook = pkgs.importNpmLock.npmConfigHook;
-              TURBO_TELEMETRY_DISABLED = 1;
-              NEXT_TELEMETRY_DISABLED = 1;
-              npmBuildScript = "build:site";
-              installPhase = ''
-                mkdir -p $out
-                cp -r apps/site/.next/standalone/* $out/
-                cp -r apps/site/.next/static $out/apps/site/.next/static
-              '';
-            };
-
-            legacy = pkgs.runCommand "boluo-legacy" { } ''
-              cp -r ${self'.packages.frontendBuild}/legacy $out
-            '';
-
-            legacy-image =
-              let
-                webRoot = self'.packages.legacy;
-                nginxPort = "80";
-                nginxConf = pkgs.writeText "nginx.conf" ''
-                  user nobody nobody;
-                  daemon off;
-                  error_log /dev/stdout info;
-                  pid /dev/null;
-                  events {}
-                  http {
-                    include ${pkgs.nginx}/conf/mime.types;
-                    access_log /dev/stdout;
-                    server {
-                      server_name _;
-                      listen ${nginxPort};
-                      listen [::]:${nginxPort};
-                      index index.html index.htm;
-                      location / {
-                        root ${webRoot};
-                        try_files $uri $uri/ $uri.html /index.html;
-                      }
-                      location /api {
-                        return 404;
-                      }
-                    }
-                  }
+            legacy = pkgs.buildNpmPackage (
+              frontendBuildArgs "legacy"
+              // {
+                installPhase = ''
+                  mkdir -p $out
+                  cp -r apps/legacy/dist/* $out/
                 '';
-              in
-              pkgs.dockerTools.buildLayeredImage {
-                name = "boluo-legacy";
-                tag = "latest";
+              }
+            );
 
-                contents = [
-                  pkgs.fakeNss
-                  pkgs.nginx
+            siteBuild = pkgs.buildNpmPackage (
+              frontendBuildArgs "site"
+              // {
+                outputs = [
+                  "out"
+                  "worker"
                 ];
-                extraCommands = ''
-                  mkdir -p tmp/nginx_client_body
-
-                  # nginx still tries to read this directory even if error_log
-                  # directive is specifying another file :/
-                  mkdir -p var/log/nginx
+                postBuild = ''
+                  (cd apps/site && ../../node_modules/.bin/opennextjs-cloudflare build --skipNextBuild)
                 '';
-                config = {
-                  Cmd = [
-                    "nginx"
-                    "-c"
-                    nginxConf
-                  ];
-                  ExposedPorts = {
-                    "${nginxPort}/tcp" = { };
-                  };
-                  Labels = imageLabel;
-                };
-              };
+                installPhase = ''
+                  mkdir -p $out $worker/apps/site/.open-next
+                  cp -r apps/site/.next/standalone/* $out/
+                  cp -r apps/site/.next/static $out/apps/site/.next/static
+                  cp -r apps/site/.open-next/. $worker/apps/site/.open-next/
+                '';
+              }
+            );
+
+            site-worker = self'.packages.siteBuild.worker;
+
+            legacy-image = mkStaticSpaImage {
+              name = "boluo-legacy";
+              webRoot = self'.packages.legacy;
+              labels = imageLabel;
+            };
 
             site =
               let
@@ -493,66 +442,46 @@
               };
             };
 
-            spa = pkgs.runCommand "boluo-spa" { } ''
-              cp -r ${self'.packages.frontendBuild}/spa $out
-            '';
-
-            spa-image =
-              let
-                webRoot = self'.packages.spa;
-                nginxPort = "80";
-                nginxConf = pkgs.writeText "nginx.conf" ''
-                  user nobody nobody;
-                  daemon off;
-                  error_log /dev/stdout info;
-                  pid /dev/null;
-                  events {}
-                  http {
-                    include ${pkgs.nginx}/conf/mime.types;
-                    access_log /dev/stdout;
-                    server {
-                      server_name _;
-                      listen ${nginxPort};
-                      listen [::]:${nginxPort};
-                      index index.html index.htm;
-                      location / {
-                        root ${webRoot};
-                        try_files $uri $uri/ $uri.html /index.html;
-                      }
-                      location /api {
-                        return 404;
-                      }
-                    }
-                  }
-                '';
-              in
-              pkgs.dockerTools.buildLayeredImage {
-                name = "boluo-spa";
-                tag = "latest";
-
-                contents = [
-                  pkgs.fakeNss
-                  pkgs.nginx
+            spa = pkgs.buildNpmPackage (
+              frontendBuildArgs "spa"
+              // {
+                outputs = [
+                  "out"
+                  "backendProxy"
                 ];
-                extraCommands = ''
-                  mkdir -p tmp/nginx_client_body
-
-                  # nginx still tries to read this directory even if error_log
-                  # directive is specifying another file :/
-                  mkdir -p var/log/nginx
+                installPhase = ''
+                  mkdir -p $out $backendProxy
+                  cp -r apps/spa/out/* $out/
+                  cp -r packages/backend-proxy/dist/* $backendProxy/
                 '';
-                config = {
-                  Cmd = [
-                    "nginx"
-                    "-c"
-                    nginxConf
-                  ];
-                  ExposedPorts = {
-                    "${nginxPort}/tcp" = { };
-                  };
-                  Labels = imageLabel;
-                };
-              };
+              }
+            );
+
+            backend-proxy = self'.packages.spa.backendProxy;
+
+            storybook = pkgs.buildNpmPackage (
+              frontendBuildArgs "boluo-storybook"
+              // {
+                pname = "boluo-storybook";
+                npmBuildScript = "build:storybook";
+                installPhase = ''
+                  mkdir -p $out
+                  cp -r apps/storybook/storybook-static/* $out/
+                '';
+              }
+            );
+
+            frontend-release = mkFrontendRelease { };
+
+            frontend-release-staging = mkFrontendRelease {
+              includeStorybook = true;
+            };
+
+            spa-image = mkStaticSpaImage {
+              name = "boluo-spa";
+              webRoot = self'.packages.spa;
+              labels = imageLabel;
+            };
 
             push-server-image = mkPushImage {
               imageName = "server";
@@ -567,13 +496,13 @@
             deploy-server-staging = pkgs.writeShellScriptBin "deploy-server-staging" ''
               set -euo pipefail
               : "''${APP_VERSION:?APP_VERSION must be set}"
-              ${pkgs.flyctl}/bin/flyctl deploy --config ${apps/server/fly.toml} --image "ghcr.io/mythal/boluo/server:v''${APP_VERSION}" --env "APP_VERSION=''${APP_VERSION}" --remote-only
+              ${pkgs.flyctl}/bin/flyctl deploy --config ${crates/server/fly.toml} --image "ghcr.io/mythal/boluo/server:v''${APP_VERSION}" --env "APP_VERSION=''${APP_VERSION}" --remote-only
             '';
 
             deploy-server-production = pkgs.writeShellScriptBin "deploy-server-production" ''
               set -euo pipefail
               : "''${APP_VERSION:?APP_VERSION must be set}"
-              ${pkgs.flyctl}/bin/flyctl deploy --config ${apps/server/production/fly.toml} --image "ghcr.io/mythal/boluo/server:v''${APP_VERSION}" --env "APP_VERSION=''${APP_VERSION}" --remote-only
+              ${pkgs.flyctl}/bin/flyctl deploy --config ${crates/server/production/fly.toml} --image "ghcr.io/mythal/boluo/server:v''${APP_VERSION}" --env "APP_VERSION=''${APP_VERSION}" --remote-only
             '';
 
             deploy-site-staging = pkgs.writeShellScriptBin "deploy-site-staging" ''
@@ -612,7 +541,7 @@
                 python3
                 gh
               ]
-              ++ lib.optionals stdenv.isLinux [ pkgs.wild ];
+              ++ lib.optionals stdenv.hostPlatform.isLinux [ pkgs.wild ];
             shellHook = ''
               export PATH="node_modules/.bin:$PATH"
             '';

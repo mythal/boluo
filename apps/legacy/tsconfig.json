@@ -22,7 +22,6 @@
 
     /* React */
     "jsx": "react-jsx",
-    "jsxImportSource": "@emotion/react",
 
     /* Other */
     "allowJs": true,
@@ -30,7 +29,7 @@
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
     "sourceMap": true,
-    "types": ["node", "@emotion/react/types/css-prop", "vite/client"]
+    "types": ["node", "vite/client"]
   },
   "include": ["src"],
   "references": [{ "path": "./tsconfig.node.json" }]

@@ -17,4 +17,6 @@ runs:
 
     - name: Unpack frontend build
       shell: bash
-      run: tar --extract --file .tmp/frontend-build.tar
+      run: |
+        tar --extract --no-same-permissions --file .tmp/frontend-build.tar
+        chmod -R u+rwX apps .frontend-versions

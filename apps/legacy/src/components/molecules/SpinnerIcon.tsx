@@ -1,10 +1,9 @@
 import React from 'react';
 import Fan from '@boluo/icons/legacy/Fan';
-import { spin } from '../../styles/atoms';
 import Icon from '../atoms/Icon';
 
 function SpinnerIcon() {
-  return <Icon icon={Fan} css={spin} />;
+  return <Icon className="animate-legacy-spin" icon={Fan} />;
 }
 
 export default React.memo(SpinnerIcon);

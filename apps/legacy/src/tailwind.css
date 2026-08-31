@@ -1,0 +1,462 @@
+/*
+ * Keep Tailwind's reset disabled because sanitize.css remains the legacy app's reset.
+ * The legacy palette predates Tailwind's current colors, so every color utility
+ * is namespaced and pinned to the values used by src/styles/colors.ts.
+ */
+@layer theme, base, components, utilities;
+
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);
+
+@source './**/*.{ts,tsx}';
+
+@theme {
+  --color-*: initial;
+  --color-inherit: inherit;
+  --color-current: currentColor;
+  --color-transparent: transparent;
+  --color-black: #000;
+  --color-white: #fff;
+
+  /* Tailwind v1 palette retained by the legacy application. */
+  --color-legacy-black: #000000;
+  --color-legacy-white: #ffffff;
+
+  --color-legacy-gray-100: #f7fafc;
+  --color-legacy-gray-200: #edf2f7;
+  --color-legacy-gray-300: #e2e8f0;
+  --color-legacy-gray-400: #cbd5e0;
+  --color-legacy-gray-500: #a0aec0;
+  --color-legacy-gray-600: #718096;
+  --color-legacy-gray-700: #4a5568;
+  --color-legacy-gray-800: #2d3748;
+  --color-legacy-gray-900: #1a202c;
+
+  --color-legacy-red-100: #fff5f5;
+  --color-legacy-red-200: #fed7d7;
+  --color-legacy-red-300: #feb2b2;
+  --color-legacy-red-400: #fc8181;
+  --color-legacy-red-500: #f56565;
+  --color-legacy-red-600: #e53e3e;
+  --color-legacy-red-700: #c53030;
+  --color-legacy-red-800: #9b2c2c;
+  --color-legacy-red-900: #742a2a;
+
+  --color-legacy-blue-100: #ebf8ff;
+  --color-legacy-blue-200: #bee3f8;
+  --color-legacy-blue-300: #90cdf4;
+  --color-legacy-blue-400: #63b3ed;
+  --color-legacy-blue-500: #4299e1;
+  --color-legacy-blue-600: #3182ce;
+  --color-legacy-blue-700: #2b6cb0;
+  --color-legacy-blue-800: #2c5282;
+  --color-legacy-blue-900: #2a4365;
+
+  /* This is the old orange "primary" scale, not Tailwind v4 orange. */
+  --color-legacy-primary-100: #fffaf0;
+  --color-legacy-primary-200: #feebc8;
+  --color-legacy-primary-300: #fbd38d;
+  --color-legacy-primary-400: #f6ad55;
+  --color-legacy-primary-500: #ed8936;
+  --color-legacy-primary-600: #dd6b20;
+  --color-legacy-primary-700: #c05621;
+  --color-legacy-primary-800: #9c4221;
+  --color-legacy-primary-900: #7b341e;
+
+  --color-legacy-green-100: #f0fff4;
+  --color-legacy-green-200: #c6f6d5;
+  --color-legacy-green-300: #9ae6b4;
+  --color-legacy-green-400: #68d391;
+  --color-legacy-green-500: #48bb78;
+  --color-legacy-green-600: #38a169;
+  --color-legacy-green-700: #2f855a;
+  --color-legacy-green-800: #276749;
+  --color-legacy-green-900: #22543d;
+
+  --color-legacy-purple-100: #faf5ff;
+  --color-legacy-purple-200: #e9d8fd;
+  --color-legacy-purple-300: #d6bcfa;
+  --color-legacy-purple-400: #b794f4;
+  --color-legacy-purple-500: #9f7aea;
+  --color-legacy-purple-600: #805ad5;
+  --color-legacy-purple-700: #6b46c1;
+  --color-legacy-purple-800: #553c9a;
+  --color-legacy-purple-900: #44337a;
+
+  --color-legacy-transparent-100: rgba(255, 255, 255, 0.9);
+  --color-legacy-transparent-200: rgba(255, 255, 255, 0.8);
+  --color-legacy-transparent-300: rgba(255, 255, 255, 0.7);
+  --color-legacy-transparent-400: rgba(255, 255, 255, 0.6);
+  --color-legacy-transparent-500: rgba(255, 255, 255, 0.5);
+  --color-legacy-transparent-600: rgba(255, 255, 255, 0.4);
+  --color-legacy-transparent-700: rgba(255, 255, 255, 0.3);
+  --color-legacy-transparent-800: rgba(255, 255, 255, 0.2);
+  --color-legacy-transparent-900: rgba(255, 255, 255, 0.1);
+
+  /* Semantic aliases from src/styles/colors.ts. */
+  --color-legacy-background: #1a202c;
+  --color-legacy-text: #f7fafc;
+  --color-legacy-text-minor: #adcce0;
+  --color-legacy-ui-shadow: #000000;
+  --color-legacy-error: #711518;
+  --color-legacy-line: #36435c;
+  --color-legacy-brand-primary: #ed8936;
+  --color-legacy-danger: #9a4444;
+  --color-legacy-link: #f5c094;
+  --color-legacy-close-hover: rgba(255, 255, 255, 0.2);
+  --color-legacy-close-active: rgba(255, 255, 255, 0.4);
+  --color-legacy-modal-mask: rgba(0, 0, 0, 0.5);
+  --color-legacy-dialog-background: #232b3a;
+  --color-legacy-dialog-title: #a0aec0;
+  --color-legacy-dialog-shadow: rgba(100, 100, 100, 0.4);
+  --color-legacy-button: #4a5568;
+  --color-legacy-button-primary: #dd6b20;
+  --color-legacy-button-danger: #e53e3e;
+  --color-legacy-button-dark: #2d3748;
+  --color-legacy-information-info: #2b6cb0;
+  --color-legacy-information-warn: #b7791f;
+  --color-legacy-information-error: #9b2c2c;
+  --color-legacy-information-success: #2f855a;
+  --color-legacy-header-background: #2d3748;
+  --color-legacy-focus-outline: rgba(255, 255, 255, 0.4);
+  --color-legacy-chat-sidebar: #27303f;
+  --color-legacy-input-background: #2d3748;
+  --color-legacy-menu-background: #000000;
+  --color-legacy-menu-shadow: rgba(100, 100, 100, 0.2);
+  --color-legacy-menu-item-hover: #c05621;
+  --color-legacy-sidebar-item: #d2e3ee;
+  --color-legacy-sidebar-item-hover-background: rgba(0, 0, 0, 0.1);
+  --color-legacy-sidebar-item-active-background: rgba(0, 0, 0, 0.2);
+
+  /* Static polished() results used outside the central palette module. */
+  --color-legacy-link-hover: #f9dbc3;
+  --color-legacy-outline-primary-border: #f09e59;
+  --color-legacy-select-primary-75: #7f400b;
+  --color-legacy-select-primary-50: #964b0d;
+  --color-legacy-select-primary-25: #ad5710;
+  --color-legacy-select-neutral-5: #303540;
+  --color-legacy-select-neutral-10: #464b55;
+  --color-legacy-select-neutral-20: #5c616a;
+  --color-legacy-select-neutral-30: #72777f;
+  --color-legacy-select-neutral-40: #888d94;
+  --color-legacy-select-neutral-50: #9ea2a8;
+  --color-legacy-select-neutral-60: #b4b8bd;
+  --color-legacy-select-neutral-70: #caced2;
+  --color-legacy-select-neutral-80: #e0e4e7;
+  --color-legacy-compose-input-background: #11141c;
+  --color-legacy-compose-input-border: #404f6c;
+  --color-legacy-compose-input-border-hover: #53668c;
+  --color-legacy-compose-input-border-focus: #6b7fa7;
+  --color-legacy-menu-item-active: #7f3916;
+  --color-legacy-new-space-background: #1f2634;
+  --color-legacy-card-background: #232c3c;
+  --color-legacy-card-hover: #2d374c;
+  --color-legacy-member-card-background: #07090c;
+  --color-legacy-error-text: #ec999c;
+  --color-legacy-header-hover: #232b38;
+  --color-legacy-header-active: #191f29;
+  --color-legacy-header-deep: #101319;
+  --color-legacy-chat-item-background: #2d3748;
+  --color-legacy-chat-item-hover: #232b38;
+  --color-legacy-chat-item-out-background: #1a202c;
+  --color-legacy-chat-item-out-hover: #171d27;
+  --color-legacy-preview-in-stripe: #101319;
+  --color-legacy-preview-out-stripe: #000;
+  --color-legacy-sidebar-border: #1f2632;
+  --color-legacy-connection-background: rgba(72, 187, 120, 0.4);
+  --color-legacy-connection-hover: rgba(72, 187, 120, 0.5);
+  --color-legacy-chat-toolbar-text: #75a9cb;
+  --color-legacy-item-move-handle: #35698c;
+  --color-legacy-expression-background: #274d67;
+  --color-legacy-expression-hover: #2e5b7a;
+  --color-legacy-expression-border: #4385b1;
+  --color-legacy-compose-background: #233753;
+  --color-legacy-information-info-border: #5392d5;
+  --color-legacy-information-info-hover: #90b9e4;
+  --color-legacy-information-warn-border: #dfa043;
+  --color-legacy-information-warn-hover: #eac185;
+  --color-legacy-information-error-border: #cb4848;
+  --color-legacy-information-error-hover: #dc8484;
+  --color-legacy-information-success-border: #44bd80;
+  --color-legacy-information-success-hover: #7cd1a7;
+  --color-legacy-ui-shadow-muted: rgba(0, 0, 0, 0.4);
+  --color-legacy-button-shadow: rgba(0, 0, 0, 0.2);
+  --color-legacy-button-focus: rgba(255, 255, 255, 0.3);
+  --color-legacy-outline-background: rgba(255, 255, 255, 0.05);
+  --color-legacy-outline-border: rgba(255, 255, 255, 0.2);
+  --color-legacy-outline-active: rgba(255, 255, 255, 0.1);
+
+  --font-legacy-mono: Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+  --font-legacy-sans:
+    system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+    'Noto Sans', sans-serif;
+
+  --shadow-legacy-ui:
+    0 0 4px 0 var(--color-legacy-ui-shadow-muted), 0 1px 1px 0 var(--color-legacy-ui-shadow);
+
+  --animate-legacy-spin: legacy-spin 1.5s linear infinite;
+  --animate-legacy-mask-in: legacy-mask-in 0.1s ease-in forwards;
+  --animate-legacy-menu-enter: legacy-menu-enter 0.1s ease-in forwards;
+  --animate-legacy-loading-pulse: legacy-loading-pulse 2s linear infinite;
+  --animate-legacy-version-enter: legacy-version-enter 160ms ease-out both;
+
+  @keyframes legacy-spin {
+    from {
+      transform: rotate(0);
+    }
+
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes legacy-mask-in {
+    to {
+      opacity: 100%;
+    }
+  }
+
+  @keyframes legacy-menu-enter {
+    60% {
+      opacity: 100%;
+    }
+
+    to {
+      opacity: 100%;
+      transform: translateY(-0.25rem);
+    }
+  }
+
+  @keyframes legacy-loading-pulse {
+    0% {
+      opacity: 40%;
+    }
+
+    80% {
+      opacity: 100%;
+    }
+
+    to {
+      opacity: 40%;
+    }
+  }
+
+  @keyframes legacy-version-enter {
+    from {
+      opacity: 0;
+      transform: translate(-50%, calc(-100% - 0.5rem));
+    }
+
+    to {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+  }
+}
+
+/* Exact replacement for the former Emotion Global/baseStyle injection. */
+html {
+  font-size: 16px;
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    'Helvetica Neue',
+    Arial,
+    'Noto Sans',
+    sans-serif;
+  color: var(--color-legacy-text);
+  background-color: var(--color-legacy-background);
+}
+
+@font-face {
+  font-family: 'Pixel';
+  src: url('./assets/fusion-pixel.woff2') format('woff2');
+}
+
+/* Unlayered so this deliberate override wins over sanitize.css's textarea rule. */
+.legacy-textarea {
+  resize: none;
+}
+
+.legacy-menu-item-button {
+  margin: 0.25rem 0;
+  font: inherit;
+}
+
+/* sanitize.css resets button margins outside Tailwind's layers. */
+.legacy-header-button {
+  margin-right: 0.25rem;
+}
+
+.legacy-page-error-refresh {
+  margin-right: 0.25rem;
+  margin-left: 0.25rem;
+}
+
+.legacy-checkbox-spaced {
+  margin-right: 0.25rem;
+}
+
+/* Shared chat controls also decorate Button variants, so these declarations
+ * intentionally sit outside Tailwind layers and win over sanitize.css. */
+.legacy-chat-header-button {
+  max-width: 6rem;
+  border: 0;
+  border-radius: 1px;
+  padding: 0.375rem 0.5rem;
+  background-color: var(--color-legacy-gray-700);
+}
+
+.legacy-chat-header-button:hover {
+  background-color: rgba(255, 255, 255, 0.25);
+}
+
+.legacy-chat-header-button:active,
+.legacy-chat-header-button[aria-current='page'],
+.legacy-chat-header-button[data-active='true'] {
+  background-color: var(--color-legacy-gray-900);
+}
+
+.legacy-chat-header-action,
+.legacy-sidebar-icon-spaced {
+  margin-left: 0.25rem;
+}
+
+.legacy-sidebar-icon-spaced {
+  margin-right: 0;
+  margin-bottom: 0.25rem;
+  margin-left: 0;
+}
+
+.legacy-sidebar-section-title {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.legacy-sidebar-connection-trigger {
+  font: inherit;
+}
+
+.legacy-sidebar-member-button {
+  font: inherit;
+}
+
+.legacy-connection-option {
+  font: inherit;
+}
+
+.legacy-chat-preview .roll::before {
+  content: '未定';
+  font-size: 0.75rem;
+}
+
+.legacy-chat-preview-in-game {
+  background: repeating-linear-gradient(
+    45deg,
+    var(--color-legacy-chat-item-background),
+    var(--color-legacy-chat-item-background) 3px,
+    var(--color-legacy-preview-in-stripe) 3px,
+    var(--color-legacy-preview-in-stripe) 6px
+  );
+}
+
+.legacy-chat-preview-out-game {
+  background: repeating-linear-gradient(
+    45deg,
+    var(--color-legacy-chat-item-out-background),
+    var(--color-legacy-chat-item-out-background) 3px,
+    var(--color-legacy-preview-out-stripe) 3px,
+    var(--color-legacy-preview-out-stripe) 6px
+  );
+}
+
+.legacy-chat-code-block {
+  margin: 0;
+  font-family: 'Pixel', monospace;
+}
+
+.legacy-chat-view,
+.legacy-chat-view body,
+.legacy-chat-view #root {
+  height: 100%;
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  .legacy-chat-header-button {
+    max-width: 8rem;
+  }
+
+  .legacy-chat-view,
+  .legacy-chat-view body,
+  .legacy-chat-view #root {
+    font-size: 16px;
+  }
+}
+
+.legacy-label-no-bottom-padding {
+  padding-bottom: 0;
+}
+
+.legacy-space-title {
+  display: inline-block;
+  margin: 0;
+  padding: 0;
+  font-size: 1.875rem;
+  font-weight: normal;
+  line-height: 1.25em;
+}
+
+.legacy-space-copy-button {
+  margin-left: 0.25rem;
+}
+
+.legacy-space-operator > * {
+  margin-bottom: 0.25rem;
+}
+
+.legacy-space-operator-action {
+  margin-right: 0.25rem;
+}
+
+.legacy-guest-title {
+  font-size: 1.875rem;
+  font-weight: normal;
+  font-style: normal;
+}
+
+/* Typography reset overrides that must stay above sanitize.css's unlayered rules. */
+.legacy-error-message {
+  margin: 0;
+}
+
+.legacy-help-text {
+  display: block;
+  margin: 0;
+  padding: 0.25rem 0;
+  font-size: 0.875rem;
+  line-height: 1.5em;
+}
+
+.legacy-panel-title {
+  margin: 0.5rem 0;
+  font-size: 1.25rem;
+  font-weight: normal;
+  font-style: normal;
+}
+
+.legacy-title {
+  margin: 0;
+  padding: 0 0 1.5rem;
+  font-size: 1.25rem;
+  font-weight: normal;
+}
+
+@layer components {
+  .legacy-icon-strut[data-strut='true']::before {
+    content: '\200b';
+  }
+}

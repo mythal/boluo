@@ -1,18 +1,5 @@
-import { css } from '@emotion/react';
-import styled from '@emotion/styled';
 import * as React from 'react';
 import Loading from '../../components/molecules/Loading';
-import { mask } from '../../styles/atoms';
-
-const Mask = styled.div`
-  ${mask};
-  z-index: 1000;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-`;
-
-const spinnerContainer = css``;
 
 interface Props {
   text?: string;
@@ -20,11 +7,11 @@ interface Props {
 
 function PageLoading({ text }: Props) {
   return (
-    <Mask>
-      <div css={spinnerContainer}>
-        <Loading css={{ display: 'block' }} text={text} />
+    <div className="bg-legacy-modal-mask fixed inset-0 z-[1000] flex items-center justify-center">
+      <div>
+        <Loading style={{ display: 'block' }} text={text} />
       </div>
-    </Mask>
+    </div>
   );
 }
 

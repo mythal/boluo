@@ -1,7 +1,6 @@
-import styled from '@emotion/styled';
-import { block, pY } from '../../styles/atoms';
+import React from 'react';
+import { cls } from '../../utils/classnames';
 
-export const Label = styled.label`
-  ${pY(2)};
-  ${block};
-`;
+export function Label({ className, ref, ...props }: React.ComponentPropsWithRef<'label'>) {
+  return <label ref={ref} className={cls('block py-2', className)} {...props} />;
+}

@@ -29,6 +29,7 @@ function Filter({ className }: Props) {
   return (
     <React.Fragment>
       <ChatHeaderButton
+        aria-label="筛选消息"
         data-active={open}
         onClick={() => setOpen((open) => !open)}
         ref={button}

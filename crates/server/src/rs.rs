@@ -31,7 +31,7 @@ pub fn export() {
         })
         .export(&types, RustFormat)
         .unwrap();
-    std::fs::write("./packages/generated/src/generated.rs", source).unwrap();
+    std::fs::write("./crates/generated/src/generated.rs", source).unwrap();
 }
 
 struct RustFormat;

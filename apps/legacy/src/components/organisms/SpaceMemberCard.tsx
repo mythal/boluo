@@ -1,5 +1,3 @@
-import { css } from '@emotion/react';
-import { darken } from 'polished';
 import * as React from 'react';
 import { useEffect } from 'react';
 import { loadUser } from '../../actions';
@@ -8,8 +6,7 @@ import { type AppResult } from '../../api/request';
 import { type Space, type SpaceMember } from '../../api/spaces';
 import { type User } from '../../api/users';
 import { useDispatch, useSelector } from '../../store';
-import { mR, mT, pX, pY, roundedPx, textLg, uiShadow } from '../../styles/atoms';
-import { bgColor } from '../../styles/colors';
+import { cls } from '../../utils/classnames';
 import Badge from '../atoms/Badge';
 import LeaveSpaceButton from '../molecules/LeaveSpaceButton';
 import { RenderError } from '../molecules/RenderError';
@@ -39,27 +36,27 @@ function MemberCardContent({ member, space }: Props) {
   return (
     <div>
       <div>
-        <span css={[textLg, mR(2)]}>{user.nickname}</span>
+        <span className="mr-2 text-[1.125rem]">{user.nickname}</span>
         <SpaceRoleTag space={space} member={member} />
         {self && <Badge color="#555">我自己</Badge>}
       </div>
       {self && (
-        <div css={[mT(4)]}>
-          <LeaveSpaceButton id={space.id} name={space.name} data-small />
+        <div className="mt-4">
+          <LeaveSpaceButton id={space.id} name={space.name} size="small" />
         </div>
       )}
     </div>
   );
 }
 
-const cardStyle = css`
-  ${[pX(3), pY(3), roundedPx, uiShadow]};
-  background-color: ${darken(0.1, bgColor)};
-`;
-
 function SpaceMemberCard({ className, ...props }: Props) {
   return (
-    <div css={cardStyle} className={className}>
+    <div
+      className={cls(
+        'bg-legacy-member-card-background shadow-legacy-ui rounded-[1px] px-3 py-3',
+        className,
+      )}
+    >
       <MemberCardContent {...props} />
     </div>
   );

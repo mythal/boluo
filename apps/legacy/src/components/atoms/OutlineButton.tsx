@@ -1,92 +1,79 @@
-import { css } from '@emotion/react';
-import styled from '@emotion/styled';
-import { lighten } from 'polished';
+import React from 'react';
 import { Link } from 'react-router-dom';
-import {
-  controlRounded,
-  disabled,
-  focusShadow,
-  onDisabled,
-  onHover,
-  pX,
-  pY,
-  spacingN,
-  textBase,
-  textLg,
-  textSm,
-  uiShadow,
-  uiShadowValue,
-} from '../../styles/atoms';
-import { dangerColor, primaryColor, textColor } from '../../styles/colors';
+import { cls } from '../../utils/classnames';
+import { type ButtonSize, type ButtonVariant } from './Button';
 
-const btnColor = (color: string) => css`
-  background-color: ${color};
-  border-color: ${lighten(0.075, color)};
-`;
-
-interface DataAttributes {
-  'data-variant'?: 'normal' | 'danger' | 'primary' | 'dark';
-  'data-icon'?: boolean;
-  'data-size'?: 'normal' | 'small' | 'large';
+interface OutlineButtonStyleProps {
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+  iconOnly?: boolean;
 }
 
-export const outlineButtonStyle = css`
-  background-color: rgba(255, 255, 255, 0.05);
-  color: ${textColor};
-  display: inline-flex;
-  justify-content: space-around;
-  align-items: center;
-  min-width: 5em;
-  cursor: pointer;
-  text-decoration: none;
-  transition-property: all;
-  transition-duration: 120ms;
-  transition-timing-function: ease-in;
-  border: 0.075em solid rgba(255, 255, 255, 0.2);
-  ${[uiShadow, controlRounded, textBase]};
+const outlineButtonBaseClassName =
+  'inline-flex cursor-pointer items-center justify-around rounded-[1px] border-[0.075em] border-solid text-legacy-text no-underline shadow-legacy-ui transition-all duration-120 ease-in hover:shadow-[0_0_4px_0_var(--color-legacy-ui-shadow-muted),0_1px_1px_0_var(--color-legacy-ui-shadow),inset_0_-0.2em_0_0_var(--color-legacy-brand-primary)] focus:outline-none focus:shadow-[0_0_0_2px_var(--color-legacy-focus-outline),0_0_4px_0_var(--color-legacy-ui-shadow-muted),0_1px_1px_0_var(--color-legacy-ui-shadow)] active:bg-legacy-outline-active active:shadow-[0_0_4px_0_var(--color-legacy-ui-shadow-muted),0_1px_1px_0_var(--color-legacy-ui-shadow),inset_0_-0.2em_0_0_var(--color-legacy-link)] disabled:cursor-default disabled:shadow-none disabled:[filter:grayscale(80%)_brightness(80%)_contrast(30%)]';
 
-  &:hover {
-    box-shadow:
-      ${uiShadowValue},
-      0 -0.2em 0 0 ${primaryColor} inset;
-  }
+const outlineButtonSizeClassNames: Record<ButtonSize, string> = {
+  normal: 'px-3 py-2 text-[1rem]',
+  small: 'px-[0.4375rem] py-[0.3125rem] text-[0.875rem]',
+  large: 'px-3 py-2 text-[1.125rem]',
+};
 
-  &:active,
-  &:focus:active {
-    background-color: rgba(255, 255, 255, 0.1);
-    box-shadow:
-      ${uiShadowValue},
-      0 -0.2em 0 0 ${lighten(0.2, primaryColor)} inset;
-  }
+const outlineButtonVariantClassNames: Record<ButtonVariant, string> = {
+  normal: 'border-legacy-outline-border bg-legacy-outline-background',
+  primary: 'border-legacy-outline-primary-border bg-legacy-brand-primary',
+  danger: 'border-legacy-danger bg-legacy-outline-background',
+  dark: 'border-legacy-outline-border bg-legacy-outline-background',
+};
 
-  &:focus {
-    ${focusShadow};
-  }
+function getOutlineButtonClassName({
+  className,
+  variant = 'normal',
+  size = 'normal',
+  iconOnly = false,
+}: OutlineButtonStyleProps & { className?: string }) {
+  return cls(
+    outlineButtonBaseClassName,
+    outlineButtonSizeClassNames[size],
+    outlineButtonVariantClassNames[variant],
+    iconOnly ? 'min-w-[unset]' : 'min-w-[5em]',
+    className,
+  );
+}
 
-  padding: ${spacingN(2)} ${spacingN(3)};
+type OutlineButtonProps = React.ComponentPropsWithRef<'button'> & OutlineButtonStyleProps;
 
-  &[data-variant='primary'] {
-    ${btnColor(primaryColor)};
-  }
+export function OutlineButton({
+  className,
+  variant,
+  size,
+  iconOnly,
+  ref,
+  ...props
+}: OutlineButtonProps) {
+  return (
+    <button
+      ref={ref}
+      className={getOutlineButtonClassName({ className, variant, size, iconOnly })}
+      {...props}
+    />
+  );
+}
 
-  &[data-variant='danger'] {
-    border-color: ${dangerColor};
-  }
+type OutlineButtonLinkProps = React.ComponentPropsWithRef<typeof Link> & OutlineButtonStyleProps;
 
-  &[data-icon='true'] {
-    min-width: unset;
-  }
-
-  &[data-size='small'] {
-    ${[textSm, pX(1.75), pY(1.25)]};
-  }
-
-  &[data-size='large'] {
-    ${[textLg, pX(3), pY(2)]};
-  }
-
-  ${onDisabled(disabled, onHover(disabled), { cursor: 'default' })};
-`;
-
-export const OutlineButton = styled.button<DataAttributes>(outlineButtonStyle);
-export const OutlineButtonLink = styled(Link)<DataAttributes>(outlineButtonStyle);
+export function OutlineButtonLink({
+  className,
+  variant,
+  size,
+  iconOnly,
+  ref,
+  ...props
+}: OutlineButtonLinkProps) {
+  return (
+    <Link
+      ref={ref}
+      className={getOutlineButtonClassName({ className, variant, size, iconOnly })}
+      {...props}
+    />
+  );
+}

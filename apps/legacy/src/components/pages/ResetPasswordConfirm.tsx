@@ -4,7 +4,6 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { errorText, NOT_FOUND } from '../../api/error';
 import { post } from '../../api/request';
 import { useTitle } from '../../hooks/useTitle';
-import { alignRight, largeInput, mT, mY, textLg } from '../../styles/atoms';
 import { passwordValidation } from '../../validators';
 import Button from '../atoms/Button';
 import { ErrorMessage } from '../atoms/ErrorMessage';
@@ -64,25 +63,27 @@ function ResetPasswordConfirm() {
     <>
       <Title>重设密码</Title>
       <form onSubmit={handleSubmit(onSubmit)}>
-        <div css={[mY(2)]}>
+        <div className="my-2">
           <Label htmlFor="password">密码</Label>
           <div>
             <Input
-              css={largeInput}
+              className="h-10"
               type="password"
               id="password"
+              inputSize="large"
               {...register('password', passwordValidation)}
             />
           </div>
           <div>{errors.password && <ErrorMessage>{errors.password.message}</ErrorMessage>}</div>
 
-          <div css={[mY(2)]}>
+          <div className="my-2">
             <Label htmlFor="passwordRepeat">重复密码</Label>
             <div>
               <Input
-                css={largeInput}
+                className="h-10"
                 type="password"
-                id="password"
+                id="passwordRepeat"
+                inputSize="large"
                 {...register('passwordRepeat', passwordRepeatValidation)}
               />
             </div>
@@ -92,14 +93,9 @@ function ResetPasswordConfirm() {
               )}
             </div>
           </div>
-          <div css={[alignRight]}>
+          <div className="pt-2 text-right">
             {submitError && <ErrorMessage>{submitError}</ErrorMessage>}
-            <Button
-              css={[textLg, mT(2)]}
-              disabled={state === 'loading'}
-              data-variant="primary"
-              type="submit"
-            >
+            <Button disabled={state === 'loading'} size="large" variant="primary" type="submit">
               重设密码
             </Button>
           </div>

@@ -1,6 +1,3 @@
-import { css } from '@emotion/react';
-import styled from '@emotion/styled';
-import { darken } from 'polished';
 import Prando from 'prando';
 import React, { type MouseEventHandler, type ReactNode, useState } from 'react';
 import Cubes from '@boluo/icons/legacy/Cubes';
@@ -25,18 +22,7 @@ import {
   TOO_MUCH_LAYER,
 } from '../../interpreter/eval';
 import { useSelector } from '../../store';
-import {
-  fontMono,
-  fontNormal,
-  mL,
-  mY,
-  pX,
-  pY,
-  roundedPx,
-  textLg,
-  textSm,
-} from '../../styles/atoms';
-import { blue, red, textColor } from '../../styles/colors';
+import { cls } from '../../utils/classnames';
 import Icon from '../atoms/Icon';
 
 interface Props {
@@ -51,58 +37,38 @@ const Num: React.FC<{ children: ReactNode }> = ({ children }) => {
   if (!Number.isSafeInteger(children)) {
     children = '?';
   }
-  return <span css={textLg}>{children}</span>;
+  return <span className="text-[1.125rem]">{children}</span>;
 };
 
-const entityShadow = css`
-  box-shadow: 0 0 3px 0 rgba(0, 0, 0, 50%);
-`;
+const errorClassName =
+  'rounded-[1px] bg-legacy-red-900 px-1 py-0.5 shadow-[0_0_3px_0_rgba(0,0,0,0.5)]';
+const rollClassName =
+  'my-[0.0625rem] cursor-pointer items-center justify-center rounded-[1px] bg-legacy-expression-background px-1 py-[0.1875rem] text-[0.875rem] font-normal shadow-[0_0_3px_0_rgba(0,0,0,0.5)] [box-decoration-break:clone] hover:border-legacy-expression-border hover:bg-legacy-expression-hover';
+const fateDiceClassName =
+  'rounded-[1px] bg-legacy-blue-600 px-1 font-legacy-mono shadow-[0_0_1px_0_#000]';
 
-const error = css`
-  ${[pX(1), pY(0.5), roundedPx, entityShadow]};
-  background-color: ${red['900']};
-`;
+const Unsupported = () => <span className={errorClassName}>不支持</span>;
 
-const Unsupported = () => <span css={error}>不支持</span>;
-
-const Roll = styled.span`
-  ${[pX(1), pY(0.75), mY(0.25), textSm, roundedPx, entityShadow, fontNormal]};
-  cursor: pointer;
-  align-items: center;
-  justify-content: center;
-  background-color: ${darken(0.7, textColor)};
-  box-decoration-break: clone;
-
-  &:hover {
-    background-color: ${darken(0.65, textColor)};
-    border-color: ${darken(0.5, textColor)};
-  }
-`;
-
-const fateDiceStyle = css`
-  ${[fontMono, pX(1)]};
-  vertical-align: center;
-  background-color: ${blue['600']};
-  box-shadow: 0 0 1px 0 #000;
-  border-radius: 1px;
-`;
+const Roll = ({ className, ...props }: React.ComponentPropsWithoutRef<'span'>) => (
+  <span className={cls(rollClassName, className)} {...props} />
+);
 
 const fateDiceMapper = (value: number, index: number): React.ReactNode => {
   if (value === 0) {
     return (
-      <span key={index} css={fateDiceStyle}>
+      <span key={index} className={fateDiceClassName}>
         {' '}
       </span>
     );
   } else if (value === 1) {
     return (
-      <span key={index} css={fateDiceStyle}>
+      <span key={index} className={fateDiceClassName}>
         +
       </span>
     );
   } else {
     return (
-      <span key={index} css={fateDiceStyle}>
+      <span key={index} className={fateDiceClassName}>
         -
       </span>
     );
@@ -133,7 +99,7 @@ const DicePoolNode: React.FC<{ node: DicePoolResult }> = ({ node }) => {
       }
     }
     additionCounter = (
-      <span css={mL(1)}>
+      <span className="ml-1">
         (
         {fumble && (
           <React.Fragment>
@@ -167,7 +133,7 @@ const FateRollNode: React.FC<{ node: FateResult }> = ({ node }) => {
   return (
     <Roll className="roll">
       {node.values.map(fateDiceMapper)}
-      <span css={mL(1)}>{node.value}</span>
+      <span className="ml-1">{node.value}</span>
     </Roll>
   );
 };
@@ -196,11 +162,11 @@ const CocRollNode: React.FC<{ node: CocRollResult }> = ({ node }) => {
       <Icon icon={ElderSign} />
       {node.value}
       {expand && <span>= {node.rolled}</span>}
-      {modifierName && <span css={[mL(1)]}>{modifierName}</span>}
+      {modifierName && <span className="ml-1">{modifierName}</span>}
       {expand && node.modifiers.length > 0 && (
-        <span css={[mL(1)]}>[{node.modifiers.join(', ')}]</span>
+        <span className="ml-1">[{node.modifiers.join(', ')}]</span>
       )}
-      {successName && <span css={[mL(1)]}>{successName}</span>}
+      {successName && <span className="ml-1">{successName}</span>}
       {expand && targetValue != null && <span>({targetValue})</span>}
     </Roll>
   );
@@ -217,7 +183,7 @@ const RollNode: React.FC<{ node: RollResult }> = ({ node }) => {
   };
 
   if (node.counter > MAX_DICE_COUNTER) {
-    return <span css={error}>骰子过多</span>;
+    return <span className={errorClassName}>骰子过多</span>;
   }
 
   const resultList = node.values.length > 1 ? <span>=[{node.values.join(', ')}]</span> : null;
@@ -323,7 +289,7 @@ export const ExprEntity = React.memo<Props>(({ node, rng }) => {
     evaluated = evaluate(node, rng ?? fakeRng);
   } catch (e) {
     if (e === TOO_MUCH_LAYER) {
-      return <span css={error}>表达式嵌套太深</span>;
+      return <span className={errorClassName}>表达式嵌套太深</span>;
     } else {
       throw e;
     }

@@ -1,4 +1,3 @@
-import styled from '@emotion/styled';
 import * as React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -11,20 +10,17 @@ import RotateCw from '@boluo/icons/legacy/RotateCw';
 import { useChannelId } from '../../hooks/useChannelId';
 import { useDispatch, useSelector } from '../../store';
 import { getOldestMessage } from '../../states/chat-item-set';
-import { bgColor } from '../../styles/colors';
 import { newId } from '../../utils/id';
 import Button from '../atoms/Button';
 import Icon from '../atoms/Icon';
 
 export const loadMoreHeight = 60;
 
-export const LoadMoreContainer = styled.div`
-  background-color: ${bgColor};
-  height: ${loadMoreHeight}px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-`;
+export function LoadMoreContainer({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="bg-legacy-background flex h-[60px] items-center justify-center">{children}</div>
+  );
+}
 
 function LoadMore() {
   const pane = useChannelId();
@@ -134,7 +130,7 @@ function LoadMore() {
   };
   return (
     <LoadMoreContainer>
-      <Button data-small ref={button} onClick={loadMore} disabled={loading || moving}>
+      <Button size="small" ref={button} onClick={loadMore} disabled={loading || moving}>
         {loading ? <Icon icon={RotateCw} loading /> : '载入更多'}
       </Button>
     </LoadMoreContainer>

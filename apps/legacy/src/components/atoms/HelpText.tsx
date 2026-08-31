@@ -1,11 +1,12 @@
-import styled from '@emotion/styled';
-import { block, spacingN, textSm } from '../../styles/atoms';
-import { minorTextColor } from '../../styles/colors';
+import React from 'react';
+import { cls } from '../../utils/classnames';
 
-export const HelpText = styled.small`
-  ${[textSm, block]};
-  margin: 0;
-  padding: ${spacingN(1)} 0;
-  line-height: 1.5em;
-  color: ${minorTextColor};
-`;
+export function HelpText({ className, ref, ...props }: React.ComponentPropsWithRef<'small'>) {
+  return (
+    <small
+      ref={ref}
+      className={cls('legacy-help-text text-legacy-text-minor', className)}
+      {...props}
+    />
+  );
+}

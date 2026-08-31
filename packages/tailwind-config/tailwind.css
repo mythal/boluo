@@ -1,6 +1,6 @@
 @import 'tailwindcss';
 @source '../../{apps,packages}/**/*.{ts,tsx,js,jsx,html,htm}';
-@source not '../../apps/server';
+@source not '../../crates/server';
 @source not '../../apps/legacy';
 
 @import './theme.tailwind.css';

@@ -1,75 +1,33 @@
-import { css } from '@emotion/react';
-import styled from '@emotion/styled';
-import { darken } from 'polished';
 import * as React from 'react';
 import { NavLink } from 'react-router-dom';
-import {
-  breakpoint,
-  headerTransition,
-  mediaQuery,
-  roundedPx,
-  spacingN,
-  textSm,
-} from '../../styles/atoms';
-import { bgColor, headerBgColor, textColor } from '../../styles/colors';
+import { cls } from '../../utils/classnames';
 
-interface Props {
-  to: string;
+interface Props extends Omit<React.ComponentPropsWithoutRef<typeof NavLink>, 'className' | 'end'> {
   exact?: boolean;
   className?: string;
-  children: React.ReactNode;
-  onClick?: () => void;
 }
 
-export const headerLinkStyle = css`
-  color: ${textColor};
-  ${textSm};
-  cursor: pointer;
-  text-decoration: none;
-  padding: ${spacingN(1.5)} ${spacingN(2)};
-  background-color: ${darken(0.05, headerBgColor)};
-  max-width: 8rem;
-  ${roundedPx};
-  ${mediaQuery(breakpoint.sm)} {
-    max-width: 16rem;
-  }
-  ${mediaQuery(breakpoint.lg)} {
-    max-width: 24rem;
-  }
-  border: 0;
-  line-height: 1.5em;
-  display: inline-block;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  ${headerTransition};
-  &.active {
-    background-color: ${bgColor};
-  }
-  &:hover {
-    background-color: ${darken(0.1, headerBgColor)};
-  }
-  &:active {
-    background-color: ${darken(0.15, headerBgColor)};
-  }
-  &:focus {
-    outline: none;
-  }
-`;
+export const headerLinkClassName =
+  'inline-block max-w-32 cursor-pointer overflow-hidden rounded-[1px] border-0 bg-legacy-header-hover px-2 py-1.5 text-sm leading-[1.5em] text-ellipsis whitespace-nowrap text-legacy-text no-underline transition-all duration-[120ms] ease-in-out aria-[current=page]:bg-legacy-background hover:bg-legacy-header-active active:bg-legacy-header-deep focus:outline-none sm:max-w-64 lg:max-w-96';
 
-export const HeaderButton = styled.button(headerLinkStyle);
-
-function HeaderLink({ children, exact, ...props }: Props) {
+export function HeaderButton({
+  className,
+  type = 'button',
+  ref,
+  ...props
+}: React.ComponentPropsWithRef<'button'>) {
   return (
-    <NavLink
-      css={headerLinkStyle}
-      className={({ isActive }) => (isActive ? 'active' : '')}
-      end={exact}
+    <button
+      className={cls(headerLinkClassName, 'legacy-header-button', className)}
+      ref={ref}
+      type={type}
       {...props}
-    >
-      {children}
-    </NavLink>
+    />
   );
+}
+
+function HeaderLink({ exact, className, ...props }: Props) {
+  return <NavLink className={cls(headerLinkClassName, className)} end={exact} {...props} />;
 }
 
 export default HeaderLink;

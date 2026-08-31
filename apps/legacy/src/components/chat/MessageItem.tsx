@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import { type DraggableProvidedDragHandleProps } from '@hello-pangea/dnd';
 import { type ChannelMember } from '../../api/channels';
 import { type Message } from '../../api/messages';
-import { chatItemContainer } from './ChatItemContainer';
 import { ChatItemContentContainer } from './ChatItemContentContainer';
 import ChatItemName from './ChatItemName';
 import ChatItemContent from './ItemContent';
@@ -12,7 +11,11 @@ import MessageMedia from './MessageMedia';
 import MessageTime from './MessageTime';
 import ChatMessageToolbar from './MessageToolbar';
 import MessageWhisperList from './MessageWhisperList';
-import { itemImage, nameContainer } from './styles';
+import {
+  chatItemContainerClassName,
+  chatItemImageClassName,
+  chatItemNameContainerClassName,
+} from './classNames';
 
 interface Props {
   message: Message;
@@ -56,7 +59,7 @@ function MessageItem({
         data-action={message.isAction ?? false}
         data-folded={message.folded ?? false}
       >
-        <MessageMedia css={itemImage} mediaId={message.mediaId} />
+        <MessageMedia className={chatItemImageClassName} mediaId={message.mediaId} />
         {message.isAction && name}
         {message.whisperToUsers != null && (
           <MessageWhisperList message={message} myMember={myMember} shown />
@@ -71,14 +74,14 @@ function MessageItem({
   const renderName = !message.isAction && !sameSender;
   return (
     <div
-      css={chatItemContainer}
+      className={chatItemContainerClassName}
       style={style}
       data-no-name={!renderName}
       data-in-game={message.inGame ?? false}
       data-moving={moving}
     >
       {handleProps && <Handle timestamp={message.created} handleProps={handleProps} />}
-      {renderName && <div css={nameContainer}>{name}</div>}
+      {renderName && <div className={chatItemNameContainerClassName}>{name}</div>}
       {content}
       {myMember && !lazy && (
         <ChatMessageToolbar key={message.id} mine={mine} message={message} myMember={myMember} />

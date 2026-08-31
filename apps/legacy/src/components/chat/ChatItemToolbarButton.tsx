@@ -1,68 +1,11 @@
-import { css } from '@emotion/react';
-import { darken } from 'polished';
 import * as React from 'react';
 import RotateCw from '@boluo/icons/legacy/RotateCw';
-import { fontBase, fontNormal, p, textBase, textLg, textXs } from '../../styles/atoms';
-import { textColor } from '../../styles/colors';
 import { isMobile } from '../../utils/browser';
+import { cls } from '../../utils/classnames';
 import Icon, { type SvgIcon } from '../atoms/Icon';
 import Tooltip, { type TooltipProps } from '../atoms/Tooltip';
-import { toolbarRadius } from './ItemToolbar';
-
-const style = css`
-  border: none;
-  background-color: transparent;
-  color: ${textColor};
-  ${[p(0), toolbarRadius]};
-
-  &:hover {
-    background-color: rgba(255, 255, 255, 0.2);
-  }
-  &:active {
-    background-color: rgba(255, 255, 255, 0.3);
-  }
-  &:focus {
-    outline: none;
-  }
-  &:disabled {
-    background-color: transparent;
-    filter: brightness(80%);
-    &:hover {
-      background-color: transparent;
-      filter: brightness(80%);
-    }
-  }
-
-  &[data-size='normal'] {
-    ${textBase};
-    width: 2rem;
-    height: 2rem;
-  }
-
-  &[data-size='large'] {
-    ${textLg};
-    width: 2.5rem;
-    height: 2.5rem;
-  }
-
-  &[data-on='true'] {
-    background-color: rgba(255, 255, 255, 0.3);
-    color: white;
-    &:hover {
-      background-color: rgba(255, 255, 255, 0.35);
-    }
-    &:active {
-      background-color: rgba(255, 255, 255, 0.25);
-    }
-  }
-  &[data-on='false'] {
-    color: ${darken(0.35, textColor)};
-    &:hover {
-      color: white;
-      background-color: transparent;
-    }
-  }
-`;
+const toolbarButtonClassName =
+  'rounded-[4px] border-0 bg-transparent p-0 text-legacy-text hover:bg-legacy-transparent-800 active:bg-legacy-transparent-700 focus:outline-none disabled:bg-transparent disabled:brightness-[80%] disabled:hover:bg-transparent disabled:hover:brightness-[80%] data-[on=false]:text-legacy-chat-toolbar-text data-[on=false]:hover:bg-transparent data-[on=false]:hover:text-white data-[on=true]:bg-legacy-transparent-700 data-[on=true]:text-white data-[on=true]:hover:bg-[rgba(255,255,255,0.35)] data-[on=true]:active:bg-[rgba(255,255,255,0.25)]';
 
 export interface ToolbarButtonProps {
   className?: string;
@@ -77,18 +20,6 @@ export interface ToolbarButtonProps {
   x?: TooltipProps['x'];
 }
 
-const container = css`
-  ${[fontNormal, fontBase]};
-  display: inline-block;
-  position: relative;
-  & .tooltip {
-    visibility: hidden;
-  }
-  &:hover .tooltip {
-    visibility: visible;
-  }
-`;
-
 function ChatItemToolbarButton({
   onClick,
   icon,
@@ -102,19 +33,29 @@ function ChatItemToolbarButton({
   size = 'normal',
 }: ToolbarButtonProps) {
   return (
-    <div css={container} className={className}>
+    <div
+      className={cls(
+        'group/toolbar-button font-legacy-sans relative inline-block font-normal',
+        className,
+      )}
+    >
       {!isMobile && title.length > 0 && (
-        <Tooltip className="tooltip" x={x}>
+        <Tooltip className="invisible group-hover/toolbar-button:visible" x={x}>
           <div>{title}</div>
-          {info && <div css={[textXs]}>{info}</div>}
+          {info && <div className="text-[0.75rem]">{info}</div>}
         </Tooltip>
       )}
       <button
-        css={style}
+        aria-label={title || undefined}
+        className={cls(
+          toolbarButtonClassName,
+          size === 'normal' ? 'size-8 text-[1rem]' : 'size-10 text-[1.125rem]',
+        )}
         data-size={size}
         data-on={on}
         onClick={onClick}
         disabled={loading || disabled}
+        type="button"
       >
         <Icon spin={loading} icon={loading ? RotateCw : icon} />
       </button>

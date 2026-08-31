@@ -1,0 +1,79 @@
+name: Cloudflare infrastructure
+
+on:
+  push:
+    branches:
+      - production
+    paths:
+      - infra/cloudflare/**
+
+concurrency:
+  group: cloudflare-${{ github.ref }}
+
+env:
+  DO_NOT_TRACK: 1
+
+jobs:
+  preview:
+    name: Preview Cloudflare infrastructure
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    environment:
+      name: Production
+      deployment: false
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v7
+
+      - name: Nix Setup
+        uses: ./.github/actions/nix-setup
+
+      - name: Node.js Setup
+        uses: ./.github/actions/node-setup
+
+      - name: Preview Cloudflare infrastructure
+        run: |
+          nix develop --quiet --no-update-lock-file .#infra --command \
+            bash -e -u -o pipefail -c '
+              pulumi login "$PULUMI_BACKEND_URL"
+              pulumi --cwd infra/cloudflare preview --stack main --refresh --diff --non-interactive
+            '
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PULUMI_API_TOKEN }}
+          PULUMI_BACKEND_URL: ${{ secrets.PULUMI_BACKEND_URL }}
+          PULUMI_CONFIG_PASSPHRASE: ${{ secrets.PULUMI_CONFIG_PASSPHRASE }}
+
+  apply:
+    name: Apply Cloudflare infrastructure
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    needs: preview
+    if: needs.preview.result == 'success'
+    environment:
+      name: Infrastructure
+      deployment: false
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v7
+
+      - name: Nix Setup
+        uses: ./.github/actions/nix-setup
+
+      - name: Node.js Setup
+        uses: ./.github/actions/node-setup
+
+      - name: Apply Cloudflare infrastructure
+        run: |
+          nix develop --quiet --no-update-lock-file .#infra --command \
+            bash -e -u -o pipefail -c '
+              pulumi login "$PULUMI_BACKEND_URL"
+              pulumi --cwd infra/cloudflare up --stack main --refresh --yes --non-interactive
+            '
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PULUMI_API_TOKEN }}
+          PULUMI_BACKEND_URL: ${{ secrets.PULUMI_BACKEND_URL }}
+          PULUMI_CONFIG_PASSPHRASE: ${{ secrets.PULUMI_CONFIG_PASSPHRASE }}

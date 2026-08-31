@@ -1,60 +1,12 @@
-import { css } from '@emotion/react';
-import styled from '@emotion/styled';
 import Prando from 'prando';
 import * as React from 'react';
-import { useCallback, useMemo, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { useCallback, useMemo } from 'react';
 import Gamemaster from '@boluo/icons/legacy/Gamemaster';
 import { useChannelId } from '../../../hooks/useChannelId';
 import { useDispatch, useSelector } from '../../../store';
-import { fontBold, gap, inline, mL, mR, relative, spacingN, textSm } from '../../../styles/atoms';
-import { gray } from '../../../styles/colors';
 import { genColor } from '../../../utils/game';
-import { encodeUuid, Id } from '../../../utils/id';
 import Icon from '../../atoms/Icon';
 import Tooltip from '../../atoms/Tooltip';
-import { chatContentLineHeight } from '../styles';
-
-interface Props {
-  master: boolean;
-}
-
-const Container = styled.span`
-  ${[mR(1), chatContentLineHeight]};
-
-  & .user-panel {
-    visibility: visible;
-  }
-`;
-
-const NameLink = styled(Link)`
-  ${[fontBold, relative]};
-  text-decoration: none;
-`;
-
-const colorMap: Record<string, string> = {};
-
-const masterIconStyle = css`
-  ${[mL(0.5)]};
-  color: ${gray['500']};
-`;
-
-const nicknameStyle = css`
-  ${textSm};
-  user-select: none;
-`;
-
-const nameInputStyle = css`
-  color: ${gray['100']};
-  background-color: ${gray['700']};
-  border: 1px solid ${gray['600']};
-  padding: ${spacingN(1)};
-  border-radius: 2px;
-  &:focus {
-    outline: none;
-    border-color: ${gray['500']};
-  }
-`;
 
 function MyPreviewName() {
   const dispatch = useDispatch();
@@ -84,12 +36,12 @@ function MyPreviewName() {
     [channelId, dispatch],
   );
   return (
-    <Container>
-      <div css={[relative, inline]}>
+    <span className="mr-1 leading-[1.6rem]">
+      <div className="relative inline">
         {inGame && (
           <input
+            className="border-legacy-gray-600 bg-legacy-gray-700 text-legacy-gray-100 focus:border-legacy-gray-500 rounded-[2px] border p-1 focus:outline-none"
             placeholder={characterName}
-            css={nameInputStyle}
             value={name}
             onChange={handleNameInput}
           />
@@ -97,13 +49,13 @@ function MyPreviewName() {
         {!inGame && <span style={{ color }}>{nickname}</span>}
 
         {name.length === 0 && inGame && !characterName && (
-          <Tooltip css={nicknameStyle} x={'right'} className="user-panel">
+          <Tooltip className="visible text-[0.875rem] select-none" x="right">
             需要一个名字
           </Tooltip>
         )}
       </div>
-      {isMaster && <Icon css={masterIconStyle} icon={Gamemaster} />}
-    </Container>
+      {isMaster && <Icon className="text-legacy-gray-500 ml-0.5" icon={Gamemaster} />}
+    </span>
   );
 }
 

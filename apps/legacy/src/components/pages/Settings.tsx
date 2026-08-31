@@ -1,4 +1,3 @@
-import { css } from '@emotion/react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { type AppError } from '../../api/error';
@@ -6,7 +5,6 @@ import { editAvatar, post } from '../../api/request';
 import { type EditUser, type Settings as SettingsData } from '../../api/users';
 import Save from '@boluo/icons/legacy/Save';
 import { useDispatch, useSelector } from '../../store';
-import { alignRight, flex, largeInput, mR, mT, spacingN, textLg } from '../../styles/atoms';
 import { bioValidation, nicknameValidation } from '../../validators';
 import Button from '../atoms/Button';
 import { ErrorMessage } from '../atoms/ErrorMessage';
@@ -17,14 +15,6 @@ import TextArea from '../atoms/TextArea';
 import InformationBar from '../molecules/InformationBar';
 import { RenderError } from '../molecules/RenderError';
 import EditAvatar from '../organisms/EditAvatar';
-
-const nicknameFieldStyle = css`
-  flex-grow: 1;
-  margin-right: ${spacingN(2)};
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-`;
 
 interface SettingsForm {
   nickname: string;
@@ -102,13 +92,14 @@ function Settings() {
       {updated && <InformationBar variant="SUCCESS">设置已更新</InformationBar>}
       {appError && <RenderError error={appError} variant="component" />}
       <form onSubmit={handleSubmit(onSubmit)}>
-        <div css={[flex, mT(4)]}>
-          <div css={nicknameFieldStyle}>
+        <div className="mt-4 flex">
+          <div className="mr-2 flex flex-grow flex-col justify-end">
             <Label htmlFor="nickname">昵称</Label>
             <Input
-              css={largeInput}
+              className="h-10"
               defaultValue={user.nickname}
               id="nickname"
+              inputSize="large"
               {...register('nickname', nicknameValidation)}
             />
             {errors.nickname && <ErrorMessage>{errors.nickname.message}</ErrorMessage>}
@@ -125,7 +116,7 @@ function Settings() {
               type="checkbox"
               id="enterSend"
               defaultChecked={Boolean(settings.enterSend)}
-              css={[mR(1)]}
+              className="legacy-checkbox-spaced"
               {...register('enterSend')}
             />
             使用回车键发送消息
@@ -137,14 +128,14 @@ function Settings() {
               type="checkbox"
               id="expandDice"
               defaultChecked={Boolean(settings.expandDice)}
-              css={[mR(1)]}
+              className="legacy-checkbox-spaced"
               {...register('expandDice')}
             />
             默认展开每个骰子
           </Label>
         </div>
-        <div css={[alignRight, mT(2)]}>
-          <Button css={[textLg]} data-variant="primary" type="submit" disabled={submitting}>
+        <div className="mt-2 text-right">
+          <Button size="large" variant="primary" type="submit" disabled={submitting}>
             <Icon icon={Save} loading={submitting} /> 保存设置
           </Button>
         </div>

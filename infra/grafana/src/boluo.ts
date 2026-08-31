@@ -37,6 +37,7 @@ const panels = {
   appConnections: 'panel-7',
   applicationPool: 'panel-17',
   cacheHitRatio: 'panel-15',
+  cacheCapacity: 'panel-39',
   spacePayloadCacheReads: 'panel-35',
   serializedPayloadSizes: 'panel-37',
   messages: 'panel-9',
@@ -51,6 +52,7 @@ const panels = {
   processMemory: 'panel-29',
   websocketLifecycle: 'panel-33',
   applicationLogs: 'panel-30',
+  frontendLogs: 'panel-38',
 } as const;
 
 const messageRateMetrics = [
@@ -349,7 +351,7 @@ export function buildBoluoDashboard(
       panels.cacheHitRatio,
       timeSeriesPanel({
         id: 15,
-        title: 'In-process cache effectiveness',
+        title: 'In-process cache hit ratio',
         description: 'Idle caches have no hit-ratio series.',
         datasourceUid,
         unit: 'percentunit',
@@ -363,17 +365,27 @@ export function buildBoluoDashboard(
             expr: `sum by(cache) (increase(boluo_server_cache_hits_total{app="${APP}"}[${CACHE_RATIO_INTERVAL}])) / (sum by(cache) (increase(boluo_server_cache_hits_total{app="${APP}"}[${CACHE_RATIO_INTERVAL}])) + sum by(cache) (increase(boluo_server_cache_misses_total{app="${APP}"}[${CACHE_RATIO_INTERVAL}])))`,
             legendFormat: '{{cache}} hit ratio',
           },
+        ],
+      }),
+    )
+    .element(
+      panels.cacheCapacity,
+      timeSeriesPanel({
+        id: 39,
+        title: 'In-process cache capacity',
+        description: 'Current entries as a proportion of each cache capacity.',
+        datasourceUid,
+        unit: 'percentunit',
+        min: 0,
+        max: 1,
+        lineInterpolation: LineInterpolation.StepAfter,
+        tooltipMode: TooltipDisplayMode.Multi,
+        targets: [
           {
             refId: 'capacity',
             editorMode: QueryEditorMode.Code,
             expr: `sum by(cache) (boluo_server_cache_items{app="${APP}"}) / clamp_min(sum by(cache) (boluo_server_cache_capacity{app="${APP}"}), 1)`,
             legendFormat: '{{cache}} capacity',
-          },
-        ],
-        overrides: [
-          {
-            matcher: { id: 'byFrameRefID', options: 'capacity' },
-            properties: [{ id: 'custom.lineInterpolation', value: LineInterpolation.StepAfter }],
           },
         ],
       }),
@@ -948,17 +960,27 @@ export function buildBoluoDashboard(
         id: 30,
         title: 'Application logs',
         datasourceUid: logsDatasourceUid,
-        expr: `{app="${APP}"} -level:="info" -level:="debug" -event:="maintenance.token_rotated"`,
+        expr: `{app="${APP}"} -level:="info" -level:="debug" -event:="maintenance.token_rotated" -event:="frontend.log" -event:="frontend.exception"`,
+      }),
+    )
+    .element(
+      panels.frontendLogs,
+      logsPanel({
+        id: 38,
+        title: 'Frontend logs',
+        datasourceUid: logsDatasourceUid,
+        expr: `{app="${APP}"} (event:="frontend.log" OR event:="frontend.exception")`,
       }),
     )
     .layout(
       new RowsBuilder().rows([
         new RowBuilder()
           .title('Logs')
-          .collapse(true)
+          .collapse(false)
           .layout(
             new GridBuilder().items([
               gridItem(panels.applicationLogs).x(0).y(0).width(24).height(8),
+              gridItem(panels.frontendLogs).x(0).y(8).width(24).height(8),
             ]),
           ),
         new RowBuilder()
@@ -993,7 +1015,8 @@ export function buildBoluoDashboard(
               gridItem(panels.queueDepths).x(0).y(8).width(12).height(8),
               gridItem(panels.eventDelivery).x(12).y(8).width(12).height(8),
               gridItem(panels.cacheHitRatio).x(0).y(16).width(12).height(8),
-              gridItem(panels.spacePayloadCacheReads).x(12).y(16).width(12).height(8),
+              gridItem(panels.cacheCapacity).x(12).y(16).width(12).height(8),
+              gridItem(panels.spacePayloadCacheReads).x(0).y(24).width(24).height(8),
             ]),
           ),
         new RowBuilder()

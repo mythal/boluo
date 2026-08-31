@@ -1,4 +1,3 @@
-import { css } from '@emotion/react';
 import * as React from 'react';
 import { useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -10,8 +9,8 @@ import Edit from '@boluo/icons/legacy/Edit';
 import Ninja from '@boluo/icons/legacy/Ninja';
 import { useChannelId } from '../../hooks/useChannelId';
 import store, { useDispatch, useSelector } from '../../store';
-import { alignRight, mL, mR, mT } from '../../styles/atoms';
 import { recordNext } from '../../utils/browser';
+import { cls } from '../../utils/classnames';
 import { throwErr } from '../../utils/errors';
 import { chatName } from '../../utils/game';
 import { type Id } from '../../utils/id';
@@ -27,11 +26,6 @@ import Overlay from '../atoms/Overlay';
 import Text from '../atoms/Text';
 import Dialog from '../molecules/Dialog';
 import ChatHeaderButton, { ChatHeaderButtonLink } from './ChatHeaderButton';
-
-const buttonBarStyle = css`
-  ${[mT(4)]};
-  text-align: right;
-`;
 
 interface ChannelMemberOperators {
   join: (characterName?: string) => Promise<void>;
@@ -153,7 +147,11 @@ function ChannelMemberButton({ className }: Props) {
 
   if (user === undefined) {
     return (
-      <ChatHeaderButtonLink css={[mL(1)]} to="/login" onClick={toLogin}>
+      <ChatHeaderButtonLink
+        className={cls('legacy-chat-header-action', className)}
+        to="/login"
+        onClick={toLogin}
+      >
         登录
       </ChatHeaderButtonLink>
     );
@@ -169,8 +167,8 @@ function ChannelMemberButton({ className }: Props) {
           <Dialog title="加入频道" dismiss={dismissDialog} mask>
             <form onSubmit={handleSubmit(onConfirmJoin)}>
               {characterNameField}
-              <div css={[mT(4), alignRight]}>
-                <Button data-variant="primary" type="submit">
+              <div className="mt-4 text-right">
+                <Button variant="primary" type="submit">
                   加入
                 </Button>
               </div>
@@ -188,7 +186,7 @@ function ChannelMemberButton({ className }: Props) {
         onClick={toggleMenu}
         className={className}
       >
-        <Icon icon={Ninja} css={[mR(1)]} />
+        <Icon icon={Ninja} className="mr-1" />
         {name}
       </ChatHeaderButton>
       {menu && (
@@ -218,8 +216,8 @@ function ChannelMemberButton({ className }: Props) {
         <Dialog title="频道成员设置" dismiss={dismissDialog} mask>
           <form onSubmit={handleSubmit(onSubmitEdit)}>
             {characterNameField}
-            <div css={buttonBarStyle}>
-              <Button data-variant="primary" type="submit">
+            <div className="mt-4 text-right">
+              <Button variant="primary" type="submit">
                 提交修改
               </Button>
             </div>

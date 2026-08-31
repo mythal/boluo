@@ -4,7 +4,7 @@ import Select from 'react-select';
 import { useChannelId } from '../../../hooks/useChannelId';
 import { type UserItem } from '../../../reducers/chatState';
 import { useDispatch, useSelector } from '../../../store';
-import { mB, selectTheme } from '../../../styles/atoms';
+import { reactSelectTheme } from '../../../styles/reactSelectTheme';
 import { HelpText } from '../../atoms/HelpText';
 import Text from '../../atoms/Text';
 import Dialog from '../../molecules/Dialog';
@@ -53,9 +53,9 @@ function WhisperToSelect({ dismiss }: Props) {
           value={values}
           isMulti
           options={options}
-          theme={selectTheme}
+          theme={reactSelectTheme}
           onChange={(options) => setValues([...options])}
-          css={mB(2)}
+          className="mb-2"
           placeholder={`悄悄说给...`}
         />
       )}

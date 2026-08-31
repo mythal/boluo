@@ -7,6 +7,13 @@ const CACHE_CONTROL = 'public, max-age=15552000, immutable';
 const DEFAULT_CONCURRENCY = 8;
 const MAX_ATTEMPTS = 3;
 
+type UploadOptions = {
+  assets: string;
+  bucket: string;
+  concurrency: number;
+  prefix: string;
+};
+
 const CONTENT_TYPES = new Map([
   ['.avif', 'image/avif'],
   ['.css', 'text/css; charset=utf-8'],
@@ -29,10 +36,10 @@ const CONTENT_TYPES = new Map([
   ['.woff2', 'font/woff2'],
 ]);
 
-export const contentTypeFor = (filename) =>
+export const contentTypeFor = (filename: string): string =>
   CONTENT_TYPES.get(path.extname(filename).toLowerCase()) ?? 'application/octet-stream';
 
-export const objectKeyFor = (prefix, assetRoot, filename) => {
+export const objectKeyFor = (prefix: string, assetRoot: string, filename: string): string => {
   const normalizedPrefix = prefix.replace(/^\/+|\/+$/g, '');
   if (!normalizedPrefix || normalizedPrefix.split('/').some((part) => part === '..')) {
     throw new Error(`Unsafe R2 object prefix: ${prefix}`);
@@ -48,7 +55,7 @@ export const objectKeyFor = (prefix, assetRoot, filename) => {
   return `${normalizedPrefix}/${relativePath}`;
 };
 
-export const listFiles = async (directory) => {
+export const listFiles = async (directory: string): Promise<string[]> => {
   const entries = await readdir(directory, { withFileTypes: true });
   const files = await Promise.all(
     entries.map((entry) => {
@@ -59,8 +66,8 @@ export const listFiles = async (directory) => {
   return files.flat().sort();
 };
 
-const parseArguments = (argv) => {
-  const values = new Map();
+const parseArguments = (argv: string[]): UploadOptions => {
+  const values = new Map<string, string>();
   for (let index = 2; index < argv.length; index += 2) {
     const name = argv[index];
     const value = argv[index + 1];
@@ -82,12 +89,12 @@ const parseArguments = (argv) => {
   return { assets: path.resolve(assets), bucket, concurrency, prefix };
 };
 
-const run = (command, args) =>
+const run = (command: string, args: string[]): Promise<void> =>
   new Promise((resolve, reject) => {
     const child = spawn(command, args, { stdio: ['ignore', 'ignore', 'pipe'] });
     let stderr = '';
-    child.stderr.setEncoding('utf8');
-    child.stderr.on('data', (chunk) => {
+    child.stderr?.setEncoding('utf8');
+    child.stderr?.on('data', (chunk: string) => {
       stderr += chunk;
     });
     child.on('error', reject);
@@ -97,9 +104,15 @@ const run = (command, args) =>
     });
   });
 
-const wait = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
+const wait = (milliseconds: number): Promise<void> =>
+  new Promise((resolve) => setTimeout(resolve, milliseconds));
 
-const upload = async ({ assets, bucket, filename, prefix }) => {
+const upload = async ({
+  assets,
+  bucket,
+  filename,
+  prefix,
+}: UploadOptions & { filename: string }) => {
   const key = objectKeyFor(prefix, assets, filename);
   const args = [
     '--no-install',
@@ -117,20 +130,20 @@ const upload = async ({ assets, bucket, filename, prefix }) => {
     CACHE_CONTROL,
   ];
 
-  let lastError;
+  let lastError: Error | undefined;
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
     try {
       await run('npx', args);
       return;
     } catch (error) {
-      lastError = error;
+      lastError = error instanceof Error ? error : new Error(String(error));
       if (attempt < MAX_ATTEMPTS) await wait(attempt * 500);
     }
   }
   throw new Error(`Failed to upload ${key}: ${lastError?.message ?? 'unknown error'}`);
 };
 
-const main = async () => {
+const main = async (): Promise<void> => {
   const options = parseArguments(process.argv);
   const files = await listFiles(options.assets);
   if (files.length === 0) throw new Error(`No frontend assets found in ${options.assets}`);
@@ -152,6 +165,7 @@ const main = async () => {
   await Promise.all(workers);
 };
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+const scriptPath = process.argv[1];
+if (scriptPath && import.meta.url === pathToFileURL(scriptPath).href) {
   await main();
 }

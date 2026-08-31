@@ -1,7 +1,5 @@
-import { css, keyframes } from '@emotion/react';
 import * as React from 'react';
-import { spacingN } from '../../styles/atoms';
-import { dialogBgColor, dialogShadowColor } from '../../styles/colors';
+import { cls } from '../../utils/classnames';
 import Modal from '../atoms/Modal';
 import CloseButton from './CloseButton';
 
@@ -12,40 +10,24 @@ interface Props {
   className?: string;
 }
 
-const slideIn = keyframes`
-  from {
-    transform: translateX(100%);
-  }
-
-  to {
-    transform: translateX(0);
-  }
-`;
-
-const style = css`
-  position: fixed;
-  height: 100%;
-  overflow-y: auto;
-  left: unset;
-  transform: unset;
-  right: 0;
-  top: 0;
-  background-color: ${dialogBgColor};
-  padding: ${spacingN(6)} ${spacingN(6)} ${spacingN(6)} ${spacingN(6)};
-  box-shadow: 0 0 0 ${spacingN(2)} ${dialogShadowColor};
-`;
-
-const closeButtonStyle = css`
-  position: absolute;
-  right: 0.2rem;
-  top: 0.2rem;
-  font-size: 1.5em;
-`;
+const panelClassName =
+  'h-full overflow-y-auto bg-legacy-dialog-background p-6 [box-shadow:0_0_0_0.5rem_var(--color-legacy-dialog-shadow)]';
 
 function Panel({ dismiss, mask, children, className }: Props) {
   return (
-    <Modal css={style} mask={mask} onClickMask={dismiss} className={className}>
-      {dismiss && <CloseButton css={closeButtonStyle} onClick={dismiss} />}
+    <Modal
+      className={cls(panelClassName, className)}
+      placement="panel"
+      mask={mask}
+      onClickMask={dismiss}
+    >
+      {dismiss && (
+        <CloseButton
+          aria-label="关闭"
+          className="absolute top-[0.2rem] right-[0.2rem] text-[1.5em]"
+          onClick={dismiss}
+        />
+      )}
       {children}
     </Modal>
   );

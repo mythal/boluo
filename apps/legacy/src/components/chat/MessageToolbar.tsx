@@ -1,4 +1,3 @@
-import { css } from '@emotion/react';
 import * as React from 'react';
 import { useCallback, useState } from 'react';
 import { type ChannelMember } from '../../api/channels';
@@ -11,8 +10,6 @@ import Unfold from '@boluo/icons/legacy/Unfold';
 import { useChannelId } from '../../hooks/useChannelId';
 import { useIsAdmin } from '../../hooks/useIsAdmin';
 import { useDispatch, useSelector } from '../../store';
-import { fontMono, pL, spacingN, textSm } from '../../styles/atoms';
-import { primary } from '../../styles/colors';
 import { throwErr } from '../../utils/errors';
 import { Text } from '../atoms/Text';
 import Dialog from '../molecules/Dialog';
@@ -24,11 +21,6 @@ interface Props {
   mine: boolean;
   message: Message;
 }
-
-const quoteStyle = css`
-  ${[fontMono, textSm, pL(4)]};
-  border-left: ${spacingN(1)} solid ${primary['700']};
-`;
 
 function MessageToolbar({ myMember, mine, message }: Props) {
   const dispatch = useDispatch();
@@ -112,7 +104,11 @@ function MessageToolbar({ myMember, mine, message }: Props) {
           mask
         >
           <Text>是否要删除这条消息？</Text>
-          {message.text && <Text css={quoteStyle}>{message.text}</Text>}
+          {message.text && (
+            <Text className="border-legacy-primary-700 font-legacy-mono border-l-4 pl-4 text-[0.875rem]">
+              {message.text}
+            </Text>
+          )}
         </Dialog>
       )}
     </React.Fragment>

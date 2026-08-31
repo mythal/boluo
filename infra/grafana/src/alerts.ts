@@ -255,7 +255,7 @@ export function buildAlertRules(datasourceUid: string): AlertRulesProvisioning {
           threshold: DAILY_BACKUP_MAX_AGE_SECONDS,
           forDuration: '5m',
           severity: 'critical',
-          summary: 'No differential backup has completed within 36 hours.',
+          summary: 'No full or differential backup has completed within 36 hours.',
         }),
         alertRule(datasourceUid, backups, {
           uid: 'boluo-full-backup-stale',

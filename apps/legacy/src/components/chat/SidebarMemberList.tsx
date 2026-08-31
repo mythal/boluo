@@ -2,7 +2,6 @@ import { useAtom } from 'jotai';
 import React, { useCallback } from 'react';
 import { userDialogAtom } from '../../states/userDialog';
 import { useSelector } from '../../store';
-import { overflowYAuto } from '../../styles/atoms';
 import { type Id } from '../../utils/id';
 import { SidebarMemberListItem } from './SidebarMemberListItem';
 import { isOnline } from './UserStatusButton';
@@ -37,7 +36,7 @@ function SidebarMemberList({ spaceId }: Props) {
       />,
     );
   }
-  return <div css={overflowYAuto}>{memberList}</div>;
+  return <div className="overflow-y-auto">{memberList}</div>;
 }
 
 export default React.memo(SidebarMemberList);

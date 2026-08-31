@@ -49,8 +49,6 @@ jobs:
 
       - name: Nix Setup
         uses: ./.github/actions/nix-setup
-        with:
-          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
 
       - name: Check whether server deployment changed
         id: server_deployment
@@ -85,8 +83,6 @@ jobs:
 
       - name: Nix Setup
         uses: ./.github/actions/nix-setup
-        with:
-          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
 
       - name: Cache sccache
         uses: actions/cache@v6
@@ -134,8 +130,6 @@ jobs:
 
       - name: Nix Setup
         uses: ./.github/actions/nix-setup
-        with:
-          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
 
       - name: Push site image
         run: nix run --quiet --no-update-lock-file --print-build-logs ".#push-site-image"
@@ -154,45 +148,31 @@ jobs:
       - name: Check out the repo
         uses: actions/checkout@v7
 
-      - name: Node.js Setup
-        uses: ./.github/actions/node-setup
+      - name: Nix Setup
+        uses: ./.github/actions/nix-setup
 
-      - name: Build legacy
-        run: npm run build:legacy
-
-      - name: Build SPA
-        run: npm run build:spa
-
-      - name: Build Storybook
-        if: github.ref_name == 'master'
-        run: npm run build:storybook
-
-      - name: Build site Worker
-        working-directory: apps/site
-        run: npm --prefix ../.. run build:site && npx --yes @opennextjs/cloudflare build --skipNextBuild
+      - name: Build frontend release
+        env:
+          BRANCH_NAME: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          release_package=frontend-release
+          if [[ "$BRANCH_NAME" == master ]]; then
+            release_package=frontend-release-staging
+          fi
+          mkdir -p .tmp
+          nix build \
+            --no-update-lock-file \
+            --print-build-logs \
+            --max-jobs 1 \
+            --out-link .tmp/frontend-build \
+            ".#$release_package"
 
       # GitHub Artifacts reject characters used in OpenNext cache filenames, such as colons.
       - name: Pack frontend build
-        run: |
-          set -euo pipefail
-          mkdir -p .tmp/frontend-build
-          build_paths=(
-            apps/legacy/dist
-            apps/spa/out
-            apps/site/.open-next
-            packages/backend-proxy/dist
-          )
-          if [[ -d apps/storybook/storybook-static ]]; then
-            build_paths+=(apps/storybook/storybook-static)
-          fi
-          {
-            printf '%s\0' "${build_paths[@]}"
-            find apps/site/.next/static -type f -name '*.map' -print0
-          } | tar \
-            --create \
-            --file .tmp/frontend-build.tar \
-            --null \
-            --files-from=-
+        run: >-
+          tar --create --file .tmp/frontend-build.tar
+          --directory .tmp/frontend-build .
 
       - name: Upload frontend build
         uses: actions/upload-artifact@v7
@@ -202,50 +182,6 @@ jobs:
           if-no-files-found: error
           retention-days: 7
           overwrite: true
-
-  cloudflare:
-    name: Cloudflare infrastructure
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    permissions:
-      contents: read
-    needs:
-      - production_avatar
-      - legacy
-      - site
-      - spa
-    if: >-
-      !cancelled() &&
-      github.ref_name == 'production' &&
-      needs.production_avatar.result == 'success' &&
-      needs.legacy.result == 'success' &&
-      needs.site.result == 'success' &&
-      needs.spa.result == 'success'
-    environment:
-      name: production
-    steps:
-      - name: Check out the repo
-        uses: actions/checkout@v7
-
-      - name: Nix Setup
-        uses: ./.github/actions/nix-setup
-        with:
-          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
-
-      - name: Node.js Setup
-        uses: ./.github/actions/node-setup
-
-      - name: Deploy Cloudflare infrastructure
-        run: |
-          nix develop --quiet --no-update-lock-file .#infra --command \
-            bash -e -u -o pipefail -c '
-              pulumi login "$PULUMI_BACKEND_URL"
-              pulumi --cwd infra/cloudflare up --stack main --refresh --yes --non-interactive
-            '
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PULUMI_API_TOKEN }}
-          PULUMI_BACKEND_URL: ${{ secrets.PULUMI_BACKEND_URL }}
-          PULUMI_CONFIG_PASSPHRASE: ${{ secrets.PULUMI_CONFIG_PASSPHRASE }}
 
   backend:
     name: Backend
@@ -283,8 +219,6 @@ jobs:
 
       - name: Nix Setup
         uses: ./.github/actions/nix-setup
-        with:
-          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
 
       - name: Deploy site to staging
         if: >-
@@ -335,8 +269,9 @@ jobs:
           artifact-name: frontend-${{ github.run_id }}
 
       - name: Upload legacy asset history
+        if: github.ref_name == 'production'
         run: |
-          node scripts/upload-frontend-assets.mjs \
+          node scripts/upload-frontend-assets.ts \
             --assets apps/legacy/dist/assets \
             --bucket boluo-history-files \
             --prefix "${DEPLOYMENT_ENV}/legacy/assets"
@@ -346,7 +281,12 @@ jobs:
 
       - name: Deploy legacy
         working-directory: apps/legacy
-        run: npx wrangler deploy --env "$DEPLOYMENT_ENV" --tag "$GITHUB_SHA"
+        run: >-
+          node ../../scripts/deploy-cloudflare-worker.ts
+          --tag-file ../../.frontend-versions/legacy
+          --env "$DEPLOYMENT_ENV"
+          --message "Git commit $GITHUB_SHA"
+          -- npx wrangler deploy --env "$DEPLOYMENT_ENV"
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -384,8 +324,9 @@ jobs:
           artifact-name: frontend-${{ github.run_id }}
 
       - name: Upload SPA asset history
+        if: github.ref_name == 'production'
         run: |
-          node scripts/upload-frontend-assets.mjs \
+          node scripts/upload-frontend-assets.ts \
             --assets apps/spa/out/_next/static \
             --bucket boluo-history-files \
             --prefix "${DEPLOYMENT_ENV}/spa/_next/static"
@@ -395,7 +336,12 @@ jobs:
 
       - name: Deploy SPA
         working-directory: apps/spa
-        run: npx wrangler deploy --env "$DEPLOYMENT_ENV" --tag "$GITHUB_SHA"
+        run: >-
+          node ../../scripts/deploy-cloudflare-worker.ts
+          --tag-file ../../.frontend-versions/spa
+          --env "$DEPLOYMENT_ENV"
+          --message "Git commit $GITHUB_SHA"
+          -- npx wrangler deploy --env "$DEPLOYMENT_ENV"
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -407,12 +353,10 @@ jobs:
     permissions:
       contents: read
     needs:
-      - backend
       - frontend_build
     if: >-
       !cancelled() &&
       github.ref_name == 'master' &&
-      needs.backend.result == 'success' &&
       needs.frontend_build.result == 'success'
     environment:
       name: staging
@@ -431,7 +375,11 @@ jobs:
 
       - name: Deploy Storybook
         working-directory: apps/storybook
-        run: npx wrangler deploy --tag "$GITHUB_SHA"
+        run: >-
+          node ../../scripts/deploy-cloudflare-worker.ts
+          --tag-file ../../.frontend-versions/storybook
+          --message "Git commit $GITHUB_SHA"
+          -- npx wrangler deploy
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -469,9 +417,10 @@ jobs:
           artifact-name: frontend-${{ github.run_id }}
 
       - name: Upload site source maps
+        if: github.ref_name == 'production'
         run: |
-          node scripts/upload-frontend-assets.mjs \
-            --assets apps/site/.next/static \
+          node scripts/upload-frontend-assets.ts \
+            --assets apps/site/.open-next/assets/_next/static \
             --bucket boluo-history-files \
             --prefix "${DEPLOYMENT_ENV}/site/_next/static"
         env:
@@ -481,8 +430,11 @@ jobs:
       - name: Deploy site Worker
         working-directory: apps/site
         run: >-
-          npx @opennextjs/cloudflare deploy --env "$DEPLOYMENT_ENV"
-          --tag "$GITHUB_SHA"
+          node ../../scripts/deploy-cloudflare-worker.ts
+          --tag-file ../../.frontend-versions/site
+          --env "$DEPLOYMENT_ENV"
+          --message "Git commit $GITHUB_SHA"
+          -- npx @opennextjs/cloudflare deploy --env "$DEPLOYMENT_ENV"
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -493,11 +445,7 @@ jobs:
     timeout-minutes: 30
     permissions:
       contents: read
-    needs: backend
-    if: >-
-      !cancelled() &&
-      github.ref_name == 'production' &&
-      needs.backend.result == 'success'
+    if: github.ref_name == 'production'
     environment:
       name: production
       deployment: false
@@ -521,11 +469,7 @@ jobs:
     timeout-minutes: 30
     permissions:
       contents: read
-    needs: backend
-    if: >-
-      !cancelled() &&
-      github.ref_name == 'production' &&
-      needs.backend.result == 'success'
+    if: github.ref_name == 'production'
     environment:
       name: production
       deployment: false

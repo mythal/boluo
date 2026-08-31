@@ -1,10 +1,8 @@
-import { css } from '@emotion/react';
 import * as React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import useSWR from 'swr';
 import { mediaHead, mediaUrl } from '../../api/request';
-import { roundedSm } from '../../styles/atoms';
-import { gray } from '../../styles/colors';
+import { cls } from '../../utils/classnames';
 import { type Id } from '../../utils/id';
 import { allowImageType } from '../../validators';
 import Modal from '../atoms/Modal';
@@ -15,44 +13,7 @@ interface Props {
   file?: File;
 }
 
-export const inlineImg = css`
-  ${roundedSm};
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-`;
-
-export const placeHolder = css`
-  float: right;
-  width: 3rem;
-  height: 3rem;
-  ${roundedSm};
-  background-color: ${gray['700']};
-`;
-
-export const largeImg = css`
-  max-width: 80vw;
-  max-height: 80vh;
-`;
-
-export const inlineImgLink = css`
-  display: block;
-  float: right;
-  width: 3rem;
-  height: 3rem;
-  &:hover {
-    filter: brightness(50%);
-  }
-`;
-
-export const xStyle = css`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  height: 100%;
-  font-size: 2rem;
-`;
+const placeholderClassName = 'float-right size-12 rounded-[3px] bg-legacy-gray-700';
 
 function MessageMedia({ className, mediaId, file }: Props) {
   const [lightBox, setLightBox] = useState(false);
@@ -93,13 +54,13 @@ function MessageMedia({ className, mediaId, file }: Props) {
   }
   if (error) {
     return (
-      <div css={placeHolder} className={className}>
-        <div css={xStyle}>×</div>
+      <div className={cls(placeholderClassName, className)}>
+        <div className="flex size-full items-center justify-center text-[2rem]">×</div>
       </div>
     );
   }
   if (!type) {
-    return <div css={placeHolder} className={className} />;
+    return <div className={cls(placeholderClassName, className)} />;
   }
 
   if (allowImageType.includes(type)) {
@@ -118,12 +79,16 @@ function MessageMedia({ className, mediaId, file }: Props) {
     }
     return (
       <React.Fragment>
-        <a href={src} css={inlineImgLink} className={className} onClick={onClick}>
-          <img alt="" css={inlineImg} src={src} />
+        <a
+          href={src}
+          className={cls('float-right block size-12 hover:brightness-50', className)}
+          onClick={onClick}
+        >
+          <img alt="消息图片" className="size-full rounded-[3px] object-cover" src={src} />
         </a>
         {lightBox && (
           <Modal mask onClickMask={dismiss}>
-            <img alt="" css={largeImg} src={src} />
+            <img alt="消息图片" className="max-h-[80vh] max-w-[80vw]" src={src} />
           </Modal>
         )}
       </React.Fragment>

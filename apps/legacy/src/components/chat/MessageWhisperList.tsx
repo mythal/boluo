@@ -1,4 +1,3 @@
-import { css } from '@emotion/react';
 import * as React from 'react';
 import { showFlash } from '../../actions';
 import { type ChannelMember } from '../../api/channels';
@@ -8,12 +7,9 @@ import EyeSlash from '@boluo/icons/legacy/EyeSlash';
 import Eye from '@boluo/icons/legacy/Eye';
 import { useChannelId } from '../../hooks/useChannelId';
 import { useDispatch, useSelector } from '../../store';
-import { mR, textSm } from '../../styles/atoms';
-import { gray } from '../../styles/colors';
 import { throwErr } from '../../utils/errors';
 import Button from '../atoms/Button';
 import Icon from '../atoms/Icon';
-import { chatContentLineHeight } from './styles';
 
 interface Props {
   shown?: boolean;
@@ -21,18 +17,8 @@ interface Props {
   message: Message;
 }
 
-const whisperContentWrapper = css`
-  grid-area: content;
-  display: flex;
-  align-items: center;
-  width: 100%;
-  ${[chatContentLineHeight, textSm]};
-  color: ${gray['500']};
-
-  &[data-folded='true'] {
-    text-decoration: line-through;
-  }
-`;
+const whisperSummaryClassName =
+  'flex w-full items-center text-[0.875rem] leading-[1.6rem] text-legacy-gray-500 [grid-area:content] data-[folded=true]:line-through';
 
 function MessageWhisperList({ myMember, message, shown = false }: Props) {
   const dispatch = useDispatch();
@@ -71,11 +57,13 @@ function MessageWhisperList({ myMember, message, shown = false }: Props) {
       );
     }
     return (
-      <div css={whisperContentWrapper} data-folded={message.folded ?? false}>
+      <div className={whisperSummaryClassName} data-folded={message.folded ?? false}>
         {!shown && (
-          <Button data-size="small" onClick={reveal} css={mR(2)}>
-            查看 <Icon icon={Eye} />
-          </Button>
+          <span className="mr-2">
+            <Button size="small" onClick={reveal}>
+              查看 <Icon icon={Eye} />
+            </Button>
+          </span>
         )}
 
         {description}
@@ -83,9 +71,9 @@ function MessageWhisperList({ myMember, message, shown = false }: Props) {
     );
   } else {
     return (
-      <div css={whisperContentWrapper} data-folded={message.folded ?? false}>
+      <div className={whisperSummaryClassName} data-folded={message.folded ?? false}>
         <span>
-          <Icon icon={EyeSlash} css={mR(2)} />
+          <Icon icon={EyeSlash} className="mr-2" />
           对别的人说悄悄话
         </span>
       </div>

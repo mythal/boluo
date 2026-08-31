@@ -4,6 +4,10 @@ use hyper::body::Body;
 use serde::{Deserialize, Serialize};
 use smallvec::SmallVec;
 use std::io;
+use std::sync::{
+    Arc,
+    atomic::{AtomicU64, Ordering},
+};
 use std::time::{Duration, Instant};
 
 use crate::error::AppError;
@@ -75,6 +79,23 @@ pub type Response = hyper::Response<ResponseBytes>;
 pub const DEFAULT_JSON_BODY_LIMIT_BYTES: usize = 1024 * 1024;
 /// Maximum request size for message payloads, whose parsed entities may be substantially larger.
 pub const LARGE_JSON_BODY_LIMIT_BYTES: usize = 4 * 1024 * 1024;
+
+#[derive(Debug, Default)]
+pub(crate) struct RequestBodyReadTracker(AtomicU64);
+
+impl RequestBodyReadTracker {
+    pub(crate) fn new() -> Self {
+        Self::default()
+    }
+
+    pub(crate) fn duration_ms(&self) -> u64 {
+        self.0.load(Ordering::Relaxed)
+    }
+
+    fn record(&self, duration_ms: u64) {
+        self.0.store(duration_ms, Ordering::Relaxed);
+    }
+}
 
 const RESPONSE_BODY_SIZE_SAMPLE_INTERVAL: u8 = 64;
 
@@ -213,12 +234,17 @@ where
     })
 }
 
-fn record_request_body_read(started_at: Instant, body_bytes: Option<usize>) {
+fn record_request_body_read(
+    started_at: Instant,
+    body_bytes: Option<usize>,
+    tracker: Option<&RequestBodyReadTracker>,
+) {
+    let duration_ms = started_at.elapsed().as_millis() as u64;
     let span = tracing::Span::current();
-    span.record(
-        "request_body_read_ms",
-        started_at.elapsed().as_millis() as u64,
-    );
+    span.record("request_body_read_ms", duration_ms);
+    if let Some(tracker) = tracker {
+        tracker.record(duration_ms);
+    }
     if let Some(body_bytes) = body_bytes {
         span.record("request_body_bytes", body_bytes as u64);
     }
@@ -234,6 +260,11 @@ where
     use bytes::{Buf, BufMut, BytesMut};
     use http_body_util::BodyExt;
 
+    let tracker = req
+        .extensions()
+        .get::<Arc<RequestBodyReadTracker>>()
+        .cloned();
+
     if req
         .headers()
         .get(hyper::header::CONTENT_LENGTH)
@@ -241,7 +272,7 @@ where
         .and_then(|value| value.parse::<u64>().ok())
         .is_some_and(|content_length| content_length > max_bytes as u64)
     {
-        record_request_body_read(Instant::now(), None);
+        record_request_body_read(Instant::now(), None, tracker.as_deref());
         return Err(AppError::PayloadTooLarge);
     }
 
@@ -268,11 +299,11 @@ where
     let body = match collected {
         Ok(Ok(body)) => body,
         Ok(Err(error)) => {
-            record_request_body_read(started_at, None);
+            record_request_body_read(started_at, None, tracker.as_deref());
             return Err(error);
         }
         Err(_) => {
-            record_request_body_read(started_at, None);
+            record_request_body_read(started_at, None, tracker.as_deref());
             tracing::warn!(
                 event = "http.request_body.read_timeout",
                 "Timeout when reading the request body"
@@ -280,7 +311,7 @@ where
             return Err(AppError::Timeout);
         }
     };
-    record_request_body_read(started_at, Some(body.len()));
+    record_request_body_read(started_at, Some(body.len()), tracker.as_deref());
     Ok(body)
 }
 

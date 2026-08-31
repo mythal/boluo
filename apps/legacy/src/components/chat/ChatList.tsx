@@ -1,4 +1,3 @@
-import { css } from '@emotion/react';
 import { type List } from 'immutable';
 import * as React from 'react';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
@@ -10,7 +9,6 @@ import { usePane } from '../../hooks/useChannelId';
 import { type ChatState } from '../../reducers/chatState';
 import { type MessageItem, type PreviewItem } from '../../states/chat-item-set';
 import { useDispatch, useSelector } from '../../store';
-import { blue } from '../../styles/colors';
 import { throwErr } from '../../utils/errors';
 import { type Id } from '../../utils/id';
 import ChatItem from './ChatItem';
@@ -43,16 +41,6 @@ const filterMessages =
     }
     return true;
   };
-
-const listWrapperStyle = css`
-  overflow-y: scroll;
-  overflow-x: hidden;
-
-  border: 1px solid ${blue['900']};
-  &[data-active='true'] {
-    border: 1px solid ${blue['700']};
-  }
-`;
 
 const itemPos = (item: PreviewItem | MessageItem | undefined | null): [number, number] | null => {
   if (!item) {
@@ -213,7 +201,12 @@ function ChatList({ channelId, focus }: Props) {
 
   return (
     <DragDropContext onDragEnd={onDragEnd} onDragStart={onDragStart}>
-      <div ref={wrapperRef} css={listWrapperStyle} onClick={focus} data-active={paneInfo.isFocused}>
+      <div
+        ref={wrapperRef}
+        className="border-legacy-blue-900 data-[active=true]:border-legacy-blue-700 overflow-x-hidden overflow-y-scroll border"
+        onClick={focus}
+        data-active={paneInfo.isFocused}
+      >
         <Droppable droppableId={channelId} type="CHANNEL">
           {(provided) => (
             <div ref={provided.innerRef} {...provided.droppableProps}>

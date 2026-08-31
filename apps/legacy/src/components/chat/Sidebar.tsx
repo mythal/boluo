@@ -1,5 +1,3 @@
-import { css } from '@emotion/react';
-import { darken } from 'polished';
 import * as React from 'react';
 import { Fragment, useCallback, useMemo, useState } from 'react';
 import { type Channel } from '../../api/channels';
@@ -7,14 +5,12 @@ import { type Space } from '../../api/spaces';
 import Bars from '@boluo/icons/legacy/Bars';
 import Logo from '@boluo/icons/legacy/Logo';
 import { useSelector } from '../../store';
-import { mR, pT, textLg } from '../../styles/atoms';
-import { chatSidebarColor, headerBgColor } from '../../styles/colors';
+import { cls } from '../../utils/classnames';
 import Icon from '../atoms/Icon';
 import ChatHeaderButton, { ChatHeaderButtonLink } from './ChatHeaderButton';
 import SidebarExpandItems from './SidebarExpandItems';
 import SidebarFoldedItems from './SidebarFoldedItems';
 import SidebarMemberList from './SidebarMemberList';
-import { chatHeaderPadding, sidebarWidth } from './styles';
 import UserStatusButton from './UserStatusButton';
 
 interface Props {
@@ -22,38 +18,8 @@ interface Props {
   channels: Channel[];
 }
 
-const sidebarBody = css`
-  background-color: ${chatSidebarColor};
-  grid-area: sidebar-body;
-  border-right: 1px solid ${darken(0.04, chatSidebarColor)};
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  transition: all 300ms ease-in-out;
-  &[data-state='entering'],
-  &[data-state='entered'] {
-    ${sidebarWidth};
-  }
-  &[data-state='exited'] {
-    ${pT(4)};
-    text-align: center;
-    align-items: center;
-  }
-`;
-
-const sidebarHeader = css`
-  background-color: ${headerBgColor};
-  grid-area: sidebar-header;
-  display: flex;
-  align-items: stretch;
-  justify-content: space-between;
-  ${[chatHeaderPadding]};
-`;
-
-const spaceLinkStyle = css`
-  max-width: 100px;
-  ${mR(1)};
-`;
+const sidebarBodyClassName =
+  'flex min-w-0 flex-col [grid-area:sidebar-body] border-r border-legacy-sidebar-border bg-legacy-chat-sidebar transition-all duration-300 ease-in-out';
 
 const SIDEBAR_KEY = 'sidebar-state';
 
@@ -112,21 +78,32 @@ function Sidebar({ space, channels }: Props) {
   const state = expand ? 'entered' : 'exited';
   return (
     <React.Fragment>
-      <div css={sidebarHeader}>
-        <ChatHeaderButton onClick={toggle} css={[textLg]} data-active={expand}>
+      <div className="bg-legacy-header-background flex items-stretch justify-between px-2 py-1.5 [grid-area:sidebar-header]">
+        <ChatHeaderButton
+          aria-label={expand ? '折叠侧栏' : '展开侧栏'}
+          className="text-[1.125rem]"
+          onClick={toggle}
+          data-active={expand}
+        >
           <Icon icon={Bars} />
         </ChatHeaderButton>
         {state === 'entered' && (
           <Fragment>
             <UserStatusButton spaceId={space.id} active={showMember} toggle={toggleShowMember} />
-            <ChatHeaderButtonLink to="/" css={[spaceLinkStyle]}>
+            <ChatHeaderButtonLink to="/" className="mr-1 max-w-[100px]">
               <Icon icon={Logo} />
               菠萝
             </ChatHeaderButtonLink>
           </Fragment>
         )}
       </div>
-      <div css={sidebarBody} data-state={state}>
+      <div
+        className={cls(
+          sidebarBodyClassName,
+          state === 'entered' ? 'w-[200px]' : 'items-center pt-4 text-center',
+        )}
+        data-state={state}
+      >
         {state === 'entered' &&
           (showMember ? (
             <SidebarMemberList spaceId={space.id} />

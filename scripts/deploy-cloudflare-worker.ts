@@ -54,6 +54,10 @@ if (!tagFile || !message || !deployExecutable) {
   throw new Error('A tag file, message, and deploy command are required');
 }
 
+function shellQuote(value: string): string {
+  return `'${value.replaceAll("'", "'\\''")}'`;
+}
+
 const tag = readFileSync(tagFile, 'utf8').trim();
 if (!tag) {
   throw new Error(`Tag file is empty: ${tagFile}`);
@@ -115,9 +119,11 @@ try {
   console.warn(`Could not determine the current Worker tag; deploying: ${error}`);
 }
 
+const isOpenNext = deployCommand.includes('@opennextjs/cloudflare');
+const deployMessage = isOpenNext ? shellQuote(message) : message;
 const result = spawnSync(
   deployExecutable,
-  [...deployCommand.slice(1), '--tag', tag, '--message', message],
+  [...deployCommand.slice(1), '--tag', tag, '--message', deployMessage],
   {
     stdio: 'inherit',
   },

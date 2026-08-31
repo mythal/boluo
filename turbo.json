@@ -87,7 +87,6 @@
       "outputs": ["storybook-static/**"]
     },
     "@boluo/lang#generate": {
-      "dependsOn": ["//#lang:extract"],
       "inputs": ["src/**/*.json", "package.json"],
       "outputs": ["dist/**"]
     },

@@ -41,6 +41,11 @@ jobs:
       - name: Check Node.js formatting
         run: npm run format:check
 
+      - name: Check language extraction
+        run: |
+          npm run lang:extract
+          git diff --exit-code -- packages/lang/src
+
   cargo:
     name: Cargo Checks
     runs-on: ubuntu-latest

@@ -335,6 +335,7 @@ jobs:
           artifact-name: frontend-${{ github.run_id }}
 
       - name: Upload legacy asset history
+        if: github.ref_name == 'production'
         run: |
           node scripts/upload-frontend-assets.mjs \
             --assets apps/legacy/dist/assets \
@@ -384,6 +385,7 @@ jobs:
           artifact-name: frontend-${{ github.run_id }}
 
       - name: Upload SPA asset history
+        if: github.ref_name == 'production'
         run: |
           node scripts/upload-frontend-assets.mjs \
             --assets apps/spa/out/_next/static \
@@ -469,6 +471,7 @@ jobs:
           artifact-name: frontend-${{ github.run_id }}
 
       - name: Upload site source maps
+        if: github.ref_name == 'production'
         run: |
           node scripts/upload-frontend-assets.mjs \
             --assets apps/site/.next/static \

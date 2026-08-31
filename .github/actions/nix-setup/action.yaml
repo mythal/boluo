@@ -1,11 +1,5 @@
 name: Nix Setup
 description: Setup Nix for the workflow
-inputs:
-  authToken:
-    description: Cachix auth token
-    required: false
-    default: ''
-
 runs:
   using: 'composite'
   steps:
@@ -17,13 +11,13 @@ runs:
         extra-conf: |
           extra-sandbox-paths = /tmp/sccache?
 
-    # https://github.com/cachix/cachix-action
-    - name: Set up Cachix
-      uses: cachix/cachix-action@5f2d7c5294214f71b873db4b969586b980625e71
+    # https://github.com/nix-community/cache-nix-action
+    - name: Cache Nix store
+      uses: nix-community/cache-nix-action@7df957e333c1e5da7721f60227dbba6d06080569
       with:
-        name: boluo
-        # https://github.com/actions/runner/issues/2206#issuecomment-1532246677
-        authToken: ${{ inputs.authToken }}
+        primary-key: nix-${{ runner.os }}-${{ github.workflow }}-${{ github.job }}-${{ github.sha }}
+        restore-prefixes-first-match: |
+          nix-${{ runner.os }}-${{ github.workflow }}-${{ github.job }}-
 
     - name: Show Nix Config
       shell: bash

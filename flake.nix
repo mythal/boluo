@@ -49,11 +49,24 @@
           version = "0.0.0";
           unfilteredRoot = ./.;
 
-          npmWorkspaceLib = import ./packages/nix-npm-workspaces {
+          npmWorkspaceLib = import ./packages/nix-workspaces/npm.nix {
             inherit pkgs;
             root = unfilteredRoot;
             rootDependencyNames = [ "turbo" ];
             extraSourceFiles = [ (unfilteredRoot + "/turbo.json") ];
+          };
+
+          cargoWorkspaceLib = import ./packages/nix-workspaces/cargo.nix {
+            inherit pkgs;
+            root = unfilteredRoot;
+            extraSourceFiles =
+              target:
+              lib.optionals (target == "server") [
+                ./apps/db/schema.sql
+                ./.sqlx
+                ./.config/nextest.toml
+                ./scripts/setup-test-db.sh
+              ];
           };
 
           mkStaticSpaImage = import ./packages/nix-static-spa-image { inherit pkgs; };
@@ -161,46 +174,8 @@
               ${pkgs.skopeo}/bin/skopeo copy --dest-authfile "$AUTH_FILE" docker-archive:"${imageArchive}" "docker://$IMAGE_DESTINATION:v''${GITHUB_SHA}"
             '';
 
-          # https://crane.dev/source-filtering.html#fileset-filtering
-          # https://nixos.org/manual/nixpkgs/unstable/#sec-functions-library-fileset
-          cargoSource =
-            let
-              inherit (lib.fileset)
-                unions
-                difference
-                fileFilter
-                maybeMissing
-                ;
-              ignoreFilenames = [
-                "wrangler.jsonc"
-                ".rustfmt.toml"
-                ".taplo.toml"
-                "fly.toml"
-                "fly.staging.toml"
-                "schema.sql"
-              ];
-              filesetToIgnore = unions (
-                map (name: fileFilter (file: file.name == name) unfilteredRoot) ignoreFilenames
-              );
-              fileset = difference (unions [
-                (craneLib.fileset.commonCargoSources unfilteredRoot)
-                (fileFilter (file: file.hasExt "sql") unfilteredRoot)
-                (maybeMissing ./.sqlx)
-                (maybeMissing ./crates/bridge/.sqlx)
-                (maybeMissing ./crates/server/text)
-                (maybeMissing ./.config/nextest.toml)
-                (maybeMissing ./scripts/setup-test-db.sh)
-              ]) filesetToIgnore;
-            in
-            lib.fileset.toSource {
-              root = unfilteredRoot;
-              inherit fileset;
-              # Debugging:
-              # fileset = lib.fileset.trace fileset fileset;
-            };
-
-          commonArgs = {
-            src = cargoSource;
+          commonArgs = target: {
+            src = cargoWorkspaceLib.sourceFor target;
             inherit version;
             strictDeps = true;
 
@@ -214,8 +189,13 @@
             SCCACHE_DIR = "/tmp/sccache";
           };
 
+          bridgeCommonArgs = commonArgs "bridge";
+          serverCommonArgs = (commonArgs "server") // {
+            RUSTFLAGS = "--cfg tracing_unstable";
+          };
+
           bridgeReleaseArtifacts = craneLib.buildDepsOnly (
-            commonArgs
+            bridgeCommonArgs
             // {
               pname = "bridge";
               cargoExtraArgs = "--locked --package=bridge";
@@ -227,7 +207,7 @@
 
           # CI checks only need the test profile.
           bridgeTestArtifacts = craneLib.buildDepsOnly (
-            commonArgs
+            bridgeCommonArgs
             // {
               pname = "bridge-tests";
               CARGO_PROFILE = "";
@@ -237,24 +217,24 @@
               cargoTestCommand = "cargo nextest run";
               cargoTestExtraArgs = "--no-run";
               SQLX_OFFLINE = "true";
-              nativeBuildInputs = commonArgs.nativeBuildInputs ++ [ pkgs.cargo-nextest ];
+              nativeBuildInputs = bridgeCommonArgs.nativeBuildInputs ++ [ pkgs.cargo-nextest ];
             }
           );
 
           bridgeCheck = craneLib.cargoNextest (
-            commonArgs
+            bridgeCommonArgs
             // {
               pname = "bridge";
               cargoArtifacts = bridgeTestArtifacts;
               CARGO_PROFILE = "";
               cargoExtraArgs = "--locked --package=bridge";
               SQLX_OFFLINE = "true";
-              nativeBuildInputs = commonArgs.nativeBuildInputs ++ [ pkgs.cargo-nextest ];
+              nativeBuildInputs = bridgeCommonArgs.nativeBuildInputs ++ [ pkgs.cargo-nextest ];
             }
           );
 
           serverReleaseArtifacts = craneLib.buildDepsOnly (
-            commonArgs
+            serverCommonArgs
             // {
               pname = "server";
               cargoExtraArgs = "--locked --package=server";
@@ -265,7 +245,7 @@
 
           # CI checks only need the test profile.
           serverTestArtifacts = craneLib.buildDepsOnly (
-            commonArgs
+            serverCommonArgs
             // {
               pname = "server-tests";
               CARGO_PROFILE = "";
@@ -274,19 +254,19 @@
               cargoBuildCommand = "true";
               cargoTestCommand = "cargo nextest run";
               cargoTestExtraArgs = "--no-run";
-              nativeBuildInputs = commonArgs.nativeBuildInputs ++ [ pkgs.cargo-nextest ];
+              nativeBuildInputs = serverCommonArgs.nativeBuildInputs ++ [ pkgs.cargo-nextest ];
             }
           );
 
           serverCheck = craneLib.cargoNextest (
-            commonArgs
+            serverCommonArgs
             // {
               pname = "server";
               cargoArtifacts = serverTestArtifacts;
               CARGO_PROFILE = "";
               cargoExtraArgs = "--locked --package=server";
               cargoNextestExtraArgs = "--retries 2";
-              nativeBuildInputs = commonArgs.nativeBuildInputs ++ [
+              nativeBuildInputs = serverCommonArgs.nativeBuildInputs ++ [
                 pkgs.postgresql
                 pkgs.cargo-nextest
               ];
@@ -304,14 +284,14 @@
 
           packages = {
             server = craneLib.buildPackage (
-              commonArgs
+              serverCommonArgs
               // {
                 pname = "server";
 
                 cargoArtifacts = serverReleaseArtifacts;
                 cargoExtraArgs = "--locked --package=server";
                 doCheck = false;
-                nativeBuildInputs = commonArgs.nativeBuildInputs ++ [
+                nativeBuildInputs = serverCommonArgs.nativeBuildInputs ++ [
                   pkgs.postgresql
                 ];
                 preBuild = ''
@@ -332,7 +312,7 @@
             # the committed `crates/bridge/.sqlx` cache, so it needs no database at
             # build time.
             bridge = craneLib.buildPackage (
-              commonArgs
+              bridgeCommonArgs
               // {
                 pname = "bridge";
 

@@ -183,48 +183,6 @@ jobs:
           retention-days: 7
           overwrite: true
 
-  cloudflare:
-    name: Cloudflare infrastructure
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    permissions:
-      contents: read
-    needs:
-      - production_avatar
-      - legacy
-      - site
-      - spa
-    if: >-
-      !cancelled() &&
-      github.ref_name == 'production' &&
-      needs.production_avatar.result == 'success' &&
-      needs.legacy.result == 'success' &&
-      needs.site.result == 'success' &&
-      needs.spa.result == 'success'
-    environment:
-      name: production
-    steps:
-      - name: Check out the repo
-        uses: actions/checkout@v7
-
-      - name: Nix Setup
-        uses: ./.github/actions/nix-setup
-
-      - name: Node.js Setup
-        uses: ./.github/actions/node-setup
-
-      - name: Deploy Cloudflare infrastructure
-        run: |
-          nix develop --quiet --no-update-lock-file .#infra --command \
-            bash -e -u -o pipefail -c '
-              pulumi login "$PULUMI_BACKEND_URL"
-              pulumi --cwd infra/cloudflare up --stack main --refresh --yes --non-interactive
-            '
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PULUMI_API_TOKEN }}
-          PULUMI_BACKEND_URL: ${{ secrets.PULUMI_BACKEND_URL }}
-          PULUMI_CONFIG_PASSPHRASE: ${{ secrets.PULUMI_CONFIG_PASSPHRASE }}
-
   backend:
     name: Backend
     runs-on: ubuntu-latest
@@ -395,12 +353,10 @@ jobs:
     permissions:
       contents: read
     needs:
-      - backend
       - frontend_build
     if: >-
       !cancelled() &&
       github.ref_name == 'master' &&
-      needs.backend.result == 'success' &&
       needs.frontend_build.result == 'success'
     environment:
       name: staging
@@ -489,11 +445,7 @@ jobs:
     timeout-minutes: 30
     permissions:
       contents: read
-    needs: backend
-    if: >-
-      !cancelled() &&
-      github.ref_name == 'production' &&
-      needs.backend.result == 'success'
+    if: github.ref_name == 'production'
     environment:
       name: production
       deployment: false
@@ -517,11 +469,7 @@ jobs:
     timeout-minutes: 30
     permissions:
       contents: read
-    needs: backend
-    if: >-
-      !cancelled() &&
-      github.ref_name == 'production' &&
-      needs.backend.result == 'success'
+    if: github.ref_name == 'production'
     environment:
       name: production
       deployment: false

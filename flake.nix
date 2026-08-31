@@ -48,7 +48,6 @@
           inherit (pkgs) lib stdenv;
           version = "0.0.0";
           unfilteredRoot = ./.;
-          rev = if (self ? rev) then self.rev else lib.warn "Dirty workspace" "unknown";
 
           npmWorkspaceLib = import ./packages/nix-npm-workspaces {
             inherit pkgs;
@@ -56,6 +55,8 @@
             rootDependencyNames = [ "turbo" ];
             extraSourceFiles = [ (unfilteredRoot + "/turbo.json") ];
           };
+
+          mkStaticSpaImage = import ./packages/nix-static-spa-image { inherit pkgs; };
 
           frontendBuildArgs =
             target:
@@ -152,11 +153,12 @@
 
               AUTH_FILE="$XDG_CONFIG_HOME/containers/auth.json"
               ${pkgs.skopeo}/bin/skopeo login --authfile "$AUTH_FILE" ghcr.io -u "$GITHUB_ACTOR" -p "$GITHUB_TOKEN"
+              : "''${GITHUB_SHA:?GITHUB_SHA must be set}"
               IMAGE_TAG="$(${pkgs.python3}/bin/python3 ${./scripts/image-tag.py})"
               IMAGE_DESTINATION="ghcr.io/mythal/boluo/${imageName}"
               echo "Pushing ${imageName} image with tag: $IMAGE_TAG"
               ${pkgs.skopeo}/bin/skopeo copy --dest-authfile "$AUTH_FILE" docker-archive:"${imageArchive}" "docker://$IMAGE_DESTINATION:$IMAGE_TAG"
-              ${pkgs.skopeo}/bin/skopeo copy --dest-authfile "$AUTH_FILE" docker-archive:"${imageArchive}" "docker://$IMAGE_DESTINATION:v${rev}"
+              ${pkgs.skopeo}/bin/skopeo copy --dest-authfile "$AUTH_FILE" docker-archive:"${imageArchive}" "docker://$IMAGE_DESTINATION:v''${GITHUB_SHA}"
             '';
 
           # https://crane.dev/source-filtering.html#fileset-filtering
@@ -413,62 +415,11 @@
 
             site-worker = self'.packages.siteBuild.worker;
 
-            legacy-image =
-              let
-                webRoot = self'.packages.legacy;
-                nginxPort = "80";
-                nginxConf = pkgs.writeText "nginx.conf" ''
-                  user nobody nobody;
-                  daemon off;
-                  error_log /dev/stdout info;
-                  pid /dev/null;
-                  events {}
-                  http {
-                    include ${pkgs.nginx}/conf/mime.types;
-                    access_log /dev/stdout;
-                    server {
-                      server_name _;
-                      listen ${nginxPort};
-                      listen [::]:${nginxPort};
-                      index index.html index.htm;
-                      location / {
-                        root ${webRoot};
-                        try_files $uri $uri/ $uri.html /index.html;
-                      }
-                      location /api {
-                        return 404;
-                      }
-                    }
-                  }
-                '';
-              in
-              pkgs.dockerTools.buildLayeredImage {
-                name = "boluo-legacy";
-                tag = "latest";
-
-                contents = [
-                  pkgs.fakeNss
-                  pkgs.nginx
-                ];
-                extraCommands = ''
-                  mkdir -p tmp/nginx_client_body
-
-                  # nginx still tries to read this directory even if error_log
-                  # directive is specifying another file :/
-                  mkdir -p var/log/nginx
-                '';
-                config = {
-                  Cmd = [
-                    "nginx"
-                    "-c"
-                    nginxConf
-                  ];
-                  ExposedPorts = {
-                    "${nginxPort}/tcp" = { };
-                  };
-                  Labels = imageLabel;
-                };
-              };
+            legacy-image = mkStaticSpaImage {
+              name = "boluo-legacy";
+              webRoot = self'.packages.legacy;
+              labels = imageLabel;
+            };
 
             site =
               let
@@ -546,62 +497,11 @@
               includeStorybook = true;
             };
 
-            spa-image =
-              let
-                webRoot = self'.packages.spa;
-                nginxPort = "80";
-                nginxConf = pkgs.writeText "nginx.conf" ''
-                  user nobody nobody;
-                  daemon off;
-                  error_log /dev/stdout info;
-                  pid /dev/null;
-                  events {}
-                  http {
-                    include ${pkgs.nginx}/conf/mime.types;
-                    access_log /dev/stdout;
-                    server {
-                      server_name _;
-                      listen ${nginxPort};
-                      listen [::]:${nginxPort};
-                      index index.html index.htm;
-                      location / {
-                        root ${webRoot};
-                        try_files $uri $uri/ $uri.html /index.html;
-                      }
-                      location /api {
-                        return 404;
-                      }
-                    }
-                  }
-                '';
-              in
-              pkgs.dockerTools.buildLayeredImage {
-                name = "boluo-spa";
-                tag = "latest";
-
-                contents = [
-                  pkgs.fakeNss
-                  pkgs.nginx
-                ];
-                extraCommands = ''
-                  mkdir -p tmp/nginx_client_body
-
-                  # nginx still tries to read this directory even if error_log
-                  # directive is specifying another file :/
-                  mkdir -p var/log/nginx
-                '';
-                config = {
-                  Cmd = [
-                    "nginx"
-                    "-c"
-                    nginxConf
-                  ];
-                  ExposedPorts = {
-                    "${nginxPort}/tcp" = { };
-                  };
-                  Labels = imageLabel;
-                };
-              };
+            spa-image = mkStaticSpaImage {
+              name = "boluo-spa";
+              webRoot = self'.packages.spa;
+              labels = imageLabel;
+            };
 
             push-server-image = mkPushImage {
               imageName = "server";
@@ -661,7 +561,7 @@
                 python3
                 gh
               ]
-              ++ lib.optionals stdenv.isLinux [ pkgs.wild ];
+              ++ lib.optionals stdenv.hostPlatform.isLinux [ pkgs.wild ];
             shellHook = ''
               export PATH="node_modules/.bin:$PATH"
             '';

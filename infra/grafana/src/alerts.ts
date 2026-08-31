@@ -249,13 +249,13 @@ export function buildAlertRules(datasourceUid: string): AlertRulesProvisioning {
         }),
         alertRule(datasourceUid, backups, {
           uid: 'boluo-daily-backup-stale',
-          title: 'Backup stale',
-          expression: `max(${backupMetric('pgbackrest_backup_since_last_completion_seconds')}) or vector(${DAILY_BACKUP_MAX_AGE_SECONDS + 1})`,
+          title: 'Daily backup stale',
+          expression: `max(${backupMetric('pgbackrest_backup_since_last_completion_seconds', 'backup_type="diff"')}) or vector(${DAILY_BACKUP_MAX_AGE_SECONDS + 1})`,
           comparator: 'gt',
           threshold: DAILY_BACKUP_MAX_AGE_SECONDS,
           forDuration: '5m',
           severity: 'critical',
-          summary: 'No pgBackRest backup has completed within 36 hours.',
+          summary: 'No full or differential backup has completed within 36 hours.',
         }),
         alertRule(datasourceUid, backups, {
           uid: 'boluo-full-backup-stale',

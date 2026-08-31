@@ -7,7 +7,7 @@ A chat application designed specifically for playing RPGs.
 This repository is a monorepo containing the following applications:
 
 - `apps/site`: The website frontend. ([Staging environment](https://boluo-site-staging.mythal.workers.dev/))
-- `apps/server`: The backend server.
+- `crates/server`: The backend server.
 - `apps/legacy`: The legacy version of the Boluo web application. ([Staging environment](https://boluo-legacy-staging.mythal.workers.dev/))
 - `apps/spa`: The chat single-page application (SPA). ([Staging environment](https://boluo-app-staging.mythal.workers.dev/))
 - [`apps/storybook`](https://boluo-storybook.mythal.workers.dev/): The Storybook instance for UI components.
@@ -37,7 +37,7 @@ npm run dev:spa
 BACKEND_URL=https://boluo-server-staging.fly.dev npm run dev:spa
 ```
 
-You can find testing users in [`apps/server/fixtures/0-users.sql`](https://github.com/mythal/boluo/blob/master/apps/server/fixtures/0-users.sql).
+You can find testing users in [`crates/server/fixtures/0-users.sql`](https://github.com/mythal/boluo/blob/master/crates/server/fixtures/0-users.sql).
 
 ### Full-stack Development
 
@@ -63,7 +63,7 @@ You need to set up the `DATABASE_URL` environment variable correctly in `.env.lo
 cargo run -p server -- init --fixtures
 ```
 
-You can find testing users in [`apps/server/fixtures/0-users.sql`](https://github.com/mythal/boluo/blob/master/apps/server/fixtures/0-users.sql).
+You can find testing users in [`crates/server/fixtures/0-users.sql`](https://github.com/mythal/boluo/blob/master/crates/server/fixtures/0-users.sql).
 
 #### Start Development Servers
 
@@ -95,7 +95,7 @@ You can run the following commands to check code quality and run tests:
 Generate new migration files using:
 
 ```
-sqlx migrate add <migration_name> -r --source apps/server/migrations
+sqlx migrate add <migration_name> -r --source crates/server/migrations
 ```
 
 Generate TypeScript bindings and type-safe query definitions using:

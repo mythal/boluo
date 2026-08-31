@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../packages/typescript-config/base.json",
+  "compilerOptions": {
+    "declaration": false,
+    "declarationMap": false,
+    "erasableSyntaxOnly": true,
+    "noEmit": true,
+    "target": "ESNext",
+    "types": ["node"]
+  },
+  "include": ["*.ts"]
+}

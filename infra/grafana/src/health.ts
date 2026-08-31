@@ -209,9 +209,9 @@ export function buildHealthDashboard(datasourceUid: string): DashboardBuilder {
             refId: 'daily-freshness',
             editorMode: QueryEditorMode.Code,
             expr: withMissingAsDown(
-              `max(${backupMetric('pgbackrest_backup_since_last_completion_seconds', 'backup_type="diff"')}) < bool ${DAILY_BACKUP_MAX_AGE_SECONDS}`,
+              `max(${backupMetric('pgbackrest_backup_since_last_completion_seconds')}) < bool ${DAILY_BACKUP_MAX_AGE_SECONDS}`,
             ),
-            legendFormat: 'Daily freshness',
+            legendFormat: 'Backup freshness',
           },
           {
             refId: 'full-freshness',

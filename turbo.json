@@ -46,7 +46,7 @@
       "env": ["ANALYZE", "BACKEND_URL"]
     },
     "spa#build": {
-      "dependsOn": ["codegen", "^generate", "@boluo/backend-proxy#build"],
+      "dependsOn": ["codegen", "^generate"],
       "inputs": [
         "$TURBO_DEFAULT$",
         ".env",
@@ -70,7 +70,7 @@
       "outputs": [".next/**", "!.next/cache/**"]
     },
     "legacy#build": {
-      "dependsOn": ["codegen", "^generate", "@boluo/backend-proxy#build"],
+      "dependsOn": ["codegen", "^generate"],
       "env": ["APP_VERSION", "GITHUB_SHA"],
       "inputs": [
         "$TURBO_DEFAULT$",

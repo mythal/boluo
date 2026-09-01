@@ -6,7 +6,7 @@
   ],
   "dependencies": {
     "@boluo/api": "0.0.0",
-    "@boluo/backend-proxy": "0.0.0",
+    "@boluo/frontend-worker": "0.0.0",
     "@boluo/icons": "0.0.0",
     "@boluo/utils": "0.0.0",
     "@grafana/faro-web-sdk": "^2.10.0",
@@ -33,6 +33,7 @@
     "uuid": "^14"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "5",
     "@boluo/eslint-config": "0.0.0",
     "@boluo/tailwind-config": "0.0.0",
     "@types/node": "^26.1.1",
@@ -51,7 +52,7 @@
   "private": true,
   "scripts": {
     "build": "vite build",
-    "check": "tsc --noEmit --project tsconfig.json && tsc --noEmit --project tsconfig.node.json",
+    "check": "tsc --noEmit --project tsconfig.json && tsc --noEmit --project tsconfig.node.json && tsc --noEmit --project tsconfig.worker.json",
     "dev": "vite",
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",

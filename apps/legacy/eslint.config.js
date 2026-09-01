@@ -3,6 +3,16 @@ import { createConfig } from '@boluo/eslint-config/react-internal';
 export default [
   ...createConfig(import.meta.dirname),
   {
+    files: ['worker.ts'],
+    languageOptions: {
+      parserOptions: {
+        projectService: false,
+        project: './tsconfig.worker.json',
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+  },
+  {
     files: ['vite.config.ts'],
     rules: {
       // Allow process usage in build config

@@ -2,7 +2,7 @@
   "$schema": "../../node_modules/wrangler/config-schema.json",
   "name": "boluo-app",
   "compatibility_date": "2026-07-18",
-  "main": "../../packages/backend-proxy/dist/worker.js",
+  "main": "./worker.ts",
   "preview_urls": true,
   "assets": {
     "binding": "ASSETS",
@@ -23,7 +23,6 @@
   "vars": {
     "BACKEND_URL": "https://production.boluo.chat",
     "DEPLOYMENT_ENV": "production",
-    "FRONTEND_APP": "spa",
   },
   "env": {
     "production": {
@@ -39,7 +38,6 @@
       "vars": {
         "BACKEND_URL": "https://production.boluo.chat",
         "DEPLOYMENT_ENV": "production",
-        "FRONTEND_APP": "spa",
       },
     },
     "staging": {
@@ -55,7 +53,6 @@
       "vars": {
         "BACKEND_URL": "https://boluo-server-staging.fly.dev",
         "DEPLOYMENT_ENV": "staging",
-        "FRONTEND_APP": "spa",
       },
     },
   },

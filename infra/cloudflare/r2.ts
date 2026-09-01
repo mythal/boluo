@@ -108,6 +108,15 @@ r2CustomDomain('boluo-history-files', {
   zoneId: zones.boluoChat.id,
 });
 
+r2CustomDomain('boluo-history-files-boluochat-com', {
+  bucketName: historyFiles.name,
+  domain: 'assets.boluochat.com',
+  enabled: true,
+  jurisdiction: 'default',
+  minTls: '1.2',
+  zoneId: zones.boluochatCom.id,
+});
+
 r2BucketCors('boluo-history-files', {
   bucketName: historyFiles.name,
   jurisdiction: 'default',

@@ -72,18 +72,14 @@
           mkStaticSpaImage = import ./packages/nix-static-spa-image { inherit pkgs; };
 
           frontendBuildArgs =
-            {
-              target,
-              legacyAssetBaseUrl ? "",
-            }:
+            { target }:
             let
               src = npmWorkspaceLib.sourceFor target;
               npmDeps = npmWorkspaceLib.mkNpmDepsFor target {
                 pname = "boluo-${target}-npm-deps";
                 inherit version;
               };
-              versionInput =
-                "${src}:${npmDeps}" + lib.optionalString (legacyAssetBaseUrl != "") ":${legacyAssetBaseUrl}";
+              versionInput = "${src}:${npmDeps}";
               frontendVersion = builtins.substring 0 40 (builtins.hashString "sha256" versionInput);
             in
             {
@@ -97,19 +93,12 @@
               passthru = {
                 inherit frontendVersion;
               };
-            }
-            // lib.optionalAttrs (legacyAssetBaseUrl != "") {
-              LEGACY_ASSET_BASE_URL = legacyAssetBaseUrl;
             };
 
           mkFrontendRelease =
             {
               includeStorybook ? false,
             }:
-            let
-              legacyPackage =
-                if includeStorybook then self'.packages.legacy else self'.packages.legacy-production;
-            in
             pkgs.runCommand "boluo-frontend-release${lib.optionalString includeStorybook "-staging"}" { } ''
               mkdir -p \
                 $out/.frontend-versions \
@@ -117,12 +106,12 @@
                 $out/apps/spa/out \
                 $out/packages/backend-proxy/dist
 
-              cp -r ${legacyPackage}/. $out/apps/legacy/dist/
+              cp -r ${self'.packages.legacy}/. $out/apps/legacy/dist/
               cp -r ${self'.packages.spa}/. $out/apps/spa/out/
               cp -r ${self'.packages.spa.backendProxy}/. $out/packages/backend-proxy/dist/
               cp -r ${self'.packages.siteBuild.worker}/. $out/
 
-              printf '%s\n' '${legacyPackage.frontendVersion}' > $out/.frontend-versions/legacy
+              printf '%s\n' '${self'.packages.legacy.frontendVersion}' > $out/.frontend-versions/legacy
               printf '%s\n' '${self'.packages.spa.frontendVersion}' > $out/.frontend-versions/spa
               printf '%s\n' '${self'.packages.siteBuild.frontendVersion}' > $out/.frontend-versions/site
 
@@ -386,19 +375,6 @@
               }
             );
 
-            legacy-production = pkgs.buildNpmPackage (
-              frontendBuildArgs {
-                target = "legacy";
-                legacyAssetBaseUrl = "https://assets.boluo.chat/production/legacy/";
-              }
-              // {
-                installPhase = ''
-                  mkdir -p $out
-                  cp -r apps/legacy/dist/* $out/
-                '';
-              }
-            );
-
             siteBuild = pkgs.buildNpmPackage (
               frontendBuildArgs { target = "site"; }
               // {
@@ -518,6 +494,41 @@
               imageArchive = self'.packages.site-image;
             };
 
+            preview-cloudflare = pkgs.writeShellScriptBin "preview-cloudflare" ''
+              set -euo pipefail
+
+              : "''${PULUMI_BACKEND_URL:?PULUMI_BACKEND_URL must be set}"
+
+              preview_dir="$(${pkgs.coreutils}/bin/mktemp -d)"
+              trap '${pkgs.coreutils}/bin/rm -rf "$preview_dir"' EXIT
+
+              ${pulumiToolchain}/bin/pulumi login "$PULUMI_BACKEND_URL"
+              ${pulumiToolchain}/bin/pulumi --cwd infra/cloudflare preview --stack main --refresh --diff --json --non-interactive \
+                | ${pkgs.coreutils}/bin/tee "$preview_dir/preview.json"
+
+              changes="$(${pkgs.jq}/bin/jq \
+                '.changeSummary | [.create, .update, .delete, .replace, .import, .refresh, .discard] | map(. // 0) | add' \
+                "$preview_dir/preview.json")"
+              if [[ "$changes" -gt 0 ]]; then
+                has_changes=true
+              else
+                has_changes=false
+              fi
+
+              if [[ -n "''${GITHUB_OUTPUT:-}" ]]; then
+                echo "has_changes=$has_changes" >> "$GITHUB_OUTPUT"
+              fi
+            '';
+
+            apply-cloudflare = pkgs.writeShellScriptBin "apply-cloudflare" ''
+              set -euo pipefail
+
+              : "''${PULUMI_BACKEND_URL:?PULUMI_BACKEND_URL must be set}"
+
+              ${pulumiToolchain}/bin/pulumi login "$PULUMI_BACKEND_URL"
+              ${pulumiToolchain}/bin/pulumi --cwd infra/cloudflare up --stack main --refresh --yes --non-interactive
+            '';
+
             deploy-server-staging = pkgs.writeShellScriptBin "deploy-server-staging" ''
               set -euo pipefail
               : "''${APP_VERSION:?APP_VERSION must be set}"
@@ -579,9 +590,6 @@
               flyctl
               python3
             ];
-          };
-          devShells.infra = pkgs.mkShell {
-            packages = [ pulumiToolchain ];
           };
         };
     };

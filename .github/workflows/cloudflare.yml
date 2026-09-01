@@ -16,6 +16,8 @@ env:
 jobs:
   preview:
     name: Preview Cloudflare infrastructure
+    outputs:
+      has_changes: ${{ steps.preview.outputs.has_changes }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -34,12 +36,8 @@ jobs:
         uses: ./.github/actions/node-setup
 
       - name: Preview Cloudflare infrastructure
-        run: |
-          nix develop --quiet --no-update-lock-file .#infra --command \
-            bash -e -u -o pipefail -c '
-              pulumi login "$PULUMI_BACKEND_URL"
-              pulumi --cwd infra/cloudflare preview --stack main --refresh --diff --non-interactive
-            '
+        id: preview
+        run: nix run --quiet --no-update-lock-file .#preview-cloudflare
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PULUMI_API_TOKEN }}
           PULUMI_BACKEND_URL: ${{ secrets.PULUMI_BACKEND_URL }}
@@ -52,7 +50,7 @@ jobs:
     permissions:
       contents: read
     needs: preview
-    if: needs.preview.result == 'success'
+    if: needs.preview.result == 'success' && needs.preview.outputs.has_changes == 'true'
     environment:
       name: Infrastructure
       deployment: false
@@ -67,12 +65,7 @@ jobs:
         uses: ./.github/actions/node-setup
 
       - name: Apply Cloudflare infrastructure
-        run: |
-          nix develop --quiet --no-update-lock-file .#infra --command \
-            bash -e -u -o pipefail -c '
-              pulumi login "$PULUMI_BACKEND_URL"
-              pulumi --cwd infra/cloudflare up --stack main --refresh --yes --non-interactive
-            '
+        run: nix run --quiet --no-update-lock-file .#apply-cloudflare
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PULUMI_API_TOKEN }}
           PULUMI_BACKEND_URL: ${{ secrets.PULUMI_BACKEND_URL }}

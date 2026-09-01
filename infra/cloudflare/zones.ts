@@ -348,30 +348,6 @@ zonePair.zoneSetting('ipv6', {
   value: 'on',
 });
 
-zonePair.ruleset('legacy-assets-r2-redirect', ({ hostname }) => ({
-  name: 'default',
-  phase: 'http_request_dynamic_redirect',
-  rules: [
-    {
-      action: 'redirect',
-      actionParameters: {
-        fromValue: {
-          preserveQueryString: true,
-          statusCode: 301,
-          targetUrl: {
-            expression:
-              'concat("https://assets.boluochat.com/production/legacy", http.request.uri.path)',
-          },
-        },
-      },
-      description: 'Serve production legacy assets from R2',
-      enabled: true,
-      expression: `(http.host eq "${hostname('old')}" and starts_with(http.request.uri.path, "/assets/"))`,
-      ref: 'legacy_assets_r2_redirect',
-    },
-  ],
-}));
-
 // Keep Zstd disabled for older Safari and Apple OS versions that remain in use.
 // Safari 26.3 added Zstd support on current Apple OS releases, but not on older
 // macOS versions, so Brotli and Gzip remain the compatible baseline.

@@ -10,6 +10,8 @@ interface Env {
 }
 
 const FRONTEND_VERSION_PATH = '/api/info/frontend-version';
+// Use a separate namespace: caches.default may contain SPA HTML for an asset URL.
+const HISTORY_CACHE_NAME = 'history-assets-v1';
 
 const isStaticAssetPath = (pathname: string): boolean =>
   pathname === '/assets' ||
@@ -78,8 +80,9 @@ const historyAsset = async (
     return notFound(request.method);
   }
 
+  const cache = await caches.open(HISTORY_CACHE_NAME);
   const cacheRequest = historyCacheRequest(url, request);
-  const cachedResponse = await caches.default.match(cacheRequest);
+  const cachedResponse = await cache.match(cacheRequest);
   if (cachedResponse) {
     return request.method === 'HEAD' ? withoutBody(cachedResponse) : cachedResponse;
   }
@@ -110,7 +113,7 @@ const historyAsset = async (
     status: 200,
     headers,
   });
-  ctx.waitUntil(caches.default.put(historyCacheRequest(url), response.clone()));
+  ctx.waitUntil(cache.put(historyCacheRequest(url), response.clone()));
 
   return request.method === 'HEAD' ? withoutBody(response) : response;
 };
@@ -118,11 +121,21 @@ const historyAsset = async (
 const frontendNotFound = async (request: Request, url: URL, env: Env): Promise<Response> => {
   const pathname = env.FRONTEND_APP === 'spa' ? '/404' : '/';
   const response = await env.ASSETS.fetch(new Request(new URL(pathname, url), request));
-  if (env.FRONTEND_APP === 'legacy') return response;
+  const headers = new Headers(response.headers);
+  headers.set('Cache-Control', 'no-store');
+
+  if (env.FRONTEND_APP === 'legacy') {
+    return new Response(request.method === 'HEAD' ? null : response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers,
+    });
+  }
+
   return new Response(request.method === 'HEAD' ? null : response.body, {
     status: 404,
     statusText: 'Not Found',
-    headers: response.headers,
+    headers,
   });
 };
 

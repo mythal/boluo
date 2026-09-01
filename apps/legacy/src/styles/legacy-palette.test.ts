@@ -181,3 +181,7 @@ test('Tailwind keeps Preflight disabled during the legacy migration', () => {
   assert.doesNotMatch(css, /@import 'tailwindcss\/preflight\.css'/);
   assert.doesNotMatch(css, /@import 'tailwindcss';/);
 });
+
+test('Tailwind preserves the legacy hover behavior on touch devices', () => {
+  assert.match(css, /@custom-variant hover \(&:hover\);/);
+});

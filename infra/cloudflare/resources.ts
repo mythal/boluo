@@ -160,6 +160,17 @@ export function r2BucketLifecycle(
   });
 }
 
+export function r2BucketCors(
+  identity: string,
+  args: Omit<cloudflare.R2BucketCorsArgs, 'accountId'>,
+) {
+  const name = `r2-bucket-cors-${toKebabCase(identity)}`;
+  return new cloudflare.R2BucketCors(name, {
+    ...args,
+    accountId,
+  });
+}
+
 export function r2CustomDomain(
   identity: string,
   args: Omit<cloudflare.R2CustomDomainArgs, 'accountId'>,

@@ -71,7 +71,7 @@
     },
     "legacy#build": {
       "dependsOn": ["codegen", "^generate", "@boluo/backend-proxy#build"],
-      "env": ["APP_VERSION", "GITHUB_SHA", "LEGACY_ASSET_BASE_URL"],
+      "env": ["APP_VERSION", "GITHUB_SHA"],
       "inputs": [
         "$TURBO_DEFAULT$",
         ".env",

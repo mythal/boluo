@@ -494,6 +494,41 @@
               imageArchive = self'.packages.site-image;
             };
 
+            preview-cloudflare = pkgs.writeShellScriptBin "preview-cloudflare" ''
+              set -euo pipefail
+
+              : "''${PULUMI_BACKEND_URL:?PULUMI_BACKEND_URL must be set}"
+
+              preview_dir="$(${pkgs.coreutils}/bin/mktemp -d)"
+              trap '${pkgs.coreutils}/bin/rm -rf "$preview_dir"' EXIT
+
+              ${pulumiToolchain}/bin/pulumi login "$PULUMI_BACKEND_URL"
+              ${pulumiToolchain}/bin/pulumi --cwd infra/cloudflare preview --stack main --refresh --diff --json --non-interactive \
+                | ${pkgs.coreutils}/bin/tee "$preview_dir/preview.json"
+
+              changes="$(${pkgs.jq}/bin/jq \
+                '.changeSummary | [.create, .update, .delete, .replace, .import, .refresh, .discard] | map(. // 0) | add' \
+                "$preview_dir/preview.json")"
+              if [[ "$changes" -gt 0 ]]; then
+                has_changes=true
+              else
+                has_changes=false
+              fi
+
+              if [[ -n "''${GITHUB_OUTPUT:-}" ]]; then
+                echo "has_changes=$has_changes" >> "$GITHUB_OUTPUT"
+              fi
+            '';
+
+            apply-cloudflare = pkgs.writeShellScriptBin "apply-cloudflare" ''
+              set -euo pipefail
+
+              : "''${PULUMI_BACKEND_URL:?PULUMI_BACKEND_URL must be set}"
+
+              ${pulumiToolchain}/bin/pulumi login "$PULUMI_BACKEND_URL"
+              ${pulumiToolchain}/bin/pulumi --cwd infra/cloudflare up --stack main --refresh --yes --non-interactive
+            '';
+
             deploy-server-staging = pkgs.writeShellScriptBin "deploy-server-staging" ''
               set -euo pipefail
               : "''${APP_VERSION:?APP_VERSION must be set}"
@@ -555,9 +590,6 @@
               flyctl
               python3
             ];
-          };
-          devShells.infra = pkgs.mkShell {
-            packages = [ pulumiToolchain ];
           };
         };
     };

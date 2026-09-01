@@ -11,17 +11,6 @@
       "inputs": ["$TURBO_DEFAULT$"],
       "outputs": ["dist/**"]
     },
-    "//#lang:extract": {
-      "inputs": [
-        "apps/{site,spa}/**/*.{ts,tsx,js,jsx}",
-        "packages/**/*.{ts,tsx,js,jsx}",
-        "packages/lang/package.json",
-        "!**/{node_modules,out,.next,.open-next,.tmp,storybook-static,dist,.turbo}/**/*",
-        "!packages/icons/{src,generated}/**/*",
-        "!**/*.d.ts"
-      ],
-      "outputs": ["packages/lang/src/en.json"]
-    },
     "lint": { "dependsOn": ["codegen"] },
     "test": { "dependsOn": ["check"] },
     "check": { "dependsOn": ["^check", "codegen"] },

@@ -10,7 +10,10 @@ dotenv.config({
   ]),
 });
 
+const legacyAssetBaseUrl = process.env.LEGACY_ASSET_BASE_URL ?? '/';
+
 export default defineConfig({
+  base: legacyAssetBaseUrl,
   define: {
     'import.meta.env.APP_VERSION': JSON.stringify(
       process.env.APP_VERSION ?? process.env.GITHUB_SHA ?? 'unknown',

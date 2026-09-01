@@ -26,6 +26,12 @@
   },
   "env": {
     "production": {
+      "assets": {
+        "binding": "ASSETS",
+        "directory": "./dist/",
+        "not_found_handling": "single-page-application",
+        "run_worker_first": ["/api/*", "/assets/*"],
+      },
       "version_metadata": {
         "binding": "WORKER_VERSION",
       },

@@ -1,5 +1,5 @@
 import { zones } from './config.js';
-import { r2Bucket, r2BucketLifecycle, r2CustomDomain } from './resources.js';
+import { r2Bucket, r2BucketCors, r2BucketLifecycle, r2CustomDomain } from './resources.js';
 
 r2Bucket('boluo', {
   jurisdiction: 'default',
@@ -94,6 +94,29 @@ r2BucketLifecycle('boluo-history-files', {
       enabled: true,
       deleteObjectsTransition: {
         condition: { maxAge: HISTORY_RETENTION_SECONDS, type: 'Age' },
+      },
+    },
+  ],
+});
+
+r2CustomDomain('boluo-history-files', {
+  bucketName: historyFiles.name,
+  domain: 'assets.boluo.chat',
+  enabled: true,
+  jurisdiction: 'default',
+  minTls: '1.2',
+  zoneId: zones.boluoChat.id,
+});
+
+r2BucketCors('boluo-history-files', {
+  bucketName: historyFiles.name,
+  jurisdiction: 'default',
+  rules: [
+    {
+      id: 'legacy-production-assets',
+      allowed: {
+        methods: ['GET', 'HEAD'],
+        origins: ['https://old.boluo.chat', 'https://old.boluochat.com'],
       },
     },
   ],

@@ -72,14 +72,19 @@
           mkStaticSpaImage = import ./packages/nix-static-spa-image { inherit pkgs; };
 
           frontendBuildArgs =
-            target:
+            {
+              target,
+              legacyAssetBaseUrl ? "",
+            }:
             let
               src = npmWorkspaceLib.sourceFor target;
               npmDeps = npmWorkspaceLib.mkNpmDepsFor target {
                 pname = "boluo-${target}-npm-deps";
                 inherit version;
               };
-              frontendVersion = builtins.substring 0 40 (builtins.hashString "sha256" "${src}:${npmDeps}");
+              versionInput =
+                "${src}:${npmDeps}" + lib.optionalString (legacyAssetBaseUrl != "") ":${legacyAssetBaseUrl}";
+              frontendVersion = builtins.substring 0 40 (builtins.hashString "sha256" versionInput);
             in
             {
               pname = "boluo-${target}";
@@ -92,12 +97,19 @@
               passthru = {
                 inherit frontendVersion;
               };
+            }
+            // lib.optionalAttrs (legacyAssetBaseUrl != "") {
+              LEGACY_ASSET_BASE_URL = legacyAssetBaseUrl;
             };
 
           mkFrontendRelease =
             {
               includeStorybook ? false,
             }:
+            let
+              legacyPackage =
+                if includeStorybook then self'.packages.legacy else self'.packages.legacy-production;
+            in
             pkgs.runCommand "boluo-frontend-release${lib.optionalString includeStorybook "-staging"}" { } ''
               mkdir -p \
                 $out/.frontend-versions \
@@ -105,12 +117,12 @@
                 $out/apps/spa/out \
                 $out/packages/backend-proxy/dist
 
-              cp -r ${self'.packages.legacy}/. $out/apps/legacy/dist/
+              cp -r ${legacyPackage}/. $out/apps/legacy/dist/
               cp -r ${self'.packages.spa}/. $out/apps/spa/out/
               cp -r ${self'.packages.spa.backendProxy}/. $out/packages/backend-proxy/dist/
               cp -r ${self'.packages.siteBuild.worker}/. $out/
 
-              printf '%s\n' '${self'.packages.legacy.frontendVersion}' > $out/.frontend-versions/legacy
+              printf '%s\n' '${legacyPackage.frontendVersion}' > $out/.frontend-versions/legacy
               printf '%s\n' '${self'.packages.spa.frontendVersion}' > $out/.frontend-versions/spa
               printf '%s\n' '${self'.packages.siteBuild.frontendVersion}' > $out/.frontend-versions/site
 
@@ -365,7 +377,20 @@
             };
 
             legacy = pkgs.buildNpmPackage (
-              frontendBuildArgs "legacy"
+              frontendBuildArgs { target = "legacy"; }
+              // {
+                installPhase = ''
+                  mkdir -p $out
+                  cp -r apps/legacy/dist/* $out/
+                '';
+              }
+            );
+
+            legacy-production = pkgs.buildNpmPackage (
+              frontendBuildArgs {
+                target = "legacy";
+                legacyAssetBaseUrl = "https://assets.boluo.chat/production/legacy/";
+              }
               // {
                 installPhase = ''
                   mkdir -p $out
@@ -375,7 +400,7 @@
             );
 
             siteBuild = pkgs.buildNpmPackage (
-              frontendBuildArgs "site"
+              frontendBuildArgs { target = "site"; }
               // {
                 outputs = [
                   "out"
@@ -443,7 +468,7 @@
             };
 
             spa = pkgs.buildNpmPackage (
-              frontendBuildArgs "spa"
+              frontendBuildArgs { target = "spa"; }
               // {
                 outputs = [
                   "out"
@@ -460,7 +485,7 @@
             backend-proxy = self'.packages.spa.backendProxy;
 
             storybook = pkgs.buildNpmPackage (
-              frontendBuildArgs "boluo-storybook"
+              frontendBuildArgs { target = "boluo-storybook"; }
               // {
                 pname = "boluo-storybook";
                 npmBuildScript = "build:storybook";

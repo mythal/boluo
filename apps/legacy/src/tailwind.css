@@ -10,6 +10,9 @@
 
 @source './**/*.{ts,tsx}';
 
+/* Preserve the legacy app's touch behavior, where tapping can activate :hover. */
+@custom-variant hover (&:hover);
+
 @theme {
   --color-*: initial;
   --color-inherit: inherit;

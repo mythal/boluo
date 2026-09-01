@@ -103,12 +103,10 @@
               mkdir -p \
                 $out/.frontend-versions \
                 $out/apps/legacy/dist \
-                $out/apps/spa/out \
-                $out/packages/backend-proxy/dist
+                $out/apps/spa/out
 
               cp -r ${self'.packages.legacy}/. $out/apps/legacy/dist/
               cp -r ${self'.packages.spa}/. $out/apps/spa/out/
-              cp -r ${self'.packages.spa.backendProxy}/. $out/packages/backend-proxy/dist/
               cp -r ${self'.packages.siteBuild.worker}/. $out/
 
               printf '%s\n' '${self'.packages.legacy.frontendVersion}' > $out/.frontend-versions/legacy
@@ -446,19 +444,12 @@
             spa = pkgs.buildNpmPackage (
               frontendBuildArgs { target = "spa"; }
               // {
-                outputs = [
-                  "out"
-                  "backendProxy"
-                ];
                 installPhase = ''
-                  mkdir -p $out $backendProxy
+                  mkdir -p $out
                   cp -r apps/spa/out/* $out/
-                  cp -r packages/backend-proxy/dist/* $backendProxy/
                 '';
               }
             );
-
-            backend-proxy = self'.packages.spa.backendProxy;
 
             storybook = pkgs.buildNpmPackage (
               frontendBuildArgs { target = "boluo-storybook"; }

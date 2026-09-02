@@ -7,7 +7,7 @@ import UserMinus from '@boluo/icons/legacy/UserMinus';
 import { userDialogAtom } from '../../states/userDialog';
 import { useDispatch, useSelector } from '../../store';
 import { throwErr } from '../../utils/errors';
-import { encodeUuid, type Id } from '../../utils/id';
+import { type Id } from '../../utils/id';
 import Button from '../atoms/Button';
 import Icon from '../atoms/Icon';
 import Text from '../atoms/Text';
@@ -81,7 +81,7 @@ function MemberDialog({ userId, spaceId, className, dismiss }: Props) {
             <div>
               <Link
                 className="text-legacy-primary-400 mr-1 text-[1.25rem] leading-[1em] font-bold no-underline"
-                to={`/profile/${encodeUuid(user.id)}`}
+                to={`/profile/${user.id}`}
               >
                 {user.nickname}
               </Link>

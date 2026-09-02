@@ -7,7 +7,7 @@ import { type AppResult } from '../../api/request';
 import { type User } from '../../api/users';
 import { useTitleWithResult } from '../../hooks/useTitle';
 import { useDispatch, useSelector } from '../../store';
-import { decodeUuid } from '../../utils/id';
+import { isUuid } from '@boluo/utils/id';
 import Title from '../atoms/Title';
 import Avatar from '../molecules/Avatar';
 import { RenderError } from '../molecules/RenderError';
@@ -15,7 +15,7 @@ import NotFound from './NotFound';
 
 function Profile() {
   const { id: encodedId } = useParams();
-  let id = encodedId ? decodeUuid(encodedId, { parameter: 'user_id' }) : undefined;
+  let id = encodedId && isUuid(encodedId) ? encodedId : undefined;
   const invalidRouteId = Boolean(encodedId && !id);
   const myId = useSelector((state) => state.profile?.user.id);
   id = encodedId ? id : myId;

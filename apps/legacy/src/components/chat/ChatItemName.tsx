@@ -6,7 +6,7 @@ import Gamemaster from '@boluo/icons/legacy/Gamemaster';
 import { useChannelId } from '../../hooks/useChannelId';
 import { useSelector } from '../../store';
 import { genColor } from '../../utils/game';
-import { encodeUuid, type Id } from '../../utils/id';
+import { type Id } from '../../utils/id';
 import Icon from '../atoms/Icon';
 import Tooltip from '../atoms/Tooltip';
 
@@ -40,7 +40,7 @@ function ChatItemName({ name, userId, master }: Props) {
           ref={linkRef}
           className="relative font-bold no-underline"
           style={{ color }}
-          to={`/profile/${encodeUuid(userId)}`}
+          to={`/profile/${userId}`}
         >
           {name}
         </Link>

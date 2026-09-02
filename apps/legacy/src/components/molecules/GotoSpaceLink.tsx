@@ -2,7 +2,7 @@ import * as React from 'react';
 import Binoculars from '@boluo/icons/legacy/Binoculars';
 import Teleport from '@boluo/icons/legacy/Teleport';
 import Icon from '../../components/atoms/Icon';
-import { encodeUuid, type Id } from '../../utils/id';
+import { type Id } from '../../utils/id';
 import { ButtonLink } from '../atoms/Button';
 
 interface Props {
@@ -12,7 +12,7 @@ interface Props {
 }
 
 function GotoSpaceLink({ isMember, spaceId, className }: Props) {
-  const chatPath = `/chat/${encodeUuid(spaceId)}`;
+  const chatPath = `/chat/${spaceId}`;
   if (isMember) {
     return (
       <ButtonLink size="small" variant="primary" className={className} to={chatPath}>

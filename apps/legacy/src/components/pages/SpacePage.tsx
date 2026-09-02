@@ -12,7 +12,7 @@ import GotoSpaceLink from '../../components/molecules/GotoSpaceLink';
 import { useTitleWithResult } from '../../hooks/useTitle';
 import { useDispatch, useSelector } from '../../store';
 import { throwErr } from '../../utils/errors';
-import { decodeUuid, encodeUuid } from '../../utils/id';
+import { isUuid } from '@boluo/utils/id';
 import Button from '../atoms/Button';
 import Icon from '../atoms/Icon';
 import Input from '../atoms/Input';
@@ -48,7 +48,7 @@ function SpacePageRender({ id, token }: { id: string; token: string | undefined 
       return;
     }
     const token = result.value;
-    setInviteLink(`${location.origin}/join/space/${encodeUuid(id)}/${encodeUuid(token)}`);
+    setInviteLink(`${location.origin}/#/join/space/${id}/${token}`);
   };
 
   const copyInviteLink = async () => {
@@ -130,8 +130,8 @@ function SpacePage() {
     }
     return null;
   }
-  const id = decodeUuid(encodedId, { parameter: 'space_id' });
-  const token = encodedToken ? decodeUuid(encodedToken, { parameter: 'invite_token' }) : undefined;
+  const id = isUuid(encodedId) ? encodedId : undefined;
+  const token = encodedToken ? (isUuid(encodedToken) ? encodedToken : undefined) : undefined;
   if (!id || (encodedToken && !token)) {
     return <NotFound />;
   }

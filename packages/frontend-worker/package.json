@@ -5,6 +5,7 @@
     "@boluo/eslint-config": "0.0.0",
     "@cloudflare/workers-types": "5",
     "eslint": "^10.6.0",
+    "tsx": "^4.23.0",
     "typescript": "^6"
   },
   "exports": {
@@ -14,7 +15,7 @@
   "scripts": {
     "build": "tsc",
     "lint": "eslint .",
-    "test": "npm run build && node --test test/*.test.mjs"
+    "test": "node --import tsx --test src/**/*.test.ts"
   },
   "type": "module"
 }

@@ -969,7 +969,7 @@ export function buildBoluoDashboard(
         id: 38,
         title: 'Frontend logs',
         datasourceUid: logsDatasourceUid,
-        expr: `{app="${APP}"} (event:="frontend.log" OR event:="frontend.exception")`,
+        expr: `{app="${APP}"} (event:="frontend.log" OR event:="frontend.exception") -frontend_exception_origin:="external_or_unknown"`,
       }),
     )
     .layout(

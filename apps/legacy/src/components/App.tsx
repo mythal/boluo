@@ -1,5 +1,5 @@
 import React, { Suspense, useCallback, useEffect, useRef, useState } from 'react';
-import { BrowserRouter } from 'react-router-dom';
+import { HashRouter } from 'react-router-dom';
 import store, { useDispatch, useSelector } from '../store';
 import Flash from './organisms/Flash';
 import 'sanitize.css';
@@ -93,9 +93,9 @@ export const App: React.FC = () => {
   return (
     <Suspense fallback={<PageLoading text="load modules" />}>
       <NewVersionBanner />
-      <BrowserRouter>
+      <HashRouter>
         <Router />
-      </BrowserRouter>
+      </HashRouter>
       {flashState.size !== 0 && <Flash flashState={flashState} />}
     </Suspense>
   );

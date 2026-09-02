@@ -1,4 +1,5 @@
 import type { ExportedHandler, WorkerVersionMetadata } from '@cloudflare/workers-types';
+import { legacyHashRedirect } from './legacy-redirect';
 
 interface Env {
   ASSETS: Fetcher;
@@ -165,6 +166,10 @@ export const createFrontendWorker = (frontendApp: FrontendApp): ExportedHandler<
     }
 
     if (!isApiPath(url.pathname)) {
+      if (frontendApp === 'legacy') {
+        const redirect = legacyHashRedirect(request, url);
+        if (redirect) return redirect;
+      }
       return await frontendNotFound(request, url, env, frontendApp);
     }
 

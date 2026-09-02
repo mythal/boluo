@@ -6,16 +6,20 @@
 use std::collections::HashMap;
 use std::net::{IpAddr, Ipv4Addr};
 use std::num::NonZeroU32;
-use std::sync::LazyLock;
+use std::sync::{LazyLock, OnceLock};
 
+use bytes::Bytes;
 use governor::{DefaultDirectRateLimiter, DefaultKeyedRateLimiter, Quota, RateLimiter};
 use hyper::body::Body;
 use hyper::header::{CONTENT_ENCODING, CONTENT_TYPE};
 use hyper::{Method, Request, StatusCode};
 use serde::Deserialize;
 use sonic_rs::{JsonType, JsonValueTrait, LazyValue};
+use tokio::sync::mpsc;
 
 use crate::error::AppError;
+pub(crate) use crate::frontend_sourcemap::Config;
+use crate::frontend_sourcemap::{Resolver as SourceMapResolver, StackFrame};
 use crate::interface::{Response, read_body_limited};
 use crate::rate_limit::Ipv6Prefix64;
 
@@ -25,6 +29,7 @@ const MAX_MESSAGE_BYTES: usize = 2 * 1024;
 const MAX_LOG_CONTEXT_BYTES: usize = 8 * 1024;
 const MAX_STACKTRACE_BYTES: usize = 8 * 1024;
 const MAX_EXCEPTION_SUMMARY_BYTES: usize = 160;
+const TELEMETRY_QUEUE_CAPACITY: usize = 1024;
 
 static GLOBAL_LIMITER: LazyLock<DefaultDirectRateLimiter> = LazyLock::new(|| {
     RateLimiter::direct(
@@ -43,6 +48,7 @@ static CLIENT_IPV6_PREFIX_LIMITER: LazyLock<DefaultKeyedRateLimiter<Ipv6Prefix64
                 .allow_burst(NonZeroU32::new(10).unwrap()),
         )
     });
+static TELEMETRY_QUEUE: OnceLock<mpsc::Sender<Bytes>> = OnceLock::new();
 
 #[derive(Debug, Default, Deserialize)]
 struct FaroPayload<'a> {
@@ -216,6 +222,74 @@ fn sanitized_page_path(raw_url: &str) -> String {
     path
 }
 
+async fn telemetry_worker(mut receiver: mpsc::Receiver<Bytes>, resolver: SourceMapResolver) {
+    while let Some(body) = receiver.recv().await {
+        let payload: FaroPayload = match sonic_rs::from_slice(&body) {
+            Ok(payload) => payload,
+            Err(error) => {
+                metrics::counter!(
+                    "boluo_server_frontend_telemetry_requests_total",
+                    "result" => "worker_parse_failed"
+                )
+                .increment(1);
+                tracing::warn!(
+                    event = "frontend.telemetry.worker_parse_failed",
+                    %error,
+                    "Failed to parse queued frontend telemetry payload"
+                );
+                continue;
+            }
+        };
+        if let Err(error) = process(payload, &resolver).await {
+            metrics::counter!(
+                "boluo_server_frontend_telemetry_requests_total",
+                "result" => "worker_process_failed"
+            )
+            .increment(1);
+            tracing::warn!(
+                event = "frontend.telemetry.worker_process_failed",
+                %error,
+                "Failed to process queued frontend telemetry payload"
+            );
+        }
+    }
+}
+
+fn telemetry_queue(config: Config) -> &'static mpsc::Sender<Bytes> {
+    TELEMETRY_QUEUE.get_or_init(|| {
+        let (sender, receiver) = mpsc::channel(TELEMETRY_QUEUE_CAPACITY);
+        std::thread::Builder::new()
+            .name("frontend-telemetry".to_owned())
+            .spawn(move || {
+                let runtime = tokio::runtime::Builder::new_current_thread()
+                    .enable_all()
+                    .build()
+                    .expect("frontend telemetry runtime can be created");
+                runtime.block_on(async move {
+                    let resolver = match SourceMapResolver::new(config.clone()).await {
+                        Ok(resolver) => resolver,
+                        Err(error) => {
+                            tracing::error!(
+                                event = "frontend.telemetry.sourcemap_start_failed",
+                                %error,
+                                "Failed to start frontend source map resolver; disabling symbolication"
+                            );
+                            SourceMapResolver::new(Config {
+                                source_map_base_url: None,
+                                ..config
+                            })
+                            .await
+                            .expect("disabled source map resolver can be started")
+                        }
+                    };
+                    telemetry_worker(receiver, resolver).await;
+                });
+            })
+            .expect("frontend telemetry worker can be started");
+        sender
+    })
+}
+
 fn check_rate_limit(client_ip: IpAddr) -> Result<(), AppError> {
     let client_limited = match client_ip {
         IpAddr::V4(ip) => CLIENT_IPV4_LIMITER.check_key(&ip).is_err(),
@@ -267,33 +341,7 @@ fn has_first_party_stack_frame(exception: &FaroException) -> bool {
     })
 }
 
-fn stacktrace(exception: &FaroException) -> String {
-    let mut output = String::new();
-    let Some(stacktrace) = &exception.stacktrace else {
-        return output;
-    };
-    for frame in stacktrace.frames.iter().rev().take(32) {
-        if !output.is_empty() {
-            output.push('\n');
-        }
-        use std::fmt::Write as _;
-        let _ = write!(
-            output,
-            "{} ({}:{}:{})",
-            truncated(&frame.function, 256),
-            truncated(&frame.filename, 512),
-            frame.lineno.unwrap_or_default(),
-            frame.colno.unwrap_or_default()
-        );
-        if output.len() >= MAX_STACKTRACE_BYTES {
-            output.truncate(output.floor_char_boundary(MAX_STACKTRACE_BYTES));
-            break;
-        }
-    }
-    output
-}
-
-fn process(payload: FaroPayload<'_>) -> Result<(), AppError> {
+fn validate_payload(payload: &FaroPayload<'_>) -> Result<(), AppError> {
     let signal_count = payload.signal_count();
     if signal_count == 0 {
         return Err(AppError::BadRequest(
@@ -305,6 +353,11 @@ fn process(payload: FaroPayload<'_>) -> Result<(), AppError> {
             "Frontend telemetry batch contains too many signals".to_owned(),
         ));
     }
+    Ok(())
+}
+
+async fn process(payload: FaroPayload<'_>, resolver: &SourceMapResolver) -> Result<(), AppError> {
+    validate_payload(&payload)?;
 
     let frontend_app_name = truncated(payload.meta.app.name.as_deref().unwrap_or("unknown"), 128);
     let frontend_app_version = truncated(payload.meta.app.version.as_deref().unwrap_or(""), 128);
@@ -324,7 +377,27 @@ fn process(payload: FaroPayload<'_>) -> Result<(), AppError> {
     let frontend_page_path = sanitized_page_path(payload.meta.page.url.as_deref().unwrap_or(""));
 
     for exception in &payload.exceptions {
-        let stacktrace = stacktrace(exception);
+        let symbolicated_stacktrace = resolver
+            .stacktrace(
+                frontend_app_name,
+                exception.stacktrace.as_ref().map(|stacktrace| {
+                    stacktrace
+                        .frames
+                        .iter()
+                        .rev()
+                        .take(32)
+                        .map(|frame| StackFrame {
+                            filename: truncated(&frame.filename, 512),
+                            function: truncated(&frame.function, 256),
+                            lineno: frame.lineno,
+                            colno: frame.colno,
+                        })
+                }),
+            )
+            .await;
+        let stacktrace = symbolicated_stacktrace.stacktrace;
+        let raw_stacktrace = symbolicated_stacktrace.raw_stacktrace;
+        let sourcemap_status = symbolicated_stacktrace.status;
         let exception_summary = exception_summary(exception);
         let frontend_exception_origin = if has_first_party_stack_frame(exception) {
             "first_party"
@@ -391,6 +464,8 @@ fn process(payload: FaroPayload<'_>) -> Result<(), AppError> {
                         MAX_STACKTRACE_BYTES
                     ),
                     stacktrace,
+                    raw_stacktrace,
+                    sourcemap_status,
                     frontend_exception_origin,
                     frontend_app_name,
                     frontend_app_version,
@@ -543,17 +618,49 @@ where
     let body = read_body_limited(req, MAX_BODY_BYTES).await?;
     let payload: FaroPayload = sonic_rs::from_slice(&body)
         .map_err(|_| AppError::BadRequest("Invalid frontend telemetry payload".to_owned()))?;
-    process(payload)?;
-    metrics::counter!(
-        "boluo_server_frontend_telemetry_requests_total",
-        "result" => "accepted"
-    )
-    .increment(1);
+    validate_payload(&payload)?;
+    drop(payload);
+
+    match telemetry_queue(Config::default()).try_send(body) {
+        Ok(()) => {
+            metrics::counter!(
+                "boluo_server_frontend_telemetry_requests_total",
+                "result" => "accepted"
+            )
+            .increment(1);
+        }
+        Err(mpsc::error::TrySendError::Full(_)) => {
+            metrics::counter!(
+                "boluo_server_frontend_telemetry_requests_total",
+                "result" => "queue_full"
+            )
+            .increment(1);
+            tracing::warn!(
+                event = "frontend.telemetry.queue_full",
+                "Dropping frontend telemetry because the queue is full"
+            );
+        }
+        Err(mpsc::error::TrySendError::Closed(_)) => {
+            metrics::counter!(
+                "boluo_server_frontend_telemetry_requests_total",
+                "result" => "queue_closed"
+            )
+            .increment(1);
+            tracing::error!(
+                event = "frontend.telemetry.queue_closed",
+                "Dropping frontend telemetry because the queue is closed"
+            );
+        }
+    }
 
     hyper::Response::builder()
         .status(StatusCode::ACCEPTED)
         .body(crate::interface::ResponseBytes::new())
         .map_err(|error| AppError::Unexpected(error.into()))
+}
+
+pub fn start_worker(config: Config) {
+    let _ = telemetry_queue(config);
 }
 
 pub fn start_rate_limiter_cleanup() {

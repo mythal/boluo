@@ -13,6 +13,11 @@ pub async fn connect(redis_url: Option<&str>) -> Option<redis::aio::ConnectionMa
         return None;
     };
     let client = redis::Client::open(redis_url).expect("Invalid Redis URL");
+    let connection_info = client
+        .get_connection_info()
+        .clone()
+        .set_tcp_settings(redis::io::tcp::TcpSettings::default().set_nodelay(true));
+    let client = redis::Client::open(connection_info).expect("Invalid Redis connection info");
     let manager = client
         .get_connection_manager()
         .await

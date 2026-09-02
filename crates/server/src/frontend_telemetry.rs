@@ -258,6 +258,15 @@ fn exception_summary(exception: &FaroException) -> String {
     }
 }
 
+fn has_first_party_stack_frame(exception: &FaroException) -> bool {
+    exception.stacktrace.as_ref().is_some_and(|stacktrace| {
+        stacktrace.frames.iter().any(|frame| {
+            let filename = frame.filename.as_str();
+            filename.contains("/_next/static/") || filename.contains("/assets/")
+        })
+    })
+}
+
 fn stacktrace(exception: &FaroException) -> String {
     let mut output = String::new();
     let Some(stacktrace) = &exception.stacktrace else {
@@ -317,76 +326,93 @@ fn process(payload: FaroPayload<'_>) -> Result<(), AppError> {
     for exception in &payload.exceptions {
         let stacktrace = stacktrace(exception);
         let exception_summary = exception_summary(exception);
-        tracing::error!(
-            event = "frontend.exception",
-            exception_type = truncated(&exception.exception_type, 256),
-            exception_value = truncated(&exception.value, MAX_MESSAGE_BYTES),
-            exception_fatal = exception.fatal,
-            exception_fingerprint = truncated(exception.fingerprint.as_deref().unwrap_or(""), 256),
-            frontend_timestamp = truncated(exception.timestamp.as_deref().unwrap_or(""), 64),
-            frontend_event_id = truncated(
-                exception
-                    .context
-                    .get("event_id")
-                    .map(String::as_str)
-                    .unwrap_or(""),
-                128
-            ),
-            frontend_error_digest = truncated(
-                exception
-                    .context
-                    .get("digest")
-                    .map(String::as_str)
-                    .unwrap_or(""),
-                128
-            ),
-            frontend_source = truncated(
-                exception
-                    .context
-                    .get("source")
-                    .map(String::as_str)
-                    .unwrap_or(""),
-                64
-            ),
-            frontend_request_path = truncated(
-                exception
-                    .context
-                    .get("request_path")
-                    .map(String::as_str)
-                    .unwrap_or(""),
-                256
-            ),
-            api_error_code = truncated(
-                exception
-                    .context
-                    .get("api_error_code")
-                    .map(String::as_str)
-                    .unwrap_or(""),
-                64
-            ),
-            component_stack = truncated(
-                exception
-                    .context
-                    .get("component_stack")
-                    .map(String::as_str)
-                    .unwrap_or(""),
-                MAX_STACKTRACE_BYTES
-            ),
-            stacktrace,
-            frontend_app_name,
-            frontend_app_version,
-            frontend_app_environment,
-            frontend_app_release,
-            browser_name,
-            browser_version,
-            browser_os,
-            browser_mobile,
-            frontend_user_id,
-            faro_session_id,
-            frontend_page_path,
-            "{}",
-            exception_summary
-        );
+        let frontend_exception_origin = if has_first_party_stack_frame(exception) {
+            "first_party"
+        } else {
+            "external_or_unknown"
+        };
+        macro_rules! log_exception {
+            ($level:ident) => {
+                tracing::$level!(
+                    event = "frontend.exception",
+                    exception_type = truncated(&exception.exception_type, 256),
+                    exception_value = truncated(&exception.value, MAX_MESSAGE_BYTES),
+                    exception_fatal = exception.fatal,
+                    exception_fingerprint =
+                        truncated(exception.fingerprint.as_deref().unwrap_or(""), 256),
+                    frontend_timestamp =
+                        truncated(exception.timestamp.as_deref().unwrap_or(""), 64),
+                    frontend_event_id = truncated(
+                        exception
+                            .context
+                            .get("event_id")
+                            .map(String::as_str)
+                            .unwrap_or(""),
+                        128
+                    ),
+                    frontend_error_digest = truncated(
+                        exception
+                            .context
+                            .get("digest")
+                            .map(String::as_str)
+                            .unwrap_or(""),
+                        128
+                    ),
+                    frontend_source = truncated(
+                        exception
+                            .context
+                            .get("source")
+                            .map(String::as_str)
+                            .unwrap_or(""),
+                        64
+                    ),
+                    frontend_request_path = truncated(
+                        exception
+                            .context
+                            .get("request_path")
+                            .map(String::as_str)
+                            .unwrap_or(""),
+                        256
+                    ),
+                    api_error_code = truncated(
+                        exception
+                            .context
+                            .get("api_error_code")
+                            .map(String::as_str)
+                            .unwrap_or(""),
+                        64
+                    ),
+                    component_stack = truncated(
+                        exception
+                            .context
+                            .get("component_stack")
+                            .map(String::as_str)
+                            .unwrap_or(""),
+                        MAX_STACKTRACE_BYTES
+                    ),
+                    stacktrace,
+                    frontend_exception_origin,
+                    frontend_app_name,
+                    frontend_app_version,
+                    frontend_app_environment,
+                    frontend_app_release,
+                    browser_name,
+                    browser_version,
+                    browser_os,
+                    browser_mobile,
+                    frontend_user_id,
+                    faro_session_id,
+                    frontend_page_path,
+                    "{}",
+                    exception_summary
+                );
+            };
+        }
+        if frontend_exception_origin == "external_or_unknown" {
+            log_exception!(info);
+        } else {
+            log_exception!(error);
+        }
     }
 
     for log in &payload.logs {

@@ -24,6 +24,7 @@ const MAX_SIGNALS_PER_BATCH: usize = 10;
 const MAX_MESSAGE_BYTES: usize = 2 * 1024;
 const MAX_LOG_CONTEXT_BYTES: usize = 8 * 1024;
 const MAX_STACKTRACE_BYTES: usize = 8 * 1024;
+const MAX_EXCEPTION_SUMMARY_BYTES: usize = 160;
 
 static GLOBAL_LIMITER: LazyLock<DefaultDirectRateLimiter> = LazyLock::new(|| {
     RateLimiter::direct(
@@ -245,6 +246,18 @@ fn check_rate_limit(client_ip: IpAddr) -> Result<(), AppError> {
     Ok(())
 }
 
+fn exception_summary(exception: &FaroException) -> String {
+    let exception_type = truncated(&exception.exception_type, 64).trim();
+    let exception_value = truncated(&exception.value, MAX_EXCEPTION_SUMMARY_BYTES).trim();
+    if exception_type.is_empty() {
+        exception_value.to_owned()
+    } else if exception_value.is_empty() {
+        exception_type.to_owned()
+    } else {
+        format!("{exception_type}: {exception_value}")
+    }
+}
+
 fn stacktrace(exception: &FaroException) -> String {
     let mut output = String::new();
     let Some(stacktrace) = &exception.stacktrace else {
@@ -303,6 +316,7 @@ fn process(payload: FaroPayload<'_>) -> Result<(), AppError> {
 
     for exception in &payload.exceptions {
         let stacktrace = stacktrace(exception);
+        let exception_summary = exception_summary(exception);
         tracing::error!(
             event = "frontend.exception",
             exception_type = truncated(&exception.exception_type, 256),
@@ -370,7 +384,8 @@ fn process(payload: FaroPayload<'_>) -> Result<(), AppError> {
             frontend_user_id,
             faro_session_id,
             frontend_page_path,
-            "Frontend exception"
+            "{}",
+            exception_summary
         );
     }
 

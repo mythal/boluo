@@ -24,15 +24,11 @@ jobs:
     name: Format Check
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    permissions:
-      contents: read
     steps:
       - uses: actions/checkout@v7
 
       - name: Nix Setup
         uses: ./.github/actions/nix-setup
-        with:
-          enable-magic-cache: false
 
       - name: Node.js Setup
         uses: ./.github/actions/node-setup
@@ -52,9 +48,6 @@ jobs:
     name: Cargo Checks
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    permissions:
-      contents: read
-      id-token: write
     steps:
       - uses: actions/checkout@v7
 

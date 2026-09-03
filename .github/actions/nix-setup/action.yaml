@@ -1,10 +1,5 @@
 name: Nix Setup
 description: Setup Nix for the workflow
-inputs:
-  enable-magic-cache:
-    description: Enable Magic Nix Cache for this job
-    required: false
-    default: 'true'
 runs:
   using: 'composite'
   steps:
@@ -16,15 +11,13 @@ runs:
         extra-conf: |
           extra-sandbox-paths = /tmp/sccache?
 
-    # https://github.com/DeterminateSystems/magic-nix-cache
-    - name: Magic Nix Cache
-      if: inputs.enable-magic-cache == 'true'
-      uses: DeterminateSystems/magic-nix-cache-action@908b263ff629f4cc17666315b7fd3ec127c6244d
+    # https://github.com/nix-community/cache-nix-action
+    - name: Cache Nix store
+      uses: nix-community/cache-nix-action@7df957e333c1e5da7721f60227dbba6d06080569
       with:
-        use-gha-cache: enabled
-        use-flakehub: disabled
-        upstream-cache: https://cache.nixos.org
-        diagnostic-endpoint: ''
+        primary-key: nix-${{ runner.os }}-${{ github.workflow }}-${{ github.job }}-${{ github.sha }}
+        restore-prefixes-first-match: |
+          nix-${{ runner.os }}-${{ github.workflow }}-${{ github.job }}-
 
     - name: Show Nix Config
       shell: bash

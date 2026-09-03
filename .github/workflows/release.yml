@@ -49,6 +49,8 @@ jobs:
 
       - name: Nix Setup
         uses: ./.github/actions/nix-setup
+        with:
+          cache: false
 
       - name: Check whether server deployment changed
         id: server_deployment
@@ -219,6 +221,8 @@ jobs:
 
       - name: Nix Setup
         uses: ./.github/actions/nix-setup
+        with:
+          cache: false
 
       - name: Deploy site to staging
         if: >-

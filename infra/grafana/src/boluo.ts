@@ -979,8 +979,8 @@ export function buildBoluoDashboard(
           .collapse(false)
           .layout(
             new GridBuilder().items([
-              gridItem(panels.applicationLogs).x(0).y(0).width(24).height(8),
-              gridItem(panels.frontendLogs).x(0).y(8).width(24).height(8),
+              gridItem(panels.applicationLogs).x(0).y(0).width(24).height(16),
+              gridItem(panels.frontendLogs).x(0).y(16).width(24).height(16),
             ]),
           ),
         new RowBuilder()

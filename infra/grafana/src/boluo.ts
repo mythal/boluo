@@ -969,7 +969,7 @@ export function buildBoluoDashboard(
         id: 38,
         title: 'Frontend logs',
         datasourceUid: logsDatasourceUid,
-        expr: `{app="${APP}"} (event:="frontend.log" OR event:="frontend.exception")`,
+        expr: `{app="${APP}"} (event:="frontend.log" OR event:="frontend.exception") -frontend_exception_origin:="external_or_unknown"`,
       }),
     )
     .layout(
@@ -979,8 +979,8 @@ export function buildBoluoDashboard(
           .collapse(false)
           .layout(
             new GridBuilder().items([
-              gridItem(panels.applicationLogs).x(0).y(0).width(24).height(8),
-              gridItem(panels.frontendLogs).x(0).y(8).width(24).height(8),
+              gridItem(panels.applicationLogs).x(0).y(0).width(24).height(16),
+              gridItem(panels.frontendLogs).x(0).y(16).width(24).height(16),
             ]),
           ),
         new RowBuilder()

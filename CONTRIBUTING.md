@@ -1,12 +1,12 @@
 This project is an open‑source chat tool designed for playing traditional tabletop RPGs (e.g., D&D, CoC). It is structured as a Rust + TypeScript monorepo managed with Turborepo. The repository consists of a Rust backend and multiple Next.js frontend applications.
 
-Important design decisions are documented in `docs/DESIGN.md`. However, you should not modify it; only propose changes when truly necessary.
+Important design decisions are documented in `docs/DESIGN.md`, which is intentionally kept concise and only records non-obvious decisions.
 
 ## General Notes
 
-- The language of the codebase is English. However, you should respond to the user in the language they used.
+- The language of the codebase is English.
 - Before making changes, ensure you understand the relevant parts of the codebase.
-- After making changes, provide 2-3 concise possible commit messages as options to summarize all uncommitted work using the conventional commit format, with the package name as the scope.
+- Use [Scoped Commits](https://scopedcommits.com/) as the commit convention. For example: `spa, legacy: add some new feature`.
 - Temporary files created during development can be placed in the `.tmp/` directory, which is ignored.
 
 ## Observability
@@ -16,6 +16,8 @@ The observability stack includes:
 - VictoriaMetrics `https://metrics.mythal.net/api/v1/query`
 - VictoriaLog `https://log.mythal.net/`
 
+These services are internal and accessible only to trusted contributors.
+
 ---
 
 ## Backend (`crates/server`)
@@ -24,13 +26,12 @@ The backend is written in Rust using **hyper** and **tokio**. PostgreSQL 18 is a
 
 The standalone database schema is located in `apps/db/schema.sql`. Migrations are in `crates/server/migrations`.
 
-While multi-node support is planned, currently only single-node deployment is available.
+Although sharding by space is planned, only single-node deployment is currently available.
 
 ### Development Notes
 
 - When modifying SQL statements or RESTful APIs, run: `cargo run -p server -- types` to regenerate types.
-- You should run `cargo check` after modifying any Rust code.
-- Run tests by cargo-nextest
+- Run tests with cargo-nextest.
 - Database-related tests:
   - Use `sqlx::test`
   - Test function names must start with `db_test_`
@@ -43,22 +44,20 @@ The frontend consists of three applications.
 
 ### Checking and Linting
 
-You should run `npm run check` after modifying TypeScript code.
-
 - Type checking: `npm run check`
 - Linting: `npm run lint`
 
-> **Note**: `noUncheckedIndexedAccess` is enabled in TypeScript configuration. Please handle potential `undefined` results when accessing arrays or objects by index.
+> **Note**: `noUncheckedIndexedAccess` is enabled in TypeScript configuration.
 
 Turborepo's options are available for both commands, e.g., `npm run check -- --filter=site --filter='@boluo/ui'`.
 
 ### Main Chat App (`apps/spa`)
 
 - Built with **Next.js**, exported as a **static** site.
-- Styling: **tailwindcss v4** (config in `packages/tailwind-config/tailwind.css`).
+- Styling via **Tailwind CSS v4** (config in `packages/tailwind-config/tailwind.css`).
 - State management: **jotai**.
-- Default UI language: English, with internationalization via **react-intl**.
-- Basic components are located in `packages/ui`. Prioritize using existing base components; if necessary, you can add new components in `packages/ui`.
+- Default UI language is English, with internationalization via **react-intl**.
+- Basic components are located in `packages/ui`. Prioritize using existing base components.
 
 ### Main Site (`apps/site`)
 
@@ -67,11 +66,11 @@ Turborepo's options are available for both commands, e.g., `npm run check -- --f
 
 ### Legacy Chat App (`apps/legacy`)
 
-- A historical Vite + React SPA.
-- Styling via **emotion**, written in a utility-first style similar to Tailwind.
+- Vite + React SPA.
+- Styling via **Tailwind CSS v4**.
 - State management is a mix of jotai and redux.
 
 ### Shared UI (`packages/ui`)
 
 - Contains common stateless UI components.
-- Components here should have associated stories in `apps/storybook`.
+- Each component should have an associated story in `apps/storybook`.

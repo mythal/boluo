@@ -46,6 +46,7 @@ mod db;
 mod disk_cache;
 mod entries;
 mod events;
+mod frontend_sourcemap;
 mod frontend_telemetry;
 mod http_client;
 mod info;
@@ -465,6 +466,28 @@ struct ServeArgs {
     app_url: Option<String>,
     #[clap(long, env = "SITE_URL")]
     site_url: Option<String>,
+    #[clap(long, env = "FRONTEND_SOURCEMAP_BASE_URL")]
+    frontend_sourcemap_base_url: Option<url::Url>,
+    #[clap(
+        long,
+        env = "FRONTEND_SOURCEMAP_CACHE_MB",
+        default_value_t = frontend_sourcemap::DEFAULT_SOURCE_MAP_CACHE_BYTES / (1024 * 1024),
+        help = "Frontend source map parsed memory cache size in MiB"
+    )]
+    frontend_sourcemap_cache_mb: usize,
+    #[clap(
+        long,
+        env = "FRONTEND_SOURCEMAP_DISK_CACHE_RATIO",
+        default_value_t = frontend_sourcemap::DEFAULT_SOURCE_MAP_DISK_CACHE_RATIO,
+        help = "Frontend source map raw bytes disk cache size as a multiple of the parsed memory cache size"
+    )]
+    frontend_sourcemap_disk_cache_ratio: usize,
+    #[clap(
+        long,
+        env = "FRONTEND_SOURCEMAP_DISK_CACHE_PATH",
+        help = "Frontend source map raw bytes foyer disk cache directory"
+    )]
+    frontend_sourcemap_disk_cache_path: Option<PathBuf>,
     #[clap(long, env = "DISCOURSE_SSO_SECRET")]
     discourse_sso_secret: Option<String>,
     #[clap(long, env = "SECRET")]
@@ -846,6 +869,15 @@ async fn run_server(worker_threads: usize, max_blocking_threads: usize) {
     channels::start_rate_limiter_cleanup();
     media::start_rate_limiter_cleanup();
     frontend_telemetry::start_rate_limiter_cleanup();
+    frontend_telemetry::start_worker(frontend_telemetry::Config {
+        source_map_base_url: args.frontend_sourcemap_base_url.clone(),
+        source_map_cache_bytes: args.frontend_sourcemap_cache_mb.saturating_mul(1024 * 1024),
+        source_map_disk_cache_ratio: args.frontend_sourcemap_disk_cache_ratio,
+        source_map_disk_cache_path: args
+            .frontend_sourcemap_disk_cache_path
+            .clone()
+            .unwrap_or_else(|| env::temp_dir().join("boluo-frontend-sourcemaps")),
+    });
     let timeout_counter = metrics::counter!("boluo_server_tcp_connections_timeout_total");
     let error_counter = metrics::counter!("boluo_server_tcp_connections_error_total");
 

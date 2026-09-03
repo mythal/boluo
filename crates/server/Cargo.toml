@@ -96,6 +96,7 @@ tokio-metrics = { version = "0.5.0", features = ["metrics-rs-integration"] }
 metrics-exporter-prometheus = "0.18.1"
 metrics = "0.24"
 sonic-rs = "0.5.8"
+sourcemap = "9.3.2"
 
 [dependencies.reqwest]
 version = "0.13.2"

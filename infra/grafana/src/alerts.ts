@@ -228,9 +228,7 @@ export function buildAlertRules(datasourceUid: string): AlertRulesProvisioning {
         alertRule(datasourceUid, backups, {
           uid: 'boluo-backup-unhealthy',
           title: 'Backup repository unhealthy',
-          expression: unavailable(
-            `1 - clamp_max(max(${backupMetric('pgbackrest_stanza_status')} or ${backupMetric('pgbackrest_repo_status')} or ${backupMetric('pgbackrest_backup_last_error_status')}), 1)`,
-          ),
+          expression: `1 - clamp_max(max(${backupMetric('pgbackrest_stanza_status')} or ${backupMetric('pgbackrest_repo_status')} or ${backupMetric('pgbackrest_backup_last_error_status')}), 1)`,
           comparator: 'lt',
           threshold: 1,
           forDuration: '5m',
@@ -240,7 +238,7 @@ export function buildAlertRules(datasourceUid: string): AlertRulesProvisioning {
         alertRule(datasourceUid, backups, {
           uid: 'boluo-wal-archive-unhealthy',
           title: 'WAL archive unhealthy',
-          expression: unavailable(`min(${backupMetric('pgbackrest_wal_archive_status')})`),
+          expression: `min(${backupMetric('pgbackrest_wal_archive_status')})`,
           comparator: 'lt',
           threshold: 1,
           forDuration: '5m',
@@ -250,17 +248,17 @@ export function buildAlertRules(datasourceUid: string): AlertRulesProvisioning {
         alertRule(datasourceUid, backups, {
           uid: 'boluo-daily-backup-stale',
           title: 'Daily backup stale',
-          expression: `max(${backupMetric('pgbackrest_backup_since_last_completion_seconds', 'backup_type="diff"')}) or vector(${DAILY_BACKUP_MAX_AGE_SECONDS + 1})`,
+          expression: `max(${backupMetric('pgbackrest_backup_since_last_completion_seconds', 'backup_type="diff"')})`,
           comparator: 'gt',
           threshold: DAILY_BACKUP_MAX_AGE_SECONDS,
           forDuration: '5m',
           severity: 'critical',
-          summary: 'No full or differential backup has completed within 36 hours.',
+          summary: 'No differential backup has completed within 36 hours.',
         }),
         alertRule(datasourceUid, backups, {
           uid: 'boluo-full-backup-stale',
           title: 'Full backup stale',
-          expression: `max(${backupMetric('pgbackrest_backup_since_last_completion_seconds', 'backup_type="full"')}) or vector(${FULL_BACKUP_MAX_AGE_SECONDS + 1})`,
+          expression: `max(${backupMetric('pgbackrest_backup_since_last_completion_seconds', 'backup_type="full"')})`,
           comparator: 'gt',
           threshold: FULL_BACKUP_MAX_AGE_SECONDS,
           forDuration: '5m',

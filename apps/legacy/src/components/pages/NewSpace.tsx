@@ -9,7 +9,6 @@ import Implosion from '@boluo/icons/legacy/Implosion';
 import NightSky from '@boluo/icons/legacy/NightSky';
 import { useTitle } from '../../hooks/useTitle';
 import { useDispatch } from '../../store';
-import { encodeUuid } from '../../utils/id';
 import {
   channelNameValidation,
   descriptionValidation,
@@ -51,7 +50,7 @@ function NewSpace() {
       const { space, member } = result.value;
       const action: JoinedSpace = { type: 'JOINED_SPACE', space, member };
       dispatch<JoinedSpace>(action);
-      navigate(`/space/${encodeUuid(space.id)}`);
+      navigate(`/space/${space.id}`);
     } else {
       setCreationError(result.value);
     }

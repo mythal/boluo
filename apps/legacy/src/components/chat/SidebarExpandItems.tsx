@@ -9,7 +9,6 @@ import HelpIcon from '@boluo/icons/legacy/Help';
 import PlusCircle from '@boluo/icons/legacy/PlusCircle';
 import { useNotificationSwitch } from '../../states/notify';
 import { useSelector } from '../../store';
-import { encodeUuid } from '../../utils/id';
 import Icon from '../atoms/Icon';
 import { SidebarButton } from '../atoms/SidebarButton';
 import CreateChannel from '../organisms/CreateChannel';
@@ -34,7 +33,7 @@ function SidebarExpandItems({ space, channels }: Props) {
       <NavLink
         className="text-legacy-text hover:bg-legacy-sidebar-item-hover-background aria-[current=page]:bg-legacy-sidebar-item-active-background flex items-center px-8 py-4 font-bold no-underline"
         end
-        to={`/chat/${encodeUuid(space.id)}`}
+        to={`/chat/${space.id}`}
       >
         <span>{space.name}</span>
       </NavLink>

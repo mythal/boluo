@@ -12,7 +12,8 @@ import { useMyId } from '../../hooks/useMyId';
 import { userDialogAtom } from '../../states/userDialog';
 import { useDispatch, useSelector } from '../../store';
 import { cls } from '../../utils/classnames';
-import { decodeUuid, encodeUuid, type Id } from '../../utils/id';
+import { type Id } from '../../utils/id';
+import { isUuid } from '@boluo/utils/id';
 import { chatPath } from '../../utils/path';
 import ChannelChat from '../chat/ChannelChat';
 import { Connector } from '../chat/Connector';
@@ -98,7 +99,7 @@ function ChatRender({ channelId, spaceId }: { channelId: Id | undefined; spaceId
   const { channels, space, members } = result.value;
 
   if (!space.allowSpectator && !(myId && members[myId])) {
-    navigate(`/space/${encodeUuid(spaceId)}`, { replace: true });
+    navigate(`/space/${spaceId}`, { replace: true });
   }
   return (
     <div
@@ -161,12 +162,8 @@ function ChatRender({ channelId, spaceId }: { channelId: Id | undefined; spaceId
 
 function Chat() {
   const { channelId: encodedChannelId, spaceId: encodedSpaceId } = useParams();
-  const spaceId = encodedSpaceId
-    ? decodeUuid(encodedSpaceId, { parameter: 'space_id' })
-    : undefined;
-  const channelId = encodedChannelId
-    ? decodeUuid(encodedChannelId, { parameter: 'channel_id' })
-    : undefined;
+  const spaceId = encodedSpaceId && isUuid(encodedSpaceId) ? encodedSpaceId : undefined;
+  const channelId = encodedChannelId && isUuid(encodedChannelId) ? encodedChannelId : undefined;
 
   if (!spaceId || (encodedChannelId && !channelId)) {
     return (

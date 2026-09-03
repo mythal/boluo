@@ -49,6 +49,8 @@ jobs:
 
       - name: Nix Setup
         uses: ./.github/actions/nix-setup
+        with:
+          enable-magic-cache: false
 
       - name: Check whether server deployment changed
         id: server_deployment
@@ -75,6 +77,7 @@ jobs:
     permissions:
       packages: write
       contents: read
+      id-token: write
     needs: prepare
     if: needs.prepare.outputs.server_required == 'true'
     steps:
@@ -120,6 +123,7 @@ jobs:
     permissions:
       packages: write
       contents: read
+      id-token: write
     needs: prepare
     if: >-
       github.ref_name == 'master' &&
@@ -144,6 +148,7 @@ jobs:
     timeout-minutes: 60
     permissions:
       contents: read
+      id-token: write
     steps:
       - name: Check out the repo
         uses: actions/checkout@v7
@@ -219,6 +224,8 @@ jobs:
 
       - name: Nix Setup
         uses: ./.github/actions/nix-setup
+        with:
+          enable-magic-cache: false
 
       - name: Deploy site to staging
         if: >-

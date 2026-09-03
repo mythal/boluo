@@ -186,6 +186,8 @@
             ++ lib.optionals stdenv.hostPlatform.isLinux [ pkgs.wild ];
             RUSTC_WRAPPER = "${pkgs.sccache}/bin/sccache";
             SCCACHE_DIR = "/tmp/sccache";
+            SCCACHE_CACHE_SIZE = "1G";
+            postCheck = "${pkgs.sccache}/bin/sccache --show-stats";
           };
 
           bridgeCommonArgs = commonArgs "bridge";

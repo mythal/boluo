@@ -1,5 +1,10 @@
 name: Nix Setup
 description: Setup Nix for the workflow
+inputs:
+  cache:
+    description: Restore and save the Nix store with GitHub Actions cache
+    required: false
+    default: 'true'
 runs:
   using: 'composite'
   steps:
@@ -13,11 +18,13 @@ runs:
 
     # https://github.com/nix-community/cache-nix-action
     - name: Cache Nix store
+      if: inputs.cache == 'true'
       uses: nix-community/cache-nix-action@7df957e333c1e5da7721f60227dbba6d06080569
       with:
         primary-key: nix-${{ runner.os }}-${{ github.workflow }}-${{ github.job }}-${{ github.sha }}
         restore-prefixes-first-match: |
           nix-${{ runner.os }}-${{ github.workflow }}-${{ github.job }}-
+        gc-max-store-size-linux: 1536M
 
     - name: Show Nix Config
       shell: bash

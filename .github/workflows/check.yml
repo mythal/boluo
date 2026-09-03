@@ -29,6 +29,8 @@ jobs:
 
       - name: Nix Setup
         uses: ./.github/actions/nix-setup
+        with:
+          cache: false
 
       - name: Node.js Setup
         uses: ./.github/actions/node-setup
@@ -71,7 +73,7 @@ jobs:
 
       - name: Check server and bridge
         run: >-
-          nix build --quiet --no-link --no-update-lock-file --print-build-logs
+          nix build --quiet --no-update-lock-file --print-build-logs
           ".#checks.x86_64-linux.server"
           ".#checks.x86_64-linux.bridge"
 

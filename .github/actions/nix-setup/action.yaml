@@ -10,7 +10,7 @@ runs:
   steps:
     # https://github.com/DeterminateSystems/nix-installer-action
     - name: Install Nix
-      uses: DeterminateSystems/nix-installer-action@ef8a148080ab6020fd15196c2084a2eea5ff2d25
+      uses: DeterminateSystems/nix-installer-action@v22
       with:
         diagnostic-endpoint:
         extra-conf: |
@@ -19,7 +19,7 @@ runs:
     # https://github.com/nix-community/cache-nix-action
     - name: Cache Nix store
       if: inputs.cache == 'true'
-      uses: nix-community/cache-nix-action@7df957e333c1e5da7721f60227dbba6d06080569
+      uses: nix-community/cache-nix-action@v7
       with:
         primary-key: nix-${{ runner.os }}-${{ github.workflow }}-${{ github.job }}-${{ github.sha }}
         restore-prefixes-first-match: |

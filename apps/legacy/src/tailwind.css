@@ -284,11 +284,6 @@ html {
   resize: none;
 }
 
-.legacy-menu-item-button {
-  margin: 0.25rem 0;
-  font: inherit;
-}
-
 /* sanitize.css resets button margins outside Tailwind's layers. */
 .legacy-header-button {
   margin-right: 0.25rem;
@@ -337,18 +332,6 @@ html {
 .legacy-sidebar-section-title {
   margin-top: 0.5rem;
   margin-bottom: 0.5rem;
-}
-
-.legacy-sidebar-connection-trigger {
-  font: inherit;
-}
-
-.legacy-sidebar-member-button {
-  font: inherit;
-}
-
-.legacy-connection-option {
-  font: inherit;
 }
 
 .legacy-chat-preview .roll::before {

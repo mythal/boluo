@@ -43,7 +43,7 @@ const Num: React.FC<{ children: ReactNode }> = ({ children }) => {
 const errorClassName =
   'rounded-[1px] bg-legacy-red-900 px-1 py-0.5 shadow-[0_0_3px_0_rgba(0,0,0,0.5)]';
 const rollClassName =
-  'my-[0.0625rem] cursor-pointer items-center justify-center rounded-[1px] bg-legacy-expression-background px-1 py-[0.1875rem] text-[0.875rem] font-normal shadow-[0_0_3px_0_rgba(0,0,0,0.5)] [box-decoration-break:clone] hover:border-legacy-expression-border hover:bg-legacy-expression-hover';
+  'my-[0.0625rem] cursor-pointer items-center justify-center rounded-[1px] bg-legacy-expression-background px-1 py-[0.1875rem] text-[0.875rem] font-normal not-italic shadow-[0_0_3px_0_rgba(0,0,0,0.5)] [box-decoration-break:clone] hover:border-legacy-expression-border hover:bg-legacy-expression-hover';
 const fateDiceClassName =
   'rounded-[1px] bg-legacy-blue-600 px-1 font-legacy-mono shadow-[0_0_1px_0_#000]';
 

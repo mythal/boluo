@@ -35,7 +35,7 @@ function ChatItemToolbarButton({
   return (
     <div
       className={cls(
-        'group/toolbar-button font-legacy-sans relative inline-block font-normal',
+        'group/toolbar-button font-legacy-sans relative inline-block font-normal not-italic',
         className,
       )}
     >

@@ -53,14 +53,7 @@ export const SidebarConnectionDisplay = () => {
   }
   return (
     <>
-      <button
-        aria-haspopup="dialog"
-        className="legacy-sidebar-connection-trigger w-full cursor-pointer border-0 bg-transparent p-0 text-inherit"
-        onClick={() => setOpen(true)}
-        type="button"
-      >
-        {display}
-      </button>
+      <div onClick={() => setOpen(true)}>{display}</div>
       {open && <ConnectionSelectDialog dismiss={dismiss} />}
     </>
   );

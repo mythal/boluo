@@ -44,6 +44,19 @@ pub(crate) struct SymbolicatedStacktrace {
     pub(crate) status: &'static str,
 }
 
+pub(crate) struct SymbolicatedComponentStack {
+    pub(crate) component_stacktrace: String,
+    pub(crate) raw_component_stack: String,
+    pub(crate) status: &'static str,
+}
+
+struct ComponentStackFrame<'a> {
+    function: &'a str,
+    filename: Option<&'a str>,
+    lineno: Option<u64>,
+    colno: Option<u64>,
+}
+
 #[derive(Serialize)]
 struct FaroStacktraceJson<'a> {
     frames: Vec<FaroStackFrameJson<'a>>,
@@ -69,6 +82,21 @@ struct SentryStackFrameJson {
     lineno: u64,
     colno: u64,
     #[serde(skip_serializing_if = "Option::is_none")]
+    abs_path: Option<String>,
+    in_app: bool,
+}
+
+#[derive(Serialize)]
+struct ComponentStacktraceJson {
+    frames: Vec<ComponentStackFrameJson>,
+}
+
+#[derive(Serialize)]
+struct ComponentStackFrameJson {
+    function: String,
+    filename: Option<String>,
+    lineno: Option<u64>,
+    colno: Option<u64>,
     abs_path: Option<String>,
     in_app: bool,
 }
@@ -203,6 +231,96 @@ impl Resolver {
         SymbolicatedStacktrace {
             stacktrace: sentry_stacktrace_json(sentry_frames),
             raw_stacktrace,
+            status,
+        }
+    }
+
+    pub(crate) async fn component_stack(
+        &self,
+        app_name: &str,
+        component_stack: &str,
+    ) -> SymbolicatedComponentStack {
+        let raw_component_stack = component_stack.to_owned();
+        let mut frames = Vec::new();
+        let mut applicable = false;
+        let mut symbolicated = false;
+        let mut failed = false;
+
+        for line in component_stack.split('\n') {
+            let line = line.strip_suffix('\r').unwrap_or(line);
+            let Some(frame) = parse_component_stack_frame(line) else {
+                continue;
+            };
+            let Some(filename) = frame.filename else {
+                frames.push(generated_component_frame(&frame, false));
+                continue;
+            };
+            let (Some(lineno), Some(colno)) = (frame.lineno, frame.colno) else {
+                frames.push(generated_component_frame(&frame, false));
+                continue;
+            };
+            let Some(source_map_key) = source_map_key(app_name, filename) else {
+                frames.push(generated_component_frame(&frame, false));
+                continue;
+            };
+            applicable = true;
+
+            let symbolicated_frame = if self.base_url.is_some() {
+                match self.source_map(&source_map_key).await {
+                    Ok(source_map) => symbolize_frame(
+                        &source_map,
+                        &StackFrame {
+                            filename,
+                            function: frame.function,
+                            lineno: Some(lineno),
+                            colno: Some(colno),
+                        },
+                    ),
+                    Err(error) => {
+                        failed = true;
+                        tracing::debug!(
+                            event = "frontend.telemetry.sourcemap_failed",
+                            source_map_key,
+                            %error,
+                            "Failed to load source map"
+                        );
+                        None
+                    }
+                }
+            } else {
+                None
+            };
+
+            let Some(symbolicated_frame) = symbolicated_frame else {
+                frames.push(generated_component_frame(&frame, true));
+                continue;
+            };
+            symbolicated = true;
+            frames.push(ComponentStackFrameJson {
+                function: symbolicated_frame.function,
+                filename: Some(symbolicated_frame.filename),
+                lineno: Some(symbolicated_frame.lineno),
+                colno: Some(symbolicated_frame.colno),
+                abs_path: symbolicated_frame.abs_path,
+                in_app: symbolicated_frame.in_app,
+            });
+        }
+
+        let status = if self.base_url.is_none() {
+            "disabled"
+        } else if symbolicated {
+            "symbolicated"
+        } else if failed {
+            "failed"
+        } else if applicable {
+            "missing"
+        } else {
+            "not_applicable"
+        };
+        SymbolicatedComponentStack {
+            component_stacktrace: serde_json::to_string(&ComponentStacktraceJson { frames })
+                .unwrap_or_default(),
+            raw_component_stack,
             status,
         }
     }
@@ -515,5 +633,132 @@ fn generated_sentry_frame(frame: &StackFrame<'_>, in_app: bool) -> SentryStackFr
         colno: frame.colno.unwrap_or_default(),
         abs_path: Some(frame.filename.to_owned()),
         in_app,
+    }
+}
+
+fn parse_component_stack_frame(line: &str) -> Option<ComponentStackFrame<'_>> {
+    let leading_whitespace = line.len().saturating_sub(line.trim_start().len());
+    let rest = line[leading_whitespace..].strip_prefix("at ")?;
+
+    if let Some(function_end) = rest.rfind(" (")
+        && rest.ends_with(')')
+    {
+        let function = &rest[..function_end];
+        let location = &rest[function_end + 2..rest.len() - 1];
+        if let Some((filename, lineno, colno)) = parse_component_stack_location(location) {
+            return Some(ComponentStackFrame {
+                function,
+                filename: Some(filename),
+                lineno: Some(lineno),
+                colno: Some(colno),
+            });
+        }
+        return Some(ComponentStackFrame {
+            function,
+            filename: None,
+            lineno: None,
+            colno: None,
+        });
+    }
+
+    if let Some((filename, lineno, colno)) = parse_component_stack_location(rest) {
+        return Some(ComponentStackFrame {
+            function: "",
+            filename: Some(filename),
+            lineno: Some(lineno),
+            colno: Some(colno),
+        });
+    }
+
+    Some(ComponentStackFrame {
+        function: rest,
+        filename: None,
+        lineno: None,
+        colno: None,
+    })
+}
+
+fn parse_component_stack_location(location: &str) -> Option<(&str, u64, u64)> {
+    let (location, colno) = location.rsplit_once(':')?;
+    let (filename, lineno) = location.rsplit_once(':')?;
+    Some((filename, lineno.parse().ok()?, colno.parse().ok()?))
+}
+
+fn generated_component_frame(
+    frame: &ComponentStackFrame<'_>,
+    in_app: bool,
+) -> ComponentStackFrameJson {
+    ComponentStackFrameJson {
+        function: frame.function.to_owned(),
+        filename: frame.filename.map(str::to_owned),
+        lineno: frame.lineno,
+        colno: frame.colno,
+        abs_path: frame.filename.map(str::to_owned),
+        in_app,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parses_react_component_stack_frames() {
+        let frame = parse_component_stack_frame(
+            "    at Chat (https://example.com/_next/static/chunks/app.js:12:34)",
+        )
+        .unwrap();
+        assert_eq!(frame.function, "Chat");
+        assert_eq!(
+            frame.filename,
+            Some("https://example.com/_next/static/chunks/app.js")
+        );
+        assert_eq!(frame.lineno, Some(12));
+        assert_eq!(frame.colno, Some(34));
+
+        let frame =
+            parse_component_stack_frame("    at https://example.com/assets/app.js:5:6").unwrap();
+        assert_eq!(frame.function, "");
+        assert_eq!(frame.filename, Some("https://example.com/assets/app.js"));
+        assert_eq!(frame.lineno, Some(5));
+        assert_eq!(frame.colno, Some(6));
+    }
+
+    #[test]
+    fn parses_component_stack_frames_without_locations() {
+        let frame = parse_component_stack_frame("    at div").unwrap();
+        assert_eq!(frame.function, "div");
+        assert_eq!(frame.filename, None);
+
+        let frame = parse_component_stack_frame("    at Chat (<anonymous>)").unwrap();
+        assert_eq!(frame.function, "Chat");
+        assert_eq!(frame.filename, None);
+
+        assert!(parse_component_stack_frame("not a component stack frame").is_none());
+    }
+
+    #[tokio::test]
+    async fn preserves_component_stack_when_symbolication_is_disabled() {
+        let resolver = Resolver::new(Config::default()).await.unwrap();
+        let raw =
+            "\n    at Chat (https://example.com/_next/static/chunks/app.js:12:34)\n    at div";
+        let result = resolver.component_stack("spa", raw).await;
+        let stacktrace: serde_json::Value =
+            serde_json::from_str(&result.component_stacktrace).unwrap();
+
+        assert_eq!(
+            stacktrace["frames"][0]["function"],
+            serde_json::Value::String("Chat".to_owned())
+        );
+        assert_eq!(
+            stacktrace["frames"][0]["filename"],
+            serde_json::Value::String("https://example.com/_next/static/chunks/app.js".to_owned())
+        );
+        assert_eq!(
+            stacktrace["frames"][1]["function"],
+            serde_json::Value::String("div".to_owned())
+        );
+        assert_eq!(result.raw_component_stack, raw);
+        assert_eq!(result.status, "disabled");
     }
 }

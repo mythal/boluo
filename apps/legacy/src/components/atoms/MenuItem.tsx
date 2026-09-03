@@ -6,25 +6,18 @@ import { cls } from '../../utils/classnames';
 export interface IMenuItem {
   children: React.ReactNode;
   icon?: SvgIcon;
-  onClick?: React.MouseEventHandler<HTMLButtonElement>;
+  onClick?: React.MouseEventHandler<HTMLDivElement>;
 }
 
 const menuItemClassName =
-  'my-1 flex cursor-pointer select-none justify-between rounded-[3px] px-2.5 py-2 text-legacy-text no-underline transition-colors duration-100 ease-out hover:bg-legacy-menu-item-hover active:bg-legacy-menu-item-active';
-
-const menuItemButtonClassName =
-  'legacy-menu-item-button w-full border-0 bg-transparent text-left disabled:cursor-not-allowed disabled:brightness-50 disabled:hover:bg-transparent disabled:active:bg-transparent';
+  'my-1 flex cursor-pointer select-none justify-between rounded-[3px] px-2.5 py-2 text-legacy-text no-underline transition-colors duration-100 ease-out hover:bg-legacy-menu-item-hover active:bg-legacy-menu-item-active data-[disabled=true]:cursor-not-allowed data-[disabled=true]:brightness-50 data-[disabled=true]:hover:bg-transparent data-[disabled=true]:active:bg-transparent';
 
 export function MenuItem({ children, icon, onClick }: IMenuItem) {
   return (
-    <button
-      type="button"
-      className={cls(menuItemClassName, menuItemButtonClassName)}
-      onClick={onClick}
-    >
-      <span>{children}</span>
+    <div className={menuItemClassName} onClick={onClick}>
+      <div>{children}</div>
       {icon && <TextIcon icon={icon} />}
-    </button>
+    </div>
   );
 }
 
@@ -42,7 +35,7 @@ export function MenuItemLink({ children, icon, to, exact }: IMenuItemLink) {
       end={exact}
       className={({ isActive }) => cls(menuItemClassName, isActive && 'bg-legacy-menu-item-active')}
     >
-      <span>{children}</span>
+      <div>{children}</div>
       {icon && <TextIcon icon={icon} />}
     </NavLink>
   );
@@ -55,9 +48,13 @@ export interface IMenuItemDisabled {
 
 export function MenuItemDisabled({ children, icon }: IMenuItemDisabled) {
   return (
-    <button type="button" className={cls(menuItemClassName, menuItemButtonClassName)} disabled>
-      <span>{children}</span>
+    <div
+      className={menuItemClassName}
+      data-disabled={true}
+      onClick={(event) => event.stopPropagation()}
+    >
+      <div>{children}</div>
       {icon && <TextIcon icon={icon} />}
-    </button>
+    </div>
   );
 }

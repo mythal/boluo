@@ -49,6 +49,8 @@ jobs:
 
       - name: Nix Setup
         uses: ./.github/actions/nix-setup
+        with:
+          cache: false
 
       - name: Check whether server deployment changed
         id: server_deployment
@@ -88,9 +90,9 @@ jobs:
         uses: actions/cache@v6
         with:
           path: /tmp/sccache
-          key: ${{ runner.os }}-sccache-${{ github.run_id }}
+          key: ${{ runner.os }}-sccache-v2-${{ github.run_id }}
           restore-keys: |
-            ${{ runner.os }}-sccache-
+            ${{ runner.os }}-sccache-v2-
 
       - name: Prepare restored sccache
         run: |
@@ -219,6 +221,8 @@ jobs:
 
       - name: Nix Setup
         uses: ./.github/actions/nix-setup
+        with:
+          cache: false
 
       - name: Deploy site to staging
         if: >-

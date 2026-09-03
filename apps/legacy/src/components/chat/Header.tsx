@@ -43,7 +43,7 @@ function Header({ focus }: Props) {
       <div className="text-legacy-text-minor before:font-legacy-mono before:text-legacy-text-minor mr-1 overflow-hidden pr-1 text-[0.875rem] text-ellipsis whitespace-nowrap before:pr-1 before:content-['#']">
         {!channel.isPublic && <Icon icon={Lock} className="mr-1" />}
         <span className="text-legacy-text text-[1.125rem] font-bold">{channel.name}</span>
-        <span className="text-legacy-text-minor ml-1 overflow-hidden text-[0.875rem] font-normal text-ellipsis whitespace-nowrap">
+        <span className="text-legacy-text-minor ml-1 overflow-hidden text-[0.875rem] font-normal text-ellipsis whitespace-nowrap not-italic">
           {channel.topic}
         </span>
       </div>

@@ -398,6 +398,22 @@ async fn process(payload: FaroPayload<'_>, resolver: &SourceMapResolver) -> Resu
         let stacktrace = symbolicated_stacktrace.stacktrace;
         let raw_stacktrace = symbolicated_stacktrace.raw_stacktrace;
         let sourcemap_status = symbolicated_stacktrace.status;
+        let component_stack = resolver
+            .component_stack(
+                frontend_app_name,
+                truncated(
+                    exception
+                        .context
+                        .get("component_stack")
+                        .map(String::as_str)
+                        .unwrap_or(""),
+                    MAX_STACKTRACE_BYTES,
+                ),
+            )
+            .await;
+        let symbolicated_component_stack = component_stack.component_stacktrace;
+        let raw_component_stack = component_stack.raw_component_stack;
+        let component_sourcemap_status = component_stack.status;
         let exception_summary = exception_summary(exception);
         let frontend_exception_origin = if has_first_party_stack_frame(exception) {
             "first_party"
@@ -455,14 +471,9 @@ async fn process(payload: FaroPayload<'_>, resolver: &SourceMapResolver) -> Resu
                             .unwrap_or(""),
                         64
                     ),
-                    component_stack = truncated(
-                        exception
-                            .context
-                            .get("component_stack")
-                            .map(String::as_str)
-                            .unwrap_or(""),
-                        MAX_STACKTRACE_BYTES
-                    ),
+                    component_stack = symbolicated_component_stack,
+                    raw_component_stack,
+                    component_sourcemap_status,
                     stacktrace,
                     raw_stacktrace,
                     sourcemap_status,

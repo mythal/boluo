@@ -31,8 +31,6 @@ jobs:
 
       - name: Nix Setup
         uses: ./.github/actions/nix-setup
-        with:
-          enable-magic-cache: false
 
       - name: Node.js Setup
         uses: ./.github/actions/node-setup
@@ -62,8 +60,6 @@ jobs:
 
       - name: Nix Setup
         uses: ./.github/actions/nix-setup
-        with:
-          enable-magic-cache: false
 
       - name: Node.js Setup
         uses: ./.github/actions/node-setup

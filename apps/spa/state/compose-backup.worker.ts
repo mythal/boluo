@@ -14,6 +14,13 @@ const MAX_DRAFT_COUNT = 20;
 const MIN_DRAFT_LENGTH = 3;
 
 let dbPromise: Promise<IDBDatabase> | null = null;
+let currentDb: IDBDatabase | null = null;
+
+const invalidateDb = (db?: IDBDatabase): void => {
+  if (db !== undefined && currentDb !== db) return;
+  currentDb = null;
+  dbPromise = null;
+};
 
 const reportError = (
   operation: Extract<ComposeBackupWorkerResponse, { type: 'error' }>['operation'],
@@ -28,7 +35,8 @@ const reportError = (
 
 const openDb = (): Promise<IDBDatabase> => {
   if (dbPromise) return dbPromise;
-  dbPromise = new Promise((resolve, reject) => {
+
+  const promise = new Promise<IDBDatabase>((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
     request.onupgradeneeded = () => {
       const db = request.result;
@@ -36,35 +44,77 @@ const openDb = (): Promise<IDBDatabase> => {
         db.createObjectStore(STORE_NAME);
       }
     };
-    request.onsuccess = () => resolve(request.result);
+    request.onsuccess = () => {
+      const db = request.result;
+      currentDb = db;
+      db.onclose = () => invalidateDb(db);
+      db.onversionchange = () => {
+        db.close();
+        invalidateDb(db);
+      };
+      resolve(db);
+    };
     request.onerror = () => reject(request.error ?? new Error('Failed to open compose backup db'));
+  });
+
+  dbPromise = promise;
+  void promise.catch(() => {
+    if (dbPromise === promise) {
+      dbPromise = null;
+    }
   });
   return dbPromise;
 };
 
-const readDrafts = async (channelId: string): Promise<ComposeDraftEntry[]> => {
+const isConnectionClosingError = (error: unknown): boolean => {
+  const message = error instanceof Error ? error.message : String(error);
+  return (
+    message.includes('database connection is closing') ||
+    (typeof DOMException !== 'undefined' &&
+      error instanceof DOMException &&
+      error.name === 'InvalidStateError')
+  );
+};
+
+const withDbRetry = async <T>(operation: (db: IDBDatabase) => Promise<T>): Promise<T> => {
   const db = await openDb();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_NAME, 'readonly');
-    const store = tx.objectStore(STORE_NAME);
-    const request = store.get(channelId);
-    request.onsuccess = () => {
-      const result = request.result as ComposeDraftEntry[] | undefined;
-      resolve(result ?? []);
-    };
-    request.onerror = () => reject(request.error ?? new Error('Failed to read drafts'));
-  });
+  try {
+    return await operation(db);
+  } catch (error) {
+    if (!isConnectionClosingError(error)) throw error;
+    invalidateDb(db);
+    return await operation(await openDb());
+  }
+};
+
+const readDrafts = async (channelId: string): Promise<ComposeDraftEntry[]> => {
+  return withDbRetry(
+    (db) =>
+      new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, 'readonly');
+        const store = tx.objectStore(STORE_NAME);
+        const request = store.get(channelId);
+        request.onsuccess = () => {
+          const result = request.result as ComposeDraftEntry[] | undefined;
+          resolve(result ?? []);
+        };
+        request.onerror = () => reject(request.error ?? new Error('Failed to read drafts'));
+      }),
+  );
 };
 
 const writeDrafts = async (channelId: string, drafts: ComposeDraftEntry[]): Promise<void> => {
-  const db = await openDb();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_NAME, 'readwrite');
-    const store = tx.objectStore(STORE_NAME);
-    const request = drafts.length === 0 ? store.delete(channelId) : store.put(drafts, channelId);
-    request.onsuccess = () => resolve();
-    request.onerror = () => reject(request.error ?? new Error('Failed to write drafts'));
-  });
+  return withDbRetry(
+    (db) =>
+      new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        const store = tx.objectStore(STORE_NAME);
+        const request =
+          drafts.length === 0 ? store.delete(channelId) : store.put(drafts, channelId);
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error ?? new Error('Failed to write drafts'));
+      }),
+  );
 };
 
 const makeDraftId = (): string => {
@@ -105,7 +155,7 @@ const saveDraft = async (channelId: string, text: string): Promise<void> => {
     drafts = await readDrafts(channelId);
   } catch (error) {
     reportError('load', error);
-    drafts = [];
+    return;
   }
   const now = Date.now();
   const normalizedIncoming = normalizeDraftText(trimmed);

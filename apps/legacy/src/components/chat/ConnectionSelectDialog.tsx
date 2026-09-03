@@ -27,15 +27,14 @@ const ProxyItem = ({
 }) => {
   const delay = useBaseUrlDelay(proxy.url);
   return (
-    <button
+    <div
       className={cls(
-        'legacy-connection-option flex w-full cursor-pointer items-center justify-between rounded-sm border-0 px-2 py-2 text-[1.25rem]',
+        'flex cursor-pointer items-center justify-between rounded-sm px-2 py-2 text-[1.25rem]',
         current
           ? 'bg-legacy-primary-600'
           : 'bg-[rgba(255,255,255,0.3)] hover:bg-[rgba(255,255,255,0.5)]',
       )}
       onClick={() => changeBaseUrl(proxy.url)}
-      type="button"
     >
       <span>{proxy.name}</span>
       {showStats ? (
@@ -43,7 +42,7 @@ const ProxyItem = ({
       ) : (
         <Delay delay={delay} />
       )}
-    </button>
+    </div>
   );
 };
 

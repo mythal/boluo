@@ -70,7 +70,7 @@ function ItemContent({ text, entities, seed }: Props) {
     } else if (entity.type === 'CodeBlock') {
       content.push(
         <pre
-          className="legacy-chat-code-block bg-legacy-black text-legacy-green-500 overflow-auto rounded-[3px] px-2 py-1 text-[0.875rem] leading-[1em] font-normal break-keep whitespace-pre"
+          className="legacy-chat-code-block bg-legacy-black text-legacy-green-500 overflow-auto rounded-[3px] px-2 py-1 text-[0.875rem] leading-[1em] font-normal break-keep whitespace-pre not-italic"
           key={key}
         >
           {text.slice(entity.child.start, entity.child.start + entity.child.len)}

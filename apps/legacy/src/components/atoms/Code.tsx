@@ -5,9 +5,9 @@ interface Props {
 }
 
 export function Code({ children }: Props) {
-  const ref = useRef<HTMLButtonElement>(null);
+  const ref = useRef<HTMLElement>(null);
 
-  const copyWithSelection = (node: HTMLButtonElement) => {
+  const copyWithSelection = (node: HTMLElement) => {
     const selection = window.getSelection();
     if (!selection) {
       return;
@@ -34,13 +34,12 @@ export function Code({ children }: Props) {
   };
 
   return (
-    <button
-      type="button"
+    <code
       ref={ref}
-      className="bg-legacy-black font-legacy-mono inline cursor-pointer rounded-[3px] border-0 px-2 py-1 text-[0.875rem] font-normal text-inherit hover:shadow-[inset_0_0_0_1px_var(--color-legacy-primary-700)] focus-visible:shadow-[inset_0_0_0_1px_var(--color-legacy-primary-700)] focus-visible:outline-none active:shadow-[inset_0_0_0_1px_var(--color-legacy-primary-500)]"
+      className="bg-legacy-black font-legacy-mono inline cursor-pointer rounded-[3px] px-2 py-1 text-[0.875rem] font-normal text-inherit not-italic hover:shadow-[inset_0_0_0_1px_var(--color-legacy-primary-700)] active:shadow-[inset_0_0_0_1px_var(--color-legacy-primary-500)]"
       onClick={onClick}
     >
       {children}
-    </button>
+    </code>
   );
 }

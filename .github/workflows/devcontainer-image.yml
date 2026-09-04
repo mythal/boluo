@@ -1,0 +1,84 @@
+name: Dev Container Image
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+    paths:
+      - '.devcontainer/Dockerfile'
+      - '.devcontainer/Dockerfile.dockerignore'
+      - '.devcontainer/nix-entrypoint.sh'
+      - '.github/workflows/devcontainer-image.yml'
+      - 'flake.lock'
+      - 'flake.nix'
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: boluo-devcontainer-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build & Push Multi-Arch Image
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v7
+
+      - name: Compute image tags
+        id: hashes
+        run: |
+          echo "lock=$(sha256sum flake.lock | cut -d ' ' -f 1)" >> "$GITHUB_OUTPUT"
+          echo "devshell=$(sha256sum flake.nix flake.lock | sha256sum | cut -d ' ' -f 1)" >> "$GITHUB_OUTPUT"
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Login to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ghcr.io/mythal/boluo/devcontainer
+          tags: |
+            type=raw,value=latest
+            type=raw,value=lock-${{ steps.hashes.outputs.lock }}
+            type=raw,value=devshell-${{ steps.hashes.outputs.devshell }}
+            type=sha
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.description=Prebuilt Nix development environment for Boluo
+            org.opencontainers.image.title=Boluo Dev Container
+            dev.mythal.boluo.flake-lock-sha256=${{ steps.hashes.outputs.lock }}
+
+      - name: Build & Push
+        id: build
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: .devcontainer/Dockerfile
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: |
+            type=gha,scope=devcontainer
+            type=registry,ref=ghcr.io/mythal/boluo/devcontainer:latest
+          cache-to: type=gha,scope=devcontainer,mode=max
+
+      - name: Image digest
+        run: echo "Digest=${{ steps.build.outputs.digest }}"

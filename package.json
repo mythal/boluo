@@ -4,6 +4,13 @@
   "allowScripts": {
     "esbuild@0.28.1": true
   },
+  "devEngines": {
+    "packageManager": {
+      "name": "npm",
+      "version": "11.19.0",
+      "onFail": "ignore"
+    }
+  },
   "devDependencies": {
     "@types/node": "^26.1.1",
     "prettier": "^3.9.4",
@@ -19,7 +26,6 @@
   "optionalDependencies": {
     "syncpack": "^15.3.2"
   },
-  "packageManager": "npm@10.9.2",
   "private": true,
   "scripts": {
     "build": "turbo run build",

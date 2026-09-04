@@ -1,0 +1,5 @@
+**
+!flake.nix
+!flake.lock
+!.devcontainer/
+!.devcontainer/nix-entrypoint.sh

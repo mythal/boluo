@@ -11,15 +11,23 @@ RUN apt-get update \
     && apt-get install --yes --no-install-recommends xz-utils \
     && rm -rf /var/lib/apt/lists/*
 
-# Use a pinned, multi-user Nix installation so changing the remote user's UID
-# does not change ownership of the Nix store.
-RUN curl --fail --location --show-error --silent \
+# Syscall filtering is disabled while building because QEMU user emulation cannot
+# load Nix's seccomp program.
+# https://github.com/NixOS/nix/issues/5258
+RUN mkdir -p /etc/nix \
+    && printf '%s\n' \
+      'sandbox = false' \
+      'filter-syscalls = false' \
+      'experimental-features = nix-command flakes' \
+      > /etc/nix/nix.conf \
+    && curl --fail --location --show-error --silent \
       "https://releases.nixos.org/nix/nix-${NIX_VERSION}/install" \
       --output /tmp/install-nix \
     && sh /tmp/install-nix --daemon \
     && rm /tmp/install-nix \
     && printf '%s\n' \
       'sandbox = false' \
+      'filter-syscalls = false' \
       'experimental-features = nix-command flakes' \
       >> /etc/nix/nix.conf
 
@@ -40,7 +48,8 @@ RUN mkdir -p /home/vscode/.local/state/nix/profiles \
       --command true
 
 USER root
-RUN rm -rf /tmp/boluo-flake
+RUN sed -i '/^filter-syscalls = false$/d' /etc/nix/nix.conf \
+    && rm -rf /tmp/boluo-flake
 
 USER vscode
 

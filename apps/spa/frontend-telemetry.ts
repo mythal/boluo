@@ -4,6 +4,7 @@ import {
   getFrontendTelemetryIgnoreErrors,
   serializeFrontendLogArguments,
 } from '@boluo/utils/frontend-telemetry';
+import { isBrowserSupported } from '@boluo/utils/browser';
 import {
   ErrorsInstrumentation,
   FetchTransport,
@@ -35,7 +36,7 @@ const telemetryEnvironment = (): string => {
 };
 
 export function initializeFrontendTelemetry(): void {
-  if (IS_DEVELOPMENT) {
+  if (IS_DEVELOPMENT || !isBrowserSupported()) {
     return;
   }
 

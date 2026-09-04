@@ -2,6 +2,7 @@ import {
   getFrontendTelemetryIgnoreErrors,
   serializeFrontendLogArguments,
 } from '@boluo/utils/frontend-telemetry';
+import { isBrowserSupported } from '@boluo/utils/browser';
 import {
   ErrorsInstrumentation,
   FetchTransport,
@@ -28,7 +29,7 @@ const telemetryEnvironment = (): string => {
 export function initializeFrontendTelemetry(baseUrl: string): void {
   // DEV is a built-in Vite mode flag rather than a process environment variable.
   // eslint-disable-next-line turbo/no-undeclared-env-vars
-  if (import.meta.env.DEV || getInternalFaroFromGlobalObject()) {
+  if (import.meta.env.DEV || getInternalFaroFromGlobalObject() || !isBrowserSupported()) {
     return;
   }
 

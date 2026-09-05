@@ -1,0 +1,147 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE\n    messages\nSET\n    deleted = TRUE\nWHERE\n    id = $1\n    AND deleted = FALSE\nRETURNING\n    messages AS \"message!: Message\",\n    (whisper_to_users IS NOT NULL\n        AND NOT EXISTS (\n            SELECT 1 FROM channel_members cm\n            WHERE cm.channel_id = messages.channel_id\n                AND cm.user_id = $2\n                AND cm.is_master IS TRUE\n        )\n        AND ($2::uuid IS NULL OR $2 <> ALL (whisper_to_users))) AS \"should_hide!\";\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "message!: Message",
+        "type_info": {
+          "Custom": {
+            "name": "messages",
+            "kind": {
+              "Composite": [
+                [
+                  "id",
+                  "Uuid"
+                ],
+                [
+                  "sender_id",
+                  "Uuid"
+                ],
+                [
+                  "channel_id",
+                  "Uuid"
+                ],
+                [
+                  "parent_message_id",
+                  "Uuid"
+                ],
+                [
+                  "name",
+                  "Text"
+                ],
+                [
+                  "media_id",
+                  "Uuid"
+                ],
+                [
+                  "seed",
+                  "Bytea"
+                ],
+                [
+                  "deleted",
+                  "Bool"
+                ],
+                [
+                  "in_game",
+                  "Bool"
+                ],
+                [
+                  "is_action",
+                  "Bool"
+                ],
+                [
+                  "is_master",
+                  "Bool"
+                ],
+                [
+                  "pinned",
+                  "Bool"
+                ],
+                [
+                  "tags",
+                  "TextArray"
+                ],
+                [
+                  "folded",
+                  "Bool"
+                ],
+                [
+                  "text",
+                  "Text"
+                ],
+                [
+                  "whisper_to_users",
+                  "UuidArray"
+                ],
+                [
+                  "entities",
+                  "Jsonb"
+                ],
+                [
+                  "created",
+                  "Timestamptz"
+                ],
+                [
+                  "modified",
+                  "Timestamptz"
+                ],
+                [
+                  "pos_p",
+                  "Int4"
+                ],
+                [
+                  "pos_q",
+                  "Int4"
+                ],
+                [
+                  "pos",
+                  "Float8"
+                ],
+                [
+                  "color",
+                  "Text"
+                ],
+                [
+                  "rev",
+                  "Int4"
+                ],
+                [
+                  "character_id",
+                  "Uuid"
+                ],
+                [
+                  "portrait_id",
+                  "Uuid"
+                ],
+                [
+                  "has_entry_effects",
+                  "Bool"
+                ]
+              ]
+            }
+          }
+        },
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "should_hide!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "f4f1a1f58af26f440513392dd39676c2376ea2b6c6efdc76be7b77b13ee943c4"
+}

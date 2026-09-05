@@ -513,11 +513,19 @@ async fn delete(
     if !space_member.is_admin && message.sender_id != session.user_id {
         return Err(AppError::NoPermission("user id mismatch".to_string()));
     }
-    Message::delete(&ctx.db, &id).await?;
-    Update::message_deleted(space_id, message.channel_id, message.id, message.pos).await;
-    crate::messages::MESSAGE_POSITIONS.cancel(message.channel_id, message.id);
+    let deleted_message = Message::delete(&ctx.db, &id, Some(&session.user_id))
+        .await
+        .or_not_found()?;
+    Update::message_deleted(
+        space_id,
+        deleted_message.channel_id,
+        deleted_message.id,
+        deleted_message.pos,
+    )
+    .await;
+    crate::messages::MESSAGE_POSITIONS.cancel(deleted_message.channel_id, deleted_message.id);
     metrics::counter!("boluo_server_messages_deleted_total").increment(1);
-    Ok(message)
+    Ok(deleted_message)
 }
 
 async fn toggle_fold(

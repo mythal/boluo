@@ -510,7 +510,7 @@ impl From<ChannelPosError> for AppError {
             ChannelPosError::ActorShutdown => {
                 AppError::Unexpected(anyhow::anyhow!("Actor shutdown"))
             }
-            ChannelPosError::Timeout => AppError::Timeout {
+            ChannelPosError::Timeout => AppError::Unavailable {
                 reason: "channel_pos_actor",
             },
         }

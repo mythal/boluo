@@ -94,12 +94,17 @@ export function reportApiError(error: unknown, options: ReportApiErrorOptions): 
     return;
   }
 
-  if (error.code === 'FETCH_FAIL' || error.code === 'LIMIT_EXCEEDED') {
+  if (
+    error.code === 'FETCH_FAIL' ||
+    error.code === 'LIMIT_EXCEEDED' ||
+    error.code === 'REQUEST_TIMEOUT'
+  ) {
     recordApiWarning(error, options);
   } else if (
     error.code === 'NOT_JSON' ||
     error.code === 'UNEXPECTED' ||
-    error.code === 'METHOD_NOT_ALLOWED'
+    error.code === 'METHOD_NOT_ALLOWED' ||
+    error.code === 'SERVICE_UNAVAILABLE'
   ) {
     captureException(error, {
       source: options.source,

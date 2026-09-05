@@ -79,7 +79,6 @@ mod validators;
 mod websocket;
 
 use crate::cors::allow_origin;
-use crate::db::MIGRATOR;
 use crate::error::AppError;
 use crate::interface::{err_response, missing, ok_response};
 
@@ -601,17 +600,10 @@ async fn space_payload_cache(args: &ServeArgs) -> space_payload_cache::SpacePayl
 }
 
 async fn init_database(args: InitArgs) {
-    let pool = sqlx::postgres::PgPoolOptions::new()
-        .max_connections(1)
-        .connect(&args.database_url)
-        .await
-        .expect("Cannot connect to database");
-    sqlx::migrate!("./migrations")
-        .run(&pool)
-        .await
-        .expect("Failed to run database migrations");
+    db::migrate(&args.database_url).await;
 
     if args.fixtures {
+        let pool = db::connect_for_migration(&args.database_url).await;
         let mut paths: Vec<std::fs::DirEntry> = std::fs::read_dir("./crates/server/fixtures")
             .expect("Cannot read fixtures directory")
             .map(|res| res.expect("Cannot read fixture file"))
@@ -671,20 +663,6 @@ async fn run_server(worker_threads: usize, max_blocking_threads: usize) {
     if !wants_help {
         config::load();
     }
-    let command = Cli::parse().command;
-    let args = match command {
-        Command::Serve(args) => args,
-        Command::Init(args) => {
-            init_database(args).await;
-            return;
-        }
-        Command::Types => {
-            typegen::prepare();
-            typegen::run();
-            return;
-        }
-    };
-
     let filter = EnvFilter::builder()
         .with_default_directive(LevelFilter::INFO.into())
         .from_env_lossy();
@@ -702,14 +680,29 @@ async fn run_server(worker_threads: usize, max_blocking_threads: usize) {
         .with_writer(log_writer)
         .with_env_filter(filter)
         .init();
+    // Keep the guard alive until after the final log event so shutdown flushes
+    // the queue before terminating the writer thread.
+    let _log_guard = log_guard;
+
+    let command = Cli::parse().command;
+    let args = match command {
+        Command::Serve(args) => args,
+        Command::Init(args) => {
+            init_database(args).await;
+            return;
+        }
+        Command::Types => {
+            typegen::prepare();
+            typegen::run();
+            return;
+        }
+    };
+
     tracing::info!(
         worker_threads,
         max_blocking_threads,
         "Tokio runtime configured"
     );
-    // Keep the guard alive until after the final log event so shutdown flushes
-    // the queue before terminating the writer thread.
-    let _log_guard = log_guard;
 
     let storage = std::sync::Arc::new(s3::Storage::new(s3::StorageConfig {
         endpoint_url: args.s3_endpoint_url.clone(),
@@ -738,15 +731,8 @@ async fn run_server(worker_threads: usize, max_blocking_threads: usize) {
 
     db::check_db_host(&args.database_url).await;
 
-    let pool = {
-        // Database Migrations
-        let pool = db::connect(&args.database_url).await;
-        MIGRATOR
-            .run(&pool)
-            .await
-            .expect("Failed to run database migrations");
-        pool
-    };
+    db::migrate(&args.database_url).await;
+    let pool = db::connect(&args.database_url).await;
     db::check(&pool).await;
     tracing::info!("Database is ready");
     let mut redis_conn = redis::connect(args.redis_url.as_deref()).await;

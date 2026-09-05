@@ -9,6 +9,10 @@ primary_region = 'nrt'
 [build]
   image = 'ghcr.io/mythal/boluo/server:latest'
 
+[deploy]
+  release_command = '/bin/server init'
+  release_command_timeout = '30m'
+
 [env]
   APP_URL = 'https://boluo-app.mythal.workers.dev'
   DATABASE_URL = 'postgresql://boluo:boluo-staging@boluo-db-staging.internal:5432/boluo'

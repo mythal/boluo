@@ -4,7 +4,6 @@ import { type Banner, emptyBanner, PaneBannerContext, ThrowBanner } from '../hoo
 import { ChannelIdContext } from '../hooks/useChannelId';
 import { PaneProvider } from '../state/view.context';
 import { type Pane, type PaneData } from '../state/view.types';
-import { PaneChannelSettings } from './pane-channel-settings/PaneChannelSettings';
 import { ChatPaneChannel } from './pane-channel/ChannelPane';
 import { PaneError } from './pane-error/PaneError';
 import { PaneSpace } from './pane-space/PaneSpace';
@@ -12,10 +11,23 @@ import { PaneEmpty } from './PaneEmpty';
 import { PaneLoading } from './PaneLoading';
 import { PaneWelcome } from './PaneWelcome';
 import { PaneSpaceGreeting } from './PaneSpaceGreeting';
-import { PaneChannelExport } from './pane-channel-export/PaneChannelExport';
-import { PaneChannelTopic } from './pane-channel-topic/PaneChannelTopic';
 import { useSpace } from '../hooks/useSpace';
 
+const PaneChannelSettings = React.lazy(() =>
+  import('./pane-channel-settings/PaneChannelSettings').then((module) => ({
+    default: module.PaneChannelSettings,
+  })),
+);
+const PaneChannelExport = React.lazy(() =>
+  import('./pane-channel-export/PaneChannelExport').then((module) => ({
+    default: module.PaneChannelExport,
+  })),
+);
+const PaneChannelTopic = React.lazy(() =>
+  import('./pane-channel-topic/PaneChannelTopic').then((module) => ({
+    default: module.PaneChannelTopic,
+  })),
+);
 const PaneSpaceSettings = React.lazy(() => import('./pane-space-settings/PaneSpaceSettings'));
 const PaneSpaceMembers = React.lazy(() => import('./pane-space-members/PaneSpaceMembers'));
 const PaneProfile = React.lazy(() => import('./pane-profile/PaneProfile'));

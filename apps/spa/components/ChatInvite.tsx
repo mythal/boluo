@@ -1,9 +1,10 @@
 import { useQueryCurrentUser } from '@boluo/hooks/useQueryCurrentUser';
-import { type FC, type ReactNode, lazy, useMemo } from 'react';
+import { lazyWithRetry } from '@boluo/utils/lazy';
+import { type FC, type ReactNode, useMemo } from 'react';
 import { PaneList } from './PaneList';
 import { PaneWelcome } from './PaneWelcome';
 
-const PaneLogin = lazy(() => import('./PaneLogin'));
+const PaneLogin = lazyWithRetry(() => import('./PaneLogin'));
 
 export const ChatInvite: FC<{ spaceId: string; token: string }> = () => {
   const { data: currentUser, isLoading } = useQueryCurrentUser();

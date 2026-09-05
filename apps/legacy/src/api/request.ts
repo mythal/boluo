@@ -3,7 +3,7 @@ import { isCrossOrigin } from '../settings';
 import store from '../store';
 import { Err, Ok, type Result } from '../utils/result';
 import { getAuthToken, clearAuthToken } from '../utils/token';
-import { withFaroSessionId } from '../frontend-telemetry';
+import { withFaroSessionId } from '../frontend-telemetry-session';
 import { isAppError, reportApiError } from '../error-reporting';
 import type {
   IdQuery,

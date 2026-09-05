@@ -1,6 +1,6 @@
 import { isApiError, type ApiError } from '@boluo/api';
 import { describeThrownValue } from '@boluo/utils/errors';
-import { LogLevel, faro, getInternalFaroFromGlobalObject } from '@grafana/faro-web-sdk';
+import { LogLevel, faro, getInternalFaroFromGlobalObject } from '@grafana/faro-core';
 import { IS_DEVELOPMENT } from './const';
 
 const API_WARNING_THROTTLE_MS = 60_000;

@@ -1,3 +1,4 @@
+import { getInternalFaroFromGlobalObject, LogLevel, TransportItemType } from '@grafana/faro-core';
 import { apiUrlAtom, setFaroSessionIdProvider } from '@boluo/api-browser';
 import { store } from '@boluo/store';
 import {
@@ -8,15 +9,13 @@ import {
   ConsoleInstrumentation,
   ErrorsInstrumentation,
   FetchTransport,
-  LogLevel,
   SessionInstrumentation,
-  TransportItemType,
   WebVitalsInstrumentation,
-  getInternalFaroFromGlobalObject,
   initializeFaro,
   type LogEvent,
   type TransportItem,
 } from '@grafana/faro-web-sdk';
+import { applyTelemetryUser } from './frontend-telemetry-user';
 import { APP_VERSION, IS_DEVELOPMENT } from './const';
 
 const telemetryUrl = () => `${store.get(apiUrlAtom)}/telemetry`;
@@ -42,6 +41,7 @@ export function initializeFrontendTelemetry(): void {
   const existingInstance = getInternalFaroFromGlobalObject();
   if (existingInstance) {
     setFaroSessionIdProvider(() => existingInstance.api.getSession()?.id);
+    applyTelemetryUser();
     return;
   }
 
@@ -91,6 +91,7 @@ export function initializeFrontendTelemetry(): void {
   });
 
   setFaroSessionIdProvider(() => instance.api.getSession()?.id);
+  applyTelemetryUser();
 
   store.sub(apiUrlAtom, () => {
     const nextUrl = telemetryUrl();
@@ -102,15 +103,4 @@ export function initializeFrontendTelemetry(): void {
     currentUrl = nextUrl;
     transport = nextTransport;
   });
-}
-
-export function setTelemetryUser(userId: string | null | undefined): void {
-  const instance = getInternalFaroFromGlobalObject();
-  if (!instance) return;
-
-  if (userId) {
-    instance.api.setUser({ id: userId });
-  } else {
-    instance.api.resetUser();
-  }
 }

@@ -4,12 +4,18 @@ import { Provider } from 'react-redux';
 import { App } from './components/App';
 import { store } from './store';
 import { getRoot } from './utils/browser';
-import { initializeFrontendTelemetry, setTelemetryUser } from './frontend-telemetry';
+import { setTelemetryUser } from './frontend-telemetry-user';
 import { getDefaultBaseUrl } from './base-url';
 import PageError from './components/molecules/PageError';
 import './tailwind.css';
 
-initializeFrontendTelemetry(getDefaultBaseUrl());
+void import('./frontend-telemetry')
+  .then(({ initializeFrontendTelemetry }) => {
+    initializeFrontendTelemetry(getDefaultBaseUrl());
+  })
+  .catch(() => {
+    // Telemetry must never prevent the legacy application from starting.
+  });
 
 let telemetryUserId: string | undefined;
 store.subscribe(() => {

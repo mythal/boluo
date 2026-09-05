@@ -1,6 +1,6 @@
 import { findNewVersion, readFrontendVersion } from '@boluo/api/version';
 import { useCallback, useEffect, useState } from 'react';
-import { withFaroSessionId } from '../frontend-telemetry';
+import { withFaroSessionId } from '../frontend-telemetry-session';
 
 const CHECK_INTERVAL = 30 * 60 * 1000;
 const DISMISSED_VERSION_KEY = 'boluo-legacy-dismissed-version-v1';

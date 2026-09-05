@@ -7,7 +7,7 @@ import {
   type RouteSelectionDecision,
 } from '@boluo/api/route-selection';
 import { normalizeProxyUrlForOrigin, originMap } from '@boluo/api/origin-map';
-import { withFaroSessionId } from './frontend-telemetry';
+import { withFaroSessionId } from './frontend-telemetry-session';
 import { evaluateRoute, measureBaseUrl } from './route-selection';
 
 export { AUTO_ROUTE_PROBE_INTERVAL_MS };

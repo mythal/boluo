@@ -4,7 +4,7 @@ import { PaneList } from './PaneList';
 import PaneLogin from './PaneLogin';
 import { PaneWelcome } from './PaneWelcome';
 import { clearToken } from '@boluo/api-browser';
-import { setTelemetryUser } from '../frontend-telemetry';
+import { setTelemetryUser } from '../frontend-telemetry-user';
 
 export const ChatRoot: FC = () => {
   const { data: currentUser, isLoading } = useQueryCurrentUser({

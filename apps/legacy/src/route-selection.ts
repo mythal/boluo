@@ -5,7 +5,7 @@ import {
   type RouteSelectionDecision,
   type RouteStats,
 } from '@boluo/api/route-selection';
-import { withFaroSessionId } from './frontend-telemetry';
+import { withFaroSessionId } from './frontend-telemetry-session';
 
 export type MeasureResult = Extract<RouteProbeResult, number | 'TIMEOUT' | 'ERROR'>;
 

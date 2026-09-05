@@ -11,7 +11,7 @@ import { type MutationFetcher } from 'swr/mutation';
 import useSWRMutation from 'swr/mutation';
 import type { ChildrenProps, Locale } from '@boluo/types';
 import { identity } from '@boluo/utils/function';
-import { setTelemetryUser } from '../../frontend-telemetry';
+import { setTelemetryUser } from '../../frontend-telemetry-user';
 import { reportApiError } from '../../error';
 
 interface Props extends ChildrenProps {

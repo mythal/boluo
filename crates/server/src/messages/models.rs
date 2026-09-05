@@ -707,11 +707,21 @@ impl Message {
         Ok(MessageEditOutcome::Conflict)
     }
 
-    pub async fn delete<'c, T: sqlx::PgExecutor<'c>>(db: T, id: &Uuid) -> Result<u64, sqlx::Error> {
-        sqlx::query_file!("sql/messages/delete.sql", id)
-            .execute(db)
-            .await
-            .map(|res| res.rows_affected())
+    pub async fn delete<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
+        id: &Uuid,
+        user_id: Option<&Uuid>,
+    ) -> Result<Option<Message>, sqlx::Error> {
+        let result = sqlx::query_file!("sql/messages/delete.sql", id, user_id)
+            .fetch_optional(db)
+            .await?;
+        Ok(result.map(|record| {
+            let mut message: Message = record.message;
+            if record.should_hide {
+                message.hide(None);
+            }
+            message
+        }))
     }
 }
 
@@ -1304,10 +1314,75 @@ mod tests {
         assert_eq!(cleared_attribution.character_id, None);
         assert_eq!(cleared_attribution.portrait_id, None);
 
-        let deleted = Message::delete(&pool, &message.id)
+        // Keep an older snapshot to model a delete request racing with a move. The
+        // delete result must reflect the row at the instant the update succeeds.
+        let stale_pos = cleared_attribution.pos;
+        let moved = Message::move_between(
+            &pool,
+            owner.id,
+            &message.id,
+            channel.id,
+            (Some((whisper_message.pos_p, whisper_message.pos_q)), None),
+            Some((cleared_attribution.pos_p, cleared_attribution.pos_q)),
+        )
+        .await
+        .expect("move before delete failed");
+        let MessageMoveOutcome::Moved { message: moved, .. } = moved else {
+            panic!("message should be moved before delete");
+        };
+        assert_ne!(moved.pos, stale_pos);
+
+        let deleted = Message::delete(&pool, &message.id, Some(&owner.id))
             .await
-            .expect("delete failed");
-        assert_eq!(deleted, 1);
+            .expect("delete failed")
+            .expect("message should be deleted");
+        assert_eq!(deleted.id, message.id);
+        assert_eq!(deleted.pos, moved.pos);
+        assert!(deleted.deleted);
+
+        let duplicate_delete = Message::delete(&pool, &message.id, Some(&owner.id))
+            .await
+            .expect("duplicate delete failed");
+        assert!(duplicate_delete.is_none());
+
+        // Space administration grants deletion permission, not whisper visibility.
+        SpaceMember::add_admin(&pool, &bystander.id, &space.id)
+            .await
+            .expect("failed to grant bystander admin");
+        for (user_id, visible) in [
+            (Some(&owner.id), true),      // Channel master, not a recipient.
+            (Some(&other.id), true),      // Recipient, not a master.
+            (Some(&bystander.id), false), // Space admin, neither master nor recipient.
+            (None, false),
+        ] {
+            let mut transaction = pool.begin().await.expect("failed to begin delete");
+            let deleted = Message::delete(&mut *transaction, &whisper_message.id, user_id)
+                .await
+                .expect("whisper delete failed")
+                .expect("whisper should be deleted");
+            assert!(deleted.deleted);
+            assert_eq!(deleted.pos, fetched_visible.pos);
+            if visible {
+                assert_eq!(deleted.text, whisper_text);
+                assert_eq!(deleted.media_id, fetched_visible.media_id);
+                assert_eq!(
+                    serde_json::to_value(&deleted.entities).unwrap(),
+                    serde_json::to_value(&fetched_visible.entities).unwrap(),
+                );
+            } else {
+                let mut expected = fetched_visible.clone();
+                expected.hide(None);
+                expected.deleted = true;
+                assert_eq!(
+                    serde_json::to_value(&deleted).unwrap(),
+                    serde_json::to_value(&expected).unwrap(),
+                );
+            }
+            transaction
+                .rollback()
+                .await
+                .expect("failed to roll back delete");
+        }
 
         let after_delete = Message::get(&pool, &message.id, Some(&owner.id))
             .await

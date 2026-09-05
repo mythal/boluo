@@ -196,22 +196,20 @@ export const PaneSignUp: FC = () => {
   const loginPaneHref = paneHref({ type: 'LOGIN' });
 
   const onSubmit: SubmitHandler<Schema> = useCallback(
-    ({ username, email, nickname, password }) => {
-      void (async () => {
-        const result = await post('/users/register', null, {
-          username,
-          email,
-          nickname,
-          password,
-        });
+    ({ username, email, nickname, password }) =>
+      post('/users/register', null, {
+        username,
+        email,
+        nickname,
+        password,
+      }).then((result) => {
         if (result.isErr) {
           setError(result.err);
           return;
         }
         setError(null);
         replacePane({ type: 'LOGIN' }, (pane) => pane.type === 'SIGN_UP');
-      })();
-    },
+      }),
     [replacePane],
   );
 

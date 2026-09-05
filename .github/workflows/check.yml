@@ -71,6 +71,14 @@ jobs:
           sudo chown -R "$(id -u):$(id -g)" /tmp/sccache
           chmod -R a+rwX /tmp/sccache
 
+      # The point is the out-link: a garbage collector root that carries these
+      # artifacts through the Nix store cache trim into the next run.
+      - name: Pin the check build cache
+        run: |
+          mkdir -p .tmp
+          nix build --quiet --no-update-lock-file --print-build-logs \
+            --out-link .tmp/check-build-cache ".#check-build-cache"
+
       - name: Check server and bridge
         run: >-
           nix build --quiet --no-update-lock-file --print-build-logs

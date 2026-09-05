@@ -55,3 +55,18 @@ export interface LimitExceededError {
   code: 'LIMIT_EXCEEDED';
   message: string;
 }
+
+export interface PayloadTooLargeError {
+  code: 'PAYLOAD_TOO_LARGE';
+  message: string;
+}
+
+export interface RequestTimeoutError {
+  code: 'REQUEST_TIMEOUT';
+  message: string;
+}
+
+export interface ServiceUnavailableError {
+  code: 'SERVICE_UNAVAILABLE';
+  message: string;
+}

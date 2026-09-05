@@ -32,6 +32,8 @@ pub enum AppError {
     PayloadTooLarge,
     #[error("Timeout")]
     Timeout { reason: &'static str },
+    #[error("Service unavailable")]
+    Unavailable { reason: &'static str },
     #[error("An I/O error occurred")]
     Hyper {
         #[from]
@@ -63,6 +65,7 @@ impl AppError {
             LimitExceeded(_) => StatusCode::TOO_MANY_REQUESTS,
             PayloadTooLarge => StatusCode::PAYLOAD_TOO_LARGE,
             Timeout { .. } => StatusCode::REQUEST_TIMEOUT,
+            Unavailable { .. } => StatusCode::SERVICE_UNAVAILABLE,
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
@@ -80,6 +83,7 @@ impl AppError {
             PayloadTooLarge => "PAYLOAD_TOO_LARGE",
             Conflict(_) => "CONFLICT",
             Timeout { .. } => "REQUEST_TIMEOUT",
+            Unavailable { .. } => "SERVICE_UNAVAILABLE",
             _ => "UNEXPECTED",
         }
     }
@@ -317,6 +321,16 @@ pub fn log_error(e: &AppError, path: &str) {
                 status_code = status_code,
                 reason = reason,
                 "Request timed out"
+            );
+        }
+        Unavailable { reason } => {
+            tracing::error!(
+                event = "http.request.unavailable",
+                path,
+                error_code = error_code,
+                status_code = status_code,
+                reason = reason,
+                "A dependency did not answer in time"
             );
         }
         e => {

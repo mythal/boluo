@@ -15,7 +15,6 @@ SELECT
 FROM
     (SELECT 1) singleton
     LEFT JOIN messages msg ON msg.id = $1
-        AND msg.deleted = FALSE
     LEFT JOIN channels ch ON ch.id = msg.channel_id
         AND ch.deleted = FALSE
     LEFT JOIN channel_members cm ON cm.channel_id = msg.channel_id

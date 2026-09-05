@@ -45,7 +45,6 @@ FROM
 WHERE
     msg.id = $2
     AND msg.channel_id = $1
-    AND msg.deleted = FALSE
     AND ch.id = msg.channel_id
     AND ch.deleted = FALSE
     AND (ch.is_document OR cm.is_master OR msg.sender_id = $5)

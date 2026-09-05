@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT\n    msg AS \"message!: Message\"\nFROM\n    messages msg\nWHERE\n    msg.channel_id = $1\n    AND msg.deleted = FALSE\n    AND msg.created > coalesce($2, to_timestamp(0)::timestamptz)\nORDER BY\n    msg.pos;\n\n",
+  "query": "-- Nothing selects from `archived`; a data-modifying CTE runs regardless.\nWITH removed AS (\n    DELETE FROM messages\n    WHERE id = $1\n    RETURNING\n        messages AS message\n),\narchived AS (\nINSERT INTO deleted_messages (id, channel_id, deleted_by, message)\n    SELECT\n        (removed.message).id,\n        (removed.message).channel_id,\n        $2,\n        to_jsonb(removed.message)\n    FROM\n        removed\n)\nSELECT\n    removed.message AS \"message!: Message\",\n    ((removed.message).whisper_to_users IS NOT NULL\n        AND NOT EXISTS (\n            SELECT 1 FROM channel_members cm\n            WHERE cm.channel_id = (removed.message).channel_id\n                AND cm.user_id = $2\n                AND cm.is_master IS TRUE\n        )\n        AND ($2::uuid IS NULL OR $2 <> ALL ((removed.message).whisper_to_users))) AS \"should_hide!\"\nFROM\n    removed;\n",
   "describe": {
     "columns": [
       {
@@ -38,10 +38,6 @@
                 [
                   "seed",
                   "Bytea"
-                ],
-                [
-                  "deleted",
-                  "Bool"
                 ],
                 [
                   "in_game",
@@ -124,17 +120,24 @@
           }
         },
         "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "should_hide!",
+        "type_info": "Bool",
+        "origin": "Expression"
       }
     ],
     "parameters": {
       "Left": [
         "Uuid",
-        "Timestamptz"
+        "Uuid"
       ]
     },
     "nullable": [
+      null,
       null
     ]
   },
-  "hash": "89e9164da69bcf9ffe2a9ed5c105a03fe1e88a5da7852927f91b8049d99e5133"
+  "hash": "f905dc278886139deef67bbc1253a7ae7f9292884a28b3f2fdb3f7aa6f9051ea"
 }

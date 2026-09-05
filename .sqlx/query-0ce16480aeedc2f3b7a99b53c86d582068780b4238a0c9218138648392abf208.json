@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT\n    msg AS \"message!: Message\"\nFROM\n    messages msg\nWHERE\n    msg.channel_id = $1\n    AND msg.deleted = FALSE\n    AND ($2::float8 IS NULL\n        OR msg.pos < $2) -- before\nORDER BY\n    msg.pos DESC\nLIMIT $3;\n\n",
+  "query": "WITH target_message AS MATERIALIZED (\n    SELECT message.id\n    FROM messages message\n    JOIN channels channel ON channel.id = message.channel_id\n    JOIN entry_effects effect\n      ON effect.id = $3\n     AND effect.operator_id = $2\n     AND effect.space_id = channel.space_id\n     AND effect.message_id IS NULL\n    WHERE message.id = $1\n      AND message.sender_id = $2\n    FOR UPDATE OF message, effect\n), attached_effect AS (\n    UPDATE entry_effects effect\n    SET message_id = target.id\n    FROM target_message target\n    WHERE effect.id = $3\n    RETURNING effect.message_id\n)\nUPDATE messages message\nSET has_entry_effects = TRUE,\n    rev = message.rev + 1\nFROM attached_effect effect\nWHERE message.id = effect.message_id\nRETURNING message AS \"message!: Message\";\n",
   "describe": {
     "columns": [
       {
@@ -38,10 +38,6 @@
                 [
                   "seed",
                   "Bytea"
-                ],
-                [
-                  "deleted",
-                  "Bool"
                 ],
                 [
                   "in_game",
@@ -129,13 +125,13 @@
     "parameters": {
       "Left": [
         "Uuid",
-        "Float8",
-        "Int8"
+        "Uuid",
+        "Uuid"
       ]
     },
     "nullable": [
       null
     ]
   },
-  "hash": "243e61c9d5317596e5fe64d4a27573ce30b3540be9c4702288e6441c4d4f1dd5"
+  "hash": "0ce16480aeedc2f3b7a99b53c86d582068780b4238a0c9218138648392abf208"
 }

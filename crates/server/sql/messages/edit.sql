@@ -21,7 +21,6 @@ FROM
         AND sm.user_id = $13
 WHERE
     msg.id = $1
-    AND msg.deleted = FALSE
     AND ch.id = msg.channel_id
     AND ch.deleted = FALSE
     AND ch.space_id = $14

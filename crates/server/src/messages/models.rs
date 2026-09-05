@@ -26,8 +26,6 @@ pub struct Message {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub media_id: Option<Uuid>,
     pub seed: Vec<u8>,
-    #[serde(skip)]
-    pub deleted: bool,
     #[serde(skip_serializing_if = "is_false")]
     pub in_game: bool,
     #[serde(skip_serializing_if = "is_false")]
@@ -972,6 +970,26 @@ mod tests {
             .expect("Message is missing");
         assert!(fetched.has_entry_effects);
         assert_eq!(fetched.rev, 2);
+
+        Message::delete(&pool, &message.id, Some(&owner.id))
+            .await
+            .expect("delete failed")
+            .expect("message should be deleted");
+
+        // `entry_effects.message_id` carries no foreign key so that it survives here.
+        let effect_message_ids: Vec<Option<Uuid>> =
+            sqlx::query_scalar("SELECT message_id FROM entry_effects WHERE space_id = $1")
+                .bind(space.id)
+                .fetch_all(&pool)
+                .await
+                .expect("failed to read Entry Effects after delete");
+        assert_eq!(effect_message_ids, vec![Some(message.id), Some(message.id)]);
+        let archived: Uuid = sqlx::query_scalar("SELECT id FROM deleted_messages WHERE id = $1")
+            .bind(message.id)
+            .fetch_one(&pool)
+            .await
+            .expect("the effect's message is not recoverable from the archive");
+        assert_eq!(archived, message.id);
     }
 
     #[sqlx::test(migrator = "crate::db::MIGRATOR")]
@@ -1338,7 +1356,27 @@ mod tests {
             .expect("message should be deleted");
         assert_eq!(deleted.id, message.id);
         assert_eq!(deleted.pos, moved.pos);
-        assert!(deleted.deleted);
+
+        let archived: (Uuid, Option<Uuid>, JsonValue) = sqlx::query_as(
+            "SELECT channel_id, deleted_by, message FROM deleted_messages WHERE id = $1",
+        )
+        .bind(message.id)
+        .fetch_one(&pool)
+        .await
+        .expect("deleted message was not archived");
+        assert_eq!(archived.0, channel.id);
+        assert_eq!(archived.1, Some(owner.id));
+        assert_eq!(archived.2["id"], serde_json::json!(message.id));
+        let pos_free: bool = sqlx::query_scalar(
+            "SELECT NOT EXISTS (SELECT 1 FROM messages WHERE channel_id = $1 AND pos_p = $2 AND pos_q = $3)",
+        )
+        .bind(channel.id)
+        .bind(deleted.pos_p)
+        .bind(deleted.pos_q)
+        .fetch_one(&pool)
+        .await
+        .expect("failed to check the archived position");
+        assert!(pos_free);
 
         let duplicate_delete = Message::delete(&pool, &message.id, Some(&owner.id))
             .await
@@ -1360,7 +1398,6 @@ mod tests {
                 .await
                 .expect("whisper delete failed")
                 .expect("whisper should be deleted");
-            assert!(deleted.deleted);
             assert_eq!(deleted.pos, fetched_visible.pos);
             if visible {
                 assert_eq!(deleted.text, whisper_text);
@@ -1372,7 +1409,6 @@ mod tests {
             } else {
                 let mut expected = fetched_visible.clone();
                 expected.hide(None);
-                expected.deleted = true;
                 assert_eq!(
                     serde_json::to_value(&deleted).unwrap(),
                     serde_json::to_value(&expected).unwrap(),

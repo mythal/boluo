@@ -40,10 +40,6 @@
                   "Bytea"
                 ],
                 [
-                  "deleted",
-                  "Bool"
-                ],
-                [
                   "in_game",
                   "Bool"
                 ],

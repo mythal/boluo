@@ -9,7 +9,6 @@ WITH target_message AS MATERIALIZED (
      AND effect.message_id IS NULL
     WHERE message.id = $1
       AND message.sender_id = $2
-      AND message.deleted = FALSE
     FOR UPDATE OF message, effect
 ), attached_effect AS (
     UPDATE entry_effects effect

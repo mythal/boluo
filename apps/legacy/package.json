@@ -9,6 +9,7 @@
     "@boluo/frontend-worker": "0.0.0",
     "@boluo/icons": "0.0.0",
     "@boluo/utils": "0.0.0",
+    "@grafana/faro-core": "^2.10.0",
     "@grafana/faro-web-sdk": "^2.10.0",
     "@hello-pangea/dnd": "^18.0.1",
     "@redux-devtools/extension": "^4.0.0",

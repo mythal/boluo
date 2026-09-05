@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT\n    msg AS \"message!: Message\"\nFROM\n    messages msg\nWHERE\n    msg.channel_id = $1\n    AND msg.deleted = FALSE\n    AND msg.created > coalesce($2, to_timestamp(0)::timestamptz)\nORDER BY\n    msg.pos;\n\n",
+  "query": "SELECT\n    msg AS \"message!: Message\"\nFROM\n    messages msg\nWHERE\n    msg.channel_id = $1\n    AND msg.created > coalesce($2, to_timestamp(0)::timestamptz)\nORDER BY\n    msg.pos;\n\n",
   "describe": {
     "columns": [
       {
@@ -38,10 +38,6 @@
                 [
                   "seed",
                   "Bytea"
-                ],
-                [
-                  "deleted",
-                  "Bool"
                 ],
                 [
                   "in_game",
@@ -136,5 +132,5 @@
       null
     ]
   },
-  "hash": "89e9164da69bcf9ffe2a9ed5c105a03fe1e88a5da7852927f91b8049d99e5133"
+  "hash": "e82984a506cf79e6ccf548d7afa935586fb63182d4926c8c5b1926e44f740847"
 }

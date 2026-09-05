@@ -41,9 +41,8 @@ export const PaneResetPassword: FC = () => {
   const fieldId = useId();
 
   const onSubmit: SubmitHandler<FormSchema> = useCallback(
-    ({ email }) => {
-      void (async () => {
-        const result = await post('/users/reset_password', null, { email, lang: intl.locale });
+    ({ email }) =>
+      post('/users/reset_password', null, { email, lang: intl.locale }).then((result) => {
         if (result.isErr) {
           if (result.err.code === 'NOT_FOUND') {
             setPageState('NOT_FOUND');
@@ -54,8 +53,7 @@ export const PaneResetPassword: FC = () => {
           return;
         }
         setPageState('SUCCESS');
-      })();
-    },
+      }),
     [intl.locale],
   );
 
@@ -80,12 +78,7 @@ export const PaneResetPassword: FC = () => {
     >
       <div className="p-pane max-w-lg">
         {pageState === 'FORM' ? (
-          <form
-            onSubmit={(event) => {
-              void handleFormSubmit(event);
-            }}
-            className="flex flex-col gap-4 pt-2"
-          >
+          <form onSubmit={handleFormSubmit} className="flex flex-col gap-4 pt-2">
             <div>
               <label htmlFor={fieldId} className="block py-1">
                 <FormattedMessage defaultMessage="Email" />

@@ -1,7 +1,7 @@
 import { atom, useAtomValue } from 'jotai';
 import { selectAtom } from 'jotai/utils';
 import { useEffect, useMemo } from 'react';
-import { binarySearchPos } from '@boluo/sort';
+import { binarySearchPos, binarySearchPosList } from '@boluo/sort';
 import {
   findMessage,
   isChannelHistoryFull,
@@ -254,6 +254,39 @@ export const applyEditPreview = (
   }
   // The original message may be filtered out; treat it as a normal preview.
   return resolved;
+};
+
+/**
+ * `/messages/move_between` assumes the range it receives is empty and picks the simplest
+ * fraction inside it. Previews count as neighbors: the server reserves their positions
+ * without a row in `messages`.
+ */
+export const findNeighborPos = (
+  {
+    messages,
+    previewMap,
+    historyState,
+  }: Pick<ChannelState, 'messages' | 'previewMap' | 'historyState'>,
+  pos: number,
+  direction: 'BEFORE' | 'AFTER',
+): [number, number] | null => {
+  const [index, found] = binarySearchPosList(messages, pos);
+  const neighborIndex = direction === 'AFTER' ? (found ? index + 1 : index) : index - 1;
+  let neighbor: ChatItem | undefined = L.nth(neighborIndex, messages);
+  const loadedMinPos = L.first(messages)?.pos ?? Number.MIN_SAFE_INTEGER;
+  const fullLoaded = isChannelHistoryFull({ historyState });
+  for (const preview of Object.values(previewMap)) {
+    // A partial history does not tell us whether messages exist below its oldest
+    // loaded item. Keep the lower bound open so the server can resolve that neighbor.
+    if (!isPreviewInLoadedRange(preview.pos, loadedMinPos, fullLoaded)) continue;
+    if (direction === 'AFTER' ? preview.pos <= pos : preview.pos >= pos) continue;
+    if (neighbor == null) {
+      neighbor = preview;
+    } else if (direction === 'AFTER' ? preview.pos < neighbor.pos : preview.pos > neighbor.pos) {
+      neighbor = preview;
+    }
+  }
+  return neighbor == null ? null : [neighbor.posP, neighbor.posQ];
 };
 
 export const isMessageNewerThanOptimisticRef = (

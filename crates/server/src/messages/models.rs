@@ -26,8 +26,6 @@ pub struct Message {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub media_id: Option<Uuid>,
     pub seed: Vec<u8>,
-    #[serde(skip)]
-    pub deleted: bool,
     #[serde(skip_serializing_if = "is_false")]
     pub in_game: bool,
     #[serde(skip_serializing_if = "is_false")]
@@ -707,11 +705,21 @@ impl Message {
         Ok(MessageEditOutcome::Conflict)
     }
 
-    pub async fn delete<'c, T: sqlx::PgExecutor<'c>>(db: T, id: &Uuid) -> Result<u64, sqlx::Error> {
-        sqlx::query_file!("sql/messages/delete.sql", id)
-            .execute(db)
-            .await
-            .map(|res| res.rows_affected())
+    pub async fn delete<'c, T: sqlx::PgExecutor<'c>>(
+        db: T,
+        id: &Uuid,
+        user_id: Option<&Uuid>,
+    ) -> Result<Option<Message>, sqlx::Error> {
+        let result = sqlx::query_file!("sql/messages/delete.sql", id, user_id)
+            .fetch_optional(db)
+            .await?;
+        Ok(result.map(|record| {
+            let mut message: Message = record.message;
+            if record.should_hide {
+                message.hide(None);
+            }
+            message
+        }))
     }
 }
 
@@ -962,6 +970,26 @@ mod tests {
             .expect("Message is missing");
         assert!(fetched.has_entry_effects);
         assert_eq!(fetched.rev, 2);
+
+        Message::delete(&pool, &message.id, Some(&owner.id))
+            .await
+            .expect("delete failed")
+            .expect("message should be deleted");
+
+        // `entry_effects.message_id` carries no foreign key so that it survives here.
+        let effect_message_ids: Vec<Option<Uuid>> =
+            sqlx::query_scalar("SELECT message_id FROM entry_effects WHERE space_id = $1")
+                .bind(space.id)
+                .fetch_all(&pool)
+                .await
+                .expect("failed to read Entry Effects after delete");
+        assert_eq!(effect_message_ids, vec![Some(message.id), Some(message.id)]);
+        let archived: Uuid = sqlx::query_scalar("SELECT id FROM deleted_messages WHERE id = $1")
+            .bind(message.id)
+            .fetch_one(&pool)
+            .await
+            .expect("the effect's message is not recoverable from the archive");
+        assert_eq!(archived, message.id);
     }
 
     #[sqlx::test(migrator = "crate::db::MIGRATOR")]
@@ -1304,10 +1332,93 @@ mod tests {
         assert_eq!(cleared_attribution.character_id, None);
         assert_eq!(cleared_attribution.portrait_id, None);
 
-        let deleted = Message::delete(&pool, &message.id)
+        // Keep an older snapshot to model a delete request racing with a move. The
+        // delete result must reflect the row at the instant the update succeeds.
+        let stale_pos = cleared_attribution.pos;
+        let moved = Message::move_between(
+            &pool,
+            owner.id,
+            &message.id,
+            channel.id,
+            (Some((whisper_message.pos_p, whisper_message.pos_q)), None),
+            Some((cleared_attribution.pos_p, cleared_attribution.pos_q)),
+        )
+        .await
+        .expect("move before delete failed");
+        let MessageMoveOutcome::Moved { message: moved, .. } = moved else {
+            panic!("message should be moved before delete");
+        };
+        assert_ne!(moved.pos, stale_pos);
+
+        let deleted = Message::delete(&pool, &message.id, Some(&owner.id))
             .await
-            .expect("delete failed");
-        assert_eq!(deleted, 1);
+            .expect("delete failed")
+            .expect("message should be deleted");
+        assert_eq!(deleted.id, message.id);
+        assert_eq!(deleted.pos, moved.pos);
+
+        let archived: (Uuid, Option<Uuid>, JsonValue) = sqlx::query_as(
+            "SELECT channel_id, deleted_by, message FROM deleted_messages WHERE id = $1",
+        )
+        .bind(message.id)
+        .fetch_one(&pool)
+        .await
+        .expect("deleted message was not archived");
+        assert_eq!(archived.0, channel.id);
+        assert_eq!(archived.1, Some(owner.id));
+        assert_eq!(archived.2["id"], serde_json::json!(message.id));
+        let pos_free: bool = sqlx::query_scalar(
+            "SELECT NOT EXISTS (SELECT 1 FROM messages WHERE channel_id = $1 AND pos_p = $2 AND pos_q = $3)",
+        )
+        .bind(channel.id)
+        .bind(deleted.pos_p)
+        .bind(deleted.pos_q)
+        .fetch_one(&pool)
+        .await
+        .expect("failed to check the archived position");
+        assert!(pos_free);
+
+        let duplicate_delete = Message::delete(&pool, &message.id, Some(&owner.id))
+            .await
+            .expect("duplicate delete failed");
+        assert!(duplicate_delete.is_none());
+
+        // Space administration grants deletion permission, not whisper visibility.
+        SpaceMember::add_admin(&pool, &bystander.id, &space.id)
+            .await
+            .expect("failed to grant bystander admin");
+        for (user_id, visible) in [
+            (Some(&owner.id), true),      // Channel master, not a recipient.
+            (Some(&other.id), true),      // Recipient, not a master.
+            (Some(&bystander.id), false), // Space admin, neither master nor recipient.
+            (None, false),
+        ] {
+            let mut transaction = pool.begin().await.expect("failed to begin delete");
+            let deleted = Message::delete(&mut *transaction, &whisper_message.id, user_id)
+                .await
+                .expect("whisper delete failed")
+                .expect("whisper should be deleted");
+            assert_eq!(deleted.pos, fetched_visible.pos);
+            if visible {
+                assert_eq!(deleted.text, whisper_text);
+                assert_eq!(deleted.media_id, fetched_visible.media_id);
+                assert_eq!(
+                    serde_json::to_value(&deleted.entities).unwrap(),
+                    serde_json::to_value(&fetched_visible.entities).unwrap(),
+                );
+            } else {
+                let mut expected = fetched_visible.clone();
+                expected.hide(None);
+                assert_eq!(
+                    serde_json::to_value(&deleted).unwrap(),
+                    serde_json::to_value(&expected).unwrap(),
+                );
+            }
+            transaction
+                .rollback()
+                .await
+                .expect("failed to roll back delete");
+        }
 
         let after_delete = Message::get(&pool, &message.id, Some(&owner.id))
             .await

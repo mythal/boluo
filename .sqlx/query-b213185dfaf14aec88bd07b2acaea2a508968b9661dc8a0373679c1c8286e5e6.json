@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "UPDATE\n    messages\nSET\n    folded = $2,\n    rev = rev + 1\nWHERE\n    id = $1\n    AND deleted = FALSE\nRETURNING\n    messages AS \"message!: Message\";\n",
+  "query": "SELECT\n    msg AS \"message!: Message\",\n    (msg.whisper_to_users IS NOT NULL\n        AND cm.is_master IS NOT TRUE\n        AND ($2 IS NULL\n            OR $2 <> ALL (msg.whisper_to_users))) AS \"should_hide!\"\nFROM\n    messages msg\n    LEFT JOIN channel_members cm ON cm.channel_id = msg.channel_id\n        AND cm.user_id = $2\nWHERE\n    msg.id = $1\nLIMIT 1;\n\n",
   "describe": {
     "columns": [
       {
@@ -38,10 +38,6 @@
                 [
                   "seed",
                   "Bytea"
-                ],
-                [
-                  "deleted",
-                  "Bool"
                 ],
                 [
                   "in_game",
@@ -124,17 +120,24 @@
           }
         },
         "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "should_hide!",
+        "type_info": "Bool",
+        "origin": "Expression"
       }
     ],
     "parameters": {
       "Left": [
         "Uuid",
-        "Bool"
+        "Uuid"
       ]
     },
     "nullable": [
+      null,
       null
     ]
   },
-  "hash": "e5b4c9e974515d88f06da80171997fe2cbf4b06c4d8fbb2dd8f7b9a5d3fe0db8"
+  "hash": "b213185dfaf14aec88bd07b2acaea2a508968b9661dc8a0373679c1c8286e5e6"
 }

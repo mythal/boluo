@@ -36,6 +36,21 @@ export function isApple(): boolean {
   return os === 'macOS' || os === 'iOS';
 }
 
+export const isBrowserSupported = (): boolean => {
+  const arrayPrototype = Array.prototype as unknown as {
+    at?: unknown;
+    findLast?: unknown;
+  };
+  return (
+    typeof CSS !== 'undefined' &&
+    typeof CSS.supports === 'function' &&
+    CSS.supports('container-type', 'inline-size') &&
+    CSS.supports('grid-template-rows', 'subgrid') &&
+    typeof arrayPrototype.at === 'function' &&
+    typeof arrayPrototype.findLast === 'function'
+  );
+};
+
 export const isCrossOrigin = () => {
   const hostname = window.location.hostname;
   const localHosts = ['localhost', '127.0.0.1', '::1'];

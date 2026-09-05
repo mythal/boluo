@@ -11,7 +11,7 @@ import { FormattedMessage } from 'react-intl';
 import type { VirtuosoHandle } from 'react-virtuoso';
 import { useSetBanner } from '../../hooks/useBanner';
 import { useChannelId } from '../../hooks/useChannelId';
-import { isDummySelfPreview, useChatList } from '../../hooks/useChatList';
+import { findNeighborPos, isDummySelfPreview, useChatList } from '../../hooks/useChatList';
 import { ScrollerRefContext } from '../../hooks/useScrollerRef';
 import { VirtuosoRefContext } from '../../hooks/useVirtuosoRef';
 import { type ChatItem, type MessageItem } from '../../state/channel.types';
@@ -87,6 +87,7 @@ interface UseDragHandlesResult {
 
 const useDndHandles = (channelId: string, chatList: ChatItem[]): UseDragHandlesResult => {
   const setBanner = useSetBanner();
+  const store = useStore();
   const dispatch = useSetAtom(chatAtom);
   const [draggingItem, setDraggingItem] = useState<DraggingItem | null>(null);
 
@@ -136,49 +137,32 @@ const useDndHandles = (channelId: string, chatList: ChatItem[]): UseDragHandlesR
       }
       const timestamp = Date.now();
       const item: MessageItem = { ...draggingMessage, optimistic: true };
+      const channelState = store.get(chatAtom).channels[channelId];
       let range: [[number, number] | null, [number, number] | null];
       if (sourceIndex < targetIndex) {
-        range = [[targetItem.posP, targetItem.posQ], null];
-        const targetNext = chatList[targetIndex + 1];
-        if (!targetNext) {
-          if (targetItem.type === 'PREVIEW' && isDummySelfPreview(targetItem)) {
-            // Dummy preview at the end
-            const targetBefore = chatList[targetIndex - 1];
-            if (!targetBefore) return;
-            range = [[targetBefore.posP, targetBefore.posQ], null];
-          }
-          // Move to the end
-        } else if (
-          targetItem.type === 'PREVIEW' ||
-          (targetNext.type === 'PREVIEW' && !isDummySelfPreview(targetNext))
-        ) {
-          range = [
-            [targetItem.posP, targetItem.posQ],
-            [targetNext.posP, targetNext.posQ],
-          ];
+        let anchor = targetItem;
+        if (targetItem.type === 'PREVIEW' && isDummySelfPreview(targetItem)) {
+          // The dummy preview's position is fabricated past the tail, not a reserved slot.
+          const targetBefore = chatList[targetIndex - 1];
+          if (!targetBefore) return;
+          anchor = targetBefore;
         }
-        const optimisticPos = targetNext
-          ? (targetNext.pos + targetItem.pos) / 2
-          : (targetItem.posP + 1) / targetItem.posQ;
+        const after = channelState ? findNeighborPos(channelState, anchor.pos, 'AFTER') : null;
+        range = [[anchor.posP, anchor.posQ], after];
+        const optimisticPos = after
+          ? (anchor.pos + after[0] / after[1]) / 2
+          : (anchor.posP + 1) / anchor.posQ;
         dispatch({
           type: 'setOptimisticMessage',
           payload: { ref: draggingMessage, item: { optimisticPos, timestamp, item } },
         });
       } else {
-        range = [null, [targetItem.posP, targetItem.posQ]];
-
-        const targetBefore = chatList[targetIndex - 1];
-        if (!targetBefore) {
-          // Move to the beginning
-        } else if (targetItem.type === 'PREVIEW' || targetBefore.type === 'PREVIEW') {
-          range = [
-            [targetBefore.posP, targetBefore.posQ],
-            [targetItem.posP, targetItem.posQ],
-          ];
-        }
-
-        const optimisticPos = targetBefore
-          ? (targetBefore.posP + targetItem.posP) / (targetBefore.posQ + targetItem.posQ)
+        const before = channelState
+          ? findNeighborPos(channelState, targetItem.pos, 'BEFORE')
+          : null;
+        range = [before, [targetItem.posP, targetItem.posQ]];
+        const optimisticPos = before
+          ? (before[0] + targetItem.posP) / (before[1] + targetItem.posQ)
           : targetItem.posP / (targetItem.posQ + 1);
         dispatch({
           type: 'setOptimisticMessage',
@@ -207,7 +191,7 @@ const useDndHandles = (channelId: string, chatList: ChatItem[]): UseDragHandlesR
         });
       }
     },
-    [channelId, chatList, dispatch, draggingItem, resetDragging, setBanner],
+    [channelId, chatList, dispatch, draggingItem, resetDragging, setBanner, store],
   );
 
   const handleDragCancel = useCallback(() => {

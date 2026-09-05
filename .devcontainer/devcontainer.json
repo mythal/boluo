@@ -1,0 +1,62 @@
+{
+  "name": "Boluo",
+  "dockerComposeFile": ["../docker-compose.yml", "docker-compose.yml"],
+  "service": "workspace",
+  "workspaceFolder": "/workspaces/boluo",
+  "shutdownAction": "stopCompose",
+  "remoteUser": "vscode",
+  "hostRequirements": {
+    "cpus": 4,
+    "memory": "8gb",
+    "storage": "32gb"
+  },
+  "postCreateCommand": ".devcontainer/post-create.sh",
+  "forwardPorts": [3033, 3100, 3200, 5173, 6006, 9000, 9090],
+  "portsAttributes": {
+    "3033": {
+      "label": "Boluo server"
+    },
+    "3100": {
+      "label": "Site"
+    },
+    "3200": {
+      "label": "SPA"
+    },
+    "5173": {
+      "label": "Legacy / Vite"
+    },
+    "6006": {
+      "label": "Storybook"
+    },
+    "9000": {
+      "label": "MinIO API"
+    },
+    "9090": {
+      "label": "MinIO console"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "bradlc.vscode-tailwindcss",
+        "dbaeumer.vscode-eslint",
+        "editorconfig.editorconfig",
+        "esbenp.prettier-vscode",
+        "jnoortheen.nix-ide",
+        "rust-lang.rust-analyzer"
+      ],
+      "settings": {
+        "nix.enableLanguageServer": true,
+        "nix.serverPath": "/workspaces/boluo/.devcontainer/bin/nixd",
+        "rust-analyzer.server.path": "/workspaces/boluo/.devcontainer/bin/rust-analyzer",
+        "terminal.integrated.defaultProfile.linux": "Nix dev shell",
+        "terminal.integrated.profiles.linux": {
+          "Nix dev shell": {
+            "path": "nix",
+            "args": ["develop", "--no-update-lock-file", "--command", "bash"]
+          }
+        }
+      }
+    }
+  }
+}

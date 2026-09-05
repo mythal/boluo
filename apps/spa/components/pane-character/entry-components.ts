@@ -1,13 +1,13 @@
 import type { EntryComponent } from '@boluo/api';
-import { z } from 'zod';
+import * as z from 'zod/mini';
 
 export const COUNTER_COMPONENT_TYPE = 'core/counter';
 export const COUNTER_SCHEMA_VERSION = 1;
 
 const counterDataSchema = z.object({
   value: z.number(),
-  min: z.number().optional(),
-  max: z.number().optional(),
+  min: z.optional(z.number()),
+  max: z.optional(z.number()),
 });
 
 export type CounterData = z.infer<typeof counterDataSchema>;

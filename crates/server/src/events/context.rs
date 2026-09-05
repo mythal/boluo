@@ -1194,7 +1194,6 @@ mod tests {
             name: "Alice".into(),
             media_id: None,
             seed: Vec::new(),
-            deleted: false,
             in_game: true,
             is_action: false,
             is_master: false,

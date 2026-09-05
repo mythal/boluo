@@ -315,6 +315,19 @@ CREATE TABLE public.characters (
 
 
 --
+-- Name: deleted_messages; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.deleted_messages (
+    id uuid NOT NULL,
+    channel_id uuid NOT NULL,
+    deleted_at timestamp with time zone DEFAULT now() NOT NULL,
+    deleted_by uuid,
+    message jsonb NOT NULL
+);
+
+
+--
 -- Name: entries; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -480,7 +493,6 @@ CREATE TABLE public.messages (
     name text NOT NULL,
     media_id uuid,
     seed bytea DEFAULT public.gen_random_bytes(4) NOT NULL,
-    deleted boolean DEFAULT false NOT NULL,
     in_game boolean DEFAULT false NOT NULL,
     is_action boolean DEFAULT false NOT NULL,
     is_master boolean DEFAULT false NOT NULL,
@@ -776,6 +788,14 @@ ALTER TABLE ONLY public.characters
 
 ALTER TABLE ONLY public.characters
     ADD CONSTRAINT characters_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: deleted_messages deleted_messages_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.deleted_messages
+    ADD CONSTRAINT deleted_messages_pkey PRIMARY KEY (id);
 
 
 --
@@ -1093,6 +1113,13 @@ CREATE INDEX character_space_modified_index ON public.characters USING btree (sp
 
 
 --
+-- Name: deleted_messages_channel_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX deleted_messages_channel_index ON public.deleted_messages USING btree (channel_id, deleted_at DESC);
+
+
+--
 -- Name: entry_component_history_entry_effect_index; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1375,14 +1402,6 @@ ALTER TABLE ONLY public.entry_components_asset
 
 ALTER TABLE ONLY public.entry_components_json
     ADD CONSTRAINT entry_components_json_parent FOREIGN KEY (entry_id, component_type, payload_type) REFERENCES public.entry_components(entry_id, component_type, payload_type) ON DELETE CASCADE;
-
-
---
--- Name: entry_effects entry_effect_message; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.entry_effects
-    ADD CONSTRAINT entry_effect_message FOREIGN KEY (message_id) REFERENCES public.messages(id) ON DELETE SET NULL;
 
 
 --

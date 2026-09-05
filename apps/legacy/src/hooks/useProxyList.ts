@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import useSWR from 'swr';
 import { type Proxy, getDefaultBaseUrl } from '../base-url';
-import { withFaroSessionId } from '../frontend-telemetry';
+import { withFaroSessionId } from '../frontend-telemetry-session';
 
 const fetchList = async (): Promise<Proxy[]> => {
   const response = await fetch(getDefaultBaseUrl() + '/api/info/proxies', withFaroSessionId());

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT\n    effect.id,\n    effect.space_id,\n    effect.scope_id,\n    effect.operator_id,\n    effect.created,\n    effect.message_id\nFROM entry_effects effect\nJOIN messages message ON message.id = effect.message_id\nJOIN channels channel ON channel.id = message.channel_id\nWHERE effect.space_id = $1\n  AND effect.message_id = ANY($2)\n  AND message.deleted = FALSE\n  AND channel.space_id = effect.space_id\nORDER BY effect.message_id, effect.created, effect.id;\n",
+  "query": "SELECT\n    effect.id,\n    effect.space_id,\n    effect.scope_id,\n    effect.operator_id,\n    effect.created,\n    effect.message_id\nFROM entry_effects effect\nJOIN messages message ON message.id = effect.message_id\nJOIN channels channel ON channel.id = message.channel_id\nWHERE effect.space_id = $1\n  AND effect.message_id = ANY($2)\n  AND channel.space_id = effect.space_id\nORDER BY effect.message_id, effect.created, effect.id;\n",
   "describe": {
     "columns": [
       {
@@ -85,5 +85,5 @@
       true
     ]
   },
-  "hash": "ae83c89374e2ce1cb4a5c00220ae3eb324972bb192317c3a42412d4b82234a02"
+  "hash": "0aa5bd3edcab1a044bc800c5a07ad6c39c88296ee0c6d8aa536c42f58ae10865"
 }

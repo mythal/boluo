@@ -167,7 +167,8 @@ export interface ChannelState {
 export const isChannelHistoryInitialized = (state: ChannelState): boolean =>
   state.historyState === 'PARTIAL' || state.historyState === 'FULL';
 
-export const isChannelHistoryFull = (state: ChannelState): boolean => state.historyState === 'FULL';
+export const isChannelHistoryFull = (state: Pick<ChannelState, 'historyState'>): boolean =>
+  state.historyState === 'FULL';
 
 export interface OlderMessagesPageRequest {
   before: number;

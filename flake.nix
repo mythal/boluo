@@ -554,6 +554,7 @@
               with pkgs;
               [
                 rustToolchain
+                rust-analyzer
                 nil
                 nixd
                 nodejs

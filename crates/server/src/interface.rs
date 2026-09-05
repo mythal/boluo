@@ -99,6 +99,11 @@ impl RequestBodyReadTracker {
 
 const RESPONSE_BODY_SIZE_SAMPLE_INTERVAL: u8 = 64;
 
+/// Time allowed between successive chunks of a request body before it's considered stalled.
+const REQUEST_BODY_IDLE_TIMEOUT: Duration = Duration::from_secs(10);
+/// Overall cap on reading a request body, even if data keeps trickling in.
+const REQUEST_BODY_MAX_READ_DURATION: Duration = Duration::from_secs(60);
+
 thread_local! {
     // Keep sampling off a shared atomic on the response hot path.
     static RESPONSE_BODY_SIZE_SAMPLE_COUNTER: std::cell::Cell<u8> = const {
@@ -280,21 +285,27 @@ where
     let collect = async move {
         let mut body = std::pin::pin!(req.into_body());
         let mut output = BytesMut::new();
-        while let Some(frame) = body.frame().await {
-            let frame = frame
-                .map_err(|_| AppError::BadRequest("Failed to read the request body".to_string()))?;
-            let Ok(data) = frame.into_data() else {
-                continue;
-            };
-            let data_len = data.remaining();
-            if data_len > max_bytes.saturating_sub(output.len()) {
-                return Err(AppError::PayloadTooLarge);
+        loop {
+            match tokio::time::timeout(REQUEST_BODY_IDLE_TIMEOUT, body.frame()).await {
+                Ok(Some(frame)) => {
+                    let frame = frame.map_err(|_| {
+                        AppError::BadRequest("Failed to read the request body".to_string())
+                    })?;
+                    let Ok(data) = frame.into_data() else {
+                        continue;
+                    };
+                    let data_len = data.remaining();
+                    if data_len > max_bytes.saturating_sub(output.len()) {
+                        return Err(AppError::PayloadTooLarge);
+                    }
+                    output.put(data);
+                }
+                Ok(None) => return Ok(output.freeze()),
+                Err(_) => return Err(AppError::Timeout { reason: "idle" }),
             }
-            output.put(data);
         }
-        Ok(output.freeze())
     };
-    let collected = tokio::time::timeout(Duration::from_secs(10), collect).await;
+    let collected = tokio::time::timeout(REQUEST_BODY_MAX_READ_DURATION, collect).await;
 
     let body = match collected {
         Ok(Ok(body)) => body,
@@ -304,11 +315,9 @@ where
         }
         Err(_) => {
             record_request_body_read(started_at, None, tracker.as_deref());
-            tracing::warn!(
-                event = "http.request_body.read_timeout",
-                "Timeout when reading the request body"
-            );
-            return Err(AppError::Timeout);
+            return Err(AppError::Timeout {
+                reason: "max_duration",
+            });
         }
     };
     record_request_body_read(started_at, Some(body.len()), tracker.as_deref());

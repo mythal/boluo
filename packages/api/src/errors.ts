@@ -11,7 +11,10 @@ export type ApiError =
   | errors.ValidationFailError
   | errors.ConflictError
   | errors.MethodNotAllowedError
-  | errors.LimitExceededError;
+  | errors.LimitExceededError
+  | errors.PayloadTooLargeError
+  | errors.RequestTimeoutError
+  | errors.ServiceUnavailableError;
 
 // https://stackoverflow.com/a/50125960/1137004
 type DiscriminateUnion<T, K extends keyof T, V extends T[K]> = T extends Record<K, V> ? T : never;

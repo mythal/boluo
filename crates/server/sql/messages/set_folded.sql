@@ -5,6 +5,5 @@ SET
     rev = rev + 1
 WHERE
     id = $1
-    AND deleted = FALSE
 RETURNING
     messages AS "message!: Message";

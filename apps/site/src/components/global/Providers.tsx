@@ -30,6 +30,7 @@ const nonRetryableApiErrorCodes = new Set([
   'CONFLICT',
   'METHOD_NOT_ALLOWED',
   'LIMIT_EXCEEDED',
+  'PAYLOAD_TOO_LARGE',
 ]);
 
 const requestPathFromKey = (key: unknown): string => {

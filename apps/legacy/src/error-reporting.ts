@@ -4,7 +4,7 @@ import {
   normalizeFrontendLogContext,
   type FrontendLogContextValue,
 } from '@boluo/utils/frontend-telemetry';
-import { LogLevel, faro, getInternalFaroFromGlobalObject } from '@grafana/faro-web-sdk';
+import { LogLevel, faro, getInternalFaroFromGlobalObject } from '@grafana/faro-core';
 
 const REPORT_THROTTLE_MS = 60_000;
 const lastReportAt = new Map<string, number>();

@@ -5,17 +5,29 @@ import { useMemo } from 'react';
 import { useIntl } from 'react-intl';
 import useSWR from 'swr';
 
+const proxyListSchemaPromise = import('zod/mini').then((z) =>
+  z.array(
+    z.object({
+      name: z.string(),
+      url: z.string(),
+      region: z.string(),
+    }),
+  ),
+);
+
 const fetcher = async (): Promise<Proxy[]> => {
-  try {
-    const res = await fetch(`${getDefaultBaseUrl()}/api/info/proxies`, withFaroSessionId());
-    const proxies = (await res.json()) as Proxy[];
-    return proxies.map((proxy) => ({
-      ...proxy,
-      url: normalizeProxyUrlForOrigin(proxy.url, window.location.origin),
-    }));
-  } catch (error) {
-    return [];
+  const res = await fetch(`${getDefaultBaseUrl()}/api/info/proxies`, withFaroSessionId());
+  if (!res.ok) {
+    throw new Error(`Failed to fetch proxies: ${res.status} ${res.statusText}`);
   }
+  const result = (await proxyListSchemaPromise).safeParse(await res.json());
+  if (!result.success) {
+    throw new Error('Invalid proxy list response', { cause: result.error });
+  }
+  return result.data.map((proxy) => ({
+    ...proxy,
+    url: normalizeProxyUrlForOrigin(proxy.url, window.location.origin),
+  }));
 };
 
 export const useProxies = () => {

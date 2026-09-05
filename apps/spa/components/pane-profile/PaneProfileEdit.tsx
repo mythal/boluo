@@ -77,11 +77,7 @@ export const PaneProfileEdit: FC<Props> = ({ me, onSuccess }) => {
           <ErrorDisplay error={error} type="banner" />
         </div>
       )}
-      <form
-        onSubmit={(event) => {
-          void handleFormSubmit(event);
-        }}
-      >
+      <form onSubmit={handleFormSubmit}>
         <div className="p-pane">
           <div className="group pb-12">
             <Controller<ProfileEditSchema>

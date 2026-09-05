@@ -4,7 +4,7 @@ import {
   normalizeFrontendLogContext,
   type FrontendLogContextValue,
 } from '@boluo/utils/frontend-telemetry';
-import { LogLevel, faro, getInternalFaroFromGlobalObject } from '@grafana/faro-web-sdk';
+import { faro, getInternalFaroFromGlobalObject, LogLevel } from '@grafana/faro-core';
 import { v7 as uuidv7 } from 'uuid';
 import { IS_DEVELOPMENT } from './const';
 

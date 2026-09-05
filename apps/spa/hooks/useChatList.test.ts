@@ -6,6 +6,7 @@ import * as L from 'list';
 import {
   applyEditPreview,
   areChatListsReferentiallyEqual,
+  findNeighborPos,
   isMessageNewerThanOptimisticRef,
   isPreviewInLoadedRange,
   pruneSelfPreview,
@@ -15,7 +16,11 @@ import {
   virtualChatItemKey,
 } from './useChatList';
 import { type ChatItem, type MessageItem, type PreviewItem } from '../state/channel.types';
-import { type OptimisticItem } from '../state/channel.reducer';
+import {
+  type ChannelHistoryState,
+  type ChannelState,
+  type OptimisticItem,
+} from '../state/channel.reducer';
 
 test('isPreviewInLoadedRange uses loaded range instead of filtered visible range', () => {
   const loadedMinPos = 1;
@@ -406,4 +411,74 @@ test('isMessageNewerThanOptimisticRef keeps optimistic item when version is unch
   };
 
   assert.strictEqual(isMessageNewerThanOptimisticRef(ref, optimistic, ref), false);
+});
+
+const makeNeighborState = (
+  messages: MessageItem[],
+  previews: PreviewItem[] = [],
+  historyState: ChannelHistoryState = 'FULL',
+): Pick<ChannelState, 'messages' | 'previewMap' | 'historyState'> => ({
+  messages: L.from(messages),
+  previewMap: Object.fromEntries(previews.map((preview) => [preview.senderId, preview])),
+  historyState,
+});
+
+test('findNeighborPos resolves neighbors hidden by the filtered view', () => {
+  const state = makeNeighborState([
+    makeMessageItem('m-306', 306),
+    makeMessageItem('m-307', 307),
+    makeMessageItem('m-312', 312),
+  ]);
+
+  assert.deepStrictEqual(findNeighborPos(state, 306, 'AFTER'), [307, 1]);
+  assert.deepStrictEqual(findNeighborPos(state, 312, 'BEFORE'), [307, 1]);
+});
+
+test('findNeighborPos prefers a reserved preview position over a message', () => {
+  const preview = { senderId: 'alice', pos: 307, posP: 307, posQ: 1 } as PreviewItem;
+  const state = makeNeighborState(
+    [makeMessageItem('m-306', 306), makeMessageItem('m-308', 308)],
+    [preview],
+  );
+
+  assert.deepStrictEqual(findNeighborPos(state, 306, 'AFTER'), [307, 1]);
+  assert.deepStrictEqual(findNeighborPos(state, 308, 'BEFORE'), [307, 1]);
+});
+
+test('findNeighborPos reports no neighbor at the ends of the channel', () => {
+  const state = makeNeighborState([makeMessageItem('m-1', 1), makeMessageItem('m-2', 2)]);
+
+  assert.strictEqual(findNeighborPos(state, 2, 'AFTER'), null);
+  assert.strictEqual(findNeighborPos(state, 1, 'BEFORE'), null);
+});
+
+test('findNeighborPos skips items sharing the anchor position', () => {
+  const preview = { senderId: 'alice', pos: 2, posP: 2, posQ: 1 } as PreviewItem;
+  const state = makeNeighborState(
+    [makeMessageItem('m-1', 1), makeMessageItem('m-2', 2), makeMessageItem('m-3', 3)],
+    [preview],
+  );
+
+  assert.deepStrictEqual(findNeighborPos(state, 2, 'AFTER'), [3, 1]);
+  assert.deepStrictEqual(findNeighborPos(state, 2, 'BEFORE'), [1, 1]);
+});
+
+test('findNeighborPos ignores previews below partially loaded history', () => {
+  // Reporting it as the neighbor would bury the message in unloaded history.
+  const preview = { senderId: 'alice', pos: 4, posP: 4, posQ: 1 } as PreviewItem;
+  const partial = makeNeighborState(
+    [makeMessageItem('m-10', 10), makeMessageItem('m-11', 11)],
+    [preview],
+    'PARTIAL',
+  );
+
+  assert.strictEqual(findNeighborPos(partial, 10, 'BEFORE'), null);
+
+  const full = makeNeighborState(
+    [makeMessageItem('m-10', 10), makeMessageItem('m-11', 11)],
+    [preview],
+    'FULL',
+  );
+
+  assert.deepStrictEqual(findNeighborPos(full, 10, 'BEFORE'), [4, 1]);
 });

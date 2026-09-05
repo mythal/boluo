@@ -53,6 +53,40 @@ pub async fn connect(database_url: &str) -> sqlx::Pool<sqlx::Postgres> {
         .expect("Cannot connect to database")
 }
 
+pub async fn connect_for_migration(database_url: &str) -> sqlx::Pool<sqlx::Postgres> {
+    sqlx::postgres::PgPoolOptions::new()
+        .after_connect(|conn, _meta| {
+            Box::pin(async move {
+                use sqlx::Executor;
+                conn.execute(
+                    "SET application_name = 'boluo-migration';
+                     SET statement_timeout = 0;
+                     SET lock_timeout = 10000;
+                     SET idle_in_transaction_session_timeout = 0;
+                     SET TIME ZONE 'UTC';",
+                )
+                .await?;
+
+                Ok(())
+            })
+        })
+        .max_connections(1)
+        .connect(database_url)
+        .await
+        .expect("Cannot connect to database")
+}
+
+pub async fn migrate(database_url: &str) {
+    let pool = connect_for_migration(database_url).await;
+    let started = std::time::Instant::now();
+    MIGRATOR
+        .run(&pool)
+        .await
+        .expect("Failed to run database migrations");
+    pool.close().await;
+    tracing::info!(elapsed = ?started.elapsed(), "Database migrations are up to date");
+}
+
 pub async fn check_db_host(database_url: &str) {
     use std::str::FromStr;
 

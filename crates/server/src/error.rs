@@ -31,7 +31,7 @@ pub enum AppError {
     #[error("Request payload is too large")]
     PayloadTooLarge,
     #[error("Timeout")]
-    Timeout,
+    Timeout { reason: &'static str },
     #[error("An I/O error occurred")]
     Hyper {
         #[from]
@@ -62,6 +62,7 @@ impl AppError {
             Conflict(_) => StatusCode::CONFLICT,
             LimitExceeded(_) => StatusCode::TOO_MANY_REQUESTS,
             PayloadTooLarge => StatusCode::PAYLOAD_TOO_LARGE,
+            Timeout { .. } => StatusCode::REQUEST_TIMEOUT,
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
@@ -78,6 +79,7 @@ impl AppError {
             LimitExceeded(_) => "LIMIT_EXCEEDED",
             PayloadTooLarge => "PAYLOAD_TOO_LARGE",
             Conflict(_) => "CONFLICT",
+            Timeout { .. } => "REQUEST_TIMEOUT",
             _ => "UNEXPECTED",
         }
     }
@@ -305,6 +307,16 @@ pub fn log_error(e: &AppError, path: &str) {
                 error_code = error_code,
                 status_code = status_code,
                 "Method not allowed"
+            );
+        }
+        Timeout { reason } => {
+            tracing::warn!(
+                event = "http.request.timeout",
+                path,
+                error_code = error_code,
+                status_code = status_code,
+                reason = reason,
+                "Request timed out"
             );
         }
         e => {

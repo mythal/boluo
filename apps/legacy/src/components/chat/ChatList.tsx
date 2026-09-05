@@ -54,6 +54,30 @@ const itemPos = (item: PreviewItem | MessageItem | undefined | null): [number, n
   }
 };
 
+/**
+ * `/messages/move_between` assumes the range it receives is empty and picks the simplest
+ * fraction inside it, so the neighbor must come from the unfiltered item set.
+ */
+const neighborPos = (
+  messages: List<MessageItem | PreviewItem>,
+  anchor: MessageItem | PreviewItem,
+  direction: 'BEFORE' | 'AFTER',
+): [number, number] | null => {
+  const neighbor =
+    direction === 'AFTER'
+      ? messages.find((item) => item.pos > anchor.pos)
+      : messages.findLast((item) => item.pos < anchor.pos);
+  const pos = itemPos(neighbor);
+  const anchorPos = itemPos(anchor);
+  if (pos == null || anchorPos == null) return null;
+  // `itemPos` rounds preview positions up, which can land on or past the anchor.
+  const beyondAnchor =
+    direction === 'AFTER'
+      ? pos[0] / pos[1] > anchorPos[0] / anchorPos[1]
+      : pos[0] / pos[1] < anchorPos[0] / anchorPos[1];
+  return beyondAnchor ? pos : null;
+};
+
 const useAutoScroll = (chatListRef: React.RefObject<HTMLDivElement | null>) => {
   const scrollEnd = useRef<number>(0);
 
@@ -87,6 +111,7 @@ const useAutoScroll = (chatListRef: React.RefObject<HTMLDivElement | null>) => {
 function useOnDragEnd(
   channelId: Id,
   filteredMessages: List<MessageItem | PreviewItem>,
+  messages: List<MessageItem | PreviewItem>,
 ): DragDropContextProps['onDragEnd'] {
   const dispatch = useDispatch();
 
@@ -102,18 +127,11 @@ function useOnDragEnd(
       if (sourceItem?.type !== 'MESSAGE') {
         return;
       }
+      const anchor = filteredMessages.get(destination.index, null);
       const [a, b] =
         source.index > destination.index
-          ? [
-              destination.index > 0
-                ? itemPos(filteredMessages.get(destination.index - 1, null))
-                : null,
-              itemPos(filteredMessages.get(destination.index, null)),
-            ]
-          : [
-              itemPos(filteredMessages.get(destination.index, null)),
-              itemPos(filteredMessages.get(destination.index + 1, null)),
-            ];
+          ? [anchor ? neighborPos(messages, anchor, 'BEFORE') : null, itemPos(anchor)]
+          : [itemPos(anchor), anchor ? neighborPos(messages, anchor, 'AFTER') : null];
       dispatch(finishMove);
 
       if (a === null && b === null) {
@@ -137,7 +155,7 @@ function useOnDragEnd(
         throwErr(dispatch)(result.value);
       }
     },
-    [channelId, dispatch, filteredMessages],
+    [channelId, dispatch, filteredMessages, messages],
   );
 }
 
@@ -165,7 +183,11 @@ function ChatList({ channelId, focus }: Props) {
     const show = filterMessages(filter, showFolded);
     return messages.filter(show);
   }, [messages, filter, showFolded]);
-  const onDragEnd: DragDropContextProps['onDragEnd'] = useOnDragEnd(channelId, filteredMessages);
+  const onDragEnd: DragDropContextProps['onDragEnd'] = useOnDragEnd(
+    channelId,
+    filteredMessages,
+    messages,
+  );
 
   const onDragStart = useCallback(() => {
     dispatch({ type: 'START_MOVE_MESSAGE', pane: channelId });

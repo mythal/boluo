@@ -309,6 +309,19 @@
               }
             );
 
+            # CI holds these as garbage collector roots so the artifacts they
+            # reference survive its Nix store cache trim; nothing else uses them.
+            server-build-cache = pkgs.linkFarmFromDrvs "boluo-server-build-cache" [
+              rustToolchain
+              serverReleaseArtifacts
+            ];
+
+            check-build-cache = pkgs.linkFarmFromDrvs "boluo-check-build-cache" [
+              rustToolchain
+              serverTestArtifacts
+              bridgeTestArtifacts
+            ];
+
             # The bridge stores state in SQLite and verifies its queries against
             # the committed `crates/bridge/.sqlx` cache, so it needs no database at
             # build time.

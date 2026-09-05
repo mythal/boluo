@@ -10,6 +10,5 @@ FROM
         AND cm.user_id = $2
 WHERE
     msg.id = $1
-    AND msg.deleted = FALSE
 LIMIT 1;
 

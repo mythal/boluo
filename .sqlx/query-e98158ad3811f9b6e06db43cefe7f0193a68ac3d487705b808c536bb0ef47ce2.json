@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT\n    msg AS \"message!: Message\",\n    (msg.whisper_to_users IS NOT NULL\n        AND cm.is_master IS NOT TRUE\n        AND ($2 IS NULL\n            OR $2 <> ALL (msg.whisper_to_users))) AS \"should_hide!\"\nFROM\n    messages msg\n    LEFT JOIN channel_members cm ON cm.channel_id = msg.channel_id\n        AND cm.user_id = $2\nWHERE\n    msg.id = $1\n    AND msg.deleted = FALSE\nLIMIT 1;\n\n",
+  "query": "UPDATE\n    messages msg\nSET\n    name = CASE WHEN $2 THEN $3 ELSE msg.name END,\n    character_id = CASE WHEN $2 THEN $4 ELSE msg.character_id END,\n    portrait_id = CASE WHEN $2 THEN $5 ELSE msg.portrait_id END,\n    text = $6,\n    entities = $7,\n    in_game = CASE WHEN $2 THEN $8 ELSE msg.in_game END,\n    is_action = $9,\n    media_id = $10,\n    modified = now(),\n    color = CASE WHEN $2 THEN $11 ELSE msg.color END,\n    rev = rev + 1\nFROM\n    channels ch\n    INNER JOIN channel_members cm ON cm.channel_id = ch.id\n        AND cm.user_id = $13\n        AND cm.is_joined\n    INNER JOIN space_members sm ON sm.space_id = ch.space_id\n        AND sm.user_id = $13\nWHERE\n    msg.id = $1\n    AND ch.id = msg.channel_id\n    AND ch.deleted = FALSE\n    AND ch.space_id = $14\n    AND (ch.is_document OR msg.sender_id = $13)\n    AND ($12::timestamptz IS NULL OR msg.modified = $12)\nRETURNING\n    msg AS \"message!: Message\",\n    ch.space_id AS \"space_id!\";\n",
   "describe": {
     "columns": [
       {
@@ -38,10 +38,6 @@
                 [
                   "seed",
                   "Bytea"
-                ],
-                [
-                  "deleted",
-                  "Bool"
                 ],
                 [
                   "in_game",
@@ -127,21 +123,38 @@
       },
       {
         "ordinal": 1,
-        "name": "should_hide!",
-        "type_info": "Bool",
-        "origin": "Expression"
+        "name": "space_id!",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "channels",
+            "name": "space_id"
+          }
+        }
       }
     ],
     "parameters": {
       "Left": [
+        "Uuid",
+        "Bool",
+        "Text",
+        "Uuid",
+        "Uuid",
+        "Text",
+        "Jsonb",
+        "Bool",
+        "Bool",
+        "Uuid",
+        "Text",
+        "Timestamptz",
         "Uuid",
         "Uuid"
       ]
     },
     "nullable": [
       null,
-      null
+      false
     ]
   },
-  "hash": "0dd0d4a3e833f6f3429cd4db9106f7a733ed49bb4d220c067bf4675ae224eb70"
+  "hash": "e98158ad3811f9b6e06db43cefe7f0193a68ac3d487705b808c536bb0ef47ce2"
 }

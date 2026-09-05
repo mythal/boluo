@@ -17,7 +17,6 @@ WITH target AS MATERIALIZED (
     WHERE
         msg.id = $1
         AND msg.channel_id = $2
-        AND msg.deleted = FALSE
         AND (ch.is_document OR cm.is_master OR msg.sender_id = $5)
         AND ($6::int4 IS NULL OR (msg.pos_p = $6 AND msg.pos_q = $7))
     FOR UPDATE OF msg

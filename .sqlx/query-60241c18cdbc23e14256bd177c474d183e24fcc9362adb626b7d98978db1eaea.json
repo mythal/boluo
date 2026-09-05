@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT\n    msg AS \"message!: Message\"\nFROM\n    messages msg\nWHERE\n    msg.channel_id = $1\n    AND msg.deleted = FALSE\n    AND ($2::float8 IS NULL OR msg.pos > $2)\nORDER BY\n    msg.pos ASC\nLIMIT $3;\n",
+  "query": "SELECT\n    msg AS \"message!: Message\"\nFROM\n    messages msg\nWHERE\n    msg.channel_id = $1\n    AND ($2::float8 IS NULL\n        OR msg.pos < $2) -- before\nORDER BY\n    msg.pos DESC\nLIMIT $3;\n\n",
   "describe": {
     "columns": [
       {
@@ -38,10 +38,6 @@
                 [
                   "seed",
                   "Bytea"
-                ],
-                [
-                  "deleted",
-                  "Bool"
                 ],
                 [
                   "in_game",
@@ -137,5 +133,5 @@
       null
     ]
   },
-  "hash": "b7750ba60b95563d25d986b6df674d1ec559ed4e5baa40f5bbccad27e4207094"
+  "hash": "60241c18cdbc23e14256bd177c474d183e24fcc9362adb626b7d98978db1eaea"
 }

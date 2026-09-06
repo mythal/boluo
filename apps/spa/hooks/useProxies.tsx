@@ -1,4 +1,9 @@
-import { type Proxy } from '@boluo/api';
+import {
+  type FetchFailError,
+  type NotJsonError,
+  type Proxy,
+  type UnexpectedError,
+} from '@boluo/api';
 import { normalizeProxyUrlForOrigin } from '@boluo/api/origin-map';
 import { getDefaultBaseUrl, withFaroSessionId } from '@boluo/api-browser';
 import { useMemo } from 'react';
@@ -16,13 +21,43 @@ const proxyListSchemaPromise = import('zod/mini').then((z) =>
 );
 
 const fetcher = async (): Promise<Proxy[]> => {
-  const res = await fetch(`${getDefaultBaseUrl()}/api/info/proxies`, withFaroSessionId());
-  if (!res.ok) {
-    throw new Error(`Failed to fetch proxies: ${res.status} ${res.statusText}`);
+  let res: Response;
+  try {
+    res = await fetch(`${getDefaultBaseUrl()}/api/info/proxies`, withFaroSessionId());
+  } catch (cause) {
+    const error: FetchFailError = { code: 'FETCH_FAIL', cause };
+    throw error;
   }
-  const result = (await proxyListSchemaPromise).safeParse(await res.json());
+  if (!res.ok) {
+    const error: UnexpectedError = {
+      code: 'UNEXPECTED',
+      message: `Failed to fetch proxies: ${res.status} ${res.statusText}`,
+      context: null,
+    };
+    throw error;
+  }
+  let body: string;
+  try {
+    body = await res.text();
+  } catch (cause) {
+    const error: FetchFailError = { code: 'FETCH_FAIL', cause };
+    throw error;
+  }
+  let data: unknown;
+  try {
+    data = JSON.parse(body);
+  } catch (cause) {
+    const error: NotJsonError = { code: 'NOT_JSON', cause, body };
+    throw error;
+  }
+  const result = (await proxyListSchemaPromise).safeParse(data);
   if (!result.success) {
-    throw new Error('Invalid proxy list response', { cause: result.error });
+    const error: UnexpectedError = {
+      code: 'UNEXPECTED',
+      message: 'Invalid proxy list response',
+      context: result.error,
+    };
+    throw error;
   }
   return result.data.map((proxy) => ({
     ...proxy,

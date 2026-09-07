@@ -1,9 +1,8 @@
 import Archive from '@boluo/icons/Archive';
 import ArrowDownWideShort from '@boluo/icons/ArrowDownWideShort';
 import { useAtomValue } from 'jotai';
-import { lazyWithRetry } from '@boluo/utils/lazy';
 import type { FC } from 'react';
-import { Suspense, useMemo, useState } from 'react';
+import { lazy, Suspense, useMemo, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { type Channel, type ChannelWithMaybeMember } from '@boluo/api';
 import { useQueryChannelList } from '@boluo/hooks/useQueryChannelList';
@@ -17,7 +16,7 @@ import { SidebarChannelsHeaderNewChannel } from './SidebarChannelsHeaderNewChann
 import { useQueryCurrentUser } from '@boluo/hooks/useQueryCurrentUser';
 import { SidebarChannelItem } from './SidebarChannelItem';
 
-const SidebarChannelList = lazyWithRetry(() => import('./SidebarChannelList'));
+const SidebarChannelList = lazy(() => import('./SidebarChannelList'));
 
 interface Props {
   spaceId: string;

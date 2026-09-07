@@ -459,6 +459,9 @@ struct ServeArgs {
     ci: bool,
     #[clap(long, env = "BOLUO_DEBUG", default_value_t = false)]
     debug: bool,
+    /// Never enable in production.
+    #[clap(long, env = "INSECURE_COOKIES", default_value_t = false)]
+    insecure_cookies: bool,
     #[clap(long, env = "PUBLIC_MEDIA_URL")]
     public_media_url: Option<String>,
     #[clap(long, env = "APP_URL")]
@@ -743,6 +746,7 @@ async fn run_server(worker_threads: usize, max_blocking_threads: usize) {
     let ctx_config = context::AppConfig {
         ci: args.ci,
         debug: args.debug,
+        insecure_cookies: args.insecure_cookies,
         public_media_url: args.public_media_url.clone(),
         app_url: args.app_url.clone(),
         site_url: args.site_url.clone(),

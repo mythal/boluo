@@ -37,6 +37,8 @@ impl Signer {
 pub struct AppConfig {
     pub ci: bool,
     pub debug: bool,
+    /// Never enable in production.
+    pub insecure_cookies: bool,
     pub public_media_url: Option<String>,
     pub app_url: Option<String>,
     pub site_url: Option<String>,
@@ -52,6 +54,7 @@ impl Default for AppConfig {
         Self {
             ci: false,
             debug: false,
+            insecure_cookies: false,
             public_media_url: None,
             app_url: None,
             site_url: None,
@@ -144,6 +147,10 @@ impl AppContext {
 
     pub fn debug(&self) -> bool {
         self.config.debug
+    }
+
+    pub fn insecure_cookies(&self) -> bool {
+        self.config.insecure_cookies
     }
 
     pub fn media_public_url(&self) -> &str {

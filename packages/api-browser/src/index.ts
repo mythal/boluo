@@ -71,9 +71,6 @@ export function clearToken(): void {
 function addToken(params: RequestInit): RequestInit {
   const paramsWithSession = withFaroSessionId(params);
   const headers = new Headers(paramsWithSession.headers);
-  if (isCrossOrigin()) {
-    headers.set('X-Debug', '1');
-  }
   const token = getToken();
   if (token) {
     headers.set('Authorization', token);

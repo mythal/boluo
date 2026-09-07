@@ -136,7 +136,7 @@ pub fn add_session_cookie(
     signer: &crate::context::Signer,
     origin: Option<&str>,
     session: &Uuid,
-    is_debug: bool,
+    insecure_cookies: bool,
     response_header: &mut HeaderMap<HeaderValue>,
 ) {
     use cookie::time::Duration;
@@ -146,7 +146,7 @@ pub fn add_session_cookie(
     let token = token(signer, session);
     let mut builder = CookieBuilder::new(SESSION_COOKIE_KEY, token)
         .same_site(SameSite::Lax)
-        .secure(!is_debug)
+        .secure(!insecure_cookies)
         .http_only(true)
         .path("/")
         .max_age(Duration::days(120));

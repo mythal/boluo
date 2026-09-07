@@ -191,7 +191,6 @@ pub async fn login<B: Body>(
         .get(hyper::header::ORIGIN)
         .and_then(|x| x.to_str().ok())
         .map(|s| s.to_string());
-    let is_debug = req.headers().get("X-Debug").is_some();
     let client_ip = crate::client_ip::ClientIp::require(&req)?;
     let form: Login = interface::parse_body(req).await?;
 
@@ -286,7 +285,7 @@ pub async fn login<B: Body>(
             ctx.signer(),
             origin.as_deref(),
             &session.id,
-            is_debug,
+            ctx.insecure_cookies(),
             headers,
         );
     }

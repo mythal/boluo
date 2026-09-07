@@ -1,12 +1,11 @@
-import React from 'react';
-import { lazyWithRetry } from '@boluo/utils/lazy';
+import React, { lazy } from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { useIsLoggedIn } from '../hooks/useIsLoggedIn';
+import GuestRouter from './GuestRouter';
+import LoggedInRouter from './LoggedInRouter';
 
-const Design = lazyWithRetry(() => import('./pages/Design'));
-const Chat = lazyWithRetry(() => import('./pages/Chat'));
-const LoggedInRouter = lazyWithRetry(() => import('./LoggedInRouter'));
-const GuestRouter = lazyWithRetry(() => import('./GuestRouter'));
+const Design = lazy(() => import('./pages/Design'));
+const Chat = lazy(() => import('./pages/Chat'));
 
 export const Router: React.FC = () => {
   const isLoggedIn = useIsLoggedIn();

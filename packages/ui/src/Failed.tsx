@@ -1,7 +1,6 @@
 import AlertTriangle from '@boluo/icons/AlertTriangle';
 import Icon from './Icon';
-import { Suspense, type FC, type ReactNode } from 'react';
-import { lazyWithRetry } from '@boluo/utils/lazy';
+import { lazy, Suspense, type FC, type ReactNode } from 'react';
 import { SomethingWentWrong } from './SomethingWentWrong';
 
 export interface FailedProps {
@@ -12,7 +11,7 @@ export interface FailedProps {
   eventId?: string;
 }
 
-const EventId = lazyWithRetry(() => import('./EventId'));
+const EventId = lazy(() => import('./EventId'));
 
 export const Failed: FC<FailedProps> = ({ title, message, code, icon, eventId }) => {
   const eventIdFallback = <EventIdFallback eventId={eventId || '???'} />;

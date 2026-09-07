@@ -2,6 +2,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import dotenv from 'dotenv';
+import { prefetchLazyChunks } from './vite-prefetch-plugin.ts';
 
 dotenv.config({
   path: ['.env.local', '.env'].flatMap((filename) => [
@@ -16,7 +17,7 @@ export default defineConfig({
       process.env.APP_VERSION ?? process.env.GITHUB_SHA ?? 'unknown',
     ),
   },
-  plugins: [react()],
+  plugins: [react(), prefetchLazyChunks({ loadedOnStartup: [/frontend-telemetry/] })],
 
   resolve: {
     alias: {

@@ -1,6 +1,5 @@
 import { type FC, useState } from 'react';
-import { lazyWithRetry } from '@boluo/utils/lazy';
-import { memo, Suspense } from 'react';
+import { lazy, memo, Suspense } from 'react';
 import { type Banner, emptyBanner, PaneBannerContext, ThrowBanner } from '../hooks/useBanner';
 import { ChannelIdContext } from '../hooks/useChannelId';
 import { PaneProvider } from '../state/view.context';
@@ -14,32 +13,32 @@ import { PaneWelcome } from './PaneWelcome';
 import { PaneSpaceGreeting } from './PaneSpaceGreeting';
 import { useSpace } from '../hooks/useSpace';
 
-const PaneChannelSettings = lazyWithRetry(() =>
+const PaneChannelSettings = lazy(() =>
   import('./pane-channel-settings/PaneChannelSettings').then((module) => ({
     default: module.PaneChannelSettings,
   })),
 );
-const PaneChannelExport = lazyWithRetry(() =>
+const PaneChannelExport = lazy(() =>
   import('./pane-channel-export/PaneChannelExport').then((module) => ({
     default: module.PaneChannelExport,
   })),
 );
-const PaneChannelTopic = lazyWithRetry(() =>
+const PaneChannelTopic = lazy(() =>
   import('./pane-channel-topic/PaneChannelTopic').then((module) => ({
     default: module.PaneChannelTopic,
   })),
 );
-const PaneSpaceSettings = lazyWithRetry(() => import('./pane-space-settings/PaneSpaceSettings'));
-const PaneSpaceMembers = lazyWithRetry(() => import('./pane-space-members/PaneSpaceMembers'));
-const PaneProfile = lazyWithRetry(() => import('./pane-profile/PaneProfile'));
-const PaneCreateChannel = lazyWithRetry(() => import('./pane-create-channel/PaneCreateChannel'));
-const PaneCreateSpace = lazyWithRetry(() => import('./PaneCreateSpace'));
-const PaneSettings = lazyWithRetry(() => import('./pane-settings/PaneSettings'));
-const PaneLogin = lazyWithRetry(() => import('./PaneLogin'));
-const PaneSignUp = lazyWithRetry(() => import('./PaneSignUp'));
-const PaneResetPassword = lazyWithRetry(() => import('./PaneResetPassword'));
-const PaneHelp = lazyWithRetry(() => import('./PaneHelp'));
-const PaneCharacter = lazyWithRetry(() => import('./pane-character/PaneCharacter'));
+const PaneSpaceSettings = lazy(() => import('./pane-space-settings/PaneSpaceSettings'));
+const PaneSpaceMembers = lazy(() => import('./pane-space-members/PaneSpaceMembers'));
+const PaneProfile = lazy(() => import('./pane-profile/PaneProfile'));
+const PaneCreateChannel = lazy(() => import('./pane-create-channel/PaneCreateChannel'));
+const PaneCreateSpace = lazy(() => import('./PaneCreateSpace'));
+const PaneSettings = lazy(() => import('./pane-settings/PaneSettings'));
+const PaneLogin = lazy(() => import('./PaneLogin'));
+const PaneSignUp = lazy(() => import('./PaneSignUp'));
+const PaneResetPassword = lazy(() => import('./PaneResetPassword'));
+const PaneHelp = lazy(() => import('./PaneHelp'));
+const PaneCharacter = lazy(() => import('./pane-character/PaneCharacter'));
 
 interface Props {
   pane: Pane;

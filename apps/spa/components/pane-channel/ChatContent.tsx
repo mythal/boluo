@@ -1,13 +1,12 @@
 import { useAtomValue } from 'jotai';
-import { lazyWithRetry } from '@boluo/utils/lazy';
 import { type FC, useMemo, useState } from 'react';
-import { Suspense } from 'react';
+import { lazy, Suspense } from 'react';
 import { isChatInitializedAtom } from '../../state/chat.atoms';
 import { ChatListLoading } from './ChatContentLoading';
 import { IsScrollingContext } from '../../hooks/useIsScrolling';
 import { ChatContentErrorBoundry } from './ChatContentErrorBoundry';
 
-const ChatContentView = lazyWithRetry(() => import('./ChatContentView'));
+const ChatContentView = lazy(() => import('./ChatContentView'));
 
 interface Props {
   currentUserId?: string | undefined | null;

@@ -32,6 +32,7 @@ import ReactDOM from 'react-dom';
 import { useChannelFileDrop } from './useChannelFileDrop';
 import { FileDropOverlay } from '@boluo/ui/chat/FileDropOverlay';
 import { useQueryCurrentUser } from '@boluo/hooks/useQueryCurrentUser';
+import { useChannelCharacter } from '../../hooks/useChannelCharacter';
 
 interface Props {
   channelId: string;
@@ -57,7 +58,7 @@ const ChatPaneChannelView: FC<{
 }> = ({ channel, errorNode }) => {
   const member = useMember();
   const nickname = member?.user.nickname ?? undefined;
-  const defaultCharacterName = member?.channel.characterName ?? '';
+  const { character: defaultCharacter, name: defaultCharacterName } = useChannelCharacter(member);
   const defaultInGame = channel?.type === 'IN_GAME';
   const atoms: ChannelAtoms = useMakeChannelAtoms(
     channel.id,
@@ -70,6 +71,8 @@ const ChatPaneChannelView: FC<{
     member?.space.spaceId,
     nickname,
     defaultCharacterName,
+    member?.channel.characterId ?? null,
+    defaultCharacter,
     atoms.composeAtom,
     atoms.parsedAtom,
     defaultInGame,

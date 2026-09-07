@@ -1,3 +1,4 @@
+import { type Character } from '@boluo/api';
 import { subscribePreviewAcknowledgement } from '@boluo/api/preview/ack';
 import { createPreviewPublisher } from '@boluo/api/preview/publisher';
 import { makeId } from '@boluo/utils/id';
@@ -23,6 +24,8 @@ export const useSendPreview = (
   spaceId: string | undefined,
   nickname: string | undefined,
   defaultCharacterName: string,
+  defaultCharacterId: string | null,
+  defaultCharacter: Character | undefined,
   composeAtom: ComposeAtom,
   parsedAtom: Atom<ComposeParseResult>,
   defaultInGame: boolean,
@@ -94,6 +97,8 @@ export const useSendPreview = (
       channelId,
       nickname,
       defaultCharacterName,
+      defaultCharacterId,
+      defaultCharacter,
       defaultInGame,
       compose,
       parsed,
@@ -117,6 +122,8 @@ export const useSendPreview = (
   }, [
     channelId,
     composeAtom,
+    defaultCharacter,
+    defaultCharacterId,
     defaultCharacterName,
     defaultInGame,
     nickname,

@@ -64,6 +64,19 @@ pub struct ChannelWithMember {
 }
 
 #[allow(deprecated, non_camel_case_types, non_snake_case)]
+#[derive(serde::Serialize, serde::Deserialize)]
+#[serde(tag = "payloadType", rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum ComponentPayload {
+    Json {
+        schema_version: i32,
+        data: ::serde_json::Value,
+    },
+    Asset {
+        asset_id: ::uuid::Uuid,
+    },
+}
+
+#[allow(deprecated, non_camel_case_types, non_snake_case)]
 #[derive(serde::Serialize, serde::Deserialize, Default)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum ConnectionError {

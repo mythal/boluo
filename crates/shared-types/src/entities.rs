@@ -1,4 +1,7 @@
+use crate::components::ComponentPayload;
+use compact_str::CompactString;
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
 #[derive(Debug, Serialize, Deserialize, Clone, specta::Type)]
 #[serde(untagged)]
@@ -37,6 +40,52 @@ pub struct ExprEntity {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct ComponentTarget {
+    pub scope_id: Uuid,
+    pub entry_id: Option<Uuid>,
+    #[specta(type = String)]
+    pub key: CompactString,
+    #[specta(type = String)]
+    pub component_type: CompactString,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct ComponentSnapshot {
+    pub target: ComponentTarget,
+    #[specta(type = String)]
+    pub display_name: CompactString,
+    pub payload: ComponentPayload,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct ComponentChangePreview {
+    pub target: ComponentTarget,
+    #[specta(type = String)]
+    pub display_name: CompactString,
+    pub before: Option<ComponentPayload>,
+    pub after: Option<ComponentPayload>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, specta::Type)]
+#[serde(tag = "type")]
+pub enum ComponentReport {
+    Snapshot { items: Vec<ComponentSnapshot> },
+    // Resolve values from the message's committed effects.
+    Change { items: Vec<ComponentTarget> },
+    ChangePreview { items: Vec<ComponentChangePreview> },
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, specta::Type)]
+pub struct ComponentReportEntity {
+    #[serde(flatten)]
+    pub span: Span,
+    pub report: ComponentReport,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, specta::Type)]
 pub struct SpanWithChild {
     #[serde(flatten)]
     pub span: Span,
@@ -54,6 +103,7 @@ pub enum Entity {
     Emphasis(SpanWithChild),
     StrongEmphasis(SpanWithChild),
     Expr(ExprEntity),
+    ComponentReport(ComponentReportEntity),
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, Default, specta::Type)]
@@ -62,6 +112,11 @@ pub enum Entity {
 pub enum ExprNode {
     Roll(Roll),
     Binary(Binary),
+    Variable {
+        #[specta(type = String)]
+        name: CompactString,
+        value: f64,
+    },
     Num {
         value: f64,
     },
@@ -94,6 +149,11 @@ pub enum RollNode {
 #[serde(tag = "type")]
 pub enum PureExprNode {
     Binary(PureBinary),
+    Variable {
+        #[specta(type = String)]
+        name: CompactString,
+        value: f64,
+    },
     Num {
         value: f64,
     },
@@ -199,15 +259,30 @@ pub struct PureBinary {
 pub enum EvaluatedExprNode {
     Roll(RollResult),
     Binary(BinaryResult),
-    Num { value: f64 },
-    Max { node: RollResultNode, value: f64 },
-    Min { node: RollResultNode, value: f64 },
+    Variable {
+        #[specta(type = String)]
+        name: CompactString,
+        value: f64,
+    },
+    Num {
+        value: f64,
+    },
+    Max {
+        node: RollResultNode,
+        value: f64,
+    },
+    Min {
+        node: RollResultNode,
+        value: f64,
+    },
     SubExpr(SubExprResult),
     CocRoll(CocRollResult),
     FateRoll(FateResult),
     DicePool(DicePoolResult),
     Repeat(RepeatResult),
-    Unknown { value: f64 },
+    Unknown {
+        value: f64,
+    },
 }
 
 impl Default for EvaluatedExprNode {
@@ -280,4 +355,61 @@ pub struct RollResult {
 #[serde(tag = "type")]
 pub enum RollResultNode {
     Roll(RollResult),
+}
+
+#[cfg(test)]
+mod tests {
+    use super::ExprNode;
+
+    #[test]
+    fn component_report_entities_round_trip() {
+        let target = serde_json::json!({
+            "scopeId": "00000000-0000-0000-0000-000000000002",
+            "entryId": "00000000-0000-0000-0000-000000000001",
+            "key": "hp", "componentType": "core/counter"
+        });
+        let text_target = serde_json::json!({
+            "scopeId": "00000000-0000-0000-0000-000000000002",
+            "entryId": null, "key": "description", "componentType": "example/text"
+        });
+        let counter = serde_json::json!({"payloadType": "JSON", "schemaVersion": 1, "data": {"value": 9, "min": -5, "max": 20}});
+        let text = serde_json::json!({"payloadType": "JSON", "schemaVersion": 2, "data": {"text": "Hello"}});
+        let asset = serde_json::json!({"payloadType": "ASSET", "assetId": "00000000-0000-0000-0000-000000000003"});
+        for report in [
+            serde_json::json!({"type": "Snapshot", "items": [
+                {"target": target, "displayName": "血量", "payload": counter},
+                {"target": text_target, "displayName": "Description", "payload": text}
+            ]}),
+            serde_json::json!({"type": "Change", "items": [target, text_target]}),
+            serde_json::json!({"type": "ChangePreview", "items": [
+                {"target": target, "displayName": "血量", "before": counter, "after": null},
+                {"target": text_target, "displayName": "Description", "before": null, "after": text}
+            ]}),
+            serde_json::json!({"type": "Snapshot", "items": [
+                {"target": target, "displayName": "Portrait", "payload": asset}
+            ]}),
+        ] {
+            let json = serde_json::json!({"type": "ComponentReport", "start": 0, "len": 8, "report": report});
+            let entity: super::Entity = serde_json::from_value(json.clone()).unwrap();
+            assert_eq!(serde_json::to_value(entity).unwrap(), json);
+        }
+    }
+
+    #[test]
+    fn variable_snapshot_survives_expression_serialization() {
+        let json = serde_json::json!({
+            "type": "Binary",
+            "op": "+",
+            "l": { "type": "Roll", "counter": 1, "face": 20 },
+            "r": { "type": "Variable", "name": "力量", "value": -2.5 }
+        });
+        let node: ExprNode = serde_json::from_value(json).unwrap();
+        let restored = serde_json::to_value(node).unwrap();
+        assert_eq!(
+            restored["r"],
+            serde_json::json!({
+                "type": "Variable", "name": "力量", "value": -2.5
+            })
+        );
+    }
 }

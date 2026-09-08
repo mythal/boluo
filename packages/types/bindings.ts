@@ -208,7 +208,7 @@ export type CocRollResult = {
 export type CocRollSubType = 'NORMAL' | 'BONUS' | 'BONUS_2' | 'PENALTY' | 'PENALTY_2';
 
 export type ComponentChangePreview = {
-  target: ComponentTarget;
+  component: ComponentRef;
   displayName: string;
   before: ComponentPayload | null;
   after: ComponentPayload | null;
@@ -218,9 +218,16 @@ export type ComponentPayload =
   | { payloadType: 'JSON'; schemaVersion: number; data: Value }
   | { payloadType: 'ASSET'; assetId: string };
 
+export type ComponentRef = {
+  scopeId: string;
+  entryId: string | null;
+  key: string;
+  componentType: string;
+};
+
 export type ComponentReport =
   | { type: 'Snapshot'; items: ComponentSnapshot[] }
-  | { type: 'Change'; items: ComponentTarget[] }
+  | { type: 'Change'; items: ComponentRef[] }
   | { type: 'ChangePreview'; items: ComponentChangePreview[] };
 
 export type ComponentReportEntity = {
@@ -228,16 +235,9 @@ export type ComponentReportEntity = {
 } & Span;
 
 export type ComponentSnapshot = {
-  target: ComponentTarget;
+  component: ComponentRef;
   displayName: string;
   payload: ComponentPayload;
-};
-
-export type ComponentTarget = {
-  scopeId: string;
-  entryId: string | null;
-  key: string;
-  componentType: string;
 };
 
 export type ConfirmEmailChange = {

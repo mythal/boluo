@@ -145,3 +145,33 @@ fn replace_opaque_fields(types: &Types, fields: &mut Fields) {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn component_wire_types_reuse_shared_definitions() {
+        #[allow(dead_code)]
+        #[derive(specta::Type)]
+        struct ComponentEnvelope {
+            component: shared_types::components::ComponentRef,
+            payload: shared_types::components::ComponentPayload,
+        }
+
+        let mut types = Types::default();
+        types.register_mut::<ComponentEnvelope>();
+        let source = Rust::default()
+            .opaque_type(|reference| {
+                reference
+                    .downcast_ref::<Opaque>()
+                    .map(|opaque| Cow::Owned(opaque.0.clone()))
+            })
+            .export(&types, RustFormat)
+            .unwrap();
+        assert!(source.contains("shared_types::components::ComponentRef"));
+        assert!(source.contains("shared_types::components::ComponentPayload"));
+        assert!(!source.contains("pub enum ComponentPayload"));
+        assert!(!source.contains("pub struct ComponentRef"));
+    }
+}

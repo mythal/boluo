@@ -38,10 +38,10 @@ export const componentReportToText = (
         const before = readCounterPayload(beforePayload);
         const after = readCounterPayload(afterPayload);
         const supported =
-          item.target.componentType === 'core/counter' &&
+          item.component.componentType === 'core/counter' &&
           (beforePayload === null || before != null) &&
           (afterPayload === null || after != null);
-        const label = item.displayName || item.target.key;
+        const label = item.displayName || item.component.key;
         const value = supported
           ? `${after?.value ?? labels.deleted}${!preview && after?.max != null ? ` / ${after?.max}` : ''}`
           : labels.unsupportedComponent;

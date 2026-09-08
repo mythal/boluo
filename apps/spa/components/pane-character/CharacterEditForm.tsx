@@ -16,7 +16,7 @@ import { CharacterIdentifierConflictError, CharacterStaleError } from './charact
 import {
   isCharacterAccessSelectionInvalid,
   useCharacterAccessOptions,
-} from './character-permissions';
+} from '../../characters/permissions';
 
 const MAX_CHARACTER_NAME_LENGTH = 32;
 const MAX_CHARACTER_DESCRIPTION_LENGTH = 512;

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import type { AccessPolicy } from '@boluo/api';
-import { canEditCharacter, isCharacterAccessSelectionInvalid } from './character-permissions';
+import { canEditCharacter, isCharacterAccessSelectionInvalid } from './permissions';
 
 const canEdit = (
   accessPolicy: AccessPolicy,

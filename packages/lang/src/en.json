@@ -161,6 +161,9 @@
   "5l42dd": {
     "message": "Large Text"
   },
+  "5lUmnb": {
+    "message": "Use up to 32 characters, or leave empty to use the key."
+  },
   "5lqSZ6": {
     "message": "The message you are trying to move is no longer available."
   },
@@ -1249,9 +1252,6 @@
   },
   "kIUNDX": {
     "message": "Default Dice"
-  },
-  "kLjOdv": {
-    "message": "Use 2–32 characters."
   },
   "kMogDE": {
     "message": "Must be a valid email address."

@@ -6,7 +6,11 @@ import { useCallback, useMemo, useState } from 'react';
 import { type IntlShape, useIntl } from 'react-intl';
 import { useSWRConfig } from 'swr';
 import { mediaMaxSizeMb, upload, type UploadError } from '../../media';
-import { isValidEntryDisplayName, isValidEntryKey } from './entry-metadata';
+import {
+  isValidEntryDisplayName,
+  isValidEntryKey,
+  normalizeEntryDisplayName,
+} from '../../entries/metadata';
 import {
   makePortraitAssetName,
   makePortraitDisplayName,
@@ -209,9 +213,10 @@ export const useCharacterPortraitMutation = ({
   const editPortraitMetadata = useCallback(
     async (entry: EntryComponentMatch, key: string, displayName: string) => {
       const nextKey = key.trim();
-      const nextDisplayName = displayName.trim();
+      const nextDisplayName = normalizeEntryDisplayName(displayName);
       if (
-        (nextKey === entry.key && nextDisplayName === entry.displayName) ||
+        (nextKey === entry.key &&
+          nextDisplayName === normalizeEntryDisplayName(entry.displayName)) ||
         !isValidEntryKey(nextKey) ||
         !isValidEntryDisplayName(nextDisplayName)
       ) {

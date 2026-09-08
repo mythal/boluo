@@ -19,6 +19,9 @@ export const exportComponentReportText = (
   effects: readonly EntryEffectHistory[],
 ): string => {
   const { report } = entity;
+  if (report.items.length === 0) {
+    return intl.formatMessage({ defaultMessage: 'No components.' });
+  }
   if (report.type === 'Change') {
     const history = effects.flatMap((effect) => effect.componentHistory);
     return report.items
@@ -39,18 +42,16 @@ export const exportComponentReportText = (
       })
       .join('\n');
   }
-  return (
-    report.items
-      .map((item) => {
-        const name = item.displayName || item.component.key;
-        const label = name === item.component.key ? name : `${name} (${item.component.key})`;
-        if ('payload' in item) {
-          return `${label}: ${payloadText(intl, item.component.componentType, item.payload)}`;
-        }
-        const before = payloadText(intl, item.component.componentType, item.before);
-        const after = payloadText(intl, item.component.componentType, item.after);
-        return `${intl.formatMessage({ defaultMessage: 'Preview' })}: ${label}: ${before} → ${after}`;
-      })
-      .join('\n') || intl.formatMessage({ defaultMessage: 'No components.' })
-  );
+  return report.items
+    .map((item) => {
+      const name = item.displayName || item.component.key;
+      const label = name === item.component.key ? name : `${name} (${item.component.key})`;
+      if ('payload' in item) {
+        return `${label}: ${payloadText(intl, item.component.componentType, item.payload)}`;
+      }
+      const before = payloadText(intl, item.component.componentType, item.before);
+      const after = payloadText(intl, item.component.componentType, item.after);
+      return `${intl.formatMessage({ defaultMessage: 'Preview' })}: ${label}: ${before} → ${after}`;
+    })
+    .join('\n');
 };

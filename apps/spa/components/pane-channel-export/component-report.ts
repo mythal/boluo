@@ -1,6 +1,6 @@
 import type { ComponentPayload, ComponentReportEntity, EntryEffectHistory } from '@boluo/api';
-import { componentRefsMatch } from '@boluo/common/components/ref';
-import { readCounterPayload } from '@boluo/common/components/counter';
+import { componentRefsMatch } from '@boluo/components/ref';
+import { readCounterPayload } from '@boluo/components/counter';
 import type { IntlShape } from 'react-intl';
 
 const payloadText = (intl: IntlShape, componentType: string, payload: ComponentPayload | null) => {

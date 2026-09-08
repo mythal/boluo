@@ -1,5 +1,5 @@
-import type { ComponentReportEntity } from '@boluo/api';
-import { readCounterPayload } from '@boluo/common/components/counter';
+import type { ComponentReportEntity } from '@boluo/types/bindings';
+import { readCounterReportItem } from './counter';
 
 export interface ComponentReportTextLabels {
   variableUpdate: string;
@@ -33,17 +33,10 @@ export const componentReportToText = (
   return (
     entity.report.items
       .map((item) => {
-        const beforePayload = 'before' in item ? item.before : null;
-        const afterPayload = 'payload' in item ? item.payload : item.after;
-        const before = readCounterPayload(beforePayload);
-        const after = readCounterPayload(afterPayload);
-        const supported =
-          item.component.componentType === 'core/counter' &&
-          (beforePayload === null || before != null) &&
-          (afterPayload === null || after != null);
+        const counter = readCounterReportItem(item);
         const label = item.displayName || item.component.key;
-        const value = supported
-          ? `${after?.value ?? labels.deleted}${!preview && after?.max != null ? ` / ${after?.max}` : ''}`
+        const value = counter
+          ? `${counter.after?.value ?? labels.deleted}${!preview && counter.after?.max != null ? ` / ${counter.after?.max}` : ''}`
           : labels.unsupportedComponent;
         return `${preview ? `${labels.preview}: ` : ''}${label}: ${value}`;
       })

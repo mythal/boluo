@@ -6,6 +6,7 @@
   ],
   "dependencies": {
     "@boluo/api": "0.0.0",
+    "@boluo/components": "0.0.0",
     "@boluo/frontend-worker": "0.0.0",
     "@boluo/icons": "0.0.0",
     "@boluo/interpreter": "0.0.0",

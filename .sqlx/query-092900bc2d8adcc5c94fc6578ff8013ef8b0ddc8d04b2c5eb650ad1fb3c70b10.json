@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT\n    history.entry_effect_id,\n    effect.operator_id,\n    effect.scope_id,\n    history.entry_id,\n    history.key,\n    history.component_type,\n    history.action AS \"action!: EntryComponentHistoryAction\",\n    history.payload,\n    effect.created\nFROM entry_component_history history\nJOIN entry_effects effect ON effect.id = history.entry_effect_id\nWHERE history.entry_effect_id = ANY($1)\nORDER BY\n    effect.created DESC,\n    history.entry_effect_id DESC,\n    history.entry_id,\n    history.component_type;\n",
+  "query": "SELECT\n    history.entry_effect_id,\n    effect.operator_id,\n    effect.scope_id,\n    history.entry_id,\n    history.key,\n    history.component_type,\n    history.action AS \"action!: EntryComponentHistoryAction\",\n    history.payload,\n    previous.payload AS \"before_payload?\",\n    effect.created\nFROM entry_component_history history\nJOIN entry_effects effect ON effect.id = history.entry_effect_id\nLEFT JOIN LATERAL (\n    SELECT prior.payload\n    FROM entry_component_history prior\n    JOIN entry_effects prior_effect ON prior_effect.id = prior.entry_effect_id\n    WHERE prior.entry_id = history.entry_id\n      AND prior.component_type = history.component_type\n      AND prior_effect.scope_id = effect.scope_id\n      AND (prior_effect.created, prior.entry_effect_id) < (effect.created, history.entry_effect_id)\n    ORDER BY prior_effect.created DESC, prior.entry_effect_id DESC\n    LIMIT 1\n) previous ON TRUE\nWHERE effect.scope_id = $1\n  AND history.key = $2\nORDER BY\n    effect.created DESC,\n    history.entry_effect_id DESC,\n    history.entry_id,\n    history.component_type;\n",
   "describe": {
     "columns": [
       {
@@ -103,6 +103,17 @@
       },
       {
         "ordinal": 8,
+        "name": "before_payload?",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "entry_component_history",
+            "name": "payload"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
         "name": "created",
         "type_info": "Timestamptz",
         "origin": {
@@ -115,7 +126,8 @@
     ],
     "parameters": {
       "Left": [
-        "UuidArray"
+        "Uuid",
+        "Text"
       ]
     },
     "nullable": [
@@ -127,8 +139,9 @@
       false,
       false,
       true,
+      true,
       false
     ]
   },
-  "hash": "4297e8f7bd6aa8e9eec0a92ee92aabe6a7962d669ac473afd227ed06ca81f3d3"
+  "hash": "092900bc2d8adcc5c94fc6578ff8013ef8b0ddc8d04b2c5eb650ad1fb3c70b10"
 }

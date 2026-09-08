@@ -477,6 +477,8 @@ export type EntryComponentHistory = {
   componentType: string;
   action: EntryComponentHistoryAction;
   payload: Value | null;
+  /**  Payload from the preceding recorded change. */
+  beforePayload: Value | null;
   created: string;
 };
 

@@ -2,7 +2,7 @@ import Prando from 'prando';
 import { type ChannelMemberWithUser } from './api/channels';
 import { type Message } from './api/messages';
 import { mediaUrl } from './api/request';
-import { type ExportEntity, fromLegacyEntity } from './interpreter/entities';
+import { type ExportEntity, fromLegacyEntity, componentReportToText } from './interpreter/entities';
 import { evaluate, makeRng, nodeToText } from './interpreter/eval';
 import { genColor } from './utils/game';
 import { parseDateString } from './utils/helper';
@@ -75,7 +75,9 @@ export const exportMessage = (members: ChannelMemberWithUser[]) => {
       ? []
       : entities.map((item): ExportEntity => {
           const entity = item;
-          if (entity.type === 'Expr') {
+          if (entity.type === 'ComponentReport') {
+            return { ...entity, text: componentReportToText(entity) };
+          } else if (entity.type === 'Expr') {
             const { type, start, len } = entity;
             const node = evaluate(entity.node, rng);
             return {
@@ -175,6 +177,7 @@ function entityBbCode(entity: ExportEntity, color: string): string {
       return `[url=${entity.href}]${entity.text}[/url]`;
     case 'Strong':
       return `[b]${entity.text}[/b]`;
+    case 'ComponentReport':
     case 'Text':
       return entity.text;
     case 'Expr':
@@ -197,6 +200,7 @@ function entityMarkdown(entity: ExportEntity): string {
       return `[${entity.text}](${entity.href})`;
     case 'Strong':
       return `**${entity.text}**`;
+    case 'ComponentReport':
     case 'Text':
       return entity.text;
     case 'Expr':

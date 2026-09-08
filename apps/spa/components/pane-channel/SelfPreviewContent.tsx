@@ -48,6 +48,7 @@ export const SelfPreviewContent: FC<Props> = ({
             entities={deferredParsed.entities}
             isAction={deferredParsed.isAction}
             isArchived={false}
+            isPreview
             nameNode={nameNode}
           />
         ) : (

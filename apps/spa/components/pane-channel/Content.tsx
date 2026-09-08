@@ -1,6 +1,8 @@
+import { ComponentReport } from './ComponentReport';
+import { MessageComponentChanges } from './MessageComponentChanges';
 import clsx from 'clsx';
 import { memo, type ReactNode, useMemo, type MouseEventHandler } from 'react';
-import type { Entity, EvaluatedExprNode, Entities, EvaluatedExpr } from '@boluo/api';
+import type { Entity, Entities, EvaluatedExpr } from '@boluo/api';
 import { evaluate, makeRng } from '@boluo/interpreter';
 import { EntityExpr } from '@boluo/ui/entities/EntityExpr';
 import { EntityEvaluatedExpr } from '@boluo/ui/entities/EntityEvaluatedExpr';
@@ -19,6 +21,8 @@ interface Props {
   entities: Entities;
   isAction: boolean;
   isArchived: boolean;
+  isPreview?: boolean;
+  message?: { id: string; hasEntryEffects: boolean };
   seed?: number[];
   nameNode: ReactNode;
   onDoubleClick?: MouseEventHandler<HTMLSpanElement>;
@@ -32,6 +36,8 @@ export const Content = memo<Props>(
     isAction,
     isArchived,
     nameNode,
+    message,
+    isPreview = false,
     seed,
     onContextMenu,
     onDoubleClick,
@@ -66,6 +72,18 @@ export const Content = memo<Props>(
         ...evaluatedEntities.map((entity) => {
           const key = entity.start;
           switch (entity.type) {
+            case 'ComponentReport':
+              return entity.report.type === 'Change' ? (
+                <MessageComponentChanges
+                  key={key}
+                  messageId={message?.id}
+                  hasEntryEffects={message?.hasEntryEffects ?? false}
+                  entity={entity}
+                  source={source}
+                />
+              ) : (
+                <ComponentReport key={key} entity={entity} source={source} preview={isPreview} />
+              );
             case 'Text':
               return <EntityText key={key} source={source} entity={entity} />;
             case 'Link':
@@ -103,7 +121,7 @@ export const Content = memo<Props>(
         nodeList.push(<span key="space">{ZERO_WIDTH_SPACE}</span>);
       }
       return nodeList;
-    }, [evaluatedEntities, source, isAction]);
+    }, [evaluatedEntities, source, isAction, message, isPreview]);
     return (
       <span
         className={clsx(

@@ -44,6 +44,10 @@ export const Binary: Story = {
   },
 };
 
+export const Variable: Story = {
+  args: { node: { type: 'Variable', name: '力量', value: 60 } },
+};
+
 export const RollResult: Story = {
   args: {
     node: rollResult,

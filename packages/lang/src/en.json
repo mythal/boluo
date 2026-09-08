@@ -32,6 +32,9 @@
   "/jxJyw": {
     "message": "The position you are trying to place the message is changed."
   },
+  "0+aJ0l": {
+    "message": "Unsupported component"
+  },
   "03KVTC": {
     "message": "Choose portrait image"
   },
@@ -43,6 +46,9 @@
   },
   "0EJGBZ": {
     "message": "Are you sure you want to kick {nickname} ({username})?"
+  },
+  "0Exaxi": {
+    "message": "Counter update"
   },
   "0HT+Ib": {
     "message": "Archived"
@@ -299,6 +305,9 @@
   "AbXVP4": {
     "message": "Created at"
   },
+  "AcAA5x": {
+    "message": "Components"
+  },
   "AtML1q": {
     "message": "Master"
   },
@@ -536,6 +545,9 @@
   "KN7zKn": {
     "message": "Error"
   },
+  "KQvWvD": {
+    "message": "Deleted"
+  },
   "KUUb8m": {
     "message": "Unsupported media type."
   },
@@ -632,6 +644,9 @@
   "NZyhSX": {
     "message": "News"
   },
+  "Na5Qdq": {
+    "message": "Could not load component changes."
+  },
   "Nk36gs": {
     "message": "Select and reorder portrait {number}"
   },
@@ -647,8 +662,14 @@
   "OLFHJL": {
     "message": "Extreme Success"
   },
+  "ORGv1Q": {
+    "message": "Created"
+  },
   "OWhbRI": {
     "message": "The command that will be inserted when the button is pressed."
+  },
+  "OZEgJY": {
+    "message": "Copy entry key {key}"
   },
   "OtUXSR": {
     "message": "Type a message"
@@ -1283,6 +1304,9 @@
   "l+qC1C": {
     "message": "Include Names"
   },
+  "l/m0AW": {
+    "message": "Loading result…"
+  },
   "lJePcp": {
     "message": "Failure"
   },
@@ -1381,6 +1405,9 @@
   },
   "qGHWyb": {
     "message": "{count} filtered messages"
+  },
+  "qGYN0e": {
+    "message": "Counters"
   },
   "qOH6mx": {
     "message": "Serif"
@@ -1510,6 +1537,9 @@
   },
   "tlCGm1": {
     "message": "Is Action"
+  },
+  "ts5w+M": {
+    "message": "Unconfirmed"
   },
   "u0Jaxy": {
     "message": "Only the owner and game masters can view, edit, and portray it."

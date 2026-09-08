@@ -1,6 +1,6 @@
 import type Prando from 'prando';
 import * as React from 'react';
-import { type Entity, fromLegacyEntity } from '../../interpreter/entities';
+import { type Entity, fromLegacyEntity, componentReportToText } from '../../interpreter/entities';
 import { makeRng } from '../../interpreter/eval';
 import { type LegacyEntity } from '../../interpreter/legacy-entities';
 import { Code } from '../atoms/Code';
@@ -20,7 +20,13 @@ function ItemContent({ text, entities, seed }: Props) {
   for (let key = 0; key < entities.length; key += 1) {
     const item = entities[key];
     const entity = 'offset' in item ? fromLegacyEntity(item) : item;
-    if (entity.type === 'Expr') {
+    if (entity.type === 'ComponentReport') {
+      content.push(
+        <span key={key} className="whitespace-pre-wrap">
+          {componentReportToText(entity)}
+        </span>,
+      );
+    } else if (entity.type === 'Expr') {
       rng = rng ?? makeRng(seed);
       content.push(
         <span className="font-legacy-mono" key={key}>

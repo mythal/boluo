@@ -29,6 +29,27 @@ test('parse emphasis', () => {
   assert.deepStrictEqual(parse('hello *world*!'), expected);
 });
 
+test('arithmetic keeps left associativity and multiplication precedence', () => {
+  const [entity] = parse('{20-6-2*3}');
+  assert.ok(entity?.type === 'Expr');
+  assert.deepEqual(entity.node, {
+    type: 'Binary',
+    op: '-',
+    l: {
+      type: 'Binary',
+      op: '-',
+      l: { type: 'Num', value: 20 },
+      r: { type: 'Num', value: 6 },
+    },
+    r: {
+      type: 'Binary',
+      op: '×',
+      l: { type: 'Num', value: 2 },
+      r: { type: 'Num', value: 3 },
+    },
+  });
+});
+
 test('parse link', () => {
   const expected: Entity[] = [
     {

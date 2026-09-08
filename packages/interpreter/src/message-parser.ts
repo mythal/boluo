@@ -28,7 +28,7 @@ export const defaultMessageParseEnv: MessageParseEnv = {
 };
 
 // Parser
-const { P, maybe, many, choice, regex, spaces, smallSpaces } = createParserCombinators<ParseEnv>();
+const { P, lazy, many, choice, regex, spaces, smallSpaces } = createParserCombinators<ParseEnv>();
 type P<T> = Parser<T, ParseEnv>;
 
 // Parsers
@@ -279,7 +279,7 @@ const cocRoll: P<ExprOf<'CocRoll'>> = regex(/^[Cc][Oo][Cc]([Bb][Bb]?|[Pp][Pp]?)?
       type: 'CocRoll',
       subType,
     };
-    const right = smallSpaces.with(atomPure()).run(state, env);
+    const right = smallSpaces.with(atomPure).run(state, env);
     if (right) {
       const [target, state] = right;
       node.target = target;
@@ -373,27 +373,22 @@ const variable: P<ExprOf<'Variable'>> = new P((state, env) => {
   ];
 });
 
-const chainl1 = <T, O>(op: P<O>, p: () => P<T>, cons: (op: O, l: T, r: T) => T): P<T> =>
-  new P((state, env) => {
-    const rest = (l: T): P<T> =>
-      new P((state, env) => {
-        const restExpr: P<T> = spaces
-          .with(op.skip(spaces).and(p()))
-          .then(([[op, r], state], env) => {
-            return rest(cons(op, l, r)).run(state, env);
-          });
-        return maybe(restExpr)
-          .map((node) => node ?? l)
-          .run(state, env);
-      });
-
-    const result = p().run(state, env);
-    if (result == null) {
-      return null;
+const chainl1 = <T, O>(op: P<O>, p: P<T>, cons: (op: O, l: T, r: T) => T): P<T> => {
+  const tail = spaces.with(op.skip(spaces).and(p));
+  return new P((state, env) => {
+    const first = p.run(state, env);
+    if (first == null) return null;
+    let [node, next] = first;
+    for (;;) {
+      const result = tail.run(next, env);
+      // Keep the state before the operator if its right operand cannot be parsed.
+      if (result == null) return [node, next];
+      const [[operator, right], after] = result;
+      node = cons(operator, node, right);
+      next = after;
     }
-    const [node, state2] = result;
-    return rest(node).run(state2, env);
   });
+};
 
 const ExprMinMax = (node: ExprNode, type: 'Min' | 'Max'): ExprNode => {
   if (node.type === 'Roll') {
@@ -418,11 +413,11 @@ const ExprMinMax = (node: ExprNode, type: 'Min' | 'Max'): ExprNode => {
 };
 
 const min: P<ExprNode> = regex(/^[Mm][Ii][Nn]\s*/)
-  .then(([_, state], env) => atom().run(state, env))
+  .then(([_, state], env) => atom.run(state, env))
   .map((node) => ExprMinMax(node, 'Min'));
 
 const max: P<ExprNode> = regex(/^[Mm][Aa][Xx]\s*/)
-  .then(([_, state], env) => atom().run(state, env))
+  .then(([_, state], env) => atom.run(state, env))
   .map((node) => ExprMinMax(node, 'Max'));
 
 const subExprMapper = (node: ExprNode): ExprOf<'SubExpr'> =>
@@ -431,82 +426,95 @@ const subExprMapper = (node: ExprNode): ExprOf<'SubExpr'> =>
 const subExprPureMapper = (node: PureExprNode): PureExprOf<'SubExpr'> =>
   node.type === 'SubExpr' ? node : { type: 'SubExpr', node };
 
-const atom = (): P<ExprNode> => {
+const atom: P<ExprNode> = lazy(() => {
   const subExpr = choice([
     regex(/^\(\s*/)
-      .with(expr())
+      .with(expr)
       .skip(regex(/^\s*\)/))
       .map(subExprMapper), // match (...)
     regex(/^（\s*/)
-      .with(expr())
+      .with(expr)
       .skip(regex(/^\s*）/))
       .map(subExprMapper), // match （...）
     regex(/^\[\s*/)
-      .with(expr())
+      .with(expr)
       .skip(regex(/^\s*]/))
       .map(subExprMapper), // match [...]
   ]);
-  return choice([srRoll, roll, cocRoll, fateRoll, wodRoll, repeat(), num, subExpr, variable]);
-};
+  return choice([srRoll, roll, cocRoll, fateRoll, wodRoll, repeat, num, subExpr, variable]);
+});
 
-const atomPure = (): P<PureExprNode> => {
+const atomPure: P<PureExprNode> = lazy(() => {
   const subExpr = choice<PureExprNode>([
     regex(/^\(\s*/)
-      .with(exprPure())
+      .with(exprPure)
       .skip(regex(/^\s*\)/))
       .map(subExprPureMapper), // match (...)
     regex(/^（\s*/)
-      .with(exprPure())
+      .with(exprPure)
       .skip(regex(/^\s*）/))
       .map(subExprPureMapper), // match （...）
     regex(/^\[\s*/)
-      .with(exprPure())
+      .with(exprPure)
       .skip(regex(/^\s*]/))
       .map(subExprPureMapper), // match [...]
   ]);
   return choice<PureExprNode>([num, subExpr, variable]);
-};
+});
 
-const repeat = (): P<ExprNode> =>
-  regex(/^(\d{1,2})#/).then(([match, state], env) => {
-    const count = parseInt(match[1]!);
-    if (count === 0) {
-      return null;
-    }
-    const result = expr().run(state, env);
-    if (result == null) {
-      return null;
-    }
-    const [node, next] = result;
-    return [
-      {
-        type: 'Repeat',
-        node,
-        count,
-      },
-      next,
-    ];
-  });
+const repeat: P<ExprNode> = regex(/^(\d{1,2})#/).then(([match, state], env) => {
+  const count = parseInt(match[1]!);
+  if (count === 0) {
+    return null;
+  }
+  const result = expr.run(state, env);
+  if (result == null) {
+    return null;
+  }
+  const [node, next] = result;
+  return [
+    {
+      type: 'Repeat',
+      node,
+      count,
+    },
+    next,
+  ];
+});
 
-const expr2 = (): P<ExprNode> =>
-  chainl1<ExprNode, Operator>(operator2, atom, (op, l, r) => ({ type: 'Binary', l, r, op }));
-const expr = (): P<ExprNode> =>
-  chainl1<ExprNode, Operator>(operator1, expr2, (op, l, r) => ({ type: 'Binary', l, r, op }));
+const expr2: P<ExprNode> = chainl1<ExprNode, Operator>(operator2, atom, (op, l, r) => ({
+  type: 'Binary',
+  l,
+  r,
+  op,
+}));
+const expr: P<ExprNode> = chainl1<ExprNode, Operator>(operator1, expr2, (op, l, r) => ({
+  type: 'Binary',
+  l,
+  r,
+  op,
+}));
 
-const exprPure2 = (): P<PureExprNode> =>
-  chainl1<PureExprNode, Operator>(operator2, atomPure, (op, l, r) => ({
+const exprPure2: P<PureExprNode> = chainl1<PureExprNode, Operator>(
+  operator2,
+  atomPure,
+  (op, l, r) => ({
     type: 'Binary',
     l,
     r,
     op,
-  }));
-const exprPure = (): P<PureExprNode> =>
-  chainl1<PureExprNode, Operator>(operator1, exprPure2, (op, l, r) => ({
+  }),
+);
+const exprPure: P<PureExprNode> = chainl1<PureExprNode, Operator>(
+  operator1,
+  exprPure2,
+  (op, l, r) => ({
     type: 'Binary',
     l,
     r,
     op,
-  }));
+  }),
+);
 
 const EXPRESSION = /^{(.+?)}|^【(.+?)】|^｛(.+?)｝/;
 const expression: P<Entity> = regex(EXPRESSION).then(([match, { text, rest }], env) => {
@@ -515,7 +523,7 @@ const expression: P<Entity> = regex(EXPRESSION).then(([match, { text, rest }], e
   if (!content) {
     return null;
   }
-  const exprResult = expr().run({ text: '', rest: content }, env);
+  const exprResult = expr.run({ text: '', rest: content }, env);
   if (!exprResult) {
     return null;
   }
@@ -563,7 +571,7 @@ const message: P<Entity[]> = many(entity).map((entityList) =>
 );
 
 const checkCommand: P<Entity[]> = new P((state, env) => {
-  const result = exprPure().run(state, env);
+  const result = exprPure.run(state, env);
   if (result == null) {
     return message.run(state, env);
   }
@@ -576,15 +584,13 @@ const checkCommand: P<Entity[]> = new P((state, env) => {
   return remainder == null ? [[entity], after] : [[entity, ...remainder[0]], remainder[1]];
 });
 
-const rollCommand: P<Entity[]> = new P((state, env) => {
-  const exprEntity = new P((state, env) => {
-    const result = expr().run(state, env);
-    if (result == null) {
-      return null;
-    }
-    return exprNodeToEntity(state)(result);
-  });
-  const entity = choice<Entity>([
+const exprEntity: P<Entity> = new P((state, env) => {
+  const result = expr.run(state, env);
+  return result == null ? null : exprNodeToEntity(state)(result);
+});
+
+const rollCommand: P<Entity[]> = many(
+  choice<Entity>([
     codeBlock,
     code,
     strongEmphasis,
@@ -595,10 +601,8 @@ const rollCommand: P<Entity[]> = new P((state, env) => {
     expression,
     exprEntity,
     span,
-  ]);
-  const message = many(entity).map((entityList) => entityList.reduce(mergeTextEntitiesReducer, []));
-  return message.run(state, env);
-});
+  ]),
+).map((entityList) => entityList.reduce(mergeTextEntitiesReducer, []));
 
 const mergeTextEntitiesReducer = (entities: Entity[], entity: Entity) => {
   if (entity.type !== 'Text') {
@@ -870,29 +874,30 @@ interface ParseModifersResult {
   modifiers: Modifier[];
 }
 
+const modifiersParser: P<Modifier[]> = many(
+  spaces
+    .with(
+      choice([
+        meModifier,
+        whisperModifier,
+        checkModifier,
+        rollModifier,
+        inGameModifier,
+        outGameModifier,
+        asModifier,
+        muteModifier,
+      ]),
+    )
+    .skip(spaces),
+);
+
 export const parseModifiers = (
   source: string,
   env: MessageParseEnv = defaultMessageParseEnv,
 ): ParseModifersResult => {
   const state: State = { text: '', rest: source };
-  const parser: P<Modifier[]> = many(
-    spaces
-      .with(
-        choice([
-          meModifier,
-          whisperModifier,
-          checkModifier,
-          rollModifier,
-          inGameModifier,
-          outGameModifier,
-          asModifier,
-          muteModifier,
-        ]),
-      )
-      .skip(spaces),
-  );
 
-  const result = parser.run(state, env);
+  const result = modifiersParser.run(state, env);
 
   if (!result) {
     throw Error('Failed to parse the source: ' + source);

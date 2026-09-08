@@ -265,6 +265,7 @@ export function csvBlob(intl: IntlShape, messages: ExportMessage[]): Blob {
     intl.formatMessage({ defaultMessage: 'Name' }),
     intl.formatMessage({ defaultMessage: 'Nickname' }),
     intl.formatMessage({ defaultMessage: 'Is Master' }) + '?',
+    intl.formatMessage({ defaultMessage: 'Is Action' }) + '?',
     intl.formatMessage({ defaultMessage: 'In Game' }) + '?',
     intl.formatMessage({ defaultMessage: 'Content' }),
     intl.formatMessage({ defaultMessage: 'Whisper' }),

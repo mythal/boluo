@@ -8,7 +8,7 @@ import type {
   Message,
 } from '@boluo/api';
 import { exportComponentReportText } from './component-report';
-import { exportMessage, jsonBlob, txtBlob, type ExportMessage } from './export';
+import { exportMessage, jsonBlob, txtBlob, csvBlob, type ExportMessage } from './export';
 
 const baseIntl = createIntl({ locale: 'en' });
 const intl = {
@@ -160,4 +160,38 @@ test('exports actual changes as text and preserves full history in JSON', async 
   ).text();
   assert.match(text, /hp: 12 → 9/);
   assert.doesNotMatch(text, /\.st hp-3|min:|max:/);
+});
+
+test('CSV headers align with action, in-game status, and message content', async () => {
+  const message: ExportMessage = {
+    id: 'message',
+    sender: {
+      userId: 'user',
+      nickname: 'Alice',
+      characterName: 'Hero',
+      isMaster: false,
+      color: '#000000',
+    },
+    name: 'Hero',
+    mediaUrl: null,
+    inGame: true,
+    isAction: false,
+    isMaster: false,
+    folded: false,
+    created: effect.created,
+    modified: effect.created,
+    text: 'Hello',
+    entities: [{ type: 'Text', start: 0, len: 5, text: 'Hello' }],
+    entryEffects: [],
+    whisperTo: null,
+  };
+  const [header, row] = (await csvBlob(intl, [message]).text()).trim().split('\n');
+  assert.ok(header && row);
+  const columns = header.split(',').map((value) => value.trim());
+  // This fixture contains no embedded commas or quotes.
+  const cells = row.split(',').map((value) => value.slice(1, -1));
+  assert.equal(cells.length, columns.length);
+  assert.equal(cells[columns.indexOf('Is Action?')], 'No');
+  assert.equal(cells[columns.indexOf('In Game?')], 'Yes');
+  assert.equal(cells[columns.indexOf('Content')], 'Hello');
 });

@@ -69,6 +69,12 @@ export class Parser<T, Env> {
 export const createParserCombinators = <Env = unknown>() => {
   class P<T> extends Parser<T, Env> {}
 
+  // Build recursive grammar once, when first used rather than during module initialization.
+  const lazy = <T>(build: () => P<T>): P<T> => {
+    let parser: P<T> | undefined;
+    return new P((state, env) => (parser ??= build()).run(state, env));
+  };
+
   const maybe = <T>(p: P<T | null>) =>
     new P<T | null>((state, env) => {
       const result = p.run(state, env);
@@ -119,5 +125,5 @@ export const createParserCombinators = <Env = unknown>() => {
   const spaces = regex(/^\s*/, true).map(() => null);
   const smallSpaces = regex(/^ {0,2}/, true).map(() => null);
 
-  return { P, maybe, many, many1, choice, regex, end, spaces, smallSpaces };
+  return { P, lazy, maybe, many, many1, choice, regex, end, spaces, smallSpaces };
 };

@@ -243,6 +243,12 @@ const Repeat: React.FC<{ node: RepeatResult }> = ({ node }) => {
 const Node: React.FC<{ node: EvaluatedExprNode }> = ({ node }) => {
   if (node.type === 'Num') {
     return <Num>{node.value}</Num>;
+  } else if (node.type === 'Variable') {
+    return (
+      <span>
+        {node.name}[{node.value}]
+      </span>
+    );
   } else if (node.type === 'Roll') {
     return <RollNode node={node} />;
   } else if (node.type === 'CocRoll') {

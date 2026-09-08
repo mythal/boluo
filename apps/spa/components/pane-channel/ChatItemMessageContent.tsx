@@ -1,3 +1,4 @@
+import { MessageComponentChanges } from './MessageComponentChanges';
 import { type FC, type ReactNode, useMemo } from 'react';
 import { type ParseResult } from '@boluo/interpreter';
 import { Content } from './Content';
@@ -20,6 +21,7 @@ export const ChatItemMessageContent: FC<{
   }, [message.mediaId, message.optimisticMedia]);
   const shouldGuardContent =
     message.whisperToUsers != null && (parsed.text !== '' || media != null);
+  const entities = parsed.entities;
 
   const body = useMemo(() => {
     if (parsed.text === '') return null;
@@ -27,7 +29,8 @@ export const ChatItemMessageContent: FC<{
       <div>
         <Content
           source={parsed.text}
-          entities={parsed.entities}
+          entities={entities}
+          message={{ id: message.id, hasEntryEffects: Boolean(message.hasEntryEffects) }}
           isAction={message.isAction ?? false}
           nameNode={nameNode}
           isArchived={message.folded ?? false}
@@ -37,11 +40,28 @@ export const ChatItemMessageContent: FC<{
         />
       </div>
     );
-  }, [message.folded, message.isAction, message.seed, nameNode, parsed.entities, parsed.text]);
+  }, [
+    message.folded,
+    message.isAction,
+    message.seed,
+    message.id,
+    message.hasEntryEffects,
+    nameNode,
+    entities,
+    parsed.text,
+  ]);
 
   return (
     <ContentGuard active={shouldGuardContent}>
       {body}
+      {message.hasEntryEffects &&
+        !parsed.entities.some(
+          (entity) => entity.type === 'ComponentReport' && entity.report.type === 'Change',
+        ) && (
+          <div>
+            <MessageComponentChanges messageId={message.id} />
+          </div>
+        )}
       {media}
     </ContentGuard>
   );

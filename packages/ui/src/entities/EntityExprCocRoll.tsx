@@ -56,8 +56,15 @@ interface Props {
 
 const UndecidedCocRoll: FC<{ node: ExprOf<'CocRoll'> }> = ({ node }) => {
   let target: ReactNode = null;
-  if (node.target && node.target.type === 'Num') {
-    target = <span className="text-text-muted ml-0.5">≤{node.target.value}</span>;
+  if (node.target && (node.target.type === 'Num' || node.target.type === 'Variable')) {
+    target = (
+      <span className="text-text-muted ml-0.5">
+        ≤
+        {node.target.type === 'Variable'
+          ? `${node.target.name}[${node.target.value}]`
+          : node.target.value}
+      </span>
+    );
   }
   return (
     <span>
@@ -86,11 +93,13 @@ const CocResult: FC<{ node: EvaluatedExprOf<'CocRoll'> }> = ({ node }) => {
       </span>
     );
   }
-  if (node.targetValue) {
+  if (node.targetValue != null) {
     target = (
       <span className="text-text-muted mx-0.5">
         {node.value <= node.targetValue ? '≤' : '>'}
-        {node.targetValue}
+        {node.target?.type === 'Variable'
+          ? `${node.target.name}[${node.targetValue}]`
+          : node.targetValue}
       </span>
     );
     successLevel = (

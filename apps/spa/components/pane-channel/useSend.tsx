@@ -93,13 +93,8 @@ export const useSend = () => {
       }
     }
 
-    const parsedForSend = parse(composeState.source, true, {
+    const parsedForSend = parse(composeState.source, {
       defaultDiceFace: defaultDiceFaceRef.current,
-      resolveUsername: (username) => {
-        const member = channelMembersMapRef.current.get(username);
-        if (member == null) return null;
-        return member.user.nickname;
-      },
     });
     const { text, entities, whisperToUsernames } = parsedForSend;
     const { speaker, issue: speakerIssue } = resolveSpeaker({

@@ -1,9 +1,10 @@
 import { recordError } from '../error';
-import { type Env, parse, type ParseResult } from '@boluo/interpreter';
+import { parse, type ParseResult, type Variables } from '@boluo/interpreter';
 
 export interface ParserArguments {
   source: string;
   defaultDiceFace: number;
+  variables?: Variables;
 }
 
 export type ParserWorkerResponse =
@@ -12,13 +13,15 @@ export type ParserWorkerResponse =
 const worker = self as unknown as Worker;
 worker.addEventListener(
   'message',
-  ({ data: { source, defaultDiceFace } }: MessageEvent<ParserArguments>) => {
+  ({ data: { source, defaultDiceFace, variables } }: MessageEvent<ParserArguments>) => {
     try {
-      let env: Env | undefined;
-      if (defaultDiceFace) {
-        env = { defaultDiceFace, resolveUsername: () => 'unknown' };
-      }
-      worker.postMessage({ type: 'result', data: parse(source, true, env) });
+      worker.postMessage({
+        type: 'result',
+        data: parse(source, {
+          defaultDiceFace: defaultDiceFace || 20,
+          variables,
+        }),
+      });
     } catch (e) {
       recordError('Error in parsing: ', { source, error: e });
       const message = e instanceof Error ? e.message : String(e);

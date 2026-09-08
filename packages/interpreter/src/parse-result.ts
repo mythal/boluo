@@ -1,5 +1,6 @@
+import type { ParsedStateCommand } from './state-command';
 import type { Entities } from '@boluo/api';
-import type { Modifier } from './parser';
+import type { Modifier } from './message-parser';
 
 export type AsTarget =
   | { type: 'TemporaryName'; name: string }
@@ -18,6 +19,7 @@ export interface ParseResult {
   modifiers: Modifier[];
   whisperToUsernames: string[] | null;
   broadcast: boolean;
+  stateCommand?: ParsedStateCommand;
 }
 
 export const emptyParseResult: ParseResult = {

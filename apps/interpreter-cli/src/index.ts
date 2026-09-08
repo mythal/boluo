@@ -26,7 +26,7 @@ const main = async () => {
     process.exitCode = 1;
     return;
   }
-  const { entities } = parse(source, true);
+  const { entities } = parse(source);
   process.stdout.write(formatJson({ entities, text: source }));
   if (!process.stdout.isTTY) {
     process.stdout.write('\n');

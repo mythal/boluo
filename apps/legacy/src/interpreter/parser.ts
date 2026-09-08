@@ -26,12 +26,10 @@ interface State {
 
 export interface Env {
   defaultDiceFace: number;
-  resolveUsername: (name: string) => string | null;
 }
 
 const emptyEnv: Env = {
   defaultDiceFace: 20,
-  resolveUsername: () => null,
 };
 
 // Parser
@@ -654,7 +652,7 @@ const initState = (source: string): State => {
   return { text: '', rest: source };
 };
 
-export const parse = (source: string, parseExpr = true, env: Env = emptyEnv): ParseResult => {
+export const parse = (source: string, env: Env = emptyEnv): ParseResult => {
   let state: State = initState(source);
   const parser: P<Entity[]> = choice([rollCommand, message]);
 

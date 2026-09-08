@@ -1,6 +1,7 @@
 use compact_str::CompactString;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use shared_types::components::ComponentPayload;
 use std::collections::BTreeMap;
 use std::ops::Deref;
 use time::OffsetDateTime;
@@ -169,82 +170,45 @@ impl EntryComponentsSnapshot {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, specta::Type)]
-#[serde(
-    tag = "payloadType",
-    rename_all = "SCREAMING_SNAKE_CASE",
-    rename_all_fields = "camelCase"
-)]
-pub enum EntryComponent {
-    Json {
-        data: Value,
-        schema_version: i32,
-        version: Uuid,
-        modified: OffsetDateTime,
-    },
-    Asset {
-        asset_id: Uuid,
-        version: Uuid,
-        modified: OffsetDateTime,
-    },
+#[serde(rename_all = "camelCase")]
+pub struct EntryComponent {
+    #[serde(flatten)]
+    pub payload: ComponentPayload,
+    pub version: Uuid,
+    pub modified: OffsetDateTime,
 }
 
 impl EntryComponent {
     fn estimated_memory_bytes(&self) -> usize {
         std::mem::size_of::<Self>()
-            + match self {
-                Self::Json { data, .. } => crate::utils::estimated_json_value_size(data),
-                Self::Asset { .. } => 0,
+            + match &self.payload {
+                ComponentPayload::Json { data, .. } => {
+                    crate::utils::estimated_json_value_size(data)
+                }
+                ComponentPayload::Asset { .. } => 0,
             }
     }
 
-    fn history_payload(&self) -> Value {
-        match self {
-            Self::Json {
-                data,
-                schema_version,
-                ..
-            } => json_component_history_payload(data, *schema_version),
-            Self::Asset { asset_id, .. } => asset_component_history_payload(*asset_id),
-        }
-    }
-
     #[cfg(test)]
-    pub(crate) fn json_data(&self) -> serde_json::Value {
-        match self {
-            Self::Json { data, .. } => data.clone(),
-            Self::Asset { .. } => panic!("expected a JSON Entry Component"),
+    pub(crate) fn json_data(&self) -> Value {
+        match &self.payload {
+            ComponentPayload::Json { data, .. } => data.clone(),
+            ComponentPayload::Asset { .. } => panic!("expected a JSON Entry Component"),
         }
     }
 
     #[cfg(test)]
     pub(crate) fn schema_version(&self) -> i32 {
-        match self {
-            Self::Json { schema_version, .. } => *schema_version,
-            Self::Asset { .. } => panic!("expected a JSON Entry Component"),
+        match self.payload {
+            ComponentPayload::Json { schema_version, .. } => schema_version,
+            ComponentPayload::Asset { .. } => panic!("expected a JSON Entry Component"),
         }
     }
 
     #[cfg(test)]
     pub(crate) fn version(&self) -> Uuid {
-        match self {
-            Self::Json { version, .. } | Self::Asset { version, .. } => *version,
-        }
+        self.version
     }
-}
-
-fn json_component_history_payload(data: &Value, schema_version: i32) -> Value {
-    serde_json::json!({
-        "payloadType": "JSON",
-        "schemaVersion": schema_version,
-        "data": data,
-    })
-}
-
-fn asset_component_history_payload(asset_id: Uuid) -> Value {
-    serde_json::json!({
-        "payloadType": "ASSET",
-        "assetId": asset_id,
-    })
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, specta::Type, sqlx::FromRow)]
@@ -372,9 +336,11 @@ impl EntryComponentJoinedRow {
                     );
                     return None;
                 };
-                EntryComponent::Json {
-                    data,
-                    schema_version,
+                EntryComponent {
+                    payload: ComponentPayload::Json {
+                        data,
+                        schema_version,
+                    },
                     version: self.version,
                     modified: self.modified,
                 }
@@ -388,8 +354,8 @@ impl EntryComponentJoinedRow {
                     );
                     return None;
                 };
-                EntryComponent::Asset {
-                    asset_id,
+                EntryComponent {
+                    payload: ComponentPayload::Asset { asset_id },
                     version: self.version,
                     modified: self.modified,
                 }
@@ -1219,7 +1185,10 @@ impl Entry {
                             .await?;
                             history_changes.push(EntryComponentHistoryChange::set(
                                 component_type,
-                                json_component_history_payload(data, schema_version),
+                                ComponentPayload::Json {
+                                    data: data.clone(),
+                                    schema_version,
+                                },
                             ));
                         }
                         EntryComponentPayloadInput::Asset { asset_id } => {
@@ -1236,7 +1205,9 @@ impl Entry {
                             }
                             history_changes.push(EntryComponentHistoryChange::set(
                                 component_type,
-                                asset_component_history_payload(*asset_id),
+                                ComponentPayload::Asset {
+                                    asset_id: *asset_id,
+                                },
                             ));
                         }
                     }
@@ -1294,11 +1265,11 @@ impl EntryComponentHistoryAction {
 pub struct EntryComponentHistoryChange {
     pub component_type: CompactString,
     pub action: EntryComponentHistoryAction,
-    pub payload: Option<Value>,
+    pub payload: Option<ComponentPayload>,
 }
 
 impl EntryComponentHistoryChange {
-    fn set(component_type: &str, payload: Value) -> Self {
+    fn set(component_type: &str, payload: ComponentPayload) -> Self {
         Self {
             component_type: CompactString::new(component_type),
             action: EntryComponentHistoryAction::Set,
@@ -1326,7 +1297,7 @@ pub fn components_as_set_history_changes(
     components
         .iter()
         .map(|(component_type, component)| {
-            EntryComponentHistoryChange::set(component_type, component.history_payload())
+            EntryComponentHistoryChange::set(component_type, component.payload.clone())
         })
         .collect()
 }
@@ -1341,9 +1312,9 @@ pub struct EntryComponentHistory {
     pub key: String,
     pub component_type: String,
     pub action: EntryComponentHistoryAction,
-    pub payload: Option<Value>,
+    pub payload: Option<ComponentPayload>,
     /// Payload from the preceding recorded change.
-    pub before_payload: Option<Value>,
+    pub before_payload: Option<ComponentPayload>,
     #[specta(type = OffsetDateTime)]
     #[serde(with = "time::serde::rfc3339")]
     pub created: OffsetDateTime,
@@ -1367,7 +1338,7 @@ impl EntryComponentHistory {
                 key,
                 &change.component_type,
                 change.action.as_str(),
-                change.payload,
+                change.payload.as_ref().map(sqlx::types::Json) as _,
             )
             .execute(&mut **db)
             .await?;
@@ -1463,6 +1434,44 @@ mod tests {
     use serde_json::json;
     use shared_types::messages::Entities;
 
+    #[test]
+    fn component_payload_is_shared_without_changing_the_wire_shape() {
+        let version = Uuid::from_u128(1);
+        let modified = OffsetDateTime::UNIX_EPOCH;
+        for payload in [
+            ComponentPayload::Json {
+                schema_version: 2,
+                data: json!({"text": "Hello"}),
+            },
+            ComponentPayload::Json {
+                schema_version: 1,
+                data: Value::Null,
+            },
+            ComponentPayload::Asset {
+                asset_id: Uuid::from_u128(2),
+            },
+        ] {
+            let component = EntryComponent {
+                payload: payload.clone(),
+                version,
+                modified,
+            };
+            let mut expected = serde_json::to_value(&payload).unwrap();
+            expected["version"] = json!(version);
+            expected["modified"] = json!(modified);
+            assert_eq!(serde_json::to_value(&component).unwrap(), expected);
+            assert_eq!(
+                serde_json::from_value::<EntryComponent>(expected).unwrap(),
+                component
+            );
+            let changes = components_as_set_history_changes(&BTreeMap::from([(
+                CompactString::new("example/component"),
+                component,
+            )]));
+            assert_eq!(changes[0].payload.as_ref(), Some(&payload));
+        }
+    }
+
     #[sqlx::test(migrator = "crate::db::MIGRATOR")]
     async fn db_test_component_history_previous_payload(pool: sqlx::PgPool) {
         let user = user(&pool).await;
@@ -1478,7 +1487,10 @@ mod tests {
         .unwrap();
         let entry_id = Uuid::new_v4();
         let replacement_id = Uuid::new_v4();
-        let counter = |value| json_component_history_payload(&json!({"value": value}), 1);
+        let counter = |value| ComponentPayload::Json {
+            data: json!({"value": value}),
+            schema_version: 1,
+        };
         // Identical timestamps exercise the effect-id tie breaker. A different key
         // still belongs to the same Entry; a reused key on another Entry does not.
         struct Case {
@@ -1487,7 +1499,7 @@ mod tests {
             entry_id: Uuid,
             key: &'static str,
             change: EntryComponentHistoryChange,
-            before_payload: Option<Value>,
+            before_payload: Option<ComponentPayload>,
         }
         let cases = [
             Case {
@@ -1931,7 +1943,7 @@ mod tests {
         assert_eq!(matches[0].metadata.id, portrait.id);
         assert!(matches!(
             matches[0].component,
-            EntryComponent::Asset { asset_id, .. } if asset_id == image_asset.id
+            EntryComponent { payload: ComponentPayload::Asset { asset_id }, .. } if asset_id == image_asset.id
         ));
         assert_eq!(
             Entry::first_asset_by_component(
@@ -2102,7 +2114,7 @@ mod tests {
         assert_eq!(history.history_changes.len(), 1);
         assert_eq!(
             history.history_changes[0].payload,
-            Some(json!({"payloadType": "ASSET", "assetId": asset.id}))
+            Some(ComponentPayload::Asset { asset_id: asset.id })
         );
         let effect = EntryEffect::create(&mut transaction, space.id, space.scope_id, user.id)
             .await
@@ -2125,15 +2137,17 @@ mod tests {
         assert_eq!(recorded_history.len(), 1);
         assert_eq!(
             recorded_history[0].payload,
-            Some(json!({"payloadType": "ASSET", "assetId": asset.id}))
+            Some(ComponentPayload::Asset { asset_id: asset.id })
         );
 
         let entry = Entry::get_by_id(&pool, space.scope_id, entry.id)
             .await
             .expect("load entry failed")
             .expect("entry missing");
-        let EntryComponent::Asset {
-            asset_id, version, ..
+        let EntryComponent {
+            payload: ComponentPayload::Asset { asset_id },
+            version,
+            ..
         } = entry.components["example/illustration"]
         else {
             panic!("expected Asset Component");
@@ -2141,7 +2155,7 @@ mod tests {
         assert_eq!(asset_id, asset.id);
         assert!(matches!(
             entry.components.get("example/thumbnail"),
-            Some(EntryComponent::Asset { asset_id, .. }) if *asset_id == asset.id
+            Some(EntryComponent { payload: ComponentPayload::Asset { asset_id }, .. }) if *asset_id == asset.id
         ));
         let cached = EntryComponentsSnapshot::load(&pool, entry.id)
             .await
@@ -2149,7 +2163,7 @@ mod tests {
             .to_response();
         assert!(matches!(
             cached.get("example/illustration"),
-            Some(EntryComponent::Asset { asset_id, .. }) if *asset_id == asset.id
+            Some(EntryComponent { payload: ComponentPayload::Asset { asset_id }, .. }) if *asset_id == asset.id
         ));
         let mut delete_transaction = pool.begin().await.expect("begin failed");
         let delete_error = Asset::delete(&mut delete_transaction, asset.id)
@@ -2722,11 +2736,10 @@ mod tests {
             row.component_type == "core/counter"
                 && row.action == EntryComponentHistoryAction::Set
                 && row.payload
-                    == Some(json!({
-                        "payloadType": "JSON",
-                        "schemaVersion": 1,
-                        "data": {"value": 10}
-                    }))
+                    == Some(ComponentPayload::Json {
+                        schema_version: 1,
+                        data: json!({"value": 10}),
+                    })
         }));
         assert!(history.iter().any(|row| {
             row.component_type == "core/counter"
@@ -2737,11 +2750,10 @@ mod tests {
             row.component_type == "example/custom"
                 && row.action == EntryComponentHistoryAction::Set
                 && row.payload
-                    == Some(json!({
-                        "payloadType": "JSON",
-                        "schemaVersion": 2,
-                        "data": {"anything": "updated"}
-                    }))
+                    == Some(ComponentPayload::Json {
+                        schema_version: 2,
+                        data: json!({"anything": "updated"}),
+                    })
         }));
 
         let entry_history = EntryHistory::list_by_scope(&pool, space_scope.id, None)

@@ -7,10 +7,11 @@ edition = "2024"
 name = "shared_types"
 
 [features]
-# Enables the Postgres codec for `Entities`.
+# Enables Postgres codecs for message entities and Component payloads.
 sqlx = ["dep:sqlx", "dep:tracing"]
 
 [dependencies]
+compact_str = { version = "0.10", features = ["serde"] }
 serde.workspace = true
 serde_json.workspace = true
 specta.workspace = true

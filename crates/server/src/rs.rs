@@ -116,6 +116,8 @@ fn opaque_target(named_type: &specta::datatype::NamedDataType) -> Option<String>
     let name = &named_type.name;
     if named_type.module_path.contains("shared_types::entities") {
         Some(format!("shared_types::entities::{name}"))
+    } else if named_type.module_path.contains("shared_types::components") {
+        Some(format!("shared_types::components::{name}"))
     } else if named_type.module_path.contains("shared_types::preview") {
         Some(format!("shared_types::preview::{name}"))
     } else if name == "Entities" {

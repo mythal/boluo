@@ -1,5 +1,5 @@
 import type { ComponentPayload, ComponentReportEntity, EntryEffectHistory } from '@boluo/api';
-import { componentTargetsMatch } from '@boluo/common/components/target';
+import { componentRefsMatch } from '@boluo/common/components/ref';
 import { readCounterPayload } from '@boluo/common/components/counter';
 import type { IntlShape } from 'react-intl';
 
@@ -22,10 +22,10 @@ export const exportComponentReportText = (
   if (report.type === 'Change') {
     const history = effects.flatMap((effect) => effect.componentHistory);
     return report.items
-      .flatMap((target) => {
-        const changes = history.filter((change) => componentTargetsMatch(target, change));
+      .flatMap((component) => {
+        const changes = history.filter((change) => componentRefsMatch(component, change));
         if (!changes.length) {
-          return `${target.key}: ${intl.formatMessage({ defaultMessage: 'Change not confirmed' })}`;
+          return `${component.key}: ${intl.formatMessage({ defaultMessage: 'Change not confirmed' })}`;
         }
         return changes.map((change) => {
           const before = payloadText(intl, change.componentType, change.beforePayload);
@@ -42,13 +42,13 @@ export const exportComponentReportText = (
   return (
     report.items
       .map((item) => {
-        const name = item.displayName || item.target.key;
-        const label = name === item.target.key ? name : `${name} (${item.target.key})`;
+        const name = item.displayName || item.component.key;
+        const label = name === item.component.key ? name : `${name} (${item.component.key})`;
         if ('payload' in item) {
-          return `${label}: ${payloadText(intl, item.target.componentType, item.payload)}`;
+          return `${label}: ${payloadText(intl, item.component.componentType, item.payload)}`;
         }
-        const before = payloadText(intl, item.target.componentType, item.before);
-        const after = payloadText(intl, item.target.componentType, item.after);
+        const before = payloadText(intl, item.component.componentType, item.before);
+        const after = payloadText(intl, item.component.componentType, item.after);
         return `${intl.formatMessage({ defaultMessage: 'Preview' })}: ${label}: ${before} → ${after}`;
       })
       .join('\n') || intl.formatMessage({ defaultMessage: 'No components.' })

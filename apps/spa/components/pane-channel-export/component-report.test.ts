@@ -25,7 +25,7 @@ const intl = {
       options,
     )) as typeof baseIntl.formatMessage,
 };
-const target = { scopeId: 'scope', entryId: 'hp-id', key: 'hp', componentType: 'core/counter' };
+const component = { scopeId: 'scope', entryId: 'hp-id', key: 'hp', componentType: 'core/counter' };
 const payload = (value: number): ComponentPayload => ({
   payloadType: 'JSON',
   schemaVersion: 1,
@@ -34,7 +34,7 @@ const payload = (value: number): ComponentPayload => ({
 const report: ComponentReportEntity = {
   start: 0,
   len: 8,
-  report: { type: 'Change', items: [target] },
+  report: { type: 'Change', items: [component] },
 };
 const effect: EntryEffectHistory = {
   id: 'effect',
@@ -46,7 +46,7 @@ const effect: EntryEffectHistory = {
   entryHistory: [],
   componentHistory: [
     {
-      ...target,
+      ...component,
       entryEffectId: 'effect',
       operatorId: 'user',
       created: '2026-01-01T00:00:00Z',
@@ -63,8 +63,8 @@ test('exports committed changes by identity, without bounds and with unconfirmed
     report: {
       type: 'Change',
       items: [
-        { ...target, key: 'old-name' },
-        { ...target, entryId: 'missing', key: 'mp' },
+        { ...component, key: 'old-name' },
+        { ...component, entryId: 'missing', key: 'mp' },
       ],
     },
   };
@@ -102,12 +102,12 @@ test('preserves each recorded change and distinguishes removal from JSON null', 
       type: 'Snapshot',
       items: [
         {
-          target: { ...target, componentType: 'example/text' },
+          component: { ...component, componentType: 'example/text' },
           displayName: 'Note',
           payload: { payloadType: 'JSON', schemaVersion: 1, data: null },
         },
         {
-          target: { ...target, componentType: 'core/portrait' },
+          component: { ...component, componentType: 'core/portrait' },
           displayName: 'Portrait',
           payload: { payloadType: 'ASSET', assetId: 'asset-id' },
         },

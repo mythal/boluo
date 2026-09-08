@@ -1,5 +1,17 @@
+use compact_str::CompactString;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+
+#[derive(Debug, Serialize, Deserialize, Clone, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct ComponentRef {
+    pub scope_id: Uuid,
+    pub entry_id: Option<Uuid>,
+    #[specta(type = String)]
+    pub key: CompactString,
+    #[specta(type = String)]
+    pub component_type: CompactString,
+}
 
 // Payload shared by live Components, history, and message entities.
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, specta::Type)]

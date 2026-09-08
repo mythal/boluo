@@ -1,7 +1,6 @@
-use crate::components::ComponentPayload;
+use crate::components::{ComponentPayload, ComponentRef};
 use compact_str::CompactString;
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
 
 #[derive(Debug, Serialize, Deserialize, Clone, specta::Type)]
 #[serde(untagged)]
@@ -41,19 +40,8 @@ pub struct ExprEntity {
 
 #[derive(Debug, Serialize, Deserialize, Clone, specta::Type)]
 #[serde(rename_all = "camelCase")]
-pub struct ComponentTarget {
-    pub scope_id: Uuid,
-    pub entry_id: Option<Uuid>,
-    #[specta(type = String)]
-    pub key: CompactString,
-    #[specta(type = String)]
-    pub component_type: CompactString,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone, specta::Type)]
-#[serde(rename_all = "camelCase")]
 pub struct ComponentSnapshot {
-    pub target: ComponentTarget,
+    pub component: ComponentRef,
     #[specta(type = String)]
     pub display_name: CompactString,
     pub payload: ComponentPayload,
@@ -62,7 +50,7 @@ pub struct ComponentSnapshot {
 #[derive(Debug, Serialize, Deserialize, Clone, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct ComponentChangePreview {
-    pub target: ComponentTarget,
+    pub component: ComponentRef,
     #[specta(type = String)]
     pub display_name: CompactString,
     pub before: Option<ComponentPayload>,
@@ -74,7 +62,7 @@ pub struct ComponentChangePreview {
 pub enum ComponentReport {
     Snapshot { items: Vec<ComponentSnapshot> },
     // Resolve values from the message's committed effects.
-    Change { items: Vec<ComponentTarget> },
+    Change { items: Vec<ComponentRef> },
     ChangePreview { items: Vec<ComponentChangePreview> },
 }
 
@@ -363,12 +351,12 @@ mod tests {
 
     #[test]
     fn component_report_entities_round_trip() {
-        let target = serde_json::json!({
+        let component = serde_json::json!({
             "scopeId": "00000000-0000-0000-0000-000000000002",
             "entryId": "00000000-0000-0000-0000-000000000001",
             "key": "hp", "componentType": "core/counter"
         });
-        let text_target = serde_json::json!({
+        let text_component = serde_json::json!({
             "scopeId": "00000000-0000-0000-0000-000000000002",
             "entryId": null, "key": "description", "componentType": "example/text"
         });
@@ -377,16 +365,16 @@ mod tests {
         let asset = serde_json::json!({"payloadType": "ASSET", "assetId": "00000000-0000-0000-0000-000000000003"});
         for report in [
             serde_json::json!({"type": "Snapshot", "items": [
-                {"target": target, "displayName": "血量", "payload": counter},
-                {"target": text_target, "displayName": "Description", "payload": text}
+                {"component": component, "displayName": "血量", "payload": counter},
+                {"component": text_component, "displayName": "Description", "payload": text}
             ]}),
-            serde_json::json!({"type": "Change", "items": [target, text_target]}),
+            serde_json::json!({"type": "Change", "items": [component, text_component]}),
             serde_json::json!({"type": "ChangePreview", "items": [
-                {"target": target, "displayName": "血量", "before": counter, "after": null},
-                {"target": text_target, "displayName": "Description", "before": null, "after": text}
+                {"component": component, "displayName": "血量", "before": counter, "after": null},
+                {"component": text_component, "displayName": "Description", "before": null, "after": text}
             ]}),
             serde_json::json!({"type": "Snapshot", "items": [
-                {"target": target, "displayName": "Portrait", "payload": asset}
+                {"component": component, "displayName": "Portrait", "payload": asset}
             ]}),
         ] {
             let json = serde_json::json!({"type": "ComponentReport", "start": 0, "len": 8, "report": report});

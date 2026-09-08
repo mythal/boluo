@@ -1343,6 +1343,8 @@ pub struct EntryComponentHistory {
     pub component_type: String,
     pub action: EntryComponentHistoryAction,
     pub payload: Option<Value>,
+    /// Payload from the preceding recorded change.
+    pub before_payload: Option<Value>,
     #[specta(type = OffsetDateTime)]
     #[serde(with = "time::serde::rfc3339")]
     pub created: OffsetDateTime,
@@ -1453,6 +1455,135 @@ mod tests {
     use crate::users::User;
     use serde_json::json;
     use shared_types::messages::Entities;
+
+    #[sqlx::test(migrator = "crate::db::MIGRATOR")]
+    async fn db_test_component_history_previous_payload(pool: sqlx::PgPool) {
+        let user = user(&pool).await;
+        let space = Space::create(
+            &pool,
+            format!("history_{}", &Uuid::new_v4().simple().to_string()[..8]),
+            &user.id,
+            "History test".into(),
+            None,
+            Some("d20"),
+        )
+        .await
+        .unwrap();
+        let entry_id = Uuid::new_v4();
+        let replacement_id = Uuid::new_v4();
+        let counter = |value| json_component_history_payload(&json!({"value": value}), 1);
+        // Identical timestamps exercise the effect-id tie breaker. A different key
+        // still belongs to the same Entry; a reused key on another Entry does not.
+        struct Case {
+            name: &'static str,
+            effect_id: Uuid,
+            entry_id: Uuid,
+            key: &'static str,
+            change: EntryComponentHistoryChange,
+            before_payload: Option<Value>,
+        }
+        let cases = [
+            Case {
+                name: "initial value",
+                effect_id: Uuid::from_u128(1),
+                entry_id,
+                key: "hp",
+                change: EntryComponentHistoryChange::set("core/counter", counter(12)),
+                before_payload: None,
+            },
+            Case {
+                name: "another component has independent history",
+                effect_id: Uuid::from_u128(2),
+                entry_id,
+                key: "hp",
+                change: EntryComponentHistoryChange::set("other/component", counter(100)),
+                before_payload: None,
+            },
+            Case {
+                name: "renaming preserves component history",
+                effect_id: Uuid::from_u128(3),
+                entry_id,
+                key: "health",
+                change: EntryComponentHistoryChange::set("core/counter", counter(9)),
+                before_payload: Some(counter(12)),
+            },
+            Case {
+                name: "removal retains the previous value",
+                effect_id: Uuid::from_u128(4),
+                entry_id,
+                key: "health",
+                change: EntryComponentHistoryChange::remove("core/counter"),
+                before_payload: Some(counter(9)),
+            },
+            Case {
+                name: "recreation does not skip the removal",
+                effect_id: Uuid::from_u128(5),
+                entry_id,
+                key: "health",
+                change: EntryComponentHistoryChange::set("core/counter", counter(20)),
+                before_payload: None,
+            },
+            Case {
+                name: "reusing a key does not inherit another entry's history",
+                effect_id: Uuid::from_u128(6),
+                entry_id: replacement_id,
+                key: "hp",
+                change: EntryComponentHistoryChange::set("core/counter", counter(30)),
+                before_payload: None,
+            },
+        ];
+        let mut transaction = pool.begin().await.unwrap();
+        for case in &cases {
+            sqlx::query("INSERT INTO entry_effects (id, space_id, scope_id, created) VALUES ($1, $2, $3, '2026-01-01T00:00:00Z')")
+                .bind(case.effect_id).bind(space.id).bind(space.scope_id)
+                .execute(&mut *transaction).await.unwrap();
+            EntryComponentHistory::record(
+                &mut transaction,
+                case.effect_id,
+                case.entry_id,
+                case.key,
+                std::slice::from_ref(&case.change),
+            )
+            .await
+            .unwrap();
+        }
+        transaction.commit().await.unwrap();
+
+        for case in &cases {
+            // Only the requested effect is returned; its predecessor is outside
+            // that filter and later history must never supply the before value.
+            let history = EntryComponentHistory::list_by_effects(&pool, &[case.effect_id])
+                .await
+                .unwrap();
+            assert_eq!(history.len(), 1, "{}", case.name);
+            assert_eq!(
+                history[0].before_payload, case.before_payload,
+                "{}",
+                case.name
+            );
+        }
+        let assert_before_payload = |row: &EntryComponentHistory| {
+            let case = cases
+                .iter()
+                .find(|case| case.effect_id == row.entry_effect_id)
+                .expect("history must belong to a fixture effect");
+            assert_eq!(row.before_payload, case.before_payload, "{}", case.name);
+        };
+        let history = EntryComponentHistory::list_by_entry(&pool, space.scope_id, entry_id)
+            .await
+            .unwrap();
+        assert_eq!(history.len(), 5);
+        for row in &history {
+            assert_before_payload(row);
+        }
+        let history = EntryComponentHistory::list_by_key(&pool, space.scope_id, "health")
+            .await
+            .unwrap();
+        assert_eq!(history.len(), 3);
+        for row in &history {
+            assert_before_payload(row);
+        }
+    }
 
     fn components<const N: usize>(
         values: [(&str, serde_json::Value); N],

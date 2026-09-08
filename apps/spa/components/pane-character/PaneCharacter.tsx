@@ -26,7 +26,7 @@ import { CharacterEntryList } from './CharacterEntryList';
 import { CharacterPortraitEditor } from './CharacterPortraitEditor';
 import { CharacterPortraitGallery } from './CharacterPortraitGallery';
 import { CharacterUsageList } from './CharacterUsageList';
-import { useCanEditCharacter } from './character-permissions';
+import { useCanEditCharacter } from '../../characters/permissions';
 import { CharacterAccessSummary } from './CharacterAccessFields';
 import { CharacterArchiveButton } from './CharacterArchiveButton';
 import { useCharacterMutations } from './useCharacterMutations';

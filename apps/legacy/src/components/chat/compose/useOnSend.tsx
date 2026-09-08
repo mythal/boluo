@@ -97,8 +97,7 @@ export const useOnSend = () => {
       const mediaId = uploaded.value;
       const chatDiceType = channel.channel.defaultDiceType;
       const defaultDiceFace = chatDiceType ? getDiceFace(chatDiceType) : 20;
-      const { text, entities } = parse(source, true, {
-        resolveUsername: () => null,
+      const { text, entities } = parse(source, {
         defaultDiceFace,
       });
 

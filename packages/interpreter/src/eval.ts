@@ -24,7 +24,7 @@ export const evaluate = (node: ExprNode, rng: Prando, layer = 0): EvaluatedExprN
   if (layer > 64) {
     throw TOO_MUCH_LAYER;
   }
-  if (node.type === 'Num') {
+  if (node.type === 'Num' || node.type === 'Variable') {
     return node;
   } else if (node.type === 'Roll') {
     if (node.counter > MAX_DICE_COUNTER || node.face > 121072) {
@@ -255,6 +255,8 @@ export const nodeToText = (intl: IntlShape, node: EvaluatedExprNode): string => 
     return `${toText(node.l)}${node.op}${toText(node.r)}=${node.value}`;
   } else if (node.type === 'Num') {
     return String(node.value);
+  } else if (node.type === 'Variable') {
+    return `${node.name}[${node.value}]`;
   } else if (node.type === 'SubExpr') {
     return `(${toText(node.evaluatedNode)})=${node.value}`;
   } else if (node.type === 'FateRoll') {
@@ -269,8 +271,11 @@ export const nodeToText = (intl: IntlShape, node: EvaluatedExprNode): string => 
         ? ''
         : `=${node.rolled}${typeDisplay}[${node.modifiers.join(', ')}]`;
     let successLevel: string = '';
-    if (node.targetValue) {
-      const tagetLabel = intl.formatMessage({ defaultMessage: 'target' });
+    if (node.targetValue != null) {
+      const tagetLabel =
+        node.target?.type === 'Variable'
+          ? `${node.target.name}[${node.targetValue}]`
+          : String(node.targetValue);
       const successLevelLabel = cocSuccessLevelDisplay(intl, node.value, node.targetValue);
       successLevel = `: (${tagetLabel})${successLevelLabel}`;
     }

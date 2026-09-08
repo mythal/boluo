@@ -10,7 +10,7 @@ import { useFieldArray, useFormContext, type FieldError } from 'react-hook-form'
 import { FormattedMessage, useIntl } from 'react-intl';
 import type { CharacterEditValues } from './character-edit-types';
 import { shouldCheckCharacterIdentifier } from './character-edit-validation';
-import { isValidEntryKey } from './entry-metadata';
+import { isValidEntryKey } from '../../entries/metadata';
 
 const MAX_ALIASES = 4;
 

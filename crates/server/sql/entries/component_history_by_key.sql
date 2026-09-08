@@ -6,8 +6,8 @@ SELECT
     history.key,
     history.component_type,
     history.action AS "action!: EntryComponentHistoryAction",
-    history.payload,
-    previous.payload AS "before_payload?",
+    history.payload AS "payload?: ComponentPayload",
+    previous.payload AS "before_payload?: ComponentPayload",
     effect.created
 FROM entry_component_history history
 JOIN entry_effects effect ON effect.id = history.entry_effect_id

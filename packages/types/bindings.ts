@@ -207,6 +207,39 @@ export type CocRollResult = {
 
 export type CocRollSubType = 'NORMAL' | 'BONUS' | 'BONUS_2' | 'PENALTY' | 'PENALTY_2';
 
+export type ComponentChangePreview = {
+  target: ComponentTarget;
+  displayName: string;
+  before: ComponentPayload | null;
+  after: ComponentPayload | null;
+};
+
+export type ComponentPayload =
+  | { payloadType: 'JSON'; schemaVersion: number; data: Value }
+  | { payloadType: 'ASSET'; assetId: string };
+
+export type ComponentReport =
+  | { type: 'Snapshot'; items: ComponentSnapshot[] }
+  | { type: 'Change'; items: ComponentTarget[] }
+  | { type: 'ChangePreview'; items: ComponentChangePreview[] };
+
+export type ComponentReportEntity = {
+  report: ComponentReport;
+} & Span;
+
+export type ComponentSnapshot = {
+  target: ComponentTarget;
+  displayName: string;
+  payload: ComponentPayload;
+};
+
+export type ComponentTarget = {
+  scopeId: string;
+  entryId: string | null;
+  key: string;
+  componentType: string;
+};
+
 export type ConfirmEmailChange = {
   token: string;
 };
@@ -458,15 +491,19 @@ export type Entity =
     } & SpanWithChild)
   | ({
       type: 'Expr';
-    } & ExprEntity);
+    } & ExprEntity)
+  | ({
+      type: 'ComponentReport';
+    } & ComponentReportEntity);
 
 export type Entry = {
   components: { [key in string]: EntryComponent };
 } & EntryMetadata;
 
-export type EntryComponent =
-  | { payloadType: 'JSON'; data: Value; schemaVersion: number; version: string; modified: string }
-  | { payloadType: 'ASSET'; assetId: string; version: string; modified: string };
+export type EntryComponent = {
+  version: string;
+  modified: string;
+} & ComponentPayload;
 
 export type EntryComponentHistory = {
   entryEffectId: string;
@@ -476,9 +513,9 @@ export type EntryComponentHistory = {
   key: string;
   componentType: string;
   action: EntryComponentHistoryAction;
-  payload: Value | null;
+  payload: ComponentPayload | null;
   /**  Payload from the preceding recorded change. */
-  beforePayload: Value | null;
+  beforePayload: ComponentPayload | null;
   created: string;
 };
 
@@ -565,9 +602,10 @@ export type EvaluatedExprNode =
   | ({
       type: 'Binary';
     } & BinaryResult)
-  | ({ type: 'Num'; value: number } & { node?: never })
-  | { type: 'Max'; node: RollResultNode; value: number }
-  | { type: 'Min'; node: RollResultNode; value: number }
+  | ({ type: 'Variable'; name: string; value: number } & { node?: never })
+  | ({ type: 'Num'; value: number } & { name?: never; node?: never })
+  | ({ type: 'Max'; node: RollResultNode; value: number } & { name?: never })
+  | ({ type: 'Min'; node: RollResultNode; value: number } & { name?: never })
   | ({
       type: 'SubExpr';
     } & SubExprResult)
@@ -583,7 +621,7 @@ export type EvaluatedExprNode =
   | ({
       type: 'Repeat';
     } & RepeatResult)
-  | ({ type: 'Unknown'; value: number } & { node?: never });
+  | ({ type: 'Unknown'; value: number } & { name?: never; node?: never });
 
 export type EventId = {
   /**
@@ -616,21 +654,22 @@ export type ExprNode =
   | ({
       type: 'Binary';
     } & Binary)
-  | ({ type: 'Num'; value: number } & { node?: never })
-  | ({ type: 'Max'; node: RollNode } & { value?: never })
-  | ({ type: 'Min'; node: RollNode } & { value?: never })
-  | ({ type: 'SubExpr'; node: ExprNode } & { value?: never })
+  | ({ type: 'Variable'; name: string; value: number } & { node?: never })
+  | ({ type: 'Num'; value: number } & { name?: never; node?: never })
+  | ({ type: 'Max'; node: RollNode } & { name?: never; value?: never })
+  | ({ type: 'Min'; node: RollNode } & { name?: never; value?: never })
+  | ({ type: 'SubExpr'; node: ExprNode } & { name?: never; value?: never })
   | ({
       type: 'CocRoll';
     } & CocRoll)
   | ({
       type: 'DicePool';
     } & DicePool)
-  | ({ type: 'FateRoll' } & { node?: never; value?: never })
+  | ({ type: 'FateRoll' } & { name?: never; node?: never; value?: never })
   | ({
       type: 'Repeat';
     } & Repeat)
-  | ({ type: 'Unknown' } & { node?: never; value?: never });
+  | ({ type: 'Unknown' } & { name?: never; node?: never; value?: never });
 
 export type FateResult = {
   value: number;
@@ -1033,12 +1072,13 @@ export type PureExprNode =
   | ({
       type: 'Binary';
     } & PureBinary)
-  | ({ type: 'Num'; value: number } & { node?: never })
-  | ({ type: 'SubExpr'; node: PureExprNode } & { value?: never })
+  | ({ type: 'Variable'; name: string; value: number } & { node?: never })
+  | ({ type: 'Num'; value: number } & { name?: never; node?: never })
+  | ({ type: 'SubExpr'; node: PureExprNode } & { name?: never; value?: never })
   | ({
       type: 'Repeat';
     } & PureRepeat)
-  | ({ type: 'Unknown' } & { node?: never; value?: never });
+  | ({ type: 'Unknown' } & { name?: never; node?: never; value?: never });
 
 export type PureRepeat = {
   node: PureExprNode;

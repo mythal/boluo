@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "dependencies": {
     "@boluo/api": "0.0.0",
+    "@boluo/common": "0.0.0",
     "@boluo/sort": "0.0.0",
     "prando": "^6.0.1",
     "react-intl": "^10.1.14"

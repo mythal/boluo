@@ -797,6 +797,9 @@
   "TDaF6J": {
     "message": "Dismiss"
   },
+  "TJo5E6": {
+    "message": "Preview"
+  },
   "TThIOM": {
     "message": "Not found"
   },
@@ -1214,6 +1217,9 @@
   "iySl5e": {
     "message": "You are already a member of this channel."
   },
+  "j1Qcf7": {
+    "message": "Change not confirmed"
+  },
   "j3v6aj": {
     "message": "A channel scope uses membership and game-master status from that channel."
   },
@@ -1237,6 +1243,9 @@
   },
   "k1s9UW": {
     "message": "Not Found"
+  },
+  "kAqPxQ": {
+    "message": "No components."
   },
   "kCZBrb": {
     "message": "Compact"
@@ -1522,6 +1531,9 @@
   },
   "ulAzZl": {
     "message": "Failed to query the user"
+  },
+  "ulwJ59": {
+    "message": "Absent"
   },
   "v3aFf1": {
     "message": "Create Space"

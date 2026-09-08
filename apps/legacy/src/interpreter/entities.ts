@@ -1,4 +1,4 @@
-import { componentReportToText as reportToText } from '@boluo/interpreter';
+import { componentReportToText as reportToText } from '@boluo/components/report';
 import type {
   CocRollResult as ApiCocRollResult,
   DicePoolResult as ApiDicePoolResult,

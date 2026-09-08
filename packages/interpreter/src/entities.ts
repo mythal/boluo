@@ -1,4 +1,4 @@
-import { componentReportToText } from './component-report';
+import { componentReportToText } from '@boluo/components/report';
 import type { Entity, EntityOf, EvaluatedExprNode, Span } from '@boluo/api';
 
 export interface ExportExpr extends Span {
@@ -26,8 +26,6 @@ export type ExportEntity = (
   | EntityOf<'CodeBlock'>
   | ExportExpr
 ) & { text: string };
-
-export { componentReportToText } from './component-report';
 
 export const toSimpleText = (source: string, entities: Entity[]): string => {
   let text = '';

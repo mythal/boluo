@@ -1,5 +1,5 @@
-import { componentRefsMatch } from '@boluo/common/components/ref';
-import { readCounterPayload } from '@boluo/common/components/counter';
+import { componentRefsMatch } from '@boluo/components/ref';
+import { readCounterReportItem } from '@boluo/components/counter';
 import type {
   ComponentReport,
   ComponentSnapshot,
@@ -61,16 +61,6 @@ export const EntryName = ({
       </TooltipBox>
     </>
   );
-};
-
-const counterDisplayItem = (item: ComponentSnapshot | ComponentChangePreview) => {
-  if (item.component.componentType !== 'core/counter') return null;
-  const beforePayload = 'before' in item ? item.before : null;
-  const afterPayload = 'payload' in item ? item.payload : item.after;
-  const before = readCounterPayload(beforePayload);
-  const after = readCounterPayload(afterPayload);
-  if ((beforePayload !== null && !before) || (afterPayload !== null && !after)) return null;
-  return { before, after };
 };
 
 const CounterDelta = ({ before, after }: { before: number | null; after: number }) => {
@@ -171,7 +161,7 @@ const ComponentReportRow = ({
   component: ComponentSnapshot | ComponentChangePreview;
 }) => {
   const intl = useIntl();
-  const item = counterDisplayItem(component);
+  const item = readCounterReportItem(component);
   const { component: target } = component;
   const snapshot = 'payload' in component;
   if (!item)

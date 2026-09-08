@@ -57,10 +57,8 @@ const parseWithEnv = (
   };
 };
 
-export const parse = (
-  source: string,
-  env: MessageParseEnv = defaultMessageParseEnv,
-): ParseResult => parseWithEnv(source, env);
+export const parse = (source: string, env: MessageParseEnv = defaultMessageParseEnv): ParseResult =>
+  parseWithEnv(source, env);
 
 const containsVariable = (node: ExprNode): boolean => {
   switch (node.type) {

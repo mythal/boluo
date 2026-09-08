@@ -1487,6 +1487,7 @@ mod tests {
         .unwrap();
         let entry_id = Uuid::new_v4();
         let replacement_id = Uuid::new_v4();
+        let later_effect_id = Uuid::nil();
         let counter = |value| ComponentPayload::Json {
             data: json!({"value": value}),
             schema_version: 1,
@@ -1536,7 +1537,7 @@ mod tests {
             },
             Case {
                 name: "recreation does not skip the removal",
-                effect_id: Uuid::from_u128(5),
+                effect_id: later_effect_id,
                 entry_id,
                 key: "health",
                 change: EntryComponentHistoryChange::set("core/counter", counter(20)),
@@ -1566,6 +1567,14 @@ mod tests {
             .await
             .unwrap();
         }
+        // The recreation is later despite its smaller UUID; timestamps must sort first.
+        sqlx::query(
+            "UPDATE entry_effects SET created = created + interval '1 second' WHERE id = $1",
+        )
+        .bind(later_effect_id)
+        .execute(&mut *transaction)
+        .await
+        .unwrap();
         transaction.commit().await.unwrap();
 
         for case in &cases {

@@ -18,8 +18,8 @@ LEFT JOIN LATERAL (
     WHERE prior.entry_id = history.entry_id
       AND prior.component_type = history.component_type
       AND prior_effect.scope_id = effect.scope_id
-      AND (prior_effect.created, prior.entry_effect_id) < (effect.created, history.entry_effect_id)
-    ORDER BY prior_effect.created DESC, prior.entry_effect_id DESC
+      AND (prior_effect.created, prior_effect.id) < (effect.created, history.entry_effect_id)
+    ORDER BY prior_effect.created DESC, prior_effect.id DESC
     LIMIT 1
 ) previous ON TRUE
 WHERE history.entry_effect_id = ANY($1)

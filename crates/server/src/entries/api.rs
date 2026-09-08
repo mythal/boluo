@@ -70,6 +70,7 @@ pub struct CreateEntry {
     pub key: String,
     #[serde(default)]
     pub aliases: Vec<String>,
+    #[serde(default)]
     pub display_name: String,
     pub reference_note_id: Option<Uuid>,
     #[serde(default)]

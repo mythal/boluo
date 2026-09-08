@@ -253,7 +253,7 @@ export type CreateEntry = {
   scopeId: string;
   key: string;
   aliases?: string[];
-  displayName: string;
+  displayName?: string;
   referenceNoteId: string | null;
   components?: { [key in string]: EntryComponentPayloadInput };
   tags?: string[];

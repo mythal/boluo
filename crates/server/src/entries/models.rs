@@ -4,6 +4,7 @@ use serde_json::Value;
 use std::collections::BTreeMap;
 use std::ops::Deref;
 use time::OffsetDateTime;
+use unicode_normalization::UnicodeNormalization;
 use uuid::Uuid;
 
 use crate::characters::{normalize_aliases, normalize_ident};
@@ -751,8 +752,7 @@ impl Entry {
     ) -> Result<Self, ModelError> {
         let key = normalize_ident(&key)?;
         let aliases = normalize_aliases(aliases, Some(&key))?;
-        let display_name = display_name.trim().to_string();
-        crate::validators::DISPLAY_NAME.run(&display_name)?;
+        let display_name = normalize_display_name(display_name)?;
         validate_components(&components)?;
         for (component_type, payload) in &components {
             if let EntryComponentPayloadInput::Asset { asset_id } = payload {
@@ -809,8 +809,7 @@ impl Entry {
     ) -> Result<Option<Self>, ModelError> {
         let key = normalize_ident(&key)?;
         let aliases = normalize_aliases(aliases, Some(&key))?;
-        let display_name = display_name.trim().to_string();
-        crate::validators::DISPLAY_NAME.run(&display_name)?;
+        let display_name = normalize_display_name(display_name)?;
         let tags = crate::validators::normalize_tags(tags)?;
         validate_reference_note(db, scope_id, reference_note_id).await?;
         let result = sqlx::query_file!(
@@ -1443,6 +1442,14 @@ pub struct MessageEntryEffects {
     pub effects: Vec<EntryEffectHistory>,
 }
 
+fn normalize_display_name(display_name: String) -> Result<String, ModelError> {
+    let display_name = display_name.trim().nfc().collect::<String>();
+    if display_name.chars().count() > 32 {
+        return Err(ValidationFailed("Entry display name must not exceed 32 characters.").into());
+    }
+    Ok(display_name)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1583,6 +1590,26 @@ mod tests {
         for row in &history {
             assert_before_payload(row);
         }
+    }
+
+    #[test]
+    fn optional_display_names_are_normalized_and_validated() {
+        assert_eq!(normalize_display_name(String::new()).unwrap(), "");
+        assert_eq!(normalize_display_name("  ".into()).unwrap(), "");
+        assert_eq!(normalize_display_name(" HP ".into()).unwrap(), "HP");
+        assert_eq!(
+            normalize_display_name("  Cafe\u{301}  ".into()).unwrap(),
+            "Café"
+        );
+        assert_eq!(normalize_display_name("Ａ B".into()).unwrap(), "Ａ B");
+        assert_eq!(normalize_display_name("e\u{301}".into()).unwrap(), "é");
+        assert_eq!(
+            normalize_display_name("e\u{301}".repeat(32)).unwrap(),
+            "é".repeat(32)
+        );
+        assert!(normalize_display_name("e\u{301}".repeat(33)).is_err());
+        assert_eq!(normalize_display_name("力".into()).unwrap(), "力");
+        assert!(normalize_display_name("x".repeat(33)).is_err());
     }
 
     fn components<const N: usize>(

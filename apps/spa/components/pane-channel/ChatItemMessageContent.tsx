@@ -30,7 +30,11 @@ export const ChatItemMessageContent: FC<{
         <Content
           source={parsed.text}
           entities={entities}
-          message={{ id: message.id, hasEntryEffects: Boolean(message.hasEntryEffects) }}
+          message={{
+            id: message.id,
+            rev: message.rev,
+            hasEntryEffects: Boolean(message.hasEntryEffects),
+          }}
           isAction={message.isAction ?? false}
           nameNode={nameNode}
           isArchived={message.folded ?? false}
@@ -45,6 +49,7 @@ export const ChatItemMessageContent: FC<{
     message.isAction,
     message.seed,
     message.id,
+    message.rev,
     message.hasEntryEffects,
     nameNode,
     entities,
@@ -59,7 +64,7 @@ export const ChatItemMessageContent: FC<{
           (entity) => entity.type === 'ComponentReport' && entity.report.type === 'Change',
         ) && (
           <div>
-            <MessageComponentChanges messageId={message.id} />
+            <MessageComponentChanges messageId={message.id} messageRevision={message.rev} />
           </div>
         )}
       {media}

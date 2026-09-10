@@ -1,3 +1,4 @@
+import { refreshEntries } from '../entries/cache';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { useEffect } from 'react';
 import { useSWRConfig } from 'swr';
@@ -66,9 +67,7 @@ export const applyEffect = async (
       await mutate(['/characters/usages', effect.spaceId, effect.characterId]);
       return;
     case 'ENTRY_CHANGED':
-      await mutate(['/entries/by_scope', effect.spaceId, effect.scopeId]);
-      await mutate(['/entries/query', effect.spaceId, effect.scopeId, effect.entryId]);
-      await mutate(swrKeyStartsWith('/entries/by_component', effect.spaceId, effect.scopeId));
+      await refreshEntries(mutate, effect.spaceId, effect.scopeId, effect.entryId);
       return;
   }
 };

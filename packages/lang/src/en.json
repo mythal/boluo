@@ -107,6 +107,9 @@
   "3ImDYr": {
     "message": "Include Archived"
   },
+  "3LmOu6": {
+    "message": "The message was sent, but the counter update could not be confirmed. Check .st before trying again."
+  },
   "3VG8rb": {
     "message": "An unknown error occurred"
   },
@@ -239,6 +242,9 @@
   "7ifIhk": {
     "message": "Save Topic"
   },
+  "7iqUza": {
+    "message": "Message error"
+  },
   "7q87xo": {
     "message": "Channel Settings"
   },
@@ -341,6 +347,9 @@
   "Bp3LVS": {
     "message": "Space not found"
   },
+  "BtSU44": {
+    "message": "Send a new message to change counters."
+  },
   "BzWmz8": {
     "message": "Space Name"
   },
@@ -374,9 +383,6 @@
   "CuNepY": {
     "message": "Create Channel"
   },
-  "D2E+9y": {
-    "message": "Loading character…"
-  },
   "D3idYv": {
     "message": "Settings"
   },
@@ -394,6 +400,9 @@
   },
   "EcW+hX": {
     "message": "Only visible to selected people."
+  },
+  "EtKLpO": {
+    "message": "Could not load counters. Please try again."
   },
   "F3Wc9W": {
     "message": "Last {day} days"
@@ -491,6 +500,9 @@
   "Igiyjo": {
     "message": "The edit could not be submitted. Your edits have been restored."
   },
+  "Ir04Gk": {
+    "message": "Message status"
+  },
   "IvBid4": {
     "message": "Use the {enter} key to send messages"
   },
@@ -517,6 +529,9 @@
   },
   "Jc0JUv": {
     "message": "The compose box crashed, Your last input was:"
+  },
+  "JesxLz": {
+    "message": "Counter “{name}” is unsupported."
   },
   "Jq3FDz": {
     "message": "Content"
@@ -583,9 +598,6 @@
   },
   "LXxsbk": {
     "message": "Anonymous"
-  },
-  "Ln00Sy": {
-    "message": "Unable to send message."
   },
   "LnM0On": {
     "message": "{a} and {b} are composing…"
@@ -754,6 +766,9 @@
   },
   "R59CS8": {
     "message": "Remove Avatar"
+  },
+  "RIkCNT": {
+    "message": "Select a character to use .st commands."
   },
   "RZme30": {
     "message": "Entry key"
@@ -995,6 +1010,9 @@
   "aLncO3": {
     "message": "Secret Channel"
   },
+  "aSUtuL": {
+    "message": "Counter “{name}” does not exist."
+  },
   "aifEPM": {
     "message": "This is a secret channel. You must be invited to join this channel."
   },
@@ -1009,6 +1027,9 @@
   },
   "bGay8d": {
     "message": "Space Settings"
+  },
+  "bLakAH": {
+    "message": "Loading counters…"
   },
   "bT0FEQ": {
     "message": "Are you sure you want to delete the \"{channelName}\" channel?"
@@ -1030,6 +1051,9 @@
   },
   "cXUE4o": {
     "message": "Basic information"
+  },
+  "cajPLU": {
+    "message": "Your input changed while preparing the message. Please send again."
   },
   "ccU6l/": {
     "message": "Online"
@@ -1135,6 +1159,9 @@
   },
   "fc2iho": {
     "message": "Add File"
+  },
+  "ff2VGL": {
+    "message": "Sending…"
   },
   "fnihsY": {
     "message": "Leave"
@@ -1280,11 +1307,17 @@
   "kIUNDX": {
     "message": "Default Dice"
   },
+  "kIf5T2": {
+    "message": "Invalid command. Try .st hp12, .st hp-3, or .st show."
+  },
   "kMogDE": {
     "message": "Must be a valid email address."
   },
   "kP8cI1": {
     "message": "Create character"
+  },
+  "kTBy6r": {
+    "message": "Counter “{name}” requires a safe integer value."
   },
   "kWRZBe": {
     "message": "Entry metadata"
@@ -1420,6 +1453,9 @@
   },
   "qXRz37": {
     "message": "Use portrait {number}"
+  },
+  "qadmdI": {
+    "message": "Could not send message. Please try again."
   },
   "qbB8pg": {
     "message": "Space Description"
@@ -1645,6 +1681,9 @@
   },
   "y63e7m": {
     "message": "EMail"
+  },
+  "yRiTuw": {
+    "message": "“{name}” is not a valid counter name."
   },
   "yy3DLJ": {
     "message": "Without rich-text information"

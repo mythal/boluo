@@ -2,7 +2,7 @@ import type { ComponentReportEntity } from '@boluo/types/bindings';
 import { readCounterReportItem } from './counter';
 
 export interface ComponentReportTextLabels {
-  variableUpdate: string;
+  counterUpdate: string;
   componentUpdate: string;
   deleted: string;
   unsupportedComponent: string;
@@ -11,12 +11,12 @@ export interface ComponentReportTextLabels {
 }
 
 const defaultLabels: ComponentReportTextLabels = {
-  variableUpdate: 'Variable update',
+  counterUpdate: 'Counter update',
   componentUpdate: 'Component update',
   deleted: 'deleted',
   unsupportedComponent: 'Unsupported component',
   preview: 'Preview',
-  empty: 'No variables yet.',
+  empty: 'No components.',
 };
 
 export const componentReportToText = (
@@ -25,7 +25,7 @@ export const componentReportToText = (
 ): string => {
   if (entity.report.type === 'Change') {
     const label = entity.report.items.every((item) => item.componentType === 'core/counter')
-      ? labels.variableUpdate
+      ? labels.counterUpdate
       : labels.componentUpdate;
     return `${label}: ${entity.report.items.map((item) => item.key).join(', ')}`;
   }

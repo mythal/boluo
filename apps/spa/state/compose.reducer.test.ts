@@ -113,5 +113,5 @@ test('keeps the original message attribution while applying speaker overrides', 
       inGame: false,
     },
   };
-  assert.equal(checkCompose('', false)(originalOutOfGame), 'NO_NAME');
+  assert.deepEqual(checkCompose('', false)(originalOutOfGame), { type: 'NO_NAME' });
 });

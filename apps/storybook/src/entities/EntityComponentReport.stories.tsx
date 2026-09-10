@@ -203,6 +203,16 @@ export const UnsupportedComponent: Story = {
             displayName: 'Description',
             payload: { payloadType: 'JSON', schemaVersion: 1, data: { text: 'Hello' } },
           },
+          {
+            component: {
+              scopeId: 'scope',
+              entryId: 'notes',
+              key: 'notes',
+              componentType: 'example/text',
+            },
+            displayName: '',
+            payload: { payloadType: 'JSON', schemaVersion: 1, data: { text: 'Notes' } },
+          },
         ],
       },
     },

@@ -1,3 +1,4 @@
+import { SelfPreviewFeedback } from './SelfPreviewFeedback';
 import React, { Activity, type FC, type ReactNode, useMemo } from 'react';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { useAtomValue, useSetAtom, useStore } from 'jotai';
@@ -10,10 +11,9 @@ import TriangleAlert from '@boluo/icons/TriangleAlert';
 import Whisper from '@boluo/icons/Whisper';
 import X from '@boluo/icons/X';
 import { FormattedMessage, type IntlShape, useIntl } from 'react-intl';
-import { useComposeError } from '../../hooks/useComposeError';
+import { useComposeIssues } from '../../hooks/useComposeIssues';
 import { useSend } from './useSend';
 import { type User } from '@boluo/api';
-import { ComposeErrorReason } from '../compose/ComposeErrorReason';
 import { useComposeAtom } from '../../hooks/useComposeAtom';
 import { selectAtom } from 'jotai/utils';
 import { ButtonInline } from '@boluo/ui/ButtonInline';
@@ -139,24 +139,11 @@ const SendButton: FC<{ intl: IntlShape }> = () => {
   const dispatch = useSetAtom(composeAtom);
   const editAtom = useMemo(() => selectAtom(composeAtom, ({ edit }) => edit), [composeAtom]);
   const editMode = useAtomValue(editAtom) != null;
-  const composeError = useComposeError();
+  const issues = useComposeIssues();
   const send = useSend();
   return (
     <>
-      <ToolbarButton
-        disabled={composeError != null}
-        variant="primary"
-        tooltip={
-          composeError &&
-          composeError !== 'TEXT_EMPTY' && (
-            <>
-              <Icon icon={TriangleAlert} className="mr-1" />
-              <ComposeErrorReason error={composeError} />
-            </>
-          )
-        }
-        onClick={() => void send()}
-      >
+      <ToolbarButton disabled={issues.length > 0} variant="primary" onClick={() => void send()}>
         <Icon icon={editMode ? Edit : PaperPlane} />
         <span className="ml-1">
           {editMode ? (
@@ -223,6 +210,7 @@ export const SelfPreviewToolbar: FC<Props> = ({ currentUser }) => {
       {whisperButton}
       {muteButton}
       <span className="grow" />
+      <SelfPreviewFeedback />
       {sendButton}
     </div>
   );

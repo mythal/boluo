@@ -1,3 +1,6 @@
+import { createComposeIssuesAtom, type ComposeIssue } from '../state/compose-issues';
+import { useMember } from './useMember';
+import { usePortrayableCharacters } from './usePortrayableCharacters';
 import { type Atom, atom, type PrimitiveAtom, type WritableAtom } from 'jotai';
 import { atomWithStorage, selectAtom, unwrap } from 'jotai/utils';
 import { createContext, use, useLayoutEffect, useMemo, useRef } from 'react';
@@ -5,6 +8,7 @@ import { asyncParse } from '../interpreter/async-parse';
 import {
   composeInitialParseResult,
   parseModifiers,
+  needsVariableEnvironment,
   type AsTarget,
   type ParseResult,
 } from '@boluo/interpreter';
@@ -13,6 +17,12 @@ import { checkCompose, type ComposeError, type ComposeState } from '../state/com
 import { usePaneKey } from './usePaneKey';
 import { composeAtomFamily } from '../state/compose.atoms';
 import { resolveSpeakerMode } from '../characters/resolveSpeaker';
+
+import { useComposeCountersAtom } from '../counters/useComposeCountersAtom';
+import { buildVariableEnv } from '../counters/operations';
+import type { ComposeCountersState, CounterIssue } from '../counters/types';
+import { prepareCounterPreview } from '../counters/prepare-preview';
+import { counterIssue } from '../counters/feedback';
 
 export type ChannelFilter = 'ALL' | 'IN_GAME' | 'OOC';
 
@@ -28,9 +38,14 @@ export interface ScrollToMessageRequest {
 
 export type ComposeParseResult = ParseResult & {
   source: string;
+  countersState?: ComposeCountersState;
+  counterIssue?: CounterIssue | null;
 };
 
 export interface ChannelAtoms {
+  composeIssuesAtom: Atom<ComposeIssue[]>;
+  sendingAtom: PrimitiveAtom<boolean>;
+  counterIssueAtom: Atom<CounterIssue | null>;
   composeAtom: WritableAtom<ComposeState, [ComposeActionUnion], void>;
   checkComposeAtom: Atom<ComposeError | null>;
   parsedAtom: Atom<ComposeParseResult>;
@@ -76,15 +91,17 @@ export const useMakeChannelAtoms = (
     defaultDiceFaceRef.current = defaultDiceFace;
   }, [defaultDiceFace]);
   const composeAtom = composeAtomFamily({ channelId, paneKey });
+  const countersStateAtom = useComposeCountersAtom(composeAtom);
   const checkComposeAtom: Atom<ComposeError | null> = useMemo(
     () => selectAtom(composeAtom, checkCompose(characterName, defaultInGame)),
     [characterName, composeAtom, defaultInGame],
   );
   const atoms: Omit<
     ChannelAtoms,
-    'composeAtom' | 'checkComposeAtom' | 'inGameAtom' | 'defaultDiceFaceRef'
+    'composeAtom' | 'checkComposeAtom' | 'inGameAtom' | 'defaultDiceFaceRef' | 'composeIssuesAtom'
   > = useMemo(() => {
     const sourceAtom = atom((get) => get(composeAtom).source);
+    const editingAtom = atom((get) => get(composeAtom).edit != null);
     const initialParseResult: ComposeParseResult = {
       ...composeInitialParseResult,
       source: '',
@@ -96,11 +113,26 @@ export const useMakeChannelAtoms = (
     const unwrappedParsedAtom = unwrap(
       atom(async (get, { signal }): Promise<ComposeParseResult> => {
         const source = get(sourceAtom);
+        const editing = get(editingAtom);
+        const loadState = get(countersStateAtom);
+        const variables = buildVariableEnv(
+          loadState.source === source && loadState.type === 'Ready' ? loadState.entries : [],
+        );
         const result = await asyncParse(
-          { source, defaultDiceFace: defaultDiceFaceRef.current },
+          { source, defaultDiceFace: defaultDiceFaceRef.current, variables },
           signal,
         );
-        return { ...result, source };
+        const prepared = prepareCounterPreview(result, {
+          source,
+          editing,
+          loadState,
+        });
+        return {
+          ...prepared.parsed,
+          source,
+          countersState: loadState,
+          counterIssue: counterIssue(prepared, loadState),
+        };
       }),
       (previous) => previous ?? initialParseResult,
     );
@@ -113,6 +145,14 @@ export const useMakeChannelAtoms = (
       return cachedParseResultRef.current;
     });
     /* eslint-enable react-hooks/refs */
+    const counterIssueAtom = atom((get): CounterIssue | null => {
+      const source = get(sourceAtom);
+      const parsed = get(parsedAtom);
+      if (parsed.source !== source || parsed.countersState !== get(countersStateAtom)) {
+        return needsVariableEnvironment(source) ? { type: 'LoadingCounters' } : null;
+      }
+      return parsed.counterIssue ?? null;
+    });
     const asTargetAtom = selectAtom(composeAtom, ({ source }) => {
       try {
         return parseModifiers(source).asTarget;
@@ -164,6 +204,8 @@ export const useMakeChannelAtoms = (
     return {
       composeAtom,
       parsedAtom,
+      counterIssueAtom,
+      sendingAtom: atom(false),
       isActionAtom,
       asTargetTextAtom,
       asTargetAtom,
@@ -189,7 +231,7 @@ export const useMakeChannelAtoms = (
       scrollToMessageAtom: atom<ScrollToMessageRequest | null>(null),
       highlightMessageAtom: atom<string | null>(null),
     };
-  }, [channelId, composeAtom]);
+  }, [channelId, composeAtom, countersStateAtom]);
   const originalMessageInGameAtom = useMemo(
     () =>
       selectAtom(
@@ -213,7 +255,47 @@ export const useMakeChannelAtoms = (
       }),
     [atoms.parsedAtom, defaultInGame, originalMessageInGameAtom],
   );
-  return { ...atoms, checkComposeAtom, composeAtom, inGameAtom, defaultDiceFaceRef };
+  const member = useMember();
+  const { resolve } = usePortrayableCharacters(member?.space.spaceId);
+  const nickname = member?.user.nickname ?? '';
+  const channelCharacterId = member?.channel.characterId ?? null;
+  const composeIssuesAtom = useMemo(
+    () =>
+      createComposeIssuesAtom(
+        {
+          composeAtom,
+          checkComposeAtom,
+          counterIssueAtom: atoms.counterIssueAtom,
+          sendingAtom: atoms.sendingAtom,
+        },
+        {
+          nickname,
+          defaultInGame,
+          channelCharacterId,
+          channelCharacterName: characterName,
+          resolveCharacter: resolve,
+        },
+      ),
+    [
+      composeAtom,
+      checkComposeAtom,
+      atoms.counterIssueAtom,
+      atoms.sendingAtom,
+      nickname,
+      defaultInGame,
+      channelCharacterId,
+      characterName,
+      resolve,
+    ],
+  );
+  return {
+    ...atoms,
+    checkComposeAtom,
+    composeAtom,
+    inGameAtom,
+    defaultDiceFaceRef,
+    composeIssuesAtom,
+  };
 };
 
 export const useChannelAtoms = (): ChannelAtoms => {

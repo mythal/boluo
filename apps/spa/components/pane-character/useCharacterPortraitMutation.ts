@@ -1,3 +1,4 @@
+import { entryQueryKeys } from '@boluo/hooks/entryQueryKeys';
 import { isApiError, type Asset, type EntryComponentMatch } from '@boluo/api';
 import { patch, post, put } from '@boluo/api-browser';
 import { explainError } from '@boluo/locale/errors';
@@ -82,12 +83,12 @@ export const useCharacterPortraitMutation = ({
   const [operation, setOperation] = useState<PortraitMutationOperation | null>(null);
   const [error, setError] = useState<string | null>(null);
   const portraitQueryKey = useMemo(
-    () => ['/entries/by_component', spaceId, scopeId, PORTRAIT_COMPONENT_TYPE] as const,
+    () => entryQueryKeys.byComponent(spaceId, scopeId, PORTRAIT_COMPONENT_TYPE),
     [scopeId, spaceId],
   );
 
   const revalidatePortraitEntries = useCallback(async () => {
-    await Promise.all([mutate(portraitQueryKey), mutate(['/entries/by_scope', spaceId, scopeId])]);
+    await Promise.all([mutate(portraitQueryKey), mutate(entryQueryKeys.byScope(spaceId, scopeId))]);
   }, [mutate, portraitQueryKey, scopeId, spaceId]);
 
   const attachPortraitAsset = useCallback(

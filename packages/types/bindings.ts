@@ -17,6 +17,13 @@ export type AppSettings = {
   siteUrl?: string | null;
 };
 
+export type ApplyEntryBatch = {
+  spaceId: string;
+  scopeId: string;
+  messageId: string | null;
+  operations: EntryBatchOperation[];
+};
+
 export type ArchiveCharacter = {
   spaceId: string;
   characterId: string;
@@ -406,8 +413,8 @@ export type EditEntryComponents = {
   entryId: string;
   messageId: string | null;
   skipRecordHistory?: boolean;
-  /**  Keep the Entry when the mutations leave it with no Components. */
-  keepEmptyEntry?: boolean;
+  /**  Defaults to deleting the Entry when no Components remain. */
+  onEmpty?: EmptyEntryAction;
   changes: EntryComponentMutation[];
 };
 
@@ -465,6 +472,9 @@ export type EmailVerificationStatus = {
   isVerified: boolean;
 };
 
+/**  What to do when a component update leaves the Entry without Components. */
+export type EmptyEntryAction = 'Keep' | 'Delete';
+
 export type Entities = Entity[];
 
 export type Entity =
@@ -499,6 +509,24 @@ export type Entity =
 export type Entry = {
   components: { [key in string]: EntryComponent };
 } & EntryMetadata;
+
+export type EntryBatchOperation =
+  | {
+      type: 'Create';
+      key: string;
+      aliases?: string[];
+      displayName?: string;
+      referenceNoteId: string | null;
+      components?: { [key in string]: EntryComponentPayloadInput };
+      tags?: string[];
+      beforeEntryId?: string | null;
+    }
+  | {
+      type: 'Update';
+      entryId: string;
+      changes: EntryComponentMutation[];
+      onEmpty?: EmptyEntryAction;
+    };
 
 export type EntryComponent = {
   version: string;

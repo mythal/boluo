@@ -109,6 +109,14 @@ pub struct MoveEntry {
     pub before_entry_id: Option<Uuid>,
 }
 
+/// What to do when a component update leaves the Entry without Components.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Deserialize, specta::Type)]
+pub enum EmptyEntryAction {
+    Keep,
+    #[default]
+    Delete,
+}
+
 #[derive(Debug, Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct EditEntryComponents {
@@ -118,9 +126,8 @@ pub struct EditEntryComponents {
     pub message_id: Option<Uuid>,
     #[serde(default)]
     pub skip_record_history: bool,
-    /// Keep the Entry when the mutations leave it with no Components.
     #[serde(default)]
-    pub keep_empty_entry: bool,
+    pub on_empty: EmptyEntryAction,
     pub changes: Vec<EntryComponentMutation>,
 }
 
@@ -132,6 +139,40 @@ pub struct DeleteEntry {
     pub entry_id: Uuid,
     pub expected_metadata_version: Uuid,
     pub message_id: Option<Uuid>,
+}
+
+#[derive(Debug, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct ApplyEntryBatch {
+    pub space_id: Uuid,
+    pub scope_id: Uuid,
+    pub message_id: Option<Uuid>,
+    pub operations: Vec<EntryBatchOperation>,
+}
+
+#[derive(Debug, Deserialize, specta::Type)]
+#[serde(tag = "type", rename_all_fields = "camelCase")]
+pub enum EntryBatchOperation {
+    Create {
+        key: String,
+        #[serde(default)]
+        aliases: Vec<String>,
+        #[serde(default)]
+        display_name: String,
+        reference_note_id: Option<Uuid>,
+        #[serde(default)]
+        components: BTreeMap<String, EntryComponentPayloadInput>,
+        #[serde(default)]
+        tags: Vec<String>,
+        #[serde(default)]
+        before_entry_id: Option<Uuid>,
+    },
+    Update {
+        entry_id: Uuid,
+        changes: Vec<EntryComponentMutation>,
+        #[serde(default)]
+        on_empty: EmptyEntryAction,
+    },
 }
 
 #[cfg(test)]
@@ -170,6 +211,6 @@ mod tests {
             .expect("component mutation should decode");
 
         assert!(!payload.skip_record_history);
-        assert!(!payload.keep_empty_entry);
+        assert_eq!(payload.on_empty, EmptyEntryAction::Delete);
     }
 }

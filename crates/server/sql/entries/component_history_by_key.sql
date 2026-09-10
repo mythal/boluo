@@ -23,7 +23,7 @@ LEFT JOIN LATERAL (
     LIMIT 1
 ) previous ON TRUE
 WHERE effect.scope_id = $1
-  AND history.key = $2
+  AND lower(history.key) = lower($2)
 ORDER BY
     effect.created DESC,
     history.entry_effect_id DESC,

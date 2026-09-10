@@ -1130,7 +1130,7 @@ CREATE INDEX entry_component_history_entry_effect_index ON public.entry_componen
 -- Name: entry_component_history_key_effect_index; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX entry_component_history_key_effect_index ON public.entry_component_history USING btree (key, entry_effect_id, entry_id, component_type);
+CREATE INDEX entry_component_history_key_effect_index ON public.entry_component_history USING btree (lower(key), entry_effect_id, entry_id, component_type);
 
 
 --

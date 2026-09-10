@@ -951,11 +951,8 @@ impl EntryHistory {
         previous_key: Option<&str>,
         action: EntryHistoryAction,
     ) -> Result<(), ModelError> {
-        let key = normalize_ident(key)?.to_lowercase();
-        let previous_key = previous_key
-            .map(normalize_ident)
-            .transpose()?
-            .map(|key| key.to_lowercase());
+        let key = normalize_ident(key)?;
+        let previous_key = previous_key.map(normalize_ident).transpose()?;
         if action == EntryHistoryAction::Rename && previous_key.as_deref() == Some(&key) {
             return Err(ValidationFailed("Rename history requires two different keys.").into());
         }
@@ -1329,7 +1326,7 @@ impl EntryComponentHistory {
         key: &str,
         changes: &[EntryComponentHistoryChange],
     ) -> Result<(), ModelError> {
-        let key = normalize_ident(key)?.to_lowercase();
+        let key = normalize_ident(key)?;
         for change in changes {
             let result = sqlx::query_file!(
                 "sql/entries/insert_component_history.sql",
@@ -1370,7 +1367,7 @@ impl EntryComponentHistory {
         scope_id: Uuid,
         key: &str,
     ) -> Result<Vec<Self>, ModelError> {
-        let key = normalize_ident(key)?.to_lowercase();
+        let key = normalize_ident(key)?;
         sqlx::query_file_as!(
             EntryComponentHistory,
             "sql/entries/component_history_by_key.sql",
@@ -1523,7 +1520,7 @@ mod tests {
                 name: "renaming preserves component history",
                 effect_id: Uuid::from_u128(3),
                 entry_id,
-                key: "health",
+                key: "Health",
                 change: EntryComponentHistoryChange::set("core/counter", counter(9)),
                 before_payload: Some(counter(12)),
             },
@@ -1531,7 +1528,7 @@ mod tests {
                 name: "removal retains the previous value",
                 effect_id: Uuid::from_u128(4),
                 entry_id,
-                key: "health",
+                key: "Health",
                 change: EntryComponentHistoryChange::remove("core/counter"),
                 before_payload: Some(counter(9)),
             },
@@ -1539,7 +1536,7 @@ mod tests {
                 name: "recreation does not skip the removal",
                 effect_id: later_effect_id,
                 entry_id,
-                key: "health",
+                key: "Health",
                 change: EntryComponentHistoryChange::set("core/counter", counter(20)),
                 before_payload: None,
             },
@@ -1596,6 +1593,7 @@ mod tests {
                 .find(|case| case.effect_id == row.entry_effect_id)
                 .expect("history must belong to a fixture effect");
             assert_eq!(row.before_payload, case.before_payload, "{}", case.name);
+            assert_eq!(row.key, case.key, "{}", case.name);
         };
         let history = EntryComponentHistory::list_by_entry(&pool, space.scope_id, entry_id)
             .await
@@ -1604,7 +1602,7 @@ mod tests {
         for row in &history {
             assert_before_payload(row);
         }
-        let history = EntryComponentHistory::list_by_key(&pool, space.scope_id, "health")
+        let history = EntryComponentHistory::list_by_key(&pool, space.scope_id, "hEaLtH")
             .await
             .unwrap();
         assert_eq!(history.len(), 3);
@@ -2605,7 +2603,7 @@ mod tests {
             detached.scope_id,
             detached.id,
             detached.metadata_version,
-            "stamina".to_string(),
+            "hp".to_string(),
             detached.aliases.iter().map(ToString::to_string).collect(),
             detached.display_name.to_string(),
             detached.reference_note_id,
@@ -2722,7 +2720,7 @@ mod tests {
             .expect("history failed");
         assert_eq!(history.len(), 4);
         assert!(history.iter().all(|row| row.entry_id == updated.id));
-        assert!(history.iter().all(|row| row.key == "hp"));
+        assert!(history.iter().all(|row| row.key == "HP"));
 
         let replacement_history =
             EntryComponentHistory::list_by_entry(&pool, space_scope.id, replacement.id)
@@ -2740,7 +2738,14 @@ mod tests {
         assert_eq!(key_history.len(), 5);
         assert!(key_history.iter().any(|row| row.entry_id == updated.id));
         assert!(key_history.iter().any(|row| row.entry_id == replacement.id));
-        assert!(key_history.iter().all(|row| row.key == "hp"));
+        assert!(key_history.iter().all(|row| {
+            row.key
+                == if row.entry_id == updated.id {
+                    "HP"
+                } else {
+                    "hp"
+                }
+        }));
         assert!(history.iter().any(|row| {
             row.component_type == "core/counter"
                 && row.action == EntryComponentHistoryAction::Set
@@ -2773,13 +2778,14 @@ mod tests {
             row.entry_id == updated.id
                 && row.entry_effect_id == create_effect.id
                 && row.action == EntryHistoryAction::Create
+                && row.key == entry.key
         }));
         assert!(entry_history.iter().any(|row| {
             row.entry_id == renamed.id
                 && row.entry_effect_id == rename_effect.id
                 && row.action == EntryHistoryAction::Rename
-                && row.previous_key.as_deref() == Some("hp")
-                && row.key == "stamina"
+                && row.previous_key.as_deref() == Some("HP")
+                && row.key == "hp"
         }));
         assert!(entry_history.iter().any(|row| {
             row.entry_id == updated.id

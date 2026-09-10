@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT\n    history.entry_effect_id,\n    effect.operator_id,\n    effect.scope_id,\n    history.entry_id,\n    history.key,\n    history.component_type,\n    history.action AS \"action!: EntryComponentHistoryAction\",\n    history.payload AS \"payload?: ComponentPayload\",\n    previous.payload AS \"before_payload?: ComponentPayload\",\n    effect.created\nFROM entry_component_history history\nJOIN entry_effects effect ON effect.id = history.entry_effect_id\nLEFT JOIN LATERAL (\n    SELECT prior.payload\n    FROM entry_component_history prior\n    JOIN entry_effects prior_effect ON prior_effect.id = prior.entry_effect_id\n    WHERE prior.entry_id = history.entry_id\n      AND prior.component_type = history.component_type\n      AND prior_effect.scope_id = effect.scope_id\n      AND (prior_effect.created, prior_effect.id) < (effect.created, history.entry_effect_id)\n    ORDER BY prior_effect.created DESC, prior_effect.id DESC\n    LIMIT 1\n) previous ON TRUE\nWHERE effect.scope_id = $1\n  AND history.key = $2\nORDER BY\n    effect.created DESC,\n    history.entry_effect_id DESC,\n    history.entry_id,\n    history.component_type;\n",
+  "query": "SELECT\n    history.entry_effect_id,\n    effect.operator_id,\n    effect.scope_id,\n    history.entry_id,\n    history.key,\n    history.component_type,\n    history.action AS \"action!: EntryComponentHistoryAction\",\n    history.payload AS \"payload?: ComponentPayload\",\n    previous.payload AS \"before_payload?: ComponentPayload\",\n    effect.created\nFROM entry_component_history history\nJOIN entry_effects effect ON effect.id = history.entry_effect_id\nLEFT JOIN LATERAL (\n    SELECT prior.payload\n    FROM entry_component_history prior\n    JOIN entry_effects prior_effect ON prior_effect.id = prior.entry_effect_id\n    WHERE prior.entry_id = history.entry_id\n      AND prior.component_type = history.component_type\n      AND prior_effect.scope_id = effect.scope_id\n      AND (prior_effect.created, prior_effect.id) < (effect.created, history.entry_effect_id)\n    ORDER BY prior_effect.created DESC, prior_effect.id DESC\n    LIMIT 1\n) previous ON TRUE\nWHERE effect.scope_id = $1\n  AND lower(history.key) = lower($2)\nORDER BY\n    effect.created DESC,\n    history.entry_effect_id DESC,\n    history.entry_id,\n    history.component_type;\n",
   "describe": {
     "columns": [
       {
@@ -143,5 +143,5 @@
       false
     ]
   },
-  "hash": "5fd39941364483f019d3be655986401f1538548e67de1a75449511b887af7d2d"
+  "hash": "d426aa06fb2487803ca316f5e114325f55f786f80e9f0ee4053e1e182d05dfef"
 }

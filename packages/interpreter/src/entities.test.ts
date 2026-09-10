@@ -7,7 +7,7 @@ const component = { entryId: 'hp', scopeId: 'scope', key: 'hp', componentType: '
 const summary = (report: ComponentReport, source = '') =>
   toSimpleText(source, [{ type: 'ComponentReport', start: 0, len: source.length, report }]);
 
-test('variable entities have readable summaries without raw commands or invented changes', () => {
+test('component reports have readable summaries without raw commands or invented changes', () => {
   assert.equal(
     summary(
       {
@@ -24,13 +24,13 @@ test('variable entities have readable summaries without raw commands or invented
     ),
     '血量: 9 / 20',
   );
-  assert.equal(summary({ type: 'Change', items: [component] }, '.st hp-3'), 'Variable update: hp');
-  assert.equal(summary({ type: 'Snapshot', items: [] }, '.st'), 'No variables yet.');
+  assert.equal(summary({ type: 'Change', items: [component] }, '.st hp-3'), 'Counter update: hp');
+  assert.equal(summary({ type: 'Snapshot', items: [] }, '.st'), 'No components.');
 });
 
-test('variable summaries include every change and preview item in order', () => {
+test('component report summaries include every change and preview item in order', () => {
   const mp = { ...component, entryId: 'mp', key: 'mp' };
-  assert.equal(summary({ type: 'Change', items: [component, mp] }), 'Variable update: hp, mp');
+  assert.equal(summary({ type: 'Change', items: [component, mp] }), 'Counter update: hp, mp');
   assert.equal(
     summary({
       type: 'ChangePreview',

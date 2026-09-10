@@ -16,7 +16,7 @@ export const readCounterPayload = (payload: ComponentPayload | null) => {
     return null;
   if (data.min != null && typeof data.min !== 'number') return null;
   if (data.max != null && typeof data.max !== 'number') return null;
-  return { value: data.value, min: data.min ?? null, max: data.max ?? null };
+  return { value: data.value, min: data.min ?? null, max: data.max ?? null, data };
 };
 
 export const readCounterReportItem = (item: ComponentSnapshot | ComponentChangePreview) => {

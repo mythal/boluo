@@ -60,12 +60,12 @@ export type ExportEntity =
 
 export const componentReportToText = (entity: EntityOf<'ComponentReport'>): string =>
   reportToText(entity, {
-    variableUpdate: '变量变更',
+    counterUpdate: '计数器变更',
     componentUpdate: '组件变更',
     deleted: '已删除',
     unsupportedComponent: '不支持的组件',
     preview: '预览',
-    empty: '暂无变量。',
+    empty: '暂无组件。',
   });
 
 export const fromLegacyEntity = (legacy: LegacyEntity): Entity => {

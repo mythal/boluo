@@ -9,7 +9,8 @@
     "@boluo/typescript-config": "0.0.0",
     "@types/node": "^26.1.1",
     "eslint": "^10.6.0",
-    "typescript": "^6"
+    "typescript": "^6",
+    "tsx": "^4.23.0"
   },
   "exports": {
     "./*": "./src/*.ts"
@@ -19,7 +20,8 @@
   "private": true,
   "scripts": {
     "check": "tsc --noEmit",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test": "node --import tsx --test \"src/**/*.test.ts\""
   },
   "sideEffects": false,
   "type": "module"

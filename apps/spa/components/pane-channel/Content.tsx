@@ -22,7 +22,7 @@ interface Props {
   isAction: boolean;
   isArchived: boolean;
   isPreview?: boolean;
-  message?: { id: string; hasEntryEffects: boolean };
+  message?: { id: string; rev?: number; hasEntryEffects: boolean };
   seed?: number[];
   nameNode: ReactNode;
   onDoubleClick?: MouseEventHandler<HTMLSpanElement>;
@@ -73,11 +73,11 @@ export const Content = memo<Props>(
           const key = entity.start;
           switch (entity.type) {
             case 'ComponentReport':
-              return entity.report.type === 'Change' ? (
+              return entity.report.type === 'Change' && !isPreview && message?.hasEntryEffects ? (
                 <MessageComponentChanges
                   key={key}
-                  messageId={message?.id}
-                  hasEntryEffects={message?.hasEntryEffects ?? false}
+                  messageId={message.id}
+                  messageRevision={message.rev}
                   entity={entity}
                   source={source}
                 />

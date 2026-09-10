@@ -164,21 +164,27 @@ const ComponentReportRow = ({
   const item = readCounterReportItem(component);
   const { component: target } = component;
   const snapshot = 'payload' in component;
+  const name = (
+    <span className="inline-flex min-w-0 items-center gap-1 pr-3">
+      <EntryName entryKey={target.key} displayName={component.displayName} />
+    </span>
+  );
   if (!item)
     return (
-      <span
-        className="text-text-muted col-span-3"
-        title={intl.formatMessage({ defaultMessage: 'Unsupported component' })}
-        aria-label={intl.formatMessage({ defaultMessage: 'Unsupported component' })}
-      >
-        <FormattedMessage defaultMessage="Unsupported" />
+      <span className="contents">
+        {name}
+        <span
+          className="text-text-muted col-span-2 text-right"
+          title={intl.formatMessage({ defaultMessage: 'Unsupported component' })}
+          aria-label={intl.formatMessage({ defaultMessage: 'Unsupported component' })}
+        >
+          <FormattedMessage defaultMessage="Unsupported" />
+        </span>
       </span>
     );
   return (
     <span className="contents">
-      <span className="inline-flex min-w-0 items-center gap-1 pr-3">
-        <EntryName entryKey={target.key} displayName={component.displayName} />
-      </span>
+      {name}
       <span className="contents font-mono tabular-nums">
         {item.after == null ? (
           <span className="text-text-muted col-span-2 inline-flex items-center justify-end gap-1 font-sans text-xs">

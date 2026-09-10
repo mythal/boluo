@@ -2,7 +2,7 @@ import Edit from '@boluo/icons/Edit';
 import PaperPlane from '@boluo/icons/PaperPlane';
 import { type FC } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { useComposeError } from '../../hooks/useComposeError';
+import { useComposeIssues } from '../../hooks/useComposeIssues';
 import { InComposeButton } from './InComposeButton';
 import { useTooltip } from '@boluo/ui/hooks/useTooltip';
 import { TooltipBox } from '@boluo/ui/TooltipBox';
@@ -27,13 +27,13 @@ export const SendButton: FC<Props> = ({ isEditing = false, send }) => {
     getReferenceProps,
     floatingStyles,
   } = useTooltip('top-end');
-  const composeError = useComposeError();
+  const issues = useComposeIssues();
   const title = isEditing
     ? intl.formatMessage({ defaultMessage: 'Edit' })
     : intl.formatMessage({ defaultMessage: 'Send' });
   return (
     <div className="shrink-0 self-end py-1 pr-1" ref={setReference} {...getReferenceProps()}>
-      <InComposeButton onClick={() => void send()} disabled={composeError != null} label={title}>
+      <InComposeButton onClick={() => void send()} disabled={issues.length > 0} label={title}>
         {isEditing ? <Edit /> : <PaperPlane />}
       </InComposeButton>
       <TooltipBox

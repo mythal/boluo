@@ -1,5 +1,4 @@
 import clsx from 'clsx';
-import { CSS, type Transform } from '@dnd-kit/utilities';
 import { type CSSProperties, type DragEventHandler, type FC } from 'react';
 import { PreviewHandlePlaceHolder } from '../PreviewHandlePlaceHolder';
 
@@ -14,8 +13,8 @@ interface Props {
   children: React.ReactNode;
   onDrop?: DragEventHandler;
   inEditMode?: boolean;
-  transform?: Transform | null;
-  transition?: string | undefined;
+  transform?: CSSProperties['transform'];
+  transition?: CSSProperties['transition'];
   isSelf?: boolean;
   onMouseEnter?: React.MouseEventHandler<HTMLDivElement>;
   onMouseLeave?: React.MouseEventHandler<HTMLDivElement>;
@@ -36,7 +35,7 @@ export const PreviewBox: FC<Props> = ({
   children,
   inEditMode = false,
   onDrop,
-  transform = null,
+  transform,
   transition,
   isSelf = false,
   onMouseEnter,
@@ -45,7 +44,7 @@ export const PreviewBox: FC<Props> = ({
   handle,
 }) => {
   const style: CSSProperties & { '--bg-angle': string } = {
-    transform: CSS.Transform.toString(transform),
+    transform,
     transition,
     '--bg-angle': isSelf ? '135deg' : '225deg',
     ...(disablePreviewStyle

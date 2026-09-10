@@ -270,7 +270,7 @@ async fn edit_entry(
     )
     .await?
     .or_not_found()?;
-    let renamed = previous.key.to_lowercase() != entry.key.to_lowercase();
+    let renamed = previous.key != entry.key;
     if payload.message_id.is_some() && !renamed {
         return Err(AppError::BadRequest(
             "messageId requires a recorded Entry change".to_string(),

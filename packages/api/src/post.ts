@@ -13,6 +13,8 @@ import type {
   CreateAsset,
   CreateChannel,
   CreateEntry,
+  ApplyEntryBatch,
+  EntryEffect,
   CreateNote,
   CreateSpace,
   DeleteAsset,
@@ -104,6 +106,7 @@ export interface Post {
   '/notes/archive': { payload: ArchiveNote; query: null; result: true };
   '/notes/restore': { payload: RestoreNote; query: null; result: true };
   // entries
+  '/entries/batch': { payload: ApplyEntryBatch; query: null; result: EntryEffect };
   '/entries/create': { payload: CreateEntry; query: null; result: Entry };
   '/entries/delete': { payload: DeleteEntry; query: null; result: true };
   '/entries/effects_by_messages': {

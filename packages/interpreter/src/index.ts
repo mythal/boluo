@@ -3,3 +3,5 @@ export * from './entities';
 export * from './parse-result';
 export * from './parser';
 export * from './to-parsed';
+export * from './state-command';
+export * from './variables';

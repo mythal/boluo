@@ -1,4 +1,4 @@
-import { type PreviewPost } from '@boluo/api';
+import { type Character, type PreviewPost } from '@boluo/api';
 import { equalPreviewEdit, isClearedPreviewContent } from '@boluo/api/preview/diff';
 import { type DesiredPreview } from '@boluo/api/preview/publisher';
 import { type ComposeParseResult } from '../../hooks/useChannelAtoms';
@@ -21,6 +21,8 @@ interface MakeDesiredPreviewOptions {
   channelId: string;
   nickname: string;
   defaultCharacterName: string;
+  defaultCharacterId?: string | null;
+  defaultCharacter?: Character;
   defaultInGame: boolean;
   compose: ComposeState;
   parsed: ComposeParseResult;
@@ -31,6 +33,8 @@ export const makeDesiredPreview = ({
   channelId,
   nickname,
   defaultCharacterName,
+  defaultCharacterId = null,
+  defaultCharacter,
   defaultInGame,
   compose,
   parsed,
@@ -46,8 +50,9 @@ export const makeDesiredPreview = ({
     parsedInGame: parsed.inGame,
     asTarget: parsed.asTarget,
     originalMessageAttribution: compose.originalMessageAttribution,
-    channelCharacterId: null,
+    channelCharacterId: defaultCharacterId,
     channelCharacterName: defaultCharacterName,
+    channelCharacter: defaultCharacter,
     resolveCharacter,
   });
   const shouldHideContent = !broadcast || whisperToUsernames != null;

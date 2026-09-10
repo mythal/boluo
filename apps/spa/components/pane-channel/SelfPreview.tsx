@@ -20,6 +20,7 @@ import { useSelfPreviewAutoHide } from '../../hooks/useSelfPreviewAutoHide';
 import { useReadObserve } from '../../hooks/useReadObserve';
 import { useIsInGameChannel } from '../../hooks/useIsInGameChannel';
 import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { useScrollerRef } from '../../hooks/useScrollerRef';
 import { useVirtuosoRef } from '../../hooks/useVirtuosoRef';
 import { useMember } from '../../hooks/useMember';
@@ -257,7 +258,7 @@ export const SelfPreview: FC<Props> = ({ preview, isLast, displayIndex }) => {
         onDrop={onDrop}
         pos={preview.pos}
         isInGameChannel={isInGameChannel}
-        transform={transform}
+        transform={CSS.Transform.toString(transform)}
         transition={transition}
         onMouseEnter={() => setSelfPreviewHover(true)}
         onMouseLeave={() => setSelfPreviewHover(false)}

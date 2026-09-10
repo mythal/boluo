@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-empty-object-type */
-import { isCrossOrigin } from '../settings';
 import store from '../store';
 import { Err, Ok, type Result } from '../utils/result';
 import { getAuthToken, clearAuthToken } from '../utils/token';
@@ -107,9 +106,6 @@ export const request = async <T>(
       headers: { 'Content-Type': contentType },
     }).headers,
   );
-  if (isCrossOrigin) {
-    headers.append('X-Debug', '1');
-  }
 
   const token = getAuthToken();
   if (token) {

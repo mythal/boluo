@@ -4,7 +4,11 @@ import { Button } from '@boluo/ui/Button';
 import { TextInput } from '@boluo/ui/TextInput';
 import { type FC, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { isValidEntryDisplayName, isValidEntryKey } from './entry-metadata';
+import {
+  isValidEntryDisplayName,
+  isValidEntryKey,
+  normalizeEntryDisplayName,
+} from '../../entries/metadata';
 
 interface Props {
   entry: EntryComponentMatch;
@@ -22,10 +26,12 @@ export const CharacterPortraitMetadataForm: FC<Props> = ({ entry, disabled, onSu
   const [key, setKey] = useState(entry.key);
   const [displayName, setDisplayName] = useState(entry.displayName);
   const normalizedKey = key.trim();
-  const normalizedDisplayName = displayName.trim();
+  const normalizedDisplayName = normalizeEntryDisplayName(displayName);
   const keyValid = isValidEntryKey(key);
   const displayNameValid = isValidEntryDisplayName(displayName);
-  const changed = normalizedKey !== entry.key || normalizedDisplayName !== entry.displayName;
+  const changed =
+    normalizedKey !== entry.key ||
+    normalizedDisplayName !== normalizeEntryDisplayName(entry.displayName);
 
   const reset = () => {
     setKey(entry.key);
@@ -52,13 +58,14 @@ export const CharacterPortraitMetadataForm: FC<Props> = ({ entry, disabled, onSu
           </span>
           <TextInput
             value={displayName}
+            placeholder={entry.key}
             disabled={disabled}
             variant={displayNameValid ? 'normal' : 'error'}
             onChange={(event) => setDisplayName(event.target.value)}
           />
           {!displayNameValid && (
             <span className="text-state-danger-text text-xs">
-              <FormattedMessage defaultMessage="Use 2–32 characters." />
+              <FormattedMessage defaultMessage="Use up to 32 characters, or leave empty to use the key." />
             </span>
           )}
         </label>

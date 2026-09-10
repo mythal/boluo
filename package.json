@@ -39,6 +39,7 @@
     "dev:legacy": "turbo run dev --filter=legacy",
     "dev:site": "turbo run dev --filter=site",
     "dev:spa": "turbo run dev --filter=spa",
+    "dev:spa:public": "turbo run dev --filter=spa -- --hostname 0.0.0.0",
     "fix:versions": "syncpack fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

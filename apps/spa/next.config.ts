@@ -16,6 +16,7 @@ const env = {
   BACKEND_URL: process.env.BACKEND_URL,
   APP_VERSION: process.env.APP_VERSION ?? process.env.GITHUB_SHA,
   ANALYZE: process.env.ANALYZE,
+  DEV_ALLOWED_ORIGINS: process.env.DEV_ALLOWED_ORIGINS,
 };
 
 // console.log(env);
@@ -48,6 +49,10 @@ const config: NextConfig = {
     },
   },
   devIndicators: false,
+  // https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins
+  allowedDevOrigins: env.DEV_ALLOWED_ORIGINS?.split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean),
   experimental: {
     // TODO: Turn off it if the app switched to `app` router.
     externalDir: true,

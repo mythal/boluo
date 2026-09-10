@@ -1,7 +1,8 @@
 use super::api::{
-    CheckEntryIdentifier, CreateEntry, DeleteEntry, EditEntry, EditEntryComponents,
-    EntryComponentHistoryQuery, EntryHistoryQuery, ListEntries, ListEntriesByComponent, MoveEntry,
-    QueryEntry, QueryEntryEffectsByMessages,
+    ApplyEntryBatch, CheckEntryIdentifier, CreateEntry, DeleteEntry, EditEntry,
+    EditEntryComponents, EmptyEntryAction, EntryBatchOperation, EntryComponentHistoryQuery,
+    EntryHistoryQuery, ListEntries, ListEntriesByComponent, MoveEntry, QueryEntry,
+    QueryEntryEffectsByMessages,
 };
 use super::models::{
     Entry, EntryComponentHistory, EntryComponentMatch, EntryEffect, EntryEffectHistory,
@@ -269,7 +270,7 @@ async fn edit_entry(
     )
     .await?
     .or_not_found()?;
-    let renamed = previous.key.to_lowercase() != entry.key.to_lowercase();
+    let renamed = previous.key != entry.key;
     if payload.message_id.is_some() && !renamed {
         return Err(AppError::BadRequest(
             "messageId requires a recorded Entry change".to_string(),
@@ -368,7 +369,8 @@ async fn edit_entry_components(
     let updated_entry = Entry::get_by_id_in_transaction(&mut transaction, entry.scope_id, entry.id)
         .await?
         .or_not_found()?;
-    let delete_empty_entry = updated_entry.components.is_empty() && !payload.keep_empty_entry;
+    let delete_empty_entry =
+        updated_entry.components.is_empty() && payload.on_empty == EmptyEntryAction::Delete;
     let attached_message = if payload.skip_record_history {
         None
     } else {
@@ -428,6 +430,58 @@ async fn edit_entry_components(
     changes.apply_with_mutation(ctx, &mutation).await;
     publish_attached_message(payload.space_id, attached_message).await;
     Ok((!delete_empty_entry).then_some(updated_entry))
+}
+
+async fn apply_entry_batch(
+    ctx: &crate::context::AppContext,
+    req: Request<impl Body>,
+) -> Result<EntryEffect, AppError> {
+    let session = authenticate(ctx, &req).await?;
+    let payload: ApplyEntryBatch = parse_body(req).await?;
+    let mutation = ctx.space_store.acquire_mutation(payload.space_id).await?;
+    let scope = resolve_scope(ctx, payload.space_id, payload.scope_id).await?;
+    if !can_edit_scope(ctx, &scope, session.user_id).await? {
+        return Err(AppError::NoPermission(
+            "You don't have permission to edit this scope".into(),
+        ));
+    }
+    for operation in &payload.operations {
+        if let EntryBatchOperation::Create {
+            reference_note_id, ..
+        } = operation
+        {
+            ensure_reference_access(ctx, &scope, *reference_note_id, session.user_id).await?;
+        }
+    }
+    let mut transaction = ctx.db.begin().await?;
+    let (mut effect, entries) = super::batch::apply_batch(
+        &mut transaction,
+        payload.space_id,
+        payload.scope_id,
+        session.user_id,
+        payload.operations,
+    )
+    .await?;
+    let message = attach_message(
+        &mut transaction,
+        payload.message_id,
+        session.user_id,
+        effect.id,
+    )
+    .await?;
+    effect.message_id = payload.message_id;
+    let mutation = mutation.commit(transaction).await?;
+    let mut changes = CommittedChanges::default();
+    for result in entries {
+        if let Some(entry) = result.entry {
+            changes.entry_updated(payload.space_id, &entry.metadata);
+        } else {
+            changes.entry_deleted(payload.space_id, payload.scope_id, result.entry_id);
+        }
+    }
+    changes.apply_with_mutation(ctx, &mutation).await;
+    publish_attached_message(payload.space_id, message).await;
+    Ok(effect)
 }
 
 async fn delete_entry(
@@ -670,6 +724,7 @@ pub async fn router(
         ("/by_component", Method::GET) => response(list_entries_by_component(ctx, req).await).await,
         ("/query", Method::GET) => response(query_entry(ctx, req).await).await,
         ("/check_identifier", Method::GET) => response(check_identifier(ctx, req).await).await,
+        ("/batch", Method::POST) => response(apply_entry_batch(ctx, req).await).await,
         ("/create", Method::POST) => response(create_entry(ctx, req).await).await,
         ("/edit", Method::PUT) => response(edit_entry(ctx, req).await).await,
         ("/move", Method::PUT) => response(move_entry(ctx, req).await).await,

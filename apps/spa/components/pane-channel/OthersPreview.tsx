@@ -127,6 +127,7 @@ export const OthersPreview: FC<Props> = ({ preview, isLast }) => {
             entities={entities}
             isAction={displayIsAction}
             isArchived={false}
+            isPreview={original == null}
             nameNode={nameNode}
             seed={original?.seed}
           />

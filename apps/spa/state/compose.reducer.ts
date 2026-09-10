@@ -6,7 +6,7 @@ import { type PreviewEdit } from '@boluo/api';
 import type { CharacterPortraitSelection } from './characterPortraitSelection';
 import { resolveSpeakerMode } from '../characters/resolveSpeaker';
 
-export type ComposeError = 'TEXT_EMPTY' | 'NO_NAME' | MediaError;
+export type ComposeError = { type: 'TEXT_EMPTY' } | { type: 'NO_NAME' } | { type: MediaError };
 
 export type ComposeRange = [number, number];
 
@@ -552,14 +552,14 @@ export const checkCompose =
         : defaultCharacterName;
     const needsDefaultName = asTarget == null || asTarget.type === 'DefaultCharacter';
     if (inGame && needsDefaultName && characterName === '') {
-      return 'NO_NAME';
+      return { type: 'NO_NAME' };
     }
     const mediaResult = validateMedia(media);
     if (mediaResult.isErr) {
-      return mediaResult.err;
+      return { type: mediaResult.err };
     }
     if (rest.trim() === '') {
-      return 'TEXT_EMPTY';
+      return { type: 'TEXT_EMPTY' };
     }
     return null;
   };

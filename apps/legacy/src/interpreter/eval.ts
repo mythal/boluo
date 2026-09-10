@@ -23,7 +23,7 @@ export const evaluate = (node: ExprNode, rng: Prando, layer = 0): EvaluatedExprN
   if (layer > 64) {
     throw TOO_MUCH_LAYER;
   }
-  if (node.type === 'Num') {
+  if (node.type === 'Num' || node.type === 'Variable') {
     return node;
   } else if (node.type === 'Roll') {
     if (node.counter > MAX_DICE_COUNTER || node.face > 121072) {
@@ -252,6 +252,8 @@ export const nodeToText = (node: EvaluatedExprNode): string => {
     return `${nodeToText(node.l)}${node.op}${nodeToText(node.r)}=${node.value}`;
   } else if (node.type === 'Num') {
     return String(node.value);
+  } else if (node.type === 'Variable') {
+    return `${node.name}[${node.value}]`;
   } else if (node.type === 'SubExpr') {
     return `(${nodeToText(node.evaluatedNode)})=${node.value}`;
   } else if (node.type === 'FateRoll') {

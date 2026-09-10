@@ -1,3 +1,5 @@
+import { refreshEntries } from '../../entries/cache';
+import { matchesMessageComponentHistory } from '../../entries/useMessageComponentHistory';
 import {
   type NewMessage,
   type EditMessage,
@@ -10,7 +12,7 @@ import { useCallback, useLayoutEffect, useMemo, useRef } from 'react';
 import { useChannelAtoms } from '../../hooks/useChannelAtoms';
 import { useChannelId } from '../../hooks/useChannelId';
 import { useQueryChannelMembers } from '@boluo/hooks/useQueryChannelMembers';
-import { parse } from '@boluo/interpreter';
+import { parseModifiers, needsVariableEnvironment } from '@boluo/interpreter';
 import { upload } from '../../media';
 import { type ComposeActionUnion } from '../../state/compose.actions';
 import { useDefaultInGame } from '../../hooks/useDefaultInGame';
@@ -29,18 +31,28 @@ import { usePortrayableCharacters } from '../../hooks/usePortrayableCharacters';
 import { selectedPortraitIdForCharacter } from '../../state/characterPortraitSelection';
 import { resolveSpeaker } from '../../characters/resolveSpeaker';
 
+import { useSWRConfig } from 'swr';
+import { commitCounterBatch, loadCounters } from '../../counters/api';
+import { resolveCounterTarget } from '../../counters/useComposeCountersAtom';
+import { prepareCounterMessage } from '../../counters/prepare-message';
+import { counterIssueMessage } from '../../counters/feedback';
+
 const SEND_TIMEOUT = 8000;
 
 export const useSend = () => {
   const channelId = useChannelId();
   const defaultInGame = useDefaultInGame();
   const intl = useIntl();
-  const { composeAtom, checkComposeAtom, defaultDiceFaceRef } = useChannelAtoms();
+  const { composeAtom, composeIssuesAtom, defaultDiceFaceRef, sendingAtom } = useChannelAtoms();
   const store = useStore();
 
   const myMember = useMember();
   const channelCharacterName = useChannelCharacterName(myMember);
-  const { resolve } = usePortrayableCharacters(myMember?.space.spaceId);
+  const {
+    resolve,
+    characters,
+    error: charactersError,
+  } = usePortrayableCharacters(myMember?.space.spaceId);
   const { data: queryChannelMembers } = useQueryChannelMembers(channelId, myMember?.space.spaceId);
   const channelMembersMap: Map<string, MemberWithUser> = useMemo(() => {
     if (queryChannelMembers == null) return new Map<string, MemberWithUser>();
@@ -52,6 +64,7 @@ export const useSend = () => {
   });
 
   const setBanner = useSetBanner();
+  const { mutate } = useSWRConfig();
 
   const send = useCallback(async () => {
     const sendStartTime = Date.now();
@@ -67,7 +80,6 @@ export const useSend = () => {
     }
     const nickname = myMember.user.nickname;
     const composeState = store.get(composeAtom);
-    if (store.get(checkComposeAtom) != null) return;
     const composeDispatch = (action: ComposeActionUnion) => store.set(composeAtom, action);
     const chatDispatch = (action: ChatActionUnion) => store.set(chatAtom, action);
 
@@ -93,46 +105,67 @@ export const useSend = () => {
       }
     }
 
-    const parsedForSend = parse(composeState.source, true, {
-      defaultDiceFace: defaultDiceFaceRef.current,
-      resolveUsername: (username) => {
-        const member = channelMembersMapRef.current.get(username);
-        if (member == null) return null;
-        return member.user.nickname;
-      },
-    });
-    const { text, entities, whisperToUsernames } = parsedForSend;
+    const modifiers = parseModifiers(composeState.source);
     const { speaker, issue: speakerIssue } = resolveSpeaker({
       nickname,
       defaultInGame,
-      parsedInGame: parsedForSend.inGame,
-      asTarget: parsedForSend.asTarget,
+      parsedInGame: modifiers.inGame ? modifiers.inGame.inGame : null,
+      asTarget: modifiers.asTarget,
       originalMessageAttribution: composeState.originalMessageAttribution,
       channelCharacterId: myMember.channel.characterId,
       channelCharacterName,
       resolveCharacter: resolve,
     });
-    if (speakerIssue != null) {
-      const content =
-        speakerIssue.reason === 'Loading'
-          ? intl.formatMessage({
-              defaultMessage: 'Characters are still loading. Please try again.',
-            })
-          : speakerIssue.reason === 'Error'
-            ? intl.formatMessage({ defaultMessage: 'Characters could not be loaded.' })
-            : intl.formatMessage(
-                {
-                  defaultMessage:
-                    'Character “@{identifier}” is unavailable or cannot be portrayed.',
-                },
-                { identifier: speakerIssue.identifier },
-              );
+    if (speakerIssue != null) return;
+    const { character, hasTarget } = resolveCounterTarget({
+      target: modifiers.asTarget,
+      channelCharacterId: myMember.channel.characterId,
+      originalMessageAttribution: composeState.originalMessageAttribution,
+      defaultInGame,
+      parsedInGame: modifiers.inGame ? modifiers.inGame.inGame : null,
+      characters: characters ?? [],
+    });
+    if (needsVariableEnvironment(composeState.source) && hasTarget && characters == null) {
       setBanner({
         level: 'ERROR',
-        content,
+        content: counterIssueMessage(intl, {
+          type: charactersError ? 'LoadFailed' : 'LoadingCounters',
+        }),
       });
       return;
     }
+    const prepared = await prepareCounterMessage({
+      source: composeState.source,
+      editing: composeState.edit != null,
+      spaceId: myMember.space.spaceId,
+      character,
+      defaultDiceFace: defaultDiceFaceRef.current,
+      loadEntries: loadCounters,
+    });
+    if (prepared.type === 'Error') {
+      setBanner({ level: 'ERROR', content: counterIssueMessage(intl, prepared.error) });
+      return;
+    }
+    // Do not clear a newer draft after waiting for counter data.
+    const currentCompose = store.get(composeAtom);
+    if (
+      currentCompose.source !== composeState.source ||
+      currentCompose.previewId !== composeState.previewId ||
+      currentCompose.media !== composeState.media ||
+      currentCompose.edit !== composeState.edit ||
+      currentCompose.selectedCharacterPortrait !== composeState.selectedCharacterPortrait
+    ) {
+      setBanner({
+        level: 'WARNING',
+        content: intl.formatMessage({
+          defaultMessage: 'Your input changed while preparing the message. Please send again.',
+        }),
+      });
+      return;
+    }
+    const parsedForSend = prepared.parsed;
+    const counterBatch = prepared.batch;
+    const { text, entities, whisperToUsernames } = parsedForSend;
     const collapseCharacterReference =
       parsedForSend.asTarget?.type === 'CharacterReference' &&
       myMember.channel.characterId != null &&
@@ -361,14 +394,32 @@ export const useSend = () => {
           },
         });
       }
+      if (result !== 'TIMEOUT' && result.isOk && counterBatch != null) {
+        const committed = await commitCounterBatch({ ...counterBatch, messageId: result.some.id });
+        void Promise.allSettled([
+          refreshEntries(mutate, counterBatch.spaceId, counterBatch.scopeId),
+          mutate(matchesMessageComponentHistory(counterBatch.spaceId, result.some.id)),
+        ]);
+        if (committed === 'WriteFailed') {
+          setBanner({
+            level: 'ERROR',
+            content: intl.formatMessage({
+              defaultMessage:
+                'The message was sent, but the counter update could not be confirmed. Check .st before trying again.',
+            }),
+          });
+        }
+      }
     }
   }, [
     myMember,
     channelCharacterName,
     resolve,
+    characters,
+    charactersError,
+    mutate,
     store,
     composeAtom,
-    checkComposeAtom,
     defaultDiceFaceRef,
     defaultInGame,
     setBanner,
@@ -376,5 +427,21 @@ export const useSend = () => {
     channelId,
   ]);
 
-  return send;
+  return useCallback(async () => {
+    if (store.get(composeIssuesAtom).length > 0) return;
+    store.set(sendingAtom, true);
+    try {
+      await send();
+    } catch (error) {
+      recordWarn('Could not send message', { error });
+      setBanner({
+        level: 'ERROR',
+        content: intl.formatMessage({
+          defaultMessage: 'Could not send message. Please try again.',
+        }),
+      });
+    } finally {
+      store.set(sendingAtom, false);
+    }
+  }, [send, store, composeIssuesAtom, sendingAtom, setBanner, intl]);
 };

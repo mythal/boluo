@@ -19,6 +19,12 @@ export const EntityExprNode = memo<Props>(({ node }: Props) => {
   switch (node.type) {
     case 'Num':
       return node.value;
+    case 'Variable':
+      return (
+        <span className="font-mono">
+          {node.name}[{node.value}]
+        </span>
+      );
     case 'Binary':
       return <EntityExprBinary node={node} />;
     case 'Roll':

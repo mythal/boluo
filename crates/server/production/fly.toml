@@ -12,6 +12,8 @@ swap_size_mb = 512
 
 [deploy]
   strategy = 'bluegreen'
+  release_command = '/bin/server init'
+  release_command_timeout = '30m'
 
 [env]
   HOST = '0.0.0.0'

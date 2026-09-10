@@ -1,3 +1,4 @@
+import { entryQueryKeys } from './entryQueryKeys';
 import type { ApiError, Entry } from '@boluo/api';
 import { get } from '@boluo/api-browser';
 import { unwrap } from '@boluo/utils/result';
@@ -9,7 +10,7 @@ export const useQueryEntry = (
   entryId: string | undefined,
 ): SWRResponse<Entry, ApiError> => {
   const key =
-    spaceId && scopeId && entryId ? (['/entries/query', spaceId, scopeId, entryId] as const) : null;
+    spaceId && scopeId && entryId ? entryQueryKeys.entry(spaceId, scopeId, entryId) : null;
   return useSWR<Entry, ApiError, typeof key>(
     key,
     ([, currentSpaceId, currentScopeId, currentEntryId]) =>

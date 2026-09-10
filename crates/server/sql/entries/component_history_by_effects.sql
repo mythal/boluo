@@ -6,10 +6,22 @@ SELECT
     history.key,
     history.component_type,
     history.action AS "action!: EntryComponentHistoryAction",
-    history.payload,
+    history.payload AS "payload?: ComponentPayload",
+    previous.payload AS "before_payload?: ComponentPayload",
     effect.created
 FROM entry_component_history history
 JOIN entry_effects effect ON effect.id = history.entry_effect_id
+LEFT JOIN LATERAL (
+    SELECT prior.payload
+    FROM entry_component_history prior
+    JOIN entry_effects prior_effect ON prior_effect.id = prior.entry_effect_id
+    WHERE prior.entry_id = history.entry_id
+      AND prior.component_type = history.component_type
+      AND prior_effect.scope_id = effect.scope_id
+      AND (prior_effect.created, prior_effect.id) < (effect.created, history.entry_effect_id)
+    ORDER BY prior_effect.created DESC, prior_effect.id DESC
+    LIMIT 1
+) previous ON TRUE
 WHERE history.entry_effect_id = ANY($1)
 ORDER BY
     effect.created DESC,

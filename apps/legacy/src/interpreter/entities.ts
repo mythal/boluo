@@ -1,3 +1,4 @@
+import { componentReportToText as reportToText } from '@boluo/components/report';
 import type {
   CocRollResult as ApiCocRollResult,
   DicePoolResult as ApiDicePoolResult,
@@ -53,8 +54,19 @@ export interface ExportLink extends Span {
 }
 
 export type ExportEntity =
+  | (EntityOf<'ComponentReport'> & { text: string })
   | ((Text | ExportLink | Strong | Emphasis | StrongEmphasis | Code | CodeBlock) & { text: string })
   | ExportExpr;
+
+export const componentReportToText = (entity: EntityOf<'ComponentReport'>): string =>
+  reportToText(entity, {
+    counterUpdate: '计数器变更',
+    componentUpdate: '组件变更',
+    deleted: '已删除',
+    unsupportedComponent: '不支持的组件',
+    preview: '预览',
+    empty: '暂无组件。',
+  });
 
 export const fromLegacyEntity = (legacy: LegacyEntity): Entity => {
   const { start, offset: len } = legacy;

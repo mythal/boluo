@@ -374,6 +374,41 @@ zonePair.ruleset('http-response-compression', ({ select }) => ({
   ],
 }));
 
+const scannerPathExpression = [
+  '(starts_with(http.request.uri.path, "/wp-"))',
+  '(http.request.uri.path contains "/.env")',
+  '(http.request.uri.path contains "/.git")',
+  '(http.request.uri.path contains "/phpmyadmin")',
+  '(http.request.uri.path contains "/cgi-bin/")',
+  '(ends_with(http.request.uri.path, ".php"))',
+  '(ends_with(http.request.uri.path, ".asp"))',
+  '(ends_with(http.request.uri.path, ".aspx"))',
+].join(' or ');
+
+zonePair.ruleset('http-request-firewall-custom', ({ select }) => ({
+  name: 'default',
+  phase: 'http_request_firewall_custom',
+  rules: [
+    {
+      action: 'block',
+      description: '阻止 AI 爬虫程序和爬网程序规则',
+      enabled: true,
+      expression: '(cf.verified_bot_category eq "AI Crawler")',
+      ref: select({
+        boluo_chat: 'dba12ff883f74dfb989491336ff0488e',
+        boluochat_com: 'block_ai_crawlers',
+      }),
+    },
+    {
+      action: 'block',
+      description: 'Block vulnerability scanners',
+      enabled: true,
+      expression: scannerPathExpression,
+      ref: 'block_scanners',
+    },
+  ],
+}));
+
 // Settings and rulesets that only apply to boluo.chat.
 boluoChat.zoneSetting('automatic-https-rewrites', {
   settingId: 'automatic_https_rewrites',
@@ -463,19 +498,6 @@ boluoChat.ruleset('http-request-transform', {
       expression:
         '(starts_with(http.host,"app") and http.request.uri.path eq "/") and (starts_with(http.request.accepted_languages[0],"en"))',
       ref: 'd55e5d7264294986b8a7906a72860062',
-    },
-  ],
-});
-boluoChat.ruleset('http-request-firewall-custom', {
-  name: 'default',
-  phase: 'http_request_firewall_custom',
-  rules: [
-    {
-      action: 'block',
-      description: '阻止 AI 爬虫程序和爬网程序规则',
-      enabled: true,
-      expression: '(cf.verified_bot_category eq "AI Crawler")',
-      ref: 'dba12ff883f74dfb989491336ff0488e',
     },
   ],
 });

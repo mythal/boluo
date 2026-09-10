@@ -116,6 +116,8 @@ fn opaque_target(named_type: &specta::datatype::NamedDataType) -> Option<String>
     let name = &named_type.name;
     if named_type.module_path.contains("shared_types::entities") {
         Some(format!("shared_types::entities::{name}"))
+    } else if named_type.module_path.contains("shared_types::components") {
+        Some(format!("shared_types::components::{name}"))
     } else if named_type.module_path.contains("shared_types::preview") {
         Some(format!("shared_types::preview::{name}"))
     } else if name == "Entities" {
@@ -141,5 +143,35 @@ fn replace_opaque_fields(types: &Types, fields: &mut Fields) {
         if let Some(ty) = field.ty.as_mut() {
             replace_opaque(types, ty);
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn component_wire_types_reuse_shared_definitions() {
+        #[allow(dead_code)]
+        #[derive(specta::Type)]
+        struct ComponentEnvelope {
+            component: shared_types::components::ComponentRef,
+            payload: shared_types::components::ComponentPayload,
+        }
+
+        let mut types = Types::default();
+        types.register_mut::<ComponentEnvelope>();
+        let source = Rust::default()
+            .opaque_type(|reference| {
+                reference
+                    .downcast_ref::<Opaque>()
+                    .map(|opaque| Cow::Owned(opaque.0.clone()))
+            })
+            .export(&types, RustFormat)
+            .unwrap();
+        assert!(source.contains("shared_types::components::ComponentRef"));
+        assert!(source.contains("shared_types::components::ComponentPayload"));
+        assert!(!source.contains("pub enum ComponentPayload"));
+        assert!(!source.contains("pub struct ComponentRef"));
     }
 }

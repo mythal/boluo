@@ -2,7 +2,7 @@
   "$schema": "https://turbo.build/schema.json",
   "ui": "tui",
   "noUpdateNotifier": true,
-  "globalEnv": ["NODE_ENV"],
+  "globalEnv": ["NODE_ENV", "DEV_ALLOWED_ORIGINS"],
   "tasks": {
     "codegen": { "dependsOn": ["^codegen"], "inputs": ["$TURBO_DEFAULT$"] },
     "generate": { "dependsOn": ["^generate"], "inputs": ["$TURBO_DEFAULT$"] },

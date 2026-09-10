@@ -1,3 +1,4 @@
+import { entryQueryKeys } from '@boluo/hooks/entryQueryKeys';
 import { isApiError, type Asset, type EntryComponentMatch } from '@boluo/api';
 import { patch, post, put } from '@boluo/api-browser';
 import { explainError } from '@boluo/locale/errors';
@@ -6,7 +7,11 @@ import { useCallback, useMemo, useState } from 'react';
 import { type IntlShape, useIntl } from 'react-intl';
 import { useSWRConfig } from 'swr';
 import { mediaMaxSizeMb, upload, type UploadError } from '../../media';
-import { isValidEntryDisplayName, isValidEntryKey } from './entry-metadata';
+import {
+  isValidEntryDisplayName,
+  isValidEntryKey,
+  normalizeEntryDisplayName,
+} from '../../entries/metadata';
 import {
   makePortraitAssetName,
   makePortraitDisplayName,
@@ -78,12 +83,12 @@ export const useCharacterPortraitMutation = ({
   const [operation, setOperation] = useState<PortraitMutationOperation | null>(null);
   const [error, setError] = useState<string | null>(null);
   const portraitQueryKey = useMemo(
-    () => ['/entries/by_component', spaceId, scopeId, PORTRAIT_COMPONENT_TYPE] as const,
+    () => entryQueryKeys.byComponent(spaceId, scopeId, PORTRAIT_COMPONENT_TYPE),
     [scopeId, spaceId],
   );
 
   const revalidatePortraitEntries = useCallback(async () => {
-    await Promise.all([mutate(portraitQueryKey), mutate(['/entries/by_scope', spaceId, scopeId])]);
+    await Promise.all([mutate(portraitQueryKey), mutate(entryQueryKeys.byScope(spaceId, scopeId))]);
   }, [mutate, portraitQueryKey, scopeId, spaceId]);
 
   const attachPortraitAsset = useCallback(
@@ -209,9 +214,10 @@ export const useCharacterPortraitMutation = ({
   const editPortraitMetadata = useCallback(
     async (entry: EntryComponentMatch, key: string, displayName: string) => {
       const nextKey = key.trim();
-      const nextDisplayName = displayName.trim();
+      const nextDisplayName = normalizeEntryDisplayName(displayName);
       if (
-        (nextKey === entry.key && nextDisplayName === entry.displayName) ||
+        (nextKey === entry.key &&
+          nextDisplayName === normalizeEntryDisplayName(entry.displayName)) ||
         !isValidEntryKey(nextKey) ||
         !isValidEntryDisplayName(nextDisplayName)
       ) {

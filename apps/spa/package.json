@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "dependencies": {
     "@boluo/api": "0.0.0",
+    "@boluo/components": "0.0.0",
     "@boluo/api-browser": "0.0.0",
     "@boluo/frontend-worker": "0.0.0",
     "@boluo/color": "0.0.0",

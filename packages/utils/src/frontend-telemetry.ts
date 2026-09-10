@@ -1,7 +1,7 @@
 import { describeThrownValue } from '@boluo/utils/errors';
 
 const CLOUDFLARE_INSIGHTS_SCRIPT = /static\.cloudflareinsights\.com\/beacon\.min\.js/i;
-const OPAQUE_SCRIPT_ERROR = /^Script error\.$/i;
+const OPAQUE_SCRIPT_ERROR = /^Script error\.?(?:\s|$)/i;
 const MEDIA_AUTOPLAY_BLOCKED =
   /play\(\) failed because the user didn't interact with the document first/i;
 const RESIZE_OBSERVER_LOOP =

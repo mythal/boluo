@@ -5,12 +5,14 @@ import {
   type ChannelMemberWithUser,
   type Export,
   type Message,
+  type EntryEffectHistory,
 } from '@boluo/api';
 import { type ExportEntity, evaluate, makeRng, nodeToText } from '@boluo/interpreter';
 import { computeColors, parseGameColor } from '@boluo/color';
 import { getMediaUrl } from '../../media';
 import { type IntlShape } from 'react-intl';
-import { get } from '@boluo/api-browser';
+import { get, post } from '@boluo/api-browser';
+import { exportComponentReportText } from './component-report';
 import { fileNameDateTimeFormat, generateDetailDate } from '../../date';
 import { splitByLine } from '@boluo/utils/string';
 
@@ -64,6 +66,7 @@ export interface ExportMessage {
   modified: string;
   text: string;
   entities: ExportEntity[];
+  entryEffects: EntryEffectHistory[];
   whisperTo: null | ExportMember[];
 }
 
@@ -73,9 +76,11 @@ export const formatDateString = (dateString: string): string => {
 };
 
 const entityToExportEntity =
-  (intl: IntlShape, rng: Prando, text: string) =>
+  (intl: IntlShape, rng: Prando, text: string, effects: EntryEffectHistory[]) =>
   (entity: Entity): ExportEntity => {
-    if (entity.type === 'Expr') {
+    if (entity.type === 'ComponentReport') {
+      return { ...entity, text: exportComponentReportText(intl, entity, effects) };
+    } else if (entity.type === 'Expr') {
       const { type, start, len } = entity;
       const node = evaluate(entity.node, rng);
       return {
@@ -131,7 +136,7 @@ export const exportMessage = (
       color: computeColors(member.user.id, parseGameColor(member.user.defaultColor))['light'],
     };
   }
-  return (message: Message): ExportMessage => {
+  return (message: Message, effects: EntryEffectHistory[] = []): ExportMessage => {
     const {
       id,
       senderId,
@@ -151,7 +156,7 @@ export const exportMessage = (
 
     let exportEntities: ExportEntity[] = [];
     if (rng) {
-      const entityMapper = entityToExportEntity(intl, rng, text);
+      const entityMapper = entityToExportEntity(intl, rng, text, effects);
       exportEntities = entities.map(entityMapper);
     }
     let whisperTo: ExportMessage['whisperTo'] = null;
@@ -178,6 +183,7 @@ export const exportMessage = (
       modified,
       text,
       entities: exportEntities,
+      entryEffects: effects,
       whisperTo,
     };
   };
@@ -216,6 +222,7 @@ function entityBbCode(entity: ExportEntity, color: string): string {
       return `[url=${entity.href}]${entity.text}[/url]`;
     case 'Strong':
       return `[b]${entity.text}[/b]`;
+    case 'ComponentReport':
     case 'Text':
       return entity.text;
     case 'Expr':
@@ -236,6 +243,7 @@ function entityMarkdown(entity: ExportEntity): string {
       return `[${entity.text}](${entity.href})`;
     case 'Strong':
       return `**${entity.text}**`;
+    case 'ComponentReport':
     case 'Text':
       return entity.text;
     case 'Expr':
@@ -257,6 +265,7 @@ export function csvBlob(intl: IntlShape, messages: ExportMessage[]): Blob {
     intl.formatMessage({ defaultMessage: 'Name' }),
     intl.formatMessage({ defaultMessage: 'Nickname' }),
     intl.formatMessage({ defaultMessage: 'Is Master' }) + '?',
+    intl.formatMessage({ defaultMessage: 'Is Action' }) + '?',
     intl.formatMessage({ defaultMessage: 'In Game' }) + '?',
     intl.formatMessage({ defaultMessage: 'Content' }),
     intl.formatMessage({ defaultMessage: 'Whisper' }),
@@ -462,17 +471,31 @@ export const exportChannel = async (
     exportQuery.after = after.toISOString();
   }
   const exportResult = await get('/channels/export', exportQuery);
-  const messages = exportResult
-    .unwrap()
-    .map(exportMessage(intl, publicMediaUrl, members))
-    .filter((message) => {
-      if (!includeArchived && message.folded) {
-        return false;
-      } else if (!includeOutGame && !message.inGame) {
-        return false;
-      }
-      return true;
+  const sourceMessages = exportResult.unwrap().filter((message) => {
+    if (!includeArchived && message.folded) {
+      return false;
+    } else if (!includeOutGame && !message.inGame) {
+      return false;
+    }
+    return true;
+  });
+  const effectsByMessage = new Map<string, EntryEffectHistory[]>();
+  const messageIds = sourceMessages
+    .filter((message) => message.hasEntryEffects)
+    .map(({ id }) => id);
+  for (let offset = 0; offset < messageIds.length; offset += 256) {
+    const result = await post('/entries/effects_by_messages', null, {
+      spaceId: channel.spaceId,
+      messageIds: messageIds.slice(offset, offset + 256),
     });
+    for (const message of result.unwrap()) {
+      effectsByMessage.set(message.messageId, message.effects);
+    }
+  }
+  const convertMessage = exportMessage(intl, publicMediaUrl, members);
+  const messages = sourceMessages.map((message) =>
+    convertMessage(message, effectsByMessage.get(message.id) ?? []),
+  );
   const context: ExportContext = { intl, options };
   let blob: Blob;
   let ext: string;

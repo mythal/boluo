@@ -355,6 +355,10 @@ const handleNewMessage = (
   }
   const [insertIndex, itemByPos] = binarySearchPosList(messages, message.pos);
   if (itemByPos) {
+    // Replayed creation events may predate the version already loaded from history.
+    if (itemByPos.id === message.id && compareMessageVersion(itemByPos, message) >= 0) {
+      return { ...state, previewMap, optimisticMessageMap };
+    }
     if (itemByPos.id !== message.id || itemByPos.modified !== message.modified) {
       const logContext = channelLogContext(state, action);
       recordWarn(

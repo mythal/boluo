@@ -91,7 +91,7 @@ export const useMakeChannelAtoms = (
     defaultDiceFaceRef.current = defaultDiceFace;
   }, [defaultDiceFace]);
   const composeAtom = composeAtomFamily({ channelId, paneKey });
-  const countersStateAtom = useComposeCountersAtom(composeAtom);
+  const countersStateAtom = useComposeCountersAtom(composeAtom, defaultInGame);
   const checkComposeAtom: Atom<ComposeError | null> = useMemo(
     () => selectAtom(composeAtom, checkCompose(characterName, defaultInGame)),
     [characterName, composeAtom, defaultInGame],

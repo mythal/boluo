@@ -13,7 +13,6 @@ import { InComposeButton } from './InComposeButton';
 import Edit from '@boluo/icons/Edit';
 import X from '@boluo/icons/X';
 import Icon from '@boluo/ui/Icon';
-import { findMessage } from '../../state/channel.reducer';
 import { ButtonInline } from '@boluo/ui/ButtonInline';
 
 interface Props {
@@ -25,29 +24,17 @@ export const EditMessageBanner = ({ currentUser }: Props) => {
   const { composeAtom } = useChannelAtoms();
   const dispatch = useSetAtom(composeAtom);
   const editingInfoAtom = useMemo(
-    () =>
-      selectAtom(
-        composeAtom,
-        (compose): [string | null, number | null] => {
-          if (!compose.edit) return [null, null];
-          const { p, q } = compose.edit;
-          return [compose.previewId, p / q];
-        },
-        ([idA, posA], [idB, posB]) => idA === idB && posA === posB,
-      ),
+    () => selectAtom(composeAtom, (compose) => (compose.edit ? compose.previewId : null)),
     [composeAtom],
   );
   const targetMessageAtom = useMemo(
     () =>
       atom((get): Message | null => {
-        const [targetMessageId, targetMessagePos] = get(editingInfoAtom);
+        const targetMessageId = get(editingInfoAtom);
         const chat = get(chatAtom);
         const channel = chat.channels[channelId];
-        if (!targetMessageId || !targetMessagePos || !channel) return null;
-        const result = findMessage(channel.messages, targetMessageId, targetMessagePos);
-        if (!result) return null;
-        const [message] = result;
-        return message;
+        if (!targetMessageId || !channel) return null;
+        return channel.messages.get(targetMessageId) ?? null;
       }),
     [channelId, editingInfoAtom],
   );

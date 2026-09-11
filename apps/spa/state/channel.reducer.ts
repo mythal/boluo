@@ -11,7 +11,8 @@ import { type MessageItem, type PreviewItem } from './channel.types';
 import { type ChatAction, type ChatActionUnion } from './chat.actions';
 import type { ChatReducerContext } from './chat.reducer';
 import { recordWarn } from '../error';
-import type { List } from 'list';
+import { MessageStore, type MessageStoreError } from './message-store';
+import { type Result } from '@boluo/utils/result';
 import * as L from 'list';
 import { type ComposeState } from './compose.reducer';
 import { toMessageItem } from './message';
@@ -157,7 +158,7 @@ export interface ChannelState {
   historyState: ChannelHistoryState;
   historyMutationGeneration: number;
   pendingMessageMutations: MessageMutationAction[];
-  messages: List<MessageItem>;
+  messages: MessageStore;
   previewMap: Record<UserId, PreviewItem>;
   optimisticMessageMap: Record<string, OptimisticMessage>;
   scheduledGc: ScheduledGc | null;
@@ -180,7 +181,7 @@ export const isOlderMessagesPageCurrent = (
   request: OlderMessagesPageRequest,
 ): boolean =>
   state?.historyState === 'PARTIAL' &&
-  L.first(state.messages)?.pos === request.before &&
+  L.first(state.messages.ordered)?.pos === request.before &&
   state.historyMutationGeneration === request.historyMutationGeneration;
 
 const messageDiagnostic = (message: Pick<MessageItem, 'id' | 'modified' | 'pos' | 'rev'>) => ({
@@ -193,47 +194,13 @@ const messageDiagnostic = (message: Pick<MessageItem, 'id' | 'modified' | 'pos' 
 const channelLogContext = (state: ChannelState, action: ChatActionUnion) => ({
   actionType: action.type,
   channelId: state.id,
-  firstPos: L.first(state.messages)?.pos,
+  firstPos: L.first(state.messages.ordered)?.pos,
   historyMutationGeneration: state.historyMutationGeneration,
   historyState: state.historyState,
-  lastPos: L.last(state.messages)?.pos,
+  lastPos: L.last(state.messages.ordered)?.pos,
   messageCount: state.messages.length,
   pendingMessageMutationCount: state.pendingMessageMutations.length,
 });
-
-const actionDiagnostic = (action: ChatActionUnion): Record<string, unknown> => {
-  switch (action.type) {
-    case 'receiveMessage':
-      return {
-        message: messageDiagnostic(action.payload.message),
-        previewId: action.payload.previewId,
-      };
-    case 'messageEdited':
-      return {
-        message: messageDiagnostic(action.payload.message),
-        oldPos: action.payload.oldPos,
-      };
-    case 'messageDeleted':
-      return {
-        messageId: action.payload.messageId,
-        pos: action.payload.pos,
-      };
-    case 'initialHistoryLoaded':
-    case 'olderMessagesLoaded': {
-      const firstMessage = action.payload.messages[0];
-      const lastMessage = action.payload.messages.at(-1);
-      return {
-        before: 'before' in action.payload ? action.payload.before : null,
-        firstMessage: firstMessage ? messageDiagnostic(firstMessage) : null,
-        historyExhausted: action.payload.historyExhausted,
-        lastMessage: lastMessage ? messageDiagnostic(lastMessage) : null,
-        messageCount: action.payload.messages.length,
-      };
-    }
-    default:
-      return {};
-  }
-};
 
 type MessageMutationAction = ChatAction<'messageEdited'> | ChatAction<'messageDeleted'>;
 
@@ -246,7 +213,7 @@ export interface ScheduledGc {
 export const makeInitialChannelState = (id: string): ChannelState => {
   return {
     id,
-    messages: L.empty(),
+    messages: MessageStore.empty(),
     historyState: 'UNINITIALIZED',
     historyMutationGeneration: 0,
     pendingMessageMutations: [],
@@ -260,9 +227,21 @@ export const makeInitialChannelState = (id: string): ChannelState => {
 const invalidateMessageHistory = (state: ChannelState): ChannelState => ({
   ...state,
   historyState: 'UNINITIALIZED',
-  messages: L.empty(),
+  messages: MessageStore.empty(),
   scheduledGc: null,
 });
+
+const applyMessageStore = (
+  state: ChannelState,
+  result: Result<MessageStore, MessageStoreError>,
+  warning = 'Invalid message store update',
+): ChannelState => {
+  if (result.isErr) {
+    recordWarn(warning, { error: result.err }, { context: { channelId: state.id } });
+    return invalidateMessageHistory(state);
+  }
+  return { ...state, messages: result.some };
+};
 
 const filterPreviewMap = (
   previewId: string | null | undefined,
@@ -304,121 +283,72 @@ const handleNewMessage = (
     state.optimisticMessageMap,
   );
 
-  const topMessage = L.first(messages);
-  const bottomMessage = L.last(messages);
-  if (topMessage == null || bottomMessage == null) {
-    // Keep the message even when the channel is not loaded yet. A history
-    // load racing with this event may not contain the message (the snapshot
-    // was read before it committed); `mergeHistoryPage` only merges
-    // payload messages below the top message, so keeping it here fills that
-    // gap and never duplicates.
-    return {
-      ...state,
-      previewMap,
-      optimisticMessageMap,
-      messages: L.of(message),
-    };
-  }
-  if (
-    (message.pos === topMessage.pos && topMessage.id === message.id) ||
-    (message.pos === bottomMessage.pos && bottomMessage.id === message.id)
-  ) {
-    // Same id at the boundary is a harmless duplicate.
+  // A replayed creation event may use an old position, so check the version by ID first.
+  const currentMessage = messages.get(message.id);
+  if (currentMessage && compareMessageVersion(currentMessage, message) >= 0) {
     return { ...state, previewMap, optimisticMessageMap };
   }
-  if (message.pos === topMessage.pos || message.pos === bottomMessage.pos) {
-    const itemByPos = message.pos === topMessage.pos ? topMessage : bottomMessage;
-    const logContext = channelLogContext(state, action);
-    recordWarn(
-      'Unexpected new message at history boundary',
+
+  if (currentMessage) {
+    return handleMessageEdited(
       {
-        conflictingMessage: messageDiagnostic(itemByPos),
-        incomingMessage: messageDiagnostic(message),
+        ...state,
+        previewMap,
+        optimisticMessageMap,
+        historyMutationGeneration: state.historyMutationGeneration + 1,
       },
-      { context: logContext },
+      {
+        type: 'messageEdited',
+        payload: { channelId: state.id, message, oldPos: currentMessage.pos },
+      },
     );
-    return invalidateMessageHistory({ ...state, previewMap, optimisticMessageMap });
   }
-  if (message.pos < topMessage.pos) {
-    if (!isChannelHistoryFull(state)) {
-      return { ...state, previewMap, optimisticMessageMap };
-    }
-    return {
-      ...state,
-      previewMap,
-      optimisticMessageMap,
-      messages: L.prepend(message, messages),
-    };
+
+  const nextState = { ...state, previewMap, optimisticMessageMap };
+  const topMessage = L.first(messages.ordered);
+  if (topMessage && message.pos < topMessage.pos && !isChannelHistoryFull(state)) {
+    return nextState;
   }
-  if (message.pos > bottomMessage.pos) {
-    return { ...state, previewMap, messages: L.append(message, messages), optimisticMessageMap };
+  // Keep messages received before history loads: its snapshot may predate this event.
+  const result = messages.insert(message);
+  if (result.isErr && result.err.type === 'POSITION_COLLISION') {
+    const [conflictingMessage, insertIndex] = messages.find(result.err.conflictingId)!;
+    const atBoundary = insertIndex === 0 || insertIndex === messages.length - 1;
+    recordWarn(
+      atBoundary ? 'Unexpected new message at history boundary' : 'Unexpected new message position',
+      {
+        conflictingMessage: messageDiagnostic(conflictingMessage),
+        incomingMessage: messageDiagnostic(message),
+        ...(!atBoundary && { insertIndex }),
+      },
+      { context: channelLogContext(state, action) },
+    );
+    return invalidateMessageHistory(nextState);
   }
-  const [insertIndex, itemByPos] = binarySearchPosList(messages, message.pos);
-  if (itemByPos) {
-    // Replayed creation events may predate the version already loaded from history.
-    if (itemByPos.id === message.id && compareMessageVersion(itemByPos, message) >= 0) {
-      return { ...state, previewMap, optimisticMessageMap };
-    }
-    if (itemByPos.id !== message.id || itemByPos.modified !== message.modified) {
-      const logContext = channelLogContext(state, action);
-      recordWarn(
-        'Unexpected new message position',
-        {
-          conflictingMessage: messageDiagnostic(itemByPos),
-          incomingMessage: messageDiagnostic(message),
-          insertIndex,
-        },
-        { context: logContext },
-      );
-      return invalidateMessageHistory({ ...state, previewMap, optimisticMessageMap });
-    }
-    // Duplicate message
-    return { ...state, optimisticMessageMap };
-  }
-  return {
-    ...state,
-    previewMap,
-    messages: L.insert(insertIndex, message, messages),
-    optimisticMessageMap,
-  };
+  return applyMessageStore(nextState, result);
 };
 
 const mergeHistoryPage = (
   state: ChannelState,
   payload: Pick<ChatAction<'initialHistoryLoaded'>['payload'], 'messages' | 'historyExhausted'>,
 ): ChannelState => {
-  // Note:
-  // The payload.messages are sorted in descending order
-  // But the state.messages are sorted in ascending order
-  if (isChannelHistoryFull(state)) {
-    return state;
-  }
-  let payloadMessages = L.from(payload.messages);
-  const payloadLen = payloadMessages.length;
-  const topMessage = L.first(state.messages);
+  if (isChannelHistoryFull(state)) return state;
+  const topMessage = L.first(state.messages.ordered);
   const historyState: ChannelHistoryState = payload.historyExhausted ? 'FULL' : 'PARTIAL';
-  if (historyState !== state.historyState) {
-    state = { ...state, historyState };
-  }
-  if (payloadLen === 0) {
-    return state;
-  }
-  if (!topMessage) {
-    const messages = L.reverse(L.map(toMessageItem, payloadMessages));
-    return {
-      ...state,
-      messages,
-    };
-  }
-  payloadMessages = L.dropWhile((message) => message.pos >= topMessage.pos, payloadMessages);
-  if (payloadMessages.length === 0) {
-    return state;
-  }
-  const prependedMessages = L.reverse(L.map(toMessageItem, payloadMessages));
-  return {
-    ...state,
-    messages: L.concat(prependedMessages, state.messages),
-  };
+  const nextState = historyState === state.historyState ? state : { ...state, historyState };
+  if (payload.messages.length === 0) return nextState;
+
+  // History arrives in descending order. Only merge messages below the loaded window.
+  const payloadMessages = L.from(payload.messages);
+  const olderMessages = topMessage
+    ? L.dropWhile((message) => message.pos >= topMessage.pos, payloadMessages)
+    : payloadMessages;
+  if (olderMessages.length === 0) return nextState;
+  const page = MessageStore.fromSorted(L.reverse(L.map(toMessageItem, olderMessages)));
+  const merged = topMessage
+    ? page.andThen((messages) => state.messages.prependOlder(messages))
+    : page;
+  return applyMessageStore(nextState, merged, 'Invalid message history page');
 };
 
 const handleInitialHistoryLoaded = (
@@ -483,7 +413,7 @@ const handleMessageEditing = (
     payload: { editMessage, speaker, sendTime, media, composeState },
   }: ChatAction<'messageEditing'>,
 ): ChannelState => {
-  const previousMessage = L.find(({ id }) => id === editMessage.messageId, state.messages);
+  const previousMessage = state.messages.get(editMessage.messageId);
   if (!previousMessage) return state;
   const optimisticItem = editMessageOptimisticItem(
     editMessage,
@@ -603,19 +533,14 @@ const handleMessageEdited = (
     message,
   );
   const previewMap = syncEditPreviewsWithMessage(state.previewMap, message);
-  const originalTopMessage = L.head(state.messages);
+  const originalTopMessage = L.head(state.messages.ordered);
   if (!originalTopMessage) {
     return { ...state, optimisticMessageMap };
   }
-  // Remove the previous message if it loaded
-  let messagesState = state.messages;
-  // `oldPos` can predate the loaded window when the server coalesces repeated
-  // moves, so a pos miss here is expected rather than an anomaly.
-  const oldEntry = findMessage(messagesState, message.id, payload.oldPos, {
-    warnOnStalePos: false,
-  });
-  if (oldEntry != null) {
-    const [item, index] = oldEntry;
+  const { messages } = state;
+  // The event's oldPos may be stale; use the loaded message's identity instead.
+  const item = messages.get(message.id);
+  if (item != null) {
     const versionDiff = compareMessageVersion(item, message);
     if (
       versionDiff > 0 ||
@@ -626,84 +551,34 @@ const handleMessageEdited = (
     ) {
       return state;
     }
-    if (item.pos === message.pos) {
-      // In-place editing
-      return {
-        ...state,
-        messages: L.update(index, message, state.messages),
-        optimisticMessageMap,
-        previewMap,
-      };
-    }
-    messagesState = L.remove(index, 1, state.messages);
   }
-  const messages = messagesState;
-  const topMessage = L.head(messages);
-  const bottomMessage = L.last(messages);
-  if (!topMessage || !bottomMessage) {
-    // The only message has been removed in the previous step
-    const moveUp = message.pos < originalTopMessage.pos;
-    const movedOut = moveUp && !isChannelHistoryFull(state);
-    return {
-      ...state,
-      optimisticMessageMap,
-      previewMap,
-      messages: movedOut ? L.empty() : L.of(message),
-    };
+  const nextState = { ...state, optimisticMessageMap, previewMap };
+  // With partial history, keep a moved message only if it is at or after the
+  // oldest remaining message. If none remain, compare against its original position.
+  const topMessage =
+    item === originalTopMessage && item.pos !== message.pos
+      ? (L.nth(1, messages.ordered) ?? originalTopMessage)
+      : originalTopMessage;
+  if (message.pos < topMessage.pos && !isChannelHistoryFull(state)) {
+    return { ...nextState, messages: messages.remove(message.id) };
   }
-
-  if (message.pos < topMessage.pos) {
-    // Move up
-    return {
-      ...state,
-      optimisticMessageMap,
-      previewMap,
-      messages: isChannelHistoryFull(state)
-        ? L.prepend(message, messages)
-        : // The message has been moved out of the loaded range
-          messages,
-    };
-  }
-  if (message.pos > bottomMessage.pos) {
-    // Move down to the bottom
-    return {
-      ...state,
-      optimisticMessageMap,
-      previewMap,
-      messages: L.append(message, messages),
-    };
-  }
-  const [insertIndex, itemByPos] = binarySearchPosList(messages, message.pos);
-  if (itemByPos) {
-    if (itemByPos.id === message.id) {
-      const versionDiff = compareMessageVersion(itemByPos, message);
-      if (versionDiff > 0) return state;
-      return {
-        ...state,
-        optimisticMessageMap,
-        previewMap,
-        messages: L.update(insertIndex, message, messages),
-      };
-    }
-    const logContext = channelLogContext(state, action);
+  const result = messages.merge(message);
+  if (result.isErr && result.err.type === 'POSITION_COLLISION') {
+    const [conflictingMessage, conflictingIndex] = messages.find(result.err.conflictingId)!;
+    const insertIndex = conflictingIndex - (item && item.pos < message.pos ? 1 : 0);
     recordWarn(
       'Unexpected message position in editing',
       {
-        conflictingMessage: messageDiagnostic(itemByPos),
+        conflictingMessage: messageDiagnostic(conflictingMessage),
         incomingMessage: messageDiagnostic(message),
         insertIndex,
         oldPos: payload.oldPos,
       },
-      { context: logContext },
+      { context: channelLogContext(state, action) },
     );
-    return invalidateMessageHistory({ ...state, optimisticMessageMap, previewMap });
+    return invalidateMessageHistory(nextState);
   }
-  return {
-    ...state,
-    optimisticMessageMap,
-    previewMap,
-    messages: L.insert(insertIndex, message, messages),
-  };
+  return applyMessageStore(nextState, result);
 };
 
 const handleMessagePreview = (
@@ -727,12 +602,9 @@ const handleMessagePreview = (
   }
   if (preview.edit != null) {
     const pos = preview.edit.p / preview.edit.q;
-    // An edit preview can arrive after its target message has moved. The id
-    // fallback below deliberately reconciles that stale position.
-    const findResult = findMessage(state.messages, preview.id, pos, {
-      warnOnStalePos: false,
-    });
-    if (findResult == null) {
+    // An edit preview can arrive after its target message has moved.
+    const message = state.messages.get(preview.id);
+    if (message == null) {
       newItem = {
         ...preview,
         type: 'PREVIEW',
@@ -744,7 +616,6 @@ const handleMessagePreview = (
         keyframe: toPreviewDiffBase(preview),
       };
     } else {
-      const [message] = findResult;
       if (message.modified !== preview.edit.time || message.senderId !== preview.senderId) {
         return state;
       }
@@ -764,7 +635,7 @@ const handleMessagePreview = (
     const pos = Math.ceil(preview.pos);
     const posP = pos;
     const posQ = 1;
-    const [, itemByPos] = binarySearchPosList(state.messages, pos);
+    const [, itemByPos] = binarySearchPosList(state.messages.ordered, pos);
     if (itemByPos) {
       collidedPreviewIdSet = new Set([...collidedPreviewIdSet, preview.id]);
     }
@@ -821,48 +692,6 @@ const handleMessagePreviewDiff = (
   };
 };
 
-/**
- * @param messages messages sorted by pos in ascending order
- * @param pos the pos of the message to find. this is just a hint for optimization.
- */
-export const findMessage = (
-  messages: List<MessageItem>,
-  id: string,
-  pos?: number,
-  { warnOnStalePos = true }: { warnOnStalePos?: boolean } = {},
-): [MessageItem, number] | null => {
-  let failedFoundByPos: [MessageItem | null, number] | null = null;
-  if (pos != null) {
-    const [index, item] = binarySearchPosList(messages, pos);
-    if (item && item.id === id) {
-      return [item, index];
-    }
-    // Unexpected message position
-    failedFoundByPos = [item, index];
-  }
-  const index = L.findIndex((message) => message.id === id, messages);
-  if (index === -1) {
-    return null;
-  }
-  const message = L.nth(index, messages);
-  if (message?.id === id) {
-    if (failedFoundByPos != null && warnOnStalePos) {
-      const [foundItem, foundIndex] = failedFoundByPos;
-      recordWarn('Found message by id but failed to find by pos', {
-        id,
-        pos,
-        index,
-        foundIndex,
-        foundItemId: foundItem?.id,
-        messagePos: message.pos,
-      });
-    }
-    return [message, index];
-  } else {
-    return null;
-  }
-};
-
 const handleMessageDeleted = (
   state: ChannelState,
   { payload: { messageId, pos } }: ChatAction<'messageDeleted'>,
@@ -875,12 +704,22 @@ const handleMessageDeleted = (
   } else {
     optimisticMessageMap = state.optimisticMessageMap;
   }
-  const findResult = findMessage(state.messages, messageId, pos, { warnOnStalePos });
-  if (findResult == null) {
-    return { ...state, optimisticMessageMap };
+  if (warnOnStalePos) {
+    const message = state.messages.get(messageId);
+    if (message && pos != null && message.pos !== pos) {
+      const [index] = binarySearchPosList(state.messages.ordered, message.pos);
+      const [foundIndex, foundItem] = binarySearchPosList(state.messages.ordered, pos);
+      recordWarn('Found message by id but failed to find by pos', {
+        id: messageId,
+        pos,
+        index,
+        foundIndex,
+        foundItemId: foundItem?.id,
+        messagePos: message.pos,
+      });
+    }
   }
-  const [, index] = findResult;
-  const messages = L.remove(index, 1, state.messages);
+  const messages = state.messages.remove(messageId);
   return {
     ...state,
     optimisticMessageMap,
@@ -910,8 +749,7 @@ const bufferMessageMutation = (
       warnOnStaleDeletePos: false,
     });
   }
-  const hasLoadedMessage =
-    L.findIndex((message) => message.id === action.payload.message.id, state.messages) !== -1;
+  const hasLoadedMessage = state.messages.has(action.payload.message.id);
   return hasLoadedMessage ? applyMessageMutation(pendingState, action) : pendingState;
 };
 
@@ -988,10 +826,9 @@ const handleFail = (state: ChannelState, { payload }: ChatAction<'fail'>): Chann
       payload: { id: key, timestamp },
     });
   }
-  const messageIndex = L.findIndex((message) => message.id === key, state.messages);
+  const message = state.messages.get(key);
   let messages = state.messages;
-  if (messageIndex !== -1) {
-    const message = L.nth(messageIndex, state.messages)!;
+  if (message) {
     const [basePosP, basePosQ] = basePos ?? [message.posP, message.posQ];
     const movedFromBasePos = message.posP !== basePosP || message.posQ !== basePosQ;
     if (
@@ -1005,7 +842,7 @@ const handleFail = (state: ChannelState, { payload }: ChatAction<'fail'>): Chann
         payload: { id: key },
       });
     }
-    messages = L.update(messageIndex, { ...message, failTo }, state.messages);
+    messages = state.messages.update({ ...message, failTo });
   }
 
   return handleRemoveOptimisticMessage(
@@ -1074,42 +911,14 @@ const handleGcCountdown = (state: ChannelState): ChannelState => {
 const handleGc = (state: ChannelState): ChannelState => {
   if (state.scheduledGc == null || state.scheduledGc.countdown > 0) return state;
   const { lowerPos } = state.scheduledGc;
-  const gcLowerIndex = L.findIndex((message) => message.pos >= lowerPos, state.messages) - 1;
+  const gcLowerIndex =
+    L.findIndex((message) => message.pos >= lowerPos, state.messages.ordered) - 1;
   if (gcLowerIndex <= MIN_START_GC_COUNT) return { ...state, scheduledGc: null };
   console.debug(`[Messages GC] Start GC. Lower index: ${gcLowerIndex} Power Pos: ${lowerPos}`);
-  const messages = L.drop(gcLowerIndex, state.messages);
+  const messages = state.messages.drop(gcLowerIndex);
   const scheduledGc = null;
   const historyState = state.historyState === 'FULL' ? 'PARTIAL' : state.historyState;
   return { ...state, messages, scheduledGc, historyState };
-};
-
-const MESSAGE_ORDER_CHECK_LIMIT = 512;
-const checkOrder = (state: ChannelState, action: ChatActionUnion): ChannelState => {
-  let prevPos = Number.MAX_SAFE_INTEGER;
-  let previousMessage: MessageItem | undefined;
-  let i = 0;
-  const messages = state.messages;
-  for (const message of L.backwards(messages)) {
-    if (i >= MESSAGE_ORDER_CHECK_LIMIT) break;
-    if (message.pos >= prevPos) {
-      const logContext = channelLogContext(state, action);
-      recordWarn(
-        'Messages are not sorted by pos',
-        {
-          action: actionDiagnostic(action),
-          index: i,
-          message: messageDiagnostic(message),
-          previousMessage: previousMessage ? messageDiagnostic(previousMessage) : null,
-        },
-        { context: logContext },
-      );
-      return invalidateMessageHistory(state);
-    }
-    prevPos = message.pos;
-    previousMessage = message;
-    i += 1;
-  }
-  return state;
 };
 
 export const channelReducer = (
@@ -1118,19 +927,9 @@ export const channelReducer = (
   { initialized }: ChatReducerContext,
 ): ChannelState => {
   let nextState: ChannelState = channelReducer$(state, action, initialized);
-  switch (action.type) {
-    case 'messagePreview':
-    case 'messagePreviewDiff':
-    case 'setOptimisticMessage':
-    case 'removeOptimisticMessage':
-    case 'resetGc':
-      break;
-    default:
-      nextState = checkOrder(nextState, action);
-  }
   nextState = handleGcCountdown(nextState);
   if (nextState.messages.length > GC_TRIGGER_LENGTH && !nextState.scheduledGc) {
-    const pos = L.nth(GC_TRIGGER_LENGTH >> 1, nextState.messages)!.pos;
+    const pos = L.nth(GC_TRIGGER_LENGTH >> 1, nextState.messages.ordered)!.pos;
     nextState = { ...nextState, scheduledGc: { countdown: GC_INITIAL_COUNTDOWN, lowerPos: pos } };
   } else if (nextState.scheduledGc) {
     nextState = handleGc(nextState);

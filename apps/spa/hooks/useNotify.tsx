@@ -46,7 +46,7 @@ export const useNotify = (spaceId: string) => {
           continue;
         }
         let count = 0;
-        for (const message of backwards(channelState.messages)) {
+        for (const message of backwards(channelState.messages.ordered)) {
           const created = Date.parse(message.created);
           if (!Number.isNaN(created) && created > startTime) {
             newMessages.push(message);

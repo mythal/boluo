@@ -1,8 +1,8 @@
+import { MessageStore } from '../state/message-store';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { atom, createStore } from 'jotai';
 import { selectAtom } from 'jotai/utils';
-import * as L from 'list';
 import {
   applyEditPreview,
   areChatListsReferentiallyEqual,
@@ -315,7 +315,7 @@ test('applyEditPreview replaces a moved message at its current position', () => 
   const messageA = makeMessageItem('m-a', 1);
   const messageB = makeMessageItem('m-b', 3);
   const moved = makeMessageItem('m-moved', 6);
-  const messages = L.from([messageA, messageB, moved]);
+  const messages = MessageStore.fromSortedOrThrow([messageA, messageB, moved]);
   const itemList: ChatItem[] = [messageA, messageB, moved];
   const stalePreview = makeEditPreview('m-moved', 3);
 
@@ -336,7 +336,7 @@ test('applyEditPreview replaces a moved message at its current position', () => 
 
 test('applyEditPreview follows the moved message when it is filtered from the list', () => {
   const message = makeMessageItem('m-filtered', 6);
-  const messages = L.from([makeMessageItem('m-a', 1), message]);
+  const messages = MessageStore.fromSortedOrThrow([makeMessageItem('m-a', 1), message]);
   const itemList: ChatItem[] = [makeMessageItem('m-a', 1)];
   const stalePreview = makeEditPreview('m-filtered', 3);
 
@@ -352,7 +352,7 @@ test('applyEditPreview follows the moved message when it is filtered from the li
 
 test('applyEditPreview skips a preview whose edit time no longer matches', () => {
   const message = makeMessageItem('m-edited', 3);
-  const messages = L.from([message]);
+  const messages = MessageStore.fromSortedOrThrow([message]);
   const itemList: ChatItem[] = [message];
   const stalePreview = makeEditPreview('m-edited', 3, '2023-12-31T00:00:00.000Z');
 
@@ -364,7 +364,7 @@ test('applyEditPreview skips a preview whose edit time no longer matches', () =>
 
 test('applyEditPreview skips a preview whose message is gone', () => {
   const message = makeMessageItem('m-a', 1);
-  const messages = L.from([message]);
+  const messages = MessageStore.fromSortedOrThrow([message]);
   const itemList: ChatItem[] = [message];
   const preview = makeEditPreview('m-deleted', 3);
 
@@ -418,7 +418,7 @@ const makeNeighborState = (
   previews: PreviewItem[] = [],
   historyState: ChannelHistoryState = 'FULL',
 ): Pick<ChannelState, 'messages' | 'previewMap' | 'historyState'> => ({
-  messages: L.from(messages),
+  messages: MessageStore.fromSortedOrThrow(messages),
   previewMap: Object.fromEntries(previews.map((preview) => [preview.senderId, preview])),
   historyState,
 });

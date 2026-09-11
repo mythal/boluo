@@ -173,7 +173,7 @@ export const useScrollToMessage = ({
         return;
       }
       const before: number | null = channelState
-        ? (head(channelState.messages)?.pos ?? null)
+        ? (head(channelState.messages.ordered)?.pos ?? null)
         : null;
 
       try {

@@ -5,7 +5,6 @@ import { parseModifiers, needsVariableEnvironment } from '@boluo/interpreter';
 import { useQueryEntries } from '@boluo/hooks/useQueryEntries';
 import { useQueryEntriesByComponent } from '@boluo/hooks/useQueryEntriesByComponent';
 import { useMember } from '../hooks/useMember';
-import { useDefaultInGame } from '../hooks/useDefaultInGame';
 import { resolveSpeakerMode, type SpeakerAttribution } from '../characters/resolveSpeaker';
 import { usePortrayableCharacters } from '../hooks/usePortrayableCharacters';
 import type { ComposeState } from '../state/compose.reducer';
@@ -58,9 +57,9 @@ export const resolveCounterTarget = ({
 
 export const useComposeCountersAtom = (
   composeAtom: Atom<ComposeState>,
+  defaultInGame: boolean,
 ): Atom<ComposeCountersState> => {
   const member = useMember();
-  const defaultInGame = useDefaultInGame();
   const { characters, error: characterError } = usePortrayableCharacters(member?.space.spaceId);
   const source = useAtomValue(
     useMemo(() => selectAtom(composeAtom, (state) => state.source), [composeAtom]),

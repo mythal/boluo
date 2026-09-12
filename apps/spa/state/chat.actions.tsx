@@ -88,6 +88,7 @@ export type ChatActionMap = {
   messageDeleted: { channelId: string; messageId: string; pos: number };
   channelDeleted: { channelId: string };
   resetGc: { channelId: string; pos: number };
+  runGc: { channelId: string; lowerPos: number };
   update: Update;
   resetChatState: Empty;
   effectsHandled: { effectIds: string[] };

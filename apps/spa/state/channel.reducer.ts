@@ -47,7 +47,6 @@ const hasSamePreviewActivity = (previous: PreviewItem, next: Preview): boolean =
   } satisfies Record<PreviewActivityKey, boolean>).every(Boolean);
 
 const GC_TRIGGER_LENGTH = 128;
-const GC_INITIAL_COUNTDOWN = 8;
 const MIN_START_GC_COUNT = 4;
 
 export interface OptimisticItem {
@@ -205,7 +204,6 @@ const channelLogContext = (state: ChannelState, action: ChatActionUnion) => ({
 type MessageMutationAction = ChatAction<'messageEdited'> | ChatAction<'messageDeleted'>;
 
 export interface ScheduledGc {
-  countdown: number;
   /** Messages with pos < lower will be deleted */
   lowerPos: number;
 }
@@ -780,7 +778,7 @@ const handleResetGc = (
   if (state.scheduledGc == null) return state;
   const { lowerPos } = state.scheduledGc;
   if (pos >= lowerPos) return state;
-  return { ...state, scheduledGc: { countdown: GC_INITIAL_COUNTDOWN, lowerPos: pos } };
+  return { ...state, scheduledGc: { lowerPos: pos } };
 };
 
 const handleSetOptimisticMessage = (
@@ -902,14 +900,10 @@ const channelReducer$ = (
   }
 };
 
-const handleGcCountdown = (state: ChannelState): ChannelState => {
-  const { scheduledGc } = state;
-  if (scheduledGc == null || scheduledGc.countdown <= 0) return state;
-  return { ...state, scheduledGc: { ...scheduledGc, countdown: scheduledGc.countdown - 1 } };
-};
-
-const handleGc = (state: ChannelState): ChannelState => {
-  if (state.scheduledGc == null || state.scheduledGc.countdown > 0) return state;
+const handleGc = (state: ChannelState, { payload }: ChatAction<'runGc'>): ChannelState => {
+  if (state.scheduledGc == null || state.scheduledGc.lowerPos !== payload.lowerPos) {
+    return state;
+  }
   const { lowerPos } = state.scheduledGc;
   const gcLowerIndex =
     L.findIndex((message) => message.pos >= lowerPos, state.messages.ordered) - 1;
@@ -926,13 +920,13 @@ export const channelReducer = (
   action: ChatActionUnion,
   { initialized }: ChatReducerContext,
 ): ChannelState => {
+  // The view protects visible messages and pending scroll targets before requesting GC.
+  // Return immediately so a collection does not schedule itself again.
+  if (action.type === 'runGc') return handleGc(state, action);
   let nextState: ChannelState = channelReducer$(state, action, initialized);
-  nextState = handleGcCountdown(nextState);
   if (nextState.messages.length > GC_TRIGGER_LENGTH && !nextState.scheduledGc) {
     const pos = L.nth(GC_TRIGGER_LENGTH >> 1, nextState.messages.ordered)!.pos;
-    nextState = { ...nextState, scheduledGc: { countdown: GC_INITIAL_COUNTDOWN, lowerPos: pos } };
-  } else if (nextState.scheduledGc) {
-    nextState = handleGc(nextState);
+    nextState = { ...nextState, scheduledGc: { lowerPos: pos } };
   }
   return nextState;
 };

@@ -65,6 +65,8 @@ export const useScrollToMessage = ({
     if (scrollToMessage == null) return;
 
     const { messageId, pos } = scrollToMessage;
+    let active = true;
+    const isCurrentRequest = () => active && store.get(scrollToMessageAtom) === scrollToMessage;
     retryAttemptsRef.current = 0;
     const clearRetryTimeouts = () => {
       retryTimeoutRef.current.forEach((timeoutId) => window.clearTimeout(timeoutId));
@@ -73,12 +75,12 @@ export const useScrollToMessage = ({
     clearRetryTimeouts();
 
     const scheduleRetry = (delay: number, replace = true) => {
+      if (!isCurrentRequest()) return;
       if (replace) {
         clearRetryTimeouts();
       }
       const timeoutId = window.setTimeout(() => {
-        const currentScrollRequest = store.get(scrollToMessageAtom);
-        if (currentScrollRequest?.messageId === messageId) {
+        if (isCurrentRequest()) {
           tryScrollToMessage();
         }
       }, delay);
@@ -108,10 +110,23 @@ export const useScrollToMessage = ({
         );
 
         if (chatListIndex !== -1) {
-          virtuosoRef.current?.scrollToIndex({
+          const virtuoso = virtuosoRef.current;
+          if (!virtuoso) {
+            scheduleRetry(50);
+            return;
+          }
+          retryAttemptsRef.current = 0;
+          clearRetryTimeouts();
+          virtuoso.scrollIntoView({
             index: chatListIndex,
             align: 'center',
             behavior: 'smooth',
+            // Preserve centering even when the target is already visible.
+            calculateViewLocation: ({ locationParams }) => locationParams,
+            done: () => {
+              // Retain GC protection during scrolling; an old completion must not clear a new request.
+              if (isCurrentRequest()) setScrollToMessage(null);
+            },
           });
 
           // Set highlight
@@ -121,11 +136,6 @@ export const useScrollToMessage = ({
             setHighlightMessage(null);
           }, HIGHLIGHT_DURATION);
 
-          // Clear the scroll request
-          setScrollToMessage(null);
-          isLoadingRef.current = false;
-          retryAttemptsRef.current = 0;
-          clearRetryTimeouts();
           return;
         }
 
@@ -141,7 +151,6 @@ export const useScrollToMessage = ({
           content: 'The message you are looking for is no longer available.',
         });
         setScrollToMessage(null);
-        isLoadingRef.current = false;
         retryAttemptsRef.current = 0;
         clearRetryTimeouts();
         return;
@@ -153,7 +162,6 @@ export const useScrollToMessage = ({
           content: 'The message you are looking for is no longer available.',
         });
         setScrollToMessage(null);
-        isLoadingRef.current = false;
         return;
       }
 
@@ -162,13 +170,14 @@ export const useScrollToMessage = ({
     };
 
     const loadMoreMessages = async () => {
-      if (isLoadingRef.current) return;
-      isLoadingRef.current = true;
+      if (isLoadingRef.current) {
+        scheduleRetry(50);
+        return;
+      }
 
       const chatState = store.get(chatAtom);
       const channelState = chatState.channels[channelId];
       if (channelState?.historyState === 'INITIAL_LOADING') {
-        isLoadingRef.current = false;
         scheduleRetry(500);
         return;
       }
@@ -176,6 +185,7 @@ export const useScrollToMessage = ({
         ? (head(channelState.messages.ordered)?.pos ?? null)
         : null;
 
+      isLoadingRef.current = true;
       try {
         const baseOptions = {
           channelId,
@@ -188,6 +198,7 @@ export const useScrollToMessage = ({
             ? { ...baseOptions, mode: 'INITIAL' }
             : { ...baseOptions, before, mode: 'LOAD_MORE' },
         );
+        if (!isCurrentRequest()) return;
 
         if (result.isErr) {
           recordWarn('Failed to load messages while scrolling', {
@@ -195,21 +206,21 @@ export const useScrollToMessage = ({
             error: result.err,
           });
           setScrollToMessage(null);
-          isLoadingRef.current = false;
           return;
         }
-
-        isLoadingRef.current = false;
 
         // Schedule next attempt after state updates
         scheduleRetry(50);
         scheduleRetry(500, false);
       } catch (error) {
+        if (!isCurrentRequest()) return;
         setBanner({
           level: 'ERROR',
           content: 'An error occurred while loading messages.',
         });
         setScrollToMessage(null);
+      } finally {
+        // Only the load that acquired this flag may release it, even if its jump was replaced.
         isLoadingRef.current = false;
       }
     };
@@ -217,6 +228,7 @@ export const useScrollToMessage = ({
     tryScrollToMessage();
 
     return () => {
+      active = false;
       clearRetryTimeouts();
     };
   }, [

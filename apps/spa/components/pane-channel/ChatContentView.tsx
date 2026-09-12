@@ -4,7 +4,6 @@ import { post } from '@boluo/api-browser';
 import { useSetAtom, useStore } from 'jotai';
 import type { FC, RefObject } from 'react';
 import { useRef } from 'react';
-import { useEffect } from 'react';
 import { useCallback } from 'react';
 import { useState } from 'react';
 import { FormattedMessage } from 'react-intl';
@@ -25,6 +24,7 @@ import { useMember } from '../../hooks/useMember';
 import { recordWarn } from '../../error';
 import { timeout } from '@boluo/utils/async';
 import { useScrollToMessage } from '../../hooks/useScrollToMessage';
+import { useMessageGcProtection } from '../../hooks/useMessageGc';
 import { ImagePreviewProvider } from './ImagePreviewOverlay';
 import { ChatContentContainer } from './ChatContentContainer';
 
@@ -213,8 +213,11 @@ export const ChatContentView: FC<Props> = ({ setIsScrolling, currentUserId }) =>
     onBottomStateChange: goBottomButtonOnBottomChange,
     goBottom,
   } = useScrollToBottom(virtuosoRef);
-  const { chatList, firstItemIndex, virtualListKey, filteredMessagesCount, scheduledGcLowerPos } =
-    useChatList(channelId, myId);
+  const { chatList, firstItemIndex, virtualListKey, filteredMessagesCount } = useChatList(
+    channelId,
+    myId,
+  );
+  const handleRangeStartChange = useMessageGcProtection(channelId, chatList);
 
   useScrollToMessage({
     channelId,
@@ -226,7 +229,6 @@ export const ChatContentView: FC<Props> = ({ setIsScrolling, currentUserId }) =>
     channelId,
     chatList,
   );
-  const renderRangeRef = useRef<[number, number]>([0, 0]);
 
   const scrollerRef = useRef<HTMLDivElement | null>(null);
   const wrapperRef = useRef<HTMLDivElement | null>(null);
@@ -283,18 +285,6 @@ export const ChatContentView: FC<Props> = ({ setIsScrolling, currentUserId }) =>
     [channelId, store],
   );
 
-  useEffect(() => {
-    if (scheduledGcLowerPos == null) return;
-    const [a] = renderRangeRef.current;
-    const chatItem = chatList[a];
-    if (chatItem && scheduledGcLowerPos > chatItem.pos) {
-      console.debug(
-        `[Messages GC] Reset GC. scheduled: ${scheduledGcLowerPos} reset: ${chatItem.pos}`,
-      );
-      store.set(chatAtom, { type: 'resetGc', payload: { channelId, pos: chatItem.pos } });
-    }
-  });
-
   return (
     <ChatContentContainer ref={wrapperRef}>
       <ImagePreviewProvider>
@@ -312,7 +302,7 @@ export const ChatContentView: FC<Props> = ({ setIsScrolling, currentUserId }) =>
                     key={virtualListKey}
                     firstItemIndex={firstItemIndex}
                     setIsScrolling={setIsScrolling}
-                    renderRangeRef={renderRangeRef}
+                    onRangeStartChange={handleRangeStartChange}
                     filteredMessagesCount={filteredMessagesCount}
                     handleBottomStateChange={goBottomButtonOnBottomChange}
                     virtuosoRef={virtuosoRef}

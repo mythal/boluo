@@ -291,7 +291,7 @@ export const ChatContentView: FC<Props> = ({ setIsScrolling, currentUserId }) =>
       console.debug(
         `[Messages GC] Reset GC. scheduled: ${scheduledGcLowerPos} reset: ${chatItem.pos}`,
       );
-      store.set(chatAtom, { type: 'resetGc', payload: { pos: chatItem.pos } });
+      store.set(chatAtom, { type: 'resetGc', payload: { channelId, pos: chatItem.pos } });
     }
   });
 

@@ -21,7 +21,6 @@ interface UseChatListReturn {
   firstItemIndex: number;
   virtualListKey: string;
   filteredMessagesCount: number;
-  scheduledGcLowerPos: number | null;
 }
 
 export const START_INDEX = 100000000;
@@ -301,7 +300,6 @@ export const isMessageNewerThanOptimisticRef = (
 
 type ChannelSlice = Pick<ChannelState, 'messages' | 'previewMap' | 'optimisticMessageMap'> & {
   fullLoaded: boolean;
-  scheduledGcLowerPos: number | null;
 };
 
 const channelSliceEq = shallowEqual<ChannelSlice>;
@@ -310,7 +308,6 @@ const EMPTY_CHANNEL_SLICE: ChannelSlice = {
   messages: MessageStore.empty(),
   fullLoaded: false,
   previewMap: {},
-  scheduledGcLowerPos: null,
   optimisticMessageMap: {},
 };
 
@@ -477,7 +474,6 @@ const projectChatList = ({
 
 interface ChatListViewState extends VirtualChatListState {
   filteredMessagesCount: number;
-  scheduledGcLowerPos: number | null;
   optimisticMessageMap: ChannelState['optimisticMessageMap'];
 }
 
@@ -511,7 +507,6 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
             fullLoaded: isChannelHistoryFull(channel),
             previewMap: channel.previewMap,
             optimisticMessageMap: channel.optimisticMessageMap,
-            scheduledGcLowerPos: channel.scheduledGc?.lowerPos ?? null,
           };
         },
         channelSliceEq,
@@ -557,7 +552,6 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
         ) {
           if (
             previous.filteredMessagesCount === projection.filteredMessagesCount &&
-            previous.scheduledGcLowerPos === source.scheduledGcLowerPos &&
             previous.optimisticMessageMap === source.optimisticMessageMap
           ) {
             return previous;
@@ -565,7 +559,6 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
           return {
             ...previous,
             filteredMessagesCount: projection.filteredMessagesCount,
-            scheduledGcLowerPos: source.scheduledGcLowerPos,
             optimisticMessageMap: source.optimisticMessageMap,
           };
         }
@@ -573,20 +566,13 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
         return {
           ...virtualState,
           filteredMessagesCount: projection.filteredMessagesCount,
-          scheduledGcLowerPos: source.scheduledGcLowerPos,
           optimisticMessageMap: source.optimisticMessageMap,
         };
       }),
     [chatListSourceAtom],
   );
-  const {
-    chatList,
-    firstItemIndex,
-    epoch,
-    filteredMessagesCount,
-    scheduledGcLowerPos,
-    optimisticMessageMap,
-  } = useAtomValue(chatListViewAtom);
+  const { chatList, firstItemIndex, epoch, filteredMessagesCount, optimisticMessageMap } =
+    useAtomValue(chatListViewAtom);
 
   // Show a warning when the user tries to leave the page
   useEffect(() => {
@@ -610,6 +596,5 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
     firstItemIndex,
     virtualListKey: `${channelId}:${myId ?? 'ANONYMOUS'}:${epoch}`,
     filteredMessagesCount,
-    scheduledGcLowerPos,
   };
 };

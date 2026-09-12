@@ -2,6 +2,7 @@ import { type FC, useMemo } from 'react';
 import { FormattedMessage } from 'react-intl';
 import { useConnectionEffect } from '../hooks/useConnectionEffect';
 import { useChatEffects } from '../hooks/useChatEffects';
+import { useMessageGc } from '../hooks/useMessageGc';
 import { useQuerySpace } from '@boluo/hooks/useQuerySpace';
 import { SpaceContext } from '../hooks/useSpace';
 import { PaneLoading } from './PaneLoading';
@@ -21,6 +22,7 @@ interface Props {
 export const ChatSpace: FC<Props> = ({ spaceId }) => {
   useConnectionEffect(spaceId);
   useChatEffects();
+  useMessageGc();
   useNotify(spaceId);
 
   const { data: space, error, isLoading } = useQuerySpace(spaceId);

@@ -6,12 +6,12 @@ import { makeInitialChannelState } from './channel.reducer';
 
 const ghostChannelId = 'ghost-channel';
 
-test('resetGc only changes the target channel and leaves other countdowns unchanged', () => {
+test('resetGc only changes the target channel', () => {
   const state = {
     ...makeChatState('space-1', 1),
     channels: {
-      a: { ...makeInitialChannelState('a'), scheduledGc: { countdown: 3, lowerPos: 65 } },
-      b: { ...makeInitialChannelState('b'), scheduledGc: { countdown: 1, lowerPos: 100 } },
+      a: { ...makeInitialChannelState('a'), scheduledGc: { lowerPos: 65 } },
+      b: { ...makeInitialChannelState('b'), scheduledGc: { lowerPos: 100 } },
     },
   };
 
@@ -20,9 +20,9 @@ test('resetGc only changes the target channel and leaves other countdowns unchan
     payload: { channelId: 'a', pos: 2 },
   });
 
-  assert.deepStrictEqual(next.channels.a?.scheduledGc, { countdown: 7, lowerPos: 2 });
+  assert.deepStrictEqual(next.channels.a?.scheduledGc, { lowerPos: 2 });
   assert.strictEqual(next.channels.b, state.channels.b);
-  assert.deepStrictEqual(next.channels.b?.scheduledGc, { countdown: 1, lowerPos: 100 });
+  assert.deepStrictEqual(next.channels.b?.scheduledGc, { lowerPos: 100 });
 });
 
 test('chatReducer stores messagePreview for unknown channel', () => {

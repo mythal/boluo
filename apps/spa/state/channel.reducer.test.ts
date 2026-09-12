@@ -1331,48 +1331,83 @@ describe('channelReducer', () => {
     assert.strictEqual(warn.mock.calls[0]?.arguments[0], 'Unexpected message position in editing');
   });
 
-  test('schedules and performs GC when message count exceeds threshold', (t) => {
+  test('a burst of actions only schedules GC until an explicit execution request', (t) => {
     t.mock.method(console, 'debug', () => {});
-    const longMessages = L.from(
-      Array.from({ length: 130 }, (_, index) =>
-        makeMessageItem(makeMessage(`m-${index + 1}`, index + 1)),
-      ),
+    const longMessages = Array.from({ length: 130 }, (_, index) =>
+      makeMessageItem(makeMessage(`m-${index + 1}`, index + 1)),
     );
-    const state = {
+    let state: ChannelState = {
       ...makeInitialChannelState(channelId),
-      historyState: 'FULL' as const,
+      historyState: 'FULL',
       messages: MessageStore.fromSortedOrThrow(longMessages),
     };
+    const tick: ChatAction<'messageDeleted'> = {
+      type: 'messageDeleted',
+      payload: { channelId, messageId: 'missing', pos: 0 },
+    };
+    state = channelReducer(state, tick, context);
+    assert.deepStrictEqual(state.scheduledGc, { lowerPos: 65 });
+    const beforeGc = state.messages;
+    for (let i = 0; i < 16; i++) state = channelReducer(state, tick, context);
+    assert.deepStrictEqual(state.scheduledGc, { lowerPos: 65 });
+    assert.strictEqual(state.messages, beforeGc);
 
-    const scheduled = channelReducer(
+    const collected = channelReducer(
       state,
-      {
-        type: 'messageDeleted',
-        payload: { channelId, messageId: 'missing', pos: 0 },
-      },
+      { type: 'runGc', payload: { channelId, lowerPos: 65 } },
       context,
     );
-
-    assert.strictEqual(scheduled.scheduledGc?.countdown, 8);
-    assert.strictEqual(scheduled.scheduledGc?.lowerPos, 65);
-    assert.strictEqual(scheduled.messages.length, 130);
-
-    const readyForGc = channelReducer(
-      { ...scheduled, scheduledGc: { countdown: 0, lowerPos: 50 } },
-      {
-        type: 'messageDeleted',
-        payload: { channelId, messageId: 'missing', pos: 0 },
-      },
-      context,
-    );
-
-    assert.strictEqual(readyForGc.scheduledGc, null);
-    assert.strictEqual(readyForGc.historyState, 'PARTIAL');
-    assert.strictEqual(readyForGc.messages.length, 82);
-    assert.strictEqual(L.first(readyForGc.messages.ordered)?.pos, 49);
+    assert.strictEqual(collected.scheduledGc, null);
+    assert.strictEqual(collected.historyState, 'PARTIAL');
+    assert.strictEqual(collected.messages.length, 67);
+    assert.strictEqual(L.first(collected.messages.ordered)?.pos, 64);
     for (const item of longMessages) {
-      assert.strictEqual(readyForGc.messages.get(item.id), item.pos < 49 ? undefined : item);
+      assert.strictEqual(collected.messages.get(item.id), item.pos < 64 ? undefined : item);
     }
+    assert.strictEqual(
+      channelReducer(collected, { type: 'runGc', payload: { channelId, lowerPos: 65 } }, context),
+      collected,
+    );
+  });
+
+  test('a viewport reset rejects the old GC request and allows collection at the new boundary', (t) => {
+    t.mock.method(console, 'debug', () => {});
+    let state: ChannelState = {
+      ...makeInitialChannelState(channelId),
+      messages: MessageStore.fromSortedOrThrow(
+        Array.from({ length: 130 }, (_, i) => makeMessageItem(makeMessage(`m-${i + 1}`, i + 1))),
+      ),
+      scheduledGc: { lowerPos: 65 },
+    };
+    const request: ChatAction<'runGc'> = { type: 'runGc', payload: { channelId, lowerPos: 65 } };
+    state = channelReducer(state, { type: 'resetGc', payload: { channelId, pos: 10 } }, context);
+    assert.strictEqual(channelReducer(state, request, context), state);
+    const collected = channelReducer(
+      state,
+      { type: 'runGc', payload: { channelId, lowerPos: 10 } },
+      context,
+    );
+    assert.strictEqual(collected.messages.length, 122);
+    assert.ok(collected.messages.has('m-10'));
+    assert.strictEqual(collected.scheduledGc, null);
+  });
+
+  test('GC does not immediately reschedule when a protected boundary leaves many messages', (t) => {
+    t.mock.method(console, 'debug', () => {});
+    const state = {
+      ...makeInitialChannelState(channelId),
+      messages: MessageStore.fromSortedOrThrow(
+        Array.from({ length: 200 }, (_, i) => makeMessageItem(makeMessage(`m-${i + 1}`, i + 1))),
+      ),
+      scheduledGc: { lowerPos: 10 },
+    };
+    const next = channelReducer(
+      state,
+      { type: 'runGc', payload: { channelId, lowerPos: 10 } },
+      context,
+    );
+    assert.strictEqual(next.messages.length, 192);
+    assert.strictEqual(next.scheduledGc, null);
   });
 
   test('messagePreview marks collision when position overlaps existing message', () => {
@@ -1911,7 +1946,7 @@ describe('channelReducer', () => {
   test('resetGc lowers threshold when new lower pos provided', () => {
     const state = {
       ...makeInitialChannelState(channelId),
-      scheduledGc: { countdown: 3, lowerPos: 100 },
+      scheduledGc: { lowerPos: 100 },
     };
 
     const next = channelReducer(
@@ -1921,20 +1956,18 @@ describe('channelReducer', () => {
     );
 
     assert.strictEqual(next.scheduledGc?.lowerPos, 80);
-    assert.strictEqual(next.scheduledGc?.countdown, 7);
   });
 
   test('resetGc no-op when higher pos provided or no scheduledGc', () => {
     const withGc = channelReducer(
       {
         ...makeInitialChannelState(channelId),
-        scheduledGc: { countdown: 5, lowerPos: 50 },
+        scheduledGc: { lowerPos: 50 },
       },
       { type: 'resetGc', payload: { channelId, pos: 70 } },
       context,
     );
     assert.strictEqual(withGc.scheduledGc?.lowerPos, 50);
-    assert.strictEqual(withGc.scheduledGc?.countdown, 4);
 
     const withoutGc = channelReducer(
       makeInitialChannelState(channelId),

@@ -1914,7 +1914,11 @@ describe('channelReducer', () => {
       scheduledGc: { countdown: 3, lowerPos: 100 },
     };
 
-    const next = channelReducer(state, { type: 'resetGc', payload: { pos: 80 } }, context);
+    const next = channelReducer(
+      state,
+      { type: 'resetGc', payload: { channelId, pos: 80 } },
+      context,
+    );
 
     assert.strictEqual(next.scheduledGc?.lowerPos, 80);
     assert.strictEqual(next.scheduledGc?.countdown, 7);
@@ -1926,7 +1930,7 @@ describe('channelReducer', () => {
         ...makeInitialChannelState(channelId),
         scheduledGc: { countdown: 5, lowerPos: 50 },
       },
-      { type: 'resetGc', payload: { pos: 70 } },
+      { type: 'resetGc', payload: { channelId, pos: 70 } },
       context,
     );
     assert.strictEqual(withGc.scheduledGc?.lowerPos, 50);
@@ -1934,7 +1938,7 @@ describe('channelReducer', () => {
 
     const withoutGc = channelReducer(
       makeInitialChannelState(channelId),
-      { type: 'resetGc', payload: { pos: 10 } },
+      { type: 'resetGc', payload: { channelId, pos: 10 } },
       context,
     );
     assert.strictEqual(withoutGc.scheduledGc, null);

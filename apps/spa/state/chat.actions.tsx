@@ -87,7 +87,7 @@ export type ChatActionMap = {
   messagePreviewDiff: { channelId: string; diff: PreviewDiff; timestamp: number };
   messageDeleted: { channelId: string; messageId: string; pos: number };
   channelDeleted: { channelId: string };
-  resetGc: { pos: number };
+  resetGc: { channelId: string; pos: number };
   update: Update;
   resetChatState: Empty;
   effectsHandled: { effectIds: string[] };

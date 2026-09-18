@@ -17,6 +17,7 @@ interface Props {
   myMember?: ChannelMember | undefined;
   sameSender?: boolean;
   index: number;
+  movePending?: boolean;
 }
 
 const itemSwitch = (
@@ -41,7 +42,6 @@ const itemSwitch = (
         mine={item.mine}
         myMember={myMember}
         handleProps={handleProps}
-        moving={item.moving}
         sameSender={sameSender}
       />
     );
@@ -51,7 +51,7 @@ const itemSwitch = (
     return <ChatPreviewItem key={item.id} preview={item.preview} />;
   }
 };
-function ChatItem({ item, myMember, index, sameSender = false }: Props) {
+function ChatItem({ item, myMember, index, sameSender = false, movePending = false }: Props) {
   const pane = useChannelId();
 
   const editItem = useSelector((state) => {
@@ -81,7 +81,7 @@ function ChatItem({ item, myMember, index, sameSender = false }: Props) {
     );
   };
   return (
-    <Draggable draggableId={id} index={index} isDragDisabled={!draggable}>
+    <Draggable draggableId={id} index={index} isDragDisabled={!draggable || movePending}>
       {renderer}
     </Draggable>
   );

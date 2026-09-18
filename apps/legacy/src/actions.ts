@@ -12,7 +12,6 @@ import {
 import { type Settings, type User } from './api/users';
 import { type Information, type InformationLevel } from './information';
 import { type ChatState, type Compose, type UserItem } from './reducers/chatState';
-import { type MessageItem, type PreviewItem } from './states/chat-item-set';
 import { type Dispatch } from './store';
 import { type Id, newId } from './utils/id';
 import { Err, Ok } from './utils/result';
@@ -115,22 +114,9 @@ export interface FinishMoveMessage {
   pane: Id;
 }
 
-export interface MovingMessage {
-  type: 'MOVING_MESSAGE';
-  message: MessageItem;
-  targetItem: MessageItem | PreviewItem | undefined;
-  pane: Id;
-}
-
 export interface RevealMessage {
   type: 'REVEAL_MESSAGE';
   message: Message;
-  pane: Id;
-}
-
-export interface ResetMessageMoving {
-  type: 'RESET_MESSAGE_MOVING';
-  messageId: Id;
   pane: Id;
 }
 
@@ -474,9 +460,7 @@ export type Action =
   | StartEditMessage
   | StartMoveMessage
   | FinishMoveMessage
-  | MovingMessage
   | RevealMessage
-  | ResetMessageMoving
   | ShowFlash
   | DismissFlash
   | SwitchActivePane

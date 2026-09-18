@@ -1,4 +1,4 @@
-import { List, Map } from 'immutable';
+import { Map } from 'immutable';
 import { type Action, type SpaceLoaded, type SpaceUpdated } from '../actions';
 import { type Channel, type ChannelMember, makeMembers } from '../api/channels';
 import { type SpaceMemberWithUser } from '../api/spaces';
@@ -17,7 +17,6 @@ const initChatState = (
     channel,
     members,
     colorMap: Map<Id, string>(),
-    postponed: List(),
     initialHistoryLoad: null,
     moving: false,
     showFolded: false,

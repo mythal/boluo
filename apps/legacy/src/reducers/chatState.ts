@@ -1,5 +1,4 @@
-import { List, type Map } from 'immutable';
-import * as O from 'optics-ts';
+import { type Map } from 'immutable';
 import {
   type Action,
   type AddDice,
@@ -9,9 +8,7 @@ import {
   type ComposeEditFailed,
   type ComposeSendFailed,
   type LoadMessages,
-  type MovingMessage,
   type ResetComposeAfterSent,
-  type ResetMessageMoving,
   type RestoreComposeState,
   type SetBroadcast,
   type SetComposeMedia,
@@ -50,8 +47,6 @@ import {
   editMessage,
   getOldestMessage,
   makeMessageItem,
-  markMessageMoving,
-  resetMovingMessage,
 } from '../states/chat-item-set';
 import { type Id, newId } from '../utils/id';
 import { captureRecoverableException, recordWarning } from '../error-reporting';
@@ -89,7 +84,6 @@ export interface ChatState {
   filter: 'IN_GAME' | 'OUT_GAME' | 'NONE';
   showFolded: boolean;
   moving: boolean;
-  postponed: List<Action>;
   initialHistoryLoad: {
     requestId: Id;
     pendingMutations: MessageMutation[];
@@ -98,8 +92,6 @@ export interface ChatState {
 }
 
 type MessageMutation = MessageEdited | MessageDeleted;
-
-const focusItemSet = O.optic<ChatState>().prop('itemSet');
 
 const loadChat = (prevState: ChatState | undefined, { chat }: ChatLoaded): ChatState => {
   if (prevState?.channel.id === chat.channel.id) {
@@ -431,23 +423,6 @@ const handleStartEditMessage = (state: ChatState, { message }: StartEditMessage)
   return { ...state, compose };
 };
 
-const handleMessageMoving = (
-  state: ChatState,
-  { message, targetItem }: MovingMessage,
-): ChatState => {
-  return O.modify(focusItemSet)((itemSet) => markMessageMoving(itemSet, message, targetItem))(
-    state,
-  );
-};
-
-const handleResetMessageMoving = (
-  state: ChatState,
-  { messageId }: ResetMessageMoving,
-): ChatState => {
-  const itemSet = resetMovingMessage(state.itemSet, messageId);
-  return { ...state, itemSet };
-};
-
 const updateColorMap = (members: MemberWithUser[], colorMap: Map<Id, string>): Map<Id, string> => {
   for (const member of members) {
     const { textColor, userId } = member.channel;
@@ -744,19 +719,6 @@ const handleChannelEvent = (chat: ChatState, event: Events, myId: Id | undefined
   };
 };
 
-export const handleMoveFinish = (
-  state: ChatState,
-  action: Action,
-  myId?: Id,
-): ChatState | undefined => {
-  const actions = state.postponed;
-  state = { ...state, postponed: List(), moving: false };
-  return actions.reduce<ChatState | undefined>(
-    (state, action) => chatReducer(state, action, myId),
-    state,
-  );
-};
-
 export const handleRevealMessage = (state: ChatState, message: Message, myId?: Id): ChatState => {
   return applyMessageUpdate(state, message, myId);
 };
@@ -768,12 +730,6 @@ const messageOrderCheckAnchor = (chat: ChatState, action: Action): number | null
   switch (action.type) {
     case 'LOAD_MESSAGES':
       return 0;
-    case 'MOVING_MESSAGE':
-      return binarySearchPos(messages, action.targetItem?.pos ?? action.message.pos);
-    case 'RESET_MESSAGE_MOVING': {
-      const index = messages.findIndex((item) => item.id === action.messageId);
-      return index === -1 ? messages.size - 1 : index;
-    }
     case 'REVEAL_MESSAGE':
       return binarySearchPos(messages, action.message.pos);
     case 'EVENT_RECEIVED': {
@@ -897,7 +853,7 @@ export const chatReducer = (
     case 'RESET_COMPOSE_AFTER_SENT':
       return handleResetComposeAfterSent(state, action);
     case 'FINISH_MOVE_MESSAGE':
-      return handleMoveFinish(state, action, myId);
+      return { ...state, moving: false };
     case 'SPACE_UPDATED':
       return handleSpaceUpdate(state, action.spaceWithRelated);
     case 'SPACE_DELETED':
@@ -919,12 +875,8 @@ export const chatReducer = (
       return failInitialHistoryLoad(state, action.requestId);
     case 'LOAD_MESSAGES':
       return loadMessages(state, action, myId);
-    case 'MOVING_MESSAGE':
-      return handleMessageMoving(state, action);
     case 'START_MOVE_MESSAGE':
       return { ...state, moving: true };
-    case 'RESET_MESSAGE_MOVING':
-      return handleResetMessageMoving(state, action);
     case 'CHAT_FILTER':
       return { ...state, filter: action.filter };
     case 'START_EDIT_MESSAGE':

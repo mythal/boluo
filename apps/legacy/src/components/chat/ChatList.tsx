@@ -1,18 +1,14 @@
-import { type List } from 'immutable';
 import * as React from 'react';
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
-import { DragDropContext, type DragDropContextProps, Droppable } from '@hello-pangea/dnd';
-import { type FinishMoveMessage, type ResetMessageMoving } from '../../actions';
-import { post } from '../../api/request';
-import { recordWarning } from '../../error-reporting';
+import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
+import { DragDropContext, Droppable } from '@hello-pangea/dnd';
 import { usePane } from '../../hooks/useChannelId';
 import { type ChatState } from '../../reducers/chatState';
 import { type MessageItem, type PreviewItem } from '../../states/chat-item-set';
-import { useDispatch, useSelector } from '../../store';
-import { throwErr } from '../../utils/errors';
+import { useSelector } from '../../store';
 import { type Id } from '../../utils/id';
 import ChatItem from './ChatItem';
 import LoadMore from './LoadMore';
+import { useMessageDrag } from './use-message-drag';
 
 const filterMessages =
   (filter: ChatState['filter'], showFolded: boolean) =>
@@ -41,42 +37,6 @@ const filterMessages =
     }
     return true;
   };
-
-const itemPos = (item: PreviewItem | MessageItem | undefined | null): [number, number] | null => {
-  if (!item) {
-    return null;
-  }
-  switch (item.type) {
-    case 'MESSAGE':
-      return [item.message.posP, item.message.posQ];
-    case 'PREVIEW':
-      return [Math.ceil(item.preview.pos), 1];
-  }
-};
-
-/**
- * `/messages/move_between` assumes the range it receives is empty and picks the simplest
- * fraction inside it, so the neighbor must come from the unfiltered item set.
- */
-const neighborPos = (
-  messages: List<MessageItem | PreviewItem>,
-  anchor: MessageItem | PreviewItem,
-  direction: 'BEFORE' | 'AFTER',
-): [number, number] | null => {
-  const neighbor =
-    direction === 'AFTER'
-      ? messages.find((item) => item.pos > anchor.pos)
-      : messages.findLast((item) => item.pos < anchor.pos);
-  const pos = itemPos(neighbor);
-  const anchorPos = itemPos(anchor);
-  if (pos == null || anchorPos == null) return null;
-  // `itemPos` rounds preview positions up, which can land on or past the anchor.
-  const beyondAnchor =
-    direction === 'AFTER'
-      ? pos[0] / pos[1] > anchorPos[0] / anchorPos[1]
-      : pos[0] / pos[1] < anchorPos[0] / anchorPos[1];
-  return beyondAnchor ? pos : null;
-};
 
 const useAutoScroll = (chatListRef: React.RefObject<HTMLDivElement | null>) => {
   const scrollEnd = useRef<number>(0);
@@ -108,64 +68,12 @@ const useAutoScroll = (chatListRef: React.RefObject<HTMLDivElement | null>) => {
   }, [chatListRef]);
 };
 
-function useOnDragEnd(
-  channelId: Id,
-  filteredMessages: List<MessageItem | PreviewItem>,
-  messages: List<MessageItem | PreviewItem>,
-): DragDropContextProps['onDragEnd'] {
-  const dispatch = useDispatch();
-
-  return useCallback(
-    async ({ draggableId, source, destination }) => {
-      const finishMove: FinishMoveMessage = { type: 'FINISH_MOVE_MESSAGE', pane: channelId };
-      const messageId = draggableId;
-      if (!destination || source.index === destination.index) {
-        dispatch(finishMove);
-        return;
-      }
-      const sourceItem = filteredMessages.get(source.index);
-      if (sourceItem?.type !== 'MESSAGE') {
-        return;
-      }
-      const anchor = filteredMessages.get(destination.index, null);
-      const [a, b] =
-        source.index > destination.index
-          ? [anchor ? neighborPos(messages, anchor, 'BEFORE') : null, itemPos(anchor)]
-          : [itemPos(anchor), anchor ? neighborPos(messages, anchor, 'AFTER') : null];
-      dispatch(finishMove);
-
-      if (a === null && b === null) {
-        recordWarning('No target item while moving a message', { source: 'move-message' });
-        return;
-      }
-
-      const result = await post('/messages/move_between', {
-        messageId,
-        channelId,
-        expectPos: [sourceItem.message.posP, sourceItem.message.posQ],
-        range: [a, b],
-      });
-      if (!result.isOk) {
-        const reset: ResetMessageMoving = {
-          type: 'RESET_MESSAGE_MOVING',
-          messageId,
-          pane: channelId,
-        };
-        dispatch(reset);
-        throwErr(dispatch)(result.value);
-      }
-    },
-    [channelId, dispatch, filteredMessages, messages],
-  );
-}
-
 interface Props {
   channelId: Id;
   focus: () => void;
 }
 
 function ChatList({ channelId, focus }: Props) {
-  const dispatch = useDispatch();
   const myMember = useSelector((state) => {
     if (state.profile === undefined || state.chatStates.get(channelId) === undefined) {
       return undefined;
@@ -183,19 +91,14 @@ function ChatList({ channelId, focus }: Props) {
     const show = filterMessages(filter, showFolded);
     return messages.filter(show);
   }, [messages, filter, showFolded]);
-  const onDragEnd: DragDropContextProps['onDragEnd'] = useOnDragEnd(
+  const { displayedMessages, pendingIds, onBeforeCapture, onDragEnd } = useMessageDrag(
     channelId,
     filteredMessages,
-    messages,
   );
-
-  const onDragStart = useCallback(() => {
-    dispatch({ type: 'START_MOVE_MESSAGE', pane: channelId });
-  }, [dispatch, channelId]);
 
   let prevSender: Id | null = null;
   let prevName: Id | null = null;
-  const items = filteredMessages.map((item, index) => {
+  const items = displayedMessages.map((item, index) => {
     let sameSender = false;
     if (
       item.type === 'MESSAGE' &&
@@ -217,12 +120,13 @@ function ChatList({ channelId, focus }: Props) {
         myMember={myMember}
         index={index}
         sameSender={sameSender}
+        movePending={pendingIds.has(item.id)}
       />
     );
   });
 
   return (
-    <DragDropContext onDragEnd={onDragEnd} onDragStart={onDragStart}>
+    <DragDropContext onDragEnd={onDragEnd} onBeforeCapture={onBeforeCapture}>
       <div
         ref={wrapperRef}
         className="border-legacy-blue-900 data-[active=true]:border-legacy-blue-700 overflow-x-hidden overflow-y-scroll border"

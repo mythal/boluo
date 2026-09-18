@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { List, Map as ImmutableMap } from 'immutable';
+import { Map as ImmutableMap } from 'immutable';
 import type { Action } from '../actions';
 import type { Channel, MemberWithUser } from '../api/channels';
 import type { Events, Preview, PreviewDiff } from '../api/events';
@@ -56,7 +56,6 @@ const makeState = (): ChatState => ({
   filter: 'NONE',
   showFolded: false,
   moving: false,
-  postponed: List<Action>(),
   initialHistoryLoad: null,
   compose: {
     initialized: true,

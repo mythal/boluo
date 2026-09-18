@@ -1,7 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { List, Map } from 'immutable';
-import type { Action } from '../actions';
 import type { Channel, ChannelMember, MemberWithUser } from '../api/channels';
 import type { Message } from '../api/messages';
 import type { Space, SpaceMember, SpaceWithRelated } from '../api/spaces';
@@ -19,7 +18,6 @@ const makeChatState = (channel: Channel): ChatState => ({
   channel,
   members: [],
   colorMap: Map(),
-  postponed: List<Action>(),
   initialHistoryLoad: null,
   moving: false,
   showFolded: false,

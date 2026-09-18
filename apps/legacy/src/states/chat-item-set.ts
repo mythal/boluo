@@ -14,7 +14,6 @@ export interface ChatNode {
 export interface MessageItem extends ChatNode {
   type: 'MESSAGE';
   message: Message;
-  moving?: boolean;
 }
 
 export const makeMessageItem =
@@ -145,13 +144,6 @@ export const deleteMessage = (itemSet: ChatItemSet, messageId: Id): ChatItemSet 
   return { ...itemSet, messages };
 };
 
-export const moveMessages = (
-  messages: ChatItemSet['messages'],
-  movedItems: MessageItem[],
-): ChatItemSet['messages'] => {
-  return messages;
-};
-
 export const editMessage = (
   itemSet: ChatItemSet,
   editedItem: MessageItem,
@@ -186,32 +178,6 @@ export const editMessage = (
   } else {
     return addItem({ ...itemSet, messages: messages.remove(index) }, editedItem);
   }
-};
-
-export const markMessageMoving = (
-  itemSet: ChatItemSet,
-  messageItem: MessageItem,
-  targetItem: PreviewItem | MessageItem | undefined,
-): ChatItemSet => {
-  const index = findItem(itemSet.messages, messageItem.id);
-  const messages = itemSet.messages.remove(index);
-  return { ...itemSet, messages };
-};
-
-export const resetMovingMessage = (itemSet: ChatItemSet, id: Id): ChatItemSet => {
-  const index = findItem(itemSet.messages, id);
-  if (index === -1) {
-    return itemSet;
-  }
-  const messageItem = itemSet.messages.get(index);
-  if (messageItem === undefined || messageItem.type !== 'MESSAGE' || messageItem.moving !== true) {
-    throw new Error('unexpected message when reset moving message');
-  }
-  const messages = insertItem(itemSet.messages.remove(index), {
-    ...messageItem,
-    moving: undefined,
-  });
-  return { ...itemSet, messages };
 };
 
 export function binarySearchPos(arr: List<{ pos: number }>, targetPos: number): number {

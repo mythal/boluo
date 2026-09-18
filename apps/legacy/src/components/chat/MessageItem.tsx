@@ -23,7 +23,6 @@ interface Props {
   myMember?: ChannelMember;
   style?: React.CSSProperties;
   handleProps?: DraggableProvidedDragHandleProps | null;
-  moving?: boolean;
   sameSender?: boolean;
 }
 
@@ -33,7 +32,6 @@ function MessageItem({
   style,
   handleProps,
   myMember,
-  moving = false,
   sameSender = false,
 }: Props) {
   const [lazy, setLazy] = useState(true);
@@ -78,7 +76,6 @@ function MessageItem({
       style={style}
       data-no-name={!renderName}
       data-in-game={message.inGame ?? false}
-      data-moving={moving}
     >
       {handleProps && <Handle timestamp={message.created} handleProps={handleProps} />}
       {renderName && <div className={chatItemNameContainerClassName}>{name}</div>}

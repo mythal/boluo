@@ -106,7 +106,7 @@ export const ComposeTextArea: FC<Props> = ({ parsed, enterSend, send, myId }) =>
         const len = channel.messages.length;
         if (len === 0) return null;
         let count = 0;
-        for (const message of L.backwards(channel.messages)) {
+        for (const message of L.backwards(channel.messages.ordered)) {
           if (message.folded) continue;
           if (message.senderId === myId) {
             return message;

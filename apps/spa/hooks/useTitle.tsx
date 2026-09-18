@@ -30,7 +30,7 @@ const hasUnreadMessages = (
     const channel = chatState.channels[channelId]!;
     const readPos = store.get(channelReadFamily(channelId));
     let count = 0;
-    for (const message of backwards(channel.messages)) {
+    for (const message of backwards(channel.messages.ordered)) {
       if (myId != null && message.senderId === myId) continue;
       else if (message.pos > readPos && !message.folded) {
         // console.debug('[UNREAD]', message);

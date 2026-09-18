@@ -70,7 +70,7 @@ const channelsReducer = (
   if ('channelId' in action.payload) {
     const { channelId } = action.payload;
     if (
-      action.type === 'messagePreviewDiff' &&
+      (action.type === 'messagePreviewDiff' || action.type === 'runGc') &&
       !Object.prototype.hasOwnProperty.call(channels, channelId)
     ) {
       return [channels, []];

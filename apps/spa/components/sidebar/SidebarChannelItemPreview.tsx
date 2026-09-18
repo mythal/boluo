@@ -46,7 +46,7 @@ export const SidebarChannelItemPreview: FC<Props> = ({
     const messages = store.get(messagesAtom);
     const hasMessageAtPos = (pos: number): boolean => {
       if (messages) {
-        const [, message] = binarySearchPosList(messages, pos);
+        const [, message] = binarySearchPosList(messages.ordered, pos);
         if (message) return true;
       }
       if (preloadedMessages) {

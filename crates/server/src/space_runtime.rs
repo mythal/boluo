@@ -1,6 +1,6 @@
 use std::collections::{HashMap, VecDeque};
 use std::future::Future;
-use std::sync::atomic::{AtomicBool, AtomicI64, AtomicU64, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicI64, AtomicU8, AtomicU64, Ordering};
 use std::sync::{Arc, Weak};
 use std::time::{Duration, Instant};
 
@@ -530,12 +530,20 @@ pub(crate) enum SpaceRuntimeError {
     RefreshFailed,
 }
 
+#[repr(u8)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum RuntimeState {
+    Ready = 0,
+    Dirty = 1,
+    Deleted = 2,
+}
+
 pub(crate) struct SpaceRuntime {
     space_id: Uuid,
     db: sqlx::PgPool,
     snapshot: ArcSwap<SpaceSnapshot>,
     verified_at: parking_lot::Mutex<Instant>,
-    dirty: AtomicBool,
+    state: AtomicU8,
     next_ticket: AtomicU64,
     reconciliation_pending: AtomicBool,
     authoritative_notify: tokio::sync::Notify,
@@ -546,6 +554,29 @@ pub(crate) struct SpaceRuntime {
 }
 
 impl SpaceRuntime {
+    fn state(&self) -> RuntimeState {
+        match self.state.load(Ordering::Acquire) {
+            0 => RuntimeState::Ready,
+            1 => RuntimeState::Dirty,
+            2 => RuntimeState::Deleted,
+            _ => unreachable!("invalid Space runtime state"),
+        }
+    }
+
+    fn set_state(&self, state: RuntimeState) {
+        // Deletion is terminal, including when it races with snapshot publication.
+        if let Ok(previous) =
+            self.state
+                .try_update(Ordering::AcqRel, Ordering::Acquire, |current| {
+                    (current != RuntimeState::Deleted as u8).then_some(state as u8)
+                })
+            && previous != state as u8
+            && matches!(state, RuntimeState::Ready | RuntimeState::Deleted)
+        {
+            self.authoritative_notify.notify_waiters();
+        }
+    }
+
     async fn load(db: &sqlx::PgPool, space_id: Uuid) -> Result<Arc<Self>, SpaceRuntimeError> {
         let started = Instant::now();
         let result = Self::load_snapshot(db, space_id, 0).await;
@@ -565,7 +596,7 @@ impl SpaceRuntime {
             db: db.clone(),
             snapshot: ArcSwap::from_pointee(snapshot),
             verified_at: parking_lot::Mutex::new(Instant::now()),
-            dirty: AtomicBool::new(false),
+            state: AtomicU8::new(RuntimeState::Ready as u8),
             next_ticket: AtomicU64::new(0),
             reconciliation_pending: AtomicBool::new(false),
             authoritative_notify: tokio::sync::Notify::new(),
@@ -849,11 +880,11 @@ impl SpaceRuntime {
 
     /// Returns a snapshot only while it is known to include every queued committed change.
     pub(crate) fn authoritative_snapshot(&self) -> Option<Arc<SpaceSnapshot>> {
-        if self.dirty.load(Ordering::Acquire) {
+        if self.state() != RuntimeState::Ready {
             return None;
         }
         let snapshot = self.snapshot();
-        (!self.dirty.load(Ordering::Acquire)).then_some(snapshot)
+        (self.state() == RuntimeState::Ready).then_some(snapshot)
     }
 
     async fn authoritative_snapshot_after_wait(&self) -> Option<Arc<SpaceSnapshot>> {
@@ -871,6 +902,10 @@ impl SpaceRuntime {
         notified.as_mut().enable();
         if let Some(snapshot) = self.authoritative_snapshot() {
             return Some(snapshot);
+        }
+
+        if self.state() == RuntimeState::Deleted {
+            return None;
         }
 
         let started = Instant::now();
@@ -899,7 +934,7 @@ impl SpaceRuntime {
     ) -> Result<u64, SpaceRuntimeError> {
         // The database commit already happened. Hide the old snapshot before waiting
         // for the control actor, even if this proof later turns out to be stale.
-        self.dirty.store(true, Ordering::Release);
+        self.set_state(RuntimeState::Dirty);
         let (ack_tx, ack_rx) = oneshot::channel();
         self.control_tx
             .send(ControlCommand::ApplyCommitted {
@@ -918,7 +953,7 @@ impl SpaceRuntime {
         reconciliation_permit: Option<tokio::sync::OwnedSemaphorePermit>,
     ) -> Result<(u64, oneshot::Receiver<Result<u64, SpaceRuntimeError>>), SpaceRuntimeError> {
         let ticket = self.next_ticket.fetch_add(1, Ordering::AcqRel) + 1;
-        self.dirty.store(true, Ordering::Release);
+        self.set_state(RuntimeState::Dirty);
         self.enqueue_refresh_command(ticket, reason, reconciliation_permit)
     }
 
@@ -942,6 +977,9 @@ impl SpaceRuntime {
         reason: SnapshotReloadReason,
         reconciliation_permit: Option<tokio::sync::OwnedSemaphorePermit>,
     ) -> Result<(u64, oneshot::Receiver<Result<u64, SpaceRuntimeError>>), SpaceRuntimeError> {
+        if self.state() == RuntimeState::Deleted {
+            return Err(SpaceRuntimeError::NotFound);
+        }
         let (ack_tx, ack_rx) = oneshot::channel();
         let command = RefreshCommand {
             ticket,
@@ -971,7 +1009,8 @@ impl SpaceRuntime {
     }
 
     fn needs_reconciliation(&self, max_age: Duration) -> bool {
-        self.active_mutations.load(Ordering::Acquire) == 0
+        self.state() != RuntimeState::Deleted
+            && self.active_mutations.load(Ordering::Acquire) == 0
             && !self.reconciliation_pending.load(Ordering::Acquire)
             && self.verified_at.lock().elapsed() >= max_age
     }
@@ -1018,11 +1057,14 @@ impl SpaceRuntime {
         // Invalidate synchronously before the corresponding control command is queued.
         // An older publication must not make this snapshot authoritative again.
         let ticket = self.next_ticket.fetch_add(1, Ordering::AcqRel) + 1;
-        self.dirty.store(true, Ordering::Release);
+        self.set_state(RuntimeState::Dirty);
         ticket
     }
 
     async fn acquire_mutation(self: &Arc<Self>) -> Result<SpaceMutationGuard, SpaceRuntimeError> {
+        if self.state() == RuntimeState::Deleted {
+            return Err(SpaceRuntimeError::NotFound);
+        }
         let active_mutations = self.active_mutations.fetch_add(1, Ordering::AcqRel);
         if active_mutations > MAX_QUEUED_MUTATIONS {
             self.active_mutations.fetch_sub(1, Ordering::AcqRel);
@@ -1082,6 +1124,14 @@ impl SpaceRuntime {
         }
     }
 
+    fn mark_deleted(&self) {
+        // Removal from the store does not drop outstanding Runtime references. Retire
+        // the actor explicitly so dropping the deletion guard cannot trigger recovery.
+        self.set_state(RuntimeState::Deleted);
+        // Wake an idle actor. If the queue is full, its next command observes deletion.
+        let _ = self.control_tx.try_send(ControlCommand::Remove);
+    }
+
     async fn run_control(runtime: Weak<Self>, mut control_rx: mpsc::Receiver<ControlCommand>) {
         // This state machine serializes mutations only within this server process. A future
         // multi-node deployment must add database-backed or distributed per-Space coordination.
@@ -1090,10 +1140,16 @@ impl SpaceRuntime {
             let Some(runtime) = runtime.upgrade() else {
                 break;
             };
+            if runtime.state() == RuntimeState::Deleted {
+                // Dropping the receiver and state also releases queued mutations,
+                // deferred refresh waiters, and reconciliation permits.
+                break;
+            }
             runtime
                 .control_queue_depth
                 .store(control_rx.len() as u64, Ordering::Release);
             match command {
+                ControlCommand::Remove => break,
                 ControlCommand::BeginMutation { queued_at, granted } => {
                     state
                         .pending_mutations
@@ -1170,7 +1226,7 @@ impl SpaceRuntime {
             .unwrap_or_else(|| runtime.next_ticket.load(Ordering::Acquire));
         let current = runtime.snapshot();
         let committed_refresh_is_covered =
-            !runtime.dirty.load(Ordering::Acquire) && current.revision >= requested_ticket;
+            runtime.state() == RuntimeState::Ready && current.revision >= requested_ticket;
         let ticket = requested_ticket
             .max(current.revision)
             .max(runtime.next_ticket.load(Ordering::Acquire));
@@ -1267,7 +1323,7 @@ impl SpaceRuntime {
         let current_revision = runtime.snapshot().revision;
         let generation = runtime.next_ticket.load(Ordering::Acquire);
         let was_authoritative =
-            !runtime.dirty.load(Ordering::Acquire) && generation == current_revision;
+            runtime.state() == RuntimeState::Ready && generation == current_revision;
         let reserved_ticket = runtime.reserve_generation();
         let base_revision =
             (was_authoritative && reserved_ticket == generation + 1).then_some(current_revision);
@@ -1303,7 +1359,7 @@ impl SpaceRuntime {
         let was_prepared = active.prepared.is_some();
         let repair_reason = if was_prepared && !active.published {
             Some("unpublished")
-        } else if was_prepared && runtime.dirty.load(Ordering::Acquire) {
+        } else if was_prepared && runtime.state() == RuntimeState::Dirty {
             Some("dirty")
         } else {
             None
@@ -1375,7 +1431,7 @@ impl SpaceRuntime {
                 }
                 active.published = true;
             }
-            runtime.update_dirty(state);
+            runtime.update_snapshot_state(state);
             if let Some(prepared_at) = prepared_at {
                 metrics::histogram!(
                     "boluo_server_space_runtime_mutation_dirty_duration_seconds",
@@ -1413,7 +1469,7 @@ impl SpaceRuntime {
         {
             let prepared_at = active.prepared.as_ref().map(|prepared| prepared.started_at);
             active.published = true;
-            runtime.update_dirty(state);
+            runtime.update_snapshot_state(state);
             if let Some(prepared_at) = prepared_at {
                 metrics::histogram!(
                     "boluo_server_space_runtime_mutation_dirty_duration_seconds",
@@ -1433,7 +1489,7 @@ impl SpaceRuntime {
     ) -> Result<u64, SpaceRuntimeError> {
         if matches!(reason, SnapshotReloadReason::Reconciliation) {
             let current = runtime.snapshot();
-            let authoritative = !runtime.dirty.load(Ordering::Acquire)
+            let authoritative = runtime.state() == RuntimeState::Ready
                 && current.revision == runtime.next_ticket.load(Ordering::Acquire);
             if authoritative {
                 let started = Instant::now();
@@ -1442,7 +1498,7 @@ impl SpaceRuntime {
                 {
                     Ok(ReconciliationResult::Unchanged) => {
                         *runtime.verified_at.lock() = Instant::now();
-                        runtime.update_dirty(state);
+                        runtime.update_snapshot_state(state);
                         return Ok(ticket);
                     }
                     Ok(ReconciliationResult::Refreshed { snapshot, changed }) => {
@@ -1462,7 +1518,7 @@ impl SpaceRuntime {
                             runtime.snapshot.store(snapshot);
                             *runtime.verified_at.lock() = Instant::now();
                         }
-                        runtime.update_dirty(state);
+                        runtime.update_snapshot_state(state);
                         return Ok(ticket);
                     }
                     Err(error) => {
@@ -1540,7 +1596,7 @@ impl SpaceRuntime {
                     runtime.snapshot.store(Arc::new(snapshot));
                     *runtime.verified_at.lock() = Instant::now();
                 }
-                runtime.update_dirty(state);
+                runtime.update_snapshot_state(state);
                 Ok(ticket)
             }
             Err(error) => {
@@ -1561,7 +1617,7 @@ impl SpaceRuntime {
         }
     }
 
-    fn update_dirty(&self, state: &ControlState) {
+    fn update_snapshot_state(&self, state: &ControlState) {
         let snapshot_revision = self.snapshot().revision;
         let mutation_unpublished = state
             .active_mutation
@@ -1569,10 +1625,11 @@ impl SpaceRuntime {
             .is_some_and(|active| active.prepared.is_some() && !active.published);
         let dirty =
             self.next_ticket.load(Ordering::Acquire) != snapshot_revision || mutation_unpublished;
-        let was_dirty = self.dirty.swap(dirty, Ordering::AcqRel);
-        if was_dirty && !dirty {
-            self.authoritative_notify.notify_waiters();
-        }
+        self.set_state(if dirty {
+            RuntimeState::Dirty
+        } else {
+            RuntimeState::Ready
+        });
     }
 }
 
@@ -1603,6 +1660,7 @@ impl SnapshotReloadReason {
 }
 
 enum ControlCommand {
+    Remove,
     BeginMutation {
         queued_at: Instant,
         granted: oneshot::Sender<u64>,
@@ -1789,6 +1847,9 @@ impl SpaceRuntimeHandle {
             .lock()
             .expect("Space runtime handle state mutex poisoned")
             .evicting = true;
+        if let Some(runtime) = self.runtime.get() {
+            runtime.mark_deleted();
+        }
     }
 
     fn touch_runtime_if_active(&self) -> Option<Arc<SpaceRuntime>> {
@@ -1917,7 +1978,7 @@ impl SpaceStore {
                 continue;
             };
             loaded += 1;
-            dirty += runtime.dirty.load(Ordering::Acquire) as u64;
+            dirty += (runtime.state() == RuntimeState::Dirty) as u64;
             mutations_in_flight += runtime.active_mutations.load(Ordering::Acquire);
             control_queue_depth += runtime.control_queue_depth.load(Ordering::Acquire);
             mutation_queue_depth += runtime.mutation_queue_depth.load(Ordering::Acquire);

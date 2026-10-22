@@ -90,7 +90,7 @@ export const SidebarChannelItem: FC<Props> = ({
     () =>
       atom((read) => {
         const channelState = read(channelStateAtom);
-        const messages = channelState?.messages;
+        const messages = channelState?.messages.ordered;
         const latestMessage = messages
           ? findLast((message) => !message.folded, messages)
           : undefined;

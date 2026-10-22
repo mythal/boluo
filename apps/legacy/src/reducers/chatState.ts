@@ -650,9 +650,21 @@ const handleChannelEvent = (chat: ChatState, event: Events, myId: Id | undefined
   }
   if (body.type === 'NEW_MESSAGE' || body.type === 'MESSAGE_EDITED') {
     const incomingMessage = body.message;
+    const currentItem = itemSet.messages.find(
+      (item) => item.type === 'MESSAGE' && item.id === incomingMessage.id,
+    );
+    const currentMessage = currentItem?.type === 'MESSAGE' ? currentItem.message : null;
+    const versionComparison = currentMessage
+      ? compareMessageVersion(currentMessage, incomingMessage)
+      : null;
+    // Old message versions should not trigger collision warnings.
+    const ignoredByVersion =
+      versionComparison !== null &&
+      (body.type === 'NEW_MESSAGE' ? versionComparison >= 0 : versionComparison > 0);
     const itemIndexByPos = binarySearchPos(itemSet.messages, incomingMessage.pos);
     const itemByPos = itemSet.messages.get(itemIndexByPos);
     if (
+      !ignoredByVersion &&
       itemByPos?.type === 'MESSAGE' &&
       itemByPos.pos === incomingMessage.pos &&
       itemByPos.id !== incomingMessage.id
@@ -665,6 +677,10 @@ const handleChannelEvent = (chat: ChatState, event: Events, myId: Id | undefined
         details: {
           conflictingMessage: messageDiagnostic(itemByPos.message),
           incomingMessage: messageDiagnostic(incomingMessage),
+          currentMessage: currentMessage ? messageDiagnostic(currentMessage) : null,
+          oldPos: body.type === 'MESSAGE_EDITED' ? body.oldPos : null,
+          updateLive: event.live ?? null,
+          initialized: chat.initialized,
         },
       });
     }

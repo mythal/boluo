@@ -1,9 +1,9 @@
+import { MessageStore } from '../state/message-store';
 import { atom, useAtomValue } from 'jotai';
 import { selectAtom } from 'jotai/utils';
 import { useEffect, useMemo } from 'react';
 import { binarySearchPos, binarySearchPosList } from '@boluo/sort';
 import {
-  findMessage,
   isChannelHistoryFull,
   type OptimisticItem,
   type ChannelState,
@@ -21,7 +21,6 @@ interface UseChatListReturn {
   firstItemIndex: number;
   virtualListKey: string;
   filteredMessagesCount: number;
-  scheduledGcLowerPos: number | null;
 }
 
 export const START_INDEX = 100000000;
@@ -224,19 +223,13 @@ export const pruneSelfPreview = (
  */
 export const applyEditPreview = (
   preview: PreviewItem,
-  messages: L.List<MessageItem>,
+  messages: MessageStore,
   itemList: ChatItem[],
 ): PreviewItem | null => {
   if (preview.edit == null) return null;
-  // The message may have moved since this preview was created. Falling back
-  // to its id is expected here because the resolved preview follows the move.
-  const findResult = findMessage(messages, preview.id, preview.pos, {
-    warnOnStalePos: false,
-  });
-  if (!findResult) {
-    return null;
-  }
-  const [message] = findResult;
+  // Resolve by ID so the preview follows the message when it moves.
+  const message = messages.get(preview.id);
+  if (!message) return null;
   if (preview.edit.time !== message.modified) {
     return null;
   }
@@ -270,10 +263,10 @@ export const findNeighborPos = (
   pos: number,
   direction: 'BEFORE' | 'AFTER',
 ): [number, number] | null => {
-  const [index, found] = binarySearchPosList(messages, pos);
+  const [index, found] = binarySearchPosList(messages.ordered, pos);
   const neighborIndex = direction === 'AFTER' ? (found ? index + 1 : index) : index - 1;
-  let neighbor: ChatItem | undefined = L.nth(neighborIndex, messages);
-  const loadedMinPos = L.first(messages)?.pos ?? Number.MIN_SAFE_INTEGER;
+  let neighbor: ChatItem | undefined = L.nth(neighborIndex, messages.ordered);
+  const loadedMinPos = L.first(messages.ordered)?.pos ?? Number.MIN_SAFE_INTEGER;
   const fullLoaded = isChannelHistoryFull({ historyState });
   for (const preview of Object.values(previewMap)) {
     // A partial history does not tell us whether messages exist below its oldest
@@ -307,16 +300,14 @@ export const isMessageNewerThanOptimisticRef = (
 
 type ChannelSlice = Pick<ChannelState, 'messages' | 'previewMap' | 'optimisticMessageMap'> & {
   fullLoaded: boolean;
-  scheduledGcLowerPos: number | null;
 };
 
 const channelSliceEq = shallowEqual<ChannelSlice>;
 
 const EMPTY_CHANNEL_SLICE: ChannelSlice = {
-  messages: L.empty(),
+  messages: MessageStore.empty(),
   fullLoaded: false,
   previewMap: {},
-  scheduledGcLowerPos: null,
   optimisticMessageMap: {},
 };
 
@@ -384,10 +375,10 @@ const projectChatList = ({
       // Side effect: record the optimistic item that should be rendered.
       optimisticMessageItems.push(optimisticItem);
       return false;
-    }, messages),
+    }, messages.ordered),
   );
   const itemListLen = itemList.length;
-  const loadedMinPos = L.first(messages)?.pos ?? Number.MIN_SAFE_INTEGER;
+  const loadedMinPos = L.first(messages.ordered)?.pos ?? Number.MIN_SAFE_INTEGER;
   if (myId) {
     const hasSelfPreview = pruneSelfPreview(
       optimisticPreviewList,
@@ -415,10 +406,8 @@ const projectChatList = ({
       let posP = pos;
       let posQ = 1;
       if (composeSlice.edit != null) {
-        const editTargetPos = composeSlice.edit.p / composeSlice.edit.q;
-        const result = findMessage(messages, composeSlice.previewId, editTargetPos);
-        if (result) {
-          const [message] = result;
+        const message = messages.get(composeSlice.previewId);
+        if (message) {
           pos = message.pos;
           posP = message.posP;
           posQ = message.posQ;
@@ -485,7 +474,6 @@ const projectChatList = ({
 
 interface ChatListViewState extends VirtualChatListState {
   filteredMessagesCount: number;
-  scheduledGcLowerPos: number | null;
   optimisticMessageMap: ChannelState['optimisticMessageMap'];
 }
 
@@ -519,7 +507,6 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
             fullLoaded: isChannelHistoryFull(channel),
             previewMap: channel.previewMap,
             optimisticMessageMap: channel.optimisticMessageMap,
-            scheduledGcLowerPos: channel.scheduledGc?.lowerPos ?? null,
           };
         },
         channelSliceEq,
@@ -565,7 +552,6 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
         ) {
           if (
             previous.filteredMessagesCount === projection.filteredMessagesCount &&
-            previous.scheduledGcLowerPos === source.scheduledGcLowerPos &&
             previous.optimisticMessageMap === source.optimisticMessageMap
           ) {
             return previous;
@@ -573,7 +559,6 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
           return {
             ...previous,
             filteredMessagesCount: projection.filteredMessagesCount,
-            scheduledGcLowerPos: source.scheduledGcLowerPos,
             optimisticMessageMap: source.optimisticMessageMap,
           };
         }
@@ -581,20 +566,13 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
         return {
           ...virtualState,
           filteredMessagesCount: projection.filteredMessagesCount,
-          scheduledGcLowerPos: source.scheduledGcLowerPos,
           optimisticMessageMap: source.optimisticMessageMap,
         };
       }),
     [chatListSourceAtom],
   );
-  const {
-    chatList,
-    firstItemIndex,
-    epoch,
-    filteredMessagesCount,
-    scheduledGcLowerPos,
-    optimisticMessageMap,
-  } = useAtomValue(chatListViewAtom);
+  const { chatList, firstItemIndex, epoch, filteredMessagesCount, optimisticMessageMap } =
+    useAtomValue(chatListViewAtom);
 
   // Show a warning when the user tries to leave the page
   useEffect(() => {
@@ -618,6 +596,5 @@ export const useChatList = (channelId: string, myId?: string): UseChatListReturn
     firstItemIndex,
     virtualListKey: `${channelId}:${myId ?? 'ANONYMOUS'}:${epoch}`,
     filteredMessagesCount,
-    scheduledGcLowerPos,
   };
 };

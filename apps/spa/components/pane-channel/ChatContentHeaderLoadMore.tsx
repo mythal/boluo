@@ -49,7 +49,9 @@ export const ChatContentHeaderLoadMore: FC = () => {
 
     isLoadingRef.current = true;
     setIsLoading(true);
-    const before: number | null = channelState ? (head(channelState.messages)?.pos ?? null) : null;
+    const before: number | null = channelState
+      ? (head(channelState.messages.ordered)?.pos ?? null)
+      : null;
     try {
       const baseOptions = {
         channelId,

@@ -56,7 +56,7 @@ thiserror = "2.0"
 unicode-normalization = "0.1"
 tokio-stream = "0.1"
 tokio-tungstenite = "0.30.0"
-brotli = "8.0.2"
+brotli = "9.1.1"
 flate2 = "1.1.5"
 sqlx = { version = "0.9.0", features = [
   "runtime-tokio",
@@ -73,7 +73,7 @@ arc-swap = "1.7.1"
 quick_cache = { version = "0.7.0", features = ["stats"] }
 papaya = "0.2.1"
 ahash = "0.8.11"
-parking_lot = "0.12.3"
+parking_lot = "0.13.0"
 specta.workspace = true
 specta-serde.workspace = true
 specta-typescript.workspace = true

@@ -2,7 +2,7 @@
   "name": "@boluo/grafana",
   "version": "0.0.0",
   "dependencies": {
-    "@grafana/grafana-foundation-sdk": "0.0.18"
+    "@grafana/grafana-foundation-sdk": "0.0.21"
   },
   "devDependencies": {
     "@boluo/eslint-config": "0.0.0",

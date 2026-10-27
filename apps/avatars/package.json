@@ -9,7 +9,7 @@
   },
   "devDependencies": {
     "@boluo/typescript-config": "0.0.0",
-    "@cloudflare/vitest-pool-workers": "^0.20.3",
+    "@cloudflare/vitest-plugin": "^1.4.8",
     "@cloudflare/workers-types": "5",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",

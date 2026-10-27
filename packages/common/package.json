@@ -15,7 +15,7 @@
     "@types/react": "^19.2.17",
     "eslint": "^10.6.0",
     "react": "^19.2.7",
-    "react-intl": "^10.1.14",
+    "react-intl": "^12.1.5",
     "typescript": "^6"
   },
   "exports": {
@@ -28,7 +28,7 @@
   "peerDependencies": {
     "react": "^19.2.7",
     "react-hook-form": "^7.81.0",
-    "react-intl": "^10.1.14"
+    "react-intl": "^12.1.5"
   },
   "scripts": {
     "check": "tsc --project tsconfig.json --noEmit",

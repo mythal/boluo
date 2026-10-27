@@ -9,7 +9,7 @@
     "@boluo/eslint-config": "0.0.0",
     "@boluo/types": "0.0.0",
     "@boluo/typescript-config": "0.0.0",
-    "@formatjs/intl": "^4.1.14",
+    "@formatjs/intl": "^6.1.4",
     "eslint": "^10.6.0",
     "typescript": "^6"
   },

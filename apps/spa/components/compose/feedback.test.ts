@@ -1,13 +1,17 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createIntl } from 'react-intl';
+import { createIntl, type MessageDescriptor } from 'react-intl';
 import { composeFeedback, updateFeedbackPopover } from './feedback';
 import type { ComposeIssue } from '../../state/compose-issues';
 
 const baseIntl = createIntl({ locale: 'en' });
 const intl = {
   ...baseIntl,
-  formatMessage: ((message, values, options) =>
+  formatMessage: ((
+    message: MessageDescriptor,
+    values?: Parameters<typeof baseIntl.formatMessage>[1],
+    options?: Parameters<typeof baseIntl.formatMessage>[2],
+  ) =>
     baseIntl.formatMessage(
       {
         ...message,
@@ -48,7 +52,11 @@ test('error identity distinguishes references and survives translated message ch
   const translated = composeFeedback(
     {
       ...intl,
-      formatMessage: ((descriptor, values, options) =>
+      formatMessage: ((
+        descriptor: MessageDescriptor,
+        values?: Parameters<typeof intl.formatMessage>[1],
+        options?: Parameters<typeof intl.formatMessage>[2],
+      ) =>
         intl.formatMessage(
           { ...descriptor, defaultMessage: 'Translated message' },
           values,

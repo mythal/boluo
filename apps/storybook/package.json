@@ -8,7 +8,7 @@
     "@boluo/ui": "0.0.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
-    "react-intl": "^10.1.14"
+    "react-intl": "^12.1.5"
   },
   "devDependencies": {
     "@boluo/tailwind-config": "0.0.0",

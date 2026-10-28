@@ -2,8 +2,28 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import type { Preview, PreviewDiff } from '@boluo/api';
 import { chatReducer, makeChatState } from './chat.reducer';
+import { makeInitialChannelState } from './channel.reducer';
 
 const ghostChannelId = 'ghost-channel';
+
+test('resetGc only changes the target channel', () => {
+  const state = {
+    ...makeChatState('space-1', 1),
+    channels: {
+      a: { ...makeInitialChannelState('a'), scheduledGc: { lowerPos: 65 } },
+      b: { ...makeInitialChannelState('b'), scheduledGc: { lowerPos: 100 } },
+    },
+  };
+
+  const next = chatReducer(state, {
+    type: 'resetGc',
+    payload: { channelId: 'a', pos: 2 },
+  });
+
+  assert.deepStrictEqual(next.channels.a?.scheduledGc, { lowerPos: 2 });
+  assert.strictEqual(next.channels.b, state.channels.b);
+  assert.deepStrictEqual(next.channels.b?.scheduledGc, { lowerPos: 100 });
+});
 
 test('chatReducer stores messagePreview for unknown channel', () => {
   const state = makeChatState('space-1', 1);

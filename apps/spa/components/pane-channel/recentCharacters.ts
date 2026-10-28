@@ -1,7 +1,6 @@
 import { atom } from 'jotai';
 import { atomFamily } from 'jotai-family';
 import { atomWithStorage } from 'jotai/utils';
-import type { SyncStorage } from 'jotai/vanilla/utils/atomWithStorage';
 
 const RECENT_CHARACTER_STORAGE_PREFIX = 'boluo:recent-characters';
 const MAX_STORED_RECENT_CHARACTERS = 50;
@@ -34,8 +33,8 @@ export const recordRecentCharacterId = (
   );
 };
 
-const recentCharacterStorage: SyncStorage<string[]> = {
-  getItem: (key, initialValue) => {
+const recentCharacterStorage = {
+  getItem: (key: string, initialValue: string[]) => {
     const storage = getSessionStorage();
     if (storage == null) return initialValue;
     try {
@@ -44,14 +43,14 @@ const recentCharacterStorage: SyncStorage<string[]> = {
       return initialValue;
     }
   },
-  setItem: (key, value) => {
+  setItem: (key: string, value: string[]) => {
     try {
       getSessionStorage()?.setItem(key, JSON.stringify(value));
     } catch {
       // Keep the atom useful even when session storage is unavailable.
     }
   },
-  removeItem: (key) => {
+  removeItem: (key: string) => {
     try {
       getSessionStorage()?.removeItem(key);
     } catch {

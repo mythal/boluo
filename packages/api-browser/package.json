@@ -6,7 +6,7 @@
     "@boluo/store": "0.0.0",
     "@boluo/types": "0.0.0",
     "@boluo/utils": "0.0.0",
-    "jotai": "^2.20.1"
+    "jotai": "^3.0.1"
   },
   "devDependencies": {
     "@boluo/eslint-config": "0.0.0",

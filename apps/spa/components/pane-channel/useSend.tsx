@@ -24,7 +24,6 @@ import { type FailTo } from '../../state/channel.types';
 import { useIntl } from 'react-intl';
 import { useSetBanner } from '../../hooks/useBanner';
 import { useMember } from '../../hooks/useMember';
-import { findMessage } from '../../state/channel.reducer';
 import { saveDraftInWorker } from '../../state/compose-backup.worker-client';
 import { useChannelCharacterName } from '../../hooks/useChannelCharacter';
 import { usePortrayableCharacters } from '../../hooks/usePortrayableCharacters';
@@ -85,11 +84,7 @@ export const useSend = () => {
 
     if (composeState.edit != null) {
       const channelState = store.get(chatAtom).channels[channelId];
-      const editPos = composeState.edit.p / composeState.edit.q;
-      const found = channelState
-        ? findMessage(channelState.messages, composeState.previewId, editPos)
-        : null;
-      if (!found) {
+      if (!channelState?.messages.has(composeState.previewId)) {
         if (composeState.source.trim() !== '') {
           saveDraftInWorker(channelId, composeState.source);
         }

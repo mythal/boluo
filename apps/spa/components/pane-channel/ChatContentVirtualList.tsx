@@ -23,7 +23,7 @@ import { neverMind } from '@boluo/utils/function';
 
 interface Props {
   firstItemIndex: number;
-  renderRangeRef: RefObject<[number, number]>;
+  onRangeStartChange: (index: number) => void;
   virtuosoRef: RefObject<VirtuosoHandle | null>;
   setScroller: (scroller: HTMLDivElement | null) => void;
   chatList: ChatItem[];
@@ -57,7 +57,7 @@ export const ChatContentVirtualList: FC<Props> = (props) => {
     ).catch(neverMind);
   }, [alignToBottom, updateSettings]);
   const {
-    renderRangeRef,
+    onRangeStartChange,
     virtuosoRef,
     chatList,
     setScroller,
@@ -112,7 +112,7 @@ export const ChatContentVirtualList: FC<Props> = (props) => {
     }
   };
   const handleRangeChange = (range: ListRange) => {
-    renderRangeRef.current = [range.startIndex - firstItemIndex, range.endIndex - firstItemIndex];
+    onRangeStartChange(range.startIndex - firstItemIndex);
   };
   const showOmega = chatList.length > 32;
   const context: VirtualListContext = useMemo(

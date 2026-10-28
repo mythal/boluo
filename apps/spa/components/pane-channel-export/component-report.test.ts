@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createIntl } from 'react-intl';
+import { createIntl, type MessageDescriptor } from 'react-intl';
 import type {
   ComponentPayload,
   ComponentReportEntity,
@@ -13,7 +13,11 @@ import { exportMessage, jsonBlob, txtBlob, csvBlob, type ExportMessage } from '.
 const baseIntl = createIntl({ locale: 'en' });
 const intl = {
   ...baseIntl,
-  formatMessage: ((message, values, options) =>
+  formatMessage: ((
+    message: MessageDescriptor,
+    values?: Parameters<typeof baseIntl.formatMessage>[1],
+    options?: Parameters<typeof baseIntl.formatMessage>[2],
+  ) =>
     baseIntl.formatMessage(
       {
         ...message,

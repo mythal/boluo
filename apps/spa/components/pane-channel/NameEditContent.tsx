@@ -29,7 +29,7 @@ const searchChannelForNames = (
   searchLimit: number,
 ) => {
   let count = 0;
-  for (const message of backwards(channelState.messages)) {
+  for (const message of backwards(channelState.messages.ordered)) {
     if (
       !message.inGame ||
       message.folded ||
@@ -61,8 +61,8 @@ const chatStateToNameList = (
   );
   // sort by last message time
   channels.sort((a, b) => {
-    const aCreated = last(a.messages)!.created;
-    const bCreated = last(b.messages)!.created;
+    const aCreated = last(a.messages.ordered)!.created;
+    const bCreated = last(b.messages.ordered)!.created;
     const aTime = new Date(aCreated).getTime();
     const bTime = new Date(bCreated).getTime();
     return bTime - aTime;
